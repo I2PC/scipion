@@ -182,6 +182,8 @@ DEFAULT_PARAMS = {
                COLS: None,                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
                ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
                
+               SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
+               
                IMG_ZOOM: '128px',                     # Zoom set by default
                IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
                IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
@@ -229,6 +231,7 @@ def showj(request):
         for key, value in request.GET.iteritems():
             if key in inputParams:
                 inputParams[key] = value
+                print key + " : " +value
             else:
                 extraParams[key] = value   
         inputParams[PATH] = addProjectPrefix(request, inputParams[PATH])
@@ -238,6 +241,7 @@ def showj(request):
         for key, value in request.POST.iteritems():
             if key in inputParams:
                 inputParams[key] = value
+                print key + " : " +value
         # extraParams will be readed from SESSION
         
         
@@ -300,7 +304,7 @@ def storeToSession(request, inputParams, dataset, _imageDimensions):
     
     request.session[inputParams[PATH]] = datasetDict
     
-    print "dataset dict: ", datasetDict
+#    print "dataset dict: ", datasetDict
 
 
 def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None):
@@ -318,6 +322,9 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                
     elif inputParams[MODE]==MODE_GALLERY or inputParams[MODE]==MODE_TABLE or inputParams[MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[MODE] + '_utils')})
+    
+    # IMPROVE TO KEEP THE SELECTED ITEMS
+    context.update({'listSelectedItems': inputParams[SELECTEDITEMS]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[MODE], '.html')
 #    return_page = 'showj/showj_base.html'
@@ -332,7 +339,7 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
             IMG_DIMS: request.session[inputParams[PATH]].get(IMG_DIMS, 0),
             IMG_ZOOM_DEFAULT: request.session.get(IMG_ZOOM_DEFAULT, 0),
             PROJECT_NAME: request.session[PROJECT_NAME],
-            'form': showjForm
+            'form': showjForm,
             }
     
     if dataset is not None:

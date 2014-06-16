@@ -1,38 +1,39 @@
 <script>
+
+function getListSelectedItems(mode){
+	var list_selected=[];
+    switch(mode){
+        case "gallery":
+            // To get the selected images
+            $.each($("div.image_selected"), function(){
+                var id = $(this).attr("id").split("___").pop()
+                list_selected.push(id)
+            });
+            break;
+            
+        case "table":
+            // To get the selected rows
+            $.each($("tr.row_selected"), function(){
+                var id = $(this).attr("id").split("___").pop()
+                list_selected.push(id)
+            });
+            break;
+    }
+    return list_selected
+}
+
 function changeMode(modeNew){
 	var form = document.forms['showjForm']
 	
 	var modeOld = form.mode.value
 	 
 	if (modeNew != modeOld){
-		list_selected=[];
-		switch(modeOld){
-	
-			case "gallery":
-				// To get the selected images
-				$.each($("div.image_selected"), function(){
-					var id = $(this).attr("id").split("___").pop()
-					list_selected.push(id)
-				});
-				break;
-				
-			case "table":
-				// To get the selected rows
-				$.each($("tr.row_selected"), function(){
-					var id = $(this).attr("id").split("___").pop()
-					list_selected.push(id)
-				});
-				break;
-		}
-		
-		console.log(list_selected)
-	
-	
+		form.listSelectedItems.value = getListSelectedItems(modeOld)
 		form.mode.value = modeNew;
 		form.submit();
-		
 	}
 }
+
 </script>
 
 <div id="asideMainContainer">
@@ -226,6 +227,7 @@ function changeMode(modeNew){
 		{% for hidden in form.hidden_fields %}
 	    {{ hidden }}
 	    {% endfor %} 
-		 
+	    
+		 <input type="hidden" name="listSelectedItems" value="">
 	</form>
 </div>	

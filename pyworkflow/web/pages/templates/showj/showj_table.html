@@ -186,7 +186,7 @@ function generateDataForTable(){
 			{% for column in tableDataset.getColumns %}
 				{% if tableDataset.getNumberOfColumns < 6 or forloop.counter0|divisibleby:2 %}
 			 		 <tr>
-			 		 	<td>{{column.getName}}</td>
+			 		 	<td>{{column.getLabel}}</td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
@@ -206,7 +206,7 @@ function generateDataForTable(){
 			{% for column in tableDataset.getColumns %}
 				 {% if forloop.counter0|divisibleby:2 == False %}
 			 		 <tr>
-			 		 	<td>{{column.getName}}</td>
+			 		 	<td>{{column.getLabel}}</td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_visible"></td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_renderable"></td>
 			 		 	<td><input type="checkbox" id="{{column.getName}}_editable"></td>
