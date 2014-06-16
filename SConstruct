@@ -115,7 +115,7 @@ def _delPackage(env, name):
     """
     del SCIPION['PACKAGES'][name]
 
-def _downloadLibrary(env, name, md5check=True, verbose=False):
+def _downloadLibrary(env, name, verbose=False):
     """
     This method is for downloading a library and placing it in tmp dir
     It will download first the .md5
@@ -130,9 +130,17 @@ def _downloadLibrary(env, name, md5check=True, verbose=False):
     folderDir = Dir(folder)
     url = library[URL]
     urlMd5 = "%s.md5" % url
-    
     go = True
     message = message2 = ''
+    
+    md5check = GetOption('update')
+    if GetOption('update') is None:
+        md5check = False
+        go = False
+    
+    if not os.path.exists(md5):
+        md5check = True
+    
     if md5check:
         print "Downloading md5 file for %s library..." % name
         go, message = _downloadFile(urlMd5, md5)
@@ -141,8 +149,8 @@ def _downloadLibrary(env, name, md5check=True, verbose=False):
             go = False
     
     if go:
-        print "Downloading %s in folder %s" % (url, folder)
         while go:
+            print "Downloading %s in folder %s" % (url, folder)
             down, message2 = _downloadFile(url, tar)
             if not down:
                 print "\t ...Library %s not downloaded. Server says: \n %s" % (name, message2)
@@ -206,17 +214,21 @@ def _compileLibrary(env, name, src=None, incs=None, libs=None, deps=None, flags=
     if autoTarget is None:
         autoTarget = 'config.h'
     if source is None:
-        source = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+        source = Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]), '*.c')
     if target is None:
-        target = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
+        target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])
     if makePath is None:
         makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR]))
     else:
         makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR], makePath))
     env['CROSS_BUILD'] = False
-    configure = env.AutoConfig(source=source, target=target, AutoConfigTarget=autoTarget, AutoConfigSource=autoSource, AutoConfigParams=flags)
-    make = env.Make(source=configure, target=target, MakePath=makePath)
-    _installLibs(name, libs)
+    configure = env.AutoConfig(Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[DIR])), AutoConfigTarget=autoTarget, AutoConfigSource=autoSource, AutoConfigParams=flags)
+#    Depends(configure, deps)
+    make = env.Make(source=source, target=target, MakePath=makePath, MakeEnv=os.environ, MakeTargets="all install")
+#    print "%s depends on %s" % (make, configure)
+#    Depends(make, configure)
+#    _installLibs(name, libs)
+#    return make
     return make
 
 def _compileWithSetupPy(env, name, prefix=None):
@@ -257,7 +269,12 @@ def _downloadFile(url, file):
     """
     import urllib
     import htmllib
-    response, message = urllib.urlretrieve(url, file)
+    message=None
+    try:
+        response, message = urllib.urlretrieve(url, file)
+    except:
+        message = "Exception caught when downloading the URL %s. Are you connected to internet?"
+        return False, message
     # If we get a html answer, then it is a server answer telling us that the file doesn't exist, but we return the message
     if message.dict['content-type'] == 'text/html':
         return False, message
@@ -275,7 +292,7 @@ def _checkMd5(file, md5):
     """
     Function that checks if the md5sum from a given file match the md5sum from a md5 file
     md5 file should contain it as the first element.
-    The function will return True if both sums match, False otherwise
+    The function will return 1 if both sums match, 0 if they doesn't match and -1 if either md5 or file doesn't exist 
     """
     if not os.path.exists(file):
         print "Checksum error. File %s doesn't exist" % file
@@ -373,7 +390,20 @@ env.AddMethod(_scipionLogo, "ScipionLogo")
 
 # Add main dict to environment
 env.AppendUnique(SCIPION)
+
+########################
+# Command-line options #
+########################
+
+AddOption('--update',
+              dest='update',
+              action='store_true',
+              help='Check for packages or libraries updates')
+
 env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
-env.SConscript('SConscript')
+
+# Only in case user didn't select help message, we run SConscript
+if not GetOption('help'):
+    env.SConscript('SConscript')
