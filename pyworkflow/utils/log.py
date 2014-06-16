@@ -76,7 +76,8 @@ logging.config.dictConfig(config)
 
 
 class ScipionLogger():
-    def __init__(self, filePath):
+    def __init__(self, filePath=''):
+        """ If filePath is empty string, the general logger is used. """
         self._filePath = filePath
         makeFilePath(self._filePath)
 
