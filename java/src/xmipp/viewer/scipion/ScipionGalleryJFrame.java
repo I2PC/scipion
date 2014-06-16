@@ -37,6 +37,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String inputid;
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
+    private String other;
     
    
 
@@ -63,7 +64,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             sqlitefile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
-
+            other = parameters.other;
             initComponents();
         } catch (Exception ex) {
             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -96,7 +97,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     int create = dlg.action;
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
-                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey)};
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
                         createSubset(command);
                     }
                 }
@@ -114,7 +115,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), output , dlg.getFieldValue(runNameKey)};
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), output , dlg.getFieldValue(runNameKey), other};
                             createSubset(command);
                             
                         }
