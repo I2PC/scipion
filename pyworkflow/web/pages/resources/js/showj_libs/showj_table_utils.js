@@ -145,7 +145,7 @@ function renderElements(nRow, aData){
 	   			else if (columnLayoutConfiguration.typeOfColumn == 'image'){
 			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>'+
 			   					'<img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" data-real_src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
-			   			/* $('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>' ); */
+//			   			 $('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>' ); 
 		   		 }
 	   		}	
 		 }
@@ -207,7 +207,9 @@ function getColumnsDefinition(){
 		var dataRowForTable = []
  		var columnLayoutConfiguration = jsonColumnsLayout[i]
  		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
-			dataRowForTable["bVisible"] = false
+ 			//To show the column id :true
+ 			//To hide the column id :false
+			dataRowForTable["bVisible"] = true
 		} 
 		dataRowForTable["sTitle"]= i
 		dataRowForTable["aTargets"]=[columnId]
