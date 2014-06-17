@@ -218,6 +218,7 @@ def main():
             else:
                 runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
+    # TODO(jordi): review this one and make it behave similar to MODE_TESTS (using argparse, etc)
     elif mode == MODE_TESTS_DATA:
         if n > 2:
             dataset = sys.argv[2:-1]
@@ -255,9 +256,11 @@ def main():
             print "Gathering all tests data from default dataset..."
             runCmd('scripts/sync_data.py')
 
+    # TODO(jordi & nacho): check if this should be merged with the previous one (MODE_TESTS_DATA)
     elif mode == MODE_UPDATE_DATA:
         runCmd('scripts/sync_data.py -q')
 
+    # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
         if n > 2:
             browserArgs = " ".join(sys.argv[2:])
@@ -346,6 +349,8 @@ USAGE:
                                apache_vars: show the LD_LIBRARY_PATH needed by apache server
                                
         printenv               Print the environmental variables used by the application 
+
+        download               Download external packages (EMAN, SPIDER, Relion, etc)
 """
 
 
