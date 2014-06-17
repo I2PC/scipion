@@ -907,7 +907,6 @@ class Class2D(SetOfParticles):
         from other set of micrographs to current one.
         """
         self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
-        self._mapperPath.clear()
         
     
 class Class3D(SetOfParticles):
@@ -915,7 +914,11 @@ class Class3D(SetOfParticles):
     Usually the representative of the class is a Volume 
     reconstructed from the particles assigned to the class.
     """
-    pass
+    def copyInfo(self, other):
+        """ Copy basic information (id and other properties) but not _mapperPath or _size
+        from other set of micrographs to current one.
+        """
+        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
 
 
 class ClassVol(SetOfVolumes):

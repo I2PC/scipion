@@ -144,8 +144,12 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, extraParams=args.get('extraParams', '')))
-            
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
+                                          extraParams=args.get('extraParams', ''),
+                                          viewParams={ORDER: 'enabled id _size _representative._filename',
+                                                      'visible': 'enabled id _size _representative._filename',
+                                                      ZOOM: '99', MODE: 'metadata',
+                                                      }))            
               
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()

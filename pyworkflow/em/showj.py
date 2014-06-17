@@ -61,6 +61,8 @@ COLS = 'cols'
 ALLOW_RENDER = 'allowRender'
 MANUAL_ADJUST = 'colRowMode'
 
+SELECTEDITEMS = 'listSelectedItems'
+
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'
 VOL_VIEW = 'resliceComboBox'

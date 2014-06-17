@@ -56,7 +56,7 @@ LOCAL_USER_AND_HOST = ''
 SSH_PORT = 22
 PAIRS_SEPARATOR = ':'
 
-log = ScipionLogger('pyworkflow.utils.remote')
+log = ScipionLogger()
 
 
 

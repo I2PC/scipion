@@ -210,10 +210,10 @@ class ProtUserSubSet(ProtSets):
         self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
         
         output = createFunc(inputClasses.getImages())
-        newCls = output.ITEM_TYPE()
         #output.copyInfo(inputClasses)
         for cls in modifiedSet:
             if cls.isEnabled():
+                newCls = output.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 output.append(newCls)
                 for img in cls:
@@ -306,8 +306,6 @@ class ProtJoinSets(ProtSets):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutput(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        self.inputSets.printAll()
-        
         self.inputType = str(self.inputSets[0].get().getClassName())
         #self.inputType = str(self.inputSet1.get().getClassName())
         outputSetFunction = getattr(self, "_create%s" % self.inputType)
