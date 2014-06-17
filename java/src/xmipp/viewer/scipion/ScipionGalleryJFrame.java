@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.MetaData;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;

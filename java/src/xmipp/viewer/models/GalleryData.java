@@ -91,10 +91,7 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	protected boolean hasMdChanges, hasClassesChanges;
 	protected GalleryJFrame window;
-        protected String[] renderLabels;
-        protected String renderLabel;
-        protected String[] visibleLabels;
-        protected String[] orderLabels;
+  
 
     
  
@@ -120,16 +117,17 @@ public class GalleryData {
 	public GalleryData(GalleryJFrame window, String fn, Params parameters, MetaData md) {
 		this.window = window;
                 this.parameters = parameters;
+                md.setRenderLabels(parameters.renderLabels);
+                md.setRenderLabel(parameters.getRenderLabel());
+                md.setVisibleLabels(parameters.visibleLabels);
+                md.setOrderLabels(parameters.orderLabels);
 		try {
                         
 			selectedBlock = "";
 			
 			zoom = parameters.zoom;
 			this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
-                        this.renderLabels = parameters.renderLabels;
-                        this.renderLabel = parameters.getRenderLabel();
-                        this.visibleLabels = parameters.visibleLabels;
-                        this.orderLabels = parameters.orderLabels;
+                        
 			mode = Mode.GALLERY_MD;
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
@@ -328,8 +326,8 @@ public class GalleryData {
 			ColumnInfo ciFirstRenderVisible = null;
 			int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-			if (!renderLabel.equalsIgnoreCase("first")) {
-				inputRenderLabel = MetaData.str2Label(renderLabel);
+			if (!md.getRenderLabel().equalsIgnoreCase("first")) {
+				inputRenderLabel = MetaData.str2Label(md.getRenderLabel());
 			}
 
 			for (int i = 0; i < labelids.length; ++i) {
@@ -1081,44 +1079,7 @@ public class GalleryData {
             }
        }
        
-       public boolean isRenderLabel(ColumnInfo ci) {
-           
-           if(renderLabel.equals("first"))
-               return ci.allowRender && ci.visible;
-           for(String i: renderLabels)
-               if(i.equals(ci.labelName) && ci.visible)
-                   return true;
-           return false;
-       }
        
-       public boolean isVisibleLabel(ColumnInfo ci) {
-           if(visibleLabels == null)
-               return true;
-           for(String i: visibleLabels)
-               if(i.equals(ci.labelName))
-                   return true;
-           return false;
-       }
-
-       public void orderLabels()
-       {
-           if(orderLabels == null)
-               return;
-           
-           ColumnInfo aux;
-           int j;
-           for(int i = 0; i < orderLabels.length; i ++)
-               for(ColumnInfo ci: labels)
-                   if(ci.labelName.equals(orderLabels[i]))
-                   {
-                       
-                       aux = labels.get(i);
-                       j = labels.indexOf(ci);
-                       labels.set(i, ci);
-                       labels.set(j, aux);
-                       
-                   }
-       }
        
        
 	public boolean isCTFMd() {
@@ -1508,4 +1469,45 @@ public class GalleryData {
         public MetaData getMd() {
             return md;
         }
+        
+        public boolean isRenderLabel(ColumnInfo ci) {
+           
+           if(md.getRenderLabel().equals("first"))
+               return ci.allowRender && ci.visible;
+           for(String i: md.getRenderLabels())
+               if(i.equals(ci.labelName) && ci.visible)
+                   return true;
+           return false;
+       }
+       
+       public boolean isVisibleLabel(ColumnInfo ci) {
+           if(md.getVisibleLabels() == null)
+               return true;
+           for(String i: md.getVisibleLabels())
+               if(i.equals(ci.labelName))
+                   return true;
+           return false;
+       }
+       
+       public void orderLabels()
+       {
+           String[] orderLabels = md.getOrderLabels();
+           if(orderLabels == null)
+               return;
+           
+           ColumnInfo aux;
+           int j;
+           for(int i = 0; i < orderLabels.length; i ++)
+               for(ColumnInfo ci: labels)
+                   if(ci.labelName.equals(orderLabels[i]))
+                   {
+                       
+                       aux = labels.get(i);
+                       j = labels.indexOf(ci);
+                       labels.set(i, ci);
+                       labels.set(j, aux);
+                       
+                   }
+       }
+
 }// class GalleryDaa

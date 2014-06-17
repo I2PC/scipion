@@ -49,6 +49,12 @@ public class MetaData {
 	public static final String FILL_LINEAR = "linear";
 	public static final String FILL_RAND_UNIFORM = "random uniform";
 	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
+        
+        protected String[] renderLabels;
+        protected String renderLabel = "first";
+        protected String[] visibleLabels;
+        protected String[] orderLabels;
+    
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -510,7 +516,42 @@ public class MetaData {
 	public native double getColumnMax(int column);
 
     
-	
+	public void setRenderLabels(String[] renderLabels) {
+            this.renderLabels = renderLabels;
+        }
+
+        public void setVisibleLabels(String[] visibleLabels) {
+            this.visibleLabels = visibleLabels;
+        }
+
+        public void setOrderLabels(String[] orderLabels) {
+            this.orderLabels = orderLabels;
+        }
+
+        public void setRenderLabel(String renderLabel) {
+            this.renderLabel = renderLabel;
+        }
+        
+        public String getRenderLabel()
+        {
+            return renderLabel;
+        }
+        
+         public String[] getRenderLabels()
+       {
+           return renderLabels;
+       }
+       
+       public String[] getVisibleLabels()
+       {
+           return visibleLabels;
+       }
+       
+       public String[] getOrderLabels()
+       {
+           return orderLabels;
+       }
+       
 	
 	
 

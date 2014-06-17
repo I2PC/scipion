@@ -37,6 +37,7 @@ public class ScipionMetaData extends MetaData{
     private ColumnInfo idci, labelci, commentci, enabledci;
     private String prefix = "";
     
+    
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns)
     {
         this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
@@ -212,6 +213,7 @@ public class ScipionMetaData extends MetaData{
             
         }
     }
+
     
     public class EMObject
     {
@@ -479,13 +481,17 @@ public class ScipionMetaData extends MetaData{
     public int getValueInt(int label, long id)
     {
         Object value = getValueObject(label, id);
-        return (Integer)value;
+        if(value != null)
+            return (Integer)value;
+        return Integer.MIN_VALUE;
     }
     
     public double getValueDouble(int label, long id)
     {
         Object value = getValueObject(label, id);
-        return (Float)value;
+        if(value != null)
+            return (Float)value;
+        return Double.NaN;
     }
     
     public String getValueString(int label, long id)
@@ -660,7 +666,8 @@ public class ScipionMetaData extends MetaData{
             return sql;
     }
     public  void writeBlock(String path)
-    {//overwrites file if exists, does not save recursively metadata childs
+    {
+        //Might fail if some fixed column was added
         
         Connection c = null;
         Statement stmt = null;
@@ -682,22 +689,21 @@ public class ScipionMetaData extends MetaData{
             sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
-            String createcols = "", cols = "id, label, comment", type;
+            String createcols = "", cols = "", type;
             for(int i = 0; i < columns.size(); i ++)
             {
                 ci = columns.get(i);
                 type = getTypeMapping(ci.type);
                 sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
-                createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
-                cols += String.format(", %s", ci.comment);
+                createcols += String.format("%s %s DEFAULT NULL,", ci.comment, type);
+                cols += String.format("%s,", ci.comment);
             }
             stmt.executeUpdate(sql);
-            
-            sql = String.format("DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
-                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-"                      label      TEXT DEFAULT NULL,\n" +
-"                      comment TEXT DEFAULT NULL" +
+            createcols = createcols.substring(0, createcols.length() - 1);
+            cols = cols.substring(0, cols.length() - 1);
+            sql = String.format("DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"+
 "                      %2$s)", prefix, createcols);
+            
             stmt.executeUpdate(sql);
             if(size() == 0)    
                 return;
@@ -705,7 +711,7 @@ public class ScipionMetaData extends MetaData{
             Object value;
             for(EMObject emo: emobjects)
             {
-                sql += String.format("(%s, '', ''", emo.getId());
+                sql += "(";
                 for (ColumnInfo column : columns) {
                         value = emo.getValue(column);
                         if(value != null)
@@ -717,19 +723,19 @@ public class ScipionMetaData extends MetaData{
                                     if( str.contains("@"))
                                         str = str.substring(str.lastIndexOf("@") + 1);
                                     value = str;
-                                    sql += String.format(", '%s'", value);
+                                    sql += String.format("'%s',", value);
 
 
                             }
                             else
-                                sql += String.format(", %s", value);
+                                sql += String.format("%s,", value);
                         }
                         else
-                            sql += ", NULL";
+                            sql += "NULL,";
                 }
-                sql += "),";
+                sql = sql.substring(0, sql.length() - 1) + "),";
             }
-            sql = sql.substring(0, sql.length() - 1);//remove comma
+            sql = sql.substring(0, sql.length() - 1);
             stmt.executeUpdate(sql);
             c.commit();
             stmt.close();
@@ -855,6 +861,13 @@ public class ScipionMetaData extends MetaData{
             
         }
     }
+    
+    
+      
+       
+       
+      
+    
     
    
    
