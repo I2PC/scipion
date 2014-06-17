@@ -98,6 +98,10 @@ class Project(object):
         # Read only mode
         if not isReadOnly():
             self.settings.write()
+            
+    def getDbPath(self):
+        return self.dbPath
+    
     
     def load(self):
         """Load project data and settings

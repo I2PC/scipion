@@ -90,7 +90,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
         print self.strId(), self.getProject().getName()
-        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getName(), self.strId())
+        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
         args = "--input %(micFn)s --output %(extraDir)s --mode manual  --scipion %(scipion)s"%locals()
         # TiltPairs
