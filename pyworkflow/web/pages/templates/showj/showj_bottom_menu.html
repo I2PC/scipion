@@ -1,45 +1,49 @@
 <script>
-
-function createSubset(mode){
-	
-	switch(mode){
-	
-	case "micrographs":
-		// create subsets with micrographs
-		break;
-
-	case "particles":
-		// create subsets with particles
-		break;
-		
-	case "volumes":
-		// create subsets with volumes
-		break;
-	
-	}
-}
-
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
 	var listSelectedItems = [{{listSelectedItems}}];
-		
+	
+	// Mark the selected items in the template
+	markSelectedItems(mode, listSelectedItems)
+	
+	});
+
+
+function markSelectedItems(mode, list){
 	switch(mode){
 	    case "gallery":
 	        // Came from the table mode
-	        for (var x=0;listSelectedItems.length>x;x++){
-	        	$("div#img_container___"+ listSelectedItems[x]).addClass("image_selected");
+	        for (var x=0;list.length>x;x++){
+	        	$("div#img_container___"+ list[x]).addClass("image_selected");
 	        }
 	        break;
 	        
 	    case "table":
 	        // Came from the gallery mode
-	    	for (var x=0;listSelectedItems.length>x;x++){
-	    		$("tr#row_container___"+ listSelectedItems[x]).addClass("row_selected");
+	    	for (var x=0;list.length>x;x++){
+	    		$("tr#row_container___"+ list[x]).addClass("row_selected");
 	    	}
 	        break;
 	}
+}
+
+
+function createSubset(mode){
 	
-});
+	switch(mode){
+		case "micrographs":
+			// create subsets with micrographs
+			break;
+	
+		case "particles":
+			// create subsets with particles
+			break;
+			
+		case "volumes":
+			// create subsets with volumes
+			break;
+	}
+}
 
 
 </script>
