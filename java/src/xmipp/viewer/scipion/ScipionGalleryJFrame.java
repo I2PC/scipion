@@ -139,6 +139,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     }
 
+    public void reloadTableData(boolean changed)
+    {
+        super.reloadTableData(changed);
+        enableActions();
+    }
     
 
     public JButton getScipionButton(String text, ActionListener listener) {
@@ -149,16 +154,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         return button;
     }
 
-    public void selectItem(int row, int col) {
-        super.selectItem(row, col);
-        enableActions();
-
-    }
-
-    protected void tableMouseClicked(MouseEvent evt) {
-        super.tableMouseClicked(evt);
-        enableActions();
-    }
+    
 
     protected void enableActions() {
         boolean isenabled = data.allowGallery();
@@ -172,7 +168,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
         if(classcmdbutton != null)
         {
-            isenabled = data.hasClasses();
+            isenabled = data.hasClasses() && !data.isVolumeMode();
             color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setEnabled( isenabled);
