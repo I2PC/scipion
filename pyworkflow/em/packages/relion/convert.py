@@ -173,6 +173,9 @@ def createClassesFromImages(imgsFn, classesFn, iter, classLabel, classFnTemplate
     mdClasses.write('classes@' + classesFn, xmipp.MD_APPEND)
     restoreXmippLabels()
     
+    
+#def createClassesFromImages(inputImages, inputStar, classesFn, ):
+    
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """ Fill a set of classes 2d from a Relion star file.
