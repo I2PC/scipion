@@ -86,17 +86,13 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
         micFn = createXmippInputMicrographs(self, self.inputMics)
-        inputid = self.inputMics.strId()
-        self._params = {'inputMicsXmipp': micFn,
-                        'extraDir': self._getExtraPath(),
-                        'pickingMode': 'manual',
-                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
-                        }
         
         # Launch the particle picking GUI
-        
+        extraDir = self._getExtraPath()
+        print self.strId(), self.getProject().getName()
+        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %(inputMicsXmipp)s --output %(extraDir)s --mode %(pickingMode)s  --scipion %(scipion)s"%self._params
+        args = "--input %(micFn)s --output %(extraDir)s --mode manual  --scipion %(scipion)s"%locals()
         # TiltPairs
 #        if self.inputMics.hasTiltPairs():
 #            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn

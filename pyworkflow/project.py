@@ -85,6 +85,10 @@ class Project(object):
         """Return path from the project root"""
         return join(*paths)
     
+    def getDbPath(self):
+        """ Return the path to the sqlite db. """
+        return self.dbPath
+    
     def getName(self):
         return self.name
     
@@ -98,6 +102,10 @@ class Project(object):
         # Read only mode
         if not isReadOnly():
             self.settings.write()
+            
+    def getDbPath(self):
+        return self.dbPath
+    
     
     def load(self):
         """Load project data and settings
@@ -417,6 +425,7 @@ class Project(object):
             # Set important properties of the protocol
             name = protocol.getClassName() + protocol.strId()
             protocol.setProject(self)
+            print protocol.strId(), protocol.getProject().getName()
             protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
             protocol.setMapper(self.mapper)
