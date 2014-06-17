@@ -552,7 +552,7 @@ function multipleEnableDisableImage(mode){
 	if (!$("#saveButton").hasClass("buttonGreyHovered")){
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}
-	console.log(changes)
+//	console.log(changes)
 }
 
 function multipleSelect(mode){

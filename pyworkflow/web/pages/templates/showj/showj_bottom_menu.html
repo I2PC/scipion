@@ -19,6 +19,28 @@ function createSubset(mode){
 	}
 }
 
+$(document).ready(function(){
+	var mode = document.forms['showjForm'].mode.value
+	var listSelectedItems = [{{listSelectedItems}}];
+		
+	switch(mode){
+	    case "gallery":
+	        // Came from the table mode
+	        for (var x=0;listSelectedItems.length>x;x++){
+	        	$("div#img_container___"+ listSelectedItems[x]).addClass("image_selected");
+	        }
+	        break;
+	        
+	    case "table":
+	        // Came from the gallery mode
+	    	for (var x=0;listSelectedItems.length>x;x++){
+	    		$("tr#row_container___"+ listSelectedItems[x]).addClass("row_selected");
+	    	}
+	        break;
+	}
+	
+});
+
 
 </script>
 	
