@@ -324,6 +324,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[MODE] + '_utils')})
     
     # IMPROVE TO KEEP THE SELECTED ITEMS
+    print "TYPE SELECTED ITEMS: ",type(inputParams[SELECTEDITEMS])
     context.update({'listSelectedItems': inputParams[SELECTEDITEMS]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[MODE], '.html')

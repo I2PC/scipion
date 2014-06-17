@@ -307,7 +307,8 @@ section .imageTitle{
 }
 
 .image_selected {
-	background-color: #000;
+/* 	background-color: #000; */
+	background-color: Firebrick;
 }
 
 

@@ -24,11 +24,11 @@ function getListSelectedItems(mode){
 
 function changeMode(modeNew){
 	var form = document.forms['showjForm']
-	
 	var modeOld = form.mode.value
 	 
 	if (modeNew != modeOld){
-		form.listSelectedItems.value = getListSelectedItems(modeOld)
+		var listSeletected = getListSelectedItems(modeOld);
+		form.listSelectedItems.value = getListSelectedItems(modeOld);
 		form.mode.value = modeNew;
 		form.submit();
 	}
