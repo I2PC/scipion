@@ -172,7 +172,7 @@ public class ScipionGalleryData extends GalleryData{
                             if (isClassification)
                             {
                                 ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(objId);
-                                return String.format("Class %s (%d images)", emo.id, emo.childmd.size());
+                                return String.format("Class %s (%d images)", emo.getId(), emo.childmd.size());
                             }
                             else
                                     return md.getValueString(label, objId);

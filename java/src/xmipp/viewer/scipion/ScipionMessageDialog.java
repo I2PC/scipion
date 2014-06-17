@@ -34,7 +34,6 @@ import xmipp.utils.XmippWindowUtil;
 public class ScipionMessageDialog extends JDialog implements ActionListener {
     
     private String msg;
-    private JFrame frame;
     private JButton cancelbt;
     private JButton okbt;
     public int action;
@@ -50,7 +49,6 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     {
         super(parent, true);
         this.msg = msg;
-        this.frame = parent;
         this.fields = fields;
         fieldstfs = new HashMap<String, JTextField>();
         initComponents(title);
@@ -101,7 +99,8 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         buttonspn.add(okbt);
         add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, index, GridBagConstraints.HORIZONTAL));
         pack();
-        XmippWindowUtil.setLocation(0.5, 0.5, this);
+        if (getParent() != null)
+            XmippWindowUtil.centerWindows(this, getParent());
         setVisible(true);
         
     }

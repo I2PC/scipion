@@ -35,7 +35,7 @@ public class SupervisedPickerRunner implements Runnable {
     public String inputfile;
     public String outputdir;
     public String protid;
-    public String dbpath;
+    public String projectid;
     public Mode mode;
     public int threads;
     public boolean fast;
@@ -93,7 +93,7 @@ public class SupervisedPickerRunner implements Runnable {
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             python = cmdargs[0];
             script = cmdargs[1];
-            dbpath = cmdargs[2];
+            projectid = cmdargs[2];
             protid = cmdargs[3];
             
         }
@@ -111,7 +111,7 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
             ppicker.setPython(python);
             ppicker.setScipionScript(script);
-            ppicker.setDbPath(dbpath);
+            ppicker.setProjectId(projectid);
             ppicker.setProtId(protid);
 
             new SupervisedParticlePickerJFrame(ppicker);

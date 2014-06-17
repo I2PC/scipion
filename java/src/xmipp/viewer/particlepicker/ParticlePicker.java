@@ -40,7 +40,7 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-    public String python, script, protid, dbpath;//scipion params
+    public String python, script, protid, projectid;//scipion params
 
     String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
         "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
@@ -625,9 +625,9 @@ public abstract class ParticlePicker {
      
     
      
-     public void setDbPath(String dbpath)
+     public void setProjectId(String projectid)
      {
-         this.dbpath = dbpath;
+         this.projectid = projectid;
      }
      
      public void setProtId(String protid)
@@ -642,7 +642,7 @@ public abstract class ParticlePicker {
 
     public String[] getScipionSaveCommand() {
        
-        String[] cmd = new String[]{python, script, outputdir, dbpath, protid};
+        String[] cmd = new String[]{python, script, projectid, protid};
         
         return cmd;
        }

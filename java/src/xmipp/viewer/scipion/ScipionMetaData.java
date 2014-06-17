@@ -34,7 +34,7 @@ public class ScipionMetaData extends MetaData{
     private ScipionMetaData parent;
     private boolean haschilds;
     private static int labelscount = 0;
-    private ColumnInfo enabledci;
+    private ColumnInfo idci, labelci, commentci, enabledci;
     private String prefix = "";
     
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns)
@@ -67,7 +67,7 @@ public class ScipionMetaData extends MetaData{
             int i = 0;
             for(EMObject emo: emobjects)
             {
-                prefix = String.format("Class%03d_", emo.id);
+                prefix = String.format("Class%03d_", emo.getId());
                 emo.childmd = new ScipionMetaData(dbfile, prefix);
                 emo.childmd.setParent(this);
                 i ++;
@@ -87,6 +87,8 @@ public class ScipionMetaData extends MetaData{
         
     }
     
+    
+    
     public void loadData()
     {
         Connection c = null;
@@ -96,10 +98,29 @@ public class ScipionMetaData extends MetaData{
             int type;
             boolean allowRender;
             ColumnInfo ci;
+            
             name = alias = "enabled";
             labelscount ++;
             enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
             columns.add(enabledci);
+            
+            name = alias = "id";
+            labelscount ++;
+            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
+            columns.add(idci);
+            
+            
+            name = alias = "label";
+            labelscount ++;
+            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            columns.add(labelci);
+            
+            name = alias = "comment";
+            labelscount ++;
+            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            columns.add(commentci);
+            
+           
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
             stmt = c.createStatement();
@@ -194,8 +215,7 @@ public class ScipionMetaData extends MetaData{
     
     public class EMObject
     {
-        long id;
-        String label, comment;
+        
         protected Map<ColumnInfo, Object> values;
         boolean changed;
         ScipionMetaData childmd;
@@ -203,10 +223,10 @@ public class ScipionMetaData extends MetaData{
         
         public EMObject(long id, String label, String comment, boolean enabled, ScipionMetaData md)
         {
-            this.id = id;
-            this.label = label;
-            this.comment = comment;
             values = new HashMap<ColumnInfo, Object>();
+            setValue(idci, id);
+            setValue(labelci, label);
+            setValue(commentci, comment);
             setEnabled(enabled);
             this.md = md;
             changed = false;
@@ -214,12 +234,8 @@ public class ScipionMetaData extends MetaData{
         
         Object getValue(ColumnInfo c) {
             Object result = values.get(c);
-            if(result != null)
-                return result;
-            for(ColumnInfo ci: columns)
-                if(ci.labelName.equals(c.labelName))
-                    return values.get(ci);//when mergin metadatas required
-            return null;
+            
+            return result;
         }
 
         public void setValue(ColumnInfo ci, Object value) {
@@ -239,6 +255,27 @@ public class ScipionMetaData extends MetaData{
         {
             int value = isenabled? 1: 0;
             setValue(enabledci, value);
+        }
+        
+        public Long getId()
+        {
+            return ((Integer)getValue(idci)).longValue();
+        }
+        
+        public String getLabel()
+        {
+            Object value = getValue(labelci);
+            if(value != null)
+                return ((String)getValue(labelci));
+            return null;
+        }
+        
+        public String getComment()
+        {
+            Object value = getValue(commentci);
+            if(value != null)
+                return ((String)getValue(commentci));
+            return null;
         }
     }
 
@@ -283,7 +320,7 @@ public class ScipionMetaData extends MetaData{
 
     public EMObject getEMObject(long id) {
         for(EMObject emo: emobjects)
-            if(emo.id == id)
+            if(emo.getId() == id)
                 return emo;
         return null;
     }
@@ -352,7 +389,7 @@ public class ScipionMetaData extends MetaData{
     {
         long[] ids = new long[emobjects.size()];
         for(int i = 0; i < ids.length; i++)
-            ids[i] = emobjects.get(i).id;
+            ids[i] = emobjects.get(i).getId();
         return ids;
             
        
@@ -594,7 +631,7 @@ public class ScipionMetaData extends MetaData{
             Object value;
             for(EMObject emo: emobjects)
             {
-                sql += String.format("(%s, '', ''", emo.id);
+                sql += String.format("(%s, '', ''", emo.getId());
                 for (ColumnInfo column : columns) {
                         value = emo.getValue(column);
                         if(value != null)
@@ -668,7 +705,7 @@ public class ScipionMetaData extends MetaData{
             Object value;
             for(EMObject emo: emobjects)
             {
-                sql += String.format("(%s, '', ''", emo.id);
+                sql += String.format("(%s, '', ''", emo.getId());
                 for (ColumnInfo column : columns) {
                         value = emo.getValue(column);
                         if(value != null)
@@ -805,7 +842,7 @@ public class ScipionMetaData extends MetaData{
                 if(emo.changed)
                 {
                     //sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
-                    sql= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
+                    sql= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.getId());
                     stmt.executeUpdate(sql);
                 }
             }
