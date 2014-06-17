@@ -352,8 +352,8 @@ def readCTFModel(filename, mic):
     """ Read from Xmipp .ctfparam and create a CTFModel object. """
     md = xmipp.MetaData(filename)
     ctfObj = rowToCtfModel(md, md.firstObject())
+    ctfObj.setObjId(mic.getObjId())
     ctfObj.setMicrograph(mic)
-#     ctfObj._xmippMd = String(filename) 
     
     return ctfObj
 

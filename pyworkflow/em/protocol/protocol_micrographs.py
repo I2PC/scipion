@@ -81,24 +81,8 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
-        # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
-        acquisition = self.inputMics.getAcquisition()
-         
-        self._params = {'voltage': acquisition.getVoltage(),
-                        'sphericalAberration': acquisition.getSphericalAberration(),
-                        'magnification': acquisition.getMagnification(),
-                        'ampContrast': acquisition.getAmplitudeContrast(),
-                        'samplingRate': self.inputMics.getSamplingRate(),
-                        'scannedPixelSize': self.inputMics.getScannedPixelSize(),
-                        'windowSize': self.windowSize.get(),
-                        'lowRes': self.lowRes.get(),
-                        'highRes': self.highRes.get(),
-                        # Convert from microns to Amstrongs
-                        'minDefocus': self.minDefocus.get() * 1e+4, 
-                        'maxDefocus': self.maxDefocus.get() * 1e+4
-                       }
         
+        self._defineValues()
         self._prepareCommand()
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
@@ -140,19 +124,39 @@ class ProtCTFMicrographs(ProtMicrographs):
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineValues(self):
+        """ This function get some parameters of the micrographs"""
+        # Get pointer to input micrographs 
+        self.inputMics = self.inputMicrographs.get() 
+        acquisition = self.inputMics.getAcquisition()
+        
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
+                        'samplingRate': self.inputMics.getSamplingRate(),
+                        'scannedPixelSize': self.inputMics.getScannedPixelSize(),
+                        'windowSize': self.windowSize.get(),
+                        'lowRes': self.lowRes.get(),
+                        'highRes': self.highRes.get(),
+                        # Convert from microns to Amstrongs
+                        'minDefocus': self.minDefocus.get() * 1e+4, 
+                        'maxDefocus': self.maxDefocus.get() * 1e+4
+                       }
+    
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
         return self._getExtraPath(removeBaseExt(mic.getFileName()))        
-        
+    
     def _iterMicrographs(self):
         """ Iterate over micrographs and yield
         micrograph name and a directory to process.
         """
         for mic in self.inputMics:
             micFn = mic.getFileName()
-            micDir = self._getExtraPath(removeBaseExt(micFn)) 
+            micDir = self._getMicrographDir(mic) 
             yield (micFn, micDir, mic)  
-                
+    
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph

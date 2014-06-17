@@ -209,17 +209,14 @@ def main():
         if n > 2:
             testValue = sys.argv[2]
 
-            if testValue not in ["show", "run"]:
+            if not testValue.startswith('-'):
+                # Run a single test, the one mentioned in testValue
                 if testValue.startswith('tests.'):
                     runCmd('-m unittest pyworkflow.%s' % testValue)
                 else:
                     runCmd('-m unittest pyworkflow.tests.%s' % testValue)
             else:
-                if testValue == "show":
-                    args = ["show"] + sys.argv[3:]
-                elif testValue == "run":
-                    args = sys.argv[3:]
-                runCmd('scripts/run_tests.py %s' % ' '.join(args))
+                runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_TESTS_DATA:
         if n > 2:
@@ -322,11 +319,10 @@ USAGE:
 
         tests [OPTION]         Run a test starting from pyworkflow.tests
                                OPTION can be:
-                                  test name: the specified tests will be run.
-                                  [show|run]: in this case a more sofisticated run tests 
-                                  script will be used.
+                                  <test name>: name of the test to run.
+                                  --show: list the available tests.
                                   Further options are:
-                                  case=VALUE paths=VALUE pattern="test*py" mode=[modules|classes|all]
+                                  --case=VALUE --paths=VALUE --pattern="test*py" --mode=[modules|classes|all]
 
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
                                OPTION can be:
