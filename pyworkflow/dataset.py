@@ -122,6 +122,8 @@ class Table(object):
         return columnName in self._columns
     
     def getColumn(self, columnName):
+        if not columnName in self._columns:
+            raise Exception('Table: column "%s" not found.\Current columns: %s' % (columnName, '\n'.join(self._columns.keys())))
         return self._columns[columnName] 
     
     def hasEnabledColumn(self):
@@ -282,6 +284,7 @@ class SqliteDataSet(DataSet):
     def _loadTable(self, tableName):
         """ Load information from tables PREFIX_Classes, PREFIX_Objects. """
         BASIC_COLUMNS = [Column('id', int, renderType=COL_RENDER_ID), 
+                         Column('enabled', bool ,renderType=COL_RENDER_CHECKBOX),
                          Column('label', str), 
                          Column('comment', str),
                          Column('creation', str)]
