@@ -43,10 +43,10 @@ from pyworkflow.utils.path import moveFile, makePath, makeFilePath, copyFile, cl
 def scipion_logo():
     return """
 
-QQQQQQQQQT!^'::\"\"?$QQQQQQ  S   S   S
+QQQQQQQQQT!^'::""?$QQQQQQ  S   S   S
 QQQQQQQY`          ]4QQQQ  C   C   C
-QQQQQD'              \"$QQ  I   I   I
-QQQQP                 \"4Q  P   P   P
+QQQQQD'              "$QQ  I   I   I
+QQQQP                 "4Q  P   P   P
 QQQP        :.,        -$  I   I   I
 QQD       awQQQQwp      )  O   O   O
 QQ'     qmQQQWQQQQg,   jm  N   N   N
@@ -60,7 +60,7 @@ f    dQ(             -$QQ Data synchronization script
 -   =QQ           jmQQQQQ
 /   -QQ           QQQQQQQ
 f    4Qr    jQk   )WQQQQQ
-[    ]Qm    ]QW    \"QQQQQ
+[    ]Qm    ]QW    "QQQQQ
 h     $Qc   jQQ     ]$QQQ
 Q,  :aQQf qyQQQL    _yQQQ
 QL jmQQQgmQQQQQQmaaaQWQQQ
