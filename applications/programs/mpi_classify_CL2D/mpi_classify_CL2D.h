@@ -245,6 +245,9 @@ public:
     /// Clasify all images
     bool classifyAllImages;
 
+    /// Use ClassicalCriterion at split
+    bool classicalSplit;
+
     /// Maximum shift
     double maxShift;
 
