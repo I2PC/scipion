@@ -417,6 +417,7 @@ class Project(object):
             # Set important properties of the protocol
             name = protocol.getClassName() + protocol.strId()
             protocol.setProject(self)
+            print protocol.strId(), protocol.getProject().getName()
             protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
             protocol.setMapper(self.mapper)

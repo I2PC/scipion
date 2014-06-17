@@ -44,8 +44,6 @@ if __name__ == '__main__':
     prot = project.getProtocol(protId)
     
     
-    outputdir = sys.argv[1]
-    dbpath = sys.argv[2]
     
     inputset = prot.inputMicrographs.get()
     extradir = prot._getExtraPath()

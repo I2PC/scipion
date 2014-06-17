@@ -187,7 +187,7 @@ class XmippViewer(Viewer):
         		micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, micsfn)
            	posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-           	scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), obj.getDbPath(), obj.strId())
+           	scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self._project.getName(), obj.strId())
         	app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
         	args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
         	runJavaIJapp("%dg" % (2), app, args, True)
