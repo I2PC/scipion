@@ -126,6 +126,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             
             buttonspn.add(cmdbutton);
+            if(data.isCTFMd())
+            {
+                JButton recalculatectfbt = getScipionButton("Recalculate CTF", new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                buttonspn.add(recalculatectfbt);
+            }
             pack();
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
@@ -150,7 +161,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
         JButton button = new JButton(text);
         button.addActionListener(listener);
-
+        //button.setBackground(ScipionMessageDialog.firebrick);
         return button;
     }
 

@@ -1083,12 +1083,7 @@ public class GalleryData {
        
        
 	public boolean isCTFMd() {
-		try {
-			return md.containsLabel(MDLabel.MDL_PSD_ENHANCED) && md.containsLabel(MDLabel.MDL_PSD) && md.containsLabel(MDLabel.MDL_CTF_MODEL);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
+		return md.isCTFMd();
 	}
         
         /** Save selected items as a metadata */
@@ -1231,36 +1226,36 @@ public class GalleryData {
         }
         
         public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
-		{
-			try
-			{
-				String ctfModel = getValueString(MDLabel.MDL_CTF_MODEL, getId(row));
-				String displayFilename = getValueString(MDLabel.MDL_PSD_ENHANCED, getId(row));
-				String psdFile = getValueString(MDLabel.MDL_PSD, getId(row));
+        {
+                try
+                {
+                        String ctfModel = getValueString(MDLabel.MDL_CTF_MODEL, getId(row));
+                        String displayFilename = getValueString(MDLabel.MDL_PSD_ENHANCED, getId(row));
+                        String psdFile = getValueString(MDLabel.MDL_PSD, getId(row));
 
-				ImageGeneric img = new ImageGeneric(displayFilename);
-				ImagePlus imp = XmippImageConverter.readToImagePlus(img);
+                        ImageGeneric img = new ImageGeneric(displayFilename);
+                        ImagePlus imp = XmippImageConverter.readToImagePlus(img);
 
-				if (profile)
-					ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
-				else
-				{
-					MetaData mdRow = new MetaData(); 
-					MDRow row2 = new MDRow();
-					md.getRow(row2, getId(row));
-					mdRow.setRow(row2, mdRow.addObject());
-					String sortFn = psdFile.replace(".psd", ".xmd");
-					mdRow.write(sortFn);
-					mdRow.destroy();
-					ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, getFileName(), row, sortFn);
-				}
+                        if (profile)
+                                ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
+                        else
+                        {
+                                MetaData mdRow = new MetaData(); 
+                                MDRow row2 = new MDRow();
+                                md.getRow(row2, getId(row));
+                                mdRow.setRow(row2, mdRow.addObject());
+                                String sortFn = psdFile.replace(".psd", ".xmd");
+                                mdRow.write(sortFn);
+                                mdRow.destroy();
+                                ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, getFileName(), row, sortFn);
+                        }
 
-			}
-			catch (Exception e)
-			{
-				XmippDialog.showError(window, e.getMessage());
-			}
-		}
+                }
+                catch (Exception e)
+                {
+                        XmippDialog.showError(window, e.getMessage());
+                }
+        }
         
     public ArrayList<ClassInfo> getClasses() {
         return classesArray;

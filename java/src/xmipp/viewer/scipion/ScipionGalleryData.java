@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -21,6 +22,7 @@ import xmipp.viewer.models.GalleryData;
  * @author airen
  */
 public class ScipionGalleryData extends GalleryData{
+    private List<Long> ctfids;
 
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
@@ -250,11 +252,6 @@ public class ScipionGalleryData extends GalleryData{
             return mdBlocks.length > 1 && ((ScipionMetaData)md).getSelf().contains("Class");
         }
          
-        public boolean isCTFMd() {
-		
-		return false;//fixme?? provide ctf information maybe
-	}
-        
         public boolean hasMicrographParticles() {
 		return false;//fixme?? cannot open picker from sqlite
 	}
@@ -330,4 +327,18 @@ public class ScipionGalleryData extends GalleryData{
         return ((ScipionMetaData)md).getPrefix();
     }
     
+    
+    public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
+    {
+            if(profile)
+                System.out.println("Not implemented yet");
+            else
+            {
+                long id = ids[row];
+                if(ctfids == null)
+                    ctfids = new ArrayList<Long>();
+                ctfids.add(id);
+                //add id to recalculate list
+            }
+    }
 }

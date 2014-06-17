@@ -553,6 +553,13 @@ public class MetaData {
        }
        
 	
-	
+	public boolean isCTFMd() {
+		try {
+			return containsLabel(MDLabel.MDL_PSD_ENHANCED) && containsLabel(MDLabel.MDL_PSD) && containsLabel(MDLabel.MDL_CTF_MODEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 
 }

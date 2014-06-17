@@ -864,6 +864,10 @@ public class ScipionMetaData extends MetaData{
     
     
       
+    @Override
+    public boolean isCTFMd() {
+        return getSelf().equals("CTFModel");
+    }
        
        
       
