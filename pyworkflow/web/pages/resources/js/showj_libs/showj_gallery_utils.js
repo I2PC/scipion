@@ -71,16 +71,14 @@
 
  /** METHODS ******************************************************************/
 function initRenderFunction(labelToRender){
-	renderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].columnLayoutProperties.renderFunc
-	extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].columnLayoutProperties.extraRenderFunc
-//	console.log(jsonTableLayoutConfiguration.columnsLayout) 
+	renderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].renderFunc
+	extraRenderFunc=jsonTableLayoutConfiguration.columnsLayout[labelToRender].extraRenderFunc
 	
 	if (renderFunc!=""){ 
 		$(".tableImages").each(function(){
 		   	var newSrc = $(this).data("real_src").replace(/(renderFunc=).*?(&)/,'$1' + renderFunc + '$2');
 		   	if (extraRenderFunc!=""){newSrc = newSrc.concat("&"+extraRenderFunc)}
 			$(this).data("real_src", newSrc);
-//			console.log("newSrc",newSrc)
 	   	})
 	}
 }
@@ -225,7 +223,7 @@ function enableDisableImage(element, enableDisable){
 	if ($(element).hasClass("selected")){element_value = 0}
 	else{element_value = 1}
 	
-//		Keep changes in global variable
+	// Keep changes in global variable
 	if (!$("#saveButton").hasClass("buttonGreyHovered")){
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}

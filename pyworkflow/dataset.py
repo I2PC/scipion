@@ -251,9 +251,6 @@ class Column(object):
         self._renderType = renderType
     
 
-RENDER_TYPE_DICT = {
-                    }
-
 class SqliteDataSet(DataSet):
     """ Provide a DataSet implementation based on sqlite file.
     The tables of the dataset will be the object tables in database.

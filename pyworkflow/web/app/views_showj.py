@@ -1,7 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
-# *             Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *             Adrian Quintana (aquintana@cnb.csic.es)
+# *             
 # *                
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -110,8 +111,7 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
             # If there is no image to display and it is initial load, switch to table mode 
             if firstTime:
                 inputParams[MODE] = MODE_TABLE
-                # FIXME: we really need this other call to showj???
-                #showj(request, inputParams, extraParams)
+
             inputParams[LABEL_SELECTED] = ''
     
     table.setLabelToRender(inputParams[LABEL_SELECTED]) 
@@ -121,7 +121,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
     """ Read the first renderizable item and setup some variables.
     For example, if we are in volume mode or not.
     """
-    #Setting the _typeOfColumnToRender
+    # Setting the _typeOfColumnToRender
     label = inputParams[LABEL_SELECTED]
 
     if not label:
@@ -182,8 +182,6 @@ DEFAULT_PARAMS = {
                COLS: None,                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
                ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
                
-               SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
-               
                IMG_ZOOM: '128px',                     # Zoom set by default
                IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
                IMG_APPLY_TRANSFORM: False,       # When 'True' if there is transform matrix, it will be applied
@@ -196,15 +194,17 @@ DEFAULT_PARAMS = {
                
                VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
                VOL_VIEW: xmipp.VIEW_Z_NEG,      # If 3D, axis to slice volume 
-               VOL_TYPE: 'map'}                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
+               VOL_TYPE: 'map',                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
+               SELECTEDITEMS: 0     # List with the id for the selected items in the before mode.
+}
 
 def showj(request):
     """ This method will visualize data objects in table or gallery mode.
     Columns can be customized to be rendered, visible or more...
     This method can be called in two modes:
     GET: the first time the parameters will be parsed from GET request.
-    POST: next call to the method will be done throgh POST, some paramters will
+    POST: next call to the method will be done through POST, some paramters will
          be store also in SESSION
     """
     firstTime = request.method == 'GET'
@@ -215,8 +215,7 @@ def showj(request):
 #    print "INIT SHOWJ: ", datetime.now()-start
     #===========================================================================
     
-    #############
-    # WEB INPUT PARAMETERS
+    ### WEB INPUT PARAMETERS ###
     _imageDimensions = '' 
     _imageVolName = ''
     _stats = None
@@ -231,7 +230,6 @@ def showj(request):
         for key, value in request.GET.iteritems():
             if key in inputParams:
                 inputParams[key] = value
-                print key + " : " +value
             else:
                 extraParams[key] = value   
         inputParams[PATH] = addProjectPrefix(request, inputParams[PATH])
@@ -241,8 +239,7 @@ def showj(request):
         for key, value in request.POST.iteritems():
             if key in inputParams:
                 inputParams[key] = value
-                print key + " : " +value
-        # extraParams will be readed from SESSION
+        # extraParams will be read from SESSION
         
         
     request.session[IMG_ZOOM_DEFAULT] = inputParams[IMG_ZOOM]    
@@ -286,7 +283,7 @@ def showj(request):
 
 def cleanSession(request, filename):
     """ Clean data stored in session for a new visualization. """
-    #Store dataset and labelsToRender in session 
+    # Store dataset and labelsToRender in session 
     if filename in request.session:
         del request.session[filename]
         
@@ -295,7 +292,7 @@ def cleanSession(request, filename):
 #             del request.session[key]
        
 def storeToSession(request, inputParams, dataset, _imageDimensions):
-    #Store dataset and labelsToRender in session 
+    # Store dataset and labelsToRender in session 
     datasetDict = {}
     datasetDict[DATASET] = dataset
     datasetDict[LABEL_SELECTED] = inputParams[LABEL_SELECTED]
@@ -304,8 +301,6 @@ def storeToSession(request, inputParams, dataset, _imageDimensions):
     
     request.session[inputParams[PATH]] = datasetDict
     
-#    print "dataset dict: ", datasetDict
-
 
 def createContextShowj(request, inputParams, dataset, table, paramStats, volPath=None):
     showjForm = ShowjForm(dataset,
@@ -324,17 +319,14 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[MODE] + '_utils')})
     
     # IMPROVE TO KEEP THE SELECTED ITEMS
-    print "TYPE SELECTED ITEMS: ",type(inputParams[SELECTEDITEMS])
     context.update({'listSelectedItems': inputParams[SELECTEDITEMS]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[MODE], '.html')
-#    return_page = 'showj/showj_base.html'
-        
     return context, return_page
     
 
 def createContext(dataset, table, columnsConfig, request, showjForm, inputParams):
-    #Create context to be send
+    # Create context to be send
     
     context = {
             IMG_DIMS: request.session[inputParams[PATH]].get(IMG_DIMS, 0),
@@ -376,9 +368,10 @@ def getExtraParameters(extraParams, table):
                 
     return defaultColumnsLayoutProperties
 
-###################################################################
-########################### BEGIN SAVE & LOAD #####################    
-###################################################################
+#===============================================================================
+# BEGIN SAVE & LOAD
+#===============================================================================
+
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
     """ Create a table from a metadata. """
@@ -417,9 +410,9 @@ def save_showj_table(request):
         dataset.writeTable(blockComboBox, table)
         
         return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-###################################################################
-########################### END SAVE & LOAD #######################    
-###################################################################    
+#===========================================================================
+# END SAVE & LOAD
+#===========================================================================
 
 
 def testingSSH(request):
@@ -449,10 +442,6 @@ def create_context_volume(request, inputParams, volPath, param_stats):
         
 
 def create_context_astex(request, typeVolume, volPath):
-#   volPath='/home/adrian/Scipion/tests/input/showj/emd_1042.map'        
-#   fileName, fileExtension = os.path.splitext(_imageVolName)
-            
-#    linkName = 'test_link_' + request.session._session_key + '.' + inputParams[VOL_TYPE]
 
     linkName = 'test_link_' + request.session._session_key + '.' + typeVolume
     volLinkPath = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', linkName)
@@ -491,9 +480,9 @@ def updateSessionTable(request):
     option = request.GET.get('option', None)
     
     if type == "renderable":
-        request.session["columnsConfig"].columnsLayout[label].renderable = option
+        request.session[COLS_CONFIG].configColumn(label, renderable=option)
     elif type == "editable":    
-        request.session["columnsConfig"].columnsLayout[label].editable = option
+        request.session[COLS_CONFIG].configColumn(label, editable=option)
         
     return HttpResponse(mimetype='application/javascript')
 

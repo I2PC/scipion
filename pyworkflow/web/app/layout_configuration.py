@@ -29,9 +29,4 @@ import json
 
 class ColumnPropertiesEncoder(json.JSONEncoder):
     def default(self, columnProperties):
-        
-        return {"typeOfColumn":columnProperties.getColumnType(),
-                "columnLayoutProperties":columnProperties.getValues()
-                }
-        
-    
+        return columnProperties.getValues()

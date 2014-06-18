@@ -179,7 +179,9 @@ class ColumnProperties():
                 "allowSetRenderable":self.allowSetRenderable,
                 "renderFunc":self.renderFunc,
                 "extraRenderFunc":self.extraRenderFunc,
-                'columnType': self.columnType
+                'columnType': self.columnType,
+                'columnName': self.getName(),
+                'columnLabel': self.getLabel()
                 }
         
 def getArchitecture():

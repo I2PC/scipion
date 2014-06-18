@@ -1,4 +1,4 @@
- /*****************************************************************************
+/*****************************************************************************
  *
  * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
  * 			   
@@ -112,470 +112,557 @@
  *       
  ******************************************************************************/
 
- /** METHODS ******************************************************************/
+var COL_RENDER_NONE = 0
+var COL_RENDER_ID = 1
+var COL_RENDER_TEXT = 2
+var COL_RENDER_IMAGE = 3
+var COL_RENDER_CHECKBOX = 4
 
-function renderElements(nRow, aData){
-	 columnId = 0
-	 invisibleColumns = 0 
-	 for (var i in jsonTableLayoutConfiguration.columnsLayout){ 
-		 var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
-		 
-		 if (columnLayoutConfiguration.columnLayoutProperties.visible){
-	   		 if (typeof oTable!= 'undefined'){
-	   			 columnId=oTable.fnGetColumnIndex(i)
-	   			 columnIdReal=oTable.fnColumnIndexToVisible(columnId)
-	   		 }
-	   		 else{
-	   			 columnIdReal=columnId-invisibleColumns
-	   		 }
-	   		 
-	   		if (columnIdReal!=null){ 
-	   			if (columnLayoutConfiguration.typeOfColumn == 'checkbox'){
-		   			 checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'+i+'___'+aData[0]+'\" '
-		    			 if (aData[columnId] == 1){checkbox_element += 'checked>'}
-		    			 else{checkbox_element += '>'}
-		   			 $('td:eq('+columnIdReal+')', nRow).html(checkbox_element);
-		   		}
-	   			else if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-		   			$('td:eq('+columnIdReal+')', nRow).html(
-		   					'<span style="display:none">'+aData[columnId]+'</span>'+
-		   					'<img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
-		   		 
-	   			}
-	   			else if (columnLayoutConfiguration.typeOfColumn == 'image'){
-			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>'+
-			   					'<img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" data-real_src=\"/render_column/?renderFunc='+columnLayoutConfiguration.columnLayoutProperties.renderFunc+'&'+columnLayoutConfiguration.columnLayoutProperties.extraRenderFunc+'&image='+aData[columnId]+'\"/>' );
-//			   			 $('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span>' ); 
-		   		 }
-	   		}	
-		 }
-		 else{
-			 invisibleColumns++;
-		 }
-		 columnId++;
-	 }
-}
+/** METHODS ***************************************************************** */
 
-function initializeColumnHeader(){
-	headerRow=$("#data_table thead tr")
-	var cols = oTable.fnSettings().aoColumns;
-    for ( var x=0, xLen=cols.length ; x<xLen ; x++ )
-    {
-        var cellIndex = oTable.fnColumnIndexToVisible(x)
-        if (cellIndex !=null){
-        	$('th:eq('+cellIndex+')',headerRow).find("div").append(getHeaderWithIcon(cols[x].sTitle,jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle].columnLayoutProperties))
-        	$('th:eq('+cellIndex+')',headerRow).attr("id",cols[x].sTitle+"___column_header")
-        } 
-    }
-	
-} 
+function renderElements(nRow, aData) {
+	var columnId = 0
+	var invisibleColumns = 0
 
-function getHeaderWithIcon(text, columnLayoutProperties){
-	var iconElements = '' 
-//	 NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
-//	var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
-// 	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
-//		iconElements+="<span class=\"css_right\"><img src=\"/resources/showj/delete.png\" class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\" ></span>"
-//	} 
-	
-	if (columnLayoutProperties.allowSetEditable){
-		iconElements+="<span class=\"css_right fa-stack\"><a id=\""+ text+"_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
-		iconElements+="\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
-		if (columnLayoutProperties.renderable){
-			iconElements+="fa-times"
+	for ( var i in jsonTableLayoutConfiguration.columnsLayout) {
+		var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
+
+		if (columnLayoutConfiguration.visible) {
+			if (typeof oTable != 'undefined') {
+				columnId = oTable.fnGetColumnIndex(i)
+				var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
+			} else {
+				var columnIdReal = columnId - invisibleColumns
+			}
+
+			if (columnIdReal != null) {
+
+				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
+					var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
+							+ i + '___' + aData[0] + '\" '
+					
+					var data = aData[columnId]
+							
+					if (data == "True" || data == 1 || data == true) {
+						checkbox_element += 'checked>'
+					} else {
+						checkbox_element += '>'
+					}
+					$('td:eq(' + columnIdReal + ')', nRow).html(
+							checkbox_element);
+				} else if (columnLayoutConfiguration.renderable) {
+					$('td:eq(' + columnIdReal + ')', nRow).html(
+							'<span style="display:none">' + aData[columnId]
+									+ '</span>'
+									+ '<img class=\"tableImages\" id=\"' + i
+									+ '___' + aData[0]
+									+ '\" src=\"/render_column/?renderFunc='
+									+ columnLayoutConfiguration.renderFunc
+									+ '&'
+									+ columnLayoutConfiguration.extraRenderFunc
+									+ '&image=' + aData[columnId] + '\"/>');
+
+				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+					
+					$('td:eq(' + columnIdReal + ')', nRow)
+							.html(
+									'<span>'
+											+ aData[columnId]
+											+ '</span>'
+											+ '<img style="display:none" class=\"tableImages\" id=\"'
+											+ i
+											+ '___'
+											+ aData[0]
+											+ '\" data-real_src=\"/render_column/?renderFunc='
+											+ columnLayoutConfiguration.renderFunc
+											+ '&'
+											+ columnLayoutConfiguration.extraRenderFunc
+											+ '&image=' + aData[columnId]
+											+ '\"/>');
+					// $('td:eq('+columnIdReal+')', nRow).html(
+					// '<span>'+aData[columnId]+'</span>' );
+				}
+			}
+		} else {
+			invisibleColumns++;
 		}
-		iconElements+="\"></i></a></span>"
-	}
-	
-	if (columnLayoutProperties.allowSetRenderable){
-		iconElements+="<span class=\"css_right\"><a id=\""+ text+"_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
-		if (columnLayoutProperties.renderable){
-			iconElements+="fa-eye"
-		}else{
-			iconElements+="fa-eye-slash"
-		}
-		iconElements+="\"></i></a></span>"
-	}
-	return iconElements; 
-}
-
-function getColumnsDefinition(){
-	jsonColumnsLayout=jsonTableLayoutConfiguration.columnsLayout
-	columnId=0;
-	var dataForTable = []
-	for (var i in jsonColumnsLayout){ 
-		var dataRowForTable = []
- 		var columnLayoutConfiguration = jsonColumnsLayout[i]
- 		if(!columnLayoutConfiguration.columnLayoutProperties.visible){
- 			//To show the column id :true
- 			//To hide the column id :false
-			dataRowForTable["bVisible"] = true
-		} 
-		dataRowForTable["sTitle"]= i
-		dataRowForTable["aTargets"]=[columnId]
-		dataForTable.push(dataRowForTable)
 		columnId++;
 	}
+}
+
+function initializeColumnHeader() {
+	var headerRow = $("#data_table thead tr")
+	var cols = oTable.fnSettings().aoColumns;
 	
+	for(var x = 0, xLen = cols.length; x < xLen; x++) {
+		var cellIndex = oTable.fnColumnIndexToVisible(x)
+		if (cellIndex != null) {
+			var elm = $('th:eq(' + cellIndex + ')', headerRow).find("div");
+			var text = cols[x].sTitle
+			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle]
+			
+			elm.append(getHeaderWithIcon(text,properties)) 
+			
+			$('th:eq(' + cellIndex + ')', headerRow).attr("id",
+					cols[x].sTitle + "___column_header")
+		}
+	}
+
+}
+
+function getHeaderWithIcon(text, columnLayoutProperties) {
+	var iconElements = ''
+	// NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
+	// var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
+	// if (columnLayoutProperties.visible &&
+	// columnLayoutProperties.allowSetVisible){
+	// iconElements+="<span class=\"css_right\"><img
+	// src=\"/resources/showj/delete.png\" class=\"arrowImage\"
+	// onclick=\"enableDisableColumn(event,this)\" ></span>"
+	// }
+
+	if (columnLayoutProperties.allowSetEditable) {
+		iconElements += "<span class=\"css_right fa-stack\"><a id=\""
+				+ text
+				+ "_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
+		iconElements += "\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
+		if (columnLayoutProperties.renderable) {
+			iconElements += "fa-times"
+		}
+		iconElements += "\"></i></a></span>"
+	}
+
+	if (columnLayoutProperties.allowSetRenderable) {
+		iconElements += "<span class=\"css_right\"><a id=\""
+				+ text
+				+ "_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
+		if (columnLayoutProperties.renderable) {
+			iconElements += "fa-eye"
+		} else {
+			iconElements += "fa-eye-slash"
+		}
+		iconElements += "\"></i></a></span>"
+	}
+	return iconElements;
+}
+
+function getColumnsDefinition() {
+	var jsonColumnsLayout = jsonTableLayoutConfiguration.columnsLayout;
+	var columnId = 0;
+	var dataForTable = [];
+	
+	for ( var i in jsonColumnsLayout) {
+		var dataRowForTable = [];
+		var columnLayoutConfiguration = jsonColumnsLayout[i];
+		
+		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
+		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
+		dataRowForTable["aTargets"] = [columnId];
+		dataForTable.push(dataRowForTable);
+		
+		columnId++;
+	}
+
 	return dataForTable;
 }
- 
-function enableDisableColumn(event, element){
-	//From the image element we get the column header index
-	var thCell= $(element).closest('th')
+
+function enableDisableColumn(event, element) {
+	// From the image element we get the column header index
+	var thCell = $(element).closest('th')
 	var iCol = $('th').index(thCell)
 	var iCol2 = oTable.fnVisibleToColumnIndex(iCol)
-	
+
 	var bVis = oTable.fnSettings().aoColumns[iCol2].bVisible;
-	
-	bvis_var = bVis ? false : true ;
-			
-	oTable.fnSetColumnVis(iCol2,  bvis_var);
 
-//	Update table layout configuration model
+	bvis_var = bVis ? false : true;
+
+	oTable.fnSetColumnVis(iCol2, bvis_var);
+
+	// Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.visible=!bVis
-	
-	//Update the session variable
-//	var status = "disable";
-//	if (bvis_var){
-//		status = "enable";
-//	}
-//	updateSession("visible", status)
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].visible = !bVis
 
-	//This will avoid column sorting
-	event.stopPropagation() 
+	// Update the session variable
+	// var status = "disable";
+	// if (bvis_var){
+	// status = "enable";
+	// }
+	// updateSession("visible", status)
+
+	// This will avoid column sorting
+	event.stopPropagation()
 
 }
- 
-function enableDisableRenderColumn(event, element){
-	//Switch button from on to off or viceversa
-	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
-	
-	//From the image element we get the column header index
-	var thCell= $(element).closest('th')
-	var iCol = $('th').index(thCell)
-	
-	//We enable/disable render event
-	var nTrs = oTable.fnGetNodes();
-	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
-		if ($(element).find("i").hasClass("fa-eye") && $(this).find("img").attr('src')== undefined){
-			/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
-			setImageSize(false)
-			initializeImageLoad(false)
-		}
-		$(this).find("img").toggle()
-		$(this).find("span").toggle()
-	})
 
-	//Update table layout configuration model
+function enableDisableRenderColumn(event, element) {
+	// Switch button from on to off or viceversa
+	$(element).find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
+
+	// From the image element we get the column header index
+	var thCell = $(element).closest('th')
+	var iCol = $('th').index(thCell)
+
+	// We enable/disable render event
+	var nTrs = oTable.fnGetNodes();
+	$('td:nth-child(' + (iCol + 1) + ')', nTrs).each(
+			function() {
+				if ($(element).find("i").hasClass("fa-eye")
+						&& $(this).find("img").attr('src') == undefined) {
+					/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
+					setImageSize(false)
+					initializeImageLoad(false)
+				}
+				$(this).find("img").toggle()
+				$(this).find("span").toggle()
+			})
+
+	// Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.renderable=$(element).find("i").hasClass("fa-eye")
-	
-	//Update the session variable
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].renderable = $(element).find("i").hasClass("fa-eye")
+
+	// Update the session variable
 	var status = "enable";
-	if ($(element).find("i").attr("class")=="fa fa-eye-slash"){
+	if ($(element).find("i").attr("class") == "fa fa-eye-slash") {
 		status = "disable";
 	}
 	updateSession(labelColumn, "renderable", status)
 
-	//This will avoid column sorting
-	event.stopPropagation() 
-	
+	// This will avoid column sorting
+	event.stopPropagation()
+
 }
- 
-function enableDisableEditableColumn(event, element){
+
+function enableDisableEditableColumn(event, element) {
 	$(element).find("#banElement").toggleClass("fa-times")
-	
-	//From the image element we get the column header index
-	var thCell= $(element).closest('th')
+
+	// From the image element we get the column header index
+	var thCell = $(element).closest('th')
 	var iCol = $('th').index(thCell)
-	
-	//We enable/disable render event
+
+	// We enable/disable render event
 	var nTrs = oTable.fnGetNodes();
-	if (!$(element).find("#banElement").hasClass("fa-times")){
-		$('td:nth-child('+(iCol+1)+')', nTrs).addClass('editable')
-		setElementsEditable('td:nth-child('+(iCol+1)+')')
+	if (!$(element).find("#banElement").hasClass("fa-times")) {
+		$('td:nth-child(' + (iCol + 1) + ')', nTrs).addClass('editable')
+		setElementsEditable('td:nth-child(' + (iCol + 1) + ')')
 		var status = "enable";
-	}
-	else{
-		$('td:nth-child('+(iCol+1)+')', nTrs).removeClass('editable')
-		$('td:nth-child('+(iCol+1)+')', nTrs).unbind('click');
+	} else {
+		$('td:nth-child(' + (iCol + 1) + ')', nTrs).removeClass('editable')
+		$('td:nth-child(' + (iCol + 1) + ')', nTrs).unbind('click');
 		var status = "disable";
 	}
-	$('td:nth-child('+(iCol+1)+')', nTrs).each(function(){
+	$('td:nth-child(' + (iCol + 1) + ')', nTrs).each(function() {
 		$(this).toggleClass("editable")
 	})
-	
-	//Update table layout configuration model
+
+	// Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].columnLayoutProperties.editable=!$(element).find("#banElement").hasClass("fa-times")
-	
-	//Update the session variable
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].editable = !$(
+			element).find("#banElement").hasClass("fa-times")
+
+	// Update the session variable
 	updateSession(labelColumn, "editable", status)
 
-	//This will avoid column sorting
+	// This will avoid column sorting
 	event.stopPropagation()
-	
+
 }
 
-function setElementsEditable(elements){
-	if (elements==null){
+function setElementsEditable(elements) {
+	if (elements == null) {
 		var nTrs = oTable.fnGetNodes();
-		for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
-			columnId=oTable.fnGetColumnIndex(label)
-   			columnIdReal=oTable.fnColumnIndexToVisible(columnId)
-   			if (columnIdReal!=null){
-				if (jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties.editable){
-	   				setElementsEditable('td:nth-child('+(columnIdReal+1)+')')
+		for ( var label in jsonTableLayoutConfiguration.columnsLayout) {
+			columnId = oTable.fnGetColumnIndex(label)
+			columnIdReal = oTable.fnColumnIndexToVisible(columnId)
+			if (columnIdReal != null) {
+				if (jsonTableLayoutConfiguration.columnsLayout[label].editable) {
+					setElementsEditable('td:nth-child(' + (columnIdReal + 1)
+							+ ')')
+				} else {
+					$('td:nth-child(' + (columnIdReal + 1) + ')', nTrs).unbind(
+							'click');
 				}
-				else{
-	   				$('td:nth-child('+(columnIdReal+1)+')', nTrs).unbind('click');
-	   			}
-   			}	
+			}
 		}
-	}
-	else{
-		$(elements, oTable.fnGetNodes()).editable(
-			function(value, settings){ 
-//				Get position and real column
-				var aPos = oTable.fnGetPosition( this )
-				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
-				
-//				Get label from column
-				var label = oTable.fnSettings().aoColumns[columnIdReal].sTitle
-				
-//				NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS
-				var aoData = oTable.fnSettings().aoData;
-				var nTd = aoData[ aPos[0] ]._anHidden[ oTable.fnGetColumnIndex("id") ];
-				var rowId =$(nTd).text()
-				
-//				Keep changes in global variable 
-				if (!$("#saveButton").hasClass("buttonGreyHovered")){
-					$("#saveButton").toggleClass("buttonGreyHovered")
-				}
-					
-				changes[label+"___"+rowId]=value
-			    return(value);
-			  },
-			{
-			 "callback": function( sValue, y ) {
-//				Update datatable model
-				var aPos = oTable.fnGetPosition( this );
-				columnIdReal=oTable.fnVisibleToColumnIndex(aPos[1])
-				oTable.fnUpdate( sValue, aPos[0], columnIdReal );
+	} else {
+		$(elements, oTable.fnGetNodes()).editable(function(value, settings) {
+			// Get position and real column
+			var aPos = oTable.fnGetPosition(this)
+			columnIdReal = oTable.fnVisibleToColumnIndex(aPos[1])
+
+			// Get label from column
+			var label = oTable.fnSettings().aoColumns[columnIdReal].sTitle
+
+			// NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS
+			var aoData = oTable.fnSettings().aoData;
+			var nTd = aoData[aPos[0]]._anHidden[oTable.fnGetColumnIndex("id")];
+			var rowId = $(nTd).text()
+
+			// Keep changes in global variable
+			if (!$("#saveButton").hasClass("buttonGreyHovered")) {
+				$("#saveButton").toggleClass("buttonGreyHovered")
+			}
+
+			changes[label + "___" + rowId] = value
+			return (value);
+		}, {
+			"callback" : function(sValue, y) {
+				// Update datatable model
+				var aPos = oTable.fnGetPosition(this);
+				columnIdReal = oTable.fnVisibleToColumnIndex(aPos[1])
+				oTable.fnUpdate(sValue, aPos[0], columnIdReal);
 			},
-			"height": "14px"
-		} );
-	}	
+			"height" : "14px"
+		});
+	}
 }
 
-function valueChange(element){
+function valueChange(element) {
 	element_value = ""
-	if ($(element).is("input:checkbox")){element_value = $(element).is(":checked")}
-	else{element_value = $(element).val()}
-//	Keep changes in global variable
-	changes[$(element).attr("id")]=element_value
+	if ($(element).is("input:checkbox")) {
+		element_value = $(element).is(":checked")
+	} else {
+		element_value = $(element).val()
+	}
+	// Keep changes in global variable
+	changes[$(element).attr("id")] = element_value
 }
 
-function initializeTableWidth(){
+function initializeTableWidth() {
 	var tableWidth = $("section").width()
-	if ($("#table_container").width()>tableWidth){
+	if ($("#table_container").width() > tableWidth) {
 		$("#table_container").width(tableWidth);
-	}	
+	}
 }
 
-function initializeGoToEvent(){
-	$('#id_goto').click(function(){
-		updateRowSelection();	
+function initializeGoToEvent() {
+	$('#id_goto').click(function() {
+		updateRowSelection();
 	});
-	
-	$('#id_goto').change(function(){
+
+	$('#id_goto').change(function() {
 		updateRowSelection();
 	});
 }
-function updateRowSelection(){
-	oTable.fnDisplayRowWithIndex($("#id_goto").val()-1)
+function updateRowSelection() {
+	oTable.fnDisplayRowWithIndex($("#id_goto").val() - 1)
 	var nodes = oTable.fnGetNodes();
-	selectedElement=nodes[$("#id_goto").val()-1]
+	selectedElement = nodes[$("#id_goto").val() - 1]
 	selectedElement.click();
-	
+
 	$('html, body').animate({
-        scrollTop: $(selectedElement).offset().top
-    }, 2000);
+		scrollTop : $(selectedElement).offset().top
+	}, 2000);
 }
 
 var lastChecked;
-function initializeSelectionRowEvent(){
-	$('#data_table').on("click","tr", function(event) {
+function initializeSelectionRowEvent() {
+	$('#data_table').on(
+			"click",
+			"tr",
+			function(event) {
 
-		var start = $('#data_table tbody tr').index(this);
-		if (start>=0){
-		    if(!lastChecked) {
-		        lastChecked = this;
-		    }
-		     
-		    if(event.shiftKey) {
-		        var end = $('#data_table tbody tr').index(lastChecked);
-		 
-		        for(i=Math.min(start,end);i<=Math.max(start,end);i++) {
-		            if (!$('#data_table tbody tr').eq(i).hasClass('row_selected')){
-		                $('#data_table tbody tr').eq(i).addClass("row_selected");
-		            }
-		        }
-		         
-		        // Clear browser text selection mask
-		        if (window.getSelection) {
-		            if (window.getSelection().empty) {  // Chrome
-		                window.getSelection().empty();
-		            } else if (window.getSelection().removeAllRanges) {  // Firefox
-		                window.getSelection().removeAllRanges();
-		            }
-		        } else if (document.selection) {  // IE?
-		            document.selection.empty();
-		        }
-		    } else {
-//		    	$(lastChecked).removeClass('row_selected');
-		    	if (!event.metaKey && !event.ctrlKey){
-		    		$('tr').each(function (){
-						$(this).removeClass('row_selected');
-					});
-			    }
-	
-		        $(this).toggleClass('row_selected');  
-		    }
-		     
-		    lastChecked = this;
-		    
-		    $("#id_goto").val(oTable.fnSettings()._iDisplayStart + $(this).index()+1)
-		}	    
-	});
+				var start = $('#data_table tbody tr').index(this);
+				if (start >= 0) {
+					if (!lastChecked) {
+						lastChecked = this;
+					}
+
+					if (event.shiftKey) {
+						var end = $('#data_table tbody tr').index(lastChecked);
+
+						for (i = Math.min(start, end); i <= Math
+								.max(start, end); i++) {
+							if (!$('#data_table tbody tr').eq(i).hasClass(
+									'row_selected')) {
+								$('#data_table tbody tr').eq(i).addClass(
+										"row_selected");
+							}
+						}
+
+						// Clear browser text selection mask
+						if (window.getSelection) {
+							if (window.getSelection().empty) { // Chrome
+								window.getSelection().empty();
+							} else if (window.getSelection().removeAllRanges) { // Firefox
+								window.getSelection().removeAllRanges();
+							}
+						} else if (document.selection) { // IE?
+							document.selection.empty();
+						}
+					} else {
+						// $(lastChecked).removeClass('row_selected');
+						if (!event.metaKey && !event.ctrlKey) {
+							$('tr').each(function() {
+								$(this).removeClass('row_selected');
+							});
+						}
+
+						$(this).toggleClass('row_selected');
+					}
+
+					lastChecked = this;
+
+					$("#id_goto").val(
+							oTable.fnSettings()._iDisplayStart
+									+ $(this).index() + 1)
+				}
+			});
 }
 
-function initializeMultipleSelectionTool(){
-	//Hover on multiple selection tool	
+function initializeMultipleSelectionTool() {
+	// Hover on multiple selection tool
 	hiConfig = {
-        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
-        interval: 300, // number = milliseconds for onMouseOver polling interval
-        timeout: 800, // number = milliseconds delay before onMouseOut
-        over: function(e) {
-        	if ($(this).hasClass("row_selected")){
-    			$("#multipleSelectionTool").css('left',e.pageX)
-    			$("#multipleSelectionTool").css('top',e.pageY)
-    			
-    			var iRow = $(this).index()
-    			$("#multipleSelectionTool").data('row_id', iRow)
-    			
-    			$("#multipleSelectionTool").fadeIn('slow')
-    		}
-        }, // function = onMouseOver callback (REQUIRED)
-        out: function() { 
-        	if ($(this).hasClass("row_selected")){
-    			$("#multipleSelectionTool").fadeOut('slow')
-    		}
-        } // function = onMouseOut callback (REQUIRED)
-    }	
+		sensitivity : 3, // number = sensitivity threshold (must be 1 or
+							// higher)
+		interval : 300, // number = milliseconds for onMouseOver polling
+						// interval
+		timeout : 800, // number = milliseconds delay before onMouseOut
+		over : function(e) {
+			if ($(this).hasClass("row_selected")) {
+				$("#multipleSelectionTool").css('left', e.pageX)
+				$("#multipleSelectionTool").css('top', e.pageY)
+
+				var iRow = $(this).index()
+				$("#multipleSelectionTool").data('row_id', iRow)
+
+				$("#multipleSelectionTool").fadeIn('slow')
+			}
+		}, // function = onMouseOver callback (REQUIRED)
+		out : function() {
+			if ($(this).hasClass("row_selected")) {
+				$("#multipleSelectionTool").fadeOut('slow')
+			}
+		} // function = onMouseOut callback (REQUIRED)
+	}
 	$("tr").hoverIntent(hiConfig)
-	
+
 }
 
-function showTableConfig(){
-//	Display Div 
+function showTableConfig() {
+	// Display Div
 	$("#configurationContainer").slideDown('slow')
 
-//	Initialize checkbox in table confirguration container (checked and disable attributes)
-	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
-		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties
-		
-//		VISIBLE 
-		if (columnLayoutProperties.visible){$("#"+label+"_visible").prop('checked', true)}
-		else{$("#"+label+"_visible").prop('checked', false)}
-		if (columnLayoutProperties.allowSetVisible){$("#"+label+"_visible").removeProp('disabled')}
-		else{$("#"+label+"_visible").prop('disabled', 'disabled')}
-		
-//		RENDERABLE
-		if (columnLayoutProperties.renderable){$("#"+label+"_renderable").prop('checked', true)}
-		else{$("#"+label+"_renderable").prop('checked', false)}
-		if (columnLayoutProperties.allowSetRenderable){$("#"+label+"_renderable").removeProp('disabled')}
-		else{$("#"+label+"_renderable").prop('disabled', 'disabled')}
-		
-//		EDITABLE
-		if (columnLayoutProperties.editable){$("#"+label+"_editable").prop('checked', true)}
-		else{$("#"+label+"_editable").prop('checked', false)}
-		if (columnLayoutProperties.allowSetEditable){$("#"+label+"_editable").removeProp('disabled')}
-		else{$("#"+label+"_editable").prop('disabled', 'disabled')}
-	}	
- 
-}	
+	// Initialize checkbox in table confirguration container (checked and
+	// disable attributes)
+	for ( var label in jsonTableLayoutConfiguration.columnsLayout) {
+		var columnLayoutProperties = jsonTableLayoutConfiguration.columnsLayout[label]
 
-function saveTableConfiguration(){
-	for (var label in jsonTableLayoutConfiguration.columnsLayout){ 
-		columnLayoutProperties=jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties
-		columnLayoutProperties.visible = $("#"+label+"_visible").prop('checked')
-		
-		//From the image element we get the column header index
+		// VISIBLE
+		if (columnLayoutProperties.visible) {
+			$("#" + label + "_visible").prop('checked', true)
+		} else {
+			$("#" + label + "_visible").prop('checked', false)
+		}
+		if (columnLayoutProperties.allowSetVisible) {
+			$("#" + label + "_visible").removeProp('disabled')
+		} else {
+			$("#" + label + "_visible").prop('disabled', 'disabled')
+		}
+
+		// RENDERABLE
+		if (columnLayoutProperties.renderable) {
+			$("#" + label + "_renderable").prop('checked', true)
+		} else {
+			$("#" + label + "_renderable").prop('checked', false)
+		}
+		if (columnLayoutProperties.allowSetRenderable) {
+			$("#" + label + "_renderable").removeProp('disabled')
+		} else {
+			$("#" + label + "_renderable").prop('disabled', 'disabled')
+		}
+
+		// EDITABLE
+		if (columnLayoutProperties.editable) {
+			$("#" + label + "_editable").prop('checked', true)
+		} else {
+			$("#" + label + "_editable").prop('checked', false)
+		}
+		if (columnLayoutProperties.allowSetEditable) {
+			$("#" + label + "_editable").removeProp('disabled')
+		} else {
+			$("#" + label + "_editable").prop('disabled', 'disabled')
+		}
+	}
+
+}
+
+function saveTableConfiguration() {
+	for ( var label in jsonTableLayoutConfiguration.columnsLayout) {
+		columnLayoutProperties = jsonTableLayoutConfiguration.columnsLayout[label]
+		columnLayoutProperties.visible = $("#" + label + "_visible").prop(
+				'checked')
+
+		// From the image element we get the column header index
 		columnId = oTable.fnGetColumnIndex(label)
 		oTable.fnSetColumnVis(columnId, columnLayoutProperties.visible);
-		
+
 		var newValue = ""
-		
-		newValue = $("#"+label+"_renderable").prop('checked')
-		if (newValue != columnLayoutProperties.renderable){
+
+		newValue = $("#" + label + "_renderable").prop('checked')
+		if (newValue != columnLayoutProperties.renderable) {
 			columnLayoutProperties.renderable = newValue
-			$("#"+label+"_renderable_icon").find("i").toggleClass("fa-eye").toggleClass("fa-eye-slash")
+			$("#" + label + "_renderable_icon").find("i").toggleClass("fa-eye")
+					.toggleClass("fa-eye-slash")
 		}
-		
-		newValue = $("#"+label+"_editable").prop('checked')
-		if (newValue != columnLayoutProperties.editable){
+
+		newValue = $("#" + label + "_editable").prop('checked')
+		if (newValue != columnLayoutProperties.editable) {
 			columnLayoutProperties.editable = newValue
-			$("#"+label+"_editable_icon").find("#banElement").toggleClass("fa-times")
+			$("#" + label + "_editable_icon").find("#banElement").toggleClass(
+					"fa-times")
 		}
-		
+
 	}
-	
+
 	oTable.fnDraw();
-	
+
 	$("#configurationContainer").hide()
 }
 
-function multipleEnableDisableImage(mode){
-	columnId=oTable.fnGetColumnIndex("enabled")
-	columnIdReal=oTable.fnColumnIndexToVisible(columnId)
-	
-	booleanValue=(mode=='enable')
-	integerValue= (booleanValue)? 1 : 0
-	
-	$(".row_selected").each(function(){
-		checkbox_element=$('td:eq('+columnIdReal+')',this).find(":checkbox")
-		checkbox_element.prop('checked', booleanValue);
-		changes[checkbox_element.attr("id")]=integerValue
-	})
+function multipleEnableDisableImage(mode) {
+	var columnId = oTable.fnGetColumnIndex("enabled")
+	var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
 
-	if (!$("#saveButton").hasClass("buttonGreyHovered")){
+	var booleanValue = (mode == 'enable')
+	var integerValue = (booleanValue) ? 1 : 0
+
+	$(".row_selected").each(
+			function() {
+				var checkbox_element = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+				checkbox_element.prop('checked', booleanValue);
+				changes[checkbox_element.attr("id")] = integerValue
+			})
+
+	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}
-//	console.log(changes)
 }
 
-function multipleSelect(mode){
-	row_id=parseInt($("#multipleSelectionTool").data('row_id'));
-	
-	$("#data_table tbody tr").each(function(){
-		if (mode=='all' || (mode=='from' && $(this).index()>row_id) || (mode=='to' && $(this).index()<row_id) ){
-			$(this).addClass("row_selected")
-		}	
-	})
+function multipleSelect(mode) {
+	var row_id = parseInt($("#multipleSelectionTool").data('row_id'));
+
+	$("#data_table tbody tr").each(
+			function() {
+				if (mode == 'all'
+						|| (mode == 'from' && $(this).index() > row_id)
+						|| (mode == 'to' && $(this).index() < row_id)) {
+					$(this).addClass("row_selected")
+				}
+			})
 }
 
-function updateSession(label, type, status){	
+function updateSession(label, type, status) {
 	$.ajax({
-		type : "GET", 
-		url : "/update_session_table/?label="+label+"&type="+type+"&option=" + status,
-		success: function(){
-//			alert(jsonTableLayoutConfiguration.columnsLayout[label].columnLayoutProperties["renderable"]);
+		type : "GET",
+		url : "/update_session_table/?label=" + label + "&type=" + type
+				+ "&option=" + status,
+		success : function() {
+//			 alert(jsonTableLayoutConfiguration.columnsLayout[label].renderable);
+		},
+		error: function(){
+			alert("error")
 		}
-	
+		
+
 	});
 }
-
-
