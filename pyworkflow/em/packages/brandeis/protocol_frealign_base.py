@@ -588,7 +588,7 @@ class ProtFrealignBase(EMProtocol):
 #             self._enterDir(iterDir)
         
         program = "block%03d.sh" % block
-        os.chmod(program, 0775)
+        os.chmod(join(iterDir, program), 0775)
         self.runJob(program, "", cwd=iterDir)
     
     def refineParticlesStep(self, iter, block, numberOfBlocks):
@@ -994,12 +994,12 @@ eot
     def _mergeAllParFiles(self, iter, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
         
-        file2 = self._getFile('output_par', iter=iter)
+        file2 = self._getFileName('output_par', iter=iter)
         if numberOfBlocks != 1:
             f2 = open(file2, 'w+')
             
             for block in range(1, numberOfBlocks + 1):
-                file1 = self._getFile('output_par_block', block=block, iter=iter)
+                file1 = self._getFileName('output_par_block', block=block, iter=iter)
                 f1 = open(file1)
                 
 #                 if block == 1:
