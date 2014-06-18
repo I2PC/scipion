@@ -54,8 +54,8 @@ reconstructions.
         vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
         vol.setFileName(volFn)
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(imgSet, outputVolume)
-        self._defineSourceRelation(self.input3DReference.get(), outputVolume)
+        self._defineSourceRelation(self.inputParticles.get(), vol)
+        self._defineSourceRelation(self.input3DReference.get(), vol)
 
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
