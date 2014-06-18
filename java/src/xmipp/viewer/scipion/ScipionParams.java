@@ -21,7 +21,7 @@ public class ScipionParams extends Params {
     public String script;
     public String projectid;
     public String inputid;
-    public String other = "";
+    public String other;
     
 
     public ScipionParams()
@@ -49,8 +49,7 @@ public class ScipionParams extends Params {
             script = cmdargs[1]; 
             projectid = cmdargs[2];
             inputid = cmdargs[3];
-            if(cmdargs.length == 5)
-                other = cmdargs[4];
+            other = (cmdargs.length == 5)? cmdargs[4]: "";
         }
     }
 }
