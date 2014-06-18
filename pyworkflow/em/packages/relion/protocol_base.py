@@ -75,7 +75,7 @@ class ProtRelionBase(EMProtocol):
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
-                  'classes_xmipp': self.extraIter + 'classes_xmipp.star',
+                  'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
@@ -456,7 +456,7 @@ class ProtRelionBase(EMProtocol):
             radius = self.backRadius.get()
             if radius <= 0:
                 radius = Xdim / 2
-            params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s'
+            params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
             self.runJob(self._getProgram('relion_preprocess'), params % locals())
             
             outFn = 'particles.mrcs'
@@ -560,11 +560,11 @@ class ProtRelionBase(EMProtocol):
         If the file doesn't exists, it will be created. 
         """
         data_star = self._getFileName('data', iter=it)
-        data_classes = self._getFileName('classes_xmipp', iter=it)
+        data_classes = self._getFileName('classes_scipion', iter=it)
         
         if not exists(data_classes):
-            createClassesFromImages(data_star, data_classes, it, 
-                                    self.CLASS_LABEL, self.ClassFnTemplate)
+            createClassesFromImages(self.inputParticles.get(), data_star, data_classes, 
+                                    self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
     def _getIterSortedData(self, it):
