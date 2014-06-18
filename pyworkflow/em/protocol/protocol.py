@@ -145,6 +145,7 @@ class ProtUserSubSet(ProtSets):
         
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
+        form.addHidden('otherObject', PointerParam, pointerClass='EMObject', allowsNull=True)
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
         
@@ -163,7 +164,24 @@ class ProtUserSubSet(ProtSets):
                 output.append(img)
         # Register outputs
         self._defineOutput(className, output)
-    
+        
+    def _createSubSetFromClasses(self, inputClasses):
+        outputClassName = self.outputClassName.get()
+        
+        if outputClassName == 'SetOfParticles':
+            # We need to distinguish two cases:
+            # a) when we want to create images by grouping class images
+            # b) create a subset from a particular class images
+            from pyworkflow.mapper.sqlite import SqliteFlatDb
+            db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
+            itemClassName = db.getSelfClassName()
+            if itemClassName.startswith('Class'):
+                self._createImagesFromClasses(inputClasses)
+            else:
+                self._createSubSetFromImages(inputClasses.getImages())
+        elif outputClassName.startswith('SetOfClasses'):
+            self._createClassesFromClasses(inputClasses)  
+              
     def _createSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
         output = self._createSetOfMicrographs()
@@ -225,29 +243,37 @@ class ProtUserSubSet(ProtSets):
                
     def createSetOfImagesStep(self):
         inputObj = self.inputObject.get()
+        
         self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
         
         if isinstance(inputObj, SetOfImages):
             self._createSubSetFromImages(inputObj)
             
         elif isinstance(inputObj, SetOfClasses):
-            outputClassName = self.outputClassName.get()
-            if outputClassName == 'SetOfParticles':
-                # We need to distinguish two cases:
-                # a) when we want to create images by grouping class images
-                # b) create a subset from a particular class images
-                from pyworkflow.mapper.sqlite import SqliteFlatDb
-                db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-                itemClassName = db.getSelfClassName()
-                if itemClassName.startswith('Class'):
-                    self._createImagesFromClasses(inputObj)
-                else:
-                    self._createSubSetFromImages(inputObj.getImages())
-            elif outputClassName.startswith('SetOfClasses'):
-                self._createClassesFromClasses(inputObj)
+            self._createSubSetFromClasses(inputObj)
            
         elif isinstance(inputObj, SetOfCTF):
             self._createSubSetFromCTF(inputObj) 
+            
+        elif isinstance(inputObj, EMProtocol):
+            from pyworkflow.mapper.sqlite import SqliteFlatDb
+            db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
+            setClassName = db.getProperty('self') # get the set class name
+            setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+            otherObj = self.otherObject.get()
+            
+            if isinstance(setObj, SetOfClasses):
+                setObj.setImages(otherObj)
+                self._createSubSetFromClasses(setObj)
+                
+            elif isinstance(setObj, SetOfImages):
+                setObj.copyInfo(otherObj) # copy info from original images
+                self._createSubSetFromImages(setObj)
+                
+            # Clean the pointer to other, to avoid dependency in the graph
+            self.otherObject.set(None)
+                
+            
             
     def defineOutputSet(self, outputset):
         outputs = {'output' + self.getOutputType(): outputset}
