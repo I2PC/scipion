@@ -195,7 +195,7 @@ class TestXmippCTFRestimation(TestXmippBase):
         
         print "Performing CTF Recalculation..."
         str = "1,22000,24000,0,0.05,0.26; 3,21000,23000,0,0.04,0.3"
-        protReCTF = XmippProtRecalculateCTF(numberOfTrheads=2)
+        protReCTF = XmippProtRecalculateCTF(numberOfMpi=3)
         protReCTF.inputCtf.set(protCTF.outputCTF)
         protReCTF.inputValues.set(str)
         self.proj.launchProtocol(protReCTF, wait=True)

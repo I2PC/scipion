@@ -28,7 +28,7 @@ In this module are protocol base classes related to EM Micrographs
 """
 
 from pyworkflow.em.protocol import *
-
+from pyworkflow.utils.path import copyTree
 
 class ProtMicrographs(EMProtocol):
     pass
@@ -172,6 +172,170 @@ class ProtCTFMicrographs(ProtMicrographs):
         maximum = float(max(list))/10000
         msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
         self.methodsInfo.set(msg)
+
+
+class ProtRecalculateCTF(ProtMicrographs):
+    """ Base class for all protocols that re-calculate the CTF"""
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.methodsInfo = String()
+        self.summaryInfo = String()
+        self.stepsExecutionMode = STEPS_PARALLEL
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_CTF_ESTI)
+        
+        form.addParam('inputCtf', PointerParam, important=True,
+              label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
+        form.addParam('inputValues', TextParam)
+        
+        form.addParallelSection(threads=0, mpi=1)
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        """ Insert the steps to perform ctf re-estimation on a set of CTFs.
+        """
+        self._insertFunctionStep('copyInputValues')
+        self._defineValues()
+        deps = [] # Store all steps ids, final step createOutput depends on all of them
+        # For each psd insert the steps to process it
+        for line in self.values:
+            # CTF Re-estimation with Xmipp
+            copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[])
+            stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
+            deps.append(stepId)
+        # Insert step to create output objects       
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def copyInputValues(self):
+        """ Copy a parameter file that contain the info of the
+        micrographs to recalculate its CTF to a current directory"""
+        srcFile = self.inputValues.get()
+        baseFn = basename(srcFile)
+        dstFile = self._getTmpPath(baseFn)
+        copyFile(srcFile, dstFile)
+    
+    def copyFiles(self, line):
+        """Copy micrograph's directory tree"""
+        objId = self._getObjId(line)
+        ctfModel = self.setOfCtf.__getitem__(objId)
+        mic = ctfModel.getMicrograph()
+        
+        prevDir = self._getPrevMicDir(mic)
+        micDir = self._getMicrographDir(mic)
+        # Create micrograph dir under extra directory
+        print "creating path micDir=", micDir
+        makePath(micDir)
+        if not exists(micDir):
+            raise Exception("No created dir: %s " % micDir)
+        copyTree(prevDir, micDir)
+    
+    def _estimateCTF(self, micFn, micDir):
+        """ Do the CTF estimation with the specific program
+        and the parameters required.
+        Params:
+         micFn: micrograph filename
+         micDir: micrograph directory
+        """
+        raise Exception(Message.ERROR_NO_EST_CTF)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCTF'):
+            summary.append(Message.TEXT_NO_CTF_READY)
+        else:
+            summary.append(self.summaryInfo.get())
+        return summary
+    
+    def _methods(self):
+        methods = []
+        
+        if not hasattr(self, 'outputCTF'):
+            methods.append(Message.TEXT_NO_CTF_READY)
+        else:
+            methods.append(self.methodsInfo.get())
+            
+        return methods
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineValues(self):
+        """ This function get the acquisition info of the micrographs"""
+        self.setOfCtf = self.inputCtf.get()
+        baseFn = basename(self.inputValues.get())
+        paramFn = self._getTmpPath(baseFn)
+        self.values = self._splitFile(paramFn)
+        
+        line = self.values[0]
+        objId = self._getObjId(line)
+        ctfModel = self.inputCtf.get().__getitem__(objId)
+        mic = ctfModel.getMicrograph()
+        
+        acquisition = mic.getAcquisition()
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
+                        'scannedPixelSize': mic.getScannedPixelSize(),
+                        'samplingRate': mic.getSamplingRate()
+                       }
+    
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))        
+    
+    def _iterMicrographs(self):
+        """ Iterate over micrographs and yield
+        micrograph name and a directory to process.
+        """
+        for mic in self.inputMics:
+            micFn = mic.getFileName()
+            micDir = self._getMicrographDir(mic) 
+            yield (micFn, micDir, mic)  
+    
+    def _prepareCommand(self):
+        """ This function should be implemented to prepare the
+        arguments template if doesn't change for each micrograph
+        After this method self._program and self._args should be set. 
+        """
+        pass
+    
+    def _getPrevMicDir(self, mic):
+        
+        objFn = self.setOfCtf.getFileName()
+        directory = dirname(objFn)
+        return join(directory, "extra", removeBaseExt(mic.getFileName()))
+    
+    def _getObjId(self, list):
+        return int(list[0])
+    
+    def _splitFile(self, file):
+        """ This method split the parameter file into lines"""
+        list = []
+        f1 = open(file)
+        for l in f1:
+            split = l.split()
+            list.append(split)
+        f1.close()
+        return list
+    
+    def _defocusMaxMin(self, list):
+        """ This function return the minimum and maximum of the defocus
+        of a SetOfMicrographs.
+        """
+        minimum = float(min(list))/10000
+        maximum = float(max(list))/10000
+        msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
+        self.methodsInfo.set(msg)
+    
+    def _ctfCounter(self, list):
+        """ This function return the number of CTFs that was recalculated.
+        """
+        numberOfCTF = len(list)/2
+        msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
+        self.summaryInfo.set(msg)
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):
