@@ -223,7 +223,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final static String OPEN = "Open_mi";
 	public final static String OPEN_ASTEXT = "OpenAsText_mi";
 	public final static String CTF_PROFILE = "CTFProfile_mi";
-	public final static String CTF_RECALCULATE = "CTFRecalculate_mi"; 
+	public final static String CTF_RECALCULATE = "CTFRecalculate_cb"; 
 	public final static String SELECT = "Select";
 	public final static String SELECT_ALL = "Select.All_mi";
 	public final static String SELECT_TOHERE = "Select.ToHere_mi";

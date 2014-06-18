@@ -84,6 +84,7 @@ public class GalleryData {
 	protected int refLabel;
 	// Store the selection state for each item
 	protected boolean[] selection;
+
 	// Array with all ClassInfo
 	protected ArrayList<ClassInfo> classesArray;
 	// ClassInfo reference for each element
@@ -91,7 +92,7 @@ public class GalleryData {
 	// Flags to check if md or classes has changed
 	protected boolean hasMdChanges, hasClassesChanges;
 	protected GalleryJFrame window;
-  
+        protected List<Long> ctfids;
 
     
  
@@ -1225,6 +1226,8 @@ public class GalleryData {
             return ids[i];
         }
         
+        
+        
         public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
         {
                 try
@@ -1247,7 +1250,7 @@ public class GalleryData {
                                 String sortFn = psdFile.replace(".psd", ".xmd");
                                 mdRow.write(sortFn);
                                 mdRow.destroy();
-                                ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, getFileName(), row, sortFn);
+                                ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, row, sortFn);
                         }
 
                 }
@@ -1501,8 +1504,34 @@ public class GalleryData {
                        j = labels.indexOf(ci);
                        labels.set(i, ci);
                        labels.set(j, aux);
-                       
                    }
        }
+       
+       
+       public void setCTFRecalculate(int row, boolean recalculate)
+        {
+            if(ctfids == null)
+                    ctfids = new ArrayList<Long>();
+            long id = ids[row];
+            if(recalculate)
+            {
+                if(!ctfids.contains(id))
+                    ctfids.add(id);
+            }
+            else
+                ctfids.remove(id);
+        }
+        
+        public boolean isRecalculateCTF(int row)
+       {
+           if(ctfids == null)
+                    ctfids = new ArrayList<Long>();
+           long id = ids[row];
+           for(Long ctfid: ctfids)
+               if(ctfid == id)
+                   return true;
+           return false;
+       }
+       
 
 }// class GalleryDaa

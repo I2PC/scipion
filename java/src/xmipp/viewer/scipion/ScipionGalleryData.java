@@ -6,12 +6,15 @@
 
 package xmipp.viewer.scipion;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -22,7 +25,7 @@ import xmipp.viewer.models.GalleryData;
  * @author airen
  */
 public class ScipionGalleryData extends GalleryData{
-    private List<Long> ctfids;
+    
 
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
@@ -331,14 +334,37 @@ public class ScipionGalleryData extends GalleryData{
     public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
     {
             if(profile)
-                System.out.println("Not implemented yet");
+                System.out.println("Not implemented yet, should open ctf profile window");
             else
             {
                 long id = ids[row];
+                ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
+                emo.setComment("(recalculate ctf)");
+                System.out.println(emo.getComment());
                 if(ctfids == null)
                     ctfids = new ArrayList<Long>();
                 ctfids.add(id);
                 //add id to recalculate list
             }
+    }
+    
+    public void exportCTFRecalculate(String path) {
+
+
+        try {
+            FileWriter fstream = new FileWriter(path);
+            BufferedWriter out = new BufferedWriter(fstream);
+
+            String line = "%20s%20s%20s\n";
+
+            for(long id: ctfids)
+                out.write(String.format(line, id, "param1", "param2"));
+            
+            out.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            XmippDialog.showError(window, ex.getMessage());
+        }
     }
 }

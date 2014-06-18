@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
@@ -31,6 +32,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String projectid;
     private JButton cmdbutton;
     private String sqlitefile;
+    private String outputdir;
     private JButton classcmdbutton;
     private String python;
     private String inputid;
@@ -60,7 +62,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             script = parameters.script;
             projectid = parameters.projectid;
             inputid = parameters.inputid;
-            sqlitefile = String.format("%s%sselection%s", projectid, File.separator, data.getFileExtension());
+            outputdir = new File(data.getFileName()).getParent();
+            sqlitefile = String.format("%s%sselection%s", outputdir, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             other = parameters.other;
@@ -70,6 +73,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             throw new IllegalArgumentException(ex.getMessage());
         }
     }
+    
+    
+    
     private void initComponents() {
         JButton closebt = getScipionButton("Close", new ActionListener() {
 
@@ -133,7 +139,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                        String recalculatefile = outputdir + File.separator + "ctfrecalculate.txt";
+                        ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                     }
                 });
                 buttonspn.add(recalculatectfbt);

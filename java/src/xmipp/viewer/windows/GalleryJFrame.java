@@ -62,6 +62,7 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -193,10 +194,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected GalleryData data;
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
-
-	private JComboBox imagecolumnscb;
-
-	private JMenuItem rendercolumnmi;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
 
@@ -371,11 +368,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		c.weightx = 0;
 		c.weighty = 0;
 		
-		
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-		
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
-                
 						
 		// Create the menu for table
 		menu = new GalleryMenu();
@@ -1451,6 +1445,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				{
 					public void run()
 					{
+                                                
 						jpopUpMenuTable.show(me.getComponent(), p);
 					}
 				});
@@ -1811,12 +1806,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	
 	
 	
-	
-	
-	
-	
-	
-	
 
 	class GalleryPopupMenu extends XmippPopupMenuCreator
 	{
@@ -1834,6 +1823,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
 			addItem(CTF_RECALCULATE, "Recalculate CTF");
+                        setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			addSeparator();
 			addItem(OPEN_IMAGES, "Open images");
 			addItem(SAVE_IMAGES, "Save images", "save.gif");
@@ -1847,11 +1837,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void show(Component cmpnt, Point location)
 		{
+                        row = table.rowAtPoint(location);
+			col = table.columnAtPoint(location);
 			setItemVisible(SET_CLASS, data.isClassificationMd());
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
-					
+                        setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			// Update menu items status depending on item.
 			row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
@@ -1939,7 +1931,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
-				data.showCTF(false, row, ctfTasks);
+                                data.setCTFRecalculate(row, !data.isRecalculateCTF(row));
+                                if(data.isRecalculateCTF(row));
+                                    data.showCTF(false, row, ctfTasks);
+                                gallery.fireTableRowsUpdated(row, row);
+                                
 			}
 			else if (cmd.equals(SET_CLASS))
 			{

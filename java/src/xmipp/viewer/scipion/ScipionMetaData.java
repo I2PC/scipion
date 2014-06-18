@@ -250,7 +250,7 @@ public class ScipionMetaData extends MetaData{
         public boolean isEnabled()
         {
             Integer value = (Integer)getValue(enabledci);
-            return value.intValue() == 1;
+            return value == 1;
         }
         
         public void setEnabled(boolean isenabled)
@@ -278,6 +278,10 @@ public class ScipionMetaData extends MetaData{
             if(value != null)
                 return ((String)getValue(commentci));
             return null;
+        }
+
+        public void setComment(String comment) {
+            setValue(commentci, comment);
         }
     }
 
@@ -724,8 +728,6 @@ public class ScipionMetaData extends MetaData{
                                         str = str.substring(str.lastIndexOf("@") + 1);
                                     value = str;
                                     sql += String.format("'%s',", value);
-
-
                             }
                             else
                                 sql += String.format("%s,", value);
