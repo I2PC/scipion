@@ -184,6 +184,7 @@ class Viewer(object):
     def objectView(self, path, inputType):
         pass
         
+        
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
     complex visualization associated with protocol results.

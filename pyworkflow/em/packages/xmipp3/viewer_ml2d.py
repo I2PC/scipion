@@ -31,6 +31,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
 from protocol_ml2d import XmippProtML2D
+from convert import readSetOfClasses2D
 import numpy as np
 
 ITER_LAST = 0
@@ -89,6 +90,20 @@ class XmippML2DViewer(ProtocolViewer):
     def _viewPlot(self, paramName=None):
         return createPlots(self.protocol, [paramName])
         
+    def _getClassesSqlite(self, fnXmd, it):
+        """ Return the sqlite file given the xmd of classes. """
+        fnSqlite = join(dirname(fnXmd), 'classes_it%03d.sqlite' % it)
+        print "_getClassesSqlite: fnXmd=", fnXmd
+        
+        if not exists(fnSqlite): # Create the sqlite if not exists
+            print "   print creating fnSqlite=", fnSqlite
+            classes2DSet = SetOfClasses2D(filename=fnSqlite)
+            classes2DSet.setImages(self.protocol.inputParticles.get())
+            readSetOfClasses2D(classes2DSet, fnXmd)
+            classes2DSet.write()
+        
+        return fnSqlite
+        
     def _viewIterRefs(self, e=None):
         if self.classesToShow == ITER_LAST:
             iterations = [self.protocol._lastIteration()]
@@ -101,7 +116,12 @@ class XmippML2DViewer(ProtocolViewer):
         for it in iterations:
             fn = self.protocol._getIterClasses(it)
             if exists(fn):
-                views.append(DataView('classes@' + fn))
+                # Create a classes sqlite from the classes.xmd
+                fnSqlite = self._getClassesSqlite(fn, it)
+                #views.append(DataView('classes@' + fn))
+                views.append(ObjectView(self.getProject().getName(), 
+                                        self.protocol.strId(), fnSqlite, 
+                                        self.protocol.inputParticles.get().strId()))
             else:
                 errors.append("Iteration file '%s' doesn't exist." % fn)
              
