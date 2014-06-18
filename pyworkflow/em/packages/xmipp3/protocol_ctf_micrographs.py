@@ -29,15 +29,13 @@
 This sub-package contains the XmippCtfMicrographs protocol
 """
 
-
 from pyworkflow.em import *  
-from pyworkflow.utils.path import makePath, moveFile, removeBaseExt, copyTree
-
+from pyworkflow.utils.path import makePath, moveFile, removeBaseExt
 from convert import *
 from xmipp3 import XmippMdRow
 
 
-class XmippCTFBase(ProtCTFMicrographs):
+class XmippCTFBase():
     """ This class cointains the common functionalities for all protocols to
 estimate CTF on a set of micrographs using xmipp3 """
 
@@ -51,10 +49,27 @@ estimate CTF on a set of micrographs using xmipp3 """
         'enhanced_psd': __prefix + '_enhanced_psd.xmp',
         'ctfmodel_quadrant': __prefix + '_ctfmodel_quadrant.xmp',
         'ctfmodel_halfplane': __prefix + '_ctfmodel_halfplane.xmp'
-#        'ctffind_ctfparam': join('%(micDir)s', 'ctffind.ctfparam'),
-#        'ctffind_spectrum': join('%(micDir)s', 'ctffind_spectrum.mrc')
         }
     
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _setPsdFiles(self, ctfModel, micDir):
+        ctfModel._psdFile = String(self._getFilename('psd', micDir=micDir))
+        ctfModel._xmipp_enhanced_psd = String(self._getFilename('enhanced_psd', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFilename('ctfmodel_quadrant', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFilename('ctfmodel_halfplane', micDir=micDir))
+        return ctfModel
+    
+    def _citations(self):
+        return ['Vargas2013']
+
+
+class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
+    """Protocol to estimate CTF on a set of micrographs using xmipp3"""
+    _label = 'ctf estimation'
+    
+    def __init__(self, **args):
+        ProtCTFMicrographs.__init__(self, **args)
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir):
         """ Run the estimate CTF program """        
@@ -86,23 +101,6 @@ estimate CTF on a set of micrographs using xmipp3 """
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
         self._defocusMaxMin(defocusList)
-        
-#         # Write as a Xmipp metadata
-#         mdFn = self._getPath('micrographs_ctf.xmd')
-#         writeSetOfMicrographs(micSet, mdFn, self.setupMicRow)
-#                    
-#         tmpFn = self._getPath('micrographs_backup.xmd')
-#         writeSetOfMicrographs(micSet, tmpFn, self.setupMicRow)
-#   
-#         # Evaluate the PSD and add some criterias
-#         auxMdFn = self._getTmpPath('micrographs.xmd')
-#         self.runJob("xmipp_ctf_sort_psds","-i %s -o %s" % (mdFn, auxMdFn))
-#         # Copy result to output metadata
-#         moveFile(auxMdFn, mdFn)
-        
-
-    def _citations(self):
-        return ['Vargas2013']
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self):
@@ -124,67 +122,16 @@ estimate CTF on a set of micrographs using xmipp3 """
         
         for par, val in self.__params.iteritems():
             self._args += " --%s %s" % (par, str(val))
-    
-    def _setPsdFiles(self, ctfModel, micDir):
-        ctfModel._psdFile = String(self._getFilename('psd', micDir=micDir))
-        ctfModel._xmipp_enhanced_psd = String(self._getFilename('enhanced_psd', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFilename('ctfmodel_quadrant', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFilename('ctfmodel_halfplane', micDir=micDir))
-        return ctfModel
 
 
-class XmippProtCTFMicrographs(XmippCTFBase):
-    """Protocol to estimate CTF on a set of micrographs using xmipp3"""
-    _label = 'ctf estimation'
-
-
-class XmippProtRecalculateCTF(XmippCTFBase):
+class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
     """Protocol to recalculate CTF on a subSet of micrographs using xmipp3"""
+    _label = 'ctf re-estimation'
     
     def __init__(self, **args):
-        XmippCTFBase.__init__(self, **args)
-    
-    def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_CTF_ESTI)
-        
-        form.addParam('inputCtf', PointerParam, important=True,
-              label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
-        form.addParam('inputValues', TextParam)
-
-        form.addParallelSection(threads=0, mpi=1)
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        """ Insert the steps to perform ctf estimation on a set of micrographs.
-        """
-        
-        self._defineValues()
-        deps = [] # Store all steps ids, final step createOutput depends on all of them
-        # For each psd insert the steps to process it
-        for line in self.values:
-            # CTF Re-estimation with Xmipp
-            copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[])
-            stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
-            deps.append(stepId)
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+        ProtRecalculateCTF.__init__(self, **args)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def copyFiles(self, line):
-        """Copy micrograph's directory tree"""
-        objId = self._getObjId(line)
-        ctfModel = self.setOfCtf.__getitem__(objId)
-        mic = ctfModel.getMicrograph()
-        
-        prevDir = self._getPrevMicDir(mic)
-        micDir = self._getMicrographDir(mic)
-        # Create micrograph dir under extra directory
-        print "creating path micDir=", micDir
-        makePath(micDir)
-        if not exists(micDir):
-            raise Exception("No created dir: %s " % micDir)
-        copyTree(prevDir, micDir)
-    
     def _estimateCTF(self, line):
         """ Run the estimate CTF program """
         self._prepareCommand(line)
@@ -223,50 +170,9 @@ class XmippProtRecalculateCTF(XmippCTFBase):
         self._defineOutputs(outputCTF=ctfSet)
         self._defineSourceRelation(self.setOfCtf, ctfSet)
         self._defocusMaxMin(defocusList)
-    
-    #--------------------------- INFO functions ----------------------------------------------------
-    def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputCTF'):
-            summary.append(Message.TEXT_NO_CTF_READY)
-        else:
-            summary.append("CTF Re-estimation of *testing* micrographs.")
-        return summary
-    
-    def _methods(self):
-        methods = []
-        
-        if not hasattr(self, 'outputCTF'):
-            methods.append(Message.TEXT_NO_CTF_READY)
-        else:
-            methods.append(self.methodsInfo.get())
-            
-        return methods
+        self._ctfCounter(defocusList)
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _defineValues(self):
-        """ This function get the acquisition info of the micrographs"""
-        self.setOfCtf = self.inputCtf.get()
-        self.values = []
-
-        for l in self.inputValues.get().split(';'):
-            list = []
-            list = l.split(',')
-            self.values.append(list)
-            
-        line = self.values[0]
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get().__getitem__(objId)
-        mic = ctfModel.getMicrograph()
-        
-        acquisition = mic.getAcquisition()
-        self._params = {'voltage': acquisition.getVoltage(),
-                        'sphericalAberration': acquisition.getSphericalAberration(),
-                        'magnification': acquisition.getMagnification(),
-                        'ampContrast': acquisition.getAmplitudeContrast(),
-                        'samplingRate': mic.getSamplingRate()
-                       }
-    
     def _prepareCommand(self, line):
         self._program = 'xmipp_ctf_estimate_from_psd'       
         self._args = "--psd %(psdFn)s "
@@ -305,13 +211,4 @@ class XmippProtRecalculateCTF(XmippCTFBase):
         
         for par, val in self.__params.iteritems():
             self._args += " --%s %s" % (par, str(val))
-    
-    def _getPrevMicDir(self, mic):
-        
-        objFn = self.setOfCtf.getFileName()
-        directory = dirname(objFn)
-        return join(directory, "extra", removeBaseExt(mic.getFileName()))
-    
-    def _getObjId(self, list):
-        return int(list[0])
     

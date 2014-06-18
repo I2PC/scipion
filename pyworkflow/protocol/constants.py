@@ -38,9 +38,9 @@ STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
-STATUS_CONTINUE = "interactive"    # waiting for user interaction
+STATUS_INTERACTIVE = "interactive"    # waiting for user interaction
 
-ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_CONTINUE]
+ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE]
 
 
 # Execution modes             

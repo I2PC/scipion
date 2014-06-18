@@ -54,7 +54,7 @@ marginal likelihood.
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        numberOfBlocks = self.numberOfThreads.get() - 1
+        numberOfBlocks = self.numberOfMpi.get() - 1
         depsOcc = []
         
         if self.doContinue:
@@ -163,8 +163,6 @@ marginal likelihood.
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-#         if ref ==1 and block==1:
-#             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
@@ -243,7 +241,7 @@ marginal likelihood.
         
         if leaveDir:
             self._setLastIter(iter)
-#             self._leaveDir()
+            self._leaveDir()
     
     def createOutputStep(self, lastIter):
         from convert import readSetOfClasses3D
