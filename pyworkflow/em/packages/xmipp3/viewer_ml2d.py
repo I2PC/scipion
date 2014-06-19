@@ -119,7 +119,7 @@ class XmippML2DViewer(ProtocolViewer):
                 # Create a classes sqlite from the classes.xmd
                 fnSqlite = self._getClassesSqlite(fn, it)
                 #views.append(DataView('classes@' + fn))
-                views.append(ObjectView(self.getProject().getName(), 
+                views.append(ClassesView(self.getProject().getName(), 
                                         self.protocol.strId(), fnSqlite, 
                                         self.protocol.inputParticles.get().strId()))
             else:
