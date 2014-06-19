@@ -6,6 +6,7 @@
 
 package xmipp.viewer.scipion;
 
+import ij.IJ;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
+import xmipp.jni.CTFParams;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -234,11 +237,31 @@ public class ScipionMetaData extends MetaData{
             changed = false;
         }
         
+        Object getValue(String column)
+        {
+            ColumnInfo ci = getColumnInfo(column);
+            return getValue(ci);
+        }
+        
         Object getValue(ColumnInfo c) {
             Object result = values.get(c);
             
             return result;
         }
+        
+        Double getValueDouble(String column)
+        {
+            ColumnInfo ci = getColumnInfo(column);
+            return getValueDouble(ci);
+        }
+        
+        Double getValueDouble(ColumnInfo c) {
+            Object value = values.get(c);
+            if(value != null)
+                return ((Float)value).doubleValue();//in sqlite double is float
+            return null;
+        }
+
 
         public void setValue(ColumnInfo ci, Object value) {
                 if(values.containsKey(ci))
@@ -871,10 +894,42 @@ public class ScipionMetaData extends MetaData{
         return getSelf().equals("CTFModel");
     }
        
-       
+     
       
+    @Override
+    public CTFParams getCTFParams(long id) {
+            if(!isCTFMd())
+                return null;
+            try {
+                EMObject emo = getEMObject(id);
+                
+                double Q0, Cs = 0, Ts = 0, kV = 0, defU = 0, defV = 0;
+                String psdfile = (String)emo.getValue("_psdFile");
+                
+                Q0 = emo.getValueDouble("_micObj._acquisition._sphericalAberration");
+                Cs = emo.getValueDouble("_micObj._acquisition._amplitudeContrast");
+                Ts = emo.getValueDouble("_micObj._samplingRate");
+                kV = emo.getValueDouble("_micObj._acquisition._voltage");
+                
+                defU = emo.getValueDouble("_defocusU");
+                defV = emo.getValueDouble("_defocusV");
+                //read params from sqlite
+
+
+                return new CTFParams(psdfile, psdfile, Q0, Cs, Ts, kV, defU, defV);
+            } catch (Exception ex) {
+                IJ.error(ex.getMessage());
+                throw new IllegalArgumentException(ex);
+            }
+            
+        }
+        
     
-    
+    @Override
+        public String getCTFFile(long id)
+        {
+            return null;//Maybe write ctf info for id in new metadata and return it;
+        }
    
    
 }

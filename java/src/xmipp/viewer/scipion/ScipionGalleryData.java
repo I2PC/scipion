@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package xmipp.viewer.scipion;
 
 import java.io.BufferedWriter;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
@@ -24,61 +24,57 @@ import xmipp.viewer.models.GalleryData;
  *
  * @author airen
  */
-public class ScipionGalleryData extends GalleryData{
-    
+public class ScipionGalleryData extends GalleryData {
 
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
-        
+
         mdBlocks = md.getBlocks();
         selectedBlock = mdBlocks[0];
-       
+
     }
-    
+
     public void setFileName(String file) {
-        if(file.contains("@"))
-        {
+        if (file.contains("@")) {
             int sep = file.lastIndexOf("@");
             selectedBlock = file.substring(0, sep);
             filename = file.substring(sep + 1);
         }
-	filename = file;
-                
-    }
-    
-    public void loadLabels() {
-            ScipionMetaData smd = (ScipionMetaData)md;
-            
-            labels = smd.getColumnsInfo();
-            ciFirstRender = null;
-            orderLabels();
-            for(ColumnInfo ci :labels)
-            {
-                ci.visible = isVisibleLabel(ci);
-                ci.render = isRenderLabel(ci);
-                if(ci.render && ciFirstRender == null)
-                    ciFirstRender = ci;
-            }
-            if(ciFirstRender == null)
-                zoom = 100;
+        filename = file;
+
     }
 
-    
-    public String getValueFromLabel(int index, int label)
-    {
-        return ((ScipionMetaData)md).getValueFromLabel(index, label);
+    public void loadLabels() {
+        ScipionMetaData smd = (ScipionMetaData) md;
+
+        labels = smd.getColumnsInfo();
+        ciFirstRender = null;
+        orderLabels();
+        for (ColumnInfo ci : labels) {
+            ci.visible = isVisibleLabel(ci);
+            ci.render = isRenderLabel(ci);
+            if (ci.render && ciFirstRender == null) {
+                ciFirstRender = ci;
+            }
+        }
+        if (ciFirstRender == null) {
+            zoom = 100;
+        }
     }
-    
-   
-            /** Save selected items as a metadata */
-    public void saveSelection(String path, boolean overwrite) throws Exception
-    {
+
+    public String getValueFromLabel(int index, int label) {
+        return ((ScipionMetaData) md).getValueFromLabel(index, label);
+    }
+
+    /**
+     * Save selected items as a metadata
+     */
+    public void saveSelection(String path, boolean overwrite) throws Exception {
         getSelectionMd().write(path);
-        
+
     }
-    
-    public void saveClassSelection(String path)
-    {
+
+    public void saveClassSelection(String path) {
         try {
             saveSelection(path, true);//Scipion metadata saves recursively
         } catch (Exception ex) {
@@ -86,270 +82,261 @@ public class ScipionGalleryData extends GalleryData{
         }
     }
 
-    public boolean isColumnFormat()
-    {
+    public boolean isColumnFormat() {
         return true;
     }
-    
 
-    /** Create a metadata just with selected items */
+    /**
+     * Create a metadata just with selected items
+     */
     @Override
     public ScipionMetaData getSelectionMd() {
-            ScipionMetaData selectionMd = null;
-            try
-            {
-                selectionMd = ((ScipionMetaData)md).getMd(getSelObjects());
-                return selectionMd;
-            } catch (Exception e) {
-                    e.printStackTrace();
-            }
+        ScipionMetaData selectionMd = null;
+        try {
+            selectionMd = ((ScipionMetaData) md).getMd(getSelObjects());
             return selectionMd;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return selectionMd;
     }
-        
-    	/** Get all the images assigned to all selected classes */
-	public MetaData getClassesImages(){
-		ScipionMetaData mdImages = null; 
-		MetaData md;
-		for (int i = 0; i < ids.length; ++i){
-			if (selection[i] && isEnabled(i)){
-				md = getClassImages(i);
-                                
-				if(md != null)
-                                {
-                                    if(mdImages == null)
-                                        mdImages = ((ScipionMetaData)md).getStructure("");
-                                    mdImages.unionAll(md);
-                                    md.destroy();
-                                }
-			}
-		}
-                
-		return mdImages;
-	}   
-        
-         	/** Get all the images assigned to all selected classes */
-	public MetaData getEnabledClassesImages(){
-		ScipionMetaData mdImages = null; 
-		MetaData md;
-		for (int i = 0; i < ids.length; ++i){
-			if (isEnabled(i)){
-				md = getClassImages(i);
-                                
-				if(md != null)
-                                {
-                                    if(mdImages == null)
-                                        mdImages = ((ScipionMetaData)md).getStructure("");
-                                    mdImages.unionAll(md);
-                                    md.destroy();
-                                }
-			}
-		}
-                
-		return mdImages;
-	} 
-        
-        
-        /** Get the metadata with assigned images to this classes */
-	public MetaData getClassImages(int index) {
-		try {
-			long id = ids[index];
-                        ScipionMetaData childmd = ((ScipionMetaData)md).getEMObject(id).childmd;
-			return childmd.getMd(childmd.getEnabledObjects());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-        
-        public String getLabel(long objId, int label)
-        {
-            try
-                    {
-                            if (isClassification)
-                            {
-                                ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(objId);
-                                return String.format("Class %s (%d images)", emo.getId(), emo.childmd.size());
-                            }
-                            else
-                                    return md.getValueString(label, objId);
+
+    /**
+     * Get all the images assigned to all selected classes
+     */
+    public MetaData getClassesImages() {
+        ScipionMetaData mdImages = null;
+        MetaData md;
+        for (int i = 0; i < ids.length; ++i) {
+            if (selection[i] && isEnabled(i)) {
+                md = getClassImages(i);
+
+                if (md != null) {
+                    if (mdImages == null) {
+                        mdImages = ((ScipionMetaData) md).getStructure("");
                     }
-                    catch (Exception e)
-                    {
-                            e.printStackTrace();
-                    }
-                    return null;
-        }
-        
-        public void readMd() {
-                hasMdChanges = false;
-                hasClassesChanges = false;
-                md = getMetaData(selectedBlock);
-	}
-
-        public MetaData getMetaData(String block)
-        {
-            if(md.getBlock().equals(block))
-                    return md;
-                ScipionMetaData child = ((ScipionMetaData)md).getChild(block);
-                if(child != null)
-                    return child;
-                ScipionMetaData parent = ((ScipionMetaData)md).getParent();
-                if(parent.getBlock().equals(selectedBlock))// from child to parent
-                    return parent;
-                return parent.getChild(selectedBlock);
-                
-        }
-        
-        
-	/** Get the assigned class of some element */
-	public ClassInfo getItemClassInfo(int index) {
-		return null;
-	}
-
-	/** Set item class info in md */
-	private void setItemClassInfo(long id, ClassInfo cli) {
-		
-	}
-
-	/** Set the class of an element */
-	public void setItemClass(int index, ClassInfo cli) {
-		
-	}
-
-	public ClassInfo getClassInfo(int classNumber) {
-		return null;
-	}
-
-	/**
-	 * Compute and update the number of classes and images assigned to this
-	 * superclass
-	 */
-	public void updateClassesInfo() {
-		
-	}// function upateClassesInfo
-
-	/** Load classes structure if previously stored */
-	public void loadClassesInfo() {
-		
-	}// function loadClassesInfo
-        
-
-        public MetaData[] getClassesMd() 
-        {
-            return null;
-        }
-        
-        /** Add a new class */
-	public void addClass(ClassInfo ci) {
-		
-	}
-
-	/** Remove a class from the selection */
-	public void removeClass(int classNumber) 
-        {
-		
-	}
-        
-        public boolean hasClasses()//for Scipion usage only
-        {
-            return mdBlocks.length > 1 && ((ScipionMetaData)md).getSelf().contains("Class");
-        }
-         
-        public boolean hasMicrographParticles() {
-		return false;//fixme?? cannot open picker from sqlite
-	}
-        
-        public List<ScipionMetaData.EMObject> getSelObjects()
-        {
-            List<ScipionMetaData.EMObject> emos = new ArrayList<ScipionMetaData.EMObject>();
-            for(int i = 0; i < selection.length; i ++)
-                if(selection[i] && md.getEnabled(ids[i]))
-                    emos.add(((ScipionMetaData)md).getEMObjects().get(i));
-            return emos;
-        }
-        
-        public List<ScipionMetaData.EMObject> getEnabledObjects()
-        {
-            return ((ScipionMetaData)md).getEnabledObjects();
-        }
-        
-        /** This is only needed for metadata table galleries */
-	public boolean isFile(ColumnInfo ci) {
-		return ci.labelName.contains("filename");
-	}
-        
-        public boolean isImageFile(ColumnInfo ci) {
-            return ci.allowRender;
-	}
-        
-        public MetaData getMd(List<Long> ids)
-        {
-            MetaData selmd = null;
-            try {
-                    long[] ids2 = new long[ids.size()];
-                    for(int i = 0; i < ids.size(); i ++)
-                        ids2[i] = ids.get(i);
-                    selmd = ((ScipionMetaData)md).getStructure("");
-                    selmd.importObjects(md, ids2);
-                } catch (Exception e) {
-                        e.printStackTrace();
+                    mdImages.unionAll(md);
+                    md.destroy();
                 }
-            return selmd;
+            }
         }
-        
-        @Override
-        public void openMetadata(MetaData md)
+
+        return mdImages;
+    }
+
+    /**
+     * Get all the images assigned to all selected classes
+     */
+    public MetaData getEnabledClassesImages() {
+        ScipionMetaData mdImages = null;
+        MetaData md;
+        for (int i = 0; i < ids.length; ++i) {
+            if (isEnabled(i)) {
+                md = getClassImages(i);
+
+                if (md != null) {
+                    if (mdImages == null) {
+                        mdImages = ((ScipionMetaData) md).getStructure("");
+                    }
+                    mdImages.unionAll(md);
+                    md.destroy();
+                }
+            }
+        }
+
+        return mdImages;
+    }
+
+    /**
+     * Get the metadata with assigned images to this classes
+     */
+    public MetaData getClassImages(int index) {
+        try {
+            long id = ids[index];
+            ScipionMetaData childmd = ((ScipionMetaData) md).getEMObject(id).childmd;
+            return childmd.getMd(childmd.getEnabledObjects());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getLabel(long objId, int label) {
+        try {
+            if (isClassification) {
+                ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(objId);
+                return String.format("Class %s (%d images)", emo.getId(), emo.childmd.size());
+            } else {
+                return md.getValueString(label, objId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void readMd() {
+        hasMdChanges = false;
+        hasClassesChanges = false;
+        md = getMetaData(selectedBlock);
+    }
+
+    public MetaData getMetaData(String block) {
+        if (md.getBlock().equals(block)) {
+            return md;
+        }
+        ScipionMetaData child = ((ScipionMetaData) md).getChild(block);
+        if (child != null) {
+            return child;
+        }
+        ScipionMetaData parent = ((ScipionMetaData) md).getParent();
+        if (parent.getBlock().equals(selectedBlock))// from child to parent
         {
-            ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData)md);
-            ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
-            data2.setWindow(frame);
+            return parent;
         }
-        
-        
-       
-        public void overwrite(String path)
-        {
-            ((ScipionMetaData)md).overwrite(filename, path);
+        return parent.getChild(selectedBlock);
+
+    }
+
+    /**
+     * Get the assigned class of some element
+     */
+    public ClassInfo getItemClassInfo(int index) {
+        return null;
+    }
+
+    /**
+     * Set item class info in md
+     */
+    private void setItemClassInfo(long id, ClassInfo cli) {
+
+    }
+
+    /**
+     * Set the class of an element
+     */
+    public void setItemClass(int index, ClassInfo cli) {
+
+    }
+
+    public ClassInfo getClassInfo(int classNumber) {
+        return null;
+    }
+
+    /**
+     * Compute and update the number of classes and images assigned to this
+     * superclass
+     */
+    public void updateClassesInfo() {
+
+    }// function upateClassesInfo
+
+    /**
+     * Load classes structure if previously stored
+     */
+    public void loadClassesInfo() {
+
+    }// function loadClassesInfo
+
+    public MetaData[] getClassesMd() {
+        return null;
+    }
+
+    /**
+     * Add a new class
+     */
+    public void addClass(ClassInfo ci) {
+
+    }
+
+    /**
+     * Remove a class from the selection
+     */
+    public void removeClass(int classNumber) {
+
+    }
+
+    public boolean hasClasses()//for Scipion usage only
+    {
+        return mdBlocks.length > 1 && ((ScipionMetaData) md).getSelf().contains("Class");
+    }
+
+    public boolean hasMicrographParticles() {
+        return false;//fixme?? cannot open picker from sqlite
+    }
+
+    public List<ScipionMetaData.EMObject> getSelObjects() {
+        List<ScipionMetaData.EMObject> emos = new ArrayList<ScipionMetaData.EMObject>();
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i] && md.getEnabled(ids[i])) {
+                emos.add(((ScipionMetaData) md).getEMObjects().get(i));
+            }
         }
+        return emos;
+    }
+
+    public List<ScipionMetaData.EMObject> getEnabledObjects() {
+        return ((ScipionMetaData) md).getEnabledObjects();
+    }
+
+    /**
+     * This is only needed for metadata table galleries
+     */
+    public boolean isFile(ColumnInfo ci) {
+        return ci.labelName.contains("filename");
+    }
+
+    public boolean isImageFile(ColumnInfo ci) {
+        return ci.allowRender;
+    }
+
+    public MetaData getMd(List<Long> ids) {
+        MetaData selmd = null;
+        try {
+            long[] ids2 = new long[ids.size()];
+            for (int i = 0; i < ids.size(); i++) {
+                ids2[i] = ids.get(i);
+            }
+            selmd = ((ScipionMetaData) md).getStructure("");
+            selmd.importObjects(md, ids2);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return selmd;
+    }
+
+    @Override
+    public void openMetadata(MetaData md) {
+        ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData) md);
+        ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
+        data2.setWindow(frame);
+    }
+
+    public void overwrite(String path) {
+        ((ScipionMetaData) md).overwrite(filename, path);
+    }
 
     public String getScipionType() {
-        if(hasClasses())
+        if (hasClasses()) {
             return "Particle";
-        String self = ((ScipionMetaData)md).getSelf();
-        if(self.equals("CTFModel"))
+        }
+        String self = ((ScipionMetaData) md).getSelf();
+        if (self.equals("CTFModel")) {
             return "Micrograph";
+        }
         return self;
     }
-    
+
     public String getSelf() {
-        
-        return ((ScipionMetaData)md).getSelf();
+
+        return ((ScipionMetaData) md).getSelf();
     }
 
     public String getPrefix() {
-        return ((ScipionMetaData)md).getPrefix();
+        return ((ScipionMetaData) md).getPrefix();
     }
-    
-    
-    public void showCTF(boolean profile, int row, TasksEngine ctfTasks)
-    {
-            if(profile)
-                System.out.println("Not implemented yet, should open ctf profile window");
-            else
-            {
-                long id = ids[row];
-                ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-                emo.setComment("(recalculate ctf)");
-                System.out.println(emo.getComment());
-                if(ctfids == null)
-                    ctfids = new ArrayList<Long>();
-                ctfids.add(id);
-                //add id to recalculate list
-            }
-    }
-    
-    public void exportCTFRecalculate(String path) {
 
+    public void exportCTFRecalculate(String path) {
 
         try {
             FileWriter fstream = new FileWriter(path);
@@ -357,14 +344,27 @@ public class ScipionGalleryData extends GalleryData{
 
             String line = "%20s%20s%20s\n";
 
-            for(long id: ctfids)
+            for (long id : ctfids) {
                 out.write(String.format(line, id, "param1", "param2"));
-            
+            }
+
             out.close();
 
         } catch (Exception ex) {
             ex.printStackTrace();
             XmippDialog.showError(window, ex.getMessage());
         }
+    }
+
+    public void setCTFRecalculate(int row, boolean recalculate) {
+        super.setCTFRecalculate(row, recalculate);
+        ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
+        emo.setComment((recalculate) ? "(recalculate ctf)" : "");
+    }
+
+    public String createSortFile(String psdFile, int row) {
+
+        return null;
+
     }
 }

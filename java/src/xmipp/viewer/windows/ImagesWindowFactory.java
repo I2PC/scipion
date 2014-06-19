@@ -27,6 +27,7 @@ import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippStackWindow;
+import xmipp.jni.CTFParams;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -243,11 +244,11 @@ public class ImagesWindowFactory {
 		}
 	}
 
-	public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
-			String PSDfilename, TasksEngine tasksEngine,
+	public static ImageWindow openCTFImage(ImagePlus ip, CTFParams ctfparams,
+			 TasksEngine tasksEngine,
 			int row, String sortFn) {
 		XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-		return new CTFRecalculateImageWindow(ip, CTFfilename, PSDfilename,
+		return new CTFRecalculateImageWindow(ip, ctfparams, 
 				tasksEngine, row, sortFn);
 	}
 
@@ -258,12 +259,11 @@ public class ImagesWindowFactory {
 		frameText.setVisible(true);
 	}
 
-	public static void openCTFWindow(ImagePlus imp, String CTFFilename,
-			String PSDFilename) {
+	public static void openCTFWindow(ImagePlus imp, String ctffilename, String PSDFilename) {
 //		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
 //				PSDFilename);
 //		ctfView.setVisible(true);
-		new CTFAnalyzerJFrame(imp, CTFFilename, PSDFilename);
+		new CTFAnalyzerJFrame(imp, ctffilename, PSDFilename);
 	}
 
 	public static String getSortTitle(String title, int width,

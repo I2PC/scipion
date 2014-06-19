@@ -25,6 +25,7 @@
 
 package xmipp.jni;
 
+import ij.IJ;
 import java.io.File;
 import java.util.Arrays;
 
@@ -561,5 +562,39 @@ public class MetaData {
 		}
 		return false;
 	}
+        
+        public String getCTFFile(long id)
+        {
+            return getValueString(MDLabel.MDL_CTF_MODEL, id);
+        }
+        
+        public CTFParams getCTFParams(long id) {
+            MetaData md = new MetaData(getCTFFile(id));
+            try {
+                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV;
+                String psd, psdenhanced;
+
+                psd = md.getValueString(MDLabel.MDL_PSD, id);
+                psdenhanced = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+                Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
+                Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
+                downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
+                Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
+                kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
+
+                defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
+                defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
+
+                
+                return new CTFParams(psd, psdenhanced, Q0, Cs, Ts, kV, defU, defV);
+            } catch (Exception ex) {
+                IJ.error(ex.getMessage());
+                throw new IllegalArgumentException(ex);
+            }
+            
+        }
+        
+        
+        
 
 }

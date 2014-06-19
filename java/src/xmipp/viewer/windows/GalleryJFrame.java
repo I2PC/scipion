@@ -1915,10 +1915,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 else
                                 {
                                         String file = data.getValueFromCol(row, ci);
-
                                         ImagesWindowFactory.openFileAsDefault(file);
                                 }
-                                
 			}
 			else if (cmd.equals(OPEN_ASTEXT))
 			{
@@ -1927,14 +1925,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 			else if (cmd.equals(CTF_PROFILE))
 			{
-				data.showCTF(true, row, ctfTasks);
+                                int index = gallery.getIndex(row, col);
+				data.showCTF(true, index, ctfTasks);
 			}
 			else if (cmd.equals(CTF_RECALCULATE))
 			{
-                                data.setCTFRecalculate(row, !data.isRecalculateCTF(row));
-                                if(data.isRecalculateCTF(row));
-                                    data.showCTF(false, row, ctfTasks);
+                                boolean isrecalculate = getItemSelected(CTF_RECALCULATE);
+                                int index = gallery.getIndex(row, col);
+                                data.setCTFRecalculate(index, isrecalculate);
+                                
+                                if(isrecalculate)
+                                    data.showCTF(false, index, ctfTasks);
                                 gallery.fireTableRowsUpdated(row, row);
+                                
                                 
 			}
 			else if (cmd.equals(SET_CLASS))

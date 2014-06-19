@@ -11,7 +11,6 @@ import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.process.EllipseFitter;
 import ij.process.ImageStatistics;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -23,16 +22,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.jni.CTFParams;
 
 /**
  *
@@ -50,17 +47,17 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     private JSpinner spinnerHighFreq;
     private CTFCanvas canvas;
     
-    public CTFRecalculateImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
+    public CTFRecalculateImageWindow(ImagePlus imp, CTFParams ctfparams,
             TasksEngine tasksEngine, int row, String sortFn) {
         super(imp, new CTFCanvas(imp));
         
 
-        this.PSDFilename = PSDFilename;
+        this.PSDFilename = ctfparams.psd;
         this.sortFn = sortFn;
         this.tasksEngine = tasksEngine;
         this.row = row;
 
-        ellipseCTF = new EllipseCTF(CTFFilename, imp.getWidth());
+        ellipseCTF = new EllipseCTF(ctfparams, imp.getWidth());
 
         button = XmippWindowUtil.getTextButton("Recalculate CTF", this);
         button.setEnabled(false);

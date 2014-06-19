@@ -34,7 +34,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -44,6 +46,8 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
+import xmipp.jni.CTFParams;
+import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -1232,25 +1236,21 @@ public class GalleryData {
         {
                 try
                 {
-                        String ctfModel = getValueString(MDLabel.MDL_CTF_MODEL, getId(row));
-                        String displayFilename = getValueString(MDLabel.MDL_PSD_ENHANCED, getId(row));
-                        String psdFile = getValueString(MDLabel.MDL_PSD, getId(row));
+                        long id = ids[row];
+                        CTFParams ctfparams = md.getCTFParams(id); 
+                        String displayFilename = ctfparams.psdenhanced;
+                        String psdFile = ctfparams.psd;
 
                         ImageGeneric img = new ImageGeneric(displayFilename);
                         ImagePlus imp = XmippImageConverter.readToImagePlus(img);
 
                         if (profile)
-                                ImagesWindowFactory.openCTFWindow(imp, ctfModel, psdFile);
+                                ImagesWindowFactory.openCTFWindow(imp, md.getCTFFile(id), psdFile);
                         else
                         {
-                                MetaData mdRow = new MetaData(); 
-                                MDRow row2 = new MDRow();
-                                md.getRow(row2, getId(row));
-                                mdRow.setRow(row2, mdRow.addObject());
-                                String sortFn = psdFile.replace(".psd", ".xmd");
-                                mdRow.write(sortFn);
-                                mdRow.destroy();
-                                ImagesWindowFactory.openCTFImage(imp, ctfModel, psdFile, ctfTasks, row, sortFn);
+                                String sortfn = createSortFile(psdFile, row);
+                                XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
+                                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(imp, ctfparams, ctfTasks, row, sortfn);
                         }
 
                 }
@@ -1258,7 +1258,25 @@ public class GalleryData {
                 {
                         XmippDialog.showError(window, e.getMessage());
                 }
-        }
+    }
+        
+    
+        
+    
+        
+    public String createSortFile(String psdFile, int row)
+    {
+        
+            MetaData mdRow = new MetaData(); 
+            MDRow row2 = new MDRow();
+            md.getRow(row2, getId(row));
+            mdRow.setRow(row2, mdRow.addObject());
+            String sortFn = psdFile.replace(".psd", ".xmd");
+            mdRow.write(sortFn);
+            mdRow.destroy();
+            return sortFn;
+        
+    }
         
     public ArrayList<ClassInfo> getClasses() {
         return classesArray;

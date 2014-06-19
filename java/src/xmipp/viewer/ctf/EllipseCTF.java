@@ -4,9 +4,7 @@
  */
 package xmipp.viewer.ctf;
 
-import ij.IJ;
-import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
+import xmipp.jni.CTFParams;
 
 /**
  *
@@ -14,38 +12,25 @@ import xmipp.jni.MetaData;
  */
 public class EllipseCTF {
 
-    private double Q0, Cs, D, Ts, kV, lambda, downsampleFactor, lowFreq, highFreq;
+    private double Q0, Cs, D, Ts, kV, lambda, lowFreq, highFreq;
     double defU, defV;
     private double defocusU, defocusV;
 
-    public EllipseCTF(String CTFFilename, double D) {
+   
+    
+    public EllipseCTF(CTFParams ctfparams, double D)
+    {
         this.D = D;
-
-        loadCTFFilename(CTFFilename);
+        Q0 = ctfparams.Q0;
+        Cs = ctfparams.Cs;
+        Ts = ctfparams.Ts;
+        kV = ctfparams.kV;
+        lambda = ctfparams.lambda;
+        defU = ctfparams.defU;
+        defV = ctfparams.defV;
     }
 
-    private void loadCTFFilename(String CTFFilename) {
-        try {
-            MetaData ctfMetaData = new MetaData(CTFFilename);
-
-            long firstID = ctfMetaData.findObjects()[0];
-
-            Q0 = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_Q0, firstID);
-            Cs = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_CS, firstID);
-            downsampleFactor = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, firstID);
-            Ts = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, firstID)*downsampleFactor;
-            kV = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, firstID);
-
-            defU = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, firstID);
-            defV = ctfMetaData.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, firstID);
-
-            lambda = lambda(kV);
-            
-            ctfMetaData.destroy();
-        } catch (Exception ex) {
-            IJ.error(ex.getMessage());
-        }
-    }
+    
 
     public double getDefocusU() {
         return defocusU;
@@ -79,11 +64,7 @@ public class EllipseCTF {
         defocusV = defocus(major, Q0, lambda, Cs, D, Ts);
     }
 
-    private double lambda(double Kv) {
-        double local_kV = Kv * 1.0e3;
-
-        return 12.3 / Math.sqrt(local_kV * (1. + local_kV * 1e-6));
-    }
+    
 
     private double defocus(double r, double Q0, double lambda, double Cs, double D, double Ts) {
         double R = r / (D * Ts);
@@ -120,4 +101,6 @@ public class EllipseCTF {
     + "defocusV: " + defocusV + " > (file: " + defV + ")\n"
     + "---------------------------------------------------\n";
     }*/
+    
+   
 }
