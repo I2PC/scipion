@@ -85,5 +85,6 @@ DataSet(name='ribo_movies', folder='ribo_movies',
 
 DataSet('model', 'model', 
         {'modelGoldSqlite': 'gold/model_gold.sqlite', 
-         'modelGoldXml': 'gold/model_gold.xml'})
+         'modelGoldXml': 'gold/model_gold.xml',
+         'classesSelection': 'gold/classes_selection.sqlite'})
 
