@@ -574,8 +574,8 @@ public class MetaData {
                 double Q0, Cs, Ts, kV, downsampleFactor, defU, defV;
                 String psd, psdenhanced;
 
-                psd = md.getValueString(MDLabel.MDL_PSD, id);
-                psdenhanced = md.getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+                psd = getValueString(MDLabel.MDL_PSD, id);
+                psdenhanced = getValueString(MDLabel.MDL_PSD_ENHANCED, id);
                 Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
                 Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
                 downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
@@ -585,7 +585,6 @@ public class MetaData {
                 defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
                 defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
 
-                
                 return new CTFParams(psd, psdenhanced, Q0, Cs, Ts, kV, defU, defV);
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
