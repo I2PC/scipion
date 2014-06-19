@@ -593,13 +593,7 @@ class SqliteFlatMapper(Mapper):
             print "         objRow: ", dict(objRow)
         
         for c, attrName in self._objColumns:
-            if attrName == '_mapperPath':
-                #FIXME: this is a really dirty-dirty fix in order to 
-                # continue with Ward protocol before fixing this bug
-                obj._mapperPath.trace(obj.load)
-                obj._mapperPath.set(objRow[c])
-            else:
-                obj.setAttributeValue(attrName, objRow[c])
+            obj.setAttributeValue(attrName, objRow[c])
 
         return obj
         
