@@ -42,7 +42,7 @@ from pyworkflow.gui import Window
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
-from pyworkflow.em.viewer import DataView, ObjectView
+from pyworkflow.em.viewer import ClassesView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from protocol import SpiderProtClassifyWard, SpiderProtClassifyDiday
 
@@ -283,10 +283,11 @@ class SpiderViewerDiday(SpiderViewerClassify):
                 img = particles[imgId]
                 class2D.append(img)
                 
-        from pyworkflow.em.packages.xmipp3.convert import writeSetOfClasses2D
-        fn = self._getPath('classes.xmd')
-        writeSetOfClasses2D(classes2D, fn)
+            classes2D.update(class2D)            
+        classes2D.write()
         classes2D.close()
-        
-        return [DataView(fn)]
+
+        return [ClassesView(self.getProject().getName(),
+                            prot.strId(), classes2D.getFileName(), 
+                            prot.inputParticles.get().strId())]
                               
