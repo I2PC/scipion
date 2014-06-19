@@ -129,8 +129,11 @@ class EMProtocol(Protocol):
             msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
             msg += 'which are %d and %d, respectively' % (d1, d2)
             errors.append(msg)
-
- 
+            
+    def __str__(self):
+        return self.getObjLabel()
+    
+     
 class ProtSets(EMProtocol):
     pass
 
@@ -159,9 +162,7 @@ class ProtUserSubSet(ProtSets):
         
         output = createFunc()
         output.copyInfo(inputImages)
-        for img in modifiedSet:
-            if img.isEnabled():                
-                output.append(img)
+        output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
         
@@ -209,11 +210,7 @@ class ProtUserSubSet(ProtSets):
         
         output = createFunc()
         output.copyInfo(inputImages)
-        for cls in modifiedSet:
-            if cls.isEnabled():
-                for img in cls:
-                    if img.isEnabled():                
-                        output.append(img)
+        output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
  
@@ -228,16 +225,7 @@ class ProtUserSubSet(ProtSets):
         self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
         
         output = createFunc(inputClasses.getImages())
-        #output.copyInfo(inputClasses)
-        for cls in modifiedSet:
-            if cls.isEnabled():
-                newCls = output.ITEM_TYPE()
-                newCls.copyInfo(cls)
-                output.append(newCls)
-                for img in cls:
-                    if img.isEnabled():                
-                        newCls.append(img)
-                output.update(newCls)
+        output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
                
