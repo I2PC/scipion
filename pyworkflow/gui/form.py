@@ -228,6 +228,7 @@ class SubclassesTreeProvider(TreeProvider):
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
             if not self._containsObject(objects, setObject):
                 objects.append(setObject)
+                setObject._allowSelection = False # Do not allows set to be selected here
                 for item in setObject:
                     newItem = item.clone()
                     newItem.setObjId(item.getObjId())
@@ -715,8 +716,16 @@ class ParamWidget():
         elif selected is not None:
             selected = [value]
         tp = SubclassesTreeProvider(self._protocol, self.param, selected=selected)
+        
+        def validateSelected(selectedItem):
+            if not getattr(selectedItem, '_allowSelection', True):
+                return "Please select object of types: %s" % self.param.pointerClass.get()
+
         dlg = ListDialog(self.parent, "Select object", tp, 
-                         "Double click an item to preview the object")
+                         "Double click an item to preview the object",
+                         validateSelected)
+        dlg.validateItem = validateSelected
+        
         if dlg.value is not None:
             self.set(dlg.value)
         

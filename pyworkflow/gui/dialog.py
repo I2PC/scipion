@@ -395,7 +395,8 @@ def askString(title, label, parent, entryWidth=20):
 class ListDialog(Dialog):
     """Dialog to select an element from a list.
     It is implemented using a Tree widget"""
-    def __init__(self, parent, title, provider, message=None, **args):
+    def __init__(self, parent, title, provider, 
+                 message=None, validateItem=None, **args):
         """ From args:
                 message: message tooltip to show when browsing.
                 selected: the item that should be selected.
@@ -403,6 +404,8 @@ class ListDialog(Dialog):
         self.value = None
         self.provider = provider
         self.message = message
+        self.validateItem = validateItem
+        
         Dialog.__init__(self, parent, title,
                         buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
         
@@ -419,13 +422,25 @@ class ListDialog(Dialog):
     def _createTree(self, parent):
         self.tree = BoundTree(parent, self.provider)
         
+    def _getSelectedObject(self):
+        return self.tree.getObjectFromId(self.tree.getFirst())
+    
     def apply(self):
-        self.value = self.tree.getObjectFromId(self.tree.getFirst())
+        self.value = self._getSelectedObject()
     
     def validate(self):
-        if self.tree.getFirst() is None:
-            showError("Validation error", "Please select an element", self)
+        selectedItem = self.tree.getFirst() 
+        err = ''
+        
+        if selectedItem is None:
+            err = "Please select an element"
+        elif self.validateItem:
+            err = self.validateItem(self._getSelectedObject())
+        
+        if err:
+            showError("Validation error", err, self)
             return False
+        
         return True
         
         
