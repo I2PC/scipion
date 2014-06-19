@@ -31,7 +31,7 @@ from pyworkflow.tests import *
 
 # Some utility functions to import micrographs that are used
 # in several tests.
-class TestRelionBase(unittest.TestCase):
+class TestRelionBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
@@ -41,8 +41,10 @@ class TestRelionBase(unittest.TestCase):
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
-        protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
-        cls.proj.launchProtocol(protImport, wait=True)
+        protImport = cls.newProtocol(ProtImportParticles, 
+                                      pattern=pattern, samplingRate=samplingRate, 
+                                      checkStack=checkStack)
+        cls.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
@@ -51,16 +53,18 @@ class TestRelionBase(unittest.TestCase):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
-        protPreproc = XmippProtPreprocessParticles(doNormalize=True)
+        protPreproc = cls.newProtocol(XmippProtPreprocessParticles,
+                                      doNormalize=True)
         protPreproc.inputParticles.set(particles)
-        cls.proj.launchProtocol(protPreproc, wait=True)
+        cls.launchProtocol(protPreproc)
         return protPreproc
     
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
-        protImport = ProtImportVolumes(pattern=pattern, samplingRate=samplingRate)
-        cls.proj.launchProtocol(protImport, wait=True)
+        protImport = cls.newProtocol(ProtImportVolumes, 
+                                     pattern=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(protImport)
         return protImport
 
 
@@ -74,11 +78,13 @@ class TestRelionClassify2D(TestRelionBase):
             
     def testRelion2D(self):
         print "Run relion2D"
-        prot2D = ProtRelionClassify2D(doCTF=False, maskRadiusA=170, numberOfMpi=4, numberOfThreads=1)
+        prot2D = self.newProtocol(ProtRelionClassify2D,
+                                  doCTF=False, maskRadiusA=170,
+                                  numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
         prot2D.inputParticles.set(self.protImport.outputParticles)
-        self.proj.launchProtocol(prot2D, wait=True)        
+        self.launchProtocol(prot2D)        
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
                              "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
@@ -95,25 +101,15 @@ class TestRelionClassify3D(TestRelionBase):
     
     def testProtRelionClassify3D(self):
         print "Run ProtRelionClassify3D"
-        relion3DClass = ProtRelionClassify3D(numberOfClasses=3, numberOfIterations=4, doCTF=False, runMode=1, 
-                                 numberOfMpi=2, numberOfThreads=2)
+        relion3DClass = self.newProtocol(ProtRelionClassify3D, 
+                                         numberOfClasses=3, numberOfIterations=4, 
+                                         doCTF=False, runMode=1,
+                                         numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputParticles.set(self.protImport.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
-        self.proj.launchProtocol(relion3DClass, wait=True)
+        self.launchProtocol(relion3DClass)
         
         self.assertIsNotNone(getattr(relion3DClass, 'outputClasses', None), 
                              "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
 
 
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        className = sys.argv[1]
-        cls = globals().get(className, None)
-        if cls:
-            suite = unittest.TestLoader().loadTestsFromTestCase(cls)
-            unittest.TextTestRunner(verbosity=2).run(suite)
-        else:
-            print "Test: '%s' not found." % className
-    else:
-        unittest.main()
