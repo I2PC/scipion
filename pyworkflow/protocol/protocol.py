@@ -273,6 +273,7 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
+        self._log = None
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = args.get('project', None)
@@ -556,14 +557,16 @@ class Protocol(Step):
         """
         self._currentDir = os.getcwd()
         os.chdir(path)
-        self._log.info("Entered to dir: cd '%s'" % path)
+        if self._log:
+            self._log.info("Entered to dir: cd '%s'" % path)
         
     def _leaveDir(self): 
         """ This method should be called after a call to _enterDir
         to return to the previous location. 
         """
-        os.chdir(self._currentDir)        
-        self._log.info("Returned to dir: cd '%s'" % self._currentDir)
+        os.chdir(self._currentDir)  
+        if self._log:
+            self._log.info("Returned to dir: cd '%s'" % self._currentDir)
                       
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
