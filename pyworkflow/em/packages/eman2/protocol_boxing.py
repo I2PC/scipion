@@ -61,7 +61,7 @@ class EmanProtBoxing(ProtParticlePicking):
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchBoxingGUIStep', isInteractive=True)
+            self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')  
     
