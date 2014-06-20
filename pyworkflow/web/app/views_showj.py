@@ -318,6 +318,9 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                
     elif inputParams[MODE]==MODE_GALLERY or inputParams[MODE]==MODE_TABLE or inputParams[MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[MODE] + '_utils')})
+        
+    # Library to manage the extra menu functions
+    context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
     # IMPROVE TO KEEP THE SELECTED ITEMS
     context.update({SELECTEDITEMS : inputParams[SELECTEDITEMS]})

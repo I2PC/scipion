@@ -11,69 +11,12 @@ $(document).ready(function(){
 	updateEnabledItems(mode, listEnabledItems)
 	
 	});
-
-
-function markSelectedItems(mode, list){
-	switch(mode){
-	    case "gallery":
-	        // Came from the table mode
-	        for (var x=0;list.length>x;x++){
-	        	$("div#img_container___"+ list[x]).addClass("image_selected");
-	        }
-	        break;
-	        
-	    case "table":
-	        // Came from the gallery mode
-	    	for (var x=0;list.length>x;x++){
-	    		$("tr#row_container___"+ list[x]).addClass("row_selected");
-	    	}
-	        break;
-	}
-}
-
-function updateEnabledItems(mode, list){
-	switch(mode){
-	    case "gallery":
-	        // Came from the table mode
-	        for (var x=0;list.length>x;x++){
-	        	$("img#enabled___"+ list[x]).css("display","block");
-	        }
-	        break;
-	        
-	    case "table":
-	        // Came from the gallery mode
-	    	for (var x=0;list.length>x;x++){
-	    		$("input#enabled___"+ list[x]).prop("checked", false);
-	    	}
-	        break;
-	}
-}
-
-
-function createSubset(mode){
-	
-	switch(mode){
-		case "micrographs":
-			// create subsets with micrographs
-			break;
-	
-		case "particles":
-			// create subsets with particles
-			break;
-			
-		case "volumes":
-			// create subsets with volumes
-			break;
-	}
-}
-
-
 </script>
 	
 	
 <div id="asideMainContainer">
 	<div id="createContainer" class="sectionMenu" style="float:right;">
-		<a id="saveButton" href="javascript:createSubset('particles')" class="btn buttonRed" style="padding: 5px 10px;">
+		<a id="saveButton" href="javascript:createSubset()" class="btn buttonRed" style="padding: 5px 10px;">
 			Create Particles
 		</a>
 	</div>
