@@ -71,11 +71,18 @@ BUILD_VIRTUALENV = not COMPILE_PYTHON
 ############################
 
 # Tcl/Tk
-env.AddLibrary('tcl', dft=True, tar='tcl8.6.1-src.tar.gz', dir='tcl8.6.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tcl8.6.1-src.tar.gz')
-env.AddLibrary('tk', dft=True, tar='tk8.6.1-src.tar.gz', dir='tk8.6.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/tk8.6.1-src.tar.gz')
+env.AddLibrary('tcl', 
+               tar='tcl8.6.1-src.tar.gz', 
+               dir='tcl8.6.1', 
+               src=os.path.join('tcl8.6.1', 'unix'))
+env.AddLibrary('tk',  
+               tar='tk8.6.1-src.tar.gz', 
+               dir='tk8.6.1',
+               src=os.path.join('tk8.6.1', 'unix'))
 
 # sqlite
-env.AddLibrary('sqlite', dft=True, tar='sqlite-3.6.23.tgz', dir='sqlite-3.6.23', url='http://scipionwiki.cnb.csic.es/files/scipion/software/external/sqlite-3.6.23.tgz')
+env.AddLibrary('sqlite',
+               tar='sqlite-3.6.23.tgz')
 
 
 #############################
@@ -83,35 +90,61 @@ env.AddLibrary('sqlite', dft=True, tar='sqlite-3.6.23.tgz', dir='sqlite-3.6.23',
 #############################
 
 # python 2.7.7
-env.AddLibrary('python', dft=True, tar='Python-2.7.7.tgz', dir='Python-2.7.7', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz')
+env.AddLibrary('python',  
+               tar='Python-2.7.7.tgz',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz')
 
 ############################
 # THIRD LEVEL DEPENDENCIES #
 ############################
 
 # numpy
-env.AddLibrary('numpy', dft=True, tar='numpy-1.8.1.tar.gz', dir='numpy-1.8.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/numpy-1.8.1.tar.gz')
+env.AddLibrary('numpy',  
+               tar='numpy-1.8.1.tar.gz', 
+               dir='numpy-1.8.1', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/numpy-1.8.1.tar.gz')
 
 # matplotlib
-env.AddLibrary('matplotlib', dft=True, tar='matplotlib-1.3.1.tar.gz', dir='matplotlib-1.3.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/matplotlib-1.3.1.tar.gz')
+env.AddLibrary('matplotlib',  
+               tar='matplotlib-1.3.1.tar.gz', 
+               dir='matplotlib-1.3.1', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/matplotlib-1.3.1.tar.gz')
 
 # psutil
-env.AddLibrary('psutil', dft=True, tar='psutil-2.1.1.tar.gz', dir='psutil-2.1.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/psutil-2.1.1.tar.gz')
+env.AddLibrary('psutil', 
+               tar='psutil-2.1.1.tar.gz', 
+               dir='psutil-2.1.1', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/psutil-2.1.1.tar.gz')
 
 # mpi4py
-env.AddLibrary('mpi4py', dft=True, tar='mpi4py-1.3.1.tar.gz', dir='mpi4py-1.3.1', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/mpi4py-1.3.1.tar.gz')
+env.AddLibrary('mpi4py', 
+               tar='mpi4py-1.3.1.tar.gz', 
+               dir='mpi4py-1.3.1', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/mpi4py-1.3.1.tar.gz')
 
 # scipy
-env.AddLibrary('scipy', dft=False, tar='scipy-0.14.0.tar.gz', dir='scipy-0.14.0', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/scipy-0.14.0.tar.gz')
+env.AddLibrary('scipy', 
+               dft=False, 
+               tar='scipy-0.14.0.tar.gz', 
+               dir='scipy-0.14.0', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/scipy-0.14.0.tar.gz')
 
 # bibtex
-env.AddLibrary('bibtexparser', dft=True, tar='bibtexparser-0.5.tgz', dir='bibtexparser-0.5', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/bibtexparser-0.5.tgz')
+env.AddLibrary('bibtexparser', 
+               tar='bibtexparser-0.5.tgz',  
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/bibtexparser-0.5.tgz')
 
 # django
-env.AddLibrary('django', dft=True, tar='Django-1.5.5.tgz', dir='Django-1.5.5', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Django-1.5.5.tgz')
+env.AddLibrary('django', 
+               tar='Django-1.5.5.tgz', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Django-1.5.5.tgz')
 
 # paramiko
-env.AddLibrary('paramiko', dft=False, tar='paramiko-1.14.0.tar.gz', dir='paramiko-1.14.0', url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz')
+env.AddLibrary('paramiko', 
+               dft=False, 
+               tar='paramiko-1.14.0.tar.gz', 
+               dir='paramiko-1.14.0', 
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz')
 
 ######################
 # CONFIGURATION FILE #
@@ -140,58 +173,58 @@ if not GetOption('clean'):
 #########
 # UNTAR #
 #########
-env.UntarLibrary('sqlite')
-env.UntarLibrary('tcl')
-env.UntarLibrary('tk')
-env.UntarLibrary('python')
-env.UntarLibrary('numpy')
-env.UntarLibrary('matplotlib')
-env.UntarLibrary('psutil')
-env.UntarLibrary('mpi4py')
-env.UntarLibrary('scipy')
-env.UntarLibrary('bibtexparser')
-env.UntarLibrary('django')
-env.UntarLibrary('paramiko')
+sqliteUntar = env.UntarLibrary('sqlite')
+tclUntar = env.UntarLibrary('tcl')
+tkUntar = env.UntarLibrary('tk')
+pythonUntar = env.UntarLibrary('python')
+#env.UntarLibrary('numpy')
+#env.UntarLibrary('matplotlib')
+#env.UntarLibrary('psutil')
+#env.UntarLibrary('mpi4py')
+#env.UntarLibrary('scipy')
+#env.UntarLibrary('bibtexparser')
+#env.UntarLibrary('django')
+#env.UntarLibrary('paramiko')
 
 ##########################
 # EXECUTING COMPILATIONS #
 ##########################
 
 env.CompileLibrary('sqlite',
+                   source=sqliteUntar,
                    flags=['CPPFLAGS=-w', 
                           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['sqlite'][DIR]), '*.c'),
-                   target=File('libsqlite3.so'),
-                   autoSource='Makefile.in',
-                   autoTarget='Makefile')
+                   target='libsqlite3.so')
 
-env.CompileLibrary('tcl', 
+tcl = env.CompileLibrary('tcl', 
+                   source=tclUntar,
                    flags=['--enable-threads', 
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tcl'][DIR]), 'unix', '*.c'),
-                   target=File('libtcl.so'),
+                   target='libtcl.so',
                    autoSource=os.path.join('unix','Makefile.in'),
                    autoTarget=os.path.join('unix','Makefile'),
                    makePath='unix')
 
-env.CompileLibrary('tk', 
+tk = env.CompileLibrary('tk', 
+                   source=tkUntar,
                    flags=['--enable-threads', 
 #                          '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-                   deps=File('libtcl.so'),
-                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['tk'][DIR]), 'unix', '*.c'),
-                   target=File('libtk.so'),
+                   deps=[],
+                   target='libtk.so',
                    autoSource=os.path.join('unix','Makefile.in'),
                    autoTarget=os.path.join('unix','Makefile'),
                    makePath='unix')
 
 env.CompileLibrary('python',
-                   flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-                   deps=[File('libtcl.so'), File('libtk.so'), File('libsqlite3.so')],
-                   source=Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], SCIPION['LIBS']['python'][DIR]), '*.c'),
-                   target=File('libpython2.7.so'),
-                   autoSource='Makefile.pre.in',
-                   autoTarget='Makefile')
+                   source=pythonUntar,
+                   flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
+                          #'-I/usr/include/ncurses'
+                          ],
+                   deps=[],
+                   target='libpython2.7.so',
+                   autoSource='Makefile.pre.in')
 
 
+#env.CompileWithSetupPy('numpy')
