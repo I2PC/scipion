@@ -149,9 +149,8 @@ class Step(OrderedObject):
         return self.getStatus() == STATUS_ABORTED
 
     def isInteractive(self):
-        return self.interactive
+        return self.interactive.get()
     
-        
     def run(self):
         """ Do the job of this step"""
         self.setRunning() 
