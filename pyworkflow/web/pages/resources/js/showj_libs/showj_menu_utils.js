@@ -165,6 +165,6 @@ function createSubset(){
 	var mode = document.forms['showjForm'].mode.value
 	var listSubset = getListEnabledItems(mode)
 	
-	alert("To do a subset with the elements:" + listSubset);
+	alert("To do a subset without the elements:" + listSubset);
 	
 }
