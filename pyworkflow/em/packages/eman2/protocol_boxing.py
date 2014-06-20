@@ -95,6 +95,7 @@ class EmanProtBoxing(ProtParticlePicking):
             
             coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
             readSetOfCoordinates(workDir, self.inputMics, coordSet)
+            self.boxSize.set(coordSet.getBoxSize())
             outputs = {outputName: coordSet}
             self._defineOutputs(**outputs)
             self._defineSourceRelation(micSet, coordSet)
