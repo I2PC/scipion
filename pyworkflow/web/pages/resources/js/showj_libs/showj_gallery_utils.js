@@ -117,15 +117,14 @@ function initializeImageEvents(hasEnabledColumn){
 	$(".img_container").hover(
 		function(e){
 			if (!$(this).find(".enabledGallery").hasClass("selected")){
-				$(this).find(".enabledGallery").fadeIn('slow')
+				$(this).find(".enabledGallery").fadeIn(1)
 			}
 		},
 		function(){
 			if (!$(this).find(".enabledGallery").hasClass("selected")){
-				$(this).find(".enabledGallery").fadeOut('fast')
+				$(this).find(".enabledGallery").fadeOut(1)
 			}
 		}) 
-	
 		
 	if (hasEnabledColumn){	
 			
