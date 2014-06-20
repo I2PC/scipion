@@ -1,40 +1,4 @@
-<script>
-
-function getListSelectedItems(mode){
-	var list_selected=[];
-    switch(mode){
-        case "gallery":
-            // To get the selected images
-            $.each($("div.image_selected"), function(){
-                var id = $(this).attr("id").split("___").pop()
-                list_selected.push(id)
-            });
-            break;
-            
-        case "table":
-            // To get the selected rows
-            $.each($("tr.row_selected"), function(){
-                var id = $(this).attr("id").split("___").pop()
-                list_selected.push(id)
-            });
-            break;
-    }
-    return list_selected
-}
-
-function changeMode(modeNew){
-	var form = document.forms['showjForm']
-	var modeOld = form.mode.value
-	 
-	if (modeNew != modeOld){
-		var listSeletected = getListSelectedItems(modeOld);
-		form.listSelectedItems.value = getListSelectedItems(modeOld);
-		form.mode.value = modeNew;
-		form.submit();
-	}
-}
-
-</script>
+<script type="text/javascript" src="{{showj_menu_utils}}" ></script>
 
 <div id="asideMainContainer">
 	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
@@ -230,5 +194,7 @@ function changeMode(modeNew){
 	    
 		<!-- Hidden field to storage temporally the selection. -->
 		 <input type="hidden" name="listSelectedItems" value="">
+		 <!-- Hidden field to storage temporally the enabled items. -->
+		 <input type="hidden" name="listEnabledItems" value="">
 	</form>
 </div>	

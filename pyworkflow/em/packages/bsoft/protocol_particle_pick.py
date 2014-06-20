@@ -63,7 +63,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
         # Launch Particle Picking GUI
-        self._insertFunctionStep('launchParticlePickGUIStep', isInteractive=True)
+        self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep')
         

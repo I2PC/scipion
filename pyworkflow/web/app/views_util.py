@@ -102,6 +102,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'transpose': 'showj_libs/transpose.js',
           
           'showj_utils': 'showj_libs/showj_utils.js',
+          'showj_menu_utils': 'showj_libs/showj_menu_utils.js',
           'showj_gallery_utils': 'showj_libs/showj_gallery_utils.js',
           'showj_table_utils': 'showj_libs/showj_table_utils.js',
           'showj_column_utils': 'showj_libs/showj_column_utils.js',

@@ -556,8 +556,25 @@ class SetOfImages(EMSet):
         """ Redefine iteration to set the acquisition to images. """
         for img in self._iterItems():
             img.setAcquisition(self.getAcquisition())
-            
             yield img
+            
+    def appendFromImages(self, imagesSet):
+        """ Iterate over the images and append 
+        every image that is enabled. 
+        """
+        for img in imagesSet:
+            if img.isEnabled():
+                self.append(img)
+                                    
+    def appendFromClasses(self, classesSet):
+        """ Iterate over the classes and the element inside each
+        class and append to the set all that are enabled. 
+        """
+        for cls in classesSet:
+            if cls.isEnabled():
+                for img in cls:
+                    if img.isEnabled():                
+                        self.append(img)
 
 
 class SetOfMicrographs(SetOfImages):
@@ -958,28 +975,53 @@ class SetOfClasses(EMSet):
             return self.getFirstItem().getRepresentative().getDim()
         return None
     
+    def _setItemMapperPath(self, classItem):
+        """ Set the mapper path of this class according to the mapper
+        path of the SetOfClasses and also the prefix acording to class id
+        """
+        classPrefix = 'Class%03d' % classItem.getObjId()
+        classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
+        classItem._mapperPath.setStore(False)
+        
     def _insertItem(self, classItem):
         """ Create the SetOfImages assigned to a class.
         If the file exists, it will load the Set.
         """
         if classItem.hasRepresentative():
             self._representatives.set(True)
-            
-        if classItem.getFileName() is None:
-            classPrefix = 'Class%03d' % classItem.getObjId()
-            classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
+                        
+        self._setItemMapperPath(classItem)
         EMSet._insertItem(self, classItem)
         classItem.write()#Set.write(self)
         
-    def write(self):
-        """ Override super method to also write the representatives. """
-        EMSet.write(self)
-#         if self._representatives: # Write if not None
-#             self._representatives.write()
+    def __getitem__(self, itemId):
+        """ Setup the mapper classes before returning the item. """
+        classItem = self._mapper.selectById(itemId)
+        self._setItemMapperPath(classItem)
+        return classItem
+
+    def _iterItems(self):    
+        for classItem in self._mapper.selectAll():
+            self._setItemMapperPath(classItem)
+            yield classItem
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
+    def appendFromClasses(self, classesSet):
+        """ Iterate over the classes and the elements inside each
+        class and append classes and items that are enabled.
+        """
+        for cls in classesSet:
+            if cls.isEnabled():
+                newCls = self.ITEM_TYPE()
+                newCls.copyInfo(cls)
+                self.append(newCls)
+                for img in cls:
+                    if img.isEnabled():                
+                        newCls.append(img)
+                self.update(newCls)  
+                                      
 
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """

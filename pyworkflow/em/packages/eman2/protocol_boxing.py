@@ -61,7 +61,7 @@ class EmanProtBoxing(ProtParticlePicking):
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchBoxingGUIStep', isInteractive=True)
+            self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')  
     
@@ -95,6 +95,7 @@ class EmanProtBoxing(ProtParticlePicking):
             
             coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
             readSetOfCoordinates(workDir, self.inputMics, coordSet)
+            self.boxSize.set(coordSet.getBoxSize())
             outputs = {outputName: coordSet}
             self._defineOutputs(**outputs)
             self._defineSourceRelation(micSet, coordSet)

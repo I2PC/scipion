@@ -103,10 +103,6 @@ class Project(object):
         if not isReadOnly():
             self.settings.write()
             
-    def getDbPath(self):
-        return self.dbPath
-    
-    
     def load(self):
         """Load project data and settings
         from the project dir."""
@@ -163,7 +159,7 @@ class Project(object):
         and also take care if the execution is remotely."""
         
         #if protocol.getStatus() != STATUS_INTERACTIVE:
-        if not protocol.isInteractive.get():
+        if not protocol.isInteractive():
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
         
         protocol.setStatus(STATUS_LAUNCHED)

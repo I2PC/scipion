@@ -58,7 +58,10 @@ class TestSqliteMapper(BaseTest):
         
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
-        print "Using db: >>>>>>>> fn: ", fn
+        fnGold = self.modelGoldSqlite
+        
+        print ">>> Using db: ", fn
+        print "        gold: ", fnGold
 
         mapper = SqliteMapper(fn)
         # Insert a Complex
@@ -118,7 +121,6 @@ class TestSqliteMapper(BaseTest):
         mapper.commit()
 
         # Reading test
-        fnGold = self.modelGoldSqlite
         mapper2 = SqliteMapper(fnGold, globals())
 
         l = mapper2.selectByClass('Integer')[0]
@@ -141,7 +143,9 @@ class TestSqliteMapper(BaseTest):
         iterAllObj = mapper2.selectAll(iterate=True)
 
         for a1, a2 in zip(allObj, iterAllObj):
-            self.assertEqual(a1, a2)
+            # Note compare the scalar objects, which have a well-defined comparison
+            if isinstance(a1, Scalar):
+                self.assertEqual(a1, a2)
             
         # Test relations
         childs = mapper2.getRelationChilds(relName, i)

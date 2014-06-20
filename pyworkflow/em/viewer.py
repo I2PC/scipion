@@ -127,8 +127,7 @@ class DataView(View):
         
         
 class ObjectView(DataView):
-    
-    """ Wrapper to View but for displaying Scipion objects. """
+    """ Wrapper to DataView but for displaying Scipion objects. """
     def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
         self.python = pw.PYTHON
@@ -146,6 +145,24 @@ class ObjectView(DataView):
         runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), True, env=self._env)
         
         
+class ClassesView(ObjectView):
+    """ Customized ObjectView for SetOfClasses. """
+    def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
+        defaultViewParams = {ORDER: 'enabled id _size _representative._filename',
+                             VISIBLE: 'enabled id _size _representative._filename',
+                             }
+        defaultViewParams.update(viewParams)
+        ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
+        
+        
+class Classes3DView(ClassesView):
+    """ Customized ObjectView for SetOfClasses. """
+    def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
+        defaultViewParams = {ZOOM: '99', MODE: 'metadata'}
+        defaultViewParams.update(viewParams)
+        ClassesView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
+            
+            
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
     def __init__(self, path, outputdir, viewParams={}, **kwargs):

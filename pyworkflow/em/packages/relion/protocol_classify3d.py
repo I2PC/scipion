@@ -34,11 +34,12 @@ from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
 
 class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
-    """Protocol to classify 3D using Relion. Relion employs an empirical
-Bayesian approach to refinement of (multiple) 3D reconstructions
-or 2D class averages in electron cryo-microscopy (cryo-EM). Many
-parameters of a statistical model are learned from the data,which
-leads to objective and high-quality results.
+    """    
+    Protocol to classify 3D using Relion. Relion employs an empirical
+    Bayesian approach to refinement of (multiple) 3D reconstructions
+    or 2D class averages in electron cryo-microscopy (cryo-EM). Many
+    parameters of a statistical model are learned from the data,which
+    leads to objective and high-quality results.
     """
     _label = '3D classify'
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
@@ -63,10 +64,10 @@ leads to objective and high-quality results.
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         from convert import readSetOfClasses3D
-        classesStar = self._getIterClasses(self._lastIter())
+        classesSqlite = self._getIterClasses(self._lastIter())
         imgSet = self.inputParticles.get()
         classes = self._createSetOfClasses3D(imgSet)
-        readSetOfClasses3D(classes, classesStar)
+        readSetOfClasses3D(classes, classesSqlite)
         self._defineOutputs(outputClasses=classes)
         self._defineSourceRelation(imgSet, classes)
         self._defineSourceRelation(self.referenceVolume.get(), classes)

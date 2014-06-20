@@ -53,6 +53,7 @@ MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
 RENDER = 'render'
 ORDER = 'order'
+VISIBLE = 'visible'
 ZOOM = 'zoom'
 
 GOTO = 'goto'
@@ -62,6 +63,7 @@ ALLOW_RENDER = 'allowRender'
 MANUAL_ADJUST = 'colRowMode'
 
 SELECTEDITEMS = 'listSelectedItems'
+ENABLEDITEMS = 'listEnabledItems'
 
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'
