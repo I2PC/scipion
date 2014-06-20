@@ -112,17 +112,17 @@
  *       
  ******************************************************************************/
 
-var COL_RENDER_NONE = 0
-var COL_RENDER_ID = 1
-var COL_RENDER_TEXT = 2
-var COL_RENDER_IMAGE = 3
-var COL_RENDER_CHECKBOX = 4
+var COL_RENDER_NONE = 0;
+var COL_RENDER_ID = 1;
+var COL_RENDER_TEXT = 2;
+var COL_RENDER_IMAGE = 3;
+var COL_RENDER_CHECKBOX = 4;
 
 /** METHODS ***************************************************************** */
 
 function renderElements(nRow, aData) {
-	var columnId = 0
-	var invisibleColumns = 0
+	var columnId = 0;
+	var invisibleColumns = 0;
 
 	for ( var i in jsonTableLayoutConfiguration.columnsLayout) {
 		var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
@@ -198,16 +198,18 @@ function initializeColumnHeader() {
 		var cellIndex = oTable.fnColumnIndexToVisible(x)
 		if (cellIndex != null) {
 			var elm = $('th:eq(' + cellIndex + ')', headerRow).find("div");
-			var text = cols[x].sTitle
-			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sTitle]
+			var textLabel = cols[x].sTitle
+			// To render is neccesary the Name, not the Label
+			var textName = cols[x].sSubTitle
 			
-			elm.append(getHeaderWithIcon(text,properties)) 
+			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sSubTitle]
+			
+			elm.append(getHeaderWithIcon(textName,properties)) 
 			
 			$('th:eq(' + cellIndex + ')', headerRow).attr("id",
-					cols[x].sTitle + "___column_header")
+					cols[x].sSubTitle + "___column_header")
 		}
 	}
-
 }
 
 function getHeaderWithIcon(text, columnLayoutProperties) {
@@ -257,6 +259,7 @@ function getColumnsDefinition() {
 		
 		dataRowForTable["bVisible"] = columnLayoutConfiguration.visible;             
 		dataRowForTable["sTitle"] = columnLayoutConfiguration.columnLabel;
+		dataRowForTable["sSubTitle"] = columnLayoutConfiguration.columnName;
 		dataRowForTable["aTargets"] = [columnId];
 		dataForTable.push(dataRowForTable);
 		

@@ -62,6 +62,7 @@ ALLOW_RENDER = 'allowRender'
 MANUAL_ADJUST = 'colRowMode'
 
 SELECTEDITEMS = 'listSelectedItems'
+ENABLEDITEMS = 'listEnabledItems'
 
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'

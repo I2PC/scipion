@@ -1,4 +1,28 @@
 <script>
+function getListEnabledItems(mode){
+	var list_enabled=[];
+    switch(mode){
+        case "gallery":
+            // To get the enabled images
+            $.each($("img.enabledGallery"), function(){
+                var display = $(this).css("display");
+                if (display=='block'){
+                	var id = $(this).attr('id').split("___").pop();
+                	list_enabled.push(id);
+                }
+            });
+            break;
+            
+        case "table":
+            // To get the enabled rows
+            $.each($("input[id^='enabled___']:not(:checked)"), function(){
+           		var id = $(this).attr("id").split("___").pop();
+           		list_enabled.push(id);
+            });
+            break;
+    }
+    return list_enabled
+}
 
 function getListSelectedItems(mode){
 	var list_selected=[];
@@ -28,9 +52,12 @@ function changeMode(modeNew){
 	 
 	if (modeNew != modeOld){
 		var listSeletected = getListSelectedItems(modeOld);
+		var listEnabled = getListEnabledItems(modeOld);
+		console.log(listEnabled);
 		form.listSelectedItems.value = getListSelectedItems(modeOld);
+		form.listEnabledItems.value = getListEnabledItems(modeOld);
 		form.mode.value = modeNew;
-		form.submit();
+ 		form.submit();
 	}
 }
 
@@ -230,5 +257,7 @@ function changeMode(modeNew){
 	    
 		<!-- Hidden field to storage temporally the selection. -->
 		 <input type="hidden" name="listSelectedItems" value="">
+		 <!-- Hidden field to storage temporally the enabled items. -->
+		 <input type="hidden" name="listEnabledItems" value="">
 	</form>
 </div>	

@@ -196,7 +196,8 @@ DEFAULT_PARAMS = {
                VOL_VIEW: xmipp.VIEW_Z_NEG,      # If 3D, axis to slice volume 
                VOL_TYPE: 'map',                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
-               SELECTEDITEMS: 0     # List with the id for the selected items in the before mode.
+               SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
+               ENABLEDITEMS: 0     # List with the id for the enabled items in the before mode.
 }
 
 def showj(request):
@@ -319,7 +320,10 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[MODE] + '_utils')})
     
     # IMPROVE TO KEEP THE SELECTED ITEMS
-    context.update({'listSelectedItems': inputParams[SELECTEDITEMS]})
+    context.update({SELECTEDITEMS : inputParams[SELECTEDITEMS]})
+    
+    # IMPROVE TO KEEP THE ENABLED ITEMS
+    context.update({ENABLEDITEMS: inputParams[ENABLEDITEMS]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[MODE], '.html')
     return context, return_page

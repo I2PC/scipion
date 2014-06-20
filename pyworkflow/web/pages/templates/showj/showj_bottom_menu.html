@@ -2,9 +2,13 @@
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
 	var listSelectedItems = [{{listSelectedItems}}];
+	var listEnabledItems = [{{listEnabledItems}}];
 	
 	// Mark the selected items in the template
 	markSelectedItems(mode, listSelectedItems)
+	
+	// Update the enable items in the template
+	updateEnabledItems(mode, listEnabledItems)
 	
 	});
 
@@ -22,6 +26,24 @@ function markSelectedItems(mode, list){
 	        // Came from the gallery mode
 	    	for (var x=0;list.length>x;x++){
 	    		$("tr#row_container___"+ list[x]).addClass("row_selected");
+	    	}
+	        break;
+	}
+}
+
+function updateEnabledItems(mode, list){
+	switch(mode){
+	    case "gallery":
+	        // Came from the table mode
+	        for (var x=0;list.length>x;x++){
+	        	$("img#enabled___"+ list[x]).css("display","block");
+	        }
+	        break;
+	        
+	    case "table":
+	        // Came from the gallery mode
+	    	for (var x=0;list.length>x;x++){
+	    		$("input#enabled___"+ list[x]).prop("checked", false);
 	    	}
 	        break;
 	}
