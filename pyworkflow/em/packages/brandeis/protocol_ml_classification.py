@@ -241,7 +241,6 @@ marginal likelihood.
         
         if leaveDir:
             self._setLastIter(iter)
-            self._leaveDir()
     
     def createOutputStep(self, lastIter):
         from convert import readSetOfClasses3D
@@ -323,12 +322,12 @@ marginal likelihood.
     def _mergeAllParFiles(self, iter, ref, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
         
-        file2 = self._getFile('output_par_class', iter=iter, ref=ref)
+        file2 = self._getFileName('output_par_class', iter=iter, ref=ref)
         if numberOfBlocks != 1:
             f2 = open(file2, 'w+')
             
             for block in range(1, numberOfBlocks + 1):
-                file1 = self._getFile('output_par_block_class', block=block, iter=iter, ref=ref)
+                file1 = self._getFileName('output_par_block_class', block=block, iter=iter, ref=ref)
                 f1 = open(file1)
                 
                 for l in f1:
@@ -337,7 +336,7 @@ marginal likelihood.
                 f1.close()
             f2.close()
         else:
-            file1 = self._getFile('output_par_block_class', block=1, iter=iter, ref=ref)
+            file1 = self._getFileName('output_par_block_class', block=1, iter=iter, ref=ref)
             copyFile(file1, file2)
     
     def _splitParFile(self, iter, ref, numberOfBlocks):
