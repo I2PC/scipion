@@ -4,6 +4,7 @@
  */
 package xmipp.viewer.ctf;
 
+import xmipp.jni.EllipseCTF;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -24,12 +25,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import xmipp.utils.XmippWindowUtil;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.CTFParams;
+import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.models.GalleryData;
 
 /**
  *
@@ -37,30 +41,38 @@ import xmipp.jni.CTFParams;
  */
 public class CTFRecalculateImageWindow extends ImageWindow implements ActionListener, ChangeListener{
 
-    private JButton button;
+    private JButton recalculatebt, cancelbt;
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
-    private TasksEngine tasksEngine;
     private String PSDFilename, sortFn;
     private int row;
     private JSpinner spinnerLowFreq;
     private JSpinner spinnerHighFreq;
     private CTFCanvas canvas;
+    private GalleryData data;
+    protected TasksEngine tasksEngine;
     
-    public CTFRecalculateImageWindow(ImagePlus imp, CTFParams ctfparams,
-            TasksEngine tasksEngine, int row, String sortFn) {
+    public CTFRecalculateImageWindow(GalleryData data, ImagePlus imp, String psd, EllipseCTF ctfparams,
+             TasksEngine taskEngine, int row, String sortFn) {
         super(imp, new CTFCanvas(imp));
-        
+        XmippApplication.addInstance(true);
 
-        this.PSDFilename = ctfparams.psd;
+        this.data = data;
+        this.PSDFilename = psd;
         this.sortFn = sortFn;
-        this.tasksEngine = tasksEngine;
         this.row = row;
+        this.tasksEngine = tasksEngine;
+        ellipseCTF = ctfparams;
 
-        ellipseCTF = new EllipseCTF(ctfparams, imp.getWidth());
+        recalculatebt = XmippWindowUtil.getTextButton("Ok", this);
+        recalculatebt.setEnabled(false);
+        cancelbt = XmippWindowUtil.getTextButton("Cancel", new ActionListener() {
 
-        button = XmippWindowUtil.getTextButton("Recalculate CTF", this);
-        button.setEnabled(false);
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                exit();
+            }
+        });
 
         canvas = (CTFCanvas)imp.getCanvas();
         canvas.addMouseListener(new MouseListener() {
@@ -73,7 +85,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
             public void mouseReleased(MouseEvent e) {
                 // If there is no ellipse ROI, button is disabled.
-                button.setEnabled(fitEllipse());
+                recalculatebt.setEnabled(fitEllipse());
             }
 
             public void mouseEntered(MouseEvent e) {
@@ -114,7 +126,10 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         
         spinnerHighFreq = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 0.5, 0.01));
         panel.add(spinnerHighFreq, XmippWindowUtil.getConstraints(gbc, 3, 1));
-        panel.add(button,  XmippWindowUtil.getConstraints(gbc, 2, 2, 2));
+        JPanel actionspn = new JPanel();
+        actionspn.add(cancelbt);
+        actionspn.add(recalculatebt);
+        panel.add(actionspn,  XmippWindowUtil.getConstraints(gbc, 1, 2, 3, 1, GridBagConstraints.HORIZONTAL));
         spinnerHighFreq.addChangeListener(this);   
         
         add(panel, BorderLayout.SOUTH);
@@ -173,10 +188,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
         ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
         // Add "estimate..." to tasks.
-        EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseFitter.angle, 
-                PSDFilename, imp.getWidth(), tasksEngine, row, sortFn);
-        tasksEngine.add(estimateFromCTFTask);
+        data.recalculateCTF(row, ellipseCTF, ellipseFitter, tasksEngine, sortFn);
         dispose();
     }
 
@@ -189,4 +201,11 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 	public void stateChanged(ChangeEvent arg0) {
 		getImagePlus().updateAndRepaintWindow();		
 	}
+        
+        public void exit()
+        {
+            setVisible(false);
+            dispose();
+            XmippApplication.removeInstance(true);
+        }
 }

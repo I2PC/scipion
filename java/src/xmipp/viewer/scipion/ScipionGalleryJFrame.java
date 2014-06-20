@@ -135,7 +135,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             buttonspn.add(cmdbutton);
             if(data.isCTFMd())
             {
-                JButton recalculatectfbt = getScipionButton("Recalculate CTF", new ActionListener() {
+                JButton recalculatectfbt = getScipionButton("Recalculate CTFs", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {

@@ -4,6 +4,8 @@
  */
 package xmipp.viewer.ctf;
 
+import xmipp.jni.EllipseCTF;
+
 
 /**
  *

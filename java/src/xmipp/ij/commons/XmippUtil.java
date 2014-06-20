@@ -6,10 +6,13 @@ import java.awt.Image;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
-
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,6 +106,27 @@ public class XmippUtil {
     }
 
 
-
+    public static void copyFile(String source, String dest) throws IOException
+    {
+        copyFile(new File(source), new File(dest));
+    }
+    
+    public static void copyFile(File source, File dest)
+            throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(dest);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = input.read(buf)) > 0) {
+                output.write(buf, 0, bytesRead);
+            }
+        } finally {
+            input.close();
+            output.close();
+        }
+}
        
 }

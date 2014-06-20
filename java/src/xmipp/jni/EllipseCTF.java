@@ -2,9 +2,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package xmipp.viewer.ctf;
+package xmipp.jni;
 
-import xmipp.jni.CTFParams;
 
 /**
  *
@@ -12,25 +11,26 @@ import xmipp.jni.CTFParams;
  */
 public class EllipseCTF {
 
-    private double Q0, Cs, D, Ts, kV, lambda, lowFreq, highFreq;
+    private double Q0, Cs, Ts, kV, lambda, lowFreq, highFreq;
+    int D;
     double defU, defV;
     private double defocusU, defocusV;
 
    
     
-    public EllipseCTF(CTFParams ctfparams, double D)
+    public EllipseCTF(double Q0, double Cs, double Ts, double kV, double defU, double defV, int D)
     {
         this.D = D;
-        Q0 = ctfparams.Q0;
-        Cs = ctfparams.Cs;
-        Ts = ctfparams.Ts;
-        kV = ctfparams.kV;
-        lambda = ctfparams.lambda;
-        defU = ctfparams.defU;
-        defV = ctfparams.defV;
+        this.Q0 = Q0;
+        this.Cs = Cs;
+        this.Ts = Ts;
+        this.kV = kV;
+        this.lambda = lambda;
+        this.defU = defU;
+        this.defV = defV;
     }
 
-    
+   
 
     public double getDefocusU() {
         return defocusU;
@@ -102,5 +102,9 @@ public class EllipseCTF {
     + "---------------------------------------------------\n";
     }*/
     
+    public int getD()
+    {
+        return D;
+    }
    
 }

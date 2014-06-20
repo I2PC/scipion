@@ -38,6 +38,7 @@ import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
+import xmipp.jni.EllipseCTF;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.scipion.ScipionGalleryData;
 import xmipp.viewer.scipion.ScipionMetaData;
@@ -244,13 +245,7 @@ public class ImagesWindowFactory {
 		}
 	}
 
-	public static ImageWindow openCTFImage(ImagePlus ip, CTFParams ctfparams,
-			 TasksEngine tasksEngine,
-			int row, String sortFn) {
-		XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-		return new CTFRecalculateImageWindow(ip, ctfparams, 
-				tasksEngine, row, sortFn);
-	}
+	
 
 	public static void openFileAsText(String filename, Component parent) {
 		TextfileJFrame frameText = new TextfileJFrame(filename);
