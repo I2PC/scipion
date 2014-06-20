@@ -117,10 +117,11 @@ def downloadFile(datasetName, fname, workingCopy=None, askMsg="download it?",
 def downloadDataset(datasetName, destination=None,
                     url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
                     verbose=False, onlyManifest=False):
+    destination = destination if destination else os.environ['SCIPION_TESTS']
+
     datasetFolder = join(destination, datasetName)
     makePath(datasetFolder)
-    manifest = join(destination if destination else os.environ['SCIPION_TESTS'],
-                    datasetName, 'MANIFEST')
+    manifest = join(destination, datasetName, 'MANIFEST')
     try:
         if verbose:
             print "retrieving MANIFEST file"
@@ -305,7 +306,7 @@ def main():
     add('-v', '--verbose', action='store_true', help='Print more details.')
     args = parser.parse_args()
 
-    #print scipion_logo()
+    #print scipion_logo
 
     # Dispatch the easy cases first (list and query), and then take care of
     # the more complex ones.
