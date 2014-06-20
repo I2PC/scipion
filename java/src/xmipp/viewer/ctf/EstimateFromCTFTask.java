@@ -34,6 +34,7 @@ public class EstimateFromCTFTask extends CommandTask {
                 ,//+ " ; " + getSortCmd(sortFn),
                 row,
                 commandsListener);
+        
         addCommand(getSortCmd(sortFn));
     }
     

@@ -25,12 +25,17 @@ public class EllipseCTF {
         this.Cs = Cs;
         this.Ts = Ts;
         this.kV = kV;
-        this.lambda = lambda;
+        this.lambda = EllipseCTF.lambda(kV);
         this.defU = defU;
         this.defV = defV;
     }
 
-   
+    public static double lambda(double Kv) {
+            double local_kV = Kv * 1.0e3;
+
+            return 12.3 / Math.sqrt(local_kV * (1. + local_kV * 1e-6));
+        }
+
 
     public double getDefocusU() {
         return defocusU;
@@ -86,7 +91,7 @@ public class EllipseCTF {
     public double getSphericalAberration() {
         return Cs;
     }
-    /*
+    
     @Override
     public String toString() {
     return "---------------------------------------------------\n"
@@ -100,11 +105,12 @@ public class EllipseCTF {
     + "defocusU: " + defocusU + " > (file: " + defU + ")\n"
     + "defocusV: " + defocusV + " > (file: " + defV + ")\n"
     + "---------------------------------------------------\n";
-    }*/
+    }
     
     public int getD()
     {
         return D;
     }
    
+    
 }

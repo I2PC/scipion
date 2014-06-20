@@ -31,7 +31,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.jni.CTFParams;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.GalleryData;
 
@@ -52,8 +51,8 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     private GalleryData data;
     protected TasksEngine tasksEngine;
     
-    public CTFRecalculateImageWindow(GalleryData data, ImagePlus imp, String psd, EllipseCTF ctfparams,
-             TasksEngine taskEngine, int row, String sortFn) {
+    public CTFRecalculateImageWindow(GalleryData data, ImagePlus imp, String psd, EllipseCTF ellipsectf,
+             TasksEngine tasksEngine, int row, String sortFn) {
         super(imp, new CTFCanvas(imp));
         XmippApplication.addInstance(true);
 
@@ -62,7 +61,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         this.sortFn = sortFn;
         this.row = row;
         this.tasksEngine = tasksEngine;
-        ellipseCTF = ctfparams;
+        ellipseCTF = ellipsectf;
 
         recalculatebt = XmippWindowUtil.getTextButton("Ok", this);
         recalculatebt.setEnabled(false);
@@ -70,6 +69,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
             @Override
             public void actionPerformed(ActionEvent ae) {
+                CTFRecalculateImageWindow.this.data.setCTFRecalculate(CTFRecalculateImageWindow.this.row, false);
                 exit();
             }
         });
@@ -185,8 +185,10 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     }
 
     private void recalculateCTF() {
+        
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
         ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
+        System.out.println("params to recalculate ctf already computed");
         // Add "estimate..." to tasks.
         data.recalculateCTF(row, ellipseCTF, ellipseFitter, tasksEngine, sortFn);
         dispose();

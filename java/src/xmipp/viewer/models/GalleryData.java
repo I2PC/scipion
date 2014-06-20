@@ -1593,6 +1593,8 @@ public class GalleryData {
     }
     
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, EllipseFitter ellipseFitter, TasksEngine tasksEngine, String sortFn) {
+        System.out.println("recalculating ctf\n" + ellipseCTF);
+        
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
                 ellipseCTF, 90 - ellipseFitter.angle, 
                 md.getPSDFile(ids[row]), ellipseCTF.getD(), tasksEngine, row, sortFn);
