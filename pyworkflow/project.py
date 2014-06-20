@@ -159,7 +159,7 @@ class Project(object):
         and also take care if the execution is remotely."""
         
         #if protocol.getStatus() != STATUS_INTERACTIVE:
-        if not protocol.isInteractive.get():
+        if not protocol.isInteractive():
             self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
         
         protocol.setStatus(STATUS_LAUNCHED)

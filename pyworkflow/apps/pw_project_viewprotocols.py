@@ -186,7 +186,7 @@ class ProtocolTreeProvider(ObjectTreeProvider):
         # in the tree display
         self.status = List(objName='_status')
         self.params = List(objName='_params')
-        self.statusList = ['status', 'initTime', 'endTime', 'error', 'isInteractive', 'mode']
+        self.statusList = ['status', 'initTime', 'endTime', 'error', 'interactive', 'mode']
         if protocol is None:
             objList = []
         else:

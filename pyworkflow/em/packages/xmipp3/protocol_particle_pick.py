@@ -73,7 +73,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUIStep', isInteractive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
         # Insert step to create output objects       
