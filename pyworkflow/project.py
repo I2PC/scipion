@@ -103,10 +103,6 @@ class Project(object):
         if not isReadOnly():
             self.settings.write()
             
-    def getDbPath(self):
-        return self.dbPath
-    
-    
     def load(self):
         """Load project data and settings
         from the project dir."""

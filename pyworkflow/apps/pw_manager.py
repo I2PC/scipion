@@ -207,18 +207,19 @@ class ProjectsView(tk.Frame):
         if not projName is None:
             self.manager.createProject(projName)
             self.createProjectList(self.text)
+            self.openProject(projName)
     
     def openProject(self, projName):
-        projPath = self.manager.getProjectPath(projName)
-        from pw_project import ProjectWindow
-        projWindow = ProjectWindow(projPath, self.windows)
-        projWindow.show()
+        from subprocess import Popen
+        script = pw.join('apps', 'pw_project.py')
+        Popen([os.environ['SCIPION_PYTHON'], script, projName])
           
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT, 
                      "Project *%s*" % projName + Message.MESSAGE_CREATE_PROJECT , self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
+          
           
 if __name__ == '__main__':
     ManagerWindow().show()
