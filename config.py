@@ -11,7 +11,7 @@ XMIPP_HOME = EM_ROOT + 'xmipp'
 SPIDER_DIR = EM_ROOT + 'spider'
 
 # Eman2
-EMAN2DIR = EM_ROOT + 'EMAN2-1_alpha1'
+EMAN2DIR = EM_ROOT + 'EMAN2'
 
 # frealign 8.11
 FREALIGN_HOME = EM_ROOT + 'brandeis/frealign_v9.07'

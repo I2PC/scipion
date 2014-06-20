@@ -39,7 +39,7 @@ PACKAGES = {
     #'xmipp': 'xmipp.tgz',
     'bsoft': 'bsoft1_8_8_Fedora_12.tgz',
     'ctffind': 'ctffind_V3.5.tgz',
-    'eman': 'eman2.pre2-1.linux64.tar.gz',
+    'eman': 'eman2.1beta3.linux64.tar.gz',
     'frealign': 'frealign_v9.07.tgz',
     'relion': 'relion-1.2.tgz',
     'spider': 'spider-web-21.13.tgz'}

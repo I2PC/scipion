@@ -74,7 +74,7 @@ class EmanProtInitModel(ProtInitialVolume):
         self._insertFunctionStep('createOutputStep')
 
     def _insertInitialModelStep(self):
-        args = '--input %(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
+        args = '--input=%(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
         if self.shrink > 1:
             args += ' --shrink=%(shrink)d'
         if self.numberOfThreads > 1:

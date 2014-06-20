@@ -274,8 +274,8 @@ class TestMixedBPV2(TestWorkflow):
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
         #self.validateFiles('protML2D', protML2D)
         
-        #FIXME: Check the initial model with EMAn and restore the next step
-        return
+#         #FIXME: Check the initial model with EMAn and restore the next step
+#         return
         
         print "Run Initial Model"
         protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1, numberOfModels=2,
