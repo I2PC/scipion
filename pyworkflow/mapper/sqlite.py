@@ -593,13 +593,7 @@ class SqliteFlatMapper(Mapper):
             print "         objRow: ", dict(objRow)
         
         for c, attrName in self._objColumns:
-            if attrName == '_mapperPath':
-                #FIXME: this is a really dirty-dirty fix in order to 
-                # continue with Ward protocol before fixing this bug
-                obj._mapperPath.trace(obj.load)
-                obj._mapperPath.set(objRow[c])
-            else:
-                obj.setAttributeValue(attrName, objRow[c])
+            obj.setAttributeValue(attrName, objRow[c])
 
         return obj
         
@@ -637,6 +631,20 @@ class SqliteFlatMapper(Mapper):
         """Return a list of objects, given a list of id's
         """
         return [self.selectById(rowId['id']) for rowId in objIds]
+    
+
+    def hasProperty(self, key):
+        return self.db.hasProperty(key)
+        
+    def getProperty(self, key, defaultValue=None):
+        return self.db.getProperty(key, defaultValue)
+        
+    def setProperty(self, key, value):
+        return self.db.setProperty(key, value)
+    
+    def deleteProperty(self, key):
+        return self.db.deleteProperty(key)
+        
         
 
 SELF = 'self'
@@ -666,6 +674,40 @@ class SqliteFlatDb(SqliteDb):
         self.INSERT_OBJECT = None
         self.UPDATE_OBJECT = None 
         
+        self.INSERT_PROPERTY = "INSERT INTO Properties (key, value) VALUES (?, ?)"
+        self.DELETE_PROPERTY = "DELETE FROM Properties WHERE key=?"
+        self.UPDATE_PROPERTY = "UPDATE Properties SET value=? WHERE key=?"
+        self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
+        
+
+    def hasProperty(self, key):
+        """ Return true if a property with this value is registered. """
+        self.executeCommand(self.SELECT_PROPERTY, (key,))
+        result = self.cursor.fetchone()
+        return (result is not None)
+        
+    def getProperty(self, key, defaultValue=None):
+        """ Return the value of a given property with this key.
+        If not found, the defaultValue will be returned.
+        """
+        self.executeCommand(self.SELECT_PROPERTY, (key,))
+        result = self.cursor.fetchone()
+        
+        if result:
+            return result['value']
+        else:
+            return defaultValue
+        
+    def setProperty(self, key, value):
+        """ Insert or update the property with a value. """
+        if self.hasProperty(key):
+            self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
+        else:
+            self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
+        
+    def deleteProperty(self, key):
+        self.executeCommand(self.DELETE_PROPERTY, (key,))
+    
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
         
@@ -677,6 +719,7 @@ class SqliteFlatDb(SqliteDb):
         return result is None
         
     def clear(self):
+        self.executeCommand("DROP TABLE IF EXISTS Properties;")
         self.executeCommand("DROP TABLE IF EXISTS %sClasses;" % self.tablePrefix)
         self.executeCommand("DROP TABLE IF EXISTS %sObjects;" % self.tablePrefix)
                 
@@ -685,6 +728,11 @@ class SqliteFlatDb(SqliteDb):
         Each object will be stored in a single row.
         Each nested property of the object will be stored as a column value.
         """
+        # Create a general Properties table to store some needed values
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS Properties
+                     (key       TEXT UNIQUE, -- property key                 
+                      value     TEXT  DEFAULT NULL -- property value
+                      )""")
         # Create the Classes table to store each column name and type
         self.executeCommand("""CREATE TABLE IF NOT EXISTS %sClasses
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -699,6 +747,7 @@ class SqliteFlatDb(SqliteDb):
                       comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
                       creation  DATE                 -- creation date and time of the object
                       """ % self.tablePrefix
+        
         c = 0
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c
@@ -743,6 +792,7 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.SELECT_CLASS)
         
         for classRow in self._iterResults():
+            print "classRow['label_property']", classRow['label_property']
             if classRow['label_property'] == SELF:
                 return classRow['class_name']
         raise Exception("Row '%s' was not found in Classes table. " % SELF)

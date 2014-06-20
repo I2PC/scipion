@@ -39,6 +39,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     """
     _label = '2d classify'
     IS_2D = True
+    OUTPUT_TYPE = SetOfClasses2D
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
@@ -62,10 +63,10 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self):
         from convert import readSetOfClasses2D
-        classesStar = self._getIterClasses(self._lastIter())
+        classesSqlite = self._getIterClasses(self._lastIter())
         imgSet = self.inputParticles.get()
         classes = self._createSetOfClasses2D(imgSet)
-        readSetOfClasses2D(classes, classesStar)
+        readSetOfClasses2D(classes, classesSqlite)
         self._defineOutputs(outputClasses=classes)
         self._defineSourceRelation(imgSet, classes)
         

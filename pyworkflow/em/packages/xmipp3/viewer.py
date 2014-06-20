@@ -137,24 +137,17 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
-                                          viewParams={ORDER: 'enabled id _size _representative._filename',
-                                                      'visible': 'enabled id _size _representative._filename',
-                                                      }))
+            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
-                                          extraParams=args.get('extraParams', ''),
-                                          viewParams={ORDER: 'enabled id _size _representative._filename',
-                                                      'visible': 'enabled id _size _representative._filename',
-                                                      ZOOM: '99', MODE: 'metadata',
-                                                      }))            
+            self._views.append(Classes3DView(self._project.getName(), obj.strId(), fn))            
               
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: 'metadata'}))    
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
+                                          viewParams={MODE: 'metadata'}))    
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)
@@ -180,8 +173,10 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             self._views.append(CommandView(obj._getPath('chimera.cmd')))
+            
         elif issubclass(cls, XmippProtParticlePicking):
             self._visualize(obj.getCoords())
+            
         elif issubclass(cls, XmippParticlePickingAutomatic):
         	micSet = obj.getInputMicrographs()
         	mdFn = getattr(micSet, '_xmippMd', None)

@@ -59,7 +59,7 @@ class Step(OrderedObject):
         self.initTime = String()
         self.endTime = String()
         self._error = String()
-        self.isInteractive = Boolean(False)
+        self.interactive = Boolean(False)
         self._resultFiles = String()
         self._index = None
         
@@ -127,6 +127,9 @@ class Step(OrderedObject):
     def setStatus(self, value):
         return self.status.set(value)
     
+    def setInteractive(self, value):
+        return self.interactive.set(value)
+    
     def isActive(self):
         return self.getStatus() in ACTIVE_STATUS
     
@@ -144,6 +147,9 @@ class Step(OrderedObject):
     
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
+
+    def isInteractive(self):
+        return self.interactive.get()
     
     def run(self):
         """ Do the job of this step"""
@@ -151,7 +157,7 @@ class Step(OrderedObject):
         try:
             self._run()
             if self.status == STATUS_RUNNING:
-                if self.isInteractive.get():
+                if self.isInteractive():
                     # If the Step is interactive, after run
                     # it will be waiting for use to mark it as DONE
                     status = STATUS_INTERACTIVE
@@ -184,7 +190,7 @@ class FunctionStep(Step):
         self._args = funcArgs
         self.funcName = String(funcName)
         self.argsStr = String(pickle.dumps(funcArgs))
-        self.isInteractive.set(args.get('isInteractive', False))
+        self.setInteractive(args.get('interactive', False))
         
     def _runFunc(self):
         """ Return the possible result files after running the function. """
@@ -273,6 +279,7 @@ class Protocol(Step):
         self.__stdErr = None
         self.__fOut = None
         self.__fErr = None
+        self._log = None
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = args.get('project', None)
@@ -556,14 +563,16 @@ class Protocol(Step):
         """
         self._currentDir = os.getcwd()
         os.chdir(path)
-        self._log.info("Entered to dir: cd '%s'" % path)
+        if self._log:
+            self._log.info("Entered to dir: cd '%s'" % path)
         
     def _leaveDir(self): 
         """ This method should be called after a call to _enterDir
         to return to the previous location. 
         """
-        os.chdir(self._currentDir)        
-        self._log.info("Returned to dir: cd '%s'" % self._currentDir)
+        os.chdir(self._currentDir)  
+        if self._log:
+            self._log.info("Returned to dir: cd '%s'" % self._currentDir)
                       
     def _enterWorkingDir(self):
         """ Change to the protocol working dir. """
@@ -647,7 +656,7 @@ class Protocol(Step):
         
         for step in self._steps:
             step.cleanObjId()
-            self.isInteractive.set(self.isInteractive.get() or step.isInteractive.get())
+            self.setInteractive(self.isInteractive() or step.isInteractive())
             self._stepsSet.append(step)
 
         self._stepsSet.write()

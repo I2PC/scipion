@@ -31,7 +31,7 @@ import os
 
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView, ObjectView, CommandView
+from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView, CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
@@ -177,7 +177,8 @@ Examples:
         
     def createScipionView(self, filename, extraParams=''):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-        return ObjectView(self._project.getName(), 
+        ViewClass = ClassesView if self.protocol.IS_2D else Classes3DView
+        return ViewClass(self._project.getName(), 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env)
 

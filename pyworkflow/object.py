@@ -840,6 +840,10 @@ class Set(OrderedObject):
         images: list with the images path to be stored
         """
         #TODO: If mapper is in memory, do commit and dump to disk
+        self._mapper.setProperty('self', self.getClassName())
+        objDict = self.getObjDict()
+        for key, value in objDict.iteritems():
+            self._mapper.setProperty(key, value)
         self._mapper.commit()
     
     def _loadClassesDict(self):

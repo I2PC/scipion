@@ -94,39 +94,6 @@ class TestSetOfMicrographs(BaseTest):
         """ Read micrographs from a SetOfMicrographs """
         micSet = SetOfMicrographs(filename=self.dbGold)
         self.checkSet(micSet)
-        
-#    def testXmippConvert(self):
-#        """ Test the convertion of a SetOfMicrographs to Xmipp"""
-#        micSet = SetOfMicrographs()
-#        micSet.setFileName(self.dbGold)
-#        mdFn = getOutputPath('test_data', 'micrographs.xmd')
-#        
-#        writeSetOfMicrographs(micSet, mdFn)
-#        
-#        # Test reading a set of coordinates
-#        posDir = getInputPath('Picking_XmippBPV3_Down3')
-#        print "reading pos from :", posDir
-#        coordSet = SetOfCoordinates()
-#        fn = getOutputPath('test_data', 'coordinates.sqlite')
-#        coordSet.setFileName(fn)
-#        
-#        readSetOfCoordinates(posDir, micSet, coordSet)
-#        coordSet.write()
-#        
-#        
-#        cwd = os.getcwd()
-#        # Change to test path
-#        os.chdir(getPath())
-#        
-#        # Test writing micrgraphs to an hdf        
-#        filename = getOutputPath('test_data', 'micrographs.hdf')
-#        e2convert.writeSetOfParticles(micSet, filename)
-#        
-#        # Test writing a set of particles
-#        #partSet = SetOfParticles()
-#        #readSetOfParticles(fnImages, imgSet)
-#        
-#        os.chdir(cwd)
 
 
 class TestSetOfParticles(BaseTest):
@@ -136,29 +103,6 @@ class TestSetOfParticles(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
-#        
-#    def testCreateFromOther(self):
-#        inImgSet = SetOfParticles(filename=self.dbGold)
-#        inImgSet.setHasCTF(True)
-#        outImgFn = self.getOutputPath("particles.sqlite")
-#        outImgSet = SetOfParticles(filename=outImgFn)
-#        outImgSet.copyInfo(inImgSet)
-#        
-#        print "inputs particles has CTF?", inImgSet.hasCTF()
-#        teststk = self.getOutputPath('test.stk')
-#        for i, img in enumerate(inImgSet):
-#            j = i + 1
-#            img.setLocation(j, teststk)
-#            outImgSet.append(img)
-#        
-#        outImgSet.write()
-#        
-#        if outImgSet.hasCTF():
-#            print "everything OK!"
-#        else:
-#            print "The info of the particles was not copied"
-#        
-#        cleanPath(outImgFn)
         
     def test_readStack(self):
         """ Read an stack of 29 particles from .hdf file.
@@ -202,39 +146,42 @@ class TestSetOfParticles(BaseTest):
             
         imgSet.write()
         
-            
-        
 
 class TestSetOfClasses2D(BaseTest):
     
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
-        cls.outputParticles = cls.getOutputPath('output_particles.sqlite')
-        #cls.dbGold = cls.dataset.getFile('particlesGold.sqlite')
+        cls.dataset = DataSet.getDataSet('model')  
+        cls.selectionFn = cls.dataset.getFile('classesSelection')
         
-#    def testCreateFromOther(self):
-#        inImgSet = SetOfParticles(filename=self.dbGold)
-#        inImgSet.setHasCTF(True)
-#        outImgFn = self.outputPath + "_particles.sqlite"
-#        outImgSet = SetOfParticles(filename=outImgFn)
-#        outImgSet.copyInfo(inImgSet)
-#        teststk = self.getOutputPath('test.stk')
-#        print "inputs particles has CTF?", inImgSet.hasCTF()
-#        for i, img in enumerate(inImgSet):
-#            j = i + 1
-#            img.setLocation(j, teststk)
-#            outImgSet.append(img)
-#        
-#        outImgSet.write()
-#        
-#        if outImgSet.hasCTF():
-#            print "everything OK!"
-#        else:
-#            print "The info of the particles was not copied"
-#        
-#        cleanPath(outImgFn)
+    def test_subsetsFromSelection(self):
+        """ From a sqlite file of a SetOfClasses2D, with some
+        classes and element disabled, we want to create a 
+        subset of images and classes.
+        """
+        print ">>> Reading selection from sqlite: ", self.selectionFn
+        classes2DSet = SetOfClasses2D(filename=self.selectionFn)
+        
+        imgSet = SetOfParticles(filename=':memory:')
+        # We are going to iterate over the enabled items and create
+        # a new set of images
+        imgSet.appendFromClasses(classes2DSet)
+        # Since we have disabled two classes (6 images) and 1 images
+        # from class 1 and 2 (2 images), the final size of the set
+        # should be 68
+        sizes = [32, 36]
+        self.assertEqual(imgSet.getSize(), sum(sizes))
+        imgSet.clear() # Close db connection and clean data
+        
+        # Now create a subset of classes and check the number
+        # of images per class
+        clsSet = SetOfClasses2D(filename=':memory:')
+        clsSet.appendFromClasses(classes2DSet)
+        for i, cls in enumerate(clsSet):
+            self.assertEqual(cls.getSize(), sizes[i])
+        clsSet.clear() # Close db connection and clean data
+
 
 if __name__ == '__main__':
 #    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')

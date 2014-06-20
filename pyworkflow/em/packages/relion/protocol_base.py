@@ -47,6 +47,7 @@ class ProtRelionBase(EMProtocol):
     _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = False
+    OUTPUT_TYPE = SetOfClasses3D
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
     CLASS_LABEL = xmipp.MDL_REF
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
@@ -564,7 +565,7 @@ class ProtRelionBase(EMProtocol):
         
         if not exists(data_classes):
             createClassesFromImages(self.inputParticles.get(), data_star, data_classes, 
-                                    self.CLASS_LABEL, self.ClassFnTemplate, it)
+                                    self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
     def _getIterSortedData(self, it):

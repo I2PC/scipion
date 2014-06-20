@@ -229,6 +229,9 @@ class XmippProtML2D(ProtClassify2D):
         """
         if it is None:
             it = self._lastIteration()
+        else:
+            self.oroot = self._getOroot()
+            
         extra = self.oroot + 'extra'
         mdFile = join(extra, 'iter%03d' % it, 'iter_classes.xmd')
         if block:
