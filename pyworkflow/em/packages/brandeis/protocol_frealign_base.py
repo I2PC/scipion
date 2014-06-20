@@ -584,10 +584,7 @@ class ProtFrealignBase(EMProtocol):
         """ This function execute the bash script for refine a subset(block) of images.
         It will enter in the iteration dir and execute the script there. 
         """
-#         if block == 1:
-#             self._enterDir(iterDir)
-        
-        program = "block%03d.sh" % block
+        program = "./block%03d.sh" % block
         os.chmod(join(iterDir, program), 0775)
         self.runJob(program, "", cwd=iterDir)
     
@@ -598,8 +595,6 @@ class ProtFrealignBase(EMProtocol):
         imgSet = self.inputParticles.get()
         
         iterDir = self._iterWorkingDir(iter)
-#         if block==1:
-#             self._enterDir(iterDir) # enter to the working directory for the current iteration.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
@@ -681,35 +676,33 @@ class ProtFrealignBase(EMProtocol):
         
         iterDir = self._iterWorkingDir(iter)
         samplingRate3DR = imgSet.getSamplingRate()
-        paramDic = {}
-        #Prepare arguments to call program fralign_v9.exe
-        
+        #Prepare arguments to call program fralign_v9.exe        
         paramsDic = {'frealign': FREALIGN_PATH,
-                        'mode': self.mode.get(),
-                        'useInitialAngles': self.useInitialAngles.get(),
-                        'innerRadius': self.innerRadius.get(),
-                        'outerRadius': self.outerRadius.get(),
-                        'molMass': self.molMass.get(),
-                        'ThresholdMask': self.ThresholdMask.get(),
-                        'pseudoBFactor': self.pseudoBFactor.get(),
-                        'avePhaseResidual': self.avePhaseResidual.get(),
-                        'angStepSize': self.angStepSize.get(),
-                        'numberRandomSearch': self.numberRandomSearch.get(),
-                        'numberPotentialMatches': self.numberPotentialMatches.get(),
-                        'sym': self.symmetry.get(),
-                        'relMagnification': self.relMagnification.get(),
-                        'targetScore': self.targetScore.get(),
-                        'score': self.score.get(),
-                        'beamTiltX': self.beamTiltX.get(),
-                        'beamTiltY': self.beamTiltY.get(),
-                        'resol': self.resolution.get(),
-                        'lowRes': self.lowResolRefine.get(),
-                        'highRes': self.highResolRefine.get(),
-                        'resolClass': self.resolClass.get(),
-                        'defocusUncertainty': self.defocusUncertainty.get(),
-                        'Bfactor': self.Bfactor.get(),
-                        'sampling3DR': samplingRate3DR
-                       }
+                     'mode': self.mode.get(),
+                     'useInitialAngles': self.useInitialAngles.get(),
+                     'innerRadius': self.innerRadius.get(),
+                     'outerRadius': self.outerRadius.get(),
+                     'molMass': self.molMass.get(),
+                     'ThresholdMask': self.ThresholdMask.get(),
+                     'pseudoBFactor': self.pseudoBFactor.get(),
+                     'avePhaseResidual': self.avePhaseResidual.get(),
+                     'angStepSize': self.angStepSize.get(),
+                     'numberRandomSearch': self.numberRandomSearch.get(),
+                     'numberPotentialMatches': self.numberPotentialMatches.get(),
+                     'sym': self.symmetry.get(),
+                     'relMagnification': self.relMagnification.get(),
+                     'targetScore': self.targetScore.get(),
+                     'score': self.score.get(),
+                     'beamTiltX': self.beamTiltX.get(),
+                     'beamTiltY': self.beamTiltY.get(),
+                     'resol': self.resolution.get(),
+                     'lowRes': self.lowResolRefine.get(),
+                     'highRes': self.highResolRefine.get(),
+                     'resolClass': self.resolClass.get(),
+                     'defocusUncertainty': self.defocusUncertainty.get(),
+                     'Bfactor': self.Bfactor.get(),
+                     'sampling3DR': samplingRate3DR
+                    }
         
         # Get the particles stack
         imgsFn = os.path.relpath(self._getTmpPath('particles.mrc'), iterDir)
