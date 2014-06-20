@@ -69,7 +69,6 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 
             @Override
             public void actionPerformed(ActionEvent ae) {
-                CTFRecalculateImageWindow.this.data.setCTFRecalculate(CTFRecalculateImageWindow.this.row, false);
                 exit();
             }
         });
@@ -188,9 +187,9 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
         ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
-        System.out.println("params to recalculate ctf already computed");
+        ellipseCTF.setEllipseFitter(ellipseFitter);
         // Add "estimate..." to tasks.
-        data.recalculateCTF(row, ellipseCTF, ellipseFitter, tasksEngine, sortFn);
+        data.recalculateCTF(row, ellipseCTF, sortFn);
         dispose();
     }
 

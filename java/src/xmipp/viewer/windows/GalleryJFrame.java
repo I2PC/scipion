@@ -62,7 +62,6 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -117,8 +116,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.scipion.ScipionGalleryData;
-import xmipp.viewer.scipion.ScipionGalleryJFrame;
-import xmipp.viewer.scipion.ScipionMetaData;
 
 
 /**
@@ -218,6 +215,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                     
 			this.data = data;
+                        data.setWindow(this);
                         StopWatch stopWatch = StopWatch.getInstance();
 			createModel();
                         stopWatch.printElapsedTime("creating gui");
@@ -467,6 +465,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 		setAutoAdjustColumns(adjust);
 	}
+
+        public void fireTableRowUpdated(int row) {
+            gallery.fireTableRowsUpdated(row, row);
+        }
 
 	/** Some tweaks over traditional JTable */
 	public class GalleryScroll extends JScrollPane
@@ -1932,11 +1934,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
                                 boolean isrecalculate = getItemSelected(CTF_RECALCULATE);
                                 int index = gallery.getIndex(row, col);
-                                data.setCTFRecalculate(index, isrecalculate);
                                 
                                 if(isrecalculate)
                                     data.showCTF(false, index, ctfTasks);
-                                gallery.fireTableRowsUpdated(row, row);
+                                else
+                                    data.removeCTF(row);
                                 
                                 
 			}
@@ -2230,12 +2232,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return map;
 	}
         
-    
-       
-       
-       
-       
-       
-
+        public TasksEngine getTasksEngine()
+        {
+            return ctfTasks;
+        }
        
 }// class JFrameGallery

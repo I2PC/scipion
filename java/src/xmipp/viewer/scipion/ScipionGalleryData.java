@@ -5,17 +5,18 @@
  */
 package xmipp.viewer.scipion;
 
+import ij.process.EllipseFitter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import xmipp.jni.MDRow;
+import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -309,7 +310,6 @@ public class ScipionGalleryData extends GalleryData {
     public void openMetadata(MetaData md) {
         ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData) md);
         ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
-        data2.setWindow(frame);
     }
 
     public void overwrite(String path) {
@@ -342,10 +342,10 @@ public class ScipionGalleryData extends GalleryData {
             FileWriter fstream = new FileWriter(path);
             BufferedWriter out = new BufferedWriter(fstream);
 
-            String line = "%20s%20s%20s\n";
+            String line = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n";
 
-            for (long id : ctfids) {
-                out.write(String.format(line, id, "param1", "param2"));
+            for (EllipseCTF ctf : ctfs) {
+                out.write(String.format(line, ctf.getId(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
             }
 
             out.close();
@@ -355,16 +355,29 @@ public class ScipionGalleryData extends GalleryData {
             XmippDialog.showError(window, ex.getMessage());
         }
     }
-
-    public void setCTFRecalculate(int row, boolean recalculate) {
-        super.setCTFRecalculate(row, recalculate);
+    
+    @Override
+    public void removeCTF(int row) {
+        super.removeCTF(row);
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
-        emo.setComment((recalculate) ? "(recalculate ctf)" : "");
+        emo.setComment("");
+        window.fireTableRowUpdated(row);
     }
 
+    
+
     public String createSortFile(String psdFile, int row) {
-
         return null;
-
+    }
+    
+    
+    public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) {
+         if (ctfs == null) {
+            ctfs = new ArrayList<EllipseCTF>();
+        }
+        ctfs.add(ellipseCTF);
+        ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
+        emo.setComment("(recalculate ctf)");
+        window.fireTableRowUpdated(row);
     }
 }

@@ -28,7 +28,7 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
-    private String script;
+    private String script, ctfscript;
     private String projectid;
     private JButton cmdbutton;
     private String sqlitefile;
@@ -45,13 +45,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public ScipionGalleryJFrame(String filename, ScipionMetaData md, ScipionParams parameters) {
         super(filename, md, parameters);
         readScipionParams(parameters);
-        data.setWindow(this);
     }
     
       public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
-        data.setWindow(this);
     }
 
     protected void readScipionParams(ScipionParams parameters)
@@ -59,7 +57,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         try {
             type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
-            script = parameters.script;
+            script = parameters.scripts + File.separator + "pw_create_image_subset.py";
+            ctfscript = parameters.scripts + File.separator + "pw_recalculatectf.py";
             projectid = parameters.projectid;
             inputid = parameters.inputid;
             outputdir = new File(data.getFileName()).getParent();
@@ -77,7 +76,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     
     private void initComponents() {
-        JButton closebt = getScipionButton("Close", new ActionListener() {
+        JButton closebt = XmippWindowUtil.getTextButton("Close", new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -103,7 +102,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
                         String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
-                        createSubset(command);
+                        runCommand(command);
                     }
                 }
             });
@@ -121,7 +120,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         if (create == ScipionMessageDialog.OK_OPTION) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), output , dlg.getFieldValue(runNameKey), other};
-                            createSubset(command);
+                            runCommand(command);
                             
                         }
 
@@ -140,6 +139,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     public void actionPerformed(ActionEvent ae) {
                         String recalculatefile = outputdir + File.separator + "ctfrecalculate.txt";
                         ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
+                        String[] command = new String[]{python, ctfscript, recalculatefile, inputid};
+                        runCommand(command);
                     }
                 });
                 buttonspn.add(recalculatectfbt);
@@ -168,7 +169,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
         JButton button = new JButton(text);
         button.addActionListener(listener);
-        //button.setBackground(ScipionMessageDialog.firebrick);
+        button.setBackground(ScipionMessageDialog.firebrick);
+        button.setForeground(Color.WHITE);
         return button;
     }
 
@@ -201,7 +203,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             return true;//without asking for changes
 	}
     
-   protected void createSubset(final String[] command) 
+   protected void runCommand(final String[] command) 
     {
         XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
         new Thread(new Runnable() {
@@ -213,11 +215,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if (output != null && !output.isEmpty()) {
-                        System.out.println(output);
-                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-                        
-                    }
+//                    if (output != null && !output.isEmpty()) {
+//                        System.out.println(output);
+//                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+//                        
+//                    }
 
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());

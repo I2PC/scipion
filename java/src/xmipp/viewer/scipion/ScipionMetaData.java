@@ -852,7 +852,7 @@ public class ScipionMetaData extends MetaData {
             defV = emo.getValueDouble("_defocusV");
                 //read params from sqlite
 
-            return new EllipseCTF(Q0, Cs, Ts, kV, defU, defV, D);
+            return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             throw new IllegalArgumentException(ex);

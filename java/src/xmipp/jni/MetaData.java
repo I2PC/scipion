@@ -582,7 +582,7 @@ public class MetaData {
                 defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
                 defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
 
-                return new EllipseCTF(Q0, Cs, Ts, kV, defU, defV, D);
+                return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, D);
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
                 throw new IllegalArgumentException(ex);

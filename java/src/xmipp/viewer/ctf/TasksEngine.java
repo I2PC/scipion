@@ -20,7 +20,7 @@ public class TasksEngine implements iTaskCompletionListener {
     }
 
     public synchronized void add(CommandTask task) {
-        System.out.println("running task " + Arrays.toString(task.commands.toArray()));
+        //System.out.println("running task " + Arrays.toString(task.commands.toArray()));
         gui.setRowBusy(task.row);
         tasks++;
         task.start();

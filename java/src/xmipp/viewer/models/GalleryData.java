@@ -102,7 +102,7 @@ public class GalleryData {
     // Flags to check if md or classes has changed
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
-    protected List<Long> ctfids;
+    protected List<EllipseCTF> ctfs;
     
 
     
@@ -1565,40 +1565,37 @@ public class GalleryData {
         }
     }
 
-    public void setCTFRecalculate(int row, boolean recalculate) {
-        if (ctfids == null) {
-            ctfids = new ArrayList<Long>();
-        }
-        long id = ids[row];
-        if (recalculate) {
-            if (!ctfids.contains(id)) {
-                ctfids.add(id);
-            }
-        } else {
-            ctfids.remove(id);
-        }
+    public void removeCTF(int row) {
+        if(ctfs == null)
+            return;
+        ctfs.remove(row);
+        
+        
     }
 
     public boolean isRecalculateCTF(int row) {
-        if (ctfids == null) {
-            ctfids = new ArrayList<Long>();
+        if (ctfs == null) {
+            ctfs = new ArrayList<EllipseCTF>();
         }
         long id = ids[row];
-        for (Long ctfid : ctfids) {
-            if (ctfid == id) {
+        for (EllipseCTF ctf : ctfs) {
+            if (ctf.getId() == id) {
                 return true;
             }
         }
         return false;
     }
     
-    public void recalculateCTF(int row, EllipseCTF ellipseCTF, EllipseFitter ellipseFitter, TasksEngine tasksEngine, String sortFn) {
-        System.out.println("recalculating ctf\n" + ellipseCTF);
-        
+    public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
+    {
+         if (ctfs == null) {
+            ctfs = new ArrayList<EllipseCTF>();
+        }
+        ctfs.add(ellipseCTF);
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseFitter.angle, 
-                md.getPSDFile(ids[row]), ellipseCTF.getD(), tasksEngine, row, sortFn);
-        tasksEngine.add(estimateFromCTFTask);
+                ellipseCTF, 90 - ellipseCTF.getEllipseFitter().angle, 
+                md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
+        window.getTasksEngine().add(estimateFromCTFTask);
     }
     
      public void showCTF(boolean profile, int row, TasksEngine ctfTasks) {
@@ -1625,5 +1622,7 @@ public class GalleryData {
             XmippDialog.showError(window, e.getMessage());
         }
     }
+     
+     
 
 }// class GalleryDaa

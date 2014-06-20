@@ -4,6 +4,8 @@
  */
 package xmipp.jni;
 
+import ij.process.EllipseFitter;
+
 
 /**
  *
@@ -13,28 +15,43 @@ public class EllipseCTF {
 
     private double Q0, Cs, Ts, kV, lambda, lowFreq, highFreq;
     int D;
-    double defU, defV;
+    double mddefU, mddefV;
     private double defocusU, defocusV;
+    private long id;
+    private EllipseFitter ellipseFitter;
 
+    public void setEllipseFitter(EllipseFitter ellipseFitter) {
+        this.ellipseFitter = ellipseFitter;
+    }
+
+    public EllipseFitter getEllipseFitter() {
+        return ellipseFitter;
+    }
    
     
-    public EllipseCTF(double Q0, double Cs, double Ts, double kV, double defU, double defV, int D)
+    public EllipseCTF(long id, double Q0, double Cs, double Ts, double kV, double mddefU, double mddefV, int D)
     {
+        this.id = id;
         this.D = D;
         this.Q0 = Q0;
         this.Cs = Cs;
         this.Ts = Ts;
         this.kV = kV;
         this.lambda = EllipseCTF.lambda(kV);
-        this.defU = defU;
-        this.defV = defV;
+        this.mddefU = mddefU;
+        this.mddefV = mddefV;
+    }
+    
+    public long getId()
+    {
+        return id;
     }
 
     public static double lambda(double Kv) {
             double local_kV = Kv * 1.0e3;
 
             return 12.3 / Math.sqrt(local_kV * (1. + local_kV * 1e-6));
-        }
+    }
 
 
     public double getDefocusU() {
@@ -102,8 +119,8 @@ public class EllipseCTF {
     + "Kv: " + kV + "\n"
     + "lambda: " + lambda + "\n"
     + "---------------------------------------------------\n"
-    + "defocusU: " + defocusU + " > (file: " + defU + ")\n"
-    + "defocusV: " + defocusV + " > (file: " + defV + ")\n"
+    + "defocusU: " + defocusU + " > (file: " + mddefU + ")\n"
+    + "defocusV: " + defocusV + " > (file: " + mddefV + ")\n"
     + "---------------------------------------------------\n";
     }
     

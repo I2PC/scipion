@@ -18,7 +18,7 @@ public class ScipionParams extends Params {
 
     public final static String SCIPION = "scipion";
     public String python;
-    public String script;
+    public String scripts;
     public String projectid;
     public String inputid;
     public String other;
@@ -46,7 +46,7 @@ public class ScipionParams extends Params {
         if (cmdLine.hasOption(SCIPION)) {
             String[] cmdargs = cmdLine.getOptionValues(SCIPION);
             python = cmdargs[0];
-            script = cmdargs[1]; 
+            scripts = cmdargs[1]; 
             projectid = cmdargs[2];
             inputid = cmdargs[3];
             other = (cmdargs.length == 5)? cmdargs[4]: "";
