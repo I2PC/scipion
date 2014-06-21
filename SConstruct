@@ -79,8 +79,7 @@ SCIPION = {
 
 ######################
 # AUXILIAR FUNCTIONS #
-######################
-# TODO - AddExternalLibrary for auto-tools made compilation and _addLibrary for ourself compiled libraries and 
+###################### 
 def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, tar=None, deps=None, url=None, flags=[]):
     """
     This method is for adding a library to the main dict
@@ -92,6 +91,8 @@ def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, t
     src = dir if src is None else dir
     url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar if url is None else url
     incs = [] if incs is None else incs
+    libs = ["lib%s.so" % name] if libs is None else libs
+    deps = [] if deps is None else deps
     SCIPION['LIBS'][name] = {DEF: dft,
                      SRC: src,
                      INCS: incs,
@@ -217,14 +218,12 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
      * name -> name of the library as used for the key of the LIBS dictionary in SCIPION main dictionary
      * incs -> includes for compiling process
     """
+    # PREPARING ENVIRONMENT
     env['CROSS_BUILD'] = False
     libraryDict = SCIPION['LIBS'].get(name)
     incs = libraryDict[INCS] if incs is None else incs
-    incs = [] if incs is None else incs
     libs = libraryDict[LIBS] if libs is None else libs
-    libs = [] if libs is None else libs
     deps = libraryDict[DEPS] if deps is None else deps
-    deps = [] if deps is None else deps
     flags = libraryDict[FLAGS] if flags is None else flags
     autoSource = 'Makefile.in' if autoSource is None else autoSource
     autoTarget = 'Makefile' if autoTarget is None else autoTarget
@@ -236,8 +235,7 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
         source = Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
                                    libraryDict[SRC]),
                       '*.c')
-    if target is None:
-        target = 'lib%s.so' % name
+    target = 'lib%s.so' % name if target is None else target
     target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
                           libraryDict[DIR],
                           target)
@@ -248,10 +246,6 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
         makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
                                     libraryDict[DIR], 
                                     makePath))
-    if flags is None:
-        flags = []
-    if incs is None:
-        incs = []
     incflags = []
     if not len(incs) == 0:
         incflagString = "CPPFLAGS=\'"
@@ -261,21 +255,37 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
         incflagString += "\'"
         incflags = [incflagString]
     flags += incflags
-#    print "name %s" % name
-#    print "incs %s" % incs
-#    print "libs %s" % libs
-#    print "deps %s" % deps
-#    print "flags %s" % flags
-#    print "source %s" % source
-#    print "target %s" % target
-#    print "autoTarget %s" % autoTarget
-#    print "autoSource %s" % autoSource
-#    print "makePath %s" % makePath
+
+    # DEPENDENCIES
+    for dep in deps:
+        # if we provided the key for the main dictionary
+        if dep in SCIPION['LIBS']:
+            librs = SCIPION['LIBS'][dep][LIBS]
+            if len(librs) > 0:
+                for dp in librs:
+                    Depends(File(autoSource),
+                            Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+                                             SCIPION['LIBS'][dep][DIR])))
+                    Depends(File(target),
+                            File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+                                              SCIPION['LIBS'][dep][DIR],
+                                              dp)))
+        # if we provided directly the path of a file
+        else:
+            Depends(File(target), File(dep))
+    Depends(File(autoSource), Dir(folder))
+    Depends(File(target), File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+                                        libraryDict[DIR],
+                                        autoTarget)))
+
+    # CONFIGURE
     configure = env.AutoConfig(source=Dir(folder),
                                target=target, 
                                AutoConfigTarget=autoTarget, 
                                AutoConfigSource=autoSource, 
                                AutoConfigParams=flags)
+
+    # MAKE
     make = env.Make(source=os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
                                         libraryDict[DIR],
                                         autoTarget),
@@ -283,31 +293,6 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
                     MakePath=makePath, 
                     MakeEnv=os.environ, 
                     MakeTargets=makeTargets)
-
-#-------------------------------------------------------
-#    if deps is not None:
-#        for dep in deps:
-#            print "%s depends on %s" % (dep[0], name)
-#            Depends(File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
-#                                      libraryDict[DIR], 
-#                                      autoTarget)), 
-#                    dep)
-#    Depends(File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
-#                              libraryDict[DIR], 
-#                              target)), 
-#            File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
-#                              libraryDict[DIR], 
-#                              autoTarget)))
-#    for src in source:
-#        Depends(src,
-#                os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
-#                             libraryDict[TAR]))
-#--------------------------------------------------------
-    #Depends(File(autoSource), source)
-    Depends(File(autoSource), Dir(folder))
-    Depends(File(target), File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
-                                        libraryDict[DIR],
-                                        autoTarget)))
 
     return make
 
@@ -318,7 +303,8 @@ def _compileWithSetupPy(env, name, source=None, target=None):
     libraryDict = SCIPION['LIBS'].get(name)
     if source is None:
         source = Glob(os.path.join(SCIPION['FOLDER'][TMP_FOLDER], 
-                                   libraryDict[DIR], '*.py'))
+                                   libraryDict[DIR]),
+                      '*.py')
     if target is None:
         target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
                               libraryDict[DIR])

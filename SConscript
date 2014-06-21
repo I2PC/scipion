@@ -78,11 +78,13 @@ env.AddLibrary('tcl',
 env.AddLibrary('tk',  
                tar='tk8.6.1-src.tar.gz', 
                dir='tk8.6.1',
-               src=os.path.join('tk8.6.1', 'unix'))
+               src=os.path.join('tk8.6.1', 'unix'),
+               deps=['tcl'])
 
 # sqlite
 env.AddLibrary('sqlite',
-               tar='sqlite-3.6.23.tgz')
+               tar='sqlite-3.6.23.tgz',
+               libs=['libsqlite3.so'])
 
 
 #############################
@@ -92,7 +94,9 @@ env.AddLibrary('sqlite',
 # python 2.7.7
 env.AddLibrary('python',  
                tar='Python-2.7.7.tgz',
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz',
+               libs=['libpython2.7.so'],
+               deps=['sqlite', 'tcl', 'tk'])
 
 ############################
 # THIRD LEVEL DEPENDENCIES #
@@ -102,49 +106,57 @@ env.AddLibrary('python',
 env.AddLibrary('numpy',  
                tar='numpy-1.8.1.tar.gz', 
                dir='numpy-1.8.1', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/numpy-1.8.1.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/numpy-1.8.1.tar.gz',
+               deps=['python'])
 
 # matplotlib
 env.AddLibrary('matplotlib',  
                tar='matplotlib-1.3.1.tar.gz', 
                dir='matplotlib-1.3.1', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/matplotlib-1.3.1.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/matplotlib-1.3.1.tar.gz',
+               deps=['python'])
 
 # psutil
 env.AddLibrary('psutil', 
                tar='psutil-2.1.1.tar.gz', 
                dir='psutil-2.1.1', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/psutil-2.1.1.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/psutil-2.1.1.tar.gz',
+               deps=['python'])
 
 # mpi4py
 env.AddLibrary('mpi4py', 
                tar='mpi4py-1.3.1.tar.gz', 
                dir='mpi4py-1.3.1', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/mpi4py-1.3.1.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/mpi4py-1.3.1.tar.gz',
+               deps=['python'])
 
 # scipy
 env.AddLibrary('scipy', 
                dft=False, 
                tar='scipy-0.14.0.tar.gz', 
                dir='scipy-0.14.0', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/scipy-0.14.0.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/scipy-0.14.0.tar.gz',
+               deps=['python'])
 
 # bibtex
 env.AddLibrary('bibtexparser', 
                tar='bibtexparser-0.5.tgz',  
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/bibtexparser-0.5.tgz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/bibtexparser-0.5.tgz',
+               deps=['python'])
 
 # django
 env.AddLibrary('django', 
                tar='Django-1.5.5.tgz', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Django-1.5.5.tgz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Django-1.5.5.tgz',
+               deps=['python'])
 
 # paramiko
 env.AddLibrary('paramiko', 
                dft=False, 
                tar='paramiko-1.14.0.tar.gz', 
                dir='paramiko-1.14.0', 
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz')
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz',
+               deps=['python'])
 
 ######################
 # CONFIGURATION FILE #
@@ -177,14 +189,14 @@ sqliteUntar = env.UntarLibrary('sqlite')
 tclUntar = env.UntarLibrary('tcl')
 tkUntar = env.UntarLibrary('tk')
 pythonUntar = env.UntarLibrary('python')
-#env.UntarLibrary('numpy')
-#env.UntarLibrary('matplotlib')
-#env.UntarLibrary('psutil')
-#env.UntarLibrary('mpi4py')
-#env.UntarLibrary('scipy')
-#env.UntarLibrary('bibtexparser')
-#env.UntarLibrary('django')
-#env.UntarLibrary('paramiko')
+env.UntarLibrary('numpy')
+env.UntarLibrary('matplotlib')
+env.UntarLibrary('psutil')
+env.UntarLibrary('mpi4py')
+env.UntarLibrary('scipy')
+env.UntarLibrary('bibtexparser')
+env.UntarLibrary('django')
+env.UntarLibrary('paramiko')
 
 ##########################
 # EXECUTING COMPILATIONS #
@@ -197,7 +209,7 @@ env.CompileLibrary('sqlite',
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
                    target='libsqlite3.so')
 
-tcl = env.CompileLibrary('tcl', 
+env.CompileLibrary('tcl', 
                    source=tclUntar,
                    flags=['--enable-threads', 
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
@@ -206,12 +218,11 @@ tcl = env.CompileLibrary('tcl',
                    autoTarget=os.path.join('unix','Makefile'),
                    makePath='unix')
 
-tk = env.CompileLibrary('tk', 
+env.CompileLibrary('tk', 
                    source=tkUntar,
                    flags=['--enable-threads', 
 #                          '--with-tcl="%s"' % os.path.join(Dir(os.path.join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
                           '--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
-                   deps=[],
                    target='libtk.so',
                    autoSource=os.path.join('unix','Makefile.in'),
                    autoTarget=os.path.join('unix','Makefile'),
@@ -222,7 +233,6 @@ env.CompileLibrary('python',
                    flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
                           #'-I/usr/include/ncurses'
                           ],
-                   deps=[],
                    target='libpython2.7.so',
                    autoSource='Makefile.pre.in')
 
