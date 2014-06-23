@@ -58,7 +58,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
             script = parameters.scripts + File.separator + "pw_create_image_subset.py";
-            ctfscript = parameters.scripts + File.separator + "pw_recalculatectf.py";
+            ctfscript = parameters.scripts + File.separator + "pw_recalculate_ctf.py";
             projectid = parameters.projectid;
             inputid = parameters.inputid;
             outputdir = new File(data.getFileName()).getParent();
