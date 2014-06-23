@@ -580,11 +580,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				case KeyEvent.VK_RIGHT:
 					hdir = 1;
 					break;
-                                case KeyEvent.VK_SPACE:
-                                        for (int i = 0; i < data.size(); ++i)
-                                        if (data.isSelected(i))
-                                            data.setEnabled(i, !data.isEnabled(i));
-                                        gallery.fireTableDataChanged();
+//                                case KeyEvent.VK_SPACE:
+//                                        for (int i = 0; i < data.size(); ++i)
+//                                            if (data.isSelected(i))
+//                                                data.setEnabled(i, !data.isEnabled(i));
+//                                        gallery.fireTableDataChanged();
 				}
 				if (vdir != 0 || hdir != 0)
 				{

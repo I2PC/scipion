@@ -139,7 +139,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     public void actionPerformed(ActionEvent ae) {
                         String recalculatefile = outputdir + File.separator + "ctfrecalculate.txt";
                         ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
-                        String[] command = new String[]{python, ctfscript, recalculatefile, inputid};
+                        String[] command = new String[]{python, ctfscript, projectid, inputid, recalculatefile};
                         runCommand(command);
                     }
                 });
