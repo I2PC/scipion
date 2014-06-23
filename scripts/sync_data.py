@@ -124,7 +124,7 @@ def downloadDataset(datasetName, destination=None,
     manifest = join(destination, datasetName, 'MANIFEST')
     try:
         if verbose:
-            print "retrieving MANIFEST file"
+            print "Retrieving MANIFEST file"
         data = urlopen('%s/%s/MANIFEST' % (url, datasetName)).read()
         open(manifest, 'w').write(data)
     except Exception as e:
@@ -138,9 +138,6 @@ def downloadDataset(datasetName, destination=None,
         print "Fetching dataset %s files..." % datasetName
         totalNumber = len(manifestLines)
         percent = prevPercent = 0
-        downloadBarWidth = 100
-        if not verbose:
-            initDownloadBar(downloadBarWidth)
         for number, lineExt in enumerate(manifestLines):
             line = os.path.normpath(lineExt.replace("\n","").split(" ")[0])
             md5InLine = lineExt.replace("\n","").split(" ")[1] 
@@ -153,7 +150,6 @@ def downloadDataset(datasetName, destination=None,
                     print "\t%s ...OK (%02d %%) " % (line, percent)
                 else:
                     progress = percent - prevPercent
-                    remaining = downloadBarWidth-progress
                     sys.stdout.write("#" * int(1 + progress))
                     sys.stdout.flush()
                 prevPercent = percent
@@ -247,11 +243,11 @@ def checkForUpdates(datasetName, workingCopy=None,
             filesUpdated += downloadFile(datasetName, fname, workingCopy, askMsg="download it?", url=url, verbose=verbose)
     copyFile(join(datasetFolderTmp, 'MANIFEST'), join(datasetFolder, 'MANIFEST'))
     if filesUpdated == 0:
-        print "\t ...done. Nothing changed."
+        print "\t...done. Nothing changed."
     elif filesUpdated == 1:
-        print "\t ...done. 1 file was updated."
+        print "\t...done. 1 file was updated."
     else:
-        print "\t ...done. %d files were updated." % filesUpdated
+        print "\t...done. %d files were updated." % filesUpdated
     print
 
 
