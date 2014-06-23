@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.jni.EllipseCTF;
@@ -345,7 +346,7 @@ public class ScipionGalleryData extends GalleryData {
             String line = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n";
 
             for (EllipseCTF ctf : ctfs) {
-                out.write(String.format(line, ctf.getId(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
+                out.write(String.format(Locale.ENGLISH, line, ctf.getId(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
             }
 
             out.close();

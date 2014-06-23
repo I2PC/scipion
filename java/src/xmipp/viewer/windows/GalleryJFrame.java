@@ -193,8 +193,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private ButtonGroup reslicegroup;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
-
 	protected JPanel buttonspn;
+        private GalleryJFrame childFrame;
+        
+        
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -206,7 +208,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-    
+
+
+
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -253,7 +257,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-            data.openMetadata(md);
+
+            childFrame = new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -580,11 +585,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				case KeyEvent.VK_RIGHT:
 					hdir = 1;
 					break;
-//                                case KeyEvent.VK_SPACE:
-//                                        for (int i = 0; i < data.size(); ++i)
-//                                            if (data.isSelected(i))
-//                                                data.setEnabled(i, !data.isEnabled(i));
-//                                        gallery.fireTableDataChanged();
+
+                                case KeyEvent.VK_SPACE:
+                                        int from = -1, to = -1;
+                                        for (int i = 0; i < data.size(); ++i)
+                                        if (data.isSelected(i))
+                                        {
+                                            if(from == -1)
+                                                from = i;
+                                            data.setEnabled(i, !data.isEnabled(i));
+                                            to = i;
+                                        }
+                                        if(from != -1)
+                                            gallery.fireTableRowsUpdated(from, to);
 				}
 				if (vdir != 0 || hdir != 0)
 				{
