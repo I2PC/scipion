@@ -39,6 +39,46 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
 
     _label = 'projection matching'
 
+    def __init__(self, **args):        
+        ProtRefine3D.__init__(self, **args)
+        ProtClassify3D.__init__(self, **args)
+        
+    def _initialize(self):
+        """ This function is mean to be called after the 
+        working dir for the protocol have been set. (maybe after recovery from mapper)
+        """
+        self._createFilenameTemplates()
+        self._createIterTemplates()
+        
+        self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
+        self.outputClasses = 'classes_ref3D.xmd'
+        self.outputVols = 'volumes.xmd'
+    
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called for iterations and references. """
+        self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
+        myDict = {
+                  'input_star': self._getPath('input_particles.star'),
+                  'input_mrcs': self._getPath('input_particles.mrcs'),
+                  'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
+                  'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
+                  'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
+                  'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
+                  'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
+                  'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd')
+                  }
+        # add to keys, data.star, optimiser.star and sampling.star
+        for key in self.FILE_KEYS:
+            myDict[key] = self.extraIter + '%s.star' % key
+            key_xmipp = key + '_xmipp'             
+            myDict[key_xmipp] = self.extraIter + '%s.xmd' % key
+        # add other keys that depends on prefixes
+        for p in self.PREFIXES:            
+            myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
+            myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
+
+        self._updateFilenamesDict(myDict)
+        
     #--------------------------- DEFINE param functions --------------------------------------------   
         
     def _defineParams(self, form):
