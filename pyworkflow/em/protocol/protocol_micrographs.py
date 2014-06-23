@@ -264,9 +264,7 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _defineValues(self):
         """ This function get the acquisition info of the micrographs"""
         self.setOfCtf = self.inputCtf.get()
-        baseFn = basename(self.inputValues.get())
-        paramFn = self._getTmpPath(baseFn)
-        self.values = self._splitFile(paramFn)
+        self.values = self._splitFile(self.inputValues.get())
         
         line = self.values[0]
         objId = self._getObjId(line)
@@ -274,11 +272,12 @@ class ProtRecalculateCTF(ProtMicrographs):
         mic = ctfModel.getMicrograph()
         
         acquisition = mic.getAcquisition()
+        scannedPixelSize = mic.getSamplingRate() * acquisition.getMagnification() / 10000
         self._params = {'voltage': acquisition.getVoltage(),
                         'sphericalAberration': acquisition.getSphericalAberration(),
                         'magnification': acquisition.getMagnification(),
                         'ampContrast': acquisition.getAmplitudeContrast(),
-                        'scannedPixelSize': mic.getScannedPixelSize(),
+                        'scannedPixelSize': scannedPixelSize,
                         'samplingRate': mic.getSamplingRate()
                        }
     

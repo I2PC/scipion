@@ -146,11 +146,13 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         """ Run ctffind3 with required parameters """
         objId = self._getObjId(line)
         ctfModel = self.setOfCtf.__getitem__(objId)
+        
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
-
+        
         # Update _params dictionary
+        self._prepareCommand(line)
         self._params['micFn'] = micFn
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = join(micDir, 'ctffind.out')
@@ -212,8 +214,8 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         # Convert digital frequencies to spatial frequencies
         sampling = mic.getSamplingRate()
         self._params['step_focus'] = 1000.0
-        self._params['lowRes'] = sampling / self._params['lowRes']
-        self._params['highRes'] = sampling / self._params['highRes']
+        self._params['lowRes'] = sampling / float(line[4])
+        self._params['highRes'] = sampling / float(line[5])
         self._params['minDefocus'] = min([float(line[1]), float(line[2])])
         self._params['maxDefocus'] = max([float(line[1]), float(line[2])])
         self._params['windowSize'] = size
