@@ -141,7 +141,6 @@ MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests'
 MODE_TESTS_DATA = 'testdata'
-MODE_DATASET_FORMAT = 'formatdata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
@@ -221,11 +220,6 @@ def main():
     elif mode == MODE_TESTS_DATA:
         runCmd('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
-    elif mode == MODE_DATASET_FORMAT:
-        if n < 3:
-            sys.exit('Dataset needed. Run scipion help to get more info')
-        runCmd('scripts/generate_md5.py %s %s' % (sys.argv[2], os.environ['SCIPION_TESTS']))
-
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
         if n > 2:
@@ -295,19 +289,17 @@ USAGE:
 
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder.
                                OPTION can be:
-                                  -l, --list: list the datasets in the local computer and in the remote server
+                                  --download: copy dataset from remote location to local
+                                  --upload: copy dataset from local to remote
+                                  --format: create a MANIFEST file with md5 checksums (expected in dataset folders)
+                                  dataset: name of dataset to download, upload or format
+                                  --list: list the datasets in the local computer and in the remote server
                                   --query: Show modifications stored in last_m.txt and update modifications log file.
                                            This can be used, for example, by buildbot to know when to launch tests.
-                                 --dataset: name of dataset to download (or upload if used with -r)
-                                  -r, --reverse-sync: copy from local to remote
-                                  --delete: delete remote files not present locally (used with -r)
-                                  -v, --verbose: give more feedback
                                For example, to download the dataset xmipp_tutorial:
-                                  scipion testsdata --dataset xmipp_tutorial
+                                  scipion testsdata --download xmipp_tutorial
                                Or to upload it:
-                                  scipion testsdata --dataset xmipp_tutorial --reverse-sync --delete
- 
-        formatdata <dataset>   Format a dataset to give it the expected structure.
+                                  scipion testsdata --upload xmipp_tutorial
 
         viewer [FILE]          Open a file with Scipion showj program.
 
