@@ -111,7 +111,7 @@ class Project(object):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
-            raise Exception("Project database not found in '%s'" % self.dbPath)
+            raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.settings = loadSettings(self.settingsPath)
         #self.hostsMapper = HostMapper(self.settingsPath)

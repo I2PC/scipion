@@ -339,6 +339,8 @@ def addProtocols(settings):
     
     addSpiderMDAProtocols(settings)
     
+    addRCTProtocols(settings)
+    
     addNMAProtocols(settings)
     
     
@@ -398,7 +400,15 @@ def addNMAProtocols(settings):
     m7 = m.addSubMenu('7. Analyze results (plot deformations)', tag='section')  
     
     settings.addProtocolMenu(m)
+       
+def addRCTProtocols(settings):
+    """ Write protocols related to Random Conical Tilt (RCT) workflow. """
+    m1 = ProtocolConfig("Random Conical Tilt")
     
+    m1.addSubMenu(' Import micrographs pairs', tag='protocol', icon='bookmark.png',
+                  value='ProtImportImagesTiltPairs')
+    
+    settings.addProtocolMenu(m1)   
         
 def getScipionHome(userHome):
     """ Returns default SCIPION_USER_DATA from HOME. """

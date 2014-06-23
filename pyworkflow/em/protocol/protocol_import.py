@@ -225,7 +225,6 @@ class ProtImportParticles(ProtImportImages):
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
         
-        
     def _insertAllSteps(self):
         self._createSet = self._createSetOfParticles
         self._insertFunctionStep('importImages', self.pattern.get(),
