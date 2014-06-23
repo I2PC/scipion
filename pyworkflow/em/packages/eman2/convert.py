@@ -106,14 +106,16 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
             jsonPosDict = loadJson(micPosFn)
-            boxes = jsonPosDict["boxes"]
-
-            for box in boxes:
-                x, y = box[:2] 
-                coord = Coordinate()
-                coord.setPosition(x, y)
-                coord.setMicrograph(mic)
-                coordSet.append(coord)
+            
+            if jsonPosDict.has_key("boxes"):
+                boxes = jsonPosDict["boxes"]
+    
+                for box in boxes:
+                    x, y = box[:2] 
+                    coord = Coordinate()
+                    coord.setPosition(x, y)
+                    coord.setMicrograph(mic)
+                    coordSet.append(coord)
     coordSet.setBoxSize(size)
 
 def writeSetOfCoordinates():
