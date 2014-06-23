@@ -29,31 +29,39 @@ Generate a Set with file-md5sum information for all files
 under a given directory.
 """
 
-import os, sys
+import sys
+import os
+from os.path import join, exists, relpath
 import hashlib
-from os.path import join
-from pyworkflow.utils import getExt
 
-if __name__ == '__main__':
+
+def main():
     datasets = sys.argv[1:-1]
     datasetPath = sys.argv[-1]
     for path in datasets:
-        print "Formatting %(dataset)s" % ({'dataset': path})
-        absPath = os.path.join(datasetPath, path)
-        if not os.path.exists(absPath):
-            print "ERROR: %(path)s folder doesn't exist in datasets folder %(datasetsFolder)s." % ({'path': path, 'datasetsFolder': datasetPath})
-            sys.exit(1)
-        manifestPath = join(absPath, 'MANIFEST')
-        manifestFile = open(manifestPath, 'w+')
-        for root, dirs, files in os.walk(absPath):
-            for filename in files:
-                fn = join(root, filename)
-                if fn != manifestPath:
-                    md5sum = 0
-                    md5 = hashlib.md5()
-                    with open(fn, 'r+') as fileToCheck:
-                        for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
-                            md5.update(chunk)
-                    md5sum = md5.hexdigest()
-                    manifestFile.write('%(fn)s %(md5sum)s\n' % ({'md5sum': md5sum, 'fn': os.path.relpath(fn, absPath)}))
-        manifestFile.close()
+        print "Formatting %s" % path
+        absPath = join(datasetPath, path)
+        if not exists(absPath):
+            sys.exit("ERROR: %s folder doesn't exist in datasets folder %s." %
+                     (path, datasetPath))
+        with open(join(absPath, 'MANIFEST'), 'w+') as manifest:
+            for root, dirs, files in os.walk(absPath):
+                for filename in files:
+                    if filename == 'MANIFEST':
+                        continue  # do not include ourselves
+                    fn = join(root, filename)  # file to check
+                    manifest.write('%s %s\n' % (relpath(fn, absPath), md5(fn)))
+
+
+def md5(fname):
+    """ Return the md5 hash of file fname """
+    mhash = hashlib.md5()
+    with open(fname) as f:
+        for chunk in iter(lambda: f.read(128 * mhash.block_size), ''):
+            mhash.update(chunk)
+    return mhash.hexdigest()
+
+
+
+if __name__ == '__main__':
+    main()
