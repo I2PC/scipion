@@ -237,4 +237,4 @@ env.CompileLibrary('python',
                    autoSource='Makefile.pre.in')
 
 
-#env.CompileWithSetupPy('numpy')
+env.CompileWithSetupPy('numpy')

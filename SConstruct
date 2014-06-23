@@ -216,34 +216,45 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
     Function that implements pseudo-builder for executing AutoConfig and Make builders
     Args:
      * name -> name of the library as used for the key of the LIBS dictionary in SCIPION main dictionary
-     * incs -> includes for compiling process
+     * incs -> includes for compiling process. Must be a list of paths
+     * libs -> list of libraries that will be built when compilation of this library is finished. Will be used as the target of the compilation process
+     * deps -> list of dependencies. 2 ways may be used. You can give the main key of another library in the SCIPION main dictionary or you can use the path of the future library file
+     * flags -> any other flag (in its complete way) that may be passed to the configure process, can be written as a list of flags
+     * source -> 
+     * target ->
+     * autoTarget ->
+     * autoSource ->
+     * makePath ->
+     * makeTargets ->
+      
     """
     # PREPARING ENVIRONMENT
     env['CROSS_BUILD'] = False
     libraryDict = SCIPION['LIBS'].get(name)
+    tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     incs = libraryDict[INCS] if incs is None else incs
     libs = libraryDict[LIBS] if libs is None else libs
     deps = libraryDict[DEPS] if deps is None else deps
     flags = libraryDict[FLAGS] if flags is None else flags
     autoSource = 'Makefile.in' if autoSource is None else autoSource
     autoTarget = 'Makefile' if autoTarget is None else autoTarget
-    folder = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+    folder = os.path.join(tmp,
                           libraryDict[DIR])
-    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+    tar = os.path.join(tmp,
                        libraryDict[TAR])
     if source is None:
-        source = Glob(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
+        source = Glob(os.path.join(tmp, 
                                    libraryDict[SRC]),
                       '*.c')
     target = 'lib%s.so' % name if target is None else target
-    target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+    target = os.path.join(tmp,
                           libraryDict[DIR],
                           target)
     if makePath is None:
-        makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
+        makePath = Dir(os.path.join(tmp, 
                                     libraryDict[DIR]))
     else:
-        makePath = Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
+        makePath = Dir(os.path.join(tmp, 
                                     libraryDict[DIR], 
                                     makePath))
     incflags = []
@@ -264,17 +275,17 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
             if len(librs) > 0:
                 for dp in librs:
                     Depends(File(autoSource),
-                            Dir(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+                            Dir(os.path.join(tmp,
                                              SCIPION['LIBS'][dep][DIR])))
                     Depends(File(target),
-                            File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+                            File(os.path.join(tmp,
                                               SCIPION['LIBS'][dep][DIR],
                                               dp)))
         # if we provided directly the path of a file
         else:
             Depends(File(target), File(dep))
     Depends(File(autoSource), Dir(folder))
-    Depends(File(target), File(os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+    Depends(File(target), File(os.path.join(tmp,
                                         libraryDict[DIR],
                                         autoTarget)))
 
@@ -286,7 +297,7 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
                                AutoConfigParams=flags)
 
     # MAKE
-    make = env.Make(source=os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],
+    make = env.Make(source=os.path.join(tmp,
                                         libraryDict[DIR],
                                         autoTarget),
                     target=File(target), 
@@ -296,19 +307,56 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
 
     return make
 
-def _compileWithSetupPy(env, name, source=None, target=None):
+def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setupPyFile=None, real_stdout=None):
     """
     This method enter in a folder where a setup.py file is placed and executes setup.py build and setup.py install with the given prefix
+    Args:
+     * name ->
+     * source ->
+     * target ->
+     * actions ->
+     * setupPyFile ->
     """
+    from shutil import copyfile
+    import subprocess
     libraryDict = SCIPION['LIBS'].get(name)
-    if source is None:
-        source = Glob(os.path.join(SCIPION['FOLDER'][TMP_FOLDER], 
-                                   libraryDict[DIR]),
-                      '*.py')
-    if target is None:
-        target = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], 
-                              libraryDict[DIR])
+    tmp = SCIPION['FOLDERS'][TMP_FOLDER]
+    bin = SCIPION['FOLDERS'][BIN_FOLDER]
+
+    deps = [] if deps is None else deps
+    if setupPyFile is not None:
+        copyFile(setupPyFile, os.path.join(tmp, libraryDict[DIR], 'setup.py'))
+    setupPyFile = os.path.join(tmp, libraryDict[DIR], 'setup.py')
+    setup = None
+    for action in actions:
+        command = os.path.join(File(os.path.join(bin, 'python')).abspath)
+        command += ' '
+        command += 'setup.py'
+        command += ' '
+        command += action
+        setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
+                    File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
+                    command)
+        #setup = subprocess.Popen(command,
+        #                         cwd = os.path.join(tmp, libraryDict[DIR]),
+        #                         stdout = real_stdout,
+        #                         env = env)
+    #output = setup.communicate()[0]
     
+    for dep in deps:
+        if dep in SCIPION['LIBS']:
+            librs = SCIPION['LIBS'][dep][LIBS]
+            if len(librs) > 0:
+                for dp in librs:
+                    Depends(Dir(os.path.join(tmp, libraryDict[DIR], 'build')), 
+                            File(os.path.join(tmp,
+                                              SCIPION['LIBS'][dep][DIR],
+                                              dp)))
+        else:
+            Depends(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
+                    File(dep))
+    
+    return setup
 
 def _scipionLogo(env):
     print ""
