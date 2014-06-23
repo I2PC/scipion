@@ -1,5 +1,7 @@
 package xmipp.viewer.ctf;
 
+import java.util.Arrays;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -18,6 +20,7 @@ public class TasksEngine implements iTaskCompletionListener {
     }
 
     public synchronized void add(CommandTask task) {
+        System.out.println(Arrays.toString(task.commands.toArray()));
         gui.setRowBusy(task.row);
 
         tasks++;

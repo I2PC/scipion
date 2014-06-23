@@ -952,7 +952,7 @@ public class GalleryData {
 		return null;
 	}
 
-	public MetaData getImagesMd() {
+	public MetaData getImagesMd(MetaData md) {
 		int idlabel = getRenderLabel();
 		if (md == null)
 			return null;
@@ -995,4 +995,12 @@ public class GalleryData {
 				+ "Size: " + Filename.humanReadableByteCount(file.length());
 		return fileInfo;
 	}
+        
+        public boolean hasSelection()
+        {
+            for(int i = 0; i < selection.length; i ++)
+                if(selection[i])
+                    return true;
+            return false;
+        }
 }// class GalleryDaa
