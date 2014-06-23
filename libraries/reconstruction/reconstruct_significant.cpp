@@ -311,13 +311,14 @@ void ProgReconstructSignificant::run()
 
     	// Align the input images to the projections
     	std::cout << "Current significance: " << 1-currentAlpha << std::endl;
-    	std::cout << "Aligning images ...\n";
+    	std::cerr << "Aligning images ...\n";
     	init_progress_bar(mdIn.size());
     	thMgr.run(progReconstructSignificantThreadAlign);
     	progress_bar(mdIn.size());
 
     	// Reweight according to each direction
     	ccdir.initZeros(Nimgs);
+    	double one_alpha=1-currentAlpha;
 		for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
 			for (size_t nDir=0; nDir<Ndirs; ++nDir)
 			{
@@ -337,7 +338,10 @@ void ProgReconstructSignificant::run()
 				for (size_t nImg=0; nImg<Nimgs; ++nImg)
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
-					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*DIRECT_A1D_ELEM(cdfccdir,nImg);
+					double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
+					if (cdfThis<one_alpha)
+						cdfThis=0;
+					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
 				}
 			}
 
@@ -364,15 +368,36 @@ void ProgReconstructSignificant::run()
 				mdReconstruction.unionAll(mdThr);
 				mdPM.unionAll(mdProjectionMatching[nVolume*Nthr+thr]);
 			}
+			String fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 			if (mdReconstruction.size()>0)
-				mdReconstruction.write(formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume));
+				mdReconstruction.write(fnAngles);
 			else
 			{
 				std::cout << formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 				emptyVolumes=true;
 			}
 			if (mdPM.size()>0)
-				mdPM.write(formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume));
+			{
+				String fnImages=formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+				mdPM.write(fnImages);
+
+				// Remove from mdPM those images that do not participate in angles
+				String fnAux=formatString("%s/aux_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+				// Take only the image name from angles.xmd
+				String cmd=(String)"xmipp_metadata_utilities -i "+fnAngles+" --operate keep_column image -o "+fnAux;
+				if (system(cmd.c_str())!=0)
+					REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
+				// Remove duplicated images
+				cmd=(String)"xmipp_metadata_utilities -i "+fnAux+" --operate remove_duplicates image";
+				if (system(cmd.c_str())!=0)
+					REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
+				// Intersect with images.xmd
+				String fnImagesSignificant=formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+				cmd=(String)"xmipp_metadata_utilities -i "+fnImages+" --set intersection "+fnAux+" image image -o "+fnImagesSignificant;
+				if (system(cmd.c_str())!=0)
+					REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
+		    	deleteFile(fnAux);
+			}
 			else
 				std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 	    	deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
@@ -400,7 +425,7 @@ void ProgReconstructSignificant::run()
 
 void ProgReconstructSignificant::reconstructCurrent()
 {
-	std::cout << "Reconstructing volumes ..." << std::endl;
+	std::cerr << "Reconstructing volumes ..." << std::endl;
 	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 	{
 		FileName fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
