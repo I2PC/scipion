@@ -326,6 +326,8 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2 f)
 
 	// Estimate d
 	double dsum=0;
+	std::cerr << "Estimating dimensionality ... " << std::endl;
+	init_progress_bar(MAT_YSIZE(distance));
 	for (int i=0; i<MAT_YSIZE(distance); ++i)
 	{
 		double dist=log(MAT_ELEM(distance,i,0));
@@ -340,7 +342,9 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2 f)
 	    		dsum+=d;
 	    	}
 	    }
+		progress_bar(i);
 	}
+	progress_bar(MAT_YSIZE(distance));
 	return -dsum/((k2-k1)*MAT_YSIZE(distance));
 }
 
@@ -362,7 +366,10 @@ double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2
 
 	// Compute the distance of all versus all
 	double countLessMedianK=0, countLessMaxK=0;
+	std::cerr << "Estimating dimensionality ... " << std::endl;
+	init_progress_bar(MAT_YSIZE(X)-1);
 	for (size_t i1=0; i1<MAT_YSIZE(X)-1; ++i1)
+	{
 		for (size_t i2=i1+1; i2<MAT_YSIZE(X); ++i2)
 		{
 			// Compute the distance between i1 and i2
@@ -384,6 +391,9 @@ double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2
 					countLessMedianK+=1;
 			}
 		}
+		progress_bar(i1);
+	}
+	progress_bar(MAT_YSIZE(X)-1);
 	double iCombinations=2.0/(MAT_YSIZE(X)*(MAT_YSIZE(X)-1));
 	double probLessMedianK=countLessMedianK*iCombinations; // Probability of a distance being less than medianK
 	double probLessMaxK=countLessMaxK*iCombinations; // Probability of a distance being less than maxK
