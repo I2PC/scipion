@@ -40,11 +40,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
     """Protocol to pick particles in a set of micrographs using bsoft"""
     _label = 'particle picking'
 
-    
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
-
         
     def _defineParams(self, form):
     
@@ -54,8 +52,6 @@ class BsoftProtParticlePicking(ProtParticlePicking):
                       help='Select the SetOfMicrograph ')
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)    
-        
-
         
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
@@ -79,10 +75,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         self._enterDir(outputdir)
         bsoft.loadEnvironment()
         for mic in self.inputMics:
-            self.runJob("bshow", getFile(mic.getFileName()))
+            self.runJob("bshow", basename(mic.getFileName()))
         self._leaveDir()
    
-        
     def createOutputStep(self):
         outputDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates(self.inputMics)

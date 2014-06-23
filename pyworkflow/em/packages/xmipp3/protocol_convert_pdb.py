@@ -2,10 +2,12 @@
 #   PDB downloading added by R. Marabini 
 #   using code from Michael J. Harms (pdb_download.py)
 
+import os, ftplib, gzip
+import sys
+
 from pyworkflow.em import *
 from pyworkflow.utils import *
 from os.path import isfile
-import os, ftplib, gzip
 
 class XmippProtConvertPdb(ProtInitialVolume):
     """ Covert a PDB file to a volume.  """
@@ -23,8 +25,6 @@ class XmippProtConvertPdb(ProtInitialVolume):
         Unzip some_file using the gzip library and write to some_output.
         CAUTION: deletes some_file.
         """
-
-        import sys
         success = True
         try:
             f = gzip.open(some_file, 'r')
@@ -145,7 +145,7 @@ class XmippProtConvertPdb(ProtInitialVolume):
             _inFile = self._input_file
         else:
             _inFile = self._pdb_file
-        _outFile = self._getPath(removeExt(getFile(_inFile)))
+        _outFile = self._getPath(removeBaseExt(_inFile))
         self.info("Input file: "+_inFile)
         self.info("Output file: "+_outFile)
         self._output_file = _outFile + ".vol"

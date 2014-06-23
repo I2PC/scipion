@@ -166,7 +166,7 @@ marginal likelihood.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
-        param['inputParFn'] = self._getFile('input_par_block_class', iter=prevIter, ref=ref, block=block)
+        param['inputParFn'] = self._getBaseName('input_par_block_class', iter=prevIter, ref=ref, block=block)
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
         
@@ -221,9 +221,9 @@ marginal likelihood.
         
         if iter == 1 and not leaveDir:
             ProtFrealignBase._mergeAllParFiles(self, iter, numberOfBlocks)
-            parFile = self._getFile('output_par', iter=iter)
+            parFile = self._getBaseName('output_par', iter=iter)
             samplingRate = imgSet.getSamplingRate()
-            rootFn = self._getFile('output_par_class_tmp', iter=iter)
+            rootFn = self._getBaseName('output_par_class_tmp', iter=iter)
             args  = self._rsampleCommand()
             program = RSAMPLE_PATH
         else:
@@ -232,8 +232,8 @@ marginal likelihood.
             for ref in range(1, numberOfClasses + 1):
                 if not leaveDir:
                     self._mergeAllParFiles(iter, ref, cpusRef[ref-1])
-                args += '%s\n' % self._getFile('output_par_class', iter=iter, ref=ref)
-                tmp += '%s\n' % self._getFile('output_par_class', iter=iter, ref=ref)
+                args += '%s\n' % self._getBaseName('output_par_class', iter=iter, ref=ref)
+                tmp += '%s\n' % self._getBaseName('output_par_class', iter=iter, ref=ref)
             args = args + tmp + 'eot'
             program = CALC_OCC_PATH
         
@@ -275,8 +275,8 @@ marginal likelihood.
     def _setParamsClassRefineParticles(self, iter, ref, block):
         paramDics = {}
         paramDics['stopParam'] = -100
-        paramDics['volume'] = self._getFile('ref_vol_class', iter=iter, ref=ref)
-        paramDics['outputParFn'] = self._getFile('output_par_block_class', iter=iter, ref=ref, block=block)
+        paramDics['volume'] = self._getBaseName('ref_vol_class', iter=iter, ref=ref)
+        paramDics['outputParFn'] = self._getBaseName('output_par_block_class', iter=iter, ref=ref, block=block)
         paramDics['inputParFn'] = paramDics['outputParFn']
         paramDics['imgFnMatch'] = self._getFileName('match_block_class', block=block, iter=iter, ref=ref)
         paramDics['outputShiftFn'] = self._getFileName('shift_block_class', block=block, iter=iter, ref=ref)
@@ -292,8 +292,8 @@ marginal likelihood.
         paramDics = {}
         paramDics['mode'] = 0
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
-        paramDics['volume'] = self._getFile('iter_vol_class', iter=iter, ref=ref)
-        paramDics['inputParFn'] = self._getFile('output_par_class', iter=iter, ref=ref)
+        paramDics['volume'] = self._getBaseName('iter_vol_class', iter=iter, ref=ref)
+        paramDics['inputParFn'] = self._getBaseName('output_par_class', iter=iter, ref=ref)
         paramDics['imgFnMatch'] = self._getFileName('match_class', iter=iter, ref=ref)
         paramDics['outputShiftFn'] = self._getFileName('shift_class', iter=iter, ref=ref)
         paramDics['3Dweigh'] = self._getFileName('weight_class', iter=iter, ref=ref)

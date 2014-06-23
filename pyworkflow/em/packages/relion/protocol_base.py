@@ -92,7 +92,7 @@ class ProtRelionBase(EMProtocol):
             myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
             myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
 
-        self._fnDict = myDict
+        self._updateFilenamesDict(myDict)
     
     def _createIterTemplates(self):
         """ Setup the regex on how to find iterations. """
@@ -534,10 +534,6 @@ class ProtRelionBase(EMProtocol):
         environAdd('PATH', RELION_BIN)
         environAdd('LD_LIBRARY_PATH', RELION_LIB)
         environAdd('LD_LIBRARY_PATH', RELION_LIB64)
-    
-    def _getFileName(self, key, **args):
-        """ Retrieve a filename from the templates. """
-        return self._fnDict[key] % args
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """

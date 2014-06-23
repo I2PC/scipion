@@ -103,7 +103,7 @@ class ProtFrealignBase(EMProtocol):
                   'spread_block_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d_%(block)02d'
                   }
         
-        self._fnDict = myDict
+        self._updateFilenamesDict(myDict)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -598,7 +598,7 @@ class ProtFrealignBase(EMProtocol):
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
-        param['inputParFn'] = self._getFile('input_par_block', iter=prevIter, block=block)
+        param['inputParFn'] = self._getBaseName('input_par_block', iter=prevIter, block=block)
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
         
@@ -862,13 +862,9 @@ class ProtFrealignBase(EMProtocol):
         workDir = self._getExtraPath(iterDir, *paths)
         return workDir
 
-    def _getFileName(self, key, **args):
-        """ Retrieve a filename from the templates. """
-        return self._fnDict[key] % args
-    
-    def _getFile(self, key, **args):
+    def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
-        return getFile(self._getFileName(key, **args))
+        return basename(self._getFileName(key, **args))
     
     def _particlesInBlock(self, block, numberOfBlocks):
         """calculate the initial and final particles that belongs to this block"""
@@ -887,8 +883,8 @@ class ProtFrealignBase(EMProtocol):
     def _setParamsRefineParticles(self, iter, block):
         paramDics = {}
         paramDics['stopParam'] = -100
-        paramDics['volume'] = self._getFile('ref_vol', iter=iter)
-        paramDics['outputParFn'] = self._getFile('output_par_block', block=block, iter=iter)
+        paramDics['volume'] = self._getBaseName('ref_vol', iter=iter)
+        paramDics['outputParFn'] = self._getBaseName('output_par_block', block=block, iter=iter)
         paramDics['inputParFn'] = paramDics['outputParFn']
         paramDics['imgFnMatch'] = self._getFileName('match_block', block=block, iter=iter)
         paramDics['outputShiftFn'] = self._getFileName('shift_block', block=block, iter=iter)
@@ -904,8 +900,8 @@ class ProtFrealignBase(EMProtocol):
         paramDics = {}
         paramDics['mode'] = 0
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
-        paramDics['volume'] = self._getFile('iter_vol', iter=iter)
-        paramDics['inputParFn'] = self._getFile('output_par', iter=iter)
+        paramDics['volume'] = self._getBaseName('iter_vol', iter=iter)
+        paramDics['inputParFn'] = self._getBaseName('output_par', iter=iter)
         paramDics['imgFnMatch'] = self._getFileName('match', iter=iter)
         paramDics['outputShiftFn'] = self._getFileName('shift', iter=iter)
         paramDics['3Dweigh'] = self._getFileName('weight', iter=iter)
@@ -1005,7 +1001,7 @@ eot
                 f1.close()
             f2.close()
         else:
-            file1 = self._getFile('output_par_block', block=1, iter=iter)
+            file1 = self._getBaseName('output_par_block', block=1, iter=iter)
             copyFile(file1, file2)
     
     def _splitParFile(self, iter, numberOfBlocks):

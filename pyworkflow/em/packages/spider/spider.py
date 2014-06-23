@@ -88,12 +88,12 @@ def loadEnvironment():
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
     
-def getFile(*paths):
+def _getFile(*paths):
     return join(PATH, *paths)
 
 
 def getScript(*paths):
-    return getFile(SCRIPTS_DIR, *paths)
+    return _getFile(SCRIPTS_DIR, *paths)
 
 
 def __substituteVar(match, paramsDict, lineTemplate):

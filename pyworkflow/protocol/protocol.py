@@ -283,6 +283,8 @@ class Protocol(Step):
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
         self.__project = args.get('project', None)
+        # Filename templates dict that will be used by _getFileName
+        self.__filenamesDict = {}
         
         # For non-parallel protocols mpi=1 and threads=1
         self.allowMpi = hasattr(self, 'numberOfMpi')
@@ -445,8 +447,18 @@ class Protocol(Step):
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
-    def _getFilename(self, key, **args):
-        return self._templateDict[key] % args
+    def _getFileName(self, key, **args):
+        """ This function will retrieve filenames give a key and some
+        keywords arguments. The __filenamesDict attribute should be 
+        updated with templates that accepts the given keys.
+        """
+        return self.__filenamesDict[key] % args
+    
+    def _updateFilenamesDict(self, fnDict):
+        """ Update the dictionary with templates that will be used
+        by the _getFileName function.
+        """
+        self.__filenamesDict.update(fnDict)
     
     def _store(self, *objs):
         """ Stores objects of the protocol using the mapper.
