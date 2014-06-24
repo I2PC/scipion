@@ -46,6 +46,10 @@
  * function updateEnabledItems(mode, list)
  * 	->	Function to update the enabled items what the list contains.
  * 
+ * function updateCheckboxDataTable(element, mode)
+ * 	->	This method was done to keep updated the data core in
+ *		the datatable library used to show in the table mode.
+ *       
  *       
  ******************************************************************************/
 	 
@@ -157,10 +161,27 @@ function updateEnabledItems(mode, list){
 	    case "table":
 	        // Came from the gallery mode
 	    	for (var x=0;list.length>x;x++){
-	    		$("input#enabled___"+ list[x]).prop("checked", false);
+	    		var elem = $("input#enabled___"+ list[x])
+	    		elem.prop("checked", false);
+	    	
+	    		//Fix to keep the datatable updated
+	    		updateCheckboxDataTable(elem, "False");
 	    	}
 	        break;
 	}
+}
+
+function updateCheckboxDataTable(element, mode){
+	/*
+	 * This method was done to keep updated the data core in
+	 * the datatable library used to show in the table mode. 
+	 */
+	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
+	
+	// The checkbox value is the second in the table
+	oTable.fnUpdate(mode, aPos[0], 1);
+	
+	//	oTable.fnDraw();
 }
 
 function createSubset(){
@@ -170,3 +191,4 @@ function createSubset(){
 	alert("To do a subset without the elements:" + listSubset);
 	
 }
+

@@ -420,14 +420,24 @@ function setElementsEditable(elements) {
 }
 
 function valueChange(element) {
-	element_value = ""
+	var element_value = "";
+		
 	if ($(element).is("input:checkbox")) {
 		element_value = $(element).is(":checked")
+		
+		//Fix to keep the datatable updated
+		if (!element_value){
+    		updateCheckboxDataTable($(element), "False");
+		}else{
+			updateCheckboxDataTable($(element), "True");
+		}
+		
 	} else {
 		element_value = $(element).val()
 	}
 	// Keep changes in global variable
 	changes[$(element).attr("id")] = element_value
+	
 }
 
 function initializeTableWidth() {
