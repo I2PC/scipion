@@ -29,43 +29,130 @@
 Since the Projection Matching protocol of Xmipp 3 has a very large
 form definition, we have separated in this sub-module.
 """
+import os, glob, math
+from pyworkflow.em import *
+import xmipp
+
+
 
 # Functions outside th loop loop for xmipp_projection_matching
-def insertExecuteCtfGroups(self):
+def insertExecuteCtfGroupsStep(self):
     #...
     self._insertRunJobStep('xmipp_ctf_group') #...
 
-def insertInitAngularReferenceFile(self):
+def insertInitAngularReferenceFileStep(self):
     #...
     self._insertRunJobStep('') #...
 
 # Functions in loop for xmipp_projection_matching
 
-def insertAngularProjectLibrary(self):
-    #...
+def insertAngularProjectLibraryStep(self):
+    item = iterN - 1
+    self._args = ' -i %(maskedFileNamesIter)s --experimental_images %(experimentalImages)s -o %(projectLibraryRootName)s --sampling_rate %(samplingRate)s --sym %(symmetry)s'
+    self._args += 'h --compute_neighbors --method %(projectionMethod)s' 
+
+    ###need one block per reference
+    # Project all references
+    print '* Create projection library'
+    
+    if isinstance(self.input3DReferences.get(), Volume):
+        xDim, yDim, zDim, _ = self.input3DReferences.get().getDim()
+    else:
+        xDim, yDim, zDim, = self.input3DReferences.get().getDimensions()
+    
+    memoryUsed = (xDim * yDim * zDim * 8) / pow(2,20)
+    projectionMethod = self.getEnumText('projectionMethod')
+    
+    params = {'maskedFileNamesIter' : self.maskedFileNamesIter,
+              'experimentalImages' : self.BlockWithAllExpImages,
+              'projectLibraryRootName' : self.projectLibraryRootName,
+              'samplingRate' : self.samplingRate,
+              'symmetry' : self.symmetryGroup.get(),
+              'projectionMethod' : projectionMethod,
+              }
+    
+    if projectionMethod == 'fourier':
+        memoryUsed = memoryUsed * 6
+        
+        if self.fourierMaxFrequencyOfInterest == -1:
+            md = xmipp.MetaData(self._getFileName('resolutionXmdPrevIterMax'))
+            id = md.firstObject()
+            fourierMaxFrequencyOfInterest = Float(md.getValue(xmipp.MDL_RESOLUTION_FREQREAL, id))
+            fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self.constantToAddToFiltration
+            
+            if fourierMaxFrequencyOfInterest > 0.5:
+                fourierMaxFrequencyOfInterest = 0.5
+            elif fourierMaxFrequencyOfInterest < 0.:
+                fourierMaxFrequencyOfInterest = 0.001
+        
+        params['paddingAngularProjection'] = self.PaddingAngularProjection.get()
+        params['fourierMaxFrequencyOfInterest'] = fourierMaxFrequencyOfInterest
+        params['kernelAngularProjection'] = self.getEnumText('kernelAngularProjection')
+        self._args += ' %(paddingAngularProjection)s %(fourierMaxFrequencyOfInterest)s %(kernelAngularProjection)s'
+        
+    if self.maxChangeInAngles < 181:
+        self._args += ' --near_exp_data --angular_distance %(maxChangeInAngles)s'
+    else:
+        self._args += ' --angular_distance -1'
+    
+    if self.perturbProjectionDirections:
+        perturb = math.sin(math.radians(float(self.angSamplingRateDeg[iterN]))) / 4.
+        parameters += \
+           ' --perturb ' + str(perturb)
+
+    if (DoRestricSearchbyTiltAngle):
+        parameters += \
+              ' --min_tilt_angle ' + str(Tilt0) + \
+              ' --max_tilt_angle ' + str(TiltF)
+
+    if (DoCtfCorrection):
+        parameters += \
+              ' --groups ' + CtfGroupSubsetFileName
+    processorsToUse=NumberOfMpi * NumberOfThreads
+    if processorsToUse>1:
+        memoryAvailable=getMemoryAvailable()
+        processorsToUse=min(processorsToUse,floor(memoryAvailable/memoryUsed))
+    if (DoParallel and processorsToUse>1):
+        parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
+    if (len(SymmetryGroupNeighbourhood) > 1):
+        parameters += \
+          ' --sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
+    if (OnlyWinner):
+        parameters += \
+              ' --only_winner '
+
+    runJob(_log, 'xmipp_angular_project_library',
+                         parameters,
+                         processorsToUse)
+    if (not DoCtfCorrection):
+        src = ProjectLibraryRootName.replace(".stk", '_sampling.xmd')
+        dst = src.replace('sampling.xmd', 'group%06d_sampling.xmd' % 1)
+        copyFile(_log, src, dst)
+        
+    
     self._insertRunJobStep('xmipp_angular_project_library') #...
 
-def insertProjectionMatching(self):
+def insertProjectionMatchingStep(self):
     #...
     self._insertRunJobStep('xmipp_angular_projection_matching') #...
 
-def insertAssignImagesToReferences(self):
+def insertAssignImagesToReferencesStep(self):
     #...
     self._insertRunJobStep('') #...
 
-def insertAngularClassAverage(self):
+def insertAngularClassAverageStep(self):
     #...
     self._insertRunJobStep('xmipp_angular_class_average') #...
 
-def insertReconstruction(self):
+def insertReconstructionStep(self):
     #...
     self._insertRunJobStep('xmipp_reconstruct_fourier') #...
 
-def insertComputeResolution(self):
+def insertComputeResolutionStep(self):
     #...
     self._insertRunJobStep('xmipp_resolution_fsc') #...
 
-def insertFilterVolume(self):
+def insertFilterVolumeStep(self):
     #...
     self._insertRunJobStep('xmipp_transform_filter') #...
 
