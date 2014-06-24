@@ -37,7 +37,7 @@ class ProtDownsampleMicrographs(XmippProtocol):
             self.insertParallelStep("doDownsample", verifyfiles=[fnOut], parent_step_id=XmippProjectDb.FIRST_STEP, 
                             fnMicrograph=fnMicrograph, fnOut=fnOut, downsampleFactor=self.DownsampleFactor)
         self.insertStep("gatherResults",WorkingDir=self.WorkingDir,ImportDir=self.importDir,IOTable=IOTable,
-                        downsampleFactor=self.DownsampleFactor)
+                        downsampleFactor=self.DownsampleFactor,tiltPairs=self.TiltPairs)
 
     def validate(self):
         errors = []
@@ -84,15 +84,20 @@ def convertMetaData(fnIn,fnOut,blockname,IOTable,downsampleFactor,tiltPairs):
             fnMicrographTilted=MD.getValue(xmipp.MDL_MICROGRAPH_TILTED,i);
             MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,IOTable[fnMicrographTilted],i)
             MD.setValue(xmipp.MDL_MICROGRAPH_TILTED_ORIGINAL,fnMicrographTilted,i)
-    MD.write(blockname+"@"+fnOut)
+    MD.write(blockname+"@"+fnOut,xmipp.MD_APPEND)
 
-
-def gatherResults(log, WorkingDir, ImportDir,IOTable,downsampleFactor):
-    convertMetaData(os.path.join(ImportDir,"micrographs.xmd"),os.path.join(WorkingDir,"micrographs.xmd"),
+def gatherResults(log, WorkingDir, ImportDir,IOTable,downsampleFactor,tiltPairs):
+    fnImportedMicrographs=os.path.join(ImportDir,"micrographs.xmd")
+    fnDownsampledMicrographs=os.path.join(WorkingDir,"micrographs.xmd")
+    convertMetaData(fnImportedMicrographs,fnDownsampledMicrographs,
                     "micrographs",IOTable,downsampleFactor,False)
     
-    fnTilted=os.path.join(ImportDir,"tilted_pairs.xmd")
-    if os.path.exists(fnTilted):
-        convertMetaData(fnTilted,os.path.join(WorkingDir,"tilted_pairs.xmd"),
-                        "micrographPairs",IOTable,downsampleFactor,True)
+    if tiltPairs:
+        fnTilted=os.path.join(ImportDir,"tilted_pairs.xmd")
+        if os.path.exists(fnTilted):
+            convertMetaData(fnTilted,os.path.join(WorkingDir,"tilted_pairs.xmd"),
+                            "micrographPairs",IOTable,downsampleFactor,True)
+        else:
+            convertMetaData("micrographPairs@"+fnImportedMicrographs,fnDownsampledMicrographs,
+                            "micrographPairs",IOTable,downsampleFactor,True)
     

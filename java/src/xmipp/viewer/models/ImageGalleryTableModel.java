@@ -426,7 +426,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
 			data.selection[i] = value;
-		fireTableDataChanged();
+		          fireTableRowsUpdated(first_row, last_row);
 	}
 
 	/** Set the class of a given selection of elements. */
