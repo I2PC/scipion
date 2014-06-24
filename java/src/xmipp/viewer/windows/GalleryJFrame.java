@@ -205,6 +205,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JMenuItem rendercolumnmi;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
+        private GalleryJFrame childFrame;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -216,7 +217,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-    private GalleryJFrame childFrame;
+    
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
