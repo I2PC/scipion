@@ -231,7 +231,7 @@ env.CompileLibrary('tk',
 env.CompileLibrary('python',
                    source=pythonUntar,
                    flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
-                          #'-I/usr/include/ncurses'
+                          'CFLAGS=-I/usr/include/ncurses'
                           ],
                    target='libpython2.7.so',
                    autoSource='Makefile.pre.in')

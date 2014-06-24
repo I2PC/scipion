@@ -29,17 +29,21 @@ def parms(target, source, env):
     sourcefile = 'Makefile.in'
     if 'AutoConfigSource' in env.Dictionary().keys():
         sourcefile = env['AutoConfigSource']
-    return (workdir, params, targetfile, sourcefile)
+    stdout = None
+    if 'AutoConfigStdOut' in env.Dictionary().keys():
+        stdout = env['AutoConfigStdOut']
+    return (workdir, params, targetfile, sourcefile, stdout)
 
 def message(target, source, env):
     """Return a pretty AutoConfig message."""
     (dirname,
      params,
      targetfile,
-     sourcefile) = parms(target, source, env)
+     sourcefile,
+     stdout) = parms(target, source, env)
     if 'AUTOCONFIGCOMSTR' in env.Dictionary().keys():
         return env.subst(env['AUTOCONFIGCOMSTR'],
-                         target = target, source = source, raw = 1)
+                         target = target, source = source, raw = 1) + " > %s " % stdout
     msg = 'cd ' + dirname + ' && ./configure'
     if params is not None:
         msg += ' ' + ' '.join(params)
@@ -50,7 +54,8 @@ def emitter(target, source, env):
     (dirname,
      params,
      targetfile,
-     sourcefile) = parms(target, source, env)
+     sourcefile,
+     stdout) = parms(target, source, env)
 
     # NOTE: Using source[0] instead of target[0] for the target's path!
     # If there's only one . in the source[0] value, then Scons strips off the
@@ -71,10 +76,13 @@ def builder(target, source, env):
     ( dirname,
       params,
       targetfile,
-      sourcefile) = parms(target, source, env)
+      sourcefile,
+      stdout) = parms(target, source, env)
     real_stdout = subprocess.PIPE
     if 'AUTOCONFIGCOMSTR' not in env.Dictionary().keys():
         real_stdout = None
+    else:
+        real_stdout = open(stdout, 'w+')
     cmd = './configure'
     if params is not None:
         cmd = [ cmd ] + params

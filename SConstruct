@@ -58,6 +58,7 @@ LIB_FOLDER =           TAR =   5
 MAN_FOLDER =           DEPS =  6 # explicit dependencies              
 TMP_FOLDER =           URL =   7 # URL to download from               
 INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
+LOG_FOLDER =                   9 # 
 
 
 # indexes for LIBS
@@ -71,7 +72,8 @@ SCIPION = {
                 LIB_FOLDER: os.path.join('software', 'lib'),
                 MAN_FOLDER: os.path.join('software', 'man'),
                 TMP_FOLDER: os.path.join('software', 'tmp'),
-                INCLUDE_FOLDER: os.path.join('software', 'include')},
+                INCLUDE_FOLDER: os.path.join('software', 'include'),
+                LOG_FOLDER: os.path.join('software', 'log')},
     'LIBS': {},
     'PACKAGES': {'xmipp': {INSTALL_FOLDER: 'xmipp',
                            LIB_FOLDER: os.path.join('xmipp', 'lib'),
@@ -211,7 +213,7 @@ def _untarLibrary(env, name, tar=None, folder=None):
 def __tarInfoToNode(tarInfoObject):
     return tarInfoObject.name
 
-def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None, makePath=None, makeTargets="all install"):
+def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None, makePath=None, makeTargets="all install", configStdOutLog=None, makeStdOutLog=None):
     """
     Function that implements pseudo-builder for executing AutoConfig and Make builders
     Args:
@@ -226,8 +228,12 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
      * autoSource ->
      * makePath ->
      * makeTargets ->
+     * stdoutLog ->
+     * stderrLog ->
       
     """
+    from shutil import copyfile, rmtree
+    
     # PREPARING ENVIRONMENT
     env['CROSS_BUILD'] = False
     libraryDict = SCIPION['LIBS'].get(name)
@@ -266,6 +272,20 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
         incflagString += "\'"
         incflags = [incflagString]
     flags += incflags
+    
+    # Output redirection to log file
+    configStdOutLog = os.path.join(SCIPION['FOLDERS'][LOG_FOLDER], '%s_configure.log' % name) if configStdOutLog is None else configStdOutLog
+    makeStdOutLog = os.path.join(SCIPION['FOLDERS'][LOG_FOLDER], '%s_make.log' % name) if makeStdOutLog is None else makeStdOutLog
+    if os.path.exists(configStdOutLog):
+        if os.path.exists("%s.old" % configStdOutLog):
+            os.remove("%s.old" % configStdOutLog)
+        copyfile(configStdOutLog, "%s.old" % configStdOutLog)
+    if os.path.exists(makeStdOutLog):
+        if os.path.exists("%s.old" % makeStdOutLog):
+            os.remove("%s.old" % makeStdOutLog)
+        copyfile(makeStdOutLog, "%s.old" % makeStdOutLog)
+    env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES "
+    env['MAKECOMSTR'] = "Compiling $TARGET from $SOURCES " 
 
     # DEPENDENCIES
     for dep in deps:
@@ -294,7 +314,8 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
                                target=target, 
                                AutoConfigTarget=autoTarget, 
                                AutoConfigSource=autoSource, 
-                               AutoConfigParams=flags)
+                               AutoConfigParams=flags,
+                               AutoConfigStdOut=configStdOutLog)
 
     # MAKE
     make = env.Make(source=os.path.join(tmp,
@@ -303,7 +324,8 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
                     target=File(target), 
                     MakePath=makePath, 
                     MakeEnv=os.environ, 
-                    MakeTargets=makeTargets)
+                    MakeTargets=makeTargets,
+                    MakeStdOut=makeStdOutLog)
 
     return make
 
@@ -331,17 +353,12 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     for action in actions:
         command = os.path.join(File(os.path.join(bin, 'python')).abspath)
         command += ' '
-        command += 'setup.py'
+        command += os.path.join(tmp, libraryDict[DIR], 'setup.py')
         command += ' '
         command += action
         setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
                     File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
                     command)
-        #setup = subprocess.Popen(command,
-        #                         cwd = os.path.join(tmp, libraryDict[DIR]),
-        #                         stdout = real_stdout,
-        #                         env = env)
-    #output = setup.communicate()[0]
     
     for dep in deps:
         if dep in SCIPION['LIBS']:

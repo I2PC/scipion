@@ -58,7 +58,11 @@ def parms(target, source, env):
     if 'MakeTargets' in env.Dictionary().keys():
         make_targets = env.subst(env['MakeTargets'])
 
-    return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts)
+    stdout = None
+    if 'MakeStdOut' in env.Dictionary().keys():
+        stdout = env['MakeStdOut']
+
+    return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, stdout)
 
 def message(target, source, env):
     """Return a pretty Make message"""
@@ -68,7 +72,8 @@ def message(target, source, env):
      make_targets,
      make_cmd,
      make_jobs,
-     make_opts) = parms(target, source, env)
+     make_opts,
+     stdout) = parms(target, source, env)
 
     myenv = env.Clone()
     # Want to use MakeTargets in the MAKECOMSTR, but make it pretty first.
@@ -79,7 +84,7 @@ def message(target, source, env):
 
     if 'MAKECOMSTR' in myenv.Dictionary().keys():
         return myenv.subst(myenv['MAKECOMSTR'],
-                            target = target, source = source, raw = 1)
+                            target = target, source = source, raw = 1) + " > %s " % stdout
 
     msg = 'cd ' + make_path + ' &&'
     if make_env != None:
@@ -102,7 +107,8 @@ def builder(target, source, env):
      make_targets,
      make_cmd,
      make_jobs,
-     make_opts) = parms(target, source, env)
+     make_opts,
+     stdout) = parms(target, source, env)
 
     # Make sure there's a directory to run make in
     if len(make_path) == 0:
@@ -126,11 +132,14 @@ def builder(target, source, env):
     real_stdout = subprocess.PIPE
     if 'MAKECOMSTR' not in env.Dictionary().keys():
         real_stdout = None
+    else:
+        real_stdout = open(stdout, 'w+')
 
     # Make!
     make = subprocess.Popen(fullcmd,
                             cwd = make_path,
                             stdout = real_stdout,
+                            stderr = real_stdout,
                             env = make_env)
 
     # Some subprocesses don't terminate unless we communicate with them
