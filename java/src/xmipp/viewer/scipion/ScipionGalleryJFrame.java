@@ -82,7 +82,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     
     private void initComponents() {
-        JButton closebt = XmippWindowUtil.getTextButton("Close", new ActionListener() {
+        Icon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
+						+ "fa-times.png")));
+        JButton closebt = new JButton("Close", icon);
+        closebt.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -159,6 +162,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             buttonspn.add(cmdbutton);
             if(data.isCTFMd())
             {
+                icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
+						+ "fa-cogs.png")));
                 JButton recalculatectfbt = getScipionButton("Recalculate CTFs", new ActionListener() {
 
                     @Override
@@ -168,7 +173,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String[] command = new String[]{python, ctfscript, projectid, inputid, recalculatefile};
                         runCommand(command, "Recalculating CTFs ...");
                     }
-                });
+                }, icon);
                 buttonspn.add(recalculatectfbt);
             }
             pack();
@@ -190,11 +195,15 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         enableActions();
     }
     
-
+    
     public JButton getScipionButton(String text, ActionListener listener) {
         Image imp = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
 						+ "fa-plus-circle.png"));
         Icon icon = new ImageIcon(imp);
+        return getScipionButton(text, listener, icon);
+    }
+    
+    public JButton getScipionButton(String text, ActionListener listener, Icon icon) {
         JButton button = new JButton(text.replace("Create ", ""), icon);
         button.setToolTipText(text);
         button.addActionListener(listener);
@@ -223,14 +232,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             classcmdbutton.setEnabled( isenabled);
             classcmdbutton.setBackground(color);
             classcmdbutton.setForeground(forecolor);
+            representativesbt.setEnabled( isenabled);
+            representativesbt.setBackground(color);
+            representativesbt.setForeground(forecolor);
         }
     }
 
   
-    	public boolean proceedWithChanges()
-	{
-            return true;//without asking for changes
-	}
+    public boolean proceedWithChanges()
+    {
+        return true;//without asking for changes
+    }
     
    protected void runCommand(final String[] command, String msg) 
     {
