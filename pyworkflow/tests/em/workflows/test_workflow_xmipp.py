@@ -312,14 +312,14 @@ class TestXmippProjMatching(TestWorkflow):
         self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
         self.validateFiles('protDownsampling', protDownsampling)
         
-        # Now estimate CTF on the downsampled micrographs 
-        print "Performing CTF..."   
-        protCTF = XmippProtCTFMicrographs(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)                
-        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
-        self.launchProtocol(protCTF)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
-        # After CTF estimation, the output micrograph should have CTF info
-        self.validateFiles('protCTF', protCTF)
+#         # Now estimate CTF on the downsampled micrographs 
+#         print "Performing CTF..."   
+#         protCTF = XmippProtCTFMicrographs(numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)                
+#         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
+#         self.launchProtocol(protCTF)
+#         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
+#         # After CTF estimation, the output micrograph should have CTF info
+#         self.validateFiles('protCTF', protCTF)
         
         print "Running fake particle picking..."   
         protPP = XmippProtParticlePicking(importFolder=self.allCrdsDir)                
@@ -331,7 +331,7 @@ class TestXmippProjMatching(TestWorkflow):
         print "Run extract particles with other downsampling factor"
         protExtract = XmippProtExtractParticles(boxSize=64, downsampleType=2, doFlip=True, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-        protExtract.ctfRelations.set(protCTF.outputCTF)
+#         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protExtract)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
