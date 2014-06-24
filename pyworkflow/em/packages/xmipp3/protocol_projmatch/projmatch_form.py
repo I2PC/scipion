@@ -623,6 +623,12 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)
     
+    form.addParam('mpiJobSize', IntParam, default=2,
+                  label='MPI job size',
+                  help="""Minimum size of jobs in mpi processes.
+    Set to 1 for large images (e.g. 500x500)
+    and to 10 for small images (e.g. 100x100)
+    """)
 
     form.addParallelSection(threads=1, mpi=8)
         
