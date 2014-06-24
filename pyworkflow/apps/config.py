@@ -483,27 +483,7 @@ def addHosts(settings):
     
     #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
     settings.addHost(host)
-    
-    host = HostConfig()
-    host.label.set('glassfishdev')
-    host.hostName.set('glassfishdev.cnb.csic.es')
-    host.userName.set('apoza')
-    host.password.set('BF6fYiFYiYD')
-    host.hostPath.set(getScipionHome('/home/apoza'))
-    
-    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
-    settings.addHost(host)
-    
-    host = HostConfig()
-    host.label.set('crunchy')
-    host.hostName.set('crunchy.cnb.csic.es')
-    host.userName.set('apoza')
-    host.password.set('nerfyeb4f1v')
-    host.hostPath.set(getScipionHome('/gpfs/fs1/home/bioinfo/apoza'))
-    setQueueSystem(host, maxCores=64)
-    
-    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
-    settings.addHost(host)
+
     
 def writeDefaults():
     settings = ProjectSettings()

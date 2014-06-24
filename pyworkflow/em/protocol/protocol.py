@@ -169,7 +169,8 @@ class ProtUserSubSet(ProtSets):
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
         
-        if outputClassName == 'SetOfParticles':
+        if (outputClassName.startswith('SetOfParticles') or
+            outputClassName.startswith('SetOfVolumes')):
             # We need to distinguish two cases:
             # a) when we want to create images by grouping class images
             # b) create a subset from a particular class images
@@ -177,11 +178,17 @@ class ProtUserSubSet(ProtSets):
             db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
             itemClassName = db.getSelfClassName()
             if itemClassName.startswith('Class'):
-                self._createImagesFromClasses(inputClasses)
+                if outputClassName.endswith('Representatives'):
+                    self._createRepresentativesFromClasses(inputClasses, 
+                                                           outputClassName.split(',')[0])
+                else:
+                    self._createImagesFromClasses(inputClasses)
             else:
                 self._createSubSetFromImages(inputClasses.getImages())
         elif outputClassName.startswith('SetOfClasses'):
-            self._createClassesFromClasses(inputClasses)  
+            self._createClassesFromClasses(inputClasses)
+        else:
+            raise Exception("Unrecognized output type: '%s'" % outputClassName)  
               
     def _createSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
@@ -197,7 +204,26 @@ class ProtUserSubSet(ProtSets):
                 output.append(mic)
                 
         self._defineOutputs(outputMicrographs=output)
-
+        
+    def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
+        """ Create a new set of images joining all images
+        assigned to each class.
+        """
+        inputImages = inputClasses.getImages()
+        createFunc = getattr(self, '_create' + outputClassName)
+        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
+        
+        output = createFunc()
+        output.copyInfo(inputImages)
+        for cls in modifiedSet:
+            if cls.isEnabled():
+                img = cls.getRepresentative()
+                img.copyObjId(cls)
+                output.append(img)
+        # Register outputs
+        self._defineOutput('Representatives', output)
+        
     def _createImagesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
         assigned to each class.

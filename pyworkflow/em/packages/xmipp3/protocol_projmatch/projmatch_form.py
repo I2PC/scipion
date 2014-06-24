@@ -193,18 +193,18 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)
     
-    #        form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
-    #                      label='Angular search range (deg)',
-    #                      help=""" Maximum change in rot & tilt  (in +/- degrees)
-    #    You may specify this option for each iteration. 
-    #    This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
-    #    specifies 4 iterations, the first two set the value to 1000 (no restriction)
-    #    and the last two to 10degrees. An alternative compact notation 
-    #    is ("2x1000 2x10", i.e.,
-    #    2 iterations with value 1000, and 2 with value 10).
-    #    <Note:> if there are less values than iterations the last value is reused
-    #    <Note:> if there are more values than iterations the extra value are ignored
-    #""")        
+    form.addParam('maxChangeInAngles', NumericListParam, default='1000 10 4 2', 
+                  label='Angular search range (deg)',
+                  help=""" Maximum change in rot & tilt  (in +/- degrees)
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
+    specifies 4 iterations, the first two set the value to 1000 (no restriction)
+    and the last two to 10degrees. An alternative compact notation 
+    is ("2x1000 2x10", i.e.,
+    2 iterations with value 1000, and 2 with value 10).
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
+    """)        
     
     form.addParam('perturbProjectionDirections', NumericListParam, default='0', 
                  label='Perturb projection directions?', expertLevel=LEVEL_EXPERT,
@@ -243,7 +243,7 @@ def _defineProjectionMatchingParams(self, form):
     """)
     
     form.addParam('maxChangeOffset', NumericListParam, default='1000 10 5', 
-                 label='Perturb projection directions?', expertLevel=LEVEL_EXPERT,
+                 label='Maximum change in origin offset', expertLevel=LEVEL_EXPERT,
                  help=""" If set to 1, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
@@ -623,6 +623,12 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)
     
+    form.addParam('mpiJobSize', IntParam, default=2,
+                  label='MPI job size',
+                  help="""Minimum size of jobs in mpi processes.
+    Set to 1 for large images (e.g. 500x500)
+    and to 10 for small images (e.g. 100x100)
+    """)
 
     form.addParallelSection(threads=1, mpi=8)
         

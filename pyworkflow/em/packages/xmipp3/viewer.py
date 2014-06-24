@@ -133,7 +133,7 @@ class XmippViewer(Viewer):
                     
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
-            self._views.append(DataView(fn))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
