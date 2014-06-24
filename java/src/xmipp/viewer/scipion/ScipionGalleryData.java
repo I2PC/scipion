@@ -27,6 +27,10 @@ import xmipp.viewer.models.GalleryData;
  * @author airen
  */
 public class ScipionGalleryData extends GalleryData {
+    
+    public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters) {
+        this(window, fn, parameters, new ScipionMetaData(fn));
+    }
 
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
         super(window, fn, parameters, md);
@@ -126,28 +130,7 @@ public class ScipionGalleryData extends GalleryData {
         return mdImages;
     }
 
-    /**
-     * Get all the images assigned to all selected classes
-     */
-    public MetaData getEnabledClassesImages() {
-        ScipionMetaData mdImages = null;
-        MetaData md;
-        for (int i = 0; i < ids.length; ++i) {
-            if (isEnabled(i)) {
-                md = getClassImages(i);
-
-                if (md != null) {
-                    if (mdImages == null) {
-                        mdImages = ((ScipionMetaData) md).getStructure("");
-                    }
-                    mdImages.unionAll(md);
-                    md.destroy();
-                }
-            }
-        }
-
-        return mdImages;
-    }
+    
 
     /**
      * Get the metadata with assigned images to this classes
@@ -156,7 +139,7 @@ public class ScipionGalleryData extends GalleryData {
         try {
             long id = ids[index];
             ScipionMetaData childmd = ((ScipionMetaData) md).getEMObject(id).childmd;
-            return childmd.getMd(childmd.getEnabledObjects());
+            return childmd;
         } catch (Exception e) {
             e.printStackTrace();
         }

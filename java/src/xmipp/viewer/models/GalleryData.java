@@ -115,6 +115,10 @@ public class GalleryData {
     public static int MIN_SIZE = 16;
     public static int MAX_SIZE = 256;
 
+    public GalleryData(GalleryJFrame window, String fn, Params parameters) 
+    {
+        this(window, fn, parameters, new MetaData(fn));
+    }
 	// max dimension allowed to render images
     /**
      * The constructor receive the filename of a metadata The metadata can also

@@ -33,7 +33,6 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
@@ -116,10 +115,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			long id = data.ids[row];
                         
 			int type = ci.type;
-                        
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_INT:
+                            
 				int value = md.getValueInt(label, id);
 				// treat special case of MDL_ENABLED
 				if (ci.isEnable())
@@ -141,10 +140,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			return null;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+                    e.printStackTrace();
+                    
 		}
-
-		return null;
+                return null;
 	}// function getValueAt
 
 	@Override

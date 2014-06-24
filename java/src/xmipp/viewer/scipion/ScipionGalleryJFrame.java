@@ -22,6 +22,7 @@ import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -98,13 +99,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    int size;
-                    MetaData imagesmd = null;    
+                    int size = 0;
+                    
                     if(data.hasClasses())
-                        imagesmd = data.getEnabledClassesImages();
+                    {
+                        
+                        for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEnabledObjects())
+                            if(emo.childmd != null)
+                                size += emo.childmd.getEnabledObjects().size();
+                    }
                     else
-                        imagesmd = data.getMd(data.getEnabledIds());
-                    size = imagesmd.size();
+                        size = data.getEnabledIds().size();
                     String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, size, (size > 1)?"elements":"element");
                     ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
                     int create = dlg.action;
@@ -121,8 +126,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        MetaData md = data.getMd(data.getEnabledIds());
-                        int size = md.size();
+                        int size = data.getEnabledIds().size();
                         String msg = String.format("<html>Are you sure you want to create a new set of Classes with <font color=red>%s</font> %s?", size, (size > 1)?"elements":"element");
                         ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
@@ -271,5 +275,20 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
         
 
+    /**
+	 * Open another metadata separataly *
+	 */
+    @Override
+	public void openMetadata(MetaData md)
+	{
+            try
+            {
+                new GalleryJFrame(new ScipionGalleryData(this, data.getFileName(), new Params(), (ScipionMetaData)md));
+            }
+            catch(Exception e)
+            {
+                XmippDialog.showError(this, e.getMessage());
+            }
+	}
 
 }

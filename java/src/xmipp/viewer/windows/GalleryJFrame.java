@@ -194,7 +194,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
 	protected JPanel buttonspn;
-        private GalleryJFrame childFrame;
         
         
 	/** Some static initialization for fancy default dimensions */
@@ -230,6 +229,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		catch (Exception e)
 		{
 			DEBUG.printException(e);
+                        setVisible(false);
+                        dispose();
+                        
+                        throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -257,8 +260,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-
-            childFrame = new GalleryJFrame(null, md, new Params());
+            try
+            {
+                new GalleryJFrame(null, md, new Params());
+            }
+            catch(Exception e)
+            {
+                XmippDialog.showError(this, e.getMessage());
+            }
 	}
 
 	/**
