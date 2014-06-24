@@ -32,7 +32,7 @@ This sub-package implement projection matching using xmipp 3.1
 from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues
 from pyworkflow.em import ProtRefine3D, ProtClassify3D
 
-from projmatch_initialize import createFilenameTemplates, initializeLists
+from projmatch_initialize import *
 from projmatch_form import _defineProjectionMatchingParams
 from projmatch_steps import *
 
@@ -71,37 +71,38 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     #--------------------------- INSERT steps functions --------------------------------------------  
     
     def _insertAllSteps(self):
-        self._insertInitSteps()
+        self._initialize()
+        # Insert initial steps
+        insertExecuteCtfGroupsStep(self)
+        insertInitAngularReferenceFileStep(self)
+        # Steps per iteration
         self._insertIterationSteps()
-        self._insertEndSteps()
+        # Final steps
+        self._insertFunctionStep('createOutputStep')
         
-    def _insertInitSteps(self):
-        """ Insert some initialization steps required
-        before executing the steps per iteration. 
-        """
-        pass
-                                                    
     def _insertItersSteps(self):
         """ Insert several steps needed per iteration. """
         
         for iterN in self.allIters():
-            stepId = self._insertFunctionStep('createIterDirsStep', iterN)
+            dirsStep = self._insertFunctionStep('createIterDirsStep', iterN)
 
-            ProjMatchRootNameList = ['']
+            ProjMatchRootNameList = [''] # FIXME: check the function of this list
             
             # Insert some steps per reference volume
+            projMatchSteps = []
             for refN in self.allRefs():
                 # Mask the references in the iteration
-                insertMaskReferenceStep(self, iterN, refN)
+                insertMaskReferenceStep(self, iterN, refN, prerequisites=[dirsStep])
                 
                 # Create the library of projections
                 insertAngularProjectLibraryStep(self, iterN, refN)
                 
                 # Projection matching steps
-                insertProjectionMatchingStep(self, iterN, refN)
+                projMatchStep = insertProjectionMatchingStep(self, iterN, refN)
+                projMatchSteps.append(projMatchStep)
                 
             # Select the reference that best fits each image
-            insertAssignImagesToReferencesStep(self, iterN)
+            insertAssignImagesToReferencesStep(self, iterN, prerequisites=projMatchSteps)
             
             # Create new class averages with images assigned
             insertAngularClassAverageStep(self, iterN)
@@ -110,25 +111,18 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             for refN in self.allRefs():
                 insertReconstructionStep(self, iterN, refN)
                 
-                if self.DoSplitReferenceImages[iterN]:
-                    if self.DoComputeResolution[iterN]:
+                if self.doSplitReferenceImages[iterN]:
+                    if self.doComputeResolution[iterN]:
                         # Reconstruct two halves of the data
                         insertReconstructionStep(self, iterN, refN, 'Split1')
                         insertReconstructionStep(self, iterN, refN, 'Split2')
                         # Compute the resolution
                         insertComputeResolutionStep(self, iterN, refN)
                     
-                # FIXME: in xmipp this step is inside the if self.DoSplit.. a bug there?    
+                # FIXME: in xmipp this step is inside the if self.doSplit.. a bug there?    
                 insertFilterVolumeStep(self, iterN, refN)
                     
                 
-    def _insertEndSteps(self):
-        """ Insert steps after the iteration steps 
-        have been performed.
-        """ 
-        self._insertFunctionStep('createOutputStep')
-                 
-                                       
     #--------------------------- STEPS functions --------------------------------------------       
     def createIterDirsStep(self, iterN):
         """ Create the necessary directory for a given iteration. """

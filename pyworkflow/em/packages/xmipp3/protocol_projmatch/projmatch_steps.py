@@ -29,12 +29,12 @@
 Since the Projection Matching protocol of Xmipp 3 has a very large
 form definition, we have separated in this sub-module.
 """
-import os, glob, math
-from pyworkflow.em import *
+
+import math
+
 import xmipp
-
-
-
+from pyworkflow.object import Float
+from pyworkflow.em.data import Volume
 
 
 # Functions outside th loop loop for xmipp_projection_matching
