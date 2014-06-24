@@ -330,6 +330,7 @@ void ProgReconstructSignificant::run()
 			{
 				// Look for the best correlation for this direction
 				double bestCorr=-2;
+				ccdirNeighbourhood.clear();
 				for (size_t nImg=0; nImg<Nimgs; ++nImg)
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
