@@ -294,7 +294,8 @@ void ProgReconstructSignificant::run()
     else
     	deltaAlpha=0;
 
-    MetaData mdReconstruction, mdPM;
+    MetaData mdReconstruction, mdPM, mdAux;
+    MDRow auxRow;
 	size_t Nimgs=mdInp.size();
 	Image<double> save;
 	MultidimArray<double> ccdir, cdfccdir;
@@ -368,9 +369,23 @@ void ProgReconstructSignificant::run()
 				mdReconstruction.unionAll(mdThr);
 				mdPM.unionAll(mdProjectionMatching[nVolume*Nthr+thr]);
 			}
+
+			// Remove zero-weight images
+			mdAux.clear();
+			FOR_ALL_OBJECTS_IN_METADATA(mdReconstruction)
+			{
+				double thisWeight;
+				mdReconstruction.getValue(MDL_WEIGHT,thisWeight,__iter.objId);
+				if (thisWeight>0)
+				{
+					mdReconstruction.getRow(auxRow,__iter.objId);
+					mdAux.addRow(auxRow);
+				}
+			}
+
 			String fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
-			if (mdReconstruction.size()>0)
-				mdReconstruction.write(fnAngles);
+			if (mdAux.size()>0)
+				mdAux.write(fnAngles);
 			else
 			{
 				std::cout << formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
