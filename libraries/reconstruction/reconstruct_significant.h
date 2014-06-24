@@ -73,9 +73,6 @@ public:
     /** Use imed */
     bool useImed;
 
-    /** Minimum weight */
-    double minWeight;
-
     /** Neighbourhood in angles */
     double angDistance;
 

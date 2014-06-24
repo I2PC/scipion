@@ -46,7 +46,6 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
     addParamsLine("  [--maxTilt <t=90>]           : Maximum tilt angle");
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
-    addParamsLine("  [--minWeight <w=0.33>]       : Minimum weight");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
 }
 
@@ -67,7 +66,6 @@ void ProgReconstructSignificant::readParams()
     tilt0=getDoubleParam("--minTilt");
     tiltF=getDoubleParam("--maxTilt");
     useImed=checkParam("--useImed");
-    minWeight=getDoubleParam("--minWeight");
     angDistance=getDoubleParam("--angDistance");
 }
 
@@ -88,7 +86,6 @@ void ProgReconstructSignificant::show()
         std::cout << "Minimum tilt                : "  << tilt0 << std::endl;
         std::cout << "Maximum tilt                : "  << tiltF << std::endl;
         std::cout << "Use Imed                    : "  << useImed << std::endl;
-        std::cout << "Minimum weight              : "  << minWeight << std::endl;
         std::cout << "Angular distance            : "  << angDistance << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
@@ -406,7 +403,7 @@ void ProgReconstructSignificant::run()
 			{
 				double thisWeight;
 				mdReconstruction.getValue(MDL_WEIGHT,thisWeight,__iter.objId);
-				if (thisWeight>=minWeight)
+				if (thisWeight>0)
 				{
 					mdReconstruction.getRow(auxRow,__iter.objId);
 					mdAux.addRow(auxRow);
