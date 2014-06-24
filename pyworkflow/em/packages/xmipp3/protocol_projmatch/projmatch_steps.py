@@ -57,7 +57,6 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
 
 
 def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
-    item = iterN - 1
     self._args = ' -i %(maskedFileNamesIter)s --experimental_images %(experimentalImages)s -o %(projectLibraryRootName)s --sampling_rate %(samplingRate)s --sym %(symmetry)s'
     self._args += 'h --compute_neighbors --method %(projectionMethod)s' 
 
@@ -72,12 +71,13 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     
     memoryUsed = (xDim * yDim * zDim * 8) / pow(2,20)
     projectionMethod = self.getEnumText('projectionMethod')
+    expImages = self.blockWithAllExpImages + '@' + self.docFileInputAngles[iterN-1]
     
     params = {'maskedFileNamesIter' : self.maskedFileNamesIter,
-              'experimentalImages' : self.BlockWithAllExpImages,
+              'experimentalImages' : expImages,
               'projectLibraryRootName' : self.projectLibraryRootName,
-              'samplingRate' : self.samplingRate,
-              'symmetry' : self.symmetryGroup.get(),
+              'samplingRate' : self.angSamplingRateDeg[iterN],
+              'symmetry' : self.symmetry[iterN],
               'projectionMethod' : projectionMethod,
               }
     
@@ -105,40 +105,41 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     else:
         self._args += ' --angular_distance -1'
     
-    if self.perturbProjectionDirections:
-        perturb = math.sin(math.radians(float(self.angSamplingRateDeg[iterN]))) / 4.
-        parameters += \
-           ' --perturb ' + str(perturb)
+    if self.perturbProjectionDirections[iterN]:
+        self._args +=' --perturb %(perturb)s'
+        self._params['perturb'] = math.sin(math.radians(self.angSamplingRateDeg[iterN])) / 4.
 
-    if (DoRestricSearchbyTiltAngle):
+    if self.doRestricSearchbyTiltAngle:
+        self._args += ' --min_tilt_angle %(tilt0)s --max_tilt_angle %(tiltF)s'
+        self._params['perturb'] = math.sin(math.radians(self.angSamplingRateDeg[iterN])) / 4.
         parameters += \
               ' --min_tilt_angle ' + str(Tilt0) + \
               ' --max_tilt_angle ' + str(TiltF)
-
-    if (DoCtfCorrection):
-        parameters += \
-              ' --groups ' + CtfGroupSubsetFileName
-    processorsToUse=NumberOfMpi * NumberOfThreads
-    if processorsToUse>1:
-        memoryAvailable=getMemoryAvailable()
-        processorsToUse=min(processorsToUse,floor(memoryAvailable/memoryUsed))
-    if (DoParallel and processorsToUse>1):
-        parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
-    if (len(SymmetryGroupNeighbourhood) > 1):
-        parameters += \
-          ' --sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
-    if (OnlyWinner):
-        parameters += \
-              ' --only_winner '
-
-    runJob(_log, 'xmipp_angular_project_library',
-                         parameters,
-                         processorsToUse)
-    if (not DoCtfCorrection):
-        src = ProjectLibraryRootName.replace(".stk", '_sampling.xmd')
-        dst = src.replace('sampling.xmd', 'group%06d_sampling.xmd' % 1)
-        copyFile(_log, src, dst)
-        
+ 
+#     if (DoCtfCorrection):
+#         parameters += \
+#               ' --groups ' + CtfGroupSubsetFileName
+#     processorsToUse=NumberOfMpi * NumberOfThreads
+#     if processorsToUse>1:
+#         memoryAvailable=getMemoryAvailable()
+#         processorsToUse=min(processorsToUse,floor(memoryAvailable/memoryUsed))
+#     if (DoParallel and processorsToUse>1):
+#         parameters = parameters + ' --mpi_job_size ' + str(MpiJobSize)
+#     if (len(SymmetryGroupNeighbourhood) > 1):
+#         parameters += \
+#           ' --sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
+#     if (OnlyWinner):
+#         parameters += \
+#               ' --only_winner '
+# 
+#     runJob(_log, 'xmipp_angular_project_library',
+#                          parameters,
+#                          processorsToUse)
+#     if (not DoCtfCorrection):
+#         src = ProjectLibraryRootName.replace(".stk", '_sampling.xmd')
+#         dst = src.replace('sampling.xmd', 'group%06d_sampling.xmd' % 1)
+#         copyFile(_log, src, dst)
+        self._insertRunJobStep('xmipp_angular_project_library', kk, **kwargs)
 
 def insertProjectionMatchingStep(self, iterN, refN, **kwargs):
     #...
