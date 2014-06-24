@@ -505,3 +505,6 @@ def environAdd(varName, newValue, valueFirst=False):
     varList.insert(i, newValue)
     os.environ[varName] = os.pathsep.join(varList)
 
+# To-Do: check a better implementation
+def getMemoryAvailable():
+    return int(os.popen("free -m").readlines()[1].split()[1])
