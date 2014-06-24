@@ -35,18 +35,28 @@ import xmipp
 
 
 
+
+
 # Functions outside th loop loop for xmipp_projection_matching
-def insertExecuteCtfGroupsStep(self):
+def insertExecuteCtfGroupsStep(self, **kwargs):
     #...
     self._insertRunJobStep('xmipp_ctf_group') #...
 
-def insertInitAngularReferenceFileStep(self):
+def insertInitAngularReferenceFileStep(self, **kwargs):
     #...
     self._insertRunJobStep('') #...
 
 # Functions in loop for xmipp_projection_matching
 
-def insertAngularProjectLibraryStep(self):
+def insertMaskReferenceStep(self, iterN, refN, **kwargs):
+    #...
+    maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
+    ReconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
+    
+    self._insertRunJobStep('xmipp_transform_mask') #...
+
+
+def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     item = iterN - 1
     self._args = ' -i %(maskedFileNamesIter)s --experimental_images %(experimentalImages)s -o %(projectLibraryRootName)s --sampling_rate %(samplingRate)s --sym %(symmetry)s'
     self._args += 'h --compute_neighbors --method %(projectionMethod)s' 
@@ -129,30 +139,33 @@ def insertAngularProjectLibraryStep(self):
         dst = src.replace('sampling.xmd', 'group%06d_sampling.xmd' % 1)
         copyFile(_log, src, dst)
         
-    
-    self._insertRunJobStep('xmipp_angular_project_library') #...
 
-def insertProjectionMatchingStep(self):
+def insertProjectionMatchingStep(self, iterN, refN, **kwargs):
     #...
     self._insertRunJobStep('xmipp_angular_projection_matching') #...
 
-def insertAssignImagesToReferencesStep(self):
+
+def insertAssignImagesToReferencesStep(self, iterN, **kwargs):
     #...
     self._insertRunJobStep('') #...
 
-def insertAngularClassAverageStep(self):
+
+def insertAngularClassAverageStep(self, iterN, **kwargs):
     #...
     self._insertRunJobStep('xmipp_angular_class_average') #...
 
-def insertReconstructionStep(self):
-    #...
-    self._insertRunJobStep('xmipp_reconstruct_fourier') #...
 
-def insertComputeResolutionStep(self):
+def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
+    #...
+    self._insertRunJobStep('xmipp_reconstruct_fourier', **kwargs) #...
+
+
+def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     #...
     self._insertRunJobStep('xmipp_resolution_fsc') #...
 
-def insertFilterVolumeStep(self):
+
+def insertFilterVolumeStep(self, iterN, refN, **kwargs):
     #...
     self._insertRunJobStep('xmipp_transform_filter') #...
 

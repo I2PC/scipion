@@ -24,13 +24,17 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.path import makePath
 """
 This sub-package implement projection matching using xmipp 3.1
 """
 
+from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues
 from pyworkflow.em import ProtRefine3D, ProtClassify3D
 
+from projmatch_initialize import createFilenameTemplates, initializeLists
 from projmatch_form import _defineProjectionMatchingParams
+from projmatch_steps import *
 
        
         
@@ -47,38 +51,14 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
-        self._createFilenameTemplates()
-        self._createIterTemplates()
-        
-        self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.outputClasses = 'classes_ref3D.xmd'
-        self.outputVols = 'volumes.xmd'
-    
-    def _createFilenameTemplates(self):
-        """ Centralize how files are called for iterations and references. """
-        self.extraIter = self._getExtraPath('relion_it%(iter)03d_')
-        myDict = {
-                  'input_star': self._getPath('input_particles.star'),
-                  'input_mrcs': self._getPath('input_particles.mrcs'),
-                  'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
-                  'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
-                  'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
-                  'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
-                  'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
-                  'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd')
-                  }
-        # add to keys, data.star, optimiser.star and sampling.star
-        for key in self.FILE_KEYS:
-            myDict[key] = self.extraIter + '%s.star' % key
-            key_xmipp = key + '_xmipp'             
-            myDict[key_xmipp] = self.extraIter + '%s.xmd' % key
-        # add other keys that depends on prefixes
-        for p in self.PREFIXES:            
-            myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
-            myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
+        # Setup the dictionary with filenames templates to 
+        # be used by _getFileName
+        createFilenameTemplates(self)
+        # Load the values from several params generating a list
+        # of values per iteration or references
+        initializeLists(self)
 
-        self._updateFilenamesDict(myDict)
-        
+    
     #--------------------------- DEFINE param functions --------------------------------------------   
         
     def _defineParams(self, form):
@@ -101,10 +81,47 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         """
         pass
                                                     
-    def _insertIterationSteps(self):
+    def _insertItersSteps(self):
         """ Insert several steps needed per iteration. """
-        pass
-                                                    
+        
+        for iterN in self.allIters():
+            stepId = self._insertFunctionStep('createIterDirsStep', iterN)
+
+            ProjMatchRootNameList = ['']
+            
+            # Insert some steps per reference volume
+            for refN in self.allRefs():
+                # Mask the references in the iteration
+                insertMaskReferenceStep(self, iterN, refN)
+                
+                # Create the library of projections
+                insertAngularProjectLibraryStep(self, iterN, refN)
+                
+                # Projection matching steps
+                insertProjectionMatchingStep(self, iterN, refN)
+                
+            # Select the reference that best fits each image
+            insertAssignImagesToReferencesStep(self, iterN)
+            
+            # Create new class averages with images assigned
+            insertAngularClassAverageStep(self, iterN)
+    
+            # Reconstruct each reference with new averages
+            for refN in self.allRefs():
+                insertReconstructionStep(self, iterN, refN)
+                
+                if self.DoSplitReferenceImages[iterN]:
+                    if self.DoComputeResolution[iterN]:
+                        # Reconstruct two halves of the data
+                        insertReconstructionStep(self, iterN, refN, 'Split1')
+                        insertReconstructionStep(self, iterN, refN, 'Split2')
+                        # Compute the resolution
+                        insertComputeResolutionStep(self, iterN, refN)
+                    
+                # FIXME: in xmipp this step is inside the if self.DoSplit.. a bug there?    
+                insertFilterVolumeStep(self, iterN, refN)
+                    
+                
     def _insertEndSteps(self):
         """ Insert steps after the iteration steps 
         have been performed.
@@ -113,6 +130,14 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
                  
                                        
     #--------------------------- STEPS functions --------------------------------------------       
+    def createIterDirsStep(self, iterN):
+        """ Create the necessary directory for a given iteration. """
+        iterDirs = [self._getFileName(k) for k in ['IterDir', 'ProjMatchDirs', 'LibraryDirs']]
+    
+        for d in iterDirs:
+            makePath(d)
+            
+        return iterDirs
     
     def createOutputStep(self):
         print "output generated..........."
@@ -137,3 +162,31 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     
     #--------------------------- UTILS functions --------------------------------------------
     
+    def allIters(self):
+        """ Iterate over all iterations. """
+        for i in range(1, self.numberOfIterations.get()+1):
+            yield i
+            
+    def allRefs(self):
+        """ Iterate over all references. """
+        for i in range(1, self.numberOfReferences.get()+1):
+            yield i
+            
+    def itersFloatValues(self, attributeName, firstValue=-1):
+        """ Take the string of a given attribute and
+        create a list of floats that will be used by 
+        the iteratioins. An special first value will be
+        added to the list for iteration 0.
+        """
+        valuesStr = self.getAttributeValue(attributeName)
+        return [firstValue] + getFloatListFromValues(valuesStr, length=self.numberOfIterations.get())
+    
+    def itersBoolValues(self, attributeName, firstValue=False):
+        """ Take the string of a given attribute and
+        create a list of booleans that will be used by 
+        the iteratioins. An special first value will be
+        added to the list for iteration 0.
+        """
+        valuesStr = self.getAttributeValue(attributeName)
+        return [firstValue] + getBoolListFromValues(valuesStr, length=self.numberOfIterations.get())
+        
