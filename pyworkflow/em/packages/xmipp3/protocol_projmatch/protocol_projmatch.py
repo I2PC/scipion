@@ -51,6 +51,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         """ This function is mean to be called after the 
         working dir for the protocol have been set. (maybe after recovery from mapper)
         """
+        self._loadInputInfo()
         # Setup the dictionary with filenames templates to 
         # be used by _getFileName
         createFilenameTemplates(self)
@@ -58,7 +59,19 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         # of values per iteration or references
         initializeLists(self)
 
-    
+    def _loadInputInfo(self):
+        from pyworkflow.em.packages.xmipp3 import getImageLocation
+        
+        inputVols = self.input3DReferences.get()
+        # Load references filenames
+        self.referenceFileNames = []
+        for vol in inputVols:
+            self.referenceFileNames.append(getImageLocation(vol))
+            
+        self.numberOfReferences = len(self.referenceFileNames)
+        self.numberOfCtfGroups = 1
+        self.resolSam = inputVols.getSamplingRate()
+        
     #--------------------------- DEFINE param functions --------------------------------------------   
         
     def _defineParams(self, form):
@@ -163,7 +176,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             
     def allRefs(self):
         """ Iterate over all references. """
-        for i in range(1, self.numberOfReferences.get()+1):
+        for i in range(1, self.numberOfReferences+1):
             yield i
             
     def itersFloatValues(self, attributeName, firstValue=-1):

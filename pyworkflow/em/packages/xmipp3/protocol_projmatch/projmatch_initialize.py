@@ -43,7 +43,7 @@ def createFilenameTemplates(self):
                     'LibraryDir': LibraryDir,
                     'ProjectLibraryRootName': join(LibraryDir, "gallery"),
                     'ProjMatchDir': "ProjMatchClasses",
-                    'ProjMatchName': self.Name,
+                    'ProjMatchName': self.name,
                     'ClassAverageName': 'class_average',
                     #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
                     'ForReconstructionSel': "reconstruction.sel",
@@ -68,14 +68,14 @@ def createFilenameTemplates(self):
     Iter = 'Iter_%(iter)03d'
     Ref3D = 'Ref3D_%(ref)03d'
     Ctf = 'CtfGroup_%(ctf)06d'
-    IterDir = self.workingDirPath(Iter)
+    IterDir = self._getExtraPath(Iter)
     
     #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
     ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
     _OutClassesXmd = join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.xmd')
     _OutClassesXmdS1 = join(ProjMatchDirs, '%(ProjMatchName)s_split_1_' + Ref3D + '.xmd')
     _OutClassesXmdS2 = join(ProjMatchDirs, '%(ProjMatchName)s_split_2_' + Ref3D + '.xmd')
-    CtfGroupBase = join(self.workingDirPath(), self.CtfGroupDirectory, '%(CtfGroupRootName)s')
+    CtfGroupBase = join(self.workingDirPath(), self.ctfGroupDirectory, '%(CtfGroupRootName)s')
     ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref3D)
     myDict = {
             # Global filenames templates
@@ -123,47 +123,47 @@ def initializeLists(self):
     """ Load lists with values for iterations...values are taken from string values.
     """
     # Construct special filename list with zero special case
-    self.DocFileInputAngles = [self.DocFileWithOriginalAngles] + [self._getFileName('DocfileInputAnglesIters', iter=i) for i in self.allIters()]
-    #print 'self.DocFileInputAngles: ', self.DocFileInputAngles
-    self.reconstructedFileNamesIters = [[None] + self.ReferenceFileNames]
+    self.docFileInputAngles = [self.docFileWithOriginalAngles] + [self._getFileName('DocfileInputAnglesIters', iter=i) for i in self.allIters()]
+    #print 'self.docFileInputAngles: ', self.docFileInputAngles
+    self.reconstructedFileNamesIters = [[None] + self.referenceFileNames]
     for iterN in self.allIters():
         self.reconstructedFileNamesIters.append([None] + [self._getFileName('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
     
-    self.reconstructedFilteredFileNamesIters = [[None] + self.ReferenceFileNames]
+    self.reconstructedFilteredFileNamesIters = [[None] + self.referenceFileNames]
     for iterN in self.allIters():
         self.reconstructedFilteredFileNamesIters.append([None] + [self._getFileName('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
     
-    maxFreq = self.FourierMaxFrequencyOfInterest
+    maxFreq = self.fourierMaxFrequencyOfInterest
     n2 = self.numberOfIterations.get() + 2
     
-    if self.DoComputeResolution=='0' or self.DoComputeResolution==0:
-        self.FourierMaxFrequencyOfInterest = [maxFreq] * n2
+    if self.doComputeResolution=='0' or self.doComputeResolution==0:
+        self.fourierMaxFrequencyOfInterest = [maxFreq] * n2
     else:
-        self.FourierMaxFrequencyOfInterest = [-1] * n2
-        self.FourierMaxFrequencyOfInterest[1] = maxFreq
+        self.fourierMaxFrequencyOfInterest = [-1] * n2
+        self.fourierMaxFrequencyOfInterest[1] = maxFreq
     
     #parameter for projection matching
-    self.Align2DIterNr = self.itersFloatValues('Align2DIterNr')
-    self.Align2dMaxChangeOffset = self.itersFloatValues('Align2dMaxChangeOffset')
-    self.Align2dMaxChangeRot = self.itersFloatValues('Align2dMaxChangeRot')
-    self.AngSamplingRateDeg = self.itersFloatValues('AngSamplingRateDeg')
-    self.ConstantToAddToFiltration = self.itersFloatValues('ConstantToAddToFiltration')
-    self.ConstantToAddToMaxReconstructionFrequency = self.itersFloatValues('ConstantToAddToMaxReconstructionFrequency')
-    self.DiscardPercentage = self.itersFloatValues('DiscardPercentage')
-    self.DiscardPercentagePerClass = self.itersFloatValues('DiscardPercentagePerClass')
-    self.DoAlign2D = self.itersBoolValues('DoAlign2D')
-    self.DoComputeResolution = self.itersBoolValues('DoComputeResolution')
-    self.DoSplitReferenceImages = self.itersBoolValues('DoSplitReferenceImages')
-    self.InnerRadius = self.itersFloatValues('InnerRadius', firstValue=False) # FIXME: merging bool and floats
-    self.MaxChangeInAngles = self.itersFloatValues('MaxChangeInAngles')
-    self.MaxChangeOffset = self.itersFloatValues('MaxChangeOffset')
-    self.MinimumCrossCorrelation = self.itersFloatValues('MinimumCrossCorrelation')
-    self.OnlyWinner = self.itersBoolValues('OnlyWinner')
-    self.OuterRadius = self.itersFloatValues('OuterRadius', firstValue=False) # FIXME: merging bool and floats
-    self.PerturbProjectionDirections = self.itersBoolValues('PerturbProjectionDirections')
-    self.ReferenceIsCtfCorrected = self.itersFloatValues(str(self.ReferenceIsCtfCorrected.get()) + " True") # FIXME: using bool string and float list
-    self.ScaleNumberOfSteps = self.itersFloatValues('ScaleNumberOfSteps')
-    self.ScaleStep = self.itersFloatValues('ScaleStep')
-    self.Search5DShift = self.itersFloatValues('Search5DShift')
-    self.Search5DStep = self.itersFloatValues('Search5DStep')
-    self.SymmetryGroup = self.itersFloatValues('SymmetryGroup')
+    self.align2DIterNr = self.itersFloatValues('align2DIterNr')
+    self.align2dMaxChangeOffset = self.itersFloatValues('align2dMaxChangeOffset')
+    self.align2dMaxChangeRot = self.itersFloatValues('align2dMaxChangeRot')
+    self.angSamplingRateDeg = self.itersFloatValues('angSamplingRateDeg')
+    self.constantToAddToFiltration = self.itersFloatValues('constantToAddToFiltration')
+    self.constantToAddToMaxReconstructionFrequency = self.itersFloatValues('constantToAddToMaxReconstructionFrequency')
+    self.discardPercentage = self.itersFloatValues('discardPercentage')
+    self.discardPercentagePerClass = self.itersFloatValues('discardPercentagePerClass')
+    self.doAlign2D = self.itersBoolValues('doAlign2D')
+    self.doComputeResolution = self.itersBoolValues('doComputeResolution')
+    self.doSplitReferenceImages = self.itersBoolValues('doSplitReferenceImages')
+    self.innerRadius = self.itersFloatValues('innerRadius', firstValue=False) # FIXME: merging bool and floats
+    self.maxChangeInAngles = self.itersFloatValues('maxChangeInAngles')
+    self.maxChangeOffset = self.itersFloatValues('maxChangeOffset')
+    self.minimumCrossCorrelation = self.itersFloatValues('minimumCrossCorrelation')
+    self.onlyWinner = self.itersBoolValues('onlyWinner')
+    self.outerRadius = self.itersFloatValues('outerRadius', firstValue=False) # FIXME: merging bool and floats
+    self.perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
+    self.referenceIsCtfCorrected = self.itersFloatValues(str(self.ReferenceIsCtfCorrected.get()) + " True") # FIXME: using bool string and float list
+    self.scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')
+    self.scaleStep = self.itersFloatValues('scaleStep')
+    self.search5DShift = self.itersFloatValues('search5DShift')
+    self.search5DStep = self.itersFloatValues('search5DStep')
+    self.symmetryGroup = self.itersFloatValues('symmetryGroup')
