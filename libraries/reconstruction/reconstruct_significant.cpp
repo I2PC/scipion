@@ -46,6 +46,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
     addParamsLine("  [--maxTilt <t=90>]           : Maximum tilt angle");
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
+    addParamsLine("  [--minWeight <w=0.33>]       : Minimum weight");
+    addParamsLine("  [--angDistance <a=10>]       : Angular distance");
 }
 
 // Read arguments ==========================================================
@@ -65,6 +67,8 @@ void ProgReconstructSignificant::readParams()
     tilt0=getDoubleParam("--minTilt");
     tiltF=getDoubleParam("--maxTilt");
     useImed=checkParam("--useImed");
+    minWeight=getDoubleParam("--minWeight");
+    angDistance=getDoubleParam("--angDistance");
 }
 
 // Show ====================================================================
@@ -84,6 +88,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Minimum tilt                : "  << tilt0 << std::endl;
         std::cout << "Maximum tilt                : "  << tiltF << std::endl;
         std::cout << "Use Imed                    : "  << useImed << std::endl;
+        std::cout << "Minimum weight              : "  << minWeight << std::endl;
+        std::cout << "Angular distance            : "  << angDistance << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -299,7 +305,10 @@ void ProgReconstructSignificant::run()
 	size_t Nimgs=mdInp.size();
 	Image<double> save;
 	MultidimArray<double> ccdir, cdfccdir;
+	std::vector<double> ccdirNeighbourhood;
+	ccdirNeighbourhood.resize(10*Nimgs);
 	bool emptyVolumes=false;
+	Matrix1D<double> dir1, dir2;
     for (iter=1; iter<=Niter; iter++)
     {
     	// Generate projections from the different volumes
@@ -318,9 +327,8 @@ void ProgReconstructSignificant::run()
     	progress_bar(mdIn.size());
 
     	// Reweight according to each direction
-    	ccdir.initZeros(Nimgs);
-    	double one_alpha=1-currentAlpha;
 		for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+		{
 			for (size_t nDir=0; nDir<Ndirs; ++nDir)
 			{
 				// Look for the best correlation for this direction
@@ -328,10 +336,33 @@ void ProgReconstructSignificant::run()
 				for (size_t nImg=0; nImg<Nimgs; ++nImg)
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
-					DIRECT_A1D_ELEM(ccdir,nImg)=ccimg;
+					ccdirNeighbourhood.push_back(ccimg);
 					if (ccimg>bestCorr)
 						bestCorr=ccimg;
 				}
+
+				// Look in the neighbourhood
+				GalleryImage &g1= mdGallery[nVolume][nDir];
+				for (size_t nDir2=0; nDir2<Ndirs; ++nDir2)
+				{
+					if (nDir!=nDir2)
+					{
+						GalleryImage &g2= mdGallery[nVolume][nDir2];
+						double ang=Euler_distanceBetweenAngleSets(g1.rot,g1.tilt,0.0,g2.rot,g2.tilt,0.0,true);
+						if (ang<angDistance)
+						{
+							for (size_t nImg=0; nImg<Nimgs; ++nImg)
+							{
+								double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
+								ccdirNeighbourhood.push_back(ccimg);
+								if (ccimg>bestCorr)
+									bestCorr=ccimg;
+							}
+						}
+					}
+				}
+
+				ccdir=ccdirNeighbourhood;
 				ccdir.cumlativeDensityFunction(cdfccdir);
 
 				// Reweight all images for this direction
@@ -340,11 +371,10 @@ void ProgReconstructSignificant::run()
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
 					double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
-					if (cdfThis<one_alpha)
-						cdfThis=0;
 					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
 				}
 			}
+		}
 
     	// Write the corresponding angular metadata
 		for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
@@ -376,7 +406,7 @@ void ProgReconstructSignificant::run()
 			{
 				double thisWeight;
 				mdReconstruction.getValue(MDL_WEIGHT,thisWeight,__iter.objId);
-				if (thisWeight>0)
+				if (thisWeight>=minWeight)
 				{
 					mdReconstruction.getRow(auxRow,__iter.objId);
 					mdAux.addRow(auxRow);
