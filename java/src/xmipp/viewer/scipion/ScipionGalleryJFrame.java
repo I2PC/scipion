@@ -260,11 +260,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if (output != null && !output.isEmpty()) {
-                        System.out.println(output);
-                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
-                        
-                    }
+//                    if (output != null && !output.isEmpty()) {
+//                        System.out.println(output);
+//                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
+//                        
+//                    }
 
                 } catch (Exception ex) {
                     throw new IllegalArgumentException(ex.getMessage());
