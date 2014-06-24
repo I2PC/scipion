@@ -38,24 +38,24 @@ from pyworkflow.em.data import Volume
 from pyworkflow.utils import getMemoryAvailable, replaceExt
 
 
-# Functions outside th loop loop for xmipp_projection_matching
-def insertExecuteCtfGroupsStep(self, **kwargs):
-    #...
-    self._insertRunJobStep('xmipp_ctf_group') #...
-
-def insertInitAngularReferenceFileStep(self, **kwargs):
-    #...
-    self._insertRunJobStep('') #...
+# # Functions outside th loop loop for xmipp_projection_matching
+# def insertExecuteCtfGroupsStep(self, **kwargs):
+#     #...
+#     self._insertRunJobStep('xmipp_ctf_group') #...
+# 
+# def insertInitAngularReferenceFileStep(self, **kwargs):
+#     #...
+#     self._insertRunJobStep('') #...
 
 # Functions in loop for xmipp_projection_matching
 
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
     print "executeMask", self.maskRadius.get()
+    maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
+    reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
     
     if self.getEnumText('maskType') != 'None':
-        maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
-        reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
         
         args = ' -i %(ReconstructedFilteredVolume)s -o %(reconstructedFilteredVolume)'
         if self.getEnumText('maskType') == 'circular':
@@ -65,7 +65,9 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
             maskFn = self.maskFile.get()
             args += ' --mask binary_file -%(maskFn)s'
     
-    self._insertRunJobStep('xmipp_transform_mask', args %locals()) #...
+        self._insertRunJobStep('xmipp_transform_mask', args %locals(), **kwargs)
+    else:
+        self._insertRunJobStep('copyFile', reconstructedFilteredVolume, maskedFileName)
 
 def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     self._args = ' -i %(maskedFileNamesIter)s --experimental_images %(experimentalImages)s -o %(projectLibraryRootName)s --sampling_rate %(samplingRate)s --sym %(symmetry)s'
