@@ -29,6 +29,7 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3.protocol_projmatch import XmippProtProjMatch
 from test_workflow import TestWorkflow
    
        
@@ -338,7 +339,7 @@ class TestXmippProjMatching(TestWorkflow):
         self.validateFiles('protExtract', protExtract)
         
         print "Run Projection Matching"
-        protProjMatch = XmippProtProjMatch()                
+        protProjMatch = XmippProtProjMatch(doCTFCorrection=False)                
         protProjMatch.inputParticles.set(protExtract.outputParticles)
         protProjMatch.input3DReferences.set(protImportVol.getFiles())
         self.launchProtocol(protProjMatch)
