@@ -69,8 +69,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         # Launch the particle picking GUI
         outputdir = self._getExtraPath()
         for mic in self.inputMics:
-            args = "%s %s"%(abspath(mic.getFileName()), outputdir)
-            self.runJob("ln -s", args)
+            micfile = abspath(mic.getFileName())
+            args = "%s %s"%(micfile, outputdir)
+            self.runJob("ln -sf", args)
             
         self._enterDir(outputdir)
         bsoft.loadEnvironment()
