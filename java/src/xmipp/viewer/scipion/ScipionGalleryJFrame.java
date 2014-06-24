@@ -5,7 +5,10 @@
  */
 package xmipp.viewer.scipion;
 
+import ij.ImagePlus;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -13,6 +16,8 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
@@ -39,6 +44,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
     private String other;
+    private JButton representativesbt;
     
    
 
@@ -102,7 +108,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     if (create == ScipionMessageDialog.OK_OPTION) 
                     {
                         String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
-                        runCommand(command);
+                        runCommand(command, "Creating set ...");
                     }
                 }
             });
@@ -119,15 +125,35 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         int create = dlg.action;
                         if (create == ScipionMessageDialog.OK_OPTION) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), output , dlg.getFieldValue(runNameKey), other};
-                            runCommand(command);
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+                            runCommand(command, "Creating set ...");
+                            
+                        }
+
+                    }
+                });
+                representativesbt = getScipionButton("Create Representatives", new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        MetaData md = data.getMd(data.getEnabledIds());
+                        int size = md.size();
+                        String msg = String.format("<html>Are you sure you want to create a new set of Representatives with <font color=red>%s</font> %s?", size, (size > 1)?"elements":"element");
+                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
+                        int create = dlg.action;
+                        if (create == ScipionMessageDialog.OK_OPTION) {
+                            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+                            runCommand(command, "Creating set ...");
                             
                         }
 
                     }
                 });
                 
+                buttonspn.add(representativesbt);
                 buttonspn.add(classcmdbutton);
+                
             }
             
             buttonspn.add(cmdbutton);
@@ -140,7 +166,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         String recalculatefile = outputdir + File.separator + "ctfrecalculate.txt";
                         ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                         String[] command = new String[]{python, ctfscript, projectid, inputid, recalculatefile};
-                        runCommand(command);
+                        runCommand(command, "Recalculating CTFs ...");
                     }
                 });
                 buttonspn.add(recalculatectfbt);
@@ -166,8 +192,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
 
     public JButton getScipionButton(String text, ActionListener listener) {
-
-        JButton button = new JButton(text);
+        Image imp = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
+						+ "fa-plus-circle.png"));
+        Icon icon = new ImageIcon(imp);
+        JButton button = new JButton(text.replace("Create ", ""), icon);
+        button.setToolTipText(text);
         button.addActionListener(listener);
         button.setBackground(ScipionMessageDialog.firebrick);
         button.setForeground(Color.WHITE);
@@ -203,9 +232,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             return true;//without asking for changes
 	}
     
-   protected void runCommand(final String[] command) 
+   protected void runCommand(final String[] command, String msg) 
     {
-        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, "Creating set ...");
+        XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, msg);
         new Thread(new Runnable() {
 
             @Override

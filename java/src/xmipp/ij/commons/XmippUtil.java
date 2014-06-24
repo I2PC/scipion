@@ -69,10 +69,10 @@ public class XmippUtil {
 		}
 	}
 	
-	public static Icon getImageIcon(ImagePlus imp, int width, int height)
+	public static Icon getImageIcon(Image imp, int width, int height)
 	{
 
-		Image image = imp.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		Image image = imp.getScaledInstance(width, height, Image.SCALE_SMOOTH);
 		Icon icon = new ImageIcon(image);
 
 		return icon;

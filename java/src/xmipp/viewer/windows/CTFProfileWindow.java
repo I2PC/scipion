@@ -127,7 +127,7 @@ public class CTFProfileWindow extends JFrame implements ItemListener, ActionList
                 }
             });
             
-            iconbt = new JButton(XmippUtil.getImageIcon(imp, 300, 300));
+            iconbt = new JButton(XmippUtil.getImageIcon(imp.getImage(), 300, 300));
     		iconbt.setToolTipText("Load CTF Profile");
     		iconbt.setBorderPainted(false);
     		iconbt.setContentAreaFilled(false);
