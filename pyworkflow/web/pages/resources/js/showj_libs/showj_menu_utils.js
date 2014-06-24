@@ -148,7 +148,9 @@ function updateEnabledItems(mode, list){
 	    case "gallery":
 	        // Came from the table mode
 	        for (var x=0;list.length>x;x++){
-	        	$("img#enabled___"+ list[x]).css("display","block");
+	        	var elm = $("img#enabled___"+ list[x]);
+	        	elm.css("display","inline");
+	        	elm.addClass("selected");
 	        }
 	        break;
 	        
