@@ -134,7 +134,30 @@ class TestObject(BaseTest):
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
         
+    
+class TestUtils(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+            
+    def test_ListsFunctions(self):
+        """ Test of some methods that retrieve lists from string. """
+        from pyworkflow.utils import getListFromValues, getFloatListFromValues, getBoolListFromValues
         
+        results = [('1x2 2x2 4 5', None, getListFromValues, ['1', '1', '2', '2', '4', '5']),
+                   ('1x2 2x2 4 5', None, getFloatListFromValues, [1., 1., 2., 2., 4., 5.]),
+                   ('1 2 3x3 0.5', 8, getFloatListFromValues, [1., 2., 3., 3., 3., 0.5, 0.5, 0.5]),
+                   ('1x3 0x3 1', 8, getBoolListFromValues, [True, True, True, False, False, False, True, True]),
+                   ]
+        for s, n, func, goldList in results:
+            l = func(s, length=n)#)
+            self.assertAlmostEqual(l, goldList)
+            if n:
+                self.assertEqual(n, len(l))
+        
+        
+            
 if __name__ == '__main__':
     unittest.main()
     

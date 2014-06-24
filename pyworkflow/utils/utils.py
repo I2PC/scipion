@@ -456,6 +456,44 @@ def getRangeStringFromList(list):
     return ','.join(ranges)
 
 
+def getListFromValues(valuesStr, length=None):
+    """ Convert an string representing list items into the list.
+    The items should be separated by spaces and a multiplier 'x' can be used.
+    If lenght is not None, then the last element will be repeated
+    until the desired length is reached.
+    Examples:
+    '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]
+    '3x2, 4x3, 1' -> [3, 3, 4, 4, 4, 1]
+    """
+    result = []
+    
+    for chunk in valuesStr.split():
+        values = chunk.split('x')
+        n = len(values)
+        if n == 1: # 'x' is not present in the chunk, single value
+            result += values
+        elif n == 2: # multiple the values by the number after 'x'
+            result += [values[0]] * int(values[1])
+        else:
+            raise Exception("More than one 'x' is not allowed in list string value.")
+            
+    if length is not None and length > len(result):
+        item = result[-1]
+        result += [item] * (length - len(result))
+        
+    return result
+        
+    
+def getFloatListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of floats'''
+    return [float(v) for v in getListFromValues(valuesStr, length)]
+
+def getBoolListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of booleans'''
+    from pyworkflow.object import Boolean
+    return [Boolean(value=v).get() for v in getListFromValues(valuesStr, length)]
+
+
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
     If valueFirst is true, the new value will be at the beginning.
