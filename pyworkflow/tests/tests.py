@@ -1,15 +1,17 @@
 
 
 
+import sys
+import os
+import time
 import unittest
-import os, sys, time
-from os.path import join, exists, isdir, relpath
-from unittest import TestResult
+from os.path import join, relpath
+
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 from pyworkflow.utils.utils import getColorStr
-from pyworkflow.object import *
-from pyworkflow.protocol import *
+from pyworkflow.object import Object, Float
+from pyworkflow.protocol import MODE_RESTART
 
 TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
@@ -155,7 +157,7 @@ class Complex(Object):
         return c
     
         
-class GTestResult(TestResult):
+class GTestResult(unittest.TestResult):
     """ Subclass TestResult to output tests results with colors (green for success and red for failure)
     and write a report on an .xml file. 
     """
@@ -164,7 +166,7 @@ class GTestResult(TestResult):
     numberTests = 0
     
     def __init__(self):
-        TestResult.__init__(self)
+        unittest.TestResult.__init__(self)
         self.startTimeAll = time.time()
     
     def openXmlReport(self, classname, filename):
