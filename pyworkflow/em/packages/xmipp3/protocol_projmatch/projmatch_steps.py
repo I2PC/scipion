@@ -35,29 +35,33 @@ import math
 import xmipp
 from pyworkflow.object import Float
 from pyworkflow.em.data import Volume
-from pyworkflow.utils import getMemoryAvailable, replaceExt
+from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt
 
 
 # # Functions outside th loop loop for xmipp_projection_matching
-# def insertExecuteCtfGroupsStep(self, **kwargs):
-#     #...
-#     self._insertRunJobStep('xmipp_ctf_group') #...
-# 
-# def insertInitAngularReferenceFileStep(self, **kwargs):
-#     #...
-#     self._insertRunJobStep('') #...
+def insertExecuteCtfGroupsStep(self, **kwargs):
+    #...
+    #self._insertRunJobStep('xmipp_ctf_group') #...
+    pass
+ 
+ 
+def insertInitAngularReferenceFileStep(self, **kwargs):
+    #...
+    #self._insertRunJobStep('') #...
+    pass
 
 # Functions in loop for xmipp_projection_matching
+
 
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
     print "executeMask", self.maskRadius.get()
-    maskedFileName = self.getFilename('MaskedFileNamesIters', iter=iterN, ref=refN)
+    maskedFileName = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
     
     if self.getEnumText('maskType') != 'None':
         
-        args = ' -i %(ReconstructedFilteredVolume)s -o %(reconstructedFilteredVolume)'
+        args = ' -i %(reconstructedFilteredVolume)s -o %(reconstructedFilteredVolume)'
         if self.getEnumText('maskType') == 'circular':
             maskRadius = self.maskRadius.get()
             args += ' --mask circular -%(maskRadius)s'
@@ -67,7 +71,8 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     
         self._insertRunJobStep('xmipp_transform_mask', args %locals(), **kwargs)
     else:
-        self._insertRunJobStep('copyFile', reconstructedFilteredVolume, maskedFileName)
+        self._insertCopyFileStep(reconstructedFilteredVolume, maskedFileName)
+
 
 def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     self._args = ' -i %(maskedFileNamesIter)s --experimental_images %(experimentalImages)s -o %(projectLibraryRootName)s --sampling_rate %(samplingRate)s --sym %(symmetry)s'
@@ -77,39 +82,37 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     # Project all references
     print '* Create projection library'
     
-    if isinstance(self.input3DReferences.get(), Volume):
-        xDim, yDim, zDim, _ = self.input3DReferences.get().getDim()
-    else:
-        xDim, yDim, zDim, = self.input3DReferences.get().getDimensions()
+    xDim, yDim, zDim = self.input3DReferences.get().getDim()
     
     memoryUsed = (xDim * yDim * zDim * 8) / pow(2,20)
     projectionMethod = self.getEnumText('projectionMethod')
     expImages = self.blockWithAllExpImages + '@' + self.docFileInputAngles[iterN-1]
-    self.projectLibraryRootName = self.getFilename('ProjectLibraryStk', iter=iterN, ref=refN)
+    self._projectLibraryRootName = self._getFileName('projectLibraryStk', iter=iterN, ref=refN)
     
-    params = {'maskedFileNamesIter' : self.maskedFileNamesIter,
+    params = {'maskedFileNamesIter' : self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN),
               'experimentalImages' : expImages,
-              'projectLibraryRootName' : self.projectLibraryRootName,
-              'samplingRate' : self.angSamplingRateDeg[iterN],
-              'symmetry' : self.symmetry[iterN],
+              'projectLibraryRootName' : self._projectLibraryRootName,
+              'samplingRate' : self._angSamplingRateDeg[iterN],
+              'symmetry' : self.symmetry.get(),
               'projectionMethod' : projectionMethod,
               }
     
     if projectionMethod == 'fourier':
         memoryUsed = memoryUsed * 6
-        
         if self.fourierMaxFrequencyOfInterest == -1:
-            md = xmipp.MetaData(self.getFileName('resolutionXmdMax', iter=iterN-1, ref=refN))
+            md = xmipp.MetaData(self._getFileName('resolutionXmdMax', iter=iterN-1, ref=refN))
             id = md.firstObject()
             fourierMaxFrequencyOfInterest = Float(md.getValue(xmipp.MDL_RESOLUTION_FREQREAL, id))
-            fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self.constantToAddToFiltration
+            fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToFiltration[iterN]
             
             if fourierMaxFrequencyOfInterest > 0.5:
                 fourierMaxFrequencyOfInterest = 0.5
             elif fourierMaxFrequencyOfInterest < 0.:
                 fourierMaxFrequencyOfInterest = 0.001
+        else:
+            fourierMaxFrequencyOfInterest = self.fourierMaxFrequencyOfInterest
         
-        params['paddingAngularProjection'] = self.PaddingAngularProjection.get()
+        params['paddingAngularProjection'] = self.paddingAngularProjection.get()
         params['fourierMaxFrequencyOfInterest'] = fourierMaxFrequencyOfInterest
         params['kernelAngularProjection'] = self.getEnumText('kernelAngularProjection')
         self._args += ' %(paddingAngularProjection)s %(fourierMaxFrequencyOfInterest)s %(kernelAngularProjection)s'
@@ -119,68 +122,74 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     else:
         self._args += ' --angular_distance -1'
     
-    if self.perturbProjectionDirections[iterN]:
+    if self._perturbProjectionDirections[iterN]:
         self._args +=' --perturb %(perturb)s'
-        self._params['perturb'] = math.sin(math.radians(self.angSamplingRateDeg[iterN])) / 4.
+        params['perturb'] = math.sin(math.radians(self.angSamplingRateDeg[iterN])) / 4.
 
     if self.doRestricSearchbyTiltAngle:
         self._args += ' --min_tilt_angle %(tilt0)s --max_tilt_angle %(tiltF)s'
-        self._params['tilt0'] = self.tilt0.get()
-        self._params['tiltF'] = self.tiltF.get()
+        params['tilt0'] = self.tilt0.get()
+        params['tiltF'] = self.tiltF.get()
  
     if self.doCTFCorrection:
-        self._params['ctfGroupSubsetFileName'] = self.ctfGroupSubsetFileName
+        params['ctfGroupSubsetFileName'] = self.ctfGroupSubsetFileName
         self._args += ' --groups %(ctfGroupSubsetFileName)s'
     
-    processorsToUse = self.NumberOfMpi.get() * self.NumberOfThreads.get()
+    processorsToUse = self.numberOfMpi.get() * self.numberOfThreads.get()
     if processorsToUse > 1:
         memoryAvailable = getMemoryAvailable()
-        processorsToUse=min(processorsToUse, floor(memoryAvailable/memoryUsed))
+        processorsToUse=min(processorsToUse, memoryAvailable/memoryUsed)
 
-    if self.numberOfMpi.get() > 1 and processorsToUse > 1:
-        self._params['MpiJobSize'] = self.MpiJobSize
-        self._args += ' --mpi_job_size %(MpiJobSize)s'
+    if self.numberOfMpi > 1 and processorsToUse > 1:
+        params['mpiJobSize'] = self.mpiJobSize
+        self._args += ' --mpi_job_size %(mpiJobSize)s'
 
     if len(self.symmetryGroupNeighbourhood.get()) > 1:
-        self._params['symmetryGroupNeighbourhood'] = self.symmetryGroupNeighbourhood.get()
+        params['symmetryGroupNeighbourhood'] = self.symmetryGroupNeighbourhood.get()
         self._args += ' --sym_neigh %(symmetryGroupNeighbourhood)s'
 
-    if self.onlyWinner[iterN]:
+    if self._onlyWinner[iterN]:
         self._args += ' --only_winner'
  
-    self._insertRunJobStep('xmipp_angular_project_library', self._args % self._params, numberOfMpi=processorsToUse, **kwargs)
+    self._insertRunJobStep('xmipp_angular_project_library', self._args % params, numberOfMpi=processorsToUse, **kwargs)
 
-    if not self.doCtfCorrection:
-        src = replaceExt(self.projectLibraryRootName, '_sampling.xmd')
-        dst = replaceExt(src, 'group%06d_sampling.xmd' % 1)
-        self._insertFunctionStep('copyFile',src, dst)
+    if not self.doCTFCorrection:
+        src = removeExt(self._projectLibraryRootName) + '_sampling.xmd'
+        dst = removeExt(src) + ('group%06d_sampling.xmd' % 1)
+        self._insertCopyFileStep(src, dst)
+
 
 def insertProjectionMatchingStep(self, iterN, refN, **kwargs):
     #...
-    self._insertRunJobStep('xmipp_angular_projection_matching') #...
+#     self._insertRunJobStep('xmipp_angular_projection_matching') #...
+    pass
 
 
 def insertAssignImagesToReferencesStep(self, iterN, **kwargs):
     #...
-    self._insertRunJobStep('') #...
+#     self._insertRunJobStep('') #...
+    pass
 
 
 def insertAngularClassAverageStep(self, iterN, **kwargs):
     #...
-    self._insertRunJobStep('xmipp_angular_class_average') #...
+#     self._insertRunJobStep('xmipp_angular_class_average') #...
+    pass
 
 
 def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
     #...
-    self._insertRunJobStep('xmipp_reconstruct_fourier', **kwargs) #...
+#     self._insertRunJobStep('xmipp_reconstruct_fourier', **kwargs) #...
+    pass
 
 
 def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     #...
-    self._insertRunJobStep('xmipp_resolution_fsc') #...
+#     self._insertRunJobStep('xmipp_resolution_fsc') #...
+    pass
 
 
 def insertFilterVolumeStep(self, iterN, refN, **kwargs):
     #...
-    self._insertRunJobStep('xmipp_transform_filter') #...
-
+#     self._insertRunJobStep('xmipp_transform_filter') #...
+    pass
