@@ -327,37 +327,50 @@ def main():
             remoteUser = 'scipion'
             remoteServer = 'ramanujan.cnb.csic.es'
             remoteFolder = join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests')
-            lastmFile = join("Scipion", 'last_m.txt')
-            localHostname = " ".join(os.uname())
-            localUser = getpass.getuser()
 
             if not exists(localFolder):
                 sys.exit("ERROR: local folder %s doesn't exist." % localFolder)
 
-            print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
-            print ("You're going to be connected to %s server as %s user to write "
-                   "in %s folder for %s dataset. Only authorized users shall pass." %
+            print 'Warning: Uploading, please BE CAREFUL! This is potentially dangerous.'
+            print ('You are going to be connected to server "%s" as user "%s" to write '
+                   'in folder "%s" the dataset "%s".' %
                    (remoteServer, remoteUser, remoteFolder, dataset))
             while True:
                 ans = raw_input('Continue? (y/n): ')
                 if ans in ['N', 'n']:
-                    sys.exit(1)  # FIXME: why exit with 1? why is it an error? please explain
+                    sys.exit(0)
                 elif ans in ['Y', 'y']:
                     break
-            # If the folder is not in the proper format, create the format and then upload
-            Cmd('%s scripts/generate_md5.py %s %s' % (os.environ['SCIPION_PYTHON'], dataset, os.environ['SCIPION_TESTS']))
-            # Synchronize files
+
+            # First make sure we have our MANIFEST file up-to-date
+            createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+
+            # Upload the dataset files (with rsync)
             Cmd('rsync -av %s %s %s@%s:%s' % (deleteFlag, localFolder, remoteUser, remoteServer, remoteFolder))
-            # Regenerate remote MANIFEST
+
+            # Regenerate remote MANIFEST (which contains a list of datasets)
             print "Regenerating remote MANIFEST file..."
-            Cmd('ssh %s@%s "cd %s && find -maxdepth 1 -type d -type d ! -iname \'.\' > MANIFEST"' % (remoteUser, remoteServer, remoteFolder))
+            Cmd('ssh %s@%s "cd %s && find -type d -mindepth 1 -maxdepth 1 > MANIFEST"' %
+                (remoteUser, remoteServer, remoteFolder))
+            # This is a file that just contains the name of the directories
+            # in remoteFolder. Nothing to do with the MANIFEST files in
+            # the datasets, which contain file names and md5s.
+
+            # Now do stuff related to last_m.txt - useful for buildbot
+            lastmFile = join("Scipion", 'last_m.txt')
+            localHostname = " ".join(os.uname())
+            localUser = getpass.getuser()
 
             print "Registering modification attempt in last_m.txt file"
-            Cmd("ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification to " + dataset + " dataset made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\"")
+            Cmd("ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " +
+                lastmFile + " && echo 'Modification to " + dataset +
+                " dataset made at' >> " + lastmFile + " && date >> " +
+                lastmFile + " && echo 'by " + localUser + " at " + localHostname +
+                "' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\"")
             print "...done."
             # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
             #TODO: this step
-            sys.exit(0)
+        sys.exit(0)
 
     parser.print_usage()
 
