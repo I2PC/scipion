@@ -169,6 +169,9 @@ Define the number of processors to be used in the execution.
     LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
     LABEL_AMPLITUDE = 'Amplitude Contrast'
     TEXT_AMPLITUDE = 'It should be a positive number, typically between 0.05 and 0.3.'
+    LABEL_PATTERNU = 'Pattern untilted'
+    LABEL_PATTERNT = 'Pattern tilted'
+
     
     LABEL_SAMP_MODE = 'Sampling rate mode'
     LABEL_SAMP_MODE_1 = 'From image'

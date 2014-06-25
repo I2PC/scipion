@@ -28,19 +28,30 @@
 This module contains protocols classes related to Random Conical Tilt.
 """
 
+import sys
+from glob import glob
 from protocol_import import ProtImport
+from pyworkflow.utils.properties import Message
+from pyworkflow.utils.path import copyFile, basename, createLink, expandPattern
+from pyworkflow.protocol.params import PathParam, FloatParam, BooleanParam, EnumParam, IntParam
+from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair
 
 
-
-class ProtImportImagesTiltPairs(ProtImport):
+class ProtImportMicrographsTiltPairs(ProtImport):
     """Common protocol to import a set of images in the project"""
+    
+    _className = 'Micrograph'
+    _label = 'import micrographs'
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
+        form.addParam('patternUntilted', PathParam, label=Message.LABEL_PATTERNU,
                       help=Message.TEXT_PATTERN)
-        form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
+        form.addParam('patternTilted', PathParam, label=Message.LABEL_PATTERNT,
+                      help=Message.TEXT_PATTERN)
         form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE)
@@ -49,16 +60,28 @@ class ProtImportImagesTiltPairs(ProtImport):
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
+        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
+                   label=Message.LABEL_SAMP_MODE,
+                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
+        form.addParam('samplingRate', FloatParam, default=1, 
+                   label=Message.LABEL_SAMP_RATE,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
+        form.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('scannedPixelSize', FloatParam, default=7.0,
+                   label=Message.LABEL_SCANNED,
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
+    def importMicrographs(self, pattern, suffix, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
         from pyworkflow.em import findClass
         filePaths = glob(expandPattern(pattern))
         
-        imgSet = self._createSet()
+        imgSet = self._createSetOfMicrographs(suffix)
         acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
         acquisition.setVoltage(voltage)
@@ -84,9 +107,6 @@ class ProtImportImagesTiltPairs(ProtImport):
             else:
                 createLink(fn, dst)
             
-            if checkStack:
-                _, _, _, n = imgh.getDimensions(dst)
-            
             if n > 1:
                 for index in range(1, n+1):
                     img.cleanObjId()
@@ -104,45 +124,57 @@ class ProtImportImagesTiltPairs(ProtImport):
             
         print "\n"
         
-        args = {}
-        outputSet = self._getOutputSet(self._className)
-        args[outputSet] = imgSet
-        self._defineOutputs(**args)
+        imgSet.write()
         
-        return outFiles
+        
+        return imgSet
+    
+    def createTiltedPairs(self):
+        args = {} 
+        micsTiltPair = MicrographsTiltPair()
+        micsU = self.importMicrographs(self.patternUntilted.get(), 'untilted',
+                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
+        micsT = self.importMicrographs(self.patternTilted.get(), 'tilted',
+                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
+        
+        micsTiltPair.setUntilted(micsU)
+        micsTiltPair.setTilted(micsT)
+        args["outputMicrographsTiltPair"] = micsTiltPair
+        self._defineOutputs(**args)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        if not self.pattern.get():
+        if (not self.patternUntilted.get() or not self.patternTilted.get()):
             errors.append(Message.ERROR_PATTERN_EMPTY)
         else:
-            filePaths = glob(expandPattern(self.pattern.get()))
+            filePathsUntilted = glob(expandPattern(self.patternUntilted.get()))
+            filePathsTilted = glob(expandPattern(self.patternTilted.get()))
         
-            if len(filePaths) == 0:
+            if (len(filePathsUntilted) == 0 or len(filePathsTilted) == 0):
                 errors.append(Message.ERROR_PATTERN_FILES)
 
         return errors
     
     def _summary(self):
         summary = []
-        outputSet = self._getOutputSet(self._className)
-        if not hasattr(self, outputSet):
-            summary.append("Output " + self._className + "s not ready yet.") 
-            if self.copyToProj:
-                summary.append("*Warning*: Import step could be take a long time due to the images are copying in the project.")
-        else:
-            summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
-            summary.append("Sampling rate : %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
+#         outputSet = self._getOutputSet(self._className)
+#         if not hasattr(self, outputSet):
+#             summary.append("Output " + self._className + "s not ready yet.") 
+#             if self.copyToProj:
+#                 summary.append("*Warning*: Import step could take a long time due to the images are copying in the project.")
+#         else:
+#             summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
+#             summary.append("Sampling rate : %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
         
         return summary
     
     def _methods(self):
         methods = []
-        outputSet = self._getOutputSet(self._className)
-        if hasattr(self, outputSet):
-            methods.append("%d " % getattr(self, outputSet).getSize() + self._className + "s has been imported")
-            methods.append("with a sampling rate of %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
+#         outputSet = self._getOutputSet(self._className)
+#         if hasattr(self, outputSet):
+#             methods.append("%d " % getattr(self, outputSet).getSize() + self._className + "s has been imported")
+#             methods.append("with a sampling rate of %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
             
         return methods
     
@@ -153,39 +185,10 @@ class ProtImportImagesTiltPairs(ProtImport):
     def _getOutputSet(self, setName):
         return "output" + setName + "s"
 
-
-class ProtImportMicrographsTiltPairs(ProtImportImagesTiltPairs):
-    """Protocol to import a set of micrographs to the project"""
-
-    _className = 'Micrograph'
-    _label = 'import micrographs'
-    
-    def _defineParams(self, form):
-        ProtImportImages._defineParams(self, form)
-        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label=Message.LABEL_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
-        form.addParam('samplingRate', FloatParam, default=1, 
-                   label=Message.LABEL_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label=Message.LABEL_SCANNED,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
     def _insertAllSteps(self):
-        self._createSet = self._createSetOfMicrographs
-        self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(),
-    
-    def _validate(self):
-        errors = ProtImportImages._validate(self)
-#         if self._checkMrcStack():
-#             errors.append("The micrographs can't be a mrc stack")
-        return errors
-    
+        self._insertFunctionStep('createTiltedPairs')
+        
     def _setOtherPars(self, micSet):
         micSet.getAcquisition().setMagnification(self.magnification.get())
         
@@ -194,17 +197,6 @@ class ProtImportMicrographsTiltPairs(ProtImportImagesTiltPairs):
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
     
-    def _checkMrcStack(self):
-        filePaths = glob(expandPattern(self.pattern.get()))
-        imgh = ImageHandler()
-        stack = False
-        for f in filePaths:
-            ext = os.path.splitext(basename(f))[1]
-            _, _, _, n = imgh.getDimensions(f)
-            if ext == ".mrc" and n > 1:
-                stack = True
-                break
-        return stack
     
     
 

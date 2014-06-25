@@ -47,6 +47,7 @@ from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair
 from convert import *
 from os.path import dirname, join
 from pyworkflow.utils import makePath, runJob, copyTree
@@ -61,8 +62,8 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
-                SetOfMovies, ProtExtractParticles, XmippProtScreenParticles,
-                XmippProtKerdensom, XmippProtRotSpectra,
+                SetOfMovies, MicrographsTiltPair, ProtExtractParticles, 
+                XmippProtScreenParticles, XmippProtKerdensom, XmippProtRotSpectra,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
                 XmippProtParticlePicking, XmippParticlePickingAutomatic]
@@ -103,7 +104,12 @@ class XmippViewer(Viewer):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))    
-            
+
+        elif issubclass(cls, MicrographsTiltPair):          
+            fnU = obj.getUntilted().getFileName()
+            fnT = obj.getTilted().getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
                 
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file

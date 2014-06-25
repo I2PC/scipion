@@ -28,3 +28,26 @@
 This modules contains data classes related to Random Connical Tilt workflow.
 """
 
+from pyworkflow.em.data import SetOfMicrographs, EMObject
+
+class MicrographsTiltPair(EMObject):
+    """Represents a Micrographs Tilt Pair"""
+    
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._tilted = None#SetOfMicrographs()
+        self._untilted = None#SetOfMicrographs()
+        
+    def getUntilted(self):
+        return self._untilted
+    
+    def getTilted(self):
+        return self._tilted
+    
+    def setUntilted(self, untilted):
+        self._untilted = untilted
+        
+    def setTilted(self, tilted):
+        self._tilted = tilted
+        
+    

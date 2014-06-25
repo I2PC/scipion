@@ -406,7 +406,7 @@ def addRCTProtocols(settings):
     m1 = ProtocolConfig("Random Conical Tilt")
     
     m1.addSubMenu(' Import micrographs pairs', tag='protocol', icon='bookmark.png',
-                  value='ProtImportImagesTiltPairs')
+                  value='ProtImportMicrographsTiltPairs')
     
     settings.addProtocolMenu(m1)   
         
