@@ -72,13 +72,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     g = parser.add_mutually_exclusive_group()
     g.add_argument('--download', action='store_true', help="Download dataset.")
-    g.add_argument('--upload', action='store_true',
+    g.add_argument(
+        '--upload', action='store_true',
         help=("Upload local dataset to the scipion server. The dataset name must"
               "be the name of its folder relative to the SCIPION_TESTS folder."))
-    g.add_argument('--list', action='store_true',
+    g.add_argument(
+        '--list', action='store_true',
         help=('List local datasets (from $SCIPION_TESTS) and remote ones '
               '(remote url can be specified with --url).'))
-    g.add_argument('--format', action='store_true',
+    g.add_argument(
+        '--format', action='store_true',
         help='Create a MANIFEST file with checksums in the datasets folders.')
     add = parser.add_argument  # shortcut
     add('datasets', metavar='DATASET', nargs='*', help='Name of a dataset.')
@@ -282,9 +285,7 @@ def md5sum(fname):
     return mhash.hexdigest()
 
 
-def checkForUpdates(datasetName, workingCopy=None,
-                    url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
-                    verbose=False):
+def checkForUpdates(datasetName, workingCopy=None, url=None, verbose=False):
     """ Compare md5 of files in url/datasetName/MANIFEST with their local counterpart """
 
     # Get default values for variables if we got none
@@ -395,7 +396,7 @@ def queryModifications(last_mfile, log_mfile):
     else:
         print 'File %s does not exist. Creating it...' % last_mfile
         try:
-            os.makedirs(os.path.dirname(last_mfile))
+            os.makedirs(dirname(last_mfile))
             open(last_mfile, 'w').close()  # "touch"
             sys.exit(2)
             # We return with 2, to let Buildbot know that no modification was made
