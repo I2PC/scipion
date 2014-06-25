@@ -33,6 +33,7 @@ from pyworkflow.utils.path import *
 from convert import readSetOfCoordinates
 from posixpath import abspath
 import bsoft
+from pyworkflow.gui.dialog import askYesNo
 
 
 class BsoftProtParticlePicking(ProtParticlePicking):
@@ -78,6 +79,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         for mic in self.inputMics:
             self.runJob("bshow", basename(mic.getFileName()))
         self._leaveDir()
+        # Open dialog to request confirmation to create output
+        if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+            self.createOutputStep()
    
     def createOutputStep(self):
         outputDir = self._getExtraPath()
