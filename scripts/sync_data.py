@@ -194,35 +194,37 @@ def checkForUpdates(datasetName, workingCopy=None,
     # Get default values for variables if we got none
     workingCopy = workingCopy or os.environ['SCIPION_TESTS']
 
-    # Read contents of remote MANIFEST file, and create a dict {fname: md5}
+    # Read contents of *remote* MANIFEST file, and create a dict {fname: md5}
     manifestRaw = urlopen('%s/%s/MANIFEST' % (url, datasetName)).read()
     md5sRemote = dict(x.split() for x in manifestRaw.splitlines())
 
-    # and check it with the local copy
+    # Read contents of *local* MANIFEST file, and create a dict {fname: md5}
     datasetFolder = join(workingCopy, datasetName)
     md5sLocal = dict(x.split() for x in open(join(datasetFolder, 'MANIFEST')))
-    
-    filesUpdated = 0
-    taintedMANIFEST = False  # if we may have to regenerate MANIFEST
+
+    # Check that all the files mentioned in MANIFEST are up-to-date
     print "Verifying MD5s..."
+
+    vlog = lambda txt: sys.stdout.write(txt) if verbose else None  # verbose log
+    filesUpdated = 0  # number of files that have been updated
+    taintedMANIFEST = False  # can MANIFEST be out of sync? (if so, say it)
+
     for fname in md5sRemote:
-        if verbose:
-            print '\t%s' % fname,
+        vlog('\t%s' % fname)
 
         if not exists(join(datasetFolder, fname)):
-            if verbose:
-                print "\n\tFile %s doesn't exist." % fname
+            vlog("\n\tFile %s doesn't exist.\n" % fname)
             filesUpdated += downloadFile(datasetName, fname, workingCopy,
-                                         askMsg="download it?", url=url, verbose=verbose)
+                                         askMsg='download it?', url=url, verbose=verbose)
         else:
             if md5sLocal[fname] == md5sRemote[fname]:
-                if verbose:
-                    print "\r\tOK  %s" % fname
+                vlog('\r\tOK  %s\n' % fname)
+                pass  # just to emphasize that we do nothing in this case
             else:
-                if verbose:
-                    print "\r\tBAD %s  \t==> checksum differs" % fname
+                vlog('\r\tBAD %s  \t==> checksum differs\n' % fname)
                 taintedMANIFEST = True  # if we don't update, it can be wrong
-                filesUpdated += downloadFile(datasetName, fname, workingCopy, askMsg="update it?", url=url, verbose=verbose)
+                filesUpdated += downloadFile(datasetName, fname, workingCopy,
+                                             askMsg='update it?', url=url, verbose=verbose)
 
     print '\t...done. Updated files: %d' % filesUpdated
 
@@ -231,7 +233,7 @@ def checkForUpdates(datasetName, workingCopy=None,
 
     if taintedMANIFEST:
         print 'If you stopped any files from being updated, please run '
-        print 'with --format option to regenerate the MANIFEST file.'
+        print 'with the --format option to regenerate the MANIFEST file.'
 
 
 def Cmd(command):
