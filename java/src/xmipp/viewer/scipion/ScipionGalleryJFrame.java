@@ -34,7 +34,7 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
-    private String script, ctfscript;
+    private String scripts, script, ctfscript;
     private String projectid;
     private JButton cmdbutton;
     private String sqlitefile;
@@ -64,6 +64,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         try {
             type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
+            scripts = parameters.scripts;
             script = parameters.scripts + File.separator + "pw_create_image_subset.py";
             ctfscript = parameters.scripts + File.separator + "pw_recalculate_ctf.py";
             projectid = parameters.projectid;
@@ -274,6 +275,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }).start();
     }
         
+   
 
     /**
 	 * Open another metadata separataly *
@@ -283,7 +285,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 	{
             try
             {
-                new GalleryJFrame(new ScipionGalleryData(this, data.getFileName(), new Params(), (ScipionMetaData)md));
+                String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
+                ScipionParams params = new ScipionParams(args);
+                new ScipionGalleryJFrame(new ScipionGalleryData(this, data.getFileName(), params, (ScipionMetaData)md));
             }
             catch(Exception e)
             {

@@ -290,11 +290,7 @@ public class ScipionGalleryData extends GalleryData {
         return selmd;
     }
 
-    @Override
-    public void openMetadata(MetaData md) {
-        ScipionGalleryData data2 = new ScipionGalleryData(null, md.getFilename(), new ScipionParams(), (ScipionMetaData) md);
-        ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data2);
-    }
+    
 
     public void overwrite(String path) {
         ((ScipionMetaData) md).overwrite(filename, path);

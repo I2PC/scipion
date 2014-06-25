@@ -24,8 +24,7 @@ public class ScipionParams extends Params {
     public String other;
     
 
-    public ScipionParams()
-    {}
+    
     
     public ScipionParams(String args[]) {
         super(args);
