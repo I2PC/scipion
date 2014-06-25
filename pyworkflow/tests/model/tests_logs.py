@@ -1,55 +1,51 @@
 #!/usr/bin/env python
 
 import os
-from os.path import join, dirname, exists
+import logging
 import unittest
-import filecmp
 
-from pyworkflow.object import *
-from pyworkflow.protocol import *
-from pyworkflow.mapper import *
-from pyworkflow.utils.log import *
 from pyworkflow.utils.utils import getLineInFile, isInFile
-from pyworkflow.tests import *
+from pyworkflow.utils.log import ScipionLogger, LOG_FILE
+from pyworkflow.tests import BaseTest, setupTestOutput
 
 
 #FIXME:Nacho
+# Ok, Nacho and Airen, explain what you have to fix! :)
 
-class TestSqliteMapper(BaseTest):
+class TestLogs(BaseTest):
     
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)        
-        
+
     def testSimpleFileLog(self):
         import random
         logTestCode = random.randint(1, 100000)
+
+        genLogFn = LOG_FILE
+        log1 = logging.getLogger('pyworkflow.test.log.test_scipon_log')
+        genInfoTest = 'Testing general info [%d]' % logTestCode
+        genDebugTest = 'Testing general debug [%d]' % logTestCode
+        genWarningTest = 'Testing general warning [%d]' % logTestCode
+        genErrorTest = 'Testing general error [%d]' % logTestCode
+        log1.info(genInfoTest)
+        #log.debug(genDebugTest)
+        log1.warning(genWarningTest)
+
+        logFn = self.getOutputPath('fileLog.log')
+        log2 = ScipionLogger(logFn)
+        fileInfoTest = 'Not really info, just testing logger  [%d]' % logTestCode
+        fileDebugTest = 'Not really debug, just testing logger  [%d]' % logTestCode
+        fileWarningTest = 'Not really a warning, just testing logger [%d]' % logTestCode
+        fileErrorTest = 'Not really an error, just testing logger [%d]' % logTestCode
+        log2.info(fileInfoTest)
+        #log.debug(fileDebugTest)
+        log2.warning(fileWarningTest)
+        log3 = logging.getLogger('pyworkflow.tests.log')
+        log3.error(genErrorTest)
         
-        genLogFn = logPath
-        log = getGeneralLogger('pyworkflow.test.log.test_scipon_log')        
-        genInfoTest = 'General info [' + str(logTestCode) + ']'
-        genDebugTest = 'General debug [' + str(logTestCode) + ']'
-        genWarningTest = 'General warning [' + str(logTestCode) + ']'
-        genErrorTest = 'General error [' + str(logTestCode) + ']'        
-        log.info(genInfoTest)
-        log.debug(genDebugTest)
-        log.warning(genWarningTest)
-        
-        logFn = self.getTmpPath('fileLog.log')
-        log = getFileLogger(logFn)
-        fileInfoTest = 'File info [' + str(logTestCode) + ']'
-        fileDebugTest = 'File debug [' + str(logTestCode) + ']'
-        fileWarningTest = 'File warning [' + str(logTestCode) + ']'
-        fileErrorTest = 'File error [' + str(logTestCode) + ']'        
-        log.info(fileInfoTest)
-        log.debug(fileDebugTest)
-        log.warning(fileWarningTest)
-        
-        log = getGeneralLogger('pyworkflow.tests.log')
-        log.error(genErrorTest)
-        
-        log = getFileLogger(logFn)
-        log.error(fileErrorTest)
+        log4 = ScipionLogger(logFn)
+        log4.error(fileErrorTest)
         
         # Check general logs
         lineGenInfoTest = getLineInFile(genInfoTest, genLogFn)
@@ -107,9 +103,8 @@ class TestSqliteMapper(BaseTest):
             print ('General logs in file log!!!')
             fileLoggerChecked = False 
         
-        self.assertTrue(genLoggerChecked & fileLoggerChecked)  
+        self.assertTrue(genLoggerChecked & fileLoggerChecked)
         
         
 if __name__ == '__main__':
     unittest.main()
-    

@@ -31,6 +31,7 @@ This module implement some wizards
 import os
 import Tkinter as tk
 import ttk
+from os.path import basename
 from pyworkflow.em.constants import *
 from pyworkflow.em.convert import ImageHandler
 
@@ -52,15 +53,45 @@ import xmipp
 class EmWizard(Wizard):    
     
     def _getMics(self, objs):
-        return [mic.clone() for mic in objs]
+        mics = [mic.clone() for mic in objs]
+        for m in mics:
+            m.basename = basename(m.getFileName())
+            
+        return mics
     
-    def _getParticles(self, objs):
+    def _getParticles(self, objs, num=100):
         particles = [] 
         for i, par in enumerate(objs):
-            particles.append(par.clone())
-            if i == 100: # Limit the maximum number of particles to display
+            
+            # Cloning the particle
+            particle = par.clone() 
+            
+            if i == num: # Only load up to NUM particles
                 break
+            
+            particle.text = particle.getFileName()
+            particle.basename = basename(particle.text)
+            
+            index = particle.getIndex()
+            if index:
+                particle.text = "%03d@%s" % (index, particle.text)
+                particle.basename = "%03d@%s" % (index, particle.basename)
+        
+            particles.append(particle)
+
         return particles
+    
+    def _getVols(self, objs):    
+        vols = []
+        if isinstance(objs, Volume):
+            vols.append(objs)
+        else: 
+            vols = [vol.clone() for vol in objs]
+        
+        for v in vols:
+            v.basename = basename(v.getFileName())
+        
+        return vols
     
     def _getText(self, obj):
         index = obj.getIndex()
@@ -69,13 +100,6 @@ class EmWizard(Wizard):
             return "%03d@%s" % (index, text)
         return text
     
-    def _getVols(self, objs):    
-        vols = []
-        if isinstance(objs, Volume):
-            vols.append(objs)
-        else: 
-            vols = [vol.clone() for vol in objs]
-        return vols
     
     def _getListProvider(self, objs):
         """ This should be implemented to return the list
@@ -101,6 +125,21 @@ class EmWizard(Wizard):
             return provider
         return None
     
+    def _getInputProtocol(self, targets, protocol):
+        label = []
+        value = []
+        
+        for k, v in targets:
+            if k.__name__ == protocol.getClassName():
+                label = v
+                for val in v:
+                    value.append(protocol.getAttributeValue(val))
+        
+        if len(label) > 1:     
+            return label, value
+        else:
+            return label[0], value[0]
+    
 #===============================================================================
 #    Provider class (for objects used in the wizards)
 #===============================================================================
@@ -119,6 +158,10 @@ class ListTreeProvider(TreeProvider):
     def getText(self, obj):
         """ Get the text to display for an object. """
         return os.path.basename(obj.getFileName())
+    
+    def getObjs(self):
+        """ Get the objects. """
+        return self.objList
 
 
 #===============================================================================
@@ -311,7 +354,7 @@ class GaussianVolumesWizard(GaussianWizard):
 #  Dialogs used by wizards
 #===============================================================================
 
-class previewDialog(dialog.Dialog):
+class PreviewDialog(dialog.Dialog):
     """ This will be the base class for several wizards.
     The layout of this wizard will be:
     1. Left panel(Items) that contains a list of items to preview
@@ -382,7 +425,7 @@ class previewDialog(dialog.Dialog):
         
     
 
-class ImagePreviewDialog(previewDialog):
+class ImagePreviewDialog(PreviewDialog):
     
     def _beforePreview(self):
         self.dim = 256
@@ -510,6 +553,7 @@ class CtfDialog(DownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
+
 
 class BandPassFilterDialog(DownsampleDialog):
     

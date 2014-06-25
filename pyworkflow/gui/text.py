@@ -26,17 +26,60 @@
 """
 Text based widgets.
 """
-        
+import os
+import sys
+import webbrowser
+import subprocess
 import Tkinter as tk
-import ttk, os, gui
-from pyworkflow.utils import *
-from widgets import Scrollable, Button, IconButton
+import ttk
+
+import gui
+from widgets import Scrollable, IconButton
+from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
+                              parseHyperText, renderLine, renderTextFile, colorName, which)
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
 
+# Define a function to open files cleanly in a system-dependent way
+if sys.platform.startswith('darwin'):  # macs use the "open" command
+    _open_cmd = lambda path: subprocess.call(['open', path])
+elif os.name == 'nt':  # there is a function os.startfile for windows
+    _open_cmd = lambda path: os.startfile(path)
+elif os.name == 'posix':  # linux systems and so on
+    def find_prog(*args):
+        "Return the first argument that is a program in PATH"
+        for command in args:
+            if which(command):
+                return command
+        return None
+
+    x_open = find_prog('xdg-open', 'gnome-open', 'kde-open', 'gvfs-open')
+    editor = find_prog('gedit', 'kate', 'emacs', 'nedit', 'mousepad')
+
+    def _open_cmd(path):
+        if x_open:
+            if subprocess.call([x_open, path]) == 0:
+                return  # yay! that's the way to do it!
+        # If we couldn't open it in a standard way, try web and editors
+        if path.startswith('http://'):
+            try:
+                webbrowser.open_new_tab(path)
+                return
+            except:
+                pass
+        else:
+            if editor:
+                if subprocess.call([editor, path]) == 0:
+                    return  # hope we found your fav editor :)
+        print 'WARNING: Cannot open %s' % path  # nothing worked! :(
+else:
+    def _open_cmd(path):
+        print 'Unknown system, so cannot open %s' % path
+
+
 class HyperlinkManager:
-    """ Tkinter Text Widget Hyperlink Manager, take from:
+    """ Tkinter Text Widget Hyperlink Manager, taken from:
     http://effbot.org/zone/tkinter-text-hyperlink.htm """
     def __init__(self, text):
         self.text = text
@@ -78,7 +121,7 @@ class Text(tk.Text, Scrollable):
         defaults.update(opts)
         Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
         self._createWidgets(master, **defaults)
-        self.configureTags()        
+        self.configureTags()
 
     def _createWidgets(self, master, **opts):
         """This is an internal function to create the Text, the Scrollbar and the Frame"""
@@ -147,16 +190,13 @@ class Text(tk.Text, Scrollable):
         try:
             self.selection = self.selection_get()
             self.menu.post(e.x_root, e.y_root)    
-        except TclError, e:
+        except tk.TclError, e:
             pass
     
     def copyToClipboard(self, e=None):
         self.clipboard_clear()
         self.clipboard_append(self.selection)
-        
-    def openFile(self):
-        openFile(self.selection)
-        
+
     def updateMenu(self, e=None):
         state = 'normal'
         #if not xmippExists(self.selection):
@@ -191,67 +231,21 @@ class Text(tk.Text, Scrollable):
             self.mark_set("matchEnd", "%s+%sc" % (index,count.get()))
             self.tag_add(tag, "matchStart","matchEnd")
 
-#---------------------------------------------------------------------------
-# Colors from Xmipp binding
-#--------------------------------------------------------------------------- 
-from xmipp import XMIPP_MAGENTA, XMIPP_BLUE, XMIPP_GREEN, XMIPP_RED, XMIPP_YELLOW, XMIPP_CYAN, colorStr
 
-colorMap = {'red': XMIPP_RED, 'blue': XMIPP_BLUE,
-                'green': XMIPP_GREEN, 'magenta': XMIPP_MAGENTA,
-                'yellow': XMIPP_YELLOW, 'cyan': XMIPP_CYAN}
-
-
-blueStr = lambda s: colorStr(XMIPP_BLUE, s)
-greenStr = lambda s: colorStr(XMIPP_GREEN, s)
-greenLowStr = lambda s: colorStr(XMIPP_GREEN, s, 0)
-failStr = redStr = lambda s: colorStr(XMIPP_RED, s)
-headerStr = magentaStr = lambda s: colorStr(XMIPP_MAGENTA, s)
-yellowStr = lambda s: colorStr(XMIPP_YELLOW, s)
-cyanStr = warnStr = cyanStr = lambda s: colorStr(XMIPP_CYAN, s)
-
-
-def findColor(color):
-    '''This function will search if there are color characters present
-    on string and return the color and positions on string'''
-    for k, v in colorMap.iteritems():
-        x, y = colorStr(v, "_..._").split("_..._")
-        fx = color.find(x)
-        fy = color.find(y)
-        if fx != -1 and fy != -1:
-            color = color.replace(x, '').replace(y, '')
-            return (k, fx, fy, color)
-    return None
-
-def insertColoredLine(text, line, tag=""):
-    """ Check if the color codes are present in a line
-    and use the corresponding tags. The colors tags should 
-    be already configured on text object"""
-    ctuple = findColor(line)
-    if ctuple is None:
-        line = line[line.rfind("\r")+1:]
-        text.insert(tk.END, line, tag)  
-    else:
-        color,idxInitColor,idxFinishColor,cleanText=ctuple
-        if idxInitColor>0:
-            text.insert(tk.END, cleanText[:(idxInitColor-1)]+" ")
-        text.insert(tk.END, cleanText[idxInitColor:idxFinishColor-1], "tag_" + color)
-        text.insert(tk.END, cleanText[idxFinishColor:])
-        
 def configureColorTags(text):
-    """ Function to configure tag_colorX for all supported colors.
-    It is applicable to an Text text """
+    """ Create tags in text (of type tk.Text) for all the supported colors. """
     try:
-        for color in colorMap.keys():
-            text.tag_config("tag_" + color, foreground=color)
+        for color in colorName.values():
+            text.tag_config(color, foreground=color)
         return True
-    except Exception, e:
-        print "Colors still not available"
-    return False
-       
+    except Exception as e:
+        print "Colors still not available (%s)" % e
+        return False
+
        
 class TaggedText(Text):  
     """
-    Implement a Text that will recognized some basic tags
+    Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
     some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
@@ -273,8 +267,7 @@ class TaggedText(Text):
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
     def openLink(self, link):
-        from  webbrowser import open
-        open(link, new=0) # Open in the same browner, new tab
+        webbrowser.open_new_tab(link)  # Open in the same browser, new tab
         
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
@@ -304,17 +297,19 @@ class OutputText(Text):
     Implement a Text that will show file content
     and handle console metacharacter for colored output
     """
-    def __init__(self, master, filename, colors=True, refresh=0, goEnd=True, **opts):
+    def __init__(self, master, filename, colors=True, t_refresh=0, goEnd=True, **opts):
         """ colors flag indicate if try to parse color meta-characters
-            refresh is the refresh timedeltha in seconds, 0 means no refresh
+            t_refresh is the refresh time in seconds, 0 means no refresh
         """
         self.filename = filename
         self.colors = colors
-        self.refresh = refresh
-        self.refreshAlarm = None
+        self.t_refresh = t_refresh
+        self.refreshAlarm = None  # Identifier returned by after()
         self.lineNo = 0
+        self.offset = 0
         Text.__init__(self, master, **opts)
-        self.doRefresh(refresh)
+        self.hm = HyperlinkManager(self)
+        self.doRefresh()
 
     def getDefaults(self):
         return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
@@ -324,79 +319,86 @@ class OutputText(Text):
         if self.colors:
             configureColorTags(self)
 
-    def addLine(self, line): 
+    def addLine(self, line):
         self.lineNo += 1
-        if self.colors:
-            self.insert(tk.END, "%05d:   " % self.lineNo, "tag_cyan")  
-            insertColoredLine(self, line)
+        renderLine(line, self._addChunk, self.lineNo)
+
+    def _addChunk(self, txt, fmt=None):
+        """
+        Add text txt to the widget, with format fmt.
+        fmt can be a color (like 'red') or a link that looks like 'link:url'.
+        """
+        if self.colors and fmt is not None:
+            if fmt.startswith('link:'):
+                fname = fmt.split(':', 1)[-1]
+                self.insert(tk.END, txt, self.hm.add(lambda: _open_cmd(fname)))
+            else:
+                self.insert(tk.END, txt, fmt)
         else:
-            self.insert(tk.END, "%05d:   " % self.lineNo)
-            self.insert(tk.END, line)   
-        
+            self.insert(tk.END, txt)
+
     def readFile(self, clear=False):
         if clear:
+            self.offset = 0
             self.lineNo = 0
             self.clear()
-            
+
         self.config(state=tk.NORMAL)
         #self.clear()
-        if exists(self.filename):
-            textfile = open(self.filename)
-            lineNo = 1
-            for line in textfile:
-                if lineNo > self.lineNo:
-                    self.addLine(line)
-                lineNo += 1
-            textfile.close()
+        if os.path.exists(self.filename):
+            self.offset, self.lineNo = \
+                renderTextFile(self.filename, self._addChunk,
+                               offset=self.offset, lineNo=self.lineNo)
         else:
-            self.addLine("File '%s' doesn't exist" % self.filename)
+            self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
         self.config(state=tk.DISABLED)
         #if self.isAtEnd():
-        self.goEnd();
+        self.goEnd()
         #if goEnd:
-        #    self.goEnd()        
+        #    self.goEnd()
       
-    def doRefresh(self, seconds):
-        self.stopRefresh() #Stop pending refreshes
-        self.readFile()
-        if seconds:
-            self.refreshAlarm = self.after(seconds*1000, self.doRefresh, seconds)
-    
-    def stopRefresh(self):
+    def doRefresh(self):
+        # First stop pending refreshes
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
 
-  
+        self.readFile()
+
+        if self.t_refresh > 0:
+            self.refreshAlarm = self.after(self.t_refresh*1000, self.doRefresh)
+
+
 class TextFileViewer(tk.Frame):
-    """ Implementation of a simple textfile viewer """
+    """ Implementation of a simple text file viewer """
     
     LabelBgColor = "white"
     
-    def __init__(self, master, filelist=[], 
+    def __init__(self, master, fileList=[],
                  allowSearch=True, allowRefresh=True, allowOpen=False):
         tk.Frame.__init__(self, master)
         self.searchList = None
         self.lastSearch = None
         self.refreshAlarm = None
         self._lastTabIndex = None
-        self.filelist = []
-        self.taList = []
+        self.fileList = []  # Files being visualized
+        self.taList = []  # Text areas (OutputText, a scrollable TkText)
         self.fontDict = {}
         self._allowSearch = allowSearch
         self._allowRefresh = allowRefresh
         self._allowOpen = allowOpen
-        self.createWidgets(filelist)
+
+        self.createWidgets(fileList)
         self.master = master
         self.addBinding()
         
     def addFile(self, filename):
-        self.filelist.append(filename)
+        self.fileList.append(filename)
         self._addFileTab(filename)
         
     def clear(self):
         """ Remove all added files. """
-        self.filelist = []
+        self.fileList = []
         for _ in self.taList:
             self.notebook.forget(0)       
         self.taList = []
@@ -411,7 +413,7 @@ class TextFileViewer(tk.Frame):
         tabText = "   %s   " % os.path.basename(filename)
         self.notebook.add(tab, text=tabText)        
     
-    def createWidgets(self, filelist):
+    def createWidgets(self, fileList):
         #registerCommonFonts()
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)        
@@ -448,7 +450,7 @@ class TextFileViewer(tk.Frame):
         self.notebook = ttk.Notebook(tabsFrame)  
         self.notebook.rowconfigure(0, weight=1)
         self.notebook.columnconfigure(0, weight=1)      
-        for f in filelist:
+        for f in fileList:
             self._addFileTab(f)
         self.notebook.grid(column=0, row=0, sticky='nsew', padx=5, pady=5)   
         self.notebook.bind('<<NotebookTabChanged>>', self._tabChanged)
@@ -471,15 +473,18 @@ class TextFileViewer(tk.Frame):
         selected = self.notebook.select()
         if selected:
             return self.notebook.index(selected)
-        return None
+        return -1
     
     def setIndex(self, index):
         """ Select the tab with the given index. """
-        if index is not None:
+        if index != -1:
             self.notebook.select(self.notebook.tabs()[index])
     
     def selectedText(self):
-        return self.taList[self.getIndex()]
+        index = self.getIndex()
+        if index != -1:
+            return self.taList[index]
+        return None
     
     def changeFont(self, event=""):
         for font in self.fontDict.values():
@@ -497,7 +502,9 @@ class TextFileViewer(tk.Frame):
         if self.refreshAlarm:
             self.after_cancel(self.refreshAlarm)
             self.refreshAlarm = None
-        self.selectedText().readFile()
+        text = self.selectedText()
+        if text:
+            text.readFile()
         #self.refreshAlarm = self.after(2000, self.refreshOutput)
         
     def changePosition(self, index):
@@ -544,7 +551,12 @@ class TextFileViewer(tk.Frame):
         
     def _openExternal(self):
         """ Open a new window with an external viewer. """
-        showTextFileViewer("File viewer", self.filelist, self.windows)
+        if os.environ.get('SCIPION_EXTERNAL_VIEWER', 'False').lower() in ['true', '1']:
+            if not self.taList:
+                return
+            _open_cmd(self.taList[max(self.getIndex(), 0)].filename)
+        else:
+            showTextFileViewer("File viewer", self.fileList, self.windows)
   
   
 def showTextFileViewer(title, filelist, parent=None, main=False):
@@ -556,7 +568,6 @@ def showTextFileViewer(title, filelist, parent=None, main=False):
 
     
 if __name__ == '__main__':
-    import sys
     root = tk.Tk()
     root.withdraw()
     root.title("View files")

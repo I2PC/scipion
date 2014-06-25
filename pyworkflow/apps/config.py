@@ -30,7 +30,8 @@ mainly for project GUI
 
 import os
 from os.path import join, exists
-from pyworkflow.utils.path import getHomePath, makeFilePath, cleanPath
+import time
+from pyworkflow.utils.path import getHomePath, makeFilePath
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.hosts import *
@@ -38,6 +39,7 @@ from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)
 SETTINGS = join(pw.HOME,'..','settings')
+
 
 def getConfigPath(filename):
     """Return a configuration filename from settings folder"""
@@ -49,6 +51,7 @@ def loadSettings(dbPath):
     mapper = SqliteMapper(dbPath, globals())
     settingList = mapper.selectByClass('ProjectSettings')
     n = len(settingList)
+    
     if n == 0:
         raise Exception("Can't load ProjectSettings from %s" % dbPath)
     elif n > 1:
@@ -161,13 +164,12 @@ class ProjectSettings(OrderedObject):
         self.setName('ProjectSettings')
         if dbPath is not None:
             self.mapper = SqliteMapper(dbPath, globals())
-            self.mapper.deleteAll()
-            self.mapper.insert(self)
         else:
             if self.mapper is None:
                 raise Exception("Can't write ProjectSettings without mapper or dbPath")
-            self.mapper.store(self)
         
+        self.mapper.deleteAll()
+        self.mapper.insert(self)
         self.mapper.commit()
 
 
@@ -337,6 +339,8 @@ def addProtocols(settings):
     
     addSpiderMDAProtocols(settings)
     
+    addRCTProtocols(settings)
+    
     addNMAProtocols(settings)
     
     
@@ -357,8 +361,10 @@ def addSpiderMDAProtocols(settings):
                   value='SpiderProtCustomMask')
     m1.addSubMenu(' Dimension reduction', tag='protocol',  
                   value='SpiderProtCAPCA')
-    m1.addSubMenu(' Classification', tag='protocol',
-                  value='SpiderProtClassifyWard')
+    m1.addSubMenu(' Classify', tag='protocol_base', openItem=True, 
+                  value='SpiderProtClassify')
+    #m1.addSubMenu(' Classification', tag='protocol',
+    #              value='SpiderProtClassifyWard')
     
     m2 = menu.addSubMenu('Protocol MDA', tag='protocol',
                          value='SpiderWfMDA')
@@ -394,7 +400,15 @@ def addNMAProtocols(settings):
     m7 = m.addSubMenu('7. Analyze results (plot deformations)', tag='section')  
     
     settings.addProtocolMenu(m)
+       
+def addRCTProtocols(settings):
+    """ Write protocols related to Random Conical Tilt (RCT) workflow. """
+    m1 = ProtocolConfig("Random Conical Tilt")
     
+    m1.addSubMenu(' Import micrographs pairs', tag='protocol', icon='bookmark.png',
+                  value='ProtImportImagesTiltPairs')
+    
+    settings.addProtocolMenu(m1)   
         
 def getScipionHome(userHome):
     """ Returns default SCIPION_USER_DATA from HOME. """
@@ -446,8 +460,8 @@ cat $PBS_NODEFILE
 
 %(JOB_COMMAND)s
 """)
-    queueSys.cancelCommand.set('canceljob %(JOB_ID)d')
-    queueSys.checkCommand.set('qstat %(JOB_ID)d')
+    queueSys.cancelCommand.set('canceljob %(JOB_ID)s')
+    queueSys.checkCommand.set('qstat %(JOB_ID)s')
     
     queue = QueueConfig()
     queue.maxCores.set(maxCores)
@@ -469,27 +483,7 @@ def addHosts(settings):
     
     #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
     settings.addHost(host)
-    
-    host = HostConfig()
-    host.label.set('glassfishdev')
-    host.hostName.set('glassfishdev.cnb.csic.es')
-    host.userName.set('apoza')
-    host.password.set('BF6fYiFYiYD')
-    host.hostPath.set(getScipionHome('/home/apoza'))
-    
-    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
-    settings.addHost(host)
-    
-    host = HostConfig()
-    host.label.set('crunchy')
-    host.hostName.set('crunchy.cnb.csic.es')
-    host.userName.set('apoza')
-    host.password.set('nerfyeb4f1v')
-    host.hostPath.set(getScipionHome('/gpfs/fs1/home/bioinfo/apoza'))
-    setQueueSystem(host, maxCores=64)
-    
-    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=False)
-    settings.addHost(host)
+
     
 def writeDefaults():
     settings = ProjectSettings()
@@ -504,8 +498,9 @@ def writeDefaults():
     dbPath = pw.SETTINGS
     print "Writing default settings to: ", dbPath
     if exists(dbPath):
-        print "File exist, deleting..."
-        cleanPath(dbPath)
+        dbPathBackup = '%s.%s' % (dbPath, time.time())
+        print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
+        os.rename(dbPath, dbPathBackup)
     settings.write(dbPath)
     
     

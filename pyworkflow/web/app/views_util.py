@@ -28,12 +28,15 @@
 import os
 import xmipp
 import json
+import mimetypes
 from pyworkflow.em import emProtocolsDict
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.http import (HttpResponse,
+                         HttpResponseForbidden, HttpResponseNotFound)
+from django.core.servers.basehttp import FileWrapper
 from pyworkflow.utils import *
 
 
@@ -53,7 +56,8 @@ iconDict = {
             'list_toolbar': 'md_view.gif',
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
-            'no_image': 'no-image.png'
+            'no_image': 'no-image.png',
+            'loading' : 'loading.gif'
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -98,6 +102,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'transpose': 'showj_libs/transpose.js',
           
           'showj_utils': 'showj_libs/showj_utils.js',
+          'showj_menu_utils': 'showj_libs/showj_menu_utils.js',
           'showj_gallery_utils': 'showj_libs/showj_gallery_utils.js',
           'showj_table_utils': 'showj_libs/showj_table_utils.js',
           'showj_column_utils': 'showj_libs/showj_column_utils.js',
@@ -142,7 +147,7 @@ def loadProtocolProject(request, requestType='POST'):
     # Create the protocol object
     if protId and protId != 'None':  # Case of new protocol
         protId = requestDict.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
         
         # Remove this and create loadProtocol method in project class
         protocol.setProject(project) 
@@ -151,28 +156,54 @@ def loadProtocolProject(request, requestType='POST'):
         protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
+#===============================================================================
+# Browse to relations objects
+#===============================================================================
+
+def browse_relations(request):
+    """ Browse relation objects from the database. """
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+
+        relationName = request.GET.get('relationName')
+        attributeName = request.GET.get('attributeName')
+        protId = request.GET.get('protId')
+        direction = request.GET.get('direction')
+        
+        protocol = project.getProtocol(int(protId))
+        item = protocol.getAttributeValue(attributeName)
+
+        objs = {}
+        for obj in project.getRelatedObjects(relationName, item, direction):
+            objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)}
+
+
+        jsonStr = json.dumps(objs, ensure_ascii=False)
+        return HttpResponse(jsonStr, mimetype='application/javascript')
+    
+#===============================================================================
+# Browse objects
+#===============================================================================
 
 def browse_objects(request):
     """ Browse objects from the database. """
     if request.is_ajax():
         objClassList = request.GET.get('objClass')
-        projectName = request.GET.get('projectName')
+        projectName = request.session['projectName']
         
-        objFilterParam = request.GET.get('objFilter',None)
+        objFilterParam = request.GET.get('objFilter', None)
         filterObject = FilterObject(objFilterParam)
         
-        project = loadProject(projectName)    
+        project = loadProject(projectName)
 
         objs = {}
-        for objClass in objClassList.split(","):
-            for obj in project.mapper.selectByClass(objClass.strip(), 
-                                                    objectFilter=filterObject.objFilter, 
-                                                    iterate=True):
-                objs[obj.getObjId()]={"nameId":obj.getNameId(), "info": str(obj)} 
-#                objs.append(obj.getNameId())
+        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+                objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)} 
         
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
+   
 
 class FilterObject():
     def __init__(self, condition):
@@ -183,7 +214,11 @@ class FilterObject():
         if self.condition:
             result = obj.evalCondition(self.condition)
         return result
-
+    
+#===============================================================================
+# Browse protocols like objects
+#===============================================================================
+    
 def browse_protocol_class(request):
     if request.is_ajax():
         protClassName = request.GET.get('protClassName')
@@ -199,9 +234,9 @@ def get_attributes(request):
         project = loadProject(projectName)
         objId = request.GET.get('objId', None)
         
-        obj = project.mapper.selectById(int(objId))
+        obj = project.getProtocol(int(objId))
         if obj is None:
-            obj = project.mapper.selectById(int(objId)).get()
+            obj = project.getProtocol(int(objId)).get()
             
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
         return HttpResponse(res, mimetype='application/javascript')
@@ -209,40 +244,25 @@ def get_attributes(request):
 def set_attributes(request):
     if request.is_ajax():
         id = request.GET.get('id', None)
+        
+        # New values
         label = request.GET.get('label', None)
         comment = request.GET.get('comment', None)
-        typeObj = request.GET.get('typeObj', None)
 
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        
-        if id=='new':
-            className = request.GET.get('className', None)
-            obj = emProtocolsDict.get(className, None)()
-        else:
-            obj = project.mapper.selectById(int(id))
-            if obj is None:
-                obj = project.mapper.selectById(int(id)).get()
+
+        obj = project.getProtocol(int(id))
+        if obj is None:
+            obj = project.getProtocol(int(id)).get()
                 
-#            if typeObj=='object':
-#                print obj
-#            elif typeObj=='protocol':
-        
         obj.setObjLabel(label)
         obj.setObjComment(comment)
         
-#        if typeObj=='object':
-#            project._storeProtocol(obj)
-#        elif typeObj=='protocol':
-#            project.saveProtocol(obj)
-
+        # Save the protocol 
         project._storeProtocol(obj)
-
-    return_id = "reload"
-    if typeObj=='protocol':
-        return_id = obj.getObjId()
         
-    return HttpResponse(return_id, mimetype='application/javascript')
+    return HttpResponse(mimetype='application/javascript')
 
 def file_viewer(request):
     file = request.GET.get("path")
@@ -270,9 +290,24 @@ def textfileViewer(title, file):
     
     return html
 
-def convertTktoHtml(text):
-    text = text.replace('\n', '<br/>')
-    return text
+def file_downloader(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    # Got the idea from here:
+    # https://stackoverflow.com/questions/8600843
+    path = request.GET.get("path")
+
+    # First some simple security: only allow to serve log files
+    if not any(path.endswith(x) for x in ['.log', '.stdout', '.stderr']):
+        return HttpResponseForbidden('Forbidden: Sorry, invalid path requested.')
+
+    if not os.path.exists(path):
+        return HttpResponseNotFound('Path not found: %s' % path)
+
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    return response
 
 def render_column(request):
     
@@ -290,19 +325,7 @@ def render_column(request):
         return getTestPlot(request)
 #    return getattr(self, renderFunction)
 
-
-#def get_image_plot(request):
-#    from pyworkflow.gui import getImage
-#    
-#    imagePath = request.GET.get('image')
-#    
-#    img = getImage(imagePath, tk=False)
-#    
-#    response = HttpResponse(mimetype="image/png")
-#    img.save(response, "PNG")
-#    return response
-    
-    
+      
 def get_image_plot(request):
     from PIL import Image
     imagePath = os.path.join(request.GET.get('image'))
@@ -405,7 +428,7 @@ def get_slice(request):
         if not '@' in imagePath:
             raise Exception('Slice number required.')
         
-        parts = imagePath.split('@',1)
+        parts = imagePath.split('@', 1)
         sliceNo = parts[0]
         imagePath = parts[1]
 
@@ -413,8 +436,6 @@ def get_slice(request):
                 parts = imagePath.split('@')
                 imageNo = parts[0]
                 imagePath = parts[1]
-    
-        
     
         if 'projectPath' in request.session:
             imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
@@ -449,17 +470,20 @@ def getImageXdim(request, imagePath):
     return getImageDim(request, imagePath)[0]
 
 def getImageDim(request, imagePath):
+    projectPath = request.session['projectPath']
     img = xmipp.Image()
-    imgFn = os.path.join(request.session['projectPath'], imagePath)
+    imgFn = os.path.join(projectPath, imagePath)
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
 
 def readDimensions(request, path, typeOfColumn):
+    print "reading dimensions with ", typeOfColumn
     if typeOfColumn=="image":
         img = xmipp.Image()
         imgFn = os.path.join(request.session['projectPath'], path)
         img.read(str(imgFn), xmipp.HEADER)
+        print "from file ", path
         return img.getDimensions()
     return (300,300,1,1) 
 
@@ -479,7 +503,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.convert2DataType(dataType, xmipp.CW_ADJUST)
          
     if reslice:
-        if axis !=xmipp.VIEW_Z_NEG:
+        if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
     if getStats:
@@ -542,19 +566,10 @@ def parseText(text, func=replacePattern):
     return parsedText[:-6]    
 
 
-def buildShowjPath(paths):
-    urls = []
-    for f in paths:
-        url = "/visualize_object/?path="+ f
-        urls.append(url)
-    return urls
-
 def savePlot(request, plot):
-    
     projectPath = request.session['projectPath']
     
     name_img = 'image%s.png' % id(plot)
-#        fn = os.path.join('plots', name_img)
     fn = os.path.join(projectPath,'Tmp', name_img)
     plot.savefig(fn)
     url_plot = "/get_image_plot/?image=" + fn

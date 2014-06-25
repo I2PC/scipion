@@ -1,62 +1,78 @@
 #!/usr/bin/env python
-'''
-Created on Jan 27, 2014
+# **************************************************************************
+# *
+# * Authors:    Airen Zaldivar         (airenzp@gmail.com) 
+#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
-@author: airen
-'''
-import os, sys
+import sys
+
 from pyworkflow.manager import Manager
-
-from pyworkflow.em import *
-import pyworkflow.em.packages.xmipp3 as xmipp3
-from xmipp import *
+from pyworkflow.em import ProtUserSubSet
+from pyworkflow.utils import timeit
 
 
+@timeit
+def runSubsetProtocol(projectId, inputId, sqliteFile, 
+                      outputType, protocolLabel, otherId):
+    """ Load the project and launch the protocol to
+    create the subset.
+    """
+    # Retrieve project and input object from db
+    project = Manager().loadProject(projectId)
+    inputObject = project.mapper.selectById(int(inputId))
+
+    # Create the new protocol instance and set the input values
+    prot = project.newProtocol(ProtUserSubSet)
+    prot.inputObject.set(inputObject)
+    prot.setObjLabel(protocolLabel)
+    prot.sqliteFile.set(sqliteFile)
+    prot.outputClassName.set(outputType)
+    
+    if otherId:
+        otherObject = project.mapper.selectById(int(otherId))
+        prot.otherObject.set(otherObject)
+        
+    # Launch the protocol
+    project.launchProtocol(prot, wait=True)
+    
 
 if __name__ == '__main__':
-
-    protlabel = sys.argv[1]
-    mdfile = sys.argv[2]
-    inputType = sys.argv[3]
-    setType = sys.argv[4]
-    projectid = sys.argv[5]
-    inputid = sys.argv[6]
-    inputimagesid = sys.argv[7]
-    mdname = mdfile[mdfile.rfind(os.sep) + 1:]
-    
-    
-    project = Manager().loadProject(projectid)
-    
-    prot = ProtUserSubSet(label=protlabel, inputType=inputType, outputType=setType)
-    input = project.mapper.selectById(int(inputid))
-    inputimages = project.mapper.selectById(int(inputimagesid))
-    
-    prot.createInputPointer(input)
-    project._setupProtocol(prot)
-    prot.makePathsAndClean()
-    moveFile(mdfile, prot._getExtraPath())
-    mdfile = join(prot._getExtraPath(), mdname)
-
-
-    createSetFun = getattr(prot, '_createSetOf' + setType)
-    if not 'Classes' in setType:
-        outputset = createSetFun()
-        readSetFun = getattr(xmipp3, 'readSetOf' + setType )
-        outputset.copyInfo(inputimages)    
-        readSetFun(mdfile, outputset, outputset.hasCTF())
-    else:
-        outputset = createSetFun(inputimages)
-        readSetFun = getattr(xmipp3, 'readSetOf' + setType )       
-        readSetFun(outputset, mdfile)
-
+    #TODO: REMOVE THIS AFTER DEBUGGING
+    print "ARGS: "
+    for i, arg in enumerate(sys.argv):
+        print "%02d: %s" % (i, arg)
         
-    prot.createOutputSet(outputset)
-   
-    prot.setStatus(STATUS_FINISHED)
-    project._storeProtocol(prot)
-    
-    
-  
-    
-    
-    
+    if len(sys.argv) > 6:
+        otherId = sys.argv[6]
+    else:
+        otherId = None 
+        
+    runSubsetProtocol(projectId=sys.argv[1],
+                      inputId=sys.argv[2],
+                      sqliteFile=sys.argv[3],
+                      outputType=sys.argv[4],
+                      protocolLabel=sys.argv[5], 
+                      otherId=otherId)
+

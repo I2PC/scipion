@@ -162,7 +162,6 @@ $(document).ready(function() {
 					// No errors in the process to save
 					protId = json.success;
 					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
-					
 				}
 			},"json");
 		} else if (mode == 'wiz') {
@@ -172,12 +171,9 @@ $(document).ready(function() {
 				});
 			
 			/* Execute the wizard */
-			var action = "/wizard/";
-			var type_wiz = $("#wizName").attr("value");
-			
 			var serialize_form = fixInput($("#protocolForm").serialize());
 			
-			$.post(action, serialize_form, function(html) {
+			$.post("/wizard/", serialize_form, function(html) {
 				
 				$('.messi').remove();
 				$('.messi-modal').remove();
@@ -188,10 +184,6 @@ $(document).ready(function() {
 					errorPopup("Error", "Input particles selected are None");
 				} else if (html=="errorIterate"){
 					errorPopup("Error", "Error iterating over the set of particles");
-				} else if(type_wiz=='wiz_particle_mask' || type_wiz=='wiz_volume_mask'){
-					customPopupHTML(html,540,490);
-				} else if(type_wiz=='wiz_volume_mask_radii' || type_wiz=='wiz_particle_mask_radii'){
-					customPopupHTML(html,550,540);
 				} else{
 					customPopupHTML(html,790,480);
 				}
@@ -228,7 +220,6 @@ function fixInput(serialize_form){
 		if($("#"+aux[0]+"_input")){
 			var objId = $("#"+aux[0]+"_input").attr("data-objId");
 			if (objId){
-				// console.log("eybaby")
 				// console.log(paramName)
 				serialize_form = serialize_form.replace(paramName , aux[0]+"="+objId)
 			}
@@ -245,35 +236,44 @@ function evalElements() {
 	 */
 	
 	$("tr").each(function(index) {
-//		
-		var value = jQuery(this).val();
+
+		// Get the identifier (id) for the parameter
+		var param = $(this).attr('id');
+		// Get the value for the parameter
+		var value = $(this).val();
 		if(value.length == 0){
-			var value = jQuery(this).attr('value');
+			value = $(this).attr('value');
 		}
-		var type = jQuery(this).attr('data-type');
-		var param = jQuery(this).attr('id');
+		// Get the type (data-type)
+		var type = $(this).attr('data-type');
 		
-		console.log("value:"+value+", type:"+type+", param:"+param+";")
-
-//		alert(value +" - "+type+" - "+param);
-
-//		if (type == "BooleanParam" || type == "FloatParam" || type == "IntParam") {
-//			onChangeBooleanParam(value, param);
-//		} else 
-		if (type == "EnumParam") {
-			var typeEnum = jQuery(this).attr('data-enum');
-			if (typeEnum == '0') {
-				onChangeEnumParamList(value, param);
-			} else if (typeEnum == '1') {
-				onChangeEnumParamCombo(param + "_select", param);
-			}
-		} 
-		else if (type== "MultiPointerParam"){
-			recalculateSelectDim('#' + param + '_input')
-		}
-		else {
-//			alert("before:"+value);
-			onChangeParam(value, param);
+		// DEBUG -----------------------------
+//		var debug_param = "PARAM:"+param;
+//		var debug_value = "VALUE:"+value;
+//		var debug_type = "TYPE:"+type;
+//		console.log(debug_param + "," +debug_value + "," +debug_type);
+		
+		// Depending of the parameter is processed
+		switch (type){
+			
+			case "EnumParam":
+				// Get the kind of EnumParam
+				var typeEnum = parseInt($(this).attr('data-enum'));
+				
+				if(typeEnum){
+					onChangeEnumParamCombo(param + "_select", param);
+				} else {
+					onChangeEnumParamList(value, param);
+				}
+				break;
+				
+			case "MultiPointerParam":
+				recalculateSelectDim('#' + param + '_input');
+				break;
+				
+			default:
+				onChangeParam(value, param);
+				break;
 		}
 	});
 }
@@ -282,8 +282,6 @@ function onChangeParam(value, paramId) {
 	/* 
 	 * Update the parameter for an element.
 	 */
-	
-//	alert(paramId + "-"+value);
 	setParamValue(paramId, value);
 }
 	
@@ -307,18 +305,27 @@ function setParamValue(paramId, value) {
 	/*
 	 * Put the new value in an attribute of the parent node.
 	 */
-	var row = jQuery("tr#" + paramId);
-	//	alert("before:"+row.val());
-	row.val(value);	
-	//	alert("after:"+row.val());
 	
+	// Get the row affected
+	var row = $("tr#" + paramId);
+	// Update the value for the row
+	row.val(value);
+	
+	// Get the new expertise level
 	var newLevel = $("select[name=expertLevel]").val();
+	
+	// DEBUG
+//	console.log("PARAM TO EVALUATE: " + paramId)
+//	console.log("WITH LEVEL: " + newLevel)
+	
+	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
 
+	// Get the params affected with the changes
 	var params = row.attr('data-params');
 
+	// Evaluate the expert level
 	if (params != undefined && params.length <= 0) {
-					
 		var expLevel = row.attr('data-expert');
 	
 		if (expLevel > newLevel) {
@@ -327,80 +334,119 @@ function setParamValue(paramId, value) {
 			row.show();			
 		}
 	}
+	
+	// To process the hidden elements into protocol form
+	// is necessary to be evaluated himself.
+	evalRow(row)
 }
+
+function evalRow(row){
+	var evalThis = row.attr("data-cond")
+	
+	switch (evalThis){
+		case "False":
+			row.css('display', 'none')
+			break;
+		case "True":
+			row.css('display', 'table-row')
+			break;
+	}
+}
+
 
 function evalDependencies(row, newLevel) {
 	/*
 	 * Function to evaluate the parameters dependencies for a expertise level.
 	 */
 	
-	//	var newLevel = $("select[name=expLevel]").val();
+	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
-	if (dependencies!= undefined && dependencies.length > 0) {
-		var arrayDepends = dependencies.split(",");
-		for ( var cont = 0; cont < arrayDepends.length; cont++) {
+	
+//	console.log("Dependencies:", dependencies)
 
-			var row2 = jQuery("tr#" + arrayDepends[cont]);
+	if (dependencies != undefined && dependencies.length > 0) {
+		
+		// Dependencies splitted to be looked over the elements
+		var arrayDepends = dependencies.split(",");
+
+		for (var cont = 0; cont < arrayDepends.length; cont++) {
+			// Get params affected with the dependencies
+			var row2 = $("tr#" + arrayDepends[cont]);
+			
+//			console.log("TO EVALUATE: tr#" + arrayDepends[cont])
+
+			// Evaluate the new parameter affected
 			var res = evalCondition(row2);
 			
-			var expLevel = row2.attr('data-expert');
-			
-//			alert("level:"+expLevel+", newlevel:"+newLevel)
+			if (res != undefined){
 
-			if (res == false || expLevel > newLevel) {
-				row2.hide();
-			} else if (res == true) {
-				row2.show();
-				evalDependencies(row2, newLevel);
+				// Get the expertise level for the row affected
+				var expLevel = row2.attr('data-expert');
+				if (res == false || expLevel > newLevel) {
+					row2.hide();
+				} else if (res == true) {
+					row2.show();
+					
+					// Evaluate the dependencies for the new row affected
+					evalDependencies(row2, newLevel);
+				}
 			}
 		}
-	}
+	}	
 }
 
 function evalCondition(row) {
 	/*
 	 * Function to evaluate a condition given a row of the form.
 	 */
-
+	
+	var res = undefined;
 	var cond = row.attr('data-cond');
-	var params = row.attr('data-params');
-
-	var arrayParams = params.split(",");
-
-	// Get value of the element with name=itenName
-	var param = null;
-	var value = null;
-	var cond_eval = cond;
-	// var params = '';
-
-	for ( var cont = 0; cont < arrayParams.length; cont++) {
-		param = arrayParams[cont];
-		// value = getValueByName(param);
-		value = jQuery("tr#" + param).val();
-		if (!value){
-			value = jQuery("tr#" + param).attr("value");
-			if (!value){
-				value="''";
+	
+//	console.log("data-cond:"+cond)
+	
+	if(cond != undefined){
+	
+		var params = row.attr('data-params');
+		
+//		console.log("Params:"+ params + " length:"+params.length)
+		
+		if (params.length > 0){
+			
+			var arrayParams = params.split(",");
+		
+			// Get value of the element with name=itemName
+			var param = null;
+			var value = null;
+			var cond_eval = cond;
+	
+			for (var cont = 0; cont < arrayParams.length; cont++) {
+				param = arrayParams[cont];
+				
+				value = $("tr#" + param).val();
+				if (!value){
+					value = $("tr#" + param).attr("value");
+					if (!value){
+						value="''";
+					}
+				}
+		//		params += "param: " + param + " value: " + value + "\n";
+				cond_eval = cond_eval.replace(param, value);
 			}
+			
+		//	console.log("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
+			
+			cond_eval = normalizeConditions(cond_eval)
+			
+			//	To check a good eval
+//			console.log(cond_eval + "/" + eval(cond_eval))
+		
+			res = eval(cond_eval);
 		}
-//		params += "param: " + param + " value: " + value + "\n";
-		cond_eval = cond_eval.replace(param, value);
 	}
-	
-//	if (row.attr("name")=="comment") {
-//		alert("condition: " + cond + " \nparams:\n" + params + "\n eval: " + cond_eval);
-//	}
-	
-	cond_eval = normalizeConditions(cond_eval)
-	
-//	alert(cond_eval + "/"+eval(cond_eval))
-
-//	var foundAnd = cond.indexOf("'0'") != -1;
-//	if (foundAnd)
-//		alert("condition: " + cond + " \neval: " + cond_eval+ " \nparams:"+ params );
-
-	return eval(cond_eval);
+	return res;
 }
+
 
 function normalizeConditions(cond){
 	/*
@@ -414,18 +460,42 @@ function normalizeConditions(cond){
 	return cond;
 }
 
-function browseObjects(param, projName, type_param, value_param, pointerCondition, maxNumObjects) {
+function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
-	 * Browse object in the database. 
+	 * Browse object in the database.
 	 * Params: objClass: the class to get instances from (also subclasses)
 	 * protClassName: class refered to a protocol
 	 */
 	
-	var url_param = "/browse_objects/?projectName=" + projName + "&objClass=" + value_param + "&objFilter=" + pointerCondition
-	if (type_param == 'protClassName'){
-		url_param = "/browse_protocol_class/?projectName=" + projName + "&protClassName=" + value_param
-	}
+	 var url_param = ""
+	 
+    switch (type_param){
+    
+    	case "objClass":
+			url_param = "/browse_objects/?"
+				+ "&objClass=" + value_param 
+				+ "&objFilter=" + pointerCondition
+    		break;
+    	
+    	case "protClassName":
+			url_param = "/browse_protocol_class/?"
+				+ "&protClassName=" + value_param
+			break;
+			
+    	case "relationClassName":
+    		var res = value_param.split(",")
+    		
+			url_param = "/browse_relations/?"
+				+ "&relationName=" + res[0]
+				+ "&attributeName=" + res[1]
+				+ "&protId=" + res[2]
+				+ "&direction=" + res[3]
+				                      
+    		break;
+		
+    }
 	
+//	console.log("URL:", url_param)
 		
 	$.ajax({
 		type : "GET",
@@ -434,17 +504,17 @@ function browseObjects(param, projName, type_param, value_param, pointerConditio
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response
 			// for us
-			var res = getTableFormatted(param, json, value_param, 1);
+			var res = getTableFormatted(paramName, json, value_param, 1);
 			var selectionFunc = "processSelectionTable"
 			if (maxNumObjects == 0 || maxNumObjects > 1){
 				selectionFunc = "processMultipleSelectionTable"
 			}
-			selectDialog(param, res, selectionFunc);
+			selectDialog(paramName, res, selectionFunc);
 		}
 	});
 }
 
-function formProtSimple(param, projName){
+function formProtSimple(param){
 	/*
 	 * Launch a custom protocol form with less options, thought for workflows
 	 * where some options not need to be chosen.
@@ -486,16 +556,6 @@ function setParamProt(paramProt, params){
 	$("#"+paramProt+"_input").attr("data-prot", params)
 }
 
-//function getListFormatted(node, list, id) {
-//	var res = "<div class='content' style='overflow:auto' data-node='" + node
-//			+ "'>";
-//	for ( var x = 0; x < list.length; x++) {
-//		res += "<input type='radio' id ='" + id + x + "' name='" + id
-//				+ "'  value='" + list[x] + "' />" + list[x] + "<br />";
-//	}
-//	res = res + "</div>";
-//	return res;
-//}
 
 function getTableFormatted(node, json, id, previsualize) {
 	/*
@@ -514,12 +574,9 @@ function getTableFormatted(node, json, id, previsualize) {
 		// key is the param ObjId for the object
 		// value is the name of the object
 		if(previsualize){
-//			var func = "<td class='ico'><a href='javascript:customPopup('/visualize_object/?objectId="+ key +"',1024,600);'><i class='fa fa-eye' style='font-size:1.1em;'></i></a></td>"
-//			var func = first + 'customPopup("/showj/?objectId='+ key +'",1024,600)' + second;
 			var func = first + 'launchViewer("'+ key +'")' + second;
 		}
 				
-//		res += "<tr><td id='" + id + x + "' class='" + key + "' value='"
 		res += "<tr id='"+ x + "' class='" + key + "' value='"
 				+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
 				+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
@@ -570,7 +627,6 @@ function processSelectionTable(elm) {
 	 * storaged with this method.
 	 */
 	var value = getSelectedValue(elm);
-//	$('input#' + elm.attr('data-node') + '_input').val(value[0]);
 	$('input#' + elm.attr('data-node') + '_input').attr('value', value[0]);
 	$('input#' + elm.attr('data-node') + '_input').attr('data-objId', value[1]);
 }
@@ -594,7 +650,7 @@ function processMultipleSelectionTable(elm) {
 		errorPopup("Selection Error","File already selected")
 	}
 	else{
-		var selectElementName = '#'+ elm.attr('data-node') + '_input'
+		var selectElementName = '#'+ elm.attr('data-node') + '_input' 
 		$(selectElementName).append('<option value='+value[1]+'>'+value[0]+'</option>')
 		recalculateSelectDim(selectElementName)
 	}	

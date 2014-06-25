@@ -31,7 +31,7 @@ from pyworkflow.utils import *
 import eman2
 from data import *
 from convert import readSetOfCoordinates
-
+from pyworkflow.gui.dialog import askYesNo
 
 
 class EmanProtBoxing(ProtParticlePicking):
@@ -61,11 +61,9 @@ class EmanProtBoxing(ProtParticlePicking):
                         'boxSize': self.boxSize.get()}      
         # Launch Boxing GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchBoxingGUIStep', isInteractive=True)
+            self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')  
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def launchBoxingGUIStep(self):
@@ -78,16 +76,29 @@ class EmanProtBoxing(ProtParticlePicking):
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         self.runJob(program, arguments % self._params)
         
-    def createOutputStep(self):
-        workDir = self.workingDir.get()
+        # Open dialog to request confirmation to create output
+        if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+            self._createOutput()
         
-        # As we move to workingDir we must leave it. 
-        self._leaveWorkingDir()
-        micSet = self.inputMics
-        coordSet = self._createSetOfCoordinates(self.inputMics)
-        readSetOfCoordinates(workDir, self.inputMics, coordSet)
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(micSet, coordSet)
+    def _createOutput(self):
+            workDir = self.workingDir.get()
+            
+            # As we move to workingDir we must leave it. 
+            self._leaveWorkingDir()
+            micSet = self.inputMics
+            
+            count = 0;
+            for key, output in self.iterOutputAttributes(EMObject):
+                count += 1
+            suffix = str(count + 1) if count > 0 else ''
+            outputName = 'outputCoordinates' + suffix
+            
+            coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
+            readSetOfCoordinates(workDir, self.inputMics, coordSet)
+            self.boxSize.set(coordSet.getBoxSize())
+            outputs = {outputName: coordSet}
+            self._defineOutputs(**outputs)
+            self._defineSourceRelation(micSet, coordSet)
     
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
@@ -98,6 +109,8 @@ class EmanProtBoxing(ProtParticlePicking):
 
         print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
         copyTree(self.importFolder.get(), os.getcwd())
+        
+        self._createOutput()
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):

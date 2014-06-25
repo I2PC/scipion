@@ -34,6 +34,7 @@ import os
 from pyworkflow.object import String
 from pyworkflow.utils.path import createLink
 from pyworkflow.em import ImageHandler
+from pyworkflow.em.data import Class2D, SetOfClasses2D, SetOfClasses3D
 from constants import *
 # Since Relion share several conventions with Xmipp, we will reuse 
 # the xmipp3 tools implemented for Scipion here
@@ -45,26 +46,17 @@ def locationToRelion(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Relion.
     """
-    #TODO: Maybe we need to add more logic dependent of the format
-    from pyworkflow.em.constants import NO_INDEX
-    if index != NO_INDEX:
-        return "%d@%s" % (index, filename)
-    else:
-        return filename
+    from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
+    return locationToXmipp(index, filename)
+
+
+def relionToLocation(filename):
+    from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
+    return xmippToLocation(filename)
+
 
 _xmippLabelsDict = {} # Dictionary to store mappings replaced
 
-def addRelionLabels(replace=False, extended=False):
-    """ Add relion labels as aliases for Xmipp metadata. """
-    global _xmippLabelsDict
-    _xmippLabelsDict = {}
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-        xmipp.addLabelAlias(k, v, replace)
-    if extended:
-        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
-            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
-            xmipp.addLabelAlias(k, v, replace)
             
 def restoreXmippLabels():
     global _xmippLabelsDict
@@ -73,20 +65,6 @@ def restoreXmippLabels():
     _xmippLabelsDict = {}
 
             
-def addRelionLabelsToEnviron(env):
-    """ create an string that can be used for XMIPP_EXTRA_ALIASES
-    for adding the labels of Relion.
-    """
-    from xmipp import label2Str
-    pairs = []
-    for k, v in XMIPP_RELION_LABELS.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))
-    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
-        pairs.append('%s=%s' % (label2Str(k), v))        
-    varStr = ';'.join(pairs)
-    env['XMIPP_EXTRA_ALIASES'] = varStr
-      
-    
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.
     It will write an stack in Spider format and also
@@ -108,6 +86,32 @@ class ParticleAdaptor():
         # Re-write the row with the new location
         self._particleToRow(img, imgRow)
         self._rowCount += 1
+    
+
+def addRelionLabels(replace=False, extended=False):
+    """ Add relion labels as aliases for Xmipp metadata. """
+    global _xmippLabelsDict
+    _xmippLabelsDict = {}
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+        xmipp.addLabelAlias(k, v, replace)
+    if extended:
+        for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
+            _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
+            xmipp.addLabelAlias(k, v, replace)
+
+            
+def addRelionLabelsToEnviron(env):
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of Relion.
+    """
+    pairs = []
+    for k, v in XMIPP_RELION_LABELS.iteritems():
+        pairs.append('%s=%s' % (xmipp.label2Str(k), v))
+    for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
+        pairs.append('%s=%s' % (xmipp.label2Str(k), v))        
+    varStr = ';'.join(pairs)
+    env['XMIPP_EXTRA_ALIASES'] = varStr
     
     
 def writeSetOfParticles(imgSet, starFile, stackFile):
@@ -137,66 +141,64 @@ def createRelionInputParticles(imgSet, starFile, stackFile):
         createLink(imgsFn, imgsStar.get())
 
 
-def createClassesFromImages(imgsFn, classesFn, iter, classLabel, classFnTemplate):
-    """ Give a Relion data file, produces a classes metadata as expected by Xmipp.
+def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
+                            classLabel, classFnTemplate, iter):
+    """ From an intermediate dataXXX.star file produced by relion, create
+    the set of classes in which those images are classified.
     Params:
-        imgsFn: the filename with relion star format.
+        inputImages: the SetOfImages that were initially classified by relion. 
+        inputStar: the filename with relion star format.
         classesFn: filename where to write the classes.
-        iter: the iteration number to which create the classes file
-        classLabel: the label used for classes (normally MDL_REF)
-        classFnTemplate: this should be the filename template for either volumes 3d references
-            or 2d stacks of references.
+        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        classLabel: label that is the class reference.
+        classFnTemplate: the template to get the classes averages filenames
+        iter: the iteration number, just used in Class template
     """
+    import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True, extended=True)
-    md = xmipp.MetaData(imgsFn)
-    numberOfImages = float(md.size())
-    mdClasses = xmipp.MetaData()
-    mdClasses.aggregate(md, xmipp.AGGR_COUNT, classLabel, 
-                        xmipp.MDL_IMAGE, xmipp.MDL_CLASS_COUNT)
-    #md2.aggregate(md, AGGR_COUNT, classLabel, MDL_IMAGE, MDL_COUNT)
-    mdClasses.write('classes@' + classesFn)
-    mdImages = xmipp.MetaData()
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
-    rootDir = os.path.dirname(imgsFn)
+    # rootDir here is defined to be used expanding locals()
+    rootDir = os.path.dirname(inputStar)
     
-    for objId in mdClasses:
-        ref = mdClasses.getValue(classLabel, objId)
-        refFn = classFnTemplate % locals()
-        mdClasses.setValue(xmipp.MDL_IMAGE, refFn, objId)
-        weight = mdClasses.getValue(xmipp.MDL_CLASS_COUNT, objId) / numberOfImages
-        mdClasses.setValue(xmipp.MDL_WEIGHT, weight, objId)
-        mdImages.importObjects(md, xmipp.MDValueEQ(classLabel, ref))
-        print "Writing to '%s', %d images" % (('class%06d_images' % ref) + classesFn, mdImages.size())
-        mdImages.write(('class%06d_images@' % ref) + classesFn, xmipp.MD_APPEND)
-    mdClasses.write('classes@' + classesFn, xmipp.MD_APPEND)
-    restoreXmippLabels()
+    md = xmipp.MetaData(inputStar)
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    clsSet = ClassType(filename=classesFn)
+    clsSet.setImages(inputImages)
+    
+    for objId in md:
+        ref = md.getValue(classLabel, objId)
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            cls = clsSet.ITEM_TYPE(objId=ref)
+            refLocation = relionToLocation(classFnTemplate % locals())
+            rep = cls.ITEM_TYPE()
+            rep.setLocation(refLocation)
+            cls.setRepresentative(rep)
+            
+            clsDict[ref] = cls
+            clsSet.append(cls)
+        class2D = clsDict[ref] # Try to get the class set given its ref number
+        # Set images attributes from the md row values
+        img = xmipp3.rowToParticle(md, objId, hasCtf=False)
+        class2D.append(img)
+        
+    for class2D in clsDict.values():
+        clsSet.update(class2D)
+        
+    clsSet.write()
+    restoreXmippLabels()    
+    
+#def createClassesFromImages(inputImages, inputStar, classesFn, ):
     
 
-def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
-    """ Fill a set of classes 2d from a Relion star file.
-    Params:
-        classesStar: the set of classes that will be populated.
-        filename: the path to the input Relion star file.
-        classesBlock: the name of the block in the star file.
-    """
-    import pyworkflow.em.packages.xmipp3 as xmipp3
-    addRelionLabels(replace=True, extended=True)
-    xmipp3.readSetOfClasses2D(classes2DSet, filename, classesBlock)
-    restoreXmippLabels()
+def readSetOfClasses2D(classes2DSet, filename, **args):
+    clsSet = SetOfClasses2D(filename=filename)
+    classes2DSet.appendFromClasses(clsSet)
 
 
-def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
-    """ Fill a set of classes 3d from a Relion star file.
-    Params:
-        classesStar: the set of classes that will be populated.
-        filename: the path to the input Relion star file.
-        classesBlock: the name of the block in the star file.
-    """
-    import pyworkflow.em.packages.xmipp3 as xmipp3
-    addRelionLabels(replace=True, extended=True)
-    xmipp3.readSetOfClasses3D(classes3DSet, filename, classesBlock)
-    restoreXmippLabels()
-
+def readSetOfClasses3D(classes3DSet, filename, **args):
+    clsSet = SetOfClasses3D(filename=filename)
+    classes3DSet.appendFromClasses(clsSet)
+    
 
 def sortImagesByLL(imgStar, imgSortedStar):
     """ Given a Relion images star file, sort by LogLikelihood 

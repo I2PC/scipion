@@ -29,6 +29,9 @@ This module contains several conversion utilities
 
 import os
 from constants import NO_INDEX
+import xmipp
+from constants import *
+
 
 
 class ImageHandler(object):
@@ -38,7 +41,6 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be indepent of Xmipp, we should have
         # our own image library
-        import xmipp
         from packages.xmipp3 import locationToXmipp
         
         self._img = xmipp.Image()
@@ -70,8 +72,9 @@ class ImageHandler(object):
         """
         if isinstance(location, str):
             location = (NO_INDEX, location)
-        img = self.read(location)
-        return img.getDimensions()
+        self._img.read(self._locationToStr(*location), xmipp.HEADER)
+        
+        return self._img.getDimensions()
     
     def read(self, location):
         """ Read an image from a location. """
@@ -87,7 +90,6 @@ def paramsToTransform(params):
     the Transform object (transformation matrix)
     """
     # TODO: Remove dependency to Xmipp
-    import xmipp
     from data import Transform
     t = Transform()
     e = xmipp.Euler_angles2matrix(params.angleRot, params.angleTilt, params.anglePsi)
@@ -100,7 +102,6 @@ def paramsToTransform(params):
        
 def transformToParams(transform):
     """ Inverse convertion from a Transform to param. """
-    import xmipp
     from data import TransformParams
     p = TransformParams()    
     m = transform._matrix
@@ -109,4 +110,4 @@ def transformToParams(transform):
     p.shiftX, p.shiftY, p.shiftZ = m[:, 3]
     # TODO: Consider mirror and scale
     return p
-
+    

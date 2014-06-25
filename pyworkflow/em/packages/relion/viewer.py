@@ -31,12 +31,12 @@ import os
 
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView, ObjectView, CommandView
+from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView, CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from pyworkflow.protocol.params import *
-from convert import addRelionLabels, addRelionLabelsToEnviron, restoreXmippLabels
+from convert import addRelionLabels, addRelionLabelsToEnviron
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
@@ -175,10 +175,11 @@ Examples:
     def createDataView(self, filename, extraParams=''):
         return DataView(filename, env=self._env)
         
-    def createScipionView(self, filename, output, extraParams=''):
+    def createScipionView(self, filename, extraParams=''):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-        return ObjectView(filename, output, self._project.getName(), 
-                          self.protocol.strId(), inputParticlesId,
+        ViewClass = ClassesView if self.protocol.IS_2D else Classes3DView
+        return ViewClass(self._project.getName(), 
+                          self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env)
 
     def _load(self):
@@ -247,7 +248,8 @@ Examples:
         
         for it in self._iterations:
             fn = self.protocol._getIterClasses(it)
-            v = self.createScipionView(fn, output, extraParams='--mode metadata --render first')
+            #should provide sqlite instead of metadata
+            v = self.createScipionView(fn, output)
             views.append(v)
         
         return views

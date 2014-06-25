@@ -1,0 +1,73 @@
+([node-num])
+;([node-num],[first-terminus],[last-terminus])
+
+md
+vb off
+
+rr [first-terminus]
+?first terminus?
+
+rr [last-terminus]
+?last terminus?
+
+; --- Input Parameters ---
+; [node-num]        node number
+; [first-terminus]  first terminus
+; [last-terminus]   last terminus
+; -------- Input --------
+; [node_avg]        output average
+; ------- Output -------
+; [node_lut]        node-to-particle lookup table
+
+if([first-terminus].gt.0) then
+    ; get #particles
+    [num-particles] = [last-terminus] - [first-terminus] + 1
+
+    ; save to lookup-table
+    sd [node-num],[first-terminus],[last-terminus],[num-particles]
+    [temp_lut]
+else
+    [num-particles] = 0
+
+    ; save to lookup-table
+    sd [node-num],[first-terminus],[last-terminus],[num-particles]
+    [temp_lut]
+endif
+
+sd e  ; close doc
+[temp_lut]
+
+; increment node#
+[node-num]=[node-num]+1
+
+
+; DELETE PRE-EXISTING FILES FOR NEXT NODE#
+
+de
+[node_doc][node-num]
+
+iq fi [unlabeled-exists]
+[node_avg][node-num]
+
+if([unlabeled-exists].eq.1) then
+    de
+    [node_avg][node-num]
+endif
+
+iq fi [labeled-exists]
+[labeled_avg][node-num]
+
+if([labeled-exists].eq.1) then
+    de
+    [labeled_avg][node-num]
+endif
+
+md
+vb on
+
+re
+
+; Modified 2014-05-20
+;    2014-05-20 (trs) -- checks for files before deleting (non-existing slices in stacks will crash DE command)
+;    2009-06-02 (trs) -- first particle# of 0 creates dummy entries
+;    2009-06-02 (trs) -- improved annotation

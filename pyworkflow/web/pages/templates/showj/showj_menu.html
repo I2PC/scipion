@@ -1,16 +1,4 @@
-<script>
-function changeMode(mode){
-
-	var form = document.forms['showjForm']
-	
-	if (mode != form.mode.value){
-		form.mode.value = mode;
-		form.submit();
-	}
-	
-// 	loadTemplateMode(mode)
-}
-</script>
+<script type="text/javascript" src="{{showj_menu_utils}}" ></script>
 
 <div id="asideMainContainer">
 	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
@@ -203,6 +191,10 @@ function changeMode(mode){
 		{% for hidden in form.hidden_fields %}
 	    {{ hidden }}
 	    {% endfor %} 
-		 
+	    
+		<!-- Hidden field to storage temporally the selection. -->
+		 <input type="hidden" name="listSelectedItems" value="">
+		 <!-- Hidden field to storage temporally the enabled items. -->
+		 <input type="hidden" name="listEnabledItems" value="">
 	</form>
 </div>	

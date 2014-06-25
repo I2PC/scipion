@@ -47,23 +47,24 @@ class StepExecutor():
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False):
+           runInBackground=False, cwd=None):
         """ This function is a wrapper around runJob, 
         providing the host configuration. 
         """
         process.runJob(log, programName, params,
                        numberOfMpi, numberOfThreads, 
-                       runInBackground, self.hostConfig)
+                       runInBackground, self.hostConfig, cwd=cwd)
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
         for s in steps:
-            s.setRunning()
-            stepStartedCallback(s)
-            s.run()
-            doContinue = stepFinishedCallback(s)
-            if not doContinue:
-                break
+            if not s.isFinished():
+                s.setRunning()
+                stepStartedCallback(s)
+                s.run()
+                doContinue = stepFinishedCallback(s)
+                if not doContinue:
+                    break
 
 
 class StepThread(Thread):
@@ -118,11 +119,13 @@ class ThreadStepExecutor(StepExecutor):
         self.stepStartedCallback = stepStartedCallback
         self.stepFinishedCallback = stepFinishedCallback
         self.steps = steps
-        self.stepsLeft = len(steps)
+        self.stepsLeft = 0
         self.condition = Condition() # Condition over global state
         
         for s in steps:
-            s.status.set(STATUS_WAITING_OTHERS)
+            if not s.isFinished():
+                s.status.set(STATUS_WAITING_OTHERS)
+                self.stepsLeft += 1
         
         self.thList = []
         
@@ -173,10 +176,12 @@ class ThreadStepExecutor(StepExecutor):
         """ Check if a step has all prerequisites done. """
         if step.status != STATUS_WAITING_OTHERS:
             return False
+
         for i in step._prerequisites:
-            if self.steps[i-1].status != STATUS_FINISHED:
+            if not self.steps[i-1].isFinished():
                 #print "main: prerequisite ", i, " is not finished!!!"
                 return False
+
         return True
                     
     def _launchThreads(self):
@@ -206,14 +211,14 @@ class MPIStepExecutor(ThreadStepExecutor):
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False):
+           runInBackground=False, cwd=None):
         from pyworkflow.utils.mpi import runJobMPI
         node = current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
         runJobMPI(log, programName, params, self.comm, node,
                   numberOfMpi, numberOfThreads, 
-                  runInBackground, hostConfig=self.hostConfig)
+                  runInBackground, hostConfig=self.hostConfig, cwd=cwd)
         
     def finishThread(self, th):
         from pyworkflow.utils.mpi import TAG_RUN_JOB

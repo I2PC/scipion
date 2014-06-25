@@ -174,8 +174,11 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
         #TODO: CHECK NEXT LINE
         #ctfModel.setMicFile(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
-    setObjId(img, rowFromMd(md, objId))
     
+    if md.containsLabel(xmipp.MDL_ZSCORE):
+        img._xmipp_zScore = Float(md.getValue(xmipp.MDL_ZSCORE, objId))
+    
+    setObjId(img, rowFromMd(md, objId))
     return img
     
     
@@ -244,7 +247,7 @@ def rowToClass2D(md, objId, class2D):
 
 def rowToClass3D(md, objId, class3D):
     """ Create a Class3D from a row of a metadata. """
-    return rowToClassLabel(md, objId, class3D, Particle)
+    return rowToClassLabel(md, objId, class3D, Volume)
 
 
 def rowToClassVol(md, objId, classVol):
@@ -268,16 +271,55 @@ def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
     objectToRow(ctfModel, ctfRow, CTF_DICT)
 
+
 def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
     """ Set labels values from ctfModel to md row. """
     objectToRow(defocusGroup, defocusGroupRow, CTF_DICT)
 
+
 def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
-    rowToObject(md, objId, ctfModel, CTF_DICT) 
-    return ctfModel
+    rowToObject(md, objId, ctfModel, CTF_DICT)
     
+    ctfModel._xmipp_ctfChromaticAberration = Float(md.getValue(xmipp.MDL_CTF_CA, objId))
+    ctfModel._xmipp_ctfEnergyLoss = Float(md.getValue(xmipp.MDL_CTF_ENERGY_LOSS, objId))
+    ctfModel._xmipp_ctfLensStability = Float(md.getValue(xmipp.MDL_CTF_LENS_STABILITY, objId))
+    ctfModel._xmipp_ctfConvergenceCone = Float(md.getValue(xmipp.MDL_CTF_CONVERGENCE_CONE, objId))
+    ctfModel._xmipp_ctfLongitudinalDisplacement = Float(md.getValue(xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT, objId))
+    ctfModel._xmipp_ctfTransversalDisplacement = Float(md.getValue(xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT, objId))
+    ctfModel._xmipp_ctfK = Float(md.getValue(xmipp.MDL_CTF_K, objId))
+    ctfModel._xmipp_ctfBgGaussianK = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_K, objId))
+    ctfModel._xmipp_ctfBgGaussianSigmaU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU, objId))
+    ctfModel._xmipp_ctfBgGaussianSigmaV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV, objId))
+    ctfModel._xmipp_ctfBgGaussianCU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_CU, objId))
+    ctfModel._xmipp_ctfBgGaussianCV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_CV, objId))
+    ctfModel._xmipp_ctfBgSqrtK = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_K, objId))
+    ctfModel._xmipp_ctfBgSqrtU = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_U, objId))
+    ctfModel._xmipp_ctfBgSqrtV = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_V, objId))
+    ctfModel._xmipp_ctfBgSqrtAngle = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_ANGLE, objId))
+    ctfModel._xmipp_ctfBgBaseline = Float(md.getValue(xmipp.MDL_CTF_BG_BASELINE, objId))
+    ctfModel._xmipp_ctfBgGaussian2K = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_K, objId))
+    ctfModel._xmipp_ctfBgGaussian2SigmaU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU, objId))
+    ctfModel._xmipp_ctfBgGaussian2SigmaV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV, objId))
+    ctfModel._xmipp_ctfBgGaussian2CU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_CU, objId))
+    ctfModel._xmipp_ctfBgGaussian2CV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_CV, objId))
+    ctfModel._xmipp_ctfBgGaussian2Angle = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE, objId))
+    ctfModel._xmipp_ctfCritFitting = Float(md.getValue(xmipp.MDL_CTF_CRIT_FITTINGSCORE, objId))
+    ctfModel._xmipp_ctfCritCorr13 = Float(md.getValue(xmipp.MDL_CTF_CRIT_FITTINGCORR13, objId))
+    ctfModel._xmipp_ctfDownsampleFactor = Float(md.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED, objId))
+    ctfModel._xmipp_ctfCritPsdStdQ = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDVARIANCE, objId))
+    ctfModel._xmipp_ctfCritPsdPCA1 = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE, objId))
+    ctfModel._xmipp_ctfCritPsdPCARuns = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST, objId))
+    ctfModel._xmipp_ctfCritFirstZero = Float(md.getValue(xmipp.MDL_CTF_CRIT_FIRSTZEROAVG, objId))
+    ctfModel._xmipp_ctfCritDamping = Float(md.getValue(xmipp.MDL_CTF_CRIT_DAMPING, objId))
+    ctfModel._xmipp_ctfCritFirstZeroRatio = Float(md.getValue(xmipp.MDL_CTF_CRIT_FIRSTZERORATIO, objId))
+    ctfModel._xmipp_ctfCritPsdCorr90 = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDCORRELATION90, objId))
+    ctfModel._xmipp_ctfCritPsdInt = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL, objId))
+    ctfModel._xmipp_ctfCritNormality = Float(md.getValue(xmipp.MDL_CTF_CRIT_NORMALITY, objId))
+    
+    return ctfModel
+
 
 def acquisitionToRow(acquisition, ctfRow):
     """ Set labels values from acquisition to md row. """
@@ -294,23 +336,24 @@ def readSetOfMicrographs(filename, micSet, hasCtf=False):
     readSetOfImages(filename, micSet, rowToMicrograph, hasCtf)
 
 
-def writeSetOfMicrographs(micSet, filename, rowFunc=None):
-    writeSetOfImages(micSet, filename, micrographToRow, rowFunc)
+def writeSetOfMicrographs(micSet, filename, rowFunc=None, blockName='Micrographs'):
+    writeSetOfImages(micSet, filename, micrographToRow, rowFunc, blockName)
     
     
 def readSetOfVolumes(filename, volSet, hasCtf=False):    
     readSetOfImages(filename, volSet, rowToVolume, False)
 
 
-def writeSetOfVolumes(volSet, filename, rowFunc=None):
-    writeSetOfImages(volSet, filename, volumeToRow, rowFunc)    
+def writeSetOfVolumes(volSet, filename, rowFunc=None, blockName='Volumes'):
+    writeSetOfImages(volSet, filename, volumeToRow, rowFunc, blockName)    
     
     
-def readCTFModel(filename):
+def readCTFModel(filename, mic):
     """ Read from Xmipp .ctfparam and create a CTFModel object. """
     md = xmipp.MetaData(filename)
-    ctfObj = rowToCtfModel(md, md.firstObject())  
-    ctfObj._xmippMd = String(filename) 
+    ctfObj = rowToCtfModel(md, md.firstObject())
+    ctfObj.setObjId(mic.getObjId())
+    ctfObj.setMicrograph(mic)
     
     return ctfObj
 
@@ -370,7 +413,8 @@ def writeSetOfCoordinates(posDir, coordSet):
     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
     
     return posFiles
-    
+
+
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
     Params:
@@ -423,6 +467,7 @@ def readPosCoordinates(posFile):
     
     return md
 
+
 def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
     """read from Xmipp image metadata.
         filename: The metadata filename where the image are.
@@ -431,6 +476,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         hasCtf: is True if the ctf information exists.
     """    
     imgMd = xmipp.MetaData(filename)
+    imgMd.removeDisabled()
     for objId in imgMd:
         img = rowToFunc(imgMd, objId, hasCtf)
         imgSet.append(img)
@@ -443,9 +489,8 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         imgSet.setSamplingRate(samplingRate)
     else:
         pass # TODO: what to do if not exists
-        
-    imgSet._xmippMd = String(filename)
- 
+
+
 def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
     """ This function will fill Xmipp metadata from a SetOfMicrographs
     Params:
@@ -462,8 +507,9 @@ def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
         if rowFunc:
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
-            
-def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
+
+
+def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, blockName='Images'):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
         imgSet: the set of images to be written (particles, micrographs or volumes)
@@ -473,9 +519,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
     """
     md = xmipp.MetaData()
     setOfImagesToMd(imgSet, md, imgToFunc, rowFunc)
-    md.write(filename)
-    imgSet._xmippMd = String(filename)
-        
+    md.write('%s@%s' % (blockName, filename))
         
 def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
     objId = md.addObject()
@@ -488,15 +532,19 @@ def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
 
 def readSetOfParticles(filename, partSet, hasCtf=False):
     readSetOfImages(filename, partSet, rowToParticle, hasCtf)
-     
+
+
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, particleToRow, rowFunc)
-      
+
+
 def setOfMicrographsToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, micrographToRow, rowFunc)
-      
-def writeSetOfParticles(imgSet, filename, rowFunc=None):
-    writeSetOfImages(imgSet, filename, particleToRow, rowFunc)
+
+
+def writeSetOfParticles(imgSet, filename, rowFunc=None, blockName='Particles'):
+    writeSetOfImages(imgSet, filename, particleToRow, rowFunc, blockName)
+
 
 def writeSetOfCTFs(ctfSet, mdCTF):
     """ Write a ctfSet on metadata format. 
@@ -566,7 +614,6 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-    classes2DSet._xmippMd = String(filename)
 
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
@@ -579,14 +626,11 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classes2DSet.getImages().getSamplingRate()
-    averages = None
-    
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes2DSet.createRepresentatives()
     
     for objId in classesMd:
         class2D = Class2D()
         class2D = rowToClass2D(classesMd, objId, class2D)
+        class2D.setSamplingRate(samplingRate)
         classes2DSet.append(class2D)
         ref = class2D.getObjId()
         b = 'class%06d_images' % ref
@@ -596,18 +640,9 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
             
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
                 class2D.append(img)
-                
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Particle()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(class2D)
-            averages.append(avg)
-
-    classes2DSet._xmippMd = String(filename)
-
+        # Update with new properties of class2D such as _size
+        classes2DSet.update(class2D)
 
 # def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
 #     """ This function will write a SetOfClasses3D as Xmipp metadata.
@@ -634,7 +669,6 @@ def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
 #         imagesMd.write(imagesFn, xmipp.MD_APPEND)
 #     
 #     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-#     classes3DSet._xmippMd = String(filename)
 
 
 def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
@@ -646,14 +680,11 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classes3DSet.getImages().getSamplingRate()
-    averages = None
-     
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classes3DSet.createRepresentatives()
      
     for objId in classesMd:
         class3D = Class3D()
         class3D = rowToClass3D(classesMd, objId, class3D)
+        class3D.setSamplingRate(samplingRate)
         classes3DSet.append(class3D)
         ref = class3D.getObjId()
         b = 'class%06d_images' % ref
@@ -663,20 +694,9 @@ def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
              
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                img.setSamplingRate(samplingRate)
                 class3D.append(img)
-                 
-        # Check if write function is necessary
-        class3D.write()
-    
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Volume()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(class3D)
-            averages.append(avg)
-    
-    classes3DSet._xmippMd = String(filename)
+        # Update with new properties of class2D such as _size
+        classes3DSet.update(class3D)
 
 
 def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
@@ -702,9 +722,8 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
             volumeToRow(vol, imgRow)
             imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
-    
+  
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
-    classesVolSet._xmippMd = String(filename)
 
 
 def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args):
@@ -716,10 +735,6 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classesVolSet.getImages().getSamplingRate()
-    averages = None
-    
-    if classesMd.containsLabel(xmipp.MDL_IMAGE):
-        averages = classesVolSet.createRepresentatives()
     
     for objId in classesMd:
         classVol = ClassVol()
@@ -734,18 +749,11 @@ def readSetOfClassesVol(classesVolSet, filename, classesBlock='classes', **args)
             for imgId in classImagesMd:
                 img = rowToParticle(classImagesMd, imgId, hasCtf=False)
                 img.setSamplingRate(samplingRate)
-                class3D.append(img)
-                
+                classVol.append(img)
+        # Update with new properties of class2D such as _size
+        classesVolSet.update(classVol)                
         # Check if write function is necessary
         classVol.write()
-    
-        if averages is not None:
-            index, avgFn = xmippToLocation(classesMd.getValue(xmipp.MDL_IMAGE, objId))
-            avg = Volume()
-            avg.setLocation(index, avgFn)
-            avg.copyObjId(classVol)
-            averages.append(avg)
-    classesVolSet._xmippMd = String(filename)
 
 
 def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):    
@@ -766,57 +774,40 @@ def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):
             micrographToRow(mic, micRow)
             micRow.writeToMd(micrographsMd, micrographsMd.addObject())
         micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
-    
-    moviesSet._xmippMd = String(filename)
 
 
 def createXmippInputImages(prot, imgSet, rowFunc=None, imagesFn=None):  
-    imgsMd = getattr(imgSet, '_xmippMd', None)
-    if imgsMd is None:
-        imgsFn = imagesFn    
-        if prot is not None:
-            imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
-
-        writeSetOfParticles(imgSet, imgsFn, rowFunc)
-    else:
-        imgsFn = imgsMd.get()
+    if prot is not None:
+        imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
+    
+    writeSetOfParticles(imgSet, imgsFn, rowFunc)
     return imgsFn
 
 
 def createXmippInputMicrographs(prot, micSet, rowFunc=None, micsFn=None):    
-    micsMd = getattr(micSet, '_xmippMd', None)
-    if micsMd is None:
-        if prot is not None:
-            micsFn = prot._getPath('input_micrographs.xmd')
-        writeSetOfMicrographs(micSet, micsFn, rowFunc)
-    else:
-        micsFn = micsMd.get()
+    if prot is not None:
+        micsFn = prot._getPath('input_micrographs.xmd')
+
+    writeSetOfMicrographs(micSet, micsFn, rowFunc)
     return micsFn
 
 
-
 def createXmippInputVolumes(prot, volSet, volsFn=None):    
-    volsMd = getattr(volSet, '_xmippMd', None)
-    if volsMd is None:
-        if volsFn is None:
-            volsFn = prot._getPath('input_volumes.xmd')
-        
-        writeSetOfVolumes(volSet, volsFn)
-    else:
-        volsFn = volsMd.get()
+    if volsFn is None:
+        volsFn = prot._getPath('input_volumes.xmd')
+    
+    writeSetOfVolumes(volSet, volsFn)
     return volsFn
 
+
 def createXmippInputClasses2D(prot, classSet, classFn=None):
-    classMd = getattr(classSet, '_xmippMd', None)
-    if classMd is None:
-        if prot is not None:
-            classFn = prot._getPath('input_classes.xmd')
-        
-        writeSetOfClasses2D(classSet, classFn)
-    else:
-        classFn = classMd.get()
+    if prot is not None:
+        classFn = prot._getPath('input_classes.xmd')
+    
+    writeSetOfClasses2D(classSet, classFn)
     return classFn
     
+
 def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     ctfMd = getattr(ctfSet, '_xmippMd', None)
     if ctfMd is None:
@@ -827,3 +818,30 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     else:
         ctfFn = ctfMd.get()
     return ctfFn
+
+
+def geometryFromMatrix(matrix):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
+    shifts = -translation_from_matrix(matrix)
+    angles = rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    
+    return shifts, angles
+
+
+def matrixFromGeometry(shifts, angles):
+    """ Create the transformation matrix from a given
+    2D shifts in X and Y...and the 3 euler angles.
+    """
+    #TODO: CHECK THIS IS CORRECT
+    from pyworkflow.em.transformations import translation_matrix, euler_matrix, concatenate_matrices
+    from numpy import deg2rad
+    radAngles = deg2rad(angles)
+    
+    R = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
+    T = translation_matrix(shifts)
+    
+    M = concatenate_matrices(R, T)
+    
+    return M  
+

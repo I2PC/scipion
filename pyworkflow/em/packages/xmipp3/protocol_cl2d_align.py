@@ -23,17 +23,14 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.process import runJob
 """
 This sub-package contains wrapper around align2d Xmipp program
 """
 
-from os.path import join, dirname, exists
 from pyworkflow.em import *  
-import xmipp
 
-from convert import createXmippInputImages, readSetOfParticles
-from glob import glob
+from convert import createXmippInputImages, readSetOfParticles, locationToXmipp, matrixFromGeometry
+
        
         
 class XmippProtCL2DAlign(ProtAlign2D):
@@ -41,14 +38,16 @@ class XmippProtCL2DAlign(ProtAlign2D):
     _label = 'cl2d align'
 
     #--------------------------- DEFINE param functions --------------------------------------------
+    
     def _defineAlignParams(self, form):
-        form.addParam('useReferenceImage', BooleanParam, default=True,
+        form.addParam('useReferenceImage', BooleanParam, default=False,
                       label='Use a Reference Image ?', 
                       help='If you set to *Yes*, you should provide a reference image'
                            'If *No*, the default generation is done by averaging'
                            'subsets of the input images.')
-        form.addParam('ReferenceImage', StringParam , condition='useReferenceImage',
-                      label="Reference image(s)", 
+        form.addParam('referenceImage', PointerParam, condition='useReferenceImage',
+                      pointerClass='Particle', allowsNull=True,
+                      label="Reference image", 
                       help='Image that will serve as class reference')
         
         form.addParam('maximumShift', IntParam, default=10,
@@ -58,9 +57,9 @@ class XmippProtCL2DAlign(ProtAlign2D):
                       label='Number of iterations:',
                       help='Maximum number of iterations')
         form.addParallelSection(threads=1, mpi=3)
-        
     
     #--------------------------- INSERT steps functions --------------------------------------------
+    
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d align program"""
         
@@ -74,8 +73,9 @@ class XmippProtCL2DAlign(ProtAlign2D):
                         'iter': self.numberOfIterations.get(),
                         }
         args = '-i %(imgsFn)s --odir %(extraDir)s --nref 1 --iter %(iter)d --maxShift %(maxshift)d'
+        
         if self.useReferenceImage:
-            args += " --ref0 " + self.ReferenceImage.get()
+            args += " --ref0 " + locationToXmipp(*self.refenceImage.getLocation())
         else:
             args += " --nref0 1"
             
@@ -87,11 +87,45 @@ class XmippProtCL2DAlign(ProtAlign2D):
         self._insertFunctionStep('createOutputStep')        
 
     #--------------------------- STEPS functions --------------------------------------------        
+    
     def createOutputStep(self):
         """ Store the setOfParticles object 
         as result of the protocol. 
         """
         #TODO: Generate a set of Transforms
+        particles = self.inputParticles.get()
+        # Define the output average
+        avgFile = self._getExtraPath('level_00', 'class_classes.stk')
+        avg = Particle()
+        avg.setLocation(1, avgFile)
+        avg.copyInfo(particles)
+        self._defineOutputs(outputAverage=avg)
+        self._defineSourceRelation(particles, avg)
+            
+        # Generate the SetOfAlignmet
+        alignment = self._createSetOfAlignment(particles)
+        md = xmipp.MetaData(self._getExtraPath('images.xmd'))
+        import numpy
+        angles = numpy.zeros(3)
+        shifts = numpy.zeros(3)
+        t = Transform()
+        
+        for objId in md:
+            angles[2] = md.getValue(xmipp.MDL_ANGLE_PSI, objId)
+            shifts[0] = md.getValue(xmipp.MDL_SHIFT_X, objId)
+            shifts[1] = md.getValue(xmipp.MDL_SHIFT_Y, objId)
+            M = matrixFromGeometry(shifts, angles)
+            t.setMatrix(M)
+            itemId = md.getValue(xmipp.MDL_ITEM_ID, objId)
+            t.setObjId(itemId)
+            img = particles[itemId]
+            t._image = img
+            alignment.append(t)
+            
+        self._defineOutputs(outputAlignment=alignment)
+        self._defineSourceRelation(particles, alignment)
+                
+        # Produce aligned images if requested and generate output
         if self.writeAlignedParticles:
             lastMdFn = self._getExtraPath("images.xmd")
             alignedMd = self._getPath("particles_aligned.xmd")
@@ -102,20 +136,13 @@ class XmippProtCL2DAlign(ProtAlign2D):
             # Apply transformation
             self.runJob("xmipp_transform_geometry", params % locals())
             md = xmipp.MetaData(alignedMd)
+            
             for label in [xmipp.MDL_ANGLE_PSI, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_FLIP]:
                 md.removeLabel(label)
             if md.containsLabel(xmipp.MDL_ZSCORE):
                 md.sort(xmipp.MDL_ZSCORE)
             md.write(alignedMd)
             
-            particles = self.inputParticles.get()
-            # Define the output average
-            avgFile = self._getExtraPath('level_00', 'class_classes.stk')
-            avg = Particle()
-            avg.setLocation(1, avgFile)
-            avg.copyInfo(particles)
-            self._defineOutputs(outputAverage=avg)
-            self._defineSourceRelation(particles, avg)
             # Define the output of aligned particles
             imgSet = self._createSetOfParticles()
             imgSet.copyInfo(particles)
@@ -124,10 +151,12 @@ class XmippProtCL2DAlign(ProtAlign2D):
             self._defineOutputs(outputParticles=imgSet)
             self._defineTransformRelation(particles, imgSet)
 
+        
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        refImage = self.ReferenceImage.get()
+        refImage = self.referenceImage.get()
         if self.useReferenceImage:
             if len(refImage) > 0:
                 if not exists(refImage):

@@ -29,6 +29,8 @@ This will serve as an abstraction layer from where the data will be taken.
 """
 from collections import OrderedDict, namedtuple
 
+
+
 class DataSet(object):
     """ Holds several Tables
     All tables should have an unique tableName. 
@@ -120,6 +122,8 @@ class Table(object):
         return columnName in self._columns
     
     def getColumn(self, columnName):
+        if not columnName in self._columns:
+            raise Exception('Table: column "%s" not found.\Current columns: %s' % (columnName, '\n'.join(self._columns.keys())))
         return self._columns[columnName] 
     
     def hasEnabledColumn(self):
@@ -205,15 +209,28 @@ class Table(object):
         return '\n'.join([str(row) for row in self.iterRows()])
     
         
+COL_RENDER_NONE = 0
+COL_RENDER_ID = 1
+COL_RENDER_TEXT = 2
+COL_RENDER_IMAGE = 3
+COL_RENDER_CHECKBOX = 4
+
+
 class Column(object):
-    def __init__(self, colName, colType=None, default=None):
+    def __init__(self, colName, colType=None, default=None, 
+                 label=None, renderType=COL_RENDER_NONE):
         self._name = colName
         self._type = colType
         self._default = default
+        self._label = label or colName
+        self._renderType = renderType
         
     def getName(self):
         return self._name
-    
+
+    def getLabel(self):
+        return self._label
+        
     def getType(self):
         return self._type
     
@@ -227,4 +244,93 @@ class Column(object):
     def getDefault(self):
         return self._default
     
+    def getRenderType(self):
+        return self._renderType
     
+    def setRenderType(self, renderType):
+        self._renderType = renderType
+    
+
+class SqliteDataSet(DataSet):
+    """ Provide a DataSet implementation based on sqlite file.
+    The tables of the dataset will be the object tables in database.
+    Each block is a table on the dataset. 
+    """
+    
+    def __init__(self, filename):
+        self._dbName = filename
+        from pyworkflow.mapper.sqlite_db import SqliteDb
+        db = SqliteDb()
+        db._createConnection(filename, 1000)
+        # Tables should be at pairs:
+        # PREFIX_Classes
+        # PREFIX_Objects  
+        # where PREFIX can be empty
+        tablePrefixes = []
+        tables = db.getTables()
+        for t in tables:
+            if t.endswith('Classes'):
+                prefix = t.replace('Classes', '')
+                to = prefix + 'Objects'
+                if to not in tables:
+                    raise Exception('SqliteDataSet: table "%s" found, but not "%s"' % (t, to))
+                tablePrefixes.append(prefix)
+        DataSet.__init__(self, tablePrefixes)
+        db.close()
+        
+    def _loadTable(self, tableName):
+        """ Load information from tables PREFIX_Classes, PREFIX_Objects. """
+        BASIC_COLUMNS = [Column('id', int, renderType=COL_RENDER_ID), 
+                         Column('enabled', bool ,renderType=COL_RENDER_CHECKBOX),
+                         Column('label', str), 
+                         Column('comment', str),
+                         Column('creation', str)]
+        # Load columns from PREFIX_Classes table
+        columns = list(BASIC_COLUMNS)
+        from pyworkflow.mapper.sqlite_db import SqliteDb
+        db = SqliteDb()
+        db._createConnection(self._dbName, 1000)
+        db.executeCommand("SELECT * FROM %sClasses;" % tableName)
+        # This will store the images columsn to join
+        # the _index and the _filename
+        imgCols = {}
+        
+        for row in db._iterResults():
+            renderType = COL_RENDER_NONE
+            colName = row['column_name']
+            colLabel = row['label_property']
+            
+            if colLabel != 'self':
+                # Keep track of _index and _filename pairs to mark as renderable images
+                if colLabel.endswith('_index'):
+                    imgCols[colLabel.replace('_index', '')] = colName
+                elif colLabel.endswith('_filename'):
+                    prefix = colLabel.replace('_filename', '')
+                    if prefix in imgCols:
+                        renderType = COL_RENDER_IMAGE
+                        imgCols[colName] = imgCols[prefix]
+                
+                if row['class_name'] == 'Boolean':
+                    renderType = COL_RENDER_CHECKBOX   
+                # print "adding column: name=%s, label=%s" % (row['column_name'], label)
+                columns.append(Column(colName, str, label=colLabel, renderType=renderType))
+        table = Table(*columns)
+        
+        # Populate the table in the DataSet
+        db.executeCommand("SELECT * FROM %sObjects;" % tableName)
+        for row in db._iterResults():
+            rowDict = dict(row)
+            for k, v in rowDict.iteritems():
+                if v is None:
+                    rowDict[k] = ''
+                # Set the index@filename for images columns values
+                if k in imgCols:
+                    index = rowDict[imgCols[k]]
+                    if index:
+                        rowDict[k] = '%06d@%s' % (index, rowDict[k])
+#             print "rowDict = ", rowDict
+            table.addRow(row['id'], **rowDict)
+            
+        return table
+        
+        

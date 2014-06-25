@@ -32,7 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils.path import *  
 import xmipp
 from xmipp3 import XmippProtocol
-from pyworkflow.em.packages.xmipp3.viewer import runJavaIJapp
+from pyworkflow.em.showj import runJavaIJapp
 
 from convert import createXmippInputMicrographs, readSetOfCoordinates
 
@@ -73,7 +73,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUIStep', isInteractive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
         # Insert step to create output objects       
@@ -86,17 +86,12 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         # Get the converted input micrographs in Xmipp format
         # if not exists, means the input was already in Xmipp
         micFn = createXmippInputMicrographs(self, self.inputMics)
-        inputid = self.inputMics.strId()
-        self._params = {'inputMicsXmipp': micFn,
-                        'extraDir': self._getExtraPath(),
-                        'pickingMode': 'manual',
-                        'scipion': "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords_subset.py'), self.getDbPath(), self.strId())
-                        }
         
         # Launch the particle picking GUI
-        
+        extraDir = self._getExtraPath()
+        scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %(inputMicsXmipp)s --output %(extraDir)s --mode %(pickingMode)s  --scipion %(scipion)s"%self._params
+        args = "--input %(micFn)s --output %(extraDir)s --mode manual  --scipion %(scipion)s"%locals()
         # TiltPairs
 #        if self.inputMics.hasTiltPairs():
 #            self._params['inputMicsXmipp'] = "TiltedPairs@" + fn
@@ -150,8 +145,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if not hasattr(self, 'outputCoordinates'):
             summary.append("Output coordinates not ready yet.") 
         else:
-            
-            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append("Particles picked: %d (from %d micrographs)" % (output.getSize(), self.inputMicrographs.get().getSize()))
             # Read the picking state from the config.xmd metadata
             configfile = join(self._getExtraPath(), 'config.xmd')
             if exists(configfile):

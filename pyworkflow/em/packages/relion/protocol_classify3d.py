@@ -30,13 +30,17 @@ This module contains the protocol for 3d classification with relion.
 from protocol_base import *
 from pyworkflow.utils.which import which
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
-from pyworkflow.em.protocol import *
 
 
 
 class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
-    """Protocol to classify 3D using Relion. 
     """    
+    Protocol to classify 3D using Relion. Relion employs an empirical
+    Bayesian approach to refinement of (multiple) 3D reconstructions
+    or 2D class averages in electron cryo-microscopy (cryo-EM). Many
+    parameters of a statistical model are learned from the data,which
+    leads to objective and high-quality results.
+    """
     _label = '3D classify'
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
                      xmipp.MDL_AVG_CHANGES_OFFSETS]
@@ -60,10 +64,13 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         from convert import readSetOfClasses3D
-        classesStar = self._getIterClasses(self._lastIter())
-        classes = self._createSetOfClasses3D(self.inputParticles.get())
-        readSetOfClasses3D(classes, classesStar)
+        classesSqlite = self._getIterClasses(self._lastIter())
+        imgSet = self.inputParticles.get()
+        classes = self._createSetOfClasses3D(imgSet)
+        readSetOfClasses3D(classes, classesSqlite)
         self._defineOutputs(outputClasses=classes)
+        self._defineSourceRelation(imgSet, classes)
+        self._defineSourceRelation(self.referenceVolume.get(), classes)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

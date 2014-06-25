@@ -9,7 +9,7 @@ import unittest
 
 from pyworkflow.tests import *
 from pyworkflow.em.data import Acquisition, Micrograph, SetOfMicrographs, CTFModel
-import pyworkflow.em.packages.emx as emx
+import pyworkflow.em.packages.emxlib as emx
 
 try:
     import xml.etree.cElementTree as ET
@@ -53,8 +53,6 @@ class TestEMX(BaseTest):
         
         
     def test_writeMicrographs(self):
-        
-        
         emxDir = self.getOutputPath('emx')
         
         fnXml = self.getOutputPath('test_micrographs.xml')
@@ -82,6 +80,9 @@ class TestEMX(BaseTest):
             
         emx.exportData(emxDir, micSet)
         
+        
+    def test_Transform(self):
+        pass
         
     def test_readEMX(self):
         pass

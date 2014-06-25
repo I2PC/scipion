@@ -164,6 +164,7 @@ Define the number of processors to be used in the execution.
     ERROR_PATTERN_EMPTY = 'The *pattern* cannot be empty.'
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
+    LABEL_COPYFILES = 'Copy files?'
     LABEL_VOLTAGE = 'Microscope voltage (in kV)'
     LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
     LABEL_AMPLITUDE = 'Amplitude Contrast'
@@ -187,18 +188,7 @@ Define the number of processors to be used in the execution.
     LABEL_INPUT_MOVS = 'Input Movies'
     LABEL_ALIG_PART = 'Write aligned particles?'
     TEXT_ALIG_PART = 'If set to *Yes*, the aligment will be applied to \n'+'input particles and a new aligned set will be created.'
-    #LABEL_LOW_RES = 'Lowest resolution'
-    #TEXT_LOW_RES = 'Give a value in digital frequency (i.e. between 0.0 and 0.5). '+'This cut-off prevents the typically peak at the center of the PSD '+'to interfere with CTF estimation. The default value is 0.05, but for '+'micrographs with a very fine sampling this may be lowered towards 0.0'
-    #LABEL_HIGH_RES = 'Highest resolution'
-    #TEXT_HIGH_RES = 'Give a value in digital frequency (i.e. between 0.0 and 0.5). '+'This cut-off prevents high-resolution terms where only noise exists '+'to interfere with CTF estimation. The default value is 0.35, but it should '+'be increased for micrographs with signals extending beyond this value. '+'However, if your micrographs extend further than 0.35, you should consider '+'sampling them at a finer rate.'
-    TEXT_RES = 'Give a value in digital frequency (i.e. between 0.0 and 0.5). '+'These cut-offs prevent the typical peak at the center of the PSD and high-resolution terms where only noise exists, to interfere with CTF estimation. The default lowest value is 0.05 but for '+'micrographs with a very fine sampling this may be lowered towards 0.0' + '. The default highest value is 0.35, but it should '+'be increased for micrographs with signals extending beyond this value. '+'However, if your micrographs extend further than 0.35, you should consider '+'sampling them at a finer rate.'
-    LABEL_MIN_FOCUS = 'Minimum defocus to search (in microns)'
-    TEXT_MIN_FOCUS = '<Minimum defocus value (in microns) to include in defocus search. '+'Underfocus is represented by a positive number.'
-    LABEL_MAX_FOCUS = 'Maximum defocus to search (in microns)'
-    TEXT_MAX_FOCUS = 'Maximum defocus value (in microns) to include in defocus search. '+'Underfocus is represented by a positive number.'
-    LABEL_WINDOW_SIZE = 'Window size'
-    TEXT_WINDOW_SIZE = 'The PSD is estimated from small patches of this size. Bigger patches '+'allow identifying more details. However, since there are fewer windows, '+'estimations are noisier'
-    
+
     TEXT_NO_INPUT_MIC = 'No *Input Micrographs* selected.'
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
     TEXT_NO_OUTPUT_CO = 'Output coordinates not ready yet.'
@@ -217,6 +207,9 @@ Define the number of processors to be used in the execution.
     LABEL_STOP_FORM = 'Do you really want to *STOP* this run?'
     
     NO_VIEWER_FOUND = 'There is not viewer for protocol:'
+    
+    TITLE_SAVE_OUTPUT = 'Save protocol output'
+    LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'
     
     # Hosts Template
     LABEL_HOSTS = 'Hosts'

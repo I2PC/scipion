@@ -119,7 +119,7 @@ def getNodeStateColor(node):
         
     return status, color
 
-def project_graph (request):
+def project_graph(request):
     if request.is_ajax():
         boxList = request.GET.get('list')
         # Project Id(or Name) should be stored in SESSION
@@ -160,7 +160,7 @@ def project_graph (request):
                 
                 info = ""
                 if str(node.id) != "PROJECT":
-                    protocol = project.mapper.selectById(int(node.id))
+                    protocol = project.getProtocol(int(node.id))
                     info = provider.getObjectInfo(protocol)["values"][0]
                 
                 nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
@@ -213,11 +213,12 @@ def populateTree(tree, obj):
 def update_prot_tree(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
+    settings = project.getSettings()
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    project.getSettings().setCurrentProtocolMenu(index)
-    project.getSettings().write()
+    settings.setCurrentProtocolMenu(index)
+    settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -231,13 +232,31 @@ def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
     project = loadProject(projectName)
-#    status = project.getSettings().graphView.get()
+    settings = project.getSettings()
+
     if status == "True":
-        project.getSettings().graphView.set(True)
+        settings.graphView.set(True)
     else :
-        project.getSettings().graphView.set(False)
-    project.getSettings().write()
+        settings.graphView.set(False)
+    settings.write()
     return HttpResponse(mimetype='application/javascript')
+
+
+def save_selection(request):
+    if request.is_ajax():
+        mark = request.GET.get('mark', None)
+        
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        settings = project.getSettings()
+        
+        # Set the selected runs stored in BD    
+        settings.runSelection.set(mark)
+        
+        settings.write()
+        
+    return HttpResponse(mimetype='application/javascript')
+
 
 def tree_prot_view(request):
     projectName = request.session['projectName'] 
@@ -246,12 +265,13 @@ def tree_prot_view(request):
     # load the protocol tree current active
     root = loadProtTree(project)
     
-    return render_to_response('tree_prot_view.html', {'sections': root.childs})
+    return render_to_response('project_content/tree_prot_view.html', {'sections': root.childs})
     
 def run_table_graph(request):
     try:
         projectName = request.session['projectName']
         project = loadProject(projectName)
+        settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
         runs = request.session['runs']
@@ -272,13 +292,19 @@ def run_table_graph(request):
                         listNewElm.append(vy)
         if refresh:
             request.session['runs'] = runsNew
-            graphView = project.getSettings().graphView.get()
+            
+            # Get the selected runs stored in BD    
+            selectedRuns = settings.runSelection
+    
+            # Get the mode view (list or graph) stored in BD
+            graphView = settings.graphView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
-                       'graphView': graphView}
+                       'graphView': graphView, 
+                       'selectedRuns' : selectedRuns}
             
-            return render_to_response('run_table_graph.html', context)
+            return render_to_response('project_content/run_table_graph.html', context)
         
         elif listNewElm:
             request.session['runs'] = runsNew
@@ -320,23 +346,26 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)
+    settings = project.getSettings()
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider)
     request.session['runs'] = runs
-    
-    
-    
-    graphView = project.getSettings().graphView.get()
+
+    # Get the selected runs stored in BD    
+    selectedRuns = settings.runSelection
+
+    # Get the mode view (list or graph) stored in BD
+    graphView = settings.graphView.get()
     
     # load the protocol tree current active
     root = loadProtTree(project)
     
     # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in project.getSettings().protMenuList]
+    choices = [pm.text.get() for pm in settings.protMenuList]
 
     # get the choice current 
-    choiceSelected =  project.getSettings().protMenuList.getIndex()
+    choiceSelected =  settings.protMenuList.getIndex()
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -359,11 +388,12 @@ def project_content(request):
                'columns': provider.getColumns(),
                'view': 'protocols',
                'graphView': graphView,
+               'selectedRuns': selectedRuns
                }
     
     context = base_flex(request, context)
     
-    return render_to_response('project_content.html', context)
+    return render_to_response('project_content/project_content.html', context)
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
@@ -373,16 +403,20 @@ def protocol_info(request):
         protId = request.GET.get('protocolId', None)
 
         project = loadProject(projectName)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
         
         # PROTOCOL IO
-#        input_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterInputAttributes()]
-#        output_obj = [{'name': name, 'id': attr.getObjId()} for name, attr in protocol.iterOutputAttributes(EMObject)]
-
-        input_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterInputAttributes()]
+        input_obj = [{'name':name, 
+                      'nameId': attr.getNameId(), 
+                      'id': attr.getObjId(), 
+                      'info': str(attr)} 
+                     for name, attr in protocol.iterInputAttributes()]
         
-        output_obj = [{'name':name, 'nameId': attr.getNameId(), 'id': attr.getObjId(), 'info': str(attr)} for name, attr in protocol.iterOutputAttributes(EMObject)]
-
+        output_obj = [{'name':name, 
+                       'nameId': attr.getNameId(), 
+                       'id': attr.getObjId(), 
+                       'info': str(attr)} 
+                      for name, attr in protocol.iterOutputAttributes(EMObject)]
 
         # PROTOCOL SUMMARY
         summary = parseText(protocol.summary())
@@ -404,9 +438,9 @@ def protocol_info(request):
                   'logs_out': parseText(fOutString),
                   'logs_error': parseText(fErrString),
                   'logs_scipion': parseText(fScpnString)
-                  
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, mimetype='application/javascript')
+
 

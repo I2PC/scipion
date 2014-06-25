@@ -1,289 +1,39 @@
 #!/usr/bin/env python
-# To run only the tests in this file, use:
-# python -m unittest test_mappers -v
-# To run a single test,
-# python -m unittest -v test_mappers.TestMappers.test_connectUsing
+# **************************************************************************
+# *
+# * Authors:    J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
 import os
 import os.path
 import unittest
 from pyworkflow.mapper import *
 from pyworkflow.object import *
-from pyworkflow.em.data import Acquisition
+from pyworkflow.em.data import Acquisition, SetOfImages, Image
 from pyworkflow.tests import *
 import pyworkflow.dataset as ds
-
-
-
-# @see test_object.TestPyworkflow.test_SqliteMapper
-class TestPostgreSqlMapper(unittest.TestCase):
-    mapper=None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.setupMapper()
-
-    # this class methods allow for the sharing of the connection by all tests
-
-    @classmethod
-    def getScipionHome(self):
-        if "SCIPION_HOME" not in os.environ:
-            raise Exception("SCIPION_HOME is not defined as environment variable")
-        return os.environ["SCIPION_HOME"]
-
-    @classmethod
-    def setupMapper(cls):
-        try:
-            dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
-            if os.path.isfile(dbconfig):
-                cls.mapper = postgresql.PostgresqlMapper(dbconfig)
-            else:
-                print "Config file %s not found" % (dbconfig,)
-                return None
-        except Exception as e:
-                print str(e)
-
-
-    def test_insert(self,intValue=22):
-        """Test mapper insertion and selection by Id"""
-        mapper=TestPostgreSqlMapper.mapper
-        if mapper != None:
-            i = Integer(intValue)
-            objectId=mapper.insert(i)
-            object = mapper.selectById(objectId)
-            self.assertEqual(object.get(),intValue)
-            return objectId
-
-
-    def test_insertChildren(self):
-        """ Test mapper insertion of an object with attributes (children)"""
-        mapper=TestPostgreSqlMapper.mapper
-        if mapper != None:
-            micro=Acquisition()
-            micro.voltage=Float(200.0)
-            parentId=mapper.insert(micro)
-            mapper.commit()
-            object = mapper.selectById(parentId)
-            self.assertEqual(object.voltage.get(),200.0)
-            return parentId
-
-    def test_selectById(self):
-        # the method is tested in test_insert
-        pass
-
-    def test_selectAll(self):
-       mapper=TestPostgreSqlMapper.mapper
-       if mapper != None:
-           allObjects= mapper.selectAll()
-           self.assertNotEqual(len(allObjects),0)
-
-
-
-    def test_delete(self):
-       # deleteChilds test is implicit in delete, for complex objects
-       mapper=TestPostgreSqlMapper.mapper
-       if mapper != None:
-           micro=Acquisition()
-           micro.voltage=Float(200.0)
-           parentId=mapper.insert(micro)
-           voltageId=micro.voltage.getObjId()
-           print parentId,voltageId
-           mapper.delete(micro)
-           object = mapper.selectById(parentId)
-           self.assertIsNone(object)
-           object = mapper.selectById(voltageId)
-           self.assertIsNone(object)
-
-
-
-    # This test is dangerous if run against a production DB ;-)
-    # Hence, if you really want to run it, add "test_" to the function name
-    def deleteAll(self):
-        mapper=TestPostgreSqlMapper.mapper
-        if mapper != None:
-            print "DELETING ALL..."
-            mapper.deleteAll()
-            allObjects= mapper.selectAll()
-            self.assertEqual(len(allObjects),0)
-
-
-    def test_updates(self):
-        mapper=TestPostgreSqlMapper.mapper
-        if mapper != None:
-            micro=Acquisition()
-            micro.voltage=Float(180.0)
-            parentId=mapper.insert(micro)
-            mapper.commit()
-            object = mapper.selectById(parentId)
-            self.assertEqual(object.voltage.get(),180.0)
-
-            micro.voltage=Float(160.0)
-            mapper.updateTo(micro)
-            object = mapper.selectById(parentId)
-            self.assertEqual(object.voltage.get(),160.0)
-            micro.voltage=Float(150.0)
-            mapper.updateFrom(micro)
-            self.assertEqual(micro.voltage.get(),160.0)
-
-
-class TestPostgreSqlDb(unittest.TestCase):
-    database=None
-    mapper=None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.setupDatabase()
-
-
-    @classmethod
-    def getScipionHome(self):
-        if "SCIPION_HOME" not in os.environ:
-            raise Exception("SCIPION_HOME is not defined as environment variable")
-        return os.environ["SCIPION_HOME"]
-
-    @classmethod
-    def  setupDatabase(cls):
-        try:
-            dbconfig= os.path.join(cls.getScipionHome() , "postgresql.xml")
-            if os.path.isfile(dbconfig):
-                cls.database= postgresql.PostgresqlDb()
-                cls.database.connectUsing(dbconfig)
-            else:
-                print "Config file %s not found" % dbconfig
-                return None
-        except Exception as e:
-            print str(e)
-
-
-
-    def getMapper(self):
-        if self.mapper == None and TestPostgreSqlDb.database != None :
-            try:
-                self.mapper = postgresql.PostgresqlMapper("",database=TestPostgreSqlDb.database)
-            except Exception as e:
-                print str(e)
-        return self.mapper
-
-
-
-    def getLastId(self):
-        return TestPostgreSqlDb.database.lastId()
-
-
-    def test_createTables(self):
-        db=TestPostgreSqlDb.database
-        if db != None:
-            db.createTables()
-
-
-    def insertAcquisition(self):
-        mapper=self.getMapper()
-        if mapper != None:
-            micro=Acquisition()
-            micro.voltage=Float(200.0)
-            parentId=mapper.insert(micro)
-            mapper.commit()
-            object = mapper.selectById(parentId)
-            return parentId
-
-
-
-    def insertInteger(self,intValue=22):
-       mapper=self.getMapper()
-       if mapper != None:
-           i = Integer(intValue)
-           objectId=mapper.insert(i)
-           object = mapper.selectById(objectId)
-           return objectId
-
-    def test_insertObject(self):
-        # the method is tested in mapper.insert test
-        pass
-
-
-
-    def allChildrenBelongToParent(self,childrenList,parentId):
-            return reduce(lambda x,y:  x and y, map(lambda rowDict: parentId in rowDict.values(), childrenList))
-
-
-    def test_selectObjectById(self):
-        # the method is tested in insertInteger
-        pass
-
-
-
-    def test_selectObjectsByParent(self):
-        if TestPostgreSqlDb.database != None:
-            parentId=self.insertAcquisition()
-            childrenList=TestPostgreSqlDb.database.selectObjectsByParent(parentId)
-            self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
-
-
-    def test_selectObjectsByAncestor(self):
-        if TestPostgreSqlDb.database != None:        
-            parentId=self.insertAcquisition()
-            childrenList=TestPostgreSqlDb.database.selectObjectsByAncestor(str(parentId))
-            self.assertTrue(self.allChildrenBelongToParent(childrenList,parentId))
-
-        
-
-    def test_selectBy(self):
-        if TestPostgreSqlDb.database != None:
-            id=self.insertInteger(33)
-            objects=TestPostgreSqlDb.database.selectObjectsBy(id= id, value="33")
-            self.assertEqual(len(objects),1)
-
-
-    def test_selectWhere(self):
-        if TestPostgreSqlDb.database != None:
-            id=self.insertInteger(44)
-            objects=TestPostgreSqlDb.database.selectObjectsWhere("id= %s AND value='%d'" %(id,44))
-            self.assertEqual(len(objects),1)
-
-
-
-    def test_deleteObject(self):
-        if TestPostgreSqlDb.database != None:
-            id=self.insertInteger(24)
-            print "Deleting %s" % str(id)
-            TestPostgreSqlDb.database.deleteObject(id)
-            row = TestPostgreSqlDb.database.selectObjectById(id)
-            self.assertIsNone(row)
-
-
-
-    def test_deleteChildObjects(self):
-          if TestPostgreSqlDb.database != None:
-            id=self.insertAcquisition()
-            print str(id)
-            TestPostgreSqlDb.database.deleteChildObjects(str(id))
-            obj_list=TestPostgreSqlDb.database.selectObjectsByParent(id)
-            self.assertEqual(len(obj_list),0)
-
-
-    # This test is dangerous if run against a production DB ;-)
-    # Hence, if you really want to run it, add "test_" to the function name
-    def DeleteAll(self):
-        if TestPostgreSqlDb.database != None:
-            print "DELETING ALL..."
-            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
-            print "Before: %d" % len(allObjects)
-            TestPostgreSqlDb.database.deleteAll()
-            allObjects= TestPostgreSqlDb.database.selectObjectsWhere(None)
-            self.assertEqual(len(allObjects),0)
-
-
-    def test_updateObject(self):
-        if TestPostgreSqlDb.database != None:
-            mapper=self.getMapper()
-            if mapper != None:
-                i = Integer(66)
-                objectId=mapper.insert(i)
-                TestPostgreSqlDb.database.updateObject(objectId, i.getName(), i.getClassName(), 67, i.getAttributeValue("parent_id"))
-                object = mapper.selectById(objectId)
-                self.assertTrue(object.get() == 67)
-
-
+from pyworkflow.mapper.sqlite import SqliteFlatMapper
 
 
 
@@ -293,14 +43,29 @@ class TestSqliteMapper(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('model')  
-        cls.modelGoldSqlite = cls.dataset.getFile( 'modelGoldSqlite')
+        cls.modelGoldSqlite = cls.dataset.getFile('modelGoldSqlite')
 
-
+    def test_SqliteDb(self):
+        """ Test the SqliteDb class that is used by the sqlite mappers. """
+        from pyworkflow.mapper.sqlite_db import SqliteDb
+        db = SqliteDb()
+        db._createConnection(self.modelGoldSqlite, timeout=1000)
+        
+        tables = ['Objects', 'Relations']
+        self.assertEqual(tables, db.getTables())
+        
+        db.close()
+        
     def test_SqliteMapper(self):
         fn = self.getOutputPath("basic.sqlite")
+        fnGold = self.modelGoldSqlite
+        
+        print ">>> Using db: ", fn
+        print "        gold: ", fnGold
+
         mapper = SqliteMapper(fn)
         # Insert a Complex
-        c = Complex.createComplex()
+        c = Complex.createComplex() # real = 1, imag = 1
         mapper.insert(c)
         # Insert an Integer
         i = Integer(1)
@@ -315,12 +80,33 @@ class TestSqliteMapper(BaseTest):
         p.set(c)
         mapper.insert(p)
         
-        
-        # Store list
+        # Store csv list
         strList = ['1', '2', '3']
         csv = CsvList()
         csv += strList
         mapper.insert(csv)
+        
+        # Test normal List
+        iList = List()
+        mapper.insert(iList) # Insert the list when empty        
+        
+        i1 = Integer(4)
+        i2 = Integer(3)
+        iList.append(i1)
+        iList.append(i2)
+        
+        mapper.update(iList) # now update with some items inside
+        
+        pList = PointerList()
+        p1 = Pointer()
+        p1.set(b)
+        p2 = Pointer()
+        p2.set(b2)
+        pList.append(p1)
+        pList.append(p2)
+        
+        mapper.store(pList)
+        
 
         # Test to add relations
         relName = 'testRelation'
@@ -335,44 +121,31 @@ class TestSqliteMapper(BaseTest):
         mapper.commit()
 
         # Reading test
-        fnGold = self.modelGoldSqlite
         mapper2 = SqliteMapper(fnGold, globals())
-        
+
         l = mapper2.selectByClass('Integer')[0]
         self.assertEqual(l.get(), 1)
-        
+
         c2 = mapper2.selectByClass('Complex')[0]
         self.assertTrue(c.equalAttributes(c2))
         
         b = mapper2.selectByClass('Boolean')[0]
         self.assertTrue(not b.get())
-        
+
         p = mapper2.selectByClass('Pointer')[0]
         self.assertEqual(c, p.get())
         
         csv2 = mapper2.selectByClass('CsvList')[0]
         self.assertTrue(list.__eq__(csv2, strList))
         
-        # Update a CsvList
-#        lc = ListContainer()
-#        mapper.store(lc)
-#        mapper.commit()
-#        
-#        lc.csv.append('4')
-#        lc.csv.append('3')
-#        mapper.store(lc)
-#        mapper.commit()
-#        
-#        mapper3 = SqliteMapper(fn, globals())
-#        lc3 = mapper3.selectByClass('ListContainer')[0]
-#        print 'csv3: ', lc3.csv
-        
         # Iterate over all objects
         allObj = mapper2.selectAll()
         iterAllObj = mapper2.selectAll(iterate=True)
-        
+
         for a1, a2 in zip(allObj, iterAllObj):
-            self.assertEqual(a1, a2)
+            # Note compare the scalar objects, which have a well-defined comparison
+            if isinstance(a1, Scalar):
+                self.assertEqual(a1, a2)
             
         # Test relations
         childs = mapper2.getRelationChilds(relName, i)
@@ -384,6 +157,54 @@ class TestSqliteMapper(BaseTest):
         relations = mapper2.getRelationsByCreator(creator)
         for row in relations:
             print row
+        
+        
+class TestSqliteFlatMapper(BaseTest):
+    """ Some tests for DataSet implementation. """
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.modelGoldSqlite = cls.dataset.getFile( 'micsGoldSqlite')
+        
+    def test_SqliteFlatDb(self):
+        """ Create a SqliteDataset """
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        print ">>> test_SqliteFlatDb: dbName = '%s'" % self.modelGoldSqlite
+        db = SqliteFlatDb(self.modelGoldSqlite)
+        # Test the 'self' class name is correctly retrieved
+        self.assertEqual('Micrograph', db.getSelfClassName())        
+        db.close()
+        
+    def test_insertObjects(self):
+        dbName = self.getOutputPath('images.sqlite')
+        print ">>> test_insertObjects: dbName = '%s'" % dbName
+        mapper = SqliteFlatMapper(dbName, globals())
+        n = 10
+        
+        for i in range(n):
+            img = Image()
+            img.setLocation(i+1, 'images.stk')
+            mapper.store(img)
+            
+        mapper.setProperty('samplingRate', '3.0')
+        mapper.setProperty('defocusU', 1000)
+        mapper.setProperty('defocusV', 1000)
+        mapper.setProperty('defocusU', 2000) # Test update a property value
+        mapper.deleteProperty('defocusV') # Test delete a property
+        mapper.commit()
+        mapper.close()
+        
+        # Test that values where stored properly
+        mapper2 = SqliteFlatMapper(dbName, globals())
+        
+        self.assertTrue(mapper2.hasProperty('samplingRate'))
+        self.assertTrue(mapper2.hasProperty('defocusU'))
+        self.assertFalse(mapper2.hasProperty('defocusV'))
+        
+        self.assertEqual(mapper2.getProperty('samplingRate'), '3.0')
+        self.assertEqual(mapper2.getProperty('defocusU'), '2000')
         
         
 class TestXmlMapper(BaseTest):
@@ -409,48 +230,6 @@ class TestXmlMapper(BaseTest):
         c2 = mapper2.selectFirst()
         self.assertEquals(c.imag.get(), c2.imag.get())
         
-#    def test_zStep(self):
-#        fn = self.getTmpPath(self.sqliteFile)
-#        s = MyStep()
-#        s.x.set(7)
-#        s.y.set(3.0)
-#        s.status = "KKK"
-#        mapper = SqliteMapper(fn, globals())
-#        mapper.insert(s)
-#        #write file
-#        mapper.commit()
-#        
-#        s2 = mapper.selectByClass('MyStep')[0]
-#        self.assertTrue(s.equalAttributes(s2))
-        
-#    def test_List(self):
-#        """Test the list with several Complex"""
-#        n = 10
-#        l1 = List()
-#        for i in range(n):
-#            c = Complex(3., 3.)
-#            l1.append(c)
-#        fn = self.getTmpPath(self.sqliteFile)        
-#        mapper = SqliteMapper(fn, globals())
-#        mapper.store(l1)
-#        mapper.commit()
-#        
-#        mapper2 = XmlMapper('kk.xml', globals())
-#        mapper2.setClassTag('Complex.Float', 'attribute')
-#        mapper2.setClassTag('List.ALL', 'class_name')
-#        mapper2.setClassTag('MyStep.ALL', 'attribute')
-#        mapper2.setClassTag('MyStep.Boolean', 'name_only')
-#        step = MyStep()
-#        step.b.set('false')
-#        step.status = "running"
-#        step.inittime = "now"
-#        l1.append(step)
-#        mapper2.insert(l1)
-#        mapper2.commit()
-#        
-#        mapper3 = SqliteMapper('kk.sqlite', globals())
-#        mapper3.insert(l1)
-#        mapper3.commit()
 
 class TestDataSet(BaseTest):
     """ Some tests for DataSet implementation. """
@@ -458,6 +237,8 @@ class TestDataSet(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.modelGoldSqlite = cls.dataset.getFile( 'micsGoldSqlite')
         
     def test_Table(self):
         table = ds.Table(ds.Column('x', int, 5),
@@ -481,27 +262,4 @@ class TestDataSet(BaseTest):
         row = table.getRow(1)
         print row
         self.assertEqual(row.name, 'pepe', "Error updating name in row")
-
-        print "Table:"
-        print table
-
-#    def test_XmippDataSet(self):
-#        """ Create a table from a metadata. """
-#        from pyworkflow.em.packages.xmipp3 import XmippDataSet
-#        import xmipp
-#        mdPath = getInputPath('showj', 'tux_vol.xmd')
-#
-#        xds = XmippDataSet(mdPath)
-#        
-#        tableNames = xds.listTables()
-#        print '\ntables: ', tableNames
-#        
-#        tn = tableNames[0]
-#        
-#        table = xds.getTable(tn)
-#        
-#        print "\nTable '%s':" % tn
-#        print table
-#        
-#        md = xds._convertTableToMd(table)
-#        print md
+        

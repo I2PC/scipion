@@ -43,7 +43,7 @@ class TestXmippBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = ProtImportParticles(pattern=pattern, samplingRate=samplingRate, checkStack=checkStack)
-        cls.proj.launchProtocol(cls.protImport, wait=True)
+        cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
@@ -101,6 +101,16 @@ class TestXmippCropResizeParticles(TestXmippBase):
         self.proj.launchProtocol(protCropResize, wait=True)
         
         self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
+    
+    def test_crpResizePart2(self):
+        print "Run crop/resize particles v2"
+        protCropResize = XmippProtCropResizeParticles(doResize=True, resizeOption=3, factor=0.5, doWindow=True,
+                                                      windowOperation=1, windowSize=256)
+        protCropResize.inputParticles.set(self.protImport.outputParticles)
+        self.proj.launchProtocol(protCropResize, wait=True)
+        
+        self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop v2 the particles")
+
 
 
 class TestXmippML2D(TestXmippBase):

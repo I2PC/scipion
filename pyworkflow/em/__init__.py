@@ -31,6 +31,7 @@ import os
 import pyworkflow as pw
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
+from data_tiltpairs import *
 from protocol import *
 from constants import *
 from convert import *
@@ -38,6 +39,7 @@ from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 from viewer import *
 from pprint import pprint
+import transformations
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
@@ -91,19 +93,27 @@ def findViewers(className, environment):
                     break
     return viewers
 
+
+#TODO: If we divide the way to find wizards for web
+# and desktop, the environment is no longer needed
+def findWizardsFromDict(protocol, environment, wizDict):
+    wizards = {}
+    baseClasses = [cls.__name__ for cls in protocol.getClass().mro()]
+    
+    for wiz in wizDict.values():
+        if environment in wiz._environments:
+            for cls, params in wiz._targets:
+                if cls.__name__ in baseClasses:
+                    for p in params:
+                        wizards[p] = wiz
+    return wizards
+
+    
 def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
-    wizards = {}
-    baseClasses = protocol.getClass().mro()
-    for wiz in emWizardsDict.values():
-        if environment in wiz._environments:
-            for cls, params in wiz._targets:
-                if cls in baseClasses:
-                    for p in params:
-                        wizards[p] = wiz
-    return wizards
+    return findWizardsFromDict(protocol, environment, emWizardsDict)
 
 # Update global dictionary with variables found
 globals().update(emProtocolsDict)

@@ -34,7 +34,11 @@ from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
-    """Protocol to refine a 3D map using Relion. 
+    """Protocol to refine a 3D map using Relion. Relion employs an empirical
+Bayesian approach to refinement of (multiple) 3D reconstructions
+or 2D class averages in electron cryo-microscopy (cryo-EM). Many
+parameters of a statistical model are learned from the data,which
+leads to objective and high-quality results.
     """    
     _label = '3D refine'
     IS_CLASSIFY = False

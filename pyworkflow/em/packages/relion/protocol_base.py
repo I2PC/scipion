@@ -27,12 +27,12 @@
 This module contains the protocol base class for Relion protocols
 """
 
-import xmipp
-from pyworkflow.protocol.params import BooleanParam, PointerParam, IntParam
-from pyworkflow.utils import environAdd
+from pyworkflow.utils import environAdd, moveFile, cleanPattern
 from pyworkflow.em import *
+
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages
+from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels
+
 
 
 class ProtRelionBase(EMProtocol):
@@ -47,6 +47,7 @@ class ProtRelionBase(EMProtocol):
     _label = '2d classify'
     IS_CLASSIFY = True
     IS_2D = False
+    OUTPUT_TYPE = SetOfClasses3D
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
     CLASS_LABEL = xmipp.MDL_REF
     CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
@@ -75,7 +76,7 @@ class ProtRelionBase(EMProtocol):
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
-                  'classes_xmipp': self.extraIter + 'classes_xmipp.star',
+                  'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
@@ -91,7 +92,7 @@ class ProtRelionBase(EMProtocol):
             myDict['%smodel' % p] = self.extraIter + '%smodel.star' % p
             myDict['%svolume' % p] = self.extraIter + p + 'class%(ref3d)03d.mrc:mrc'
 
-        self._fnDict = myDict
+        self._updateFilenamesDict(myDict)
     
     def _createIterTemplates(self):
         """ Setup the regex on how to find iterations. """
@@ -442,28 +443,29 @@ class ProtRelionBase(EMProtocol):
         If the input particles comes from Relion, just link the file. 
         """
         imgSet = self.inputParticles.get()
-        imgsStar = getattr(imgSet, '_relionStar', None)
+        imgStar = self._getFileName('input_star')
+        imgFn = self._getFileName('input_mrcs')
         Xdim = imgSet.getDimensions()[0]
         
-        createRelionInputParticles(imgSet, self._getFileName('input_star'),
-                                   self._getFileName('input_mrcs'))
+        createRelionInputParticles(imgSet, imgStar, imgFn)
         
-        if imgsStar is None and self.doNormalize.get():
-            
+        if self.doNormalize:
+            # Enter here to generate the star file or to normalize the images
             self._loadEnvironment()
-            self._enterDir(self._getTmpPath())
-            imgFn = os.path.relpath(self._getFileName('input_mrcs'), self._getTmpPath())
-            outFn = removeBaseExt(basename(imgFn))
+            self._enterDir(self._getPath())
+            imgFn = os.path.relpath(imgFn, self._getPath())
             radius = self.backRadius.get()
             if radius <= 0:
                 radius = Xdim / 2
-            params = '--operate_on %(imgFn)s --norm True --bg_radius %(radius)s --o %(outFn)s'
+            params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
             self.runJob(self._getProgram('relion_preprocess'), params % locals())
             
-            moveFile(basename(imgFn), imgFn)
+            outFn = 'particles.mrcs'
+            outStar = 'particles.star'
+            
+            moveFile(outFn, imgFn)
+            cleanPattern(outStar)
             self._leaveDir()
-        else:
-            pass # Do nothing if imgsStar is not None or doNormalize is set False
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
@@ -533,10 +535,6 @@ class ProtRelionBase(EMProtocol):
         environAdd('LD_LIBRARY_PATH', RELION_LIB)
         environAdd('LD_LIBRARY_PATH', RELION_LIB64)
     
-    def _getFileName(self, key, **args):
-        """ Retrieve a filename from the templates. """
-        return self._fnDict[key] % args
-    
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
         result = None
@@ -559,11 +557,11 @@ class ProtRelionBase(EMProtocol):
         If the file doesn't exists, it will be created. 
         """
         data_star = self._getFileName('data', iter=it)
-        data_classes = self._getFileName('classes_xmipp', iter=it)
+        data_classes = self._getFileName('classes_scipion', iter=it)
         
         if not exists(data_classes):
-            createClassesFromImages(data_star, data_classes, it, 
-                                    self.CLASS_LABEL, self.ClassFnTemplate)
+            createClassesFromImages(self.inputParticles.get(), data_star, data_classes, 
+                                    self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
     def _getIterSortedData(self, it):
@@ -590,7 +588,6 @@ class ProtRelionBase(EMProtocol):
     
     def _writeIterAngularDist(self, it):
         """ Write the angular distribution. Should be overriden in subclasses. """
-        from convert import addRelionLabels, restoreXmippLabels
         addRelionLabels()
         
         data_star = self._getFileName('data', iter=it)

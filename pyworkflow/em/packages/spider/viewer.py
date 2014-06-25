@@ -29,10 +29,12 @@ visualization program.
 """
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.em.viewer import DataView
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
+
 from spider import PcaFile
-from protocol_custommask import SpiderProtCustomMask
+from protocol.protocol_custommask import SpiderProtCustomMask
+
 
     
 class SpiderViewer(XmippViewer):

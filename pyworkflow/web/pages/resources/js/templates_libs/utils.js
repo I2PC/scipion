@@ -33,6 +33,9 @@
  * 
  * METHODS LIST:
  * 
+ * function detectWebBrowser()
+ * 	->	Function to detect the web browser used in the navigation.
+ * 
  * function popup(URL)
  * 	-> Launch a basic popup (600x500) opening the URL passed by argument.
  * 
@@ -90,6 +93,39 @@
 function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
 }
+
+
+function detectWebBrowser(){
+	/*
+	 * Function to detect the web browser used in the navigation.
+	 */
+	
+	var res = ""
+
+	if(!!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0){
+	    // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
+		res = "opera";
+	}
+	else if(typeof InstallTrigger !== 'undefined'){
+		// Firefox 1.0+
+		res = "firefox";
+	}
+	else if(Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0){
+		// At least Safari 3+: "[object HTMLElementConstructor]"
+		res = "safari"; 
+	}
+	else if(!!window.chrome && !isOpera){
+		// Chrome 1+
+		res = "chrome";
+	}
+	else if(/*@cc_on!@*/false || !!document.documentMode){
+		// At least IE6
+		res = "ie";
+	}
+	
+	return res;
+}
+
 
 function popup(URL) {
 	/*
@@ -265,7 +301,7 @@ function warningPopup(title, msgText, funcName){
 	 * It is used to show any warning message
 	 */
 	
-	//HTML to be used in the warning popup
+	// HTML to be used in the warning popup
 	msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
 		+ "</td><td>"+ msgText +"</td></tr></table>"
 
@@ -309,12 +345,45 @@ function errorPopup(title, msgText){
 	});
 }
 
+function listToString(list){
+	var res = "";
+	
+	for (var x=0;x<list.length;x++){
+		var elm = list[x];
+		if(res.length == 0){
+			res += elm;
+		} else{
+			res += "," + elm;
+		}
+	}
+	
+	if(res.length == 0){
+		res="None";
+	}
+	
+	return res;
+}
+
 function isNaturalNumber(n) {
     n = n.toString(); // force the value incase it is not
     var n1 = Math.abs(n),
         n2 = parseInt(n, 10);
     
     return !isNaN(n1) && n2 === n1 && n1.toString() === n && n2>0;
+}
+
+
+function processObjParam(id, title_label, title_comment,
+                      msg_comment, typeObj) {
+	
+	// New values
+	var value_label = $("input#runName").val();
+	var value_comment= $("input#comment").val();
+		
+	editObjParam(id, title_label, value_label, 
+	    title_comment, value_comment,
+	    msg_comment, typeObj);
+
 }
 
 function editObjParam(id, title_label, value_label, 
@@ -324,13 +393,8 @@ function editObjParam(id, title_label, value_label,
 	 * Launch a messi popup with an input and textarea to edit the label and comment
 	 * for an object.
 	 */
-
-	if(value_comment == ""){
-		value_comment = msg_comment;
-	}
 	
-//	alert(value_comment)
-
+	// Create the form table to edit label and comment
 	var html = "<table id='params' data-type='"+ typeObj +"'value='"+ id +"'>" + 
 		 	"<tr>" +
 		 	"<td>" +"<h3>"+ title_label +"</h3>" +"</td>" +
@@ -342,8 +406,9 @@ function editObjParam(id, title_label, value_label,
 			"</tr>"+
 			"</table>"
 	
-	// &#013;&#010;
+	// Some replaces to note up: &#013;&#010;
 	
+	// Launch the form with messi.js to start the edition
 	new Messi(html, {
 		title : 'Object Editor',
 		modal : true,
@@ -362,46 +427,48 @@ function editObjParam(id, title_label, value_label,
 	});
 }
 
+
 function updateLabelComment(){
 	/*
 	 * Method to store the label and comment for an object.
 	 */
-	var elm_table = $("table#params")
-	var id = elm_table.attr('value')
-	var typeObj = elm_table.attr('data-type')
-	var value_label = $("input#label_new").val()
-	var value_comment= $("textarea#comment_new").val()
+	var elm_table = $("table#params");
+	var id = elm_table.attr('value');
+	var typeObj = elm_table.attr('data-type');
 	
-	url_param = "/set_attributes/?" +
-		"id=" + id + 
-		"&label=" + value_label + 
-		"&comment=" + value_comment +
-		"&typeObj=" + typeObj
+	// New values
+	var value_label = $("input#label_new").val();
+	var value_comment= $("textarea#comment_new").val();
 		
 	if (id == 'new'){
-		var className = $("input#protocolClass").val()
-		url_param += "&className=" + className
-	}
+		// Return the new values to the source form
+		returnLabelComment(value_label, value_comment);
 		
-	$.ajax({
-		type : "GET",
-		url : encodeURI(url_param),
-		dataType: "text",
-		success : function(txt) {
-			if(txt=='reload'){
-				window.location.reload()
-			} else {
-				infoPopup('Success', 
-					"The protocol was saved successfuly",
-					1,
-					'window.opener.popup(\'/form/?protocolId='+txt+'\')');
+	} else {
+		var url_param = "/set_attributes/?" +
+			"id=" + id + 
+			"&label=" + value_label + 
+			"&comment=" + value_comment 
+			
+		$.ajax({
+			type : "GET",
+			url : encodeURI(url_param),
+			async: false,
+			success : function() {
+				// Return the new values to the source form
+				returnLabelComment(value_label, value_comment);
 			}
-		},
-		error: function(){
-			alert("Fallo")
-		}
-	});
+		});
+		
+	}
 }
+
+function returnLabelComment(label, comment){
+	// Return the new values to the source form
+	$("input#runName").val(label);
+	$("input#comment").val(comment);
+}
+
 
 function replaceAll(find, replace, str) {
 	return str.replace(new RegExp(find, 'g'), replace);

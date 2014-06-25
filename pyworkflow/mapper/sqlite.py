@@ -24,9 +24,10 @@
 # *
 # **************************************************************************
 
-from collections import OrderedDict
-from pyworkflow.utils.path import replaceExt, joinExt, exists
+from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
+from sqlite_db import SqliteDb
+
 
 
 class SqliteMapper(Mapper):
@@ -36,7 +37,7 @@ class SqliteMapper(Mapper):
         self.__initObjDict()
         self.__initUpdateDict()
         try:
-            self.db = SqliteDb(dbName)
+            self.db = SqliteObjectsDb(dbName)
         except Exception, ex:
             raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
@@ -44,26 +45,20 @@ class SqliteMapper(Mapper):
         self.db.commit()
         
     def __getObjectValue(self, obj):
-#        print "Inserting db", obj._objName, obj.getClassName(), obj.getObjValue()
+        """ Get the value of the object to be stored.
+        We need to handle the special case of pointer, where we should
+        store as value the object id of the pointed object.
+        """
+        value = obj.getObjValue()
+
         if obj.isPointer() and obj.hasValue():
-            if obj.get().hasObjId(): # Check the object has been stored previously
-                return obj.get().strId() # For pointers store the id of referenced object
+            if value.hasObjId(): # Check the object has been stored previously
+                value = value.strId() # For pointers store the id of referenced object
             else:
                 self.updatePendingPointers.append(obj)
-                return "Pending update" 
-#        elif obj.isMultiPointer() and obj.hasValue():
-#            idList=[]
-#            print "objget", obj.get()
-#            for item in obj.get():
-#                print "type", type(item)
-#                print "item",item
-#                print "get",item.get()
-#                print "id", item.get().strId()
-#                idList.append(item.get().strId())
-#                
-#            return ";".join(idList)    
+                value = "Pending update" 
             
-        return obj.getObjValue()
+        return value
         
     def __insert(self, obj, namePrefix=None):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
@@ -81,11 +76,17 @@ class SqliteMapper(Mapper):
         self.__insert(obj)
         
     def insertChild(self, obj, key, attr, namePrefix=None):
-        if namePrefix is None:
-            namePrefix = self.__getNamePrefix(obj)
-        attr._objName = joinExt(namePrefix, key)
-        attr._objParentId = obj._objId
-        self.__insert(attr, namePrefix)
+        try:
+            if namePrefix is None:
+                namePrefix = self.__getNamePrefix(obj)
+            attr._objName = joinExt(namePrefix, key)
+            attr._objParentId = obj._objId
+            self.__insert(attr, namePrefix)
+        except Exception, ex:
+            print ">>> ERROR::insertChild"
+            print "    obj: ", obj
+            print "    key: ", key#, "attr: ", attr
+            raise ex
         
     def insertChilds(self, obj, namePrefix=None):
         """ Insert childs of an object, if namePrefix is None,
@@ -180,6 +181,7 @@ class SqliteMapper(Mapper):
         obj._objName = self._getStrValue(objRow['name'])
         obj._objLabel = self._getStrValue(objRow['label'])
         obj._objComment = self._getStrValue(objRow['comment'])
+        obj._objCreation = self._getStrValue(objRow['creation'])
         objValue = objRow['value']
         obj._objParentId = objRow['parent_id']
         
@@ -323,19 +325,19 @@ class SqliteMapper(Mapper):
         """ Return all relations stored of a given type. """
         return self.db.selectRelationsByName(relationName)
 
-    def deleteRelations(self, relationType):
+    def deleteRelations(self, creatorObj):
         """ Delete all relations created by object creatorObj """
-        pass
+        self.db.deleteRelationsByCreator(creatorObj.getObjId())
     
     def insertRelationData(self, relName, creatorId, parentId, childId):
         self.db.insertRelation(relName, creatorId, parentId, childId)
     
     
-class SqliteDb():
+class SqliteObjectsDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
-    SELECT = "SELECT id, parent_id, name, classname, value, label, comment FROM Objects WHERE "
+    SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
@@ -345,24 +347,10 @@ class SqliteDb():
         return self.SELECT + whereStr + orderByStr
     
     def __init__(self, dbName, timeout=1000):
-        self.__createConnection(dbName, timeout)
+        SqliteDb.__init__(self)
+        self._createConnection(dbName, timeout)
         self.__createTables()
 
-    def __createConnection(self, dbName, timeout):
-        """Establish db connection"""
-        from sqlite3 import dbapi2 as sqlite
-        self.connection = sqlite.Connection(dbName, timeout, check_same_thread = False)
-        self.connection.row_factory = sqlite.Row
-        self.cursor = self.connection.cursor()
-        # Define some shortcuts functions
-        self.executeCommand = self.cursor.execute
-        #self.executeCommand = self.__debugExecute
-        self.commit = self.connection.commit
-        
-    def __debugExecute(self, *args):
-        print args
-        self.cursor.execute(*args)
-        
     def __createTables(self):
         """Create required tables if don't exists"""
         # Enable foreings keys
@@ -375,7 +363,8 @@ class SqliteDb():
                       classname TEXT,                -- object's class name
                       value     TEXT DEFAULT NULL,   -- object value, used for Scalars
                       label     TEXT DEFAULT NULL,   -- object label, text used for display
-                      comment   TEXT DEFAULT NULL    -- object comment, text used for annotations
+                      comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
+                      creation  DATE                 -- creation date and time of the object
                       )""")
         # Create the Relations table
         self.executeCommand("""CREATE TABLE IF NOT EXISTS Relations
@@ -387,24 +376,25 @@ class SqliteDb():
                       label     TEXT DEFAULT NULL,  -- relation label, text used for display
                       comment   TEXT DEFAULT NULL,  -- relation comment, text used for annotations
                       object_parent_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
-                      object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE 
+                      object_child_id  INTEGER REFERENCES Objects(id) ON DELETE CASCADE,
+                      creation  DATE                 -- creation date and time of the object
                       )""")
         self.commit()
         
     def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
         try:
-            self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)",
+            self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
                                 (parent_id, name, classname, value, label, comment))
             return self.cursor.lastrowid
         except Exception, ex:
             print "insertObject: ERROR "
-            print "INSERT INTO Objects (parent_id, name, classname, value, label, comment) VALUES (?, ?, ?, ?, ?, ?)", (parent_id, name, classname, value, label, comment)
+            print "INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))", (parent_id, name, classname, value, label, comment)
             raise ex
         
     def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, **args):
         """Execute command to insert a new object. Return the inserted object id"""
-        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id) VALUES (?, ?, ?, ?)",
+        self.executeCommand("INSERT INTO Relations (parent_id, name, object_parent_id, object_child_id, creation) VALUES (?, ?, ?, ?, datetime('now'))",
                             (parent_id, relName, object_parent_id, object_child_id))
         return self.cursor.lastrowid
     
@@ -415,7 +405,7 @@ class SqliteDb():
     
     def updateObject(self, objId, name, classname, value, parent_id, label, comment):
         """Update object data """
-        self.executeCommand("UPDATE Objects SET parent_id=?, name=?,classname=?, value=?, label=?, comment=? WHERE id=?",
+        self.executeCommand("UPDATE Objects SET parent_id=?, name=?, classname=?, value=?, label=?, comment=? WHERE id=?",
                             (parent_id, name, classname, value, label, comment, objId))
         
     def selectObjectById(self, objId):
@@ -423,20 +413,6 @@ class SqliteDb():
         self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
     
-    def _iterResults(self):
-        row = self.cursor.fetchone()
-        while row is not None:
-            yield row
-            row = self.cursor.fetchone()
-        
-    def _results(self, iterate=False):
-        """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
-        if not iterate:
-            return self.cursor.fetchall()
-        else:
-            return self._iterResults()
-        
     def selectObjectsByParent(self, parent_id=None, iterate=False):
         """Select object with a given parent
         if the parent_id is None, all object with parent_id NULL
@@ -463,7 +439,7 @@ class SqliteDb():
     
     def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
-        return self._results(iterate)   
+        return self._results(iterate)
     
     def deleteObject(self, objId):
         """Delete an existing object"""
@@ -517,14 +493,21 @@ class SqliteFlatMapper(Mapper):
     def commit(self):
         self.db.commit()
         
+    def close(self):
+        self.db.close()
+        
     def insert(self, obj):
         if self.doCreateTables:
-            self.db.createTables(obj.getObjDict(True))
+            self.db.createTables(obj.getObjDict(includeClass=True))
             self.doCreateTables = False
         """Insert a new object into the system, the id will be set"""
-        self.db.insertObject(obj.getObjId(), obj.getObjLabel(), obj.getObjComment(), 
+        self.db.insertObject(obj.getObjId(), obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), 
                              *obj.getObjDict().values())
         
+    def clear(self):
+        self.db.clear()
+        self.doCreateTables = True
+    
     def deleteAll(self):
         """ Delete all objects stored """
         self.db.deleteAll()
@@ -534,7 +517,12 @@ class SqliteFlatMapper(Mapper):
         self.db.deleteObject(obj.getObjId())
     
     def updateTo(self, obj, level=1):
-        pass
+        """ Update database entry with new object values. """ 
+        if self.db.INSERT_OBJECT is None:
+            self.db.setupCommands(obj.getObjDict(includeClass=True))
+        args = list(obj.getObjDict().values())
+        args.append(obj.getObjId())
+        self.db.updateObject(obj.isEnabled(), obj.getObjLabel(), obj.getObjComment(), *args)
             
     def selectById(self, objId):
         """Build the object which id is objId"""
@@ -544,7 +532,6 @@ class SqliteFlatMapper(Mapper):
         else:
             obj = self.__objFromRow(objRow)
         return obj
-
 
     def __loadObjDict(self):
         """ Load object properties and classes from db. """
@@ -557,7 +544,7 @@ class SqliteFlatMapper(Mapper):
         for r in rows:
             label = r['label_property']
 
-            if label == 'self':
+            if label == SELF:
                 self._objClassName = r['class_name']
                 self._objTemplate = self._buildObject(self._objClassName)
             else:
@@ -576,8 +563,9 @@ class SqliteFlatMapper(Mapper):
                         setattr(o, a, attr)
                     o = attr
                     attrJoin += '.'
-        n = len(rows) + 2
-        self._objColumns = zip(range(3, n), columnList)  
+        basicRows = 5
+        n = len(rows) + basicRows - 1
+        self._objColumns = zip(range(basicRows, n), columnList)
          
     def __buildAndFillObj(self):
         obj = self._buildObject(self._objClassName)
@@ -593,19 +581,25 @@ class SqliteFlatMapper(Mapper):
         return obj
         
     def __objFromRow(self, objRow):
+        if self._objTemplate is None:
+            self.__loadObjDict()
+            
         obj = self._objTemplate #self.__buildAndFillObj()
         obj.setObjId(objRow['id'])
         obj.setObjLabel(self._getStrValue(objRow['label']))
         obj.setObjComment(self._getStrValue(objRow['comment']))
         
+        try:
+            obj.setEnabled(objRow['enabled'])
+            obj.setObjCreation(self._getStrValue(objRow['creation']))
+        except Exception:
+            # THIS SHOULD NOT HAPPENS
+            print "WARNING: 'creation' column not found in object: %s" % obj.getObjId()
+            print "         db: %s" % self.db.getDbName()
+            print "         objRow: ", dict(objRow)
+        
         for c, attrName in self._objColumns:
-            if attrName == '_mapperPath':
-                #FIXME: this is a really dirty-dirty fix in order to 
-                # continue with Ward protocol before fixing this bug
-                obj._mapperPath.trace(obj.load)
-                obj._mapperPath.set(objRow[c])
-            else:
-                obj.setAttributeValue(attrName, objRow[c])
+            obj.setAttributeValue(attrName, objRow[c])
 
         return obj
         
@@ -632,8 +626,7 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None):
-        
+    def selectAll(self, iterate=True, objectFilter=None):        
         if self._objTemplate is None:
             self.__loadObjDict()
         objRows = self.db.selectAll()
@@ -644,9 +637,25 @@ class SqliteFlatMapper(Mapper):
         """Return a list of objects, given a list of id's
         """
         return [self.selectById(rowId['id']) for rowId in objIds]
+    
+
+    def hasProperty(self, key):
+        return self.db.hasProperty(key)
+        
+    def getProperty(self, key, defaultValue=None):
+        return self.db.getProperty(key, defaultValue)
+        
+    def setProperty(self, key, value):
+        return self.db.setProperty(key, value)
+    
+    def deleteProperty(self, key):
+        return self.db.deleteProperty(key)
+        
         
 
-class SqliteFlatDb():
+SELF = 'self'
+
+class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
     
@@ -654,19 +663,56 @@ class SqliteFlatDb():
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
                  }
-    OPEN_CONNECTIONS = {}
     
-    def __init__(self, dbName, tablePrefix, timeout=1000):
+    def __init__(self, dbName, tablePrefix='', timeout=1000):
+        SqliteDb.__init__(self)
+        self._reuseConnections = True
         tablePrefix = tablePrefix.strip()
         if tablePrefix: # Avoid having _ for empty prefix
-            tablePrefix += '_' 
+            tablePrefix += '_'
         self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
         self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix
         self.DELETE = "DELETE FROM %sObjects WHERE " % tablePrefix
         self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
         self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
         self.tablePrefix = tablePrefix
-        self.__createConnection(dbName, timeout)
+        self._createConnection(dbName, timeout)
+        self.INSERT_OBJECT = None
+        self.UPDATE_OBJECT = None 
+        
+        self.INSERT_PROPERTY = "INSERT INTO Properties (key, value) VALUES (?, ?)"
+        self.DELETE_PROPERTY = "DELETE FROM Properties WHERE key=?"
+        self.UPDATE_PROPERTY = "UPDATE Properties SET value=? WHERE key=?"
+        self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
+        
+
+    def hasProperty(self, key):
+        """ Return true if a property with this value is registered. """
+        self.executeCommand(self.SELECT_PROPERTY, (key,))
+        result = self.cursor.fetchone()
+        return (result is not None)
+        
+    def getProperty(self, key, defaultValue=None):
+        """ Return the value of a given property with this key.
+        If not found, the defaultValue will be returned.
+        """
+        self.executeCommand(self.SELECT_PROPERTY, (key,))
+        result = self.cursor.fetchone()
+        
+        if result:
+            return result['value']
+        else:
+            return defaultValue
+        
+    def setProperty(self, key, value):
+        """ Insert or update the property with a value. """
+        if self.hasProperty(key):
+            self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
+        else:
+            self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
+        
+    def deleteProperty(self, key):
+        self.executeCommand(self.DELETE_PROPERTY, (key,))
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -674,33 +720,25 @@ class SqliteFlatDb():
     def missingTables(self):
         """ Return True is the needed Objects and Classes table are not created yet. """
         self.executeCommand(self.CHECK_TABLES)
-        return self.cursor.fetchone() is None
+        result = self.cursor.fetchone()
         
-    def __createConnection(self, dbName, timeout):
-        """Establish db connection"""
-        from sqlite3 import dbapi2 as sqlite
-        if dbName in self.OPEN_CONNECTIONS:
-            self.connection = self.OPEN_CONNECTIONS[dbName]
-        else:
-            self.connection = sqlite.Connection(dbName, timeout, check_same_thread=False)
-            self.connection.row_factory = sqlite.Row
-            self.OPEN_CONNECTIONS[dbName] = self.connection
-        self.cursor = self.connection.cursor()
-        # Define some shortcuts functions
-        self.executeCommand = self.cursor.execute
-        #self.executeCommand = self.__debugExecute
-        self.commit = self.connection.commit
+        return result is None
         
-    def __debugExecute(self, *args):
-        print "COMMAND: ", args[0]
-        print "ARGUMENTS: ", args[1:]
-        self.cursor.execute(*args)
-        
+    def clear(self):
+        self.executeCommand("DROP TABLE IF EXISTS Properties;")
+        self.executeCommand("DROP TABLE IF EXISTS %sClasses;" % self.tablePrefix)
+        self.executeCommand("DROP TABLE IF EXISTS %sObjects;" % self.tablePrefix)
+                
     def createTables(self, objDict):
         """Create the Classes and Object table to store items of a Set.
         Each object will be stored in a single row.
         Each nested property of the object will be stored as a column value.
         """
+        # Create a general Properties table to store some needed values
+        self.executeCommand("""CREATE TABLE IF NOT EXISTS Properties
+                     (key       TEXT UNIQUE, -- property key                 
+                      value     TEXT  DEFAULT NULL -- property value
+                      )""")
         # Create the Classes table to store each column name and type
         self.executeCommand("""CREATE TABLE IF NOT EXISTS %sClasses
                      (id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -710,31 +748,60 @@ class SqliteFlatDb():
                       )""" % self.tablePrefix)
         CREATE_OBJECT_TABLE = """CREATE TABLE IF NOT EXISTS %sObjects
                      (id        INTEGER PRIMARY KEY,
+                      enabled   INTEGER DEFAULT 1,   -- used to selected/deselect items from a set
                       label     TEXT DEFAULT NULL,   -- object label, text used for display
-                      comment   TEXT DEFAULT NULL   -- object comment, text used for annotations
+                      comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
+                      creation  DATE                 -- creation date and time of the object
                       """ % self.tablePrefix
-        self.INSERT_OBJECT = "INSERT INTO %sObjects (id, label, comment" % self.tablePrefix
+        
         c = 0
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c
             className = v[0]
             c += 1
             self.executeCommand(self.INSERT_CLASS, (k, colName, className))
-            if k != "self":
-                self.INSERT_OBJECT += ',%s' % colName
+            if k != SELF:
                 CREATE_OBJECT_TABLE += ',%s  %s DEFAULT NULL' % (colName, self.CLASS_MAP.get(className, 'TEXT'))
         
-        self.INSERT_OBJECT += ') VALUES (?,?' + ',?' * c + ')'
         CREATE_OBJECT_TABLE += ')'
         # Create the Objects table
         self.executeCommand(CREATE_OBJECT_TABLE)
         self.commit()
+        # Prepare the INSERT and UPDATE commands
+        self.setupCommands(objDict)
+        
+    def setupCommands(self, objDict):
+        """ Setup the INSERT and UPDATE commands base on the object dictionray. """
+        self.INSERT_OBJECT = "INSERT INTO %sObjects (id, enabled, label, comment, creation" % self.tablePrefix
+        self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix 
+        c = 0
+        for k in objDict:
+            colName = 'c%02d' % c
+            c += 1
+            if k != SELF:
+                self.INSERT_OBJECT += ',%s' % colName
+                self.UPDATE_OBJECT += ', %s=?' % colName
+        
+        self.INSERT_OBJECT += ") VALUES (?,?,?,?, datetime('now')" + ',?' * (c-1) + ')'
+        self.UPDATE_OBJECT += ' WHERE id=?'
         
     def getClassRows(self):
         """ Create a dictionary with names of the attributes
         of the colums. """
         self.executeCommand(self.SELECT_CLASS)
         return self._results(iterate=False)
+    
+    def getSelfClassName(self):
+        """ Return the class name of the attribute named 'self'.
+        This is the class of the items stored in a Set.
+        """
+        self.executeCommand(self.SELECT_CLASS)
+        
+        for classRow in self._iterResults():
+            print "classRow['label_property']", classRow['label_property']
+            if classRow['label_property'] == SELF:
+                return classRow['class_name']
+        raise Exception("Row '%s' was not found in Classes table. " % SELF)
    
     def insertObject(self, *args):
         """Insert a new object as a row.
@@ -743,28 +810,14 @@ class SqliteFlatDb():
         """
         self.executeCommand(self.INSERT_OBJECT, args)
 
-    def updateObject(self, objId, label, comment, *args):
+    def updateObject(self, *args):
         """Update object data """
-        pass
+        self.executeCommand(self.UPDATE_OBJECT, args)
         
     def selectObjectById(self, objId):
         """Select an object give its id"""
         self.executeCommand(self.selectCmd("id=?"), (objId,))  
         return self.cursor.fetchone()
-    
-    def _iterResults(self):
-        row = self.cursor.fetchone()
-        while row is not None:
-            yield row
-            row = self.cursor.fetchone()
-        
-    def _results(self, iterate=False):
-        """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
-        if not iterate:
-            return self.cursor.fetchall()
-        else:
-            return self._iterResults()
     
     def selectAll(self, iterate=True):
         self.executeCommand(self.selectCmd('1'))
@@ -789,5 +842,6 @@ class SqliteFlatDb():
         
     def deleteAll(self):
         """ Delete all objects from the db. """
-        self.executeCommand(self.DELETE + "1")
+        if not self.missingTables():
+            self.executeCommand(self.DELETE + "1")
         

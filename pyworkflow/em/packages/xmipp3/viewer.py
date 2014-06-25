@@ -35,6 +35,7 @@ from pyworkflow.em.protocol import *
 from xmipp3 import getXmippPath
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
+from protocol_screen_particles import XmippProtScreenParticles
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_kerdensom import XmippProtKerdensom
@@ -43,12 +44,15 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_identify_outliers import XmippProtIdentifyOutliers
+from protocol_particle_pick import XmippProtParticlePicking
+from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
 from convert import *
 from os.path import dirname, join
-from pyworkflow.utils import makePath, runJob
+from pyworkflow.utils import makePath, runJob, copyTree
 import pyworkflow as pw
 import xmipp
+
 
 
 class XmippViewer(Viewer):
@@ -56,15 +60,17 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D, 
-                SetOfMovies, ProtExtractParticles,
-                XmippProtKerdensom, XmippProtRotSpectra,  
+    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
+                SetOfMovies, ProtExtractParticles, XmippProtScreenParticles,
+                XmippProtKerdensom, XmippProtRotSpectra,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers]
+                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
+                XmippProtParticlePicking, XmippParticlePickingAutomatic]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
         self._views = []   
+        
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)
@@ -90,26 +96,19 @@ class XmippViewer(Viewer):
               
         elif issubclass(cls, SetOfMicrographs):
             
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_micrographs.xmd')
-                writeSetOfMicrographs(obj, fn)
-                
-            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))
-            
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
-            self._views.append(ObjectView(fn, "Micrographs", self._project.getName(), obj.strId(), obj.strId(), **args))    
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))    
             
                 
         elif issubclass(cls, SetOfCoordinates):
-            micSet = obj.getMicrographs()#accessing mics to provide metadata file
+            micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
-                raise Exception('visualize: SetOfCoordinates has not micrographs set.')
+                raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
             tmpDir = self._getTmpPath(obj.getName()) 
@@ -117,64 +116,40 @@ class XmippViewer(Viewer):
             
             if mdFn:
                 fn = mdFn.get()
-            else: # happens if protocol is not an xmipp one
+            else:  # happens if protocol is not an xmipp one
                 fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, fn)
-            posDir = getattr(obj, '_xmippMd', None)#extra dir istead of md file for SetOfCoordinates
+            posDir = getattr(obj, '_xmippMd', None)  # extra dir istead of md file for SetOfCoordinates
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
                 writeSetOfCoordinates(tmpDir, obj)   
-                           
-            self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
-        
-        elif issubclass(cls, SetOfParticles) or issubclass(cls, SetOfVolumes):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_images.xmd')
-                #Set hasCTF to False to avoid problems
-                if issubclass(cls, SetOfParticles):
-                    writeSetOfParticles(obj, fn)
-                else:
-                    writeSetOfVolumes(obj, fn)
-            if issubclass(cls, SetOfParticles):
-                self._views.append(ObjectView(fn, "Particles", self._project.getName(), obj.strId(), obj.strId())) 
-            else:
-                self._views.append(DataView(fn))
+            self._views.append(CoordinatesObjectView(fn, tmpDir))
+
+        elif issubclass(cls, SetOfParticles):
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
+               
+                    
+        elif issubclass(cls, SetOfVolumes):
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
         
         elif issubclass(cls, SetOfClasses2D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses2D(obj, fn)
-            
-            self._views.append(ObjectView(fn, "Classes2D", self._project.getName(), obj.strId(), obj.getImages().strId()))  
+            fn = obj.getFileName()
+            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn))
             
         elif issubclass(cls, SetOfClasses3D):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_classes.xmd')
-                writeSetOfClasses3D(obj, fn, self._getTmpPath())
-
-            self._views.append(ObjectView("classes@"+fn, "Classes3D", self._project.getName(), obj.strId(), obj.getImages().strId(), extraParams=args.get('extraParams', '')))
+            fn = obj.getFileName()
+            self._views.append(Classes3DView(self._project.getName(), obj.strId(), fn))            
               
         elif issubclass(cls, SetOfCTF):
-            mdFn = getattr(obj, '_xmippMd', None)
-            if mdFn:
-                fn = mdFn.get()
-            else:
-                fn = self._getTmpPath(obj.getName() + '_ctfs.xmd')
-                writeSetOfCTFs(obj, fn)
-
-            self._views.append(DataView(fn, viewParams={MODE: 'metadata', RENDER: 'psd psdEnhanced image1 image2', ORDER:'id psd psdEnhanced image1 image2', ZOOM: 50}))  
+            fn = obj.getFileName()
+#            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
+                                          viewParams={MODE: 'metadata'}))    
          
-        elif issubclass(cls, XmippProtExtractParticles):
+        elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)
             fn = getattr(obj.outputParticles, '_xmippMd', None)
             if fn:
@@ -198,13 +173,25 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
             self._views.append(CommandView(obj._getPath('chimera.cmd')))
+            
+        elif issubclass(cls, XmippProtParticlePicking):
+            self._visualize(obj.getCoords())
+            
+        elif issubclass(cls, XmippParticlePickingAutomatic):
+        	micSet = obj.getInputMicrographs()
+        	mdFn = getattr(micSet, '_xmippMd', None)
+        	if mdFn:
+        		micsfn = mdFn.get()
+        	else:  # happens if protocol is not an xmipp one
+        		micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+                writeSetOfMicrographs(micSet, micsfn)
+                
+           	posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
+           	scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
+        	app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
+        	args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
+        	runJavaIJapp("%dg" % (2), app, args, True)
+            # self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
 
         return self._views
         
-
-    
-
-    
-
-
-

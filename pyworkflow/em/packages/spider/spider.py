@@ -27,17 +27,32 @@
 This sub-package will contains Spider protocols
 """
 import os
+import subprocess
+import re
+
 from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
 from pyworkflow.em.data import EMObject
-from pyworkflow.em import EMProtocol
-from pyworkflow.utils.path import copyFile, removeExt, replaceExt
+from pyworkflow.utils.path import copyFile, removeExt, replaceExt, replaceBaseExt
 from pyworkflow.utils import runJob
-import subprocess
+
 
 END_HEADER = 'END BATCH HEADER'
-
 SPIDER = 'spider_linux_mp_intel64'
+
+PATH = abspath(dirname(__file__))
+TEMPLATE_DIR = 'templates'
+SCRIPTS_DIR = 'scripts'
+
+# Regular expressions for parsing vars in scripts header
+
+# Match strings of the type
+# key = value ; some comment
+REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<rest>\s+.*)")
+# Match strings of the type [key]value
+# just before a 'fr l' line
+REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
+
 
 def loadEnvironment():
     """ Load the environment variables needed for Spider.
@@ -70,58 +85,88 @@ def loadEnvironment():
         msg += "\n named 'spider' or define the SPIDER environment variable"
         raise Exception(msg)
         
-    #
-    #TODO: maybe validate that the 
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
     
     
+def _getFile(*paths):
+    return join(PATH, *paths)
 
-TEMPLATE_DIR = abspath(join(dirname(__file__), 'templates'))
-        
-def getTemplate(templateName):
-    """ Return the path to the template file given its name. """
-    templateFile = join(TEMPLATE_DIR, templateName)
-    if not exists(templateFile):
-        raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
-    
-    return templateFile
 
-def copyTemplate(templateName, destDir):
-    """ Copy a template file to a diretory """
-    template = getTemplate(templateName)
-    templateDest = join(destDir, basename(template))
-    copyFile(template, templateDest)
+def getScript(*paths):
+    return _getFile(SCRIPTS_DIR, *paths)
+
+
+def __substituteVar(match, paramsDict, lineTemplate):
+    if match and match.groupdict()['var'] in paramsDict:
+        d = match.groupdict()
+        d['value'] = paramsDict[d['var']]
+        return lineTemplate % d
+    return None
     
-def runSpiderTemplate(templateName, ext, paramsDict):
+def runScript(inputScript, ext, paramsDict, log=None):
     """ This function will create a valid Spider script
     by copying the template and replacing the values in dictionary.
     After the new file is read, the Spider interpreter is invoked.
+    Usually the execution should be done where the results will
+    be left.
     """
     loadEnvironment()
-    copyTemplate(templateName, '.')
-    scriptName = replaceExt(templateName, ext)
+    outputScript = replaceBaseExt(inputScript, ext)
 
-    fIn = open(templateName, 'r')
-    fOut = open(scriptName, 'w')
-    replace = True # After the end of header, not more value replacement
+    fIn = open(getScript(inputScript), 'r')
+    fOut = open(outputScript, 'w')
+    inHeader = True # After the end of header, not more value replacement
+    inFrL = False
     
     for i, line in enumerate(fIn):
         if END_HEADER in line:
-            replace = False
-        if replace:
+            inHeader = False
+        if inHeader:
             try:
-                line = line % paramsDict
+                newLine = __substituteVar(REGEX_KEYVALUE.match(line), paramsDict, 
+                                          "%(var)s%(s1)s=%(s2)s%(value)s%(rest)s\n")
+                if newLine is None and inFrL:
+                    newLine = __substituteVar(REGEX_KEYFRL.match(line), paramsDict, 
+                                              "%(var)s%(value)s%(rest)s\n")
+                if newLine:
+                    line = newLine
             except Exception, ex:
                 print ex, "on line (%d): %s" % (i+1, line)
                 raise ex
+            inFrL = line.lower().startswith("fr ")
         fOut.write(line)
     fIn.close()
     fOut.close()    
 
-    scriptName = removeExt(scriptName)  
-    runJob(None, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+    scriptName = removeExt(outputScript)
+    runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+    
 
-
+def runCustomMaskScript(filterRadius1, sdFactor,
+                        filterRadius2, maskThreshold,
+                        workingDir, ext='stk',
+                        inputImage='input_image',
+                        outputMask='stkmask'):
+    """ Utility function to run the custommask.msa script.
+    This function will be called from the custom mask protocol
+    and from the wizards to create the mask.
+    """
+    params = {'[filter-radius1]': filterRadius1,
+              '[sd-factor]': sdFactor,
+              '[filter-radius2]': filterRadius2,
+              '[mask-threshold2]': maskThreshold,
+              '[input_image]': inputImage,
+              '[output_mask]': outputMask,
+              } 
+    # Store current directory and enter in the given workingDir
+    cwd = os.getcwd()
+    os.chdir(workingDir)
+    # Run the script with the given parameters
+    runScript('mda/custommask.msa', ext, params)
+    # Return to previous current directory
+    os.chdir(cwd)
+    
+    
 class SpiderShell(object):
     """ This class will open a child process running Spider interpreter
     and will keep conection to send commands. 
@@ -152,32 +197,6 @@ class SpiderShell(object):
             print >> self._log, cmd
         print >> self._proc.stdin, cmd
         self._proc.stdin.flush()
-        
-    def runScript(self, templateName, paramsDict):
-        """ Run all lines in the template script after replace the params
-        with their values.
-        """
-        templateFile = getTemplate(templateName)        
-        f = open(templateFile, 'r')
-        replace = True # After the end of header, not more value replacement
-        
-        for line in f:
-            line = line.strip()
-            
-            if END_HEADER in line:
-                replace = False
-            
-            if not line.startswith(';'): # Skip comment lines
-                try:
-                    if replace:
-                        line = line % paramsDict
-                except Exception, ex:
-                    print ex, "on line: ", line
-            self.runCmd(line)
-        
-        f.close()
-        if self._debug and self._log:
-            self._log.close()
         
     def close(self, end=True):
         if end:
@@ -226,30 +245,6 @@ class PcaFile(EMObject):
         return self.filename.get()
         
      
-class SpiderProtocol(EMProtocol):
-    """ Sub-class of EMProtocol to group some common Spider utils. """
-            
-    def convertInput(self, attrName, stackFn, selFn):
-        """ Convert from an input pointer of SetOfImages to Spider.
-        Params:
-            attrName: the attribute name of the input pointer
-            stackFn: the name of the stack for converted images
-            selFn: the name of the selection file.
-        """
-        imgSetPointer = getattr(self, attrName)
-        from convert import writeSetOfImages
-        writeSetOfImages(imgSetPointer.get(), stackFn, selFn)
-        
-        
-    def _getFileName(self, key):
-        """ Give a key, append the extension
-        and prefix the protocol working dir. 
-        """
-        template = '%(' + key + ')s.%(ext)s'
-        
-        return self._getPath(template % self._params)
-    
-
 def getDocsLink(op, label):
     """ Return a label for documentation url of a given command. """
     from constants import SPIDER_DOCS

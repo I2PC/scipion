@@ -120,11 +120,17 @@ class ElementGroup(FormElement):
         self.addParam(paramName, ParamClass, **args)
 
     def addLine(self, lineName, **kwargs):
-        return self.addParam(lineName, Line, form=self._form, 
+        
+        # Patch used to avoid the blanks spaces in the names
+        # because the jquery getting elements are not permitted.
+        labelName = lineName.split()[0]
+        
+        return self.addParam(labelName, Line, form=self._form, 
                              label=lineName, **kwargs)        
     
     
 # ----------- Some type of ElementGroup --------------------------
+
 class Line(ElementGroup):
     """ Group to put some parameters in the same line. """
     pass
@@ -236,7 +242,6 @@ class Form(object):
         
         return errors
         
-        
     def getParam(self, paramName):
         """Retrieve a param given a the param name
         None is returned if not found
@@ -274,10 +279,6 @@ class Form(object):
         self.addSection(label='General')
         self.addParam('runName', StringParam, label="Run name:", important=True, 
                       help='Select run name label to identify this run.')
-#        self.addParam('showComment', BooleanParam, default=False, 
-#                      label="Show comment?")
-#        self.addParam('comment', StringParam, condition="showComment",
-#                      label="Comment:", help='Make some annotations on this run.')
         self.addParam('runMode', EnumParam, choices=['resume', 'restart'],
                       label="Run mode", display=EnumParam.DISPLAY_COMBO, default=0,
                       help='The <resume> mode will try to start the execution'
@@ -367,7 +368,8 @@ class EnumParam(IntParam):
 class FloatParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Float, **args)
-        self.addValidator(Format(float, error="should have a float format"))
+        self.addValidator(Format(float, error="should have a float format", 
+                                 allowsNull=args.get('allowsNull', False)))
 
         
 class BooleanParam(Param):
@@ -401,7 +403,7 @@ class MultiPointerParam(PointerParam):
     def __init__(self, **args):
         PointerParam.__init__(self, paramClass=PointerList, **args)
         self.maxNumObjects = Integer(args.get('maxNumObjects',1))
-        self.minNumObjects = Integer(args.get('minNumObjects',1))    
+        self.minNumObjects = Integer(args.get('minNumObjects',1))   
 
         
 class RelationParam(Param):
@@ -492,20 +494,22 @@ class Conditional(Validator):
     If the value doesn't meet the condition,
     the error will be returned.
     """
-    def __init__(self, error):
+    def __init__(self, error, allowsNull=False):
         self.error = error
+        self._allowsNull = allowsNull
         
     def __call__(self, value):
         errors = []
-        if not self._condition(value):
-            errors.append(self.error)
+        if (value or not self._allowsNull):
+            if not self._condition(value):
+                errors.append(self.error)
         return errors   
     
     
 class Format(Conditional):
     """ Check if the format is right. """
-    def __init__(self, valueType, error='Value have not a correct format'):
-        Conditional.__init__(self, error)
+    def __init__(self, valueType, error='Value have not a correct format', allowsNull=False):
+        Conditional.__init__(self, error, allowsNull)
         self.valueType = valueType
         
     def _condition(self, value):

@@ -48,8 +48,12 @@ def findHome():
             absPath = r   
     return os.path.dirname(absPath)
 
+SCIPION_ENV = {}
 SCIPION_HOME = findHome()
 os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+
 PW_APPS = join(SCIPION_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = join(PW_APPS, '%s')
 
@@ -57,16 +61,18 @@ PW_APPS_TEMP = join(PW_APPS, '%s')
 if not SCIPION_HOME in sys.path:
     sys.path.append(SCIPION_HOME)
 
+
 import config
 
 def getConfigPath(varName):
-    """ Read a path from the config.py, if is relative, 
-    append the SCIPION_HOME prefix. 
+    """ Return the value of varName from config.py, which is a path.
+    If relative, prepend SCIPION_HOME.
     """
     pathValue = getattr(config, varName)
     if not isabs(pathValue):
         pathValue = join(SCIPION_HOME, pathValue)
     return pathValue
+
 
 def getUserDataPath():
     # If SCIPION_USER_DATA is None or empty in config
@@ -83,20 +89,24 @@ XMIPP_LIB = join(XMIPP_HOME, 'lib')
 if not XMIPP_LIB in sys.path:
     sys.path.append(XMIPP_LIB)
 
-SCIPION_DATA = join(SCIPION_HOME, 'data')
-SCIPION_LOGS = join(SCIPION_DATA, 'logs')
-SCIPION_TESTS = join(SCIPION_DATA, 'tests')
-SCIPION_USER_DATA = getUserDataPath()
-SCIPION_TMP = join(SCIPION_USER_DATA, 'tmp')
-SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
+SCIPION_DIRS = {
+    'SCIPION_DATA': join(SCIPION_HOME, 'data'),
+    'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
+    'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
+    'SCIPION_USER_DATA': getUserDataPath(),
+    'SCIPION_TMP': join(getUserDataPath(), 'tmp')}
 
 SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
-for var in SCIPION_DIRS:
-    os.environ[var] = globals()[var]
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+SCIPION_ENV['SCIPION_PYTHON'] = SCIPION_PYTHON
+
+for k,v in SCIPION_DIRS.iteritems():
+    os.environ[k] = v
+    SCIPION_ENV[k] = v
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -108,17 +118,21 @@ VARS = {
 for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 
             'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
+    
+for k,v in VARS.iteritems():
+    SCIPION_ENV[k] = v
 
 def runApp(app, args=''):
-    cmd = PW_APPS_TEMP % app + ' ' + args
-    runCmd(cmd)
-    
+    runCmd('%s %s' % (PW_APPS_TEMP % app, args))
+
 def runCmd(cmd):
     os.environ.update(VARS)
     os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (SCIPION_PYTHON, cmd)
     print ">>>>>", cmd
     result = os.system(cmd)
+    if not -256 < result < 256:
+        result = 1  # because if not, 256 is confused with 0 !
     sys.exit(result)
 
 
@@ -136,20 +150,18 @@ MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
 MODE_DOWNLOAD = 'download'
+MODE_ENV = 'printenv'
 
 
-if __name__ == '__main__':
+def main():
     n = len(sys.argv)
-    mode = sys.argv[1] if n > 1 else MODE_MANAGER
-
-    if mode == MODE_INSTALL:
-        if n > 2:
-            args = ' '.join(sys.argv[2:])
-        else:
-            args = ''
-        runCmd('scripts/install.py ' + args)
+    if n > 1:
+        mode = sys.argv[1]
     else:
-        # Validate installation
+        mode = MODE_MANAGER
+
+    # Create SCIPION_HOME folder if it does not exist
+    if mode != MODE_INSTALL:
         error = ''
         for d in SCIPION_DIRS:
             path = os.environ[d]
@@ -195,56 +207,21 @@ if __name__ == '__main__':
 
     elif mode == MODE_TESTS:
         if n > 2:
-            option = sys.argv[2]
-            if option in ["show", "run"]: # only show available tests
-                args = ' '.join(sys.argv[3:])
-                if option == 'show':
-                    args += " print"
-                runCmd('scripts/run_tests.py %s' % args)
-                f = open(join(SCIPION_HOME, 'scripts', 'batch_tests'))
-            else: # run the desired test
-                path = os.getcwd()
-                os.chdir(SCIPION_HOME)
-                runCmd('-m unittest pyworkflow.tests.%s' % option)
-                os.chdir(path)
+            testValue = sys.argv[2]
+
+            if not testValue.startswith('-'):
+                # Run a single test, the one mentioned in testValue
+                if testValue.startswith('tests.'):
+                    runCmd('-m unittest pyworkflow.%s' % testValue)
+                else:
+                    runCmd('-m unittest pyworkflow.tests.%s' % testValue)
+            else:
+                runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_TESTS_DATA:
-        if n > 2:
-            dataset = sys.argv[2:-1]
-            if n > 3:
-                option = sys.argv[-1]
-                dataset = sys.argv[2]
-                verbosity = ""
-                if n > 4:
-                    dataset = " ".join(sys.argv[2:-1])
-                    if sys.argv[-1] == "verbose":
-                        verbosity = "-v"
-                        option = sys.argv[-2]
-                        dataset = " ".join(sys.argv[2:-2])
-                if option == "upload":
-                    print "Synchronizing dataset %s with local data" % dataset
-                    runCmd('scripts/sync_data.py -f %s %s -r -d' % (dataset, verbosity))
-                elif option == "download":
-                    print "Synchronizing local dataset(s) %s with remote data" % dataset
-                    runCmd('scripts/sync_data.py -f %s %s' % (dataset, verbosity))
-                elif option == "format":
-                    print "Formatting local dataset(s) %s" % dataset
-                    runCmd('scripts/generate_md5.py %s %s' % (dataset, os.environ['SCIPION_TESTS']))
-                elif option == "raw":
-                    args = ' '.join(sys.argv[4:]) # We leave here a way to pass arguments directly to the script
-                    runCmd('scripts/sync_data.py %s' % args)
-                else:
-                    print "Bad option: " + option
-                    sys.exit(1)
-            elif sys.argv[2] == "list":
-                args = '-l'
-                runCmd('scripts/sync_data.py %s' % args)
-            else:
-                print "Asuming up-sync action. Synchronizing dataset %s with local data" % dataset
-        else:
-            print "Gathering all tests data from default dataset..."
-            runCmd('scripts/sync_data.py')
+        runCmd('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
+    # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
         if n > 2:
             browserArgs = " ".join(sys.argv[2:])
@@ -254,6 +231,9 @@ if __name__ == '__main__':
         if n > 2:
             viewerArgs = ' '.join(sys.argv[2:])
             runApp('pw_viewer.py', args=viewerArgs)
+
+    elif mode == MODE_INSTALL:
+        runCmd('scripts/install.py')
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
@@ -277,6 +257,12 @@ if __name__ == '__main__':
         else:
             args = ''
         runApp('pw_download_packages.py', args)
+        
+    elif mode == MODE_ENV:
+        for k,v in SCIPION_ENV.iteritems():
+            print "%s=%s" % (k, v)
+            
+        sys.exit(0)
 
     # If we reach this point, bad arguments were passed
     print """
@@ -297,25 +283,24 @@ USAGE:
 
         tests [OPTION]         Run a test starting from pyworkflow.tests
                                OPTION can be:
-                                  test name: the specified tests will be run.
-                                  [show|run]: in this case a more sofisticated run tests 
-                                  script will be used.
+                                  <test name>: name of the test to run.
+                                  --show: list the available tests.
                                   Further options are:
-                                  path=VALUE case=VALUE pattern="test*py" mode=[modules|classes|all]
+                                  --case=VALUE --paths=VALUE --pattern="test*py" --mode=[modules|classes|all]
 
-        testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder
+        testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder.
                                OPTION can be:
-                                  list: list the datasets already in the local computer and in the remote server
-                                  dataset [OPERATION]: if no list command is passed, it is mandatory to pass the
-                                                       name of a dataset to use
-                                     OPERATION can be:
-                                        upload [verbose]: synchronize remote dataset with your local working copy.
-                                                          This is default behaviour if no operation is given. If
-                                                          verbose argument is given, process will be more detailed.
-                                        download [verbose]: synchronize local dataset with the remote dataset. If
-                                                            verbose argument is given, process will be more detailed.
-                                        format: format a dataset to give it the expected structure
-                                        raw: directly pass the rest of the arguments to the sync_data script.
+                                  --download: copy dataset from remote location to local
+                                  --upload: copy dataset from local to remote
+                                  --format: create a MANIFEST file with md5 checksums (expected in dataset folders)
+                                  dataset: name of dataset to download, upload or format
+                                  --list: list the datasets in the local computer and in the remote server
+                                  --query: Show modifications stored in last_m.txt and update modifications log file.
+                                           This can be used, for example, by buildbot to know when to launch tests.
+                               For example, to download the dataset xmipp_tutorial:
+                                  scipion testsdata --download xmipp_tutorial
+                               Or to upload it:
+                                  scipion testsdata --upload xmipp_tutorial
 
         viewer [FILE]          Open a file with Scipion showj program.
 
@@ -323,8 +308,19 @@ USAGE:
                                django: open local django webserver (default)
                                collectstatic: copy static files for django server
                                apache_vars: show the LD_LIBRARY_PATH needed by apache server
+                               
+        printenv               Print the environmental variables used by the application 
+
+        download               Download external packages (EMAN, SPIDER, Relion, etc)
 """
 
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception, e:
+        sys.exit(str(e))
 elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
     os.environ.update(VARS)

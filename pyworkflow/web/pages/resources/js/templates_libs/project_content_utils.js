@@ -34,8 +34,26 @@
  * 
  * METHODS LIST:
  * 
+ * function preloadToolbar(list)
+ * 	->	Function to preload the nodes/rows selected.
+ * 
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
+ * 
+ * function launchToolbarTree(id, elm)
+ * 	->	Toolbar used in the project content template for graph view.
+ * 
+ * function launchToolbarProject(id, elm, type)
+ * 	->	Method used to update an element in the template depending on 
+ * 		view mode (list or graph).
+ * 
+ * function refreshToolbarSingleMark(id)
+ * 	->	Update the buttons functionalities into the toolbar
+ * 		for single marks.
+ * 
+ * function refreshToolbarMultipleMark(id, elm)
+ * 	->	Update the buttons functionalities into the toolbar
+ * 		for multiple marks.
  * 
  * function enableMultipleMarkGraph(elm)
  * 	->	Used to highlight a node in the protocol graph.
@@ -45,26 +63,65 @@
  * 	->	Used to remove the highlight applied to a node in the protocol graph.
  * 		This method is used to multiples marked nodes.
  * 
- * function launchToolbarTree(id, elm)
- * 	->	Toolbar used in the project content template for the runs tree view.
+ * function getElmMarkedList()
+ * 	->	Return a list of elements marked in the view mode currently.
+ * 
+ * function getElmMarkedGraph()
+ * 	->	Return a list of elements marked in the graph view mode.
+ * 
+ * function transposeElmMarked(status)
+ * 	->	Switch the elements marked between graph and list view.
+ * 
+ * function refreshSelectedRuns(list_marked)
+ * 	->	Refresh the elements contained into the list.
+ * 
+ * --- GRAPH METHODS ---
+ * function markSingleNodeGraph(elm)
+ * ->	Method to mark a node selected in the graph.
+ * 
+ * dismarkSingleNodeGraph(elm)
+ * 	->	Method to dismark a node selected in the graph.
+ * 
+ * function enableMultipleMarkGraph(elm)
+ * 	->	Method to active the multiple selection.
+ * 
+ * function disableMultipleMarkGraph(id)
+ * 	->	Method to disactive the multiple selection.
+ * 
+ * --- LIST METHODS --- 
+ * function markSingleNodeList(elm)
+ * 	->	Method to mark a row selected in the list.
+ * 
+ * function dismarkSingleNodeList(elm)
+ * 	->	Method to dismark a row selected in the list.
+ * 
+ * function enableMultipleMarkList(elm)
+ * 	->	Method to activate the multiple selection.
+ * 
+ * function disableMultipleMarkList(id)
+ * 	->	Method to disactivate the multiple selection.
+ * --------------------
  * 
  * function checkRunStatus(id)
  * 	->	Function to check a protocol run, depend on the status two button will be
  * 		switching in the toolbar (Stop / Analyze Results).
  * 
- * function fillTabs(id)
+ * function updateTabs(id)
  * 	->	Fill the content of the tabs for a protocol run selected 
  * 		(Data / Summary / Methods / Status)
  * 
  * function showLog(log_type)
  * 	->	This function is used to show or hide differents logs about a protocol selected.
  * 
+ *  * function showExtenalLog(log_type)
+ * 	->	This function is used to show in an external popup the log.
+ * 
  * function fillUL(list, ul_id, icon)
  * 	->	Fill an UL element with items from a list items, should contains id and 
  * 		name properties.
  * 
  * function updateButtons(id, elm)
- * 	->	Function to update the buttons in the toolbar and the tabs, after choose
+ * 	->	Function to update the buttons in the toolbar, after choose
  *  	a new protocol run.
  * 
  * function updateRow(id, elm, row)
@@ -84,14 +141,6 @@
  * function changeStatusGraph(status, graph, icon_graph, list, icon_list)
  * 	->	Function to switch between the graph/list view depending on the status.
  * 
- * function markElmGraph(node_id, graph)
- * 	->	Function used to mark the same protocol run when one is selected in the
- * 		protocol run list and the view is changed to protocol run graph.
- * 
- * function markElmList(row_id, graph)
- * 	->	Function used to mark the same protocol run when one is selected in the
- * 		protocol run graph and the view is changed to protocol run list.
- * 
  * function switchGraph() 
  * 	->	Main function called to change between graph tree/list views.
  * 
@@ -110,6 +159,9 @@
  * 
  * function deleteProtocol(elm)
  * 	->	Method to execute a delete for a protocol.
+ * 
+ * function copyProtocol(id)
+ * 	-> Method to copy protocol.
  *
  * function stopProtocolForm(protocolId)
  * 	->	Dialog web form based in messi.js to verify the option to stop a protocol.
@@ -135,63 +187,290 @@
 
  /** METHODS ******************************************************************/
 
-function launchToolbarList(id, elm) {
-	/*
-	 * Toolbar used in the project content template for list view
-	 */
-	var row = $("div#toolbar");
-	updateRow(id, elm, row);
-	updateButtons(id, elm);
-	row.show(); // Show toolbar
+function isCtrlPress(event) {
+	return event.ctrlKey;
 }
 
-var event = jQuery("div#graphActiv").trigger(jQuery.Event("click"));
-
-function enableMultipleMarkGraph(elm){
-	if (elm.attr("selected") == "selected"){
-		elm.css("border", "");
-		elm.removeAttr("selected")
-		
-		$("div#graphActiv").removeAttr("data-option");
+function preloadToolbar(list){
+	/*
+	 * Function to preload the nodes/rows selected
+	 */
+	if (list.length > 1){
+		refreshToolbarMultipleMark(list)
 	} else {
-		elm.css("border", "2.5px solid Firebrick");
-		elm.attr("selected", "selected")
-		
-		$("div#graphActiv").attr("data-option", "graph_"+elm.attr("id"));
+		refreshToolbarSingleMark(list)
 	}
 }
 
-function disableMultipleMarkGraph(id){
+
+function launchToolbarList(id, elm, multi) {
+	/*
+	 * Toolbar used in the project content template for list view
+	 */
 	
-	$.each($(".window"), function(){
-		elm = $(this)
+	if (multi){
+		enableMultipleMarkList(elm);
+	} else {
+		disableMultipleMarkList(id);
+		launchToolbarProject(id, elm, "list");
+	}
+}
+
+function launchToolbarTree(id, elm, multi) {
+	/*
+	 * Toolbar used in the project content template for graph view
+	 */
+	
+	if (multi){
+		enableMultipleMarkGraph(elm);
+	} else {
+		disableMultipleMarkGraph(id);
+		launchToolbarProject(id, elm, "graph");
+	}
+}
+
+	
+function launchToolbarProject(id, elm, type){
+	/*
+	 * Method used to update an element in the template depending on 
+	 * view mode (list or graph)
+	 */
+	var row = $("div#toolbar");
+	
+	switch (type) {
+		case "list":
+			updateRow(id, elm, row);
+		    break;
+		case "graph":
+			updateTree(id, elm, row);
+		    break;
+	}
+	    
+	// Update the buttons functionalities into the toolbar
+	// and update the content for the tabs
+	refreshToolbarSingleMark(id)
+	
+}
+
+function refreshToolbarSingleMark(id){
+	/*
+	 * Update the buttons functionalities into the toolbar
+	 * for single marks.
+	 */
+	updateButtons(id, "single");
+	
+	// Update the content for the tabs
+	updateTabs(id);
+}
+
+function refreshToolbarMultipleMark(list_id){
+	/*
+	 * Update the buttons functionalities into the toolbar
+	 * for multiple marks.
+	 */
+	updateButtons(list_id, "multiple");
+}
+
+function getElmMarkedList(){
+	/*
+	 * Return a list of elements marked in the list view mode.
+	 */
+	var list_marked = [];
+
+	$.each($("tr"), function(){
+		var elm = $(this);
+		var id = elm.attr("id");
 		
+		if(elm.hasClass("selected")){
+			list_marked.push(id);
+		}
+	});
+	return list_marked;
+}
+
+function getElmMarkedGraph(){
+	/*
+	 * Return a list of elements marked in the graph view mode.
+	 */
+	var list_marked = [];
+
+	$.each($(".window"), function(){
+		var elm = $(this);
+		var id = elm.attr("id").split("_").pop();
+		
+		if(elm.attr("selected") == "selected"){
+			list_marked.push(id);
+		} 
+	});
+	return list_marked;
+}
+
+
+function transposeElmMarked(status){
+	/*
+	 * Switch the elements marked between graph and list view.
+	 */
+	var list_marked = [];
+
+	if (status == 'inactive') {
+		// Transpose elements in the list marked to the graph
+		
+		$.each($("tr"), function(){
+			var elm = $(this);
+			var id = elm.attr("id");
+			var elmToMark = $("#graph_"+id);
+			var selected = elmToMark.attr("selected"); 
+			
+			if(elm.hasClass("selected")){
+//				console.log("adding "+ id)
+				if (selected != "selected" || selected == undefined){
+					markSingleNodeGraph(elmToMark);
+				}
+				list_marked.push(id);
+			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
+				dismarkSingleNodeGraph(elmToMark);
+			} 
+			
+		});
+	}
+	else if (status == 'active') {
+		// Transpose elements in the graph marked to the list
+		
+		$.each($(".window"), function(){
+			var elm = $(this);
+			var id = elm.attr("id").split("_").pop();
+			var elmToMark = $("tr#"+id);
+			
+			if(elm.attr("selected") == "selected"){
+//				console.log("adding "+ id)
+				if(!elmToMark.hasClass("selected")){
+					markSingleNodeList(elmToMark);
+				}
+				list_marked.push(id);
+			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
+				dismarkSingleNodeList(elmToMark);
+			}
+		});
+	}
+	
+//	console.log(list_marked)
+	
+	if (list_marked.length > 0){
+		// Update the runs selected in the DB
+		refreshSelectedRuns(list_marked);
+	}
+	
+}
+
+function refreshSelectedRuns(list_marked){
+	/*
+	 * Refresh the elements contained into the list.
+	 */
+	$.ajax({
+		type : "GET", 
+		url : '/save_selection/?mark=' + listToString(list_marked),
+		async: false
+	});
+}
+
+	
+/** Graph Methods ***********************************************/
+
+function markSingleNodeGraph(elm){
+	/*
+	 * Method to mark a node selected in the graph.
+	 */
+	// Highlight the node
+	elm.css("border", "2.5px solid Firebrick");
+	elm.attr("selected", "selected");
+}
+
+function dismarkSingleNodeGraph(elm){
+	/*
+	 * Method to dismark a node selected in the graph.
+	 */
+	
+	// Clear the node
+	elm.css("border", "");
+	elm.removeAttr("selected")
+}
+
+function enableMultipleMarkGraph(elm){
+	/*
+	 * Method to activate the multiple selection.
+	 */
+	if (elm.attr("selected") == "selected"){
+		dismarkSingleNodeGraph(elm);
+		$("div#graphActiv").removeAttr("data-option");
+	} else {
+		markSingleNodeGraph(elm);
+		$("div#graphActiv").attr("data-option", elm.attr("id"));
+	}
+	var list_marked = getElmMarkedGraph()
+	refreshToolbarMultipleMark(list_marked);
+} 	
+
+function disableMultipleMarkGraph(id){
+	/*
+	 * Method to disactivate the multiple selection.
+	 */
+	$.each($(".window"), function(){
+		var elm = $(this)
 		if (elm.attr("id") != "graph_"+id && elm.attr("selected") != undefined){
-			elm.removeAttr("selected")
-			elm.css("border", "");
+			dismarkSingleNodeGraph(elm)
 		}
 	}) 
 }
 
-function launchToolbarTree(id, elm) {
+/** List Methods ***********************************************/
+
+function markSingleNodeList(elm){
 	/*
-	 * Toolbar used in the project content template for list view
+	 * Method to mark a row selected in the list.
 	 */
 	
-	if (event.ctrlKey){
-		enableMultipleMarkGraph(elm)
-	} else {
-		disableMultipleMarkGraph(id)
-		
-		var row = $("div#toolbar");
-		updateTree(id, elm, row);
-		updateButtons(id, elm);
-		row.show(); // Show toolbar
-	}
+	// Highlight the node
+	elm.addClass("selected");
 }
 
+function dismarkSingleNodeList(elm){
+	/*
+	 * Method to dismark a row selected in the list.
+	 */
+	
+	// Clear the node
+	elm.removeClass("selected");
+}
 
-function fillTabs(id) {
+function enableMultipleMarkList(elm){
+	/*
+	 * Method to activate the multiple selection.
+	 */
+	if (elm.hasClass("selected")){
+		dismarkSingleNodeList(elm);
+	} else {
+		markSingleNodeList(elm);
+	}
+	var list_marked = getElmMarkedList()
+	refreshToolbarMultipleMark(list_marked);
+}
+
+function disableMultipleMarkList(id){
+	/*
+	 * Method to disactivate the multiple selection.
+	 */
+	$.each($("tr"), function(){
+		var elm = $(this)
+		if(elm.hasClass("selected")){
+			dismarkSingleNodeList(elm);
+		}
+	}) 
+}
+	
+/******************************************************************************/
+
+
+function updateTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a protocol run selected 
 	 * (Data / Summary / Methods / Status)
@@ -245,42 +524,80 @@ function fillTabs(id) {
 }
 
 function showLog(log_type){
+	/*
+	 * This function is used to show or hide differents logs about a protocol selected.
+	 */
 	
-	if(log_type=="output_log"){
-		$("#tab-logs-output").css("display","")
-		$("#output_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-output").html()
+	switch (log_type) {
+		case "output_log":
+			
+			$("div#tab-logs-output").css("display","")
+			$("a#output_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-output").html()
+			
+			$("div#tab-logs-error").css("display","none")
+			$("a#error_log").attr("class", "elm-header-log")
+			
+			$("div#tab-logs-scipion").css("display","none")
+			$("a#scipion_log").attr("class", "elm-header-log")
+			
+		    break;
+		    
+		case "error_log":
+			
+			$("div#tab-logs-output").css("display","none")
+			$("a#output_log").attr("class", "elm-header-log")
+			
+			$("div#tab-logs-error").css("display","")
+			$("a#error_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-error").html()
+			
+			$("div#tab-logs-scipion").css("display","none")
+			$("a#scipion_log").attr("class", "elm-header-log")
 		
-		$("#tab-logs-error").css("display","none")
-		$("#error_log").attr("class", "elm-header-log")
+		    break;
+		    
+		case "scipion_log":
+			
+			$("div#tab-logs-output").css("display","none")
+			$("a#output_log").attr("class", "elm-header-log")
+				
+			$("div#tab-logs-error").css("display","none")
+			$("a#error_log").attr("class", "elm-header-log")
+			
+			$("div#tab-logs-scipion").css("display","")
+			$("a#scipion_log").attr("class", "elm-header-log_selected")
+			html = $("div#tab-logs-scipion").html()
 		
-		$("#tab-logs-scipion").css("display","none")
-		$("#scipion_log").attr("class", "elm-header-log")
-		
-	}else if(log_type=="error_log"){
-		$("#tab-logs-output").css("display","none")
-		$("#output_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-error").css("display","")
-		$("#error_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-error").html()
-		
-		$("#tab-logs-scipion").css("display","none")
-		$("#scipion_log").attr("class", "elm-header-log")
-		
-	}else if(log_type=="scipion_log"){
-		$("#tab-logs-output").css("display","none")
-		$("#output_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-error").css("display","none")
-		$("#error_log").attr("class", "elm-header-log")
-		
-		$("#tab-logs-scipion").css("display","")
-		$("#scipion_log").attr("class", "elm-header-log_selected")
-		html = $("#tab-logs-scipion").html()
+		    break;
 	}
 	
-	$("#externalTool").attr("href","javascript:customPopupFileHTML('" + html +"','"+ log_type + "',1024,768)")
+	// Fill the button to show the button in an external window
+	var log_func = "javascript:showExternalLog('"+ log_type +"');"
+	$("a#externalTool").attr("href",log_func)
+
+}
+
+function showExternalLog(log_id){
+	/*
+	 * This function is used to show in an external popup the log.
+	 */
+	var html = "";
+
+	switch (log_id) {
+	
+		case "output_log":
+			html = $("div#tab-logs-output").html()
+			break;
+		case "error_log":
+			html = $("div#tab-logs-error").html()
+			break;
+		case "scipion_log":
+			html = $("div#tab-logs-scipion").html()
+			break;
+	}
+	customPopupFileHTML(html ,log_id,1024,768);
+
 }
 
 
@@ -291,9 +608,8 @@ function fillUL(type, list, ulId, icon) {
 	 */
 	var ul = $("#" + ulId);
 	ul.empty();
+	
 	for ( var i = 0; i < list.length; i++) {
-		
-//		inihtml = "<table><tr><td><strong>Attribute</strong></td><td><strong>&nbsp;&nbsp;&nbsp;Info</strong></td></tr>"
 		
 		// Visualize Object
 		var visualize_html = '<a href="javascript:launchViewer(' + list[i].id
@@ -310,35 +626,71 @@ function fillUL(type, list, ulId, icon) {
 		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
 		'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
 		
-//		endhtml = "</table>"
-		
 		ul.append('<li>' + visualize_html + edit_html +"&nbsp;&nbsp;&nbsp;" +list[i].info+ '</li>');
-//		ul.append(inihtml+'<tr><td>' + visualize_html +"</td><td>&nbsp;&nbsp;&nbsp;" + list[i].info + edit_html + '</td></tr>' + endhtml);
 		
 	}
 }
 
-function updateButtons(id, elm){
+function updateButtons(id, mode){
 	/*
-	 * Function to update the buttons in the toolbar and the tabs, after choose a new protocol run.
+	 * Function to update the buttons in the toolbar after choose a new protocol run.
 	 */
-	// Action Edit Button
-	$("a#editTool").attr('href',
-	'javascript:popup("/form/?protocolId=' + id + '")');
 	
-	// Action Copy Button
-	$("a#copyTool").attr('href',
-	'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
-
-	// Action Delete Button
-	$("a#deleteTool").attr('href',
-			'javascript:deleteProtocolForm("' + id + '")');
-
-	// Action Browse Button
-	var aux = "javascript:alert('Not implemented yet')";
-	$("a#browseTool").attr('href', aux);
+	 if(mode == undefined){
+		 mode="single";
+	 }
 	
-	fillTabs(id);
+	 switch (mode){
+	 
+	 	case "single":
+	 		
+			// Action Edit Button
+			$("a#editTool").attr('href',
+			'javascript:popup("/form/?protocolId=' + id + '")');
+			$("span#editTool").show();
+			
+			// Action Copy Button
+			$("a#copyTool").attr('href',
+			'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
+			$("span#copyTool").show();
+		
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+				'javascript:deleteProtocolForm("' + id + '","single")');
+			$("span#deleteTool").show();
+			
+			// Action Browse Button
+			var aux = "javascript:alert('Not implemented yet')";
+			$("a#browseTool").attr('href', aux);
+			$("span#browseTool").show();
+	 		
+			break;
+			
+	 	case "multiple":
+	 		
+			// Action Edit Button
+			$("a#editTool").attr('href','#');
+			$("span#editTool").hide();
+	 		
+	 		// Action Copy Button
+			$("a#copyTool").attr('href',
+				'javascript:copyProtocol("' + id + '")');
+			$("span#copyTool").show();
+		
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+				'javascript:deleteProtocolForm("' + id + '","multiple")');
+			$("span#deleteTool").show();
+			
+			// Action Browse Button
+			$("a#browseTool").attr('href', '#');
+			$("span#browseTool").hide();
+
+	 		break;
+	
+	 }
+	 // Show toolbar
+	 $("div#toolbar").show(); 
 }
 
 function updateRow(id, elm, row){	
@@ -348,9 +700,9 @@ function updateRow(id, elm, row){
 	 */
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.removeClass('selected')
+		dismarkSingleNodeList(rowOld);
 	}
-	elm.addClass('selected')
+	markSingleNodeList(elm)
 
 	// add id value into the toolbar
 	row.attr('value', id);
@@ -367,21 +719,11 @@ function updateTree(id, elm, row){
 	if (oldSelect != selected) {
 		if (oldSelect != "") {
 			var aux = "div#" + oldSelect + ".window";
-			$(aux).css("border", "");
-			elm.removeAttr("selected")
+			dismarkSingleNodeGraph($(aux))
 		}
 		row.attr('value', id);
 		$("div#graphActiv").attr("data-option", selected);
-		elm.css("border", "2.5px solid Firebrick");
-		elm.attr("selected", "selected")
-	}
-}
-
-function selectElmGraph(elm){
-	if(elm.css("border") == ""){
-		elm.css("border", "2.5px solid Firebrick");
-	} else {
-		elm.css("border", "");
+		markSingleNodeGraph(elm)
 	}
 }
 
@@ -393,20 +735,16 @@ function graphON(graph, icon_graph, list, icon_list){
 	
 	// Graph ON
 	graph.attr("data-mode", "active");
-//	graph.removeAttr("style");
 	graph.show();
-	graph.css("margin-top","-50em")
 	icon_graph.hide();
 	
 	// Table OFF
 	list.attr("data-mode", "inactive");
-//	list.attr("style", "display:none;");
 	list.hide();
 	icon_list.show();
 
 	// Update Graph View
 	updateGraphView("True");
-	
 }
 
 function graphOFF(graph, icon_graph, list, icon_list){
@@ -416,15 +754,12 @@ function graphOFF(graph, icon_graph, list, icon_list){
 	
 	// Table ON	
 	list.attr("data-mode", "active");
-//	list.removeAttr("style");
 	list.show();
 	icon_list.hide();
 	
 	// Graph OFF
 	graph.attr("data-mode", "inactive");
-//	graph.attr("style", "display:none;");
 	graph.hide();
-	$("img#loading").hide();
 	icon_graph.show();
 	
 	// Update Graph View
@@ -432,7 +767,7 @@ function graphOFF(graph, icon_graph, list, icon_list){
 }
 
 function changeStatusGraph(status, graph, graphTool, list, listTool){
-	/*
+	/*	
 	 * Function to switch between the graph/list view depending on the status.
 	 */
 	if (status == 'inactive') {
@@ -444,50 +779,6 @@ function changeStatusGraph(status, graph, graphTool, list, listTool){
 	}
 }
 
-function markElmGraph(node_id, graph){
-	/*
-	 * Function used to mark the same protocol run when one is selected in the
-	 * protocol run list and the view is changed to protocol run tree.
-	 */
-	var s = "graph_" + node_id;
-
-	if (s != "" || s != undefined) {
-		var nodeClear = graph.attr("data-option");
-		
-		if (nodeClear.length>0 && nodeClear != undefined) {
-			// Clear the node
-			var elmClear = $("div#" + nodeClear);
-			elmClear.css("border", "");
-		} 
-		// setElement in graph
-		graph.attr("data-option", s);
-	
-		// Highlight the node
-		var elm = $("div#" + s);
-		elm.css("border", "2.5px solid Firebrick");
-	}
-}
-	
-function markElmList(row_id, graph){
-	/*
-	 * Function used to mark the same protocol run when one is selected in the
-	 * protocol run tree and the view is changed to protocol run list.
-	 */
-	var rowClear = $("tr.selected").attr("id");
-	if (rowClear != "") {
-		if (rowClear != row_id) {
-			// Clear the row selected
-			var elmClear = $("tr.selected");
-			elmClear.attr("style", "");
-			elmClear.attr("class", "runtr");
-
-			// setElement in table
-			var elm = $("tr#" + row_id + ".runtr");
-			var projName = graph.attr("data-project");
-			launchToolbarList(row_id, elm);
-		}
-	}
-}
 
 function switchGraph() {
 	/*
@@ -506,15 +797,18 @@ function switchGraph() {
 	var list = $("div#runTable");
 	var listTool = $("span#listTool");
 	
-	changeStatusGraph(status, graph, graphTool, list, listTool)
+	changeStatusGraph(status, graph, graphTool, list, listTool);
 		
 	// Graph will be painted once
 	if (graph.attr("data-time") == 'first') {
 		callPaintGraph();
 		graph.attr("data-time", "not");
 	} 
-	markElmGraph(id, graph);
-	markElmList(id, graph);
+	
+	// Keep the consistency about the selected elements between
+	// the list and graph views.
+	transposeElmMarked(status);
+
 }
 
 function updateGraphView(status) {
@@ -526,7 +820,8 @@ function updateGraphView(status) {
 	 */
 	$.ajax({
 		type : "GET", 
-		url : "/update_graph_view/?status=" + status
+		url : "/update_graph_view/?status=" + status,
+		async: false
 	});
 }
 
@@ -544,29 +839,64 @@ function editObject(objId){
 	});
 }
 
-function deleteProtocolForm(protocolId) {
+function deleteProtocolForm(id, mode) {
 	/*
 	 * Dialog web form based in messi.js to verify the option to delete.
 	 */
-	var msg = "</td><td class='content' value='"
-			+ protocolId
-			+ "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
-			+ " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
 	
+	 var msg = "</td><td class='content' value='"+ id
+	 
+	 switch(mode){
+	 	case "single":
+			msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+			break;
+	 	case "multiple":
+			msg += "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
+	 		break;
+	 }
+	 msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+	 
 	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
 	
 }
+
 
 function deleteProtocol(elm) {
 	/*
 	 * Method to execute a delete for a protocol
 	 */
-	var protId = elm.attr('value');
+	var id = elm.attr('value');
 	
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?protocolId=" + protId,
+		url : "/delete_protocol/?id=" + id,
 		dataType : "json",
+		async :false,
+		success : function(json) {
+			if(json.errors != undefined){
+				// Show errors in the validation
+				errorPopup('Errors found',json.errors);
+			} else if(json.success!= undefined){
+	//				launchMessiSimple("Successful", messiInfo(json.success));
+	//				window.location.reload()
+			}
+		},
+		error: function(){
+			alert("error")
+		}
+	});
+	
+}
+
+function copyProtocol(id){
+	/*
+	 * Method to copy protocol.
+	 */
+	$.ajax({
+		type : "GET",
+		url : "/copy_protocol/?id=" + id,
+		dataType : "json",
+		async :false,
 		success : function(json) {
 			if(json.errors != undefined){
 				// Show errors in the validation
@@ -628,6 +958,8 @@ function changeTreeView(){
 	});
 }
 
+//** REFRESHING FUNCTIONALITIES *****************************************************/
+
 function refreshRuns(mode){
 	/*
 	 * Method to update the run list/graph
@@ -637,10 +969,10 @@ function refreshRuns(mode){
 		$.ajax({
 			url : '/run_table_graph/',
 			success : function(data) {
-			
+				
 				if (typeof data == 'string' || data instanceof String){
 					
-					if (data=='stop'){
+					if (data == 'stop'){
 						window.clearTimeout(updatetimer);
 						// stop the script
 					}

@@ -36,13 +36,28 @@ from protocol_frealign_base import ProtFrealignBase
 
 
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
-    """ This class implements the wrapper to single particle refinement protocol with frealign."""
+    """ Protocol to refine a 3D map using Frealign. The algorithms implemented
+are optimized to perform  efficiently the correction for the contrast
+transfer function of the microscope and refinement of three-dimensional
+reconstructions.
+    """
     _label = 'frealign'
 
     
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
-            
+    
+    def createOutputStep(self, lastIter):
+        lastIterDir = self._iterWorkingDir(lastIter)
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+        vol = Volume()
+        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        vol.setFileName(volFn)
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputParticles.get(), vol)
+        self._defineSourceRelation(self.input3DReference.get(), vol)
+
+    #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
-        return ['Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998', 'Sindelar2012', 'Lyumkis2013']
+        return ['Lyumkis2013', 'Sindelar2012', 'Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998']
     

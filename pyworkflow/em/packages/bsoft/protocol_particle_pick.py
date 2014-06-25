@@ -33,6 +33,7 @@ from pyworkflow.utils.path import *
 from convert import readSetOfCoordinates
 from posixpath import abspath
 import bsoft
+from pyworkflow.gui.dialog import askYesNo
 
 
 class BsoftProtParticlePicking(ProtParticlePicking):
@@ -40,11 +41,9 @@ class BsoftProtParticlePicking(ProtParticlePicking):
     """Protocol to pick particles in a set of micrographs using bsoft"""
     _label = 'particle picking'
 
-    
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
-
         
     def _defineParams(self, form):
     
@@ -55,15 +54,13 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)    
         
-
-        
     def _insertAllSteps(self):
         """The Particle Picking proccess is realized for a set of micrographs"""
         
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
         # Launch Particle Picking GUI
-        self._insertFunctionStep('launchParticlePickGUIStep', isInteractive=True)
+        self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep')
         
@@ -73,16 +70,19 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         # Launch the particle picking GUI
         outputdir = self._getExtraPath()
         for mic in self.inputMics:
-            args = "%s %s"%(abspath(mic.getFileName()), outputdir)
-            self.runJob("ln -s", args)
+            micfile = abspath(mic.getFileName())
+            args = "%s %s"%(micfile, outputdir)
+            self.runJob("ln -sf", args)
             
         self._enterDir(outputdir)
         bsoft.loadEnvironment()
         for mic in self.inputMics:
-            self.runJob("bshow", getFile(mic.getFileName()))
+            self.runJob("bshow", basename(mic.getFileName()))
         self._leaveDir()
+        # Open dialog to request confirmation to create output
+        if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+            self.createOutputStep()
    
-        
     def createOutputStep(self):
         outputDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates(self.inputMics)

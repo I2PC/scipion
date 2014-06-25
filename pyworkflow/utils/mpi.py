@@ -26,31 +26,54 @@
 """
 This module contains some MPI utilities
 """
-import os, sys
+
+import os
+from time import sleep
 from process import buildRunCommand, runCommand
+
 
 TAG_RUN_JOB = 1000
 
-def runJobMPI(log, programname, params, mpiComm, mpiDest,        
-           numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, hostConfig=None):
-    """ Send the command to the MPI node in which will be executed. """
-    print "runJobMPI: hostConfig: ", hostConfig
-    command = buildRunCommand(log, programname, params,
-                              numberOfMpi, numberOfThreads, 
-                              runInBackground, hostConfig)
-    print "Sending command: %s to %d" % (command, mpiDest)
-    mpiComm.send(command, dest=mpiDest, tag=TAG_RUN_JOB + mpiDest)
-    result = mpiComm.recv(source=mpiDest, tag=TAG_RUN_JOB + mpiDest)
-    if result == 999:
-        result = runCommand(command)
-    
+
+def send(command, comm, dest, tag):
+    """ Send command in a non-blocking way and return the exit code. """
+
+    print "Sending command to %d: %s" % (dest, command)
+
+    # Send command with isend()
+    req_send = comm.isend(command, dest=dest, tag=tag)
+    while not req_send.test()[0]:
+        sleep(1)
+
+    # Receive the exit code in a non-blocking way too (with irecv())
+    req_recv = comm.irecv(dest=dest, tag=tag)
+    while True:
+        done, result = req_recv.test()
+        if done:
+            break
+        sleep(1)
+
+    # Our convention: if we get a string, an error happened.
+    # Else, it is the return code of our command, which we return too.
     if isinstance(result, str):
         raise Exception(result)
-    
-    # If not string should be the retcode
-    return result
-    
+    else:
+        return result
+
+
+def runJobMPI(log, programname, params, mpiComm, mpiDest,
+              numberOfMpi=1, numberOfThreads=1,
+              runInBackground=False, hostConfig=None, cwd=None):
+    """ Send the command to the MPI node in which it will be executed. """
+
+    command = buildRunCommand(log, programname, params,
+                              numberOfMpi, numberOfThreads,
+                              runInBackground, hostConfig)
+    if cwd is not None:
+        send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+
+    return send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+
 
 def runJobMPISlave(mpiComm):
     """ This slave will be receiving commands to execute
@@ -58,16 +81,36 @@ def runJobMPISlave(mpiComm):
     """
     rank = mpiComm.Get_rank()
     print "Running runJobMPISlave: ", rank
+
+    # Listen for commands until we get 'None'
+    cwd = None  # We run without changing directory by default
     while True:
-        command = mpiComm.recv(source=0, tag=TAG_RUN_JOB + rank)
+        # Receive command in a non-blocking way
+        req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        while True:
+            done, command = req_recv.test()
+            if done:
+                break
+            sleep(1)
+
         print "Slave %d, received command: %s" % (rank, command)
         if command == 'None':
             break
+
+        # Run the command and get the result (exit code or exception)
         try:
-            result = runCommand(command)
+            if command.startswith("cwd="):
+                cwd = command.split("=", 1)[-1]
+                result = 0
+            else:
+                result = runCommand(command, cwd=cwd)
+                cwd = None  # unset directory
         except Exception, e:
             result = str(e)
-        mpiComm.send(result, dest=0, tag=TAG_RUN_JOB + rank)
-    print "finishing slave...", rank
-    
 
+        # Send result in a non-blocking way
+        req_send = mpiComm.isend(result, dest=0, tag=TAG_RUN_JOB+rank)
+        while not req_send.test()[0]:
+            sleep(1)
+
+    print "finishing slave...", rank

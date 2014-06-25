@@ -34,7 +34,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 from pyworkflow.em import * 
 
 from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
-from pyworkflow.utils.path import makePath, removeBaseExt, join, exists
+from pyworkflow.utils.path import makePath, removeBaseExt, replaceBaseExt, join, exists
 from xmipp3 import XmippProtocol
 from glob import glob
 import xmipp
@@ -147,6 +147,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         
+        form.addParallelSection(threads=4, mpi=1)
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
@@ -175,7 +176,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 #                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
                 
         # Write pos files for each micrograph
-        self._insertFunctionStep('writePosFilesStep')
+        firstStepId = self._insertFunctionStep('writePosFilesStep')
                 
         #if self.doFlip.get():
         ctfSet = self.ctfRelations.get()
@@ -185,7 +186,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         deps = []
         for mic in self.inputMics:
-            localDeps = []
+            localDeps = [firstStepId]
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
@@ -333,7 +334,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         elif self.rejectionMethod == REJECT_PERCENTAGE:
             percentage = self.percentage.get()
             args += " --percent " + str(percentage)
-
+        
         self.runJob("xmipp_image_sort_by_statistics", args % locals())
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
@@ -348,7 +349,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgSetAux = self._createSetOfParticles('aux')
         imgSetAux.copyInfo(imgSet)
         readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
-        imgSet._xmippMd = imgSetAux._xmippMd.clone()
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in imgSetAux:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???

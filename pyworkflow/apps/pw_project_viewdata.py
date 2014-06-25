@@ -87,7 +87,7 @@ STATUS_COLORS = {
                STATUS_RUNNING: '#FCCE62', 
                STATUS_FINISHED: '#D2F5CB', 
                STATUS_FAILED: '#F5CCCB', 
-               STATUS_WAITING_APPROVAL: '#F3F5CB',
+               STATUS_INTERACTIVE: '#F3F5CB',
                STATUS_ABORTED: '#F5CCCB',
                #STATUS_SAVED: '#124EB0',
                }
@@ -180,7 +180,7 @@ class ProjectDataView(tk.Frame):
             
             if not classNode:
                 classNode = classesGraph.createNode(className)
-                if className != 'EMObject':
+                if className != 'EMObject' and classObj.__bases__:
                     parent = createClassNode(classObj.__bases__[0])
                     parent.addChild(classNode)
                 classNode.count = 0

@@ -265,9 +265,9 @@ class XmippSet():
     
     
 class XmippDataSet(ds.DataSet):
-    """ Provide a DataSet implementation base on Xmipp xmd file.
+    """ Provide a DataSet implementation based on Xmipp xmd file.
     The tables of the dataset will be the blocks in the metadata.
-    Each block is a table on the dataset and is read as a Xmipp metadata. 
+    Each block is a table on the dataset and is read as an Xmipp metadata. 
     """
     def __init__(self, filename):
         self._filename = filename
@@ -358,16 +358,6 @@ class XmippDataSet(ds.DataSet):
                   tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z]
 
         return matrix
-        
-    def getTypeOfColumn(self, label):
-        if (label == "id"):
-            return "id"
-        elif (label!='image_transformationMatrix' and xmipp.labelIsImage(str(label))):
-            return "image"
-        elif (label == "enabled"):
-            return "checkbox"
-        else:
-            return "text" 
         
         
 class ProjMatcher():

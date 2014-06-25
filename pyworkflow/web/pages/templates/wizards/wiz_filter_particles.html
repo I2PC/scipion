@@ -4,10 +4,46 @@
 {% block head %}
 	<script>
 		function returnParams(){
-			putSelection('input#high_val', 'highFreq_input');
-			putSelection('input#low_val', 'lowFreq_input');
-			putSelection('input#decay_val', 'freqDecay_input');
-		}		
+			putSelection('input#high_val', '{{params.label.1}}_input');
+			putSelection('input#low_val', '{{params.label.0}}_input');
+			putSelection('input#decay_val', '{{params.label.2}}_input');
+		}
+		
+		function compositeLoad(elm){
+// 			var first = $("tr#"+firstElm);
+			var low = $('#low_val').attr('value')
+			var high = $('#high_val').attr('value')
+			var decay = $('#decay_val').attr('value')
+			
+			compositeBandpass(elm, low, high, decay);
+		}
+		
+		function loadPreview(type, value){
+			
+			switch (type){
+			
+				case "low":
+					var low = value;
+					var high = $('#high_val').attr('value');
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "high":
+					var low = $('#low_val').attr('value');
+					var high = value
+					var decay = $('#decay_val').attr('value');
+					break;
+					
+				case "decay":
+					var low = $('#low_val').attr('value');
+					var high = $('#high_val').attr('value');
+					var decay = value;
+					break;
+				}
+			
+			previewBandpassFilter(low, high, decay);
+		}
+		
 	</script>
 {% endblock %} 
 {% block list %}
@@ -19,7 +55,7 @@
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
-	onclick="compositeBandpass(($(this)),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));" value="{{obj.text}}">
+	onclick="compositeLoad($(this));" value="{{obj.text}}">
 	<td>{{obj.basename}}</td>
 </tr>
 {% endfor %} {% endblock %} {% block images %}
@@ -42,35 +78,39 @@
 	<table id="fourierTable">
 		<tr>
 			<td>
-				<div id="highFou">
-					{% if mode == 0  or mode == 2 %}
-					<span id="title_freq">High freq<span>
-					<div id="sliderLite" class="slider_high"></div>
-					<div id="slider_high_result">{{highFreq}}</div>
+				<div id="lowFou">
+					{% if params.mode == 1 or params.mode == 2 or params.mode == 4 %}
+					<span id="title_freq">Low freq<span>
+					<div id="sliderLite" class="slider_low"></div>
+					<div id="slider_low_result">{{params.value.0}}</div>
 					{% else %}
-					<div id="slider_high_result" style="display:none;">{{highFreq}}</div>
+					<div id="slider_low_result" style="display:none;">{{params.value.0}}</div>
 					{% endif %}
-					<input id="high_val" type="hidden" value="{{highFreq}}"/>
+					<input id="low_val" type="hidden" value="{{params.value.0}}"/>
 				</div>
 			</td>
 			<td>
-				<div id="lowFou">
-					{% if mode == 1 or mode == 2 %}
-					<span id="title_freq">Low freq<span>
-					<div id="sliderLite" class="slider_low"></div>
-					<div id="slider_low_result">{{lowFreq}}</div>
+				<div id="highFou">
+					{% if params.mode == 0 or params.mode == 2 or params.mode == 3 or params.mode == 4 %}
+					<span id="title_freq">High freq<span>
+					<div id="sliderLite" class="slider_high"></div>
+					<div id="slider_high_result">{{params.value.1}}</div>
 					{% else %}
-					<div id="slider_low_result" style="display:none;">{{lowFreq}}</div>
+					<div id="slider_high_result" style="display:none;">{{params.value.1}}</div>
 					{% endif %}
-					<input id="low_val" type="hidden" value="{{lowFreq}}"/>
+					<input id="high_val" type="hidden" value="{{params.value.1}}"/>
 				</div>
 			</td>
 			<td>
 				<div id="decayFou">
+					{% if params.mode == 0  or params.mode == 1 or params.mode == 2 %}
 					<span id="title_freq">Decay<span>
 					<div id="sliderLite" class="slider_decay"></div>
-					<div id="slider_decay_result">{{decayFreq}}</div>
-					<input id="decay_val" type="hidden" value="{{decayFreq}}"/>
+					<div id="slider_decay_result">{{params.value.2}}</div>
+					{% else %}
+					<div id="slider_decay_result" style="display:none;">{{params.value.2}}</div>
+					{% endif %}
+					<input id="decay_val" type="hidden" value="{{params.value.2}}"/>
 				</div>
 			</td>
 		</tr>
@@ -80,7 +120,7 @@
 $(".slider_low").slider({
 	animate : true,
 	range : "min",
-	value : "{{lowFreq}}",
+	value : "{{params.value.0}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -91,14 +131,15 @@ $(".slider_low").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#low_val').attr('value', ui.value);
+		
 		//update the image filtered
- 		previewBandpassFilter(ui.value,$('#high_val').attr('value'),$('#decay_val').attr('value'));
+		loadPreview("low", ui.value);
 	}
 });
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
-	value : "{{highFreq}}",
+	value : "{{params.value.1}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -109,14 +150,15 @@ $(".slider_high").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#high_val').attr('value', ui.value);
+		
 		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),ui.value,$('#decay_val').attr('value'));	
+		loadPreview("high", ui.value);
 	}
 });
 $(".slider_decay").slider({
 	animate : true,
 	range : "min",
-	value : "{{decayFreq}}",
+	value : "{{params.value.2}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -127,12 +169,13 @@ $(".slider_decay").slider({
 	//this updates the hidden form field so we can submit the data using a form
 	change : function(event, ui) {
 		$('#decay_val').attr('value', ui.value);
+		
 		//update the image filtered
-		previewBandpassFilter($('#low_val').attr('value'),$('#high_val').attr('value'),ui.value);
+		loadPreview("decay", ui.value);
 	}
 });
 //Load the First Element of the list
-window.onload = compositeBandpass($("tr#"+firstElm),$('#low_val').attr('value'),$('#high_val').attr('value'),$('#decay_val').attr('value'));
+window.onload =  compositeLoad($("tr#"+firstElm));
 </script>
 {% endblock %}
 {% block function %}

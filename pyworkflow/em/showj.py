@@ -33,8 +33,8 @@ import os
 from os.path import join
 from collections import OrderedDict
 
-import pyworkflow as pw
 from pyworkflow.utils import runJob
+from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE
 
 
 #------------------------ Showj constants ---------------------------
@@ -53,6 +53,7 @@ MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
 RENDER = 'render'
 ORDER = 'order'
+VISIBLE = 'visible'
 ZOOM = 'zoom'
 
 GOTO = 'goto'
@@ -60,6 +61,9 @@ ROWS = 'rows'
 COLS = 'cols'
 ALLOW_RENDER = 'allowRender'
 MANUAL_ADJUST = 'colRowMode'
+
+SELECTEDITEMS = 'listSelectedItems'
+ENABLEDITEMS = 'listEnabledItems'
 
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'
@@ -95,18 +99,17 @@ class ColumnsConfig():
     - renderFunc
     - renderFuncExtra
     """
-    def __init__(self, ds, table, allowRender=True, defaultColumnsLayoutProperties=None):
+    def __init__(self, table, allowRender=True, defaultColumnsLayout={}):
         
         self._columnsDict = OrderedDict() 
          
-        for col in table.iterColumns():
-            
-            self._columnsDict[col.getName()] = ColumnProperties(col, ds, allowRender, defaultColumnsLayoutProperties[col.getName()] if defaultColumnsLayoutProperties != None else {})
-        
+        for col in table.iterColumns():  
+            colDefaultLayout =   defaultColumnsLayout.get(col.getName(), {})        
+            self._columnsDict[col.getName()] = ColumnProperties(col, allowRender, colDefaultLayout)
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
-        columns = [col.getLabel() for col in self._columnsDict.values() if col.isRenderable()]
+        columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
         return columns
     
     def hasEnableColumn(self):
@@ -136,32 +139,27 @@ class ColumnProperties():
     """ Store some properties to customize how each column
     will be display in the table. 
     """
-    def __init__(self, col, ds, allowRender, defaultColumnLayoutProperties):
+    def __init__(self, col, allowRender, defaultColumnLayoutProperties):
         self._column = col        
-        self.columnType = ds.getTypeOfColumn(col.getName())
+        self.columnType = col.getRenderType()
         
-        self.visible = not (self.columnType == 'id')
+        self.visible = not (self.columnType == COL_RENDER_ID)
         self.allowSetVisible = True 
         
-        self.editable = (self.columnType == 'text')
+        self.editable = (self.columnType == COL_RENDER_TEXT)
         self.allowSetEditable = self.editable
         
-        self.renderable = False
-        
-        for k in defaultColumnLayoutProperties:
-            if k == 'renderable':
-                self.renderable = True
-            else:
-                self.renderable = False
-
-#        self.renderable = False
+        self.renderable = 'renderable' in defaultColumnLayoutProperties
             
-        self.allowSetRenderable = (self.columnType == 'image' and allowRender)
+        self.allowSetRenderable = (self.columnType == COL_RENDER_IMAGE and allowRender)
 
         self.renderFunc = "get_image"
         self.extraRenderFunc = ""
         
     def getLabel(self):
+        return self._column.getLabel()
+    
+    def getName(self):
         return self._column.getName()
     
     def getColumnType(self):
@@ -183,7 +181,9 @@ class ColumnProperties():
                 "allowSetRenderable":self.allowSetRenderable,
                 "renderFunc":self.renderFunc,
                 "extraRenderFunc":self.extraRenderFunc,
-                'columnType': self.columnType
+                'columnType': self.columnType,
+                'columnName': self.getName(),
+                'columnLabel': self.getLabel()
                 }
         
 def getArchitecture():

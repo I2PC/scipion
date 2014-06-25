@@ -34,47 +34,100 @@ import ttk
 from pyworkflow.em.constants import *
 from constants import *
 
+from protocol_ctffind3 import ProtCTFFind
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign
 
 from pyworkflow import findResource
 
+#===============================================================================
+# CTFs
+#===============================================================================
+
+class BrandeisCTFWizard(CtfWizard):
+    _targets = [(ProtCTFFind, ['lowRes', 'highRes'])]
+    
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.inputMicrographs
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']
+        return CtfWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        CtfWizard.show(self, form, _value, _label, UNIT_PIXEL)
+
+#===============================================================================
+# MASKS
+#===============================================================================
 
 class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
     
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.input3DReference
+        protParams['label']= label
+        protParams['value']= value
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.input3DReferences.get()    
-        return VolumeMaskRadiiWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return VolumeMaskRadiiWizard._getListProvider(self, _objs)
     
     def show(self, form):
-        _value = [form.protocol.innerRadius.get(), form.protocol.outerRadius.get()]
-        _label = ["innerRadius", "outerRadius"]
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
         VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
-        
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_volume_mask_radii" 
 
+
+#===============================================================================
+# FILTERS
+#===============================================================================
  
 class FrealignBandpassWizard(FilterParticlesWizard):
     _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
     
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.inputParticles
+        protParams['label']= label
+        protParams['value']= value
+        protParams['mode'] = FILTER_NO_DECAY
+        return protParams  
+    
     def _getProvider(self, protocol):
-        _objs = protocol.inputParticles.get()
-        return FilterParticlesWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']
+        return FilterParticlesWizard._getListProvider(self, _objs)
     
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'highFreq': protocol.highResolRefine.get(),
-                    'lowFreq': protocol.lowResolRefine.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'][0],
+                    'highFreq': params['value'][1],
                     'unit': UNIT_ANGSTROM
                     }
             
@@ -89,28 +142,35 @@ class FrealignBandpassWizard(FilterParticlesWizard):
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
             
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_filter_particle" 
- 
  
 class FrealignVolBandpassWizard(FilterVolumesWizard):
     _targets = [(ProtFrealign, ['resolution'])]
     
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.input3DReference
+        protParams['label']= label
+        protParams['value']= value
+        protParams['mode'] = FILTER_LOW_PASS_NO_DECAY
+        return protParams
+    
     def _getProvider(self, protocol):
-        _objs = protocol.input3DReferences.get()    
-        return FilterVolumesWizard._getProvider(self, protocol, _objs)
+        _objs = self._getParameters(protocol)['input']  
+        return FilterVolumesWizard._getListProvider(self, _objs)
+    
     
     def show(self, form):
         protocol = form.protocol
         provider = self._getProvider(protocol)
+        params = self._getParameters(protocol)
 
         if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
             
-            args = {'mode':  self.mode,                   
-                    'lowFreq': protocol.resolution.get(),
+            args = {'mode': params['mode'],                   
+                    'lowFreq': params['value'],
                     'unit': UNIT_ANGSTROM
                     }
             
@@ -128,9 +188,6 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
                 
         else:
             dialog.showWarning("Input volumes", "Select volumes first", form.root)  
-    
-    @classmethod    
-    def getView(self):
-        return "wiz_frealign_filter_volumes" 
+
     
     

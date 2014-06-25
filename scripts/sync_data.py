@@ -2,6 +2,7 @@
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,416 +25,406 @@
 # *  e-mail address 'ifoche@cnb.csic.es'
 # *
 # **************************************************************************
+
+"""
+Scipion data synchronization.
+"""
+
 from __future__ import division
-import os
-import subprocess
-import getopt
+
 import sys
+import os
+from os.path import join, isdir, exists, relpath
+import subprocess
 import argparse
-import urllib
 import hashlib
-import types
-from pyworkflow.utils.path import moveFile, makePath, makeFilePath, copyFile, cleanPath
+from urllib2 import urlopen
+import getpass
 
-def scipion_logo():
-    print ""
-    print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
-    print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
-    print "QQQQQD'              \"$QQ"  + "  I   I   I"
-    print "QQQQP                 \"4Q"  + "  P   P   P"
-    print "QQQP        :.,        -$"   + "  I   I   I"
-    print "QQD       awQQQQwp      )"   + "  O   O   O"
-    print "QQ'     qmQQQWQQQQg,   jm"   + "  N   N   N"
-    print "Qf     QQQD^   -?$QQp jQQ"   + " ################################################"
-    print "Q`    qQQ!        4WQmQQQ"   + " # Integrating image processing packages for EM #"
-    print "F     QQ[          ~)WQQQ"   + " ################################################"
-    print "[    ]QP             4WQQ"   + ""
-    print "f    dQ(             -$QQ"   + " Data synchronization script"
-    print "'    QQ              qQQQ"
-    print ".   )QW            _jQQQQ"
-    print "-   =QQ           jmQQQQQ"
-    print "/   -QQ           QQQQQQQ"
-    print "f    4Qr    jQk   )WQQQQQ"
-    print "[    ]Qm    ]QW    \"QQQQQ"
-    print "h     $Qc   jQQ     ]$QQQ"
-    print "Q,  :aQQf qyQQQL    _yQQQ"
-    print "QL jmQQQgmQQQQQQmaaaQWQQQ"
-    print ""
+from pyworkflow.utils.path import makePath, makeFilePath, copyFile, cleanPath
 
-def backupFile(basePath, fileName='MANIFEST'):
-    filePath = os.path.join(basePath, fileName)
-    backPath = os.path.join(basePath, "."+fileName+".backup")
-    if os.path.exists(filePath):
-        moveFile(filePath, backPath)
-        
-def restoreFile(basePath, fileName='MANIFEST'):
-    filePath = os.path.join(basePath, fileName)
-    backPath = os.path.join(basePath, "."+fileName+".backup")
-    if os.path.exists(backPath):
-        if os.path.exists(filePath):
-            os.remove(filePath)
-        moveFile(backPath, filePath)
-            
-def delBackFile(basePath, fileName='MANIFEST'):
-    filePath = os.path.join(basePath, fileName)
-    backPath = os.path.join(basePath, "."+fileName+".backup")
-    if os.path.exists(backPath):
-        os.remove(backPath)
-        
-def initDownloadBar(len):
-    sys.stdout.write("[%s]" % (" " * len))
-    sys.stdout.flush()
-    sys.stdout.write("\b" * (len+1))
-    
-def backDownloadBar(number):
-    sys.stdout.write("\b" * (number))
-    sys.stdout.flush()
-    
-def forwardDownloadbar(percent, progress):
-    for x in range(0, (int)(progress//1)):
-        sys.stdout.write("#")
-        sys.stdout.flush()
-        progress-=1
-    if progress != 0:
-        if ((percent-progress)//1) != ((percent)//1):
-            sys.stdout.write("#")
-            sys.stdout.flush()
-    
-def downloadFile(datasetName, file, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], askMsg="download it?", url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):
-    fileDownloaded = 0
-    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
-    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
-    answer = "-"
+
+scipion_logo = """
+QQQQQQQQQT!^'::""?$QQQQQQ  S   S   S
+QQQQQQQY`          ]4QQQQ  C   C   C
+QQQQQD'              "$QQ  I   I   I
+QQQQP                 "4Q  P   P   P
+QQQP        :.,        -$  I   I   I
+QQD       awQQQQwp      )  O   O   O
+QQ'     qmQQQWQQQQg,   jm  N   N   N
+Qf     QQQD^   -?$QQp jQQ ################################################
+Q`    qQQ!        4WQmQQQ # Integrating image processing packages for EM #
+F     QQ[          ~)WQQQ ################################################
+[    ]QP             4WQQ
+f    dQ(             -$QQ Data synchronization script
+'    QQ              qQQQ
+.   )QW            _jQQQQ
+-   =QQ           jmQQQQQ
+/   -QQ           QQQQQQQ
+f    4Qr    jQk   )WQQQQQ
+[    ]Qm    ]QW    "QQQQQ
+h     $Qc   jQQ     ]$QQQ
+Q,  :aQQf qyQQQL    _yQQQ
+QL jmQQQgmQQQQQQmaaaQWQQQ
+"""
+
+
+
+def downloadFile(datasetName, fname, workingCopy=None, askMsg="download it?",
+                 url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
+                 verbose=False):
+    """ Download data set from a url, return 1 if it worked, 0 if not """
+
+    datasetFolder = join(workingCopy if workingCopy else os.environ['SCIPION_TESTS'],
+                         datasetName)
+
     if verbose:
-        while answer != "y" and answer != "n" and answer != "":
-            answer = raw_input("\t "+askMsg + " ([y]/n): ")
-    if answer == "y" or answer == "" or not verbose:
-        if verbose:
-            print "\t Downloading file..."
-        makeFilePath(os.path.join(datasetFolder, file))
-        try:
-            urllib.urlretrieve(url+'/'+datasetName+'/'+file, os.path.join(datasetFolder, file))
-            if verbose:
-                print "\t ...done."
-        except:
-            print "\t "+ file+" ...ERROR"
-            print "URL: "+url+'/'+datasetName+file
-            print "destination: "+os.path.join(datasetFolder, file)
-        fileDownloaded = 1
-    return fileDownloaded
+        while True:  # so verbose also interrupts the flow... uhm...
+            answer = raw_input("\t%s ([y]/n): " % askMsg)
+            if answer in ['N', 'n']:
+                return 0
+            elif answer in ['Y', 'y', '']:
+                break
 
-def downloadDataset(datasetName, destination=os.environ['SCIPION_TESTS'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False, onlyManifest=False):
-    datasetFolder = os.path.join(destination, "%(dataset)s" % ({'dataset': datasetName}))
+    if verbose:
+        print "\tDownloading file..."
+
+    makeFilePath(join(datasetFolder, fname))
+    try:
+        data = urlopen('%s/%s/%s' % (url, datasetName, fname)).read()
+        open(join(datasetFolder, fname), 'w').write(data)
+        if verbose:
+            print "\t...done."
+        return 1
+    except Exception as e:
+        print "\tError downloading %s (%s)" % (fname, e)
+        print "URL: %s/%s/%s" % (url, datasetName, fname)
+        print "destination: %s" % join(datasetFolder, fname)
+        return 0
+
+
+def downloadDataset(datasetName, destination=None,
+                    url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
+                    verbose=False, onlyManifest=False):
+    """ Download all the data files mentioned in url/datasetName/MANIFEST """
+
+    destination = destination if destination else os.environ['SCIPION_TESTS']
+
+    # First make sure that we ask for a known dataset.
+    datasetsAvailable = [x.strip('./') for x in
+                         urlopen('%s/MANIFEST' % url).read().splitlines()]
+    if datasetName not in datasetsAvailable:
+        print 'Unknown dataset "%s".' % datasetName
+        print 'Use --list to see the available datasets.'
+        return
+
+    # Retrieve the dataset's MANIFEST file.
+    # It contains a list of "file md5sum" of all files included in the dataset.
+    datasetFolder = join(destination, datasetName)
     makePath(datasetFolder)
+    manifest = join(destination, datasetName, 'MANIFEST')
     try:
         if verbose:
-            print "retrieving MANIFEST file"
-        urllib.urlretrieve(url+'/'+datasetName+'/MANIFEST', getManifestPath(basePath=destination, dataset=datasetName))
-    except:
-        print "URL could not be retrieved"
-        if verbose:
-            print "URL: " + url+'/'+datasetName+'/MANIFEST'
-            print "destination:" + getManifestPath(basePath=destination, dataset=datasetName)
-    if not onlyManifest:
-        manifestFile = open(getManifestPath(basePath=destination, dataset=datasetName), 'r+')
-        manifestLines = manifestFile.readlines()
-        print "Fetching dataset %(dataset)s files..." % ({'dataset': datasetName})
-        totalNumber = len(manifestLines)
-        percent = prevPercent = 0
-        downloadBarWidth = 100
-        if not verbose:
-            initDownloadBar(downloadBarWidth)
-        for number, lineExt in enumerate(manifestLines):
-            line = os.path.normpath(lineExt.replace("\n","").split(" ")[0])
-            md5InLine = lineExt.replace("\n","").split(" ")[1] 
-            makeFilePath(os.path.join(datasetFolder, line))
-            try:
-                urllib.urlretrieve(url+'/'+datasetName+'/'+line, os.path.join(datasetFolder, line))
-                percent = ((number+1)/(totalNumber*1.0))*100
-                if verbose:
-                    print "\t "+line+" ...OK ( %(percent)02d " % ({'percent': percent}) + ' %)'
-                else:
-                    progress = percent-prevPercent
-                    remaining = downloadBarWidth-progress
-                    forwardDownloadbar(percent, progress)
-                prevPercent = percent
-            except:
-                print "\t "+ line+" ...ERROR"
-                print "URL: "+url+'/'+datasetName+line
-                print "destination: "+os.path.join(datasetFolder, line)
-                answer = "-"
-                while answer != "y" and answer != "n" and answer != "":
-                    answer = raw_input("continue downloading? (y/[n]): ")
-                    if answer == "n" or answer == "":
-                        sys.exit(1)
-            md5sum = md5Sum(os.path.join(datasetFolder, os.path.normpath(line.replace("\n","").split(" ")[0])))
-                #data = fileToCheck.read()
-                #md5sum = hashlib.md5(data).hexdigest()
-            if verbose:
-                print "\t \t md5 verification...%(md5sum)s %(md5InLine)s" % ({'md5sum': md5sum, 'md5InLine': md5InLine})
-            if md5sum != md5InLine:
-                print "ERROR in md5 verification for file %(file)s" % ({'file': line})
-                print "md5 sum calculated for downloaded file is %(md5sum)s" % ({'md5sum': md5sum})
-                print "md5 sum that file should have is %(md5sum)s" % ({'md5sum': md5InLine})
-                print ""
-                answer = "-"
-                while answer != "y" and answer != "n" and answer != "":
-                    answer = raw_input("continue downloading? (y/[n]): ")
-                    if answer == "n" or answer == "":
-                        sys.exit(1)
-            elif verbose:
-                print "md5 verification...OK"
-                print ""
-        if not verbose:
-            sys.stdout.write("\n")
-    print "\t ...done"
-    print ""
+            print "Retrieving MANIFEST file"
+        data = urlopen('%s/%s/MANIFEST' % (url, datasetName)).read()
+        open(manifest, 'w').write(data)
+    except Exception as e:
+        print "ERROR reading %s/%s/MANIFEST (%s)" % (url, datasetName, e)
+        return
 
-def md5Sum(file):
-    md5sum = 0
-    md5 = hashlib.md5()
-    with open(file,'r+') as fileToCheck:
-        for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
-            md5.update(chunk)
-    md5sum = md5.hexdigest()
-    return md5sum
-    
-def checkForUpdates(datasetName, workingCopy=os.environ['SCIPION_TESTS'], tmpMd5copy=os.environ['SCIPION_TMP'], url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests", verbose=False):    
-    # We need to download the remote manifest file
-    datasetFolderTmp = os.path.join(tmpMd5copy, "%(dataset)s" % ({'dataset': datasetName}))
-    manifestFileTmp = open(getManifestPath(basePath=os.environ['SCIPION_TMP'], dataset=datasetName), 'r+')
-    manifestLinesTmp = manifestFileTmp.readlines()
+    if onlyManifest:
+        print "\t...done\n"
+        return
+
+    # Now retrieve all of the files mentioned in MANIFEST, and check their md5.
+    print "Fetching dataset %s files..." % datasetName
+    manifestLines = open(manifest).readlines()
+    totalNumber = len(manifestLines)
+    prevPercent = 0
+    for number, line in enumerate(manifestLines):
+        fname, md5InLine = line.strip().split()
+        makeFilePath(join(datasetFolder, fname))
+        try:
+            # Create file with downloaded content
+            data = urlopen('%s/%s/%s' % (url, datasetName, fname)).read()
+            open(join(datasetFolder, fname), 'w').write(data)
+
+            percent = ((number+1)/(totalNumber*1.0))*100
+            if verbose:
+                print "\t%s ...OK (%02d %%) " % (fname, percent)
+            else:
+                progress = percent - prevPercent
+                sys.stdout.write("#" * int(1 + progress))
+                sys.stdout.flush()
+            prevPercent = percent
+
+            md5 = md5sum(join(datasetFolder, fname))
+            assert md5 == md5InLine, \
+                'Bad md5. Expected: %s Computed: %s' % (md5InLine, md5)
+        except Exception as e:
+            print "\tError in %s (%s)" % (fname, e)
+            print "URL: %s/%s/%s" % (url, datasetName, fname)
+            print "Destination: %s" % join(datasetFolder, fname)
+            while True:
+                answer = raw_input("Continue downloading? (y/[n]): ")
+                if not answer or answer in ['N', 'n']:
+                    break
+                if answer in ['Y', 'y']:
+                    continue
+
+        if verbose:
+            print "md5 verification...OK\n"
+
+
+def md5sum(fname):
+    """ Return the md5 hash of file fname """
+
+    mhash = hashlib.md5()
+    with open(fname) as f:
+        for chunk in iter(lambda: f.read(128 * mhash.block_size), ''):
+            mhash.update(chunk)
+    return mhash.hexdigest()
+
+
+def checkForUpdates(datasetName, workingCopy=None,
+                    url="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
+                    verbose=False):
+    """ Compare md5 of files in url/datasetName/MANIFEST with their local counterpart """
+
+    # Get default values for variables if we got none
+    workingCopy = workingCopy or os.environ['SCIPION_TESTS']
+
+    # Read contents of remote MANIFEST file, and create a dict {fname: md5}
+    manifestRaw = urlopen('%s/%s/MANIFEST' % (url, datasetName)).read()
+    md5sRemote = dict(x.split() for x in manifestRaw.splitlines())
 
     # and check it with the local copy
-    datasetFolder = os.path.join(workingCopy, "%(dataset)s" % ({'dataset': datasetName}))
-    manifestFile = open(getManifestPath(dataset=datasetName))
-    manifestLines = manifestFile.readlines()
+    datasetFolder = join(workingCopy, datasetName)
+    md5sLocal = dict(x.split() for x in open(join(datasetFolder, 'MANIFEST')))
     
     filesUpdated = 0
-    print "Verifying MD5..."
-    for number, line in enumerate(manifestLinesTmp):
-        file = os.path.normpath(line.replace("\n","").split(" ")[0])
+    taintedMANIFEST = False  # if we may have to regenerate MANIFEST
+    print "Verifying MD5s..."
+    for fname in md5sRemote:
         if verbose:
-            print "\t checking file %(file)s..." % ({'file': file})
-        if os.path.exists(os.path.join(datasetFolder, file)):
-            lineInManifest = findLineInFile(line, getManifestPath(dataset=datasetName))
-            if lineInManifest == -1:
+            print '\t%s' % fname,
+
+        if not exists(join(datasetFolder, fname)):
+            if verbose:
+                print "\n\tFile %s doesn't exist." % fname
+            filesUpdated += downloadFile(datasetName, fname, workingCopy,
+                                         askMsg="download it?", url=url, verbose=verbose)
+        else:
+            if md5sLocal[fname] == md5sRemote[fname]:
                 if verbose:
-                    print ""
-                    print "\t ERROR: file %(file)s not found in MANIFEST" % ({'file': file})
-                    sys.exit(1)
-            md5fcalc = (manifestLines[lineInManifest]).split(" ")[1]
-            md5Tmpfcalc = line.split(" ")[1]
-            if md5fcalc == md5Tmpfcalc:
-                if verbose:
-                    print "\t md5 checked and OK!"
+                    print "\r\tOK  %s" % fname
             else:
                 if verbose:
-                    print ""
-                    print "\t file %(file)s checksum differs." % ({'file': file})
-                filesUpdated += downloadFile(datasetName, file, workingCopy, tmpMd5copy, askMsg="update it?", url=url, verbose=verbose)
-        else: #file does not exist, show option for downloading it
-            if verbose:
-                print ""
-                print "\t file %(file)s doesn't exist." % ({'file': file})
-            filesUpdated += downloadFile(datasetName, file, workingCopy, tmpMd5copy, askMsg="download it?", url=url, verbose=verbose)
-    copyFile(os.path.join(datasetFolderTmp, 'MANIFEST'), os.path.join(datasetFolder, 'MANIFEST'))
-    if filesUpdated == 0:
-        print "\t ...done. Nothing changed."
-    elif filesUpdated == 1:
-        print "\t ...done. 1 file was updated."
-    else:
-        print "\t ...done. %(filesUpdated)d files were updated." % ({'filesUpdated': filesUpdated})
-    print ""
+                    print "\r\tBAD %s  \t==> checksum differs" % fname
+                taintedMANIFEST = True  # if we don't update, it can be wrong
+                filesUpdated += downloadFile(datasetName, fname, workingCopy, askMsg="update it?", url=url, verbose=verbose)
 
-def findLineInFile(text, filePath):
-    file = open(filePath, 'r')
-    lineFound = -1
-    for indx, line in enumerate(file.readlines()):
-        if text in line:
-            lineFound = indx
-    return lineFound
+    print '\t...done. Updated files: %d' % filesUpdated
 
-def getManifestPath(basePath=os.environ['SCIPION_TESTS'], dataset=""):
-    return os.path.join(basePath, dataset, 'MANIFEST')
+    # Save the new MANIFEST file in the folder of the downloaded dataset.
+    open(join(datasetFolder, 'MANIFEST'), 'w').write(manifestRaw)
+
+    if taintedMANIFEST:
+        print 'If you stopped any files from being updated, please run '
+        print 'with --format option to regenerate the MANIFEST file.'
+
 
 def Cmd(command):
     print ">>>>>", command
     subprocess.call(command, shell=True)
 
-def main(argv):
+
+def main():
     # Arguments parsing
-    parser = argparse.ArgumentParser(description="*"*5 + "Sync Data Python Bash Executor (WRAPPER)" + "*"*5)
-    exclusive = parser.add_mutually_exclusive_group()
-
-    parser.add_argument('-s', '--syncfile', 
-        default="sync_data", 
-        help="Sync Bash Script")
-
-    parser.add_argument('-t', '--last-mod-file', 
-        default="last_m.txt", 
-        help="File that contain the IP/s of the computer/s that acceeded last time to change the Scipion tests data.")
-
-    parser.add_argument('-m', '--mod-log-file', 
-        default="modifications.log",
-        help="File that contain the whole modifications log to keep a tracking of what has been done in the Scipion tests data. The path given must be relative to $SCIPION_HOME")
-    
-    parser.add_argument('-u', '--url',
-        default="http://scipionwiki.cnb.csic.es/files/scipion/data/tests",
-        help="String storing the url where remote datasets will be looked for")
-
-    exclusive.add_argument('-q', '--query-for-modifications', 
-        action="store_true",
-        help="Look for last_m.txt file. There, there will be or (1) the IP of the last modifier and date or (2) nothing. If the script finds (1) it moves it to modifications.log file and returns 0. If it finds (2) it check whether the file was modified in the last 30 minutes. If not, it returns 1, if yes it returns 2.")
-
-    parser.add_argument('-d', '--delete', 
-        action="store_true",
-        help="Only valid when -r option enabled. This deletes remote files not existing in local. In the nutshell, it leaves the remote scipion data directory as it is the local one. Extremely dangerous option!.")
-
-    exclusive.add_argument('-r', '--reverse-sync', 
-        action='store_true',
-        help="Synchronize from the local data to scipion machine. When wildcard 'all' is given, it will synchronize all the local folder with the remote one. When a set of locations is given, they're synchronized one by one against the remote scipion server. File path must be given from $SCIPION_HOME/tests folder")
-    
-    parser.add_argument('-f', '--dataset',
-        nargs='+',
-        help="Determine the dataset to use. The selected operation will be applied to this dataset.")
-    
-    parser.add_argument('-l', '--list',
-        action="store_true",
-        help="Look for local datasets in $SCIPION_TESTS folder and for remote datasets in http://scipionwiki.cnb.csic.es/files/tests.")
-    
-    parser.add_argument('-v', '--verbose',
-        action="store_true",
-        help="Verbose mode. This will print more detailed messages")
-
+    parser = argparse.ArgumentParser(description=__doc__)
+    g = parser.add_mutually_exclusive_group()
+    g.add_argument('--download', action='store_true', help="Download dataset.")
+    g.add_argument('--upload', action='store_true',
+        help=("Upload local dataset to the scipion server. The dataset name must"
+              "be the name of its folder relative to the SCIPION_TESTS folder."))
+    g.add_argument('--list', action='store_true',
+        help=('List local datasets (from $SCIPION_TESTS) and remote ones '
+              '(remote url can be specified with --url).'))
+    g.add_argument('--format', action='store_true',
+        help='Create a MANIFEST file with checksums in the datasets folders.')
+    add = parser.add_argument  # shortcut
+    add('datasets', metavar='DATASET', nargs='*', help='Name of a dataset.')
+    add('--delete', action='store_true',
+        help=('Delete remote files not present in local. It leaves the remote '
+              'scipion data directory as it is in the local one. Extremely '
+              'dangerous! Only valid with -r.'))
+    add('-u', '--url',
+        default='http://scipionwiki.cnb.csic.es/files/scipion/data/tests',
+        help='URL where remote datasets will be looked for.')
+    add('-q', '--query-for-modifications', action='store_true',
+        help=("Look for last_m.txt file. There, there will be (1) the IP of "
+              "the last modifier and date or (2) nothing. If the script finds "
+              "(1) it moves it to modifications.log and returns 0. If it "
+              "finds (2) it checks whether the file was modified in the last "
+              "30 minutes. If not, it returns 1, if yes it returns 2."))
+    add('--last-mod-file', default='last_m.txt',
+        help=('File which lists the computers that have last changed the '
+              'Scipion tests data (using this script).'))
+    add('--mod-log-file', default='modifications.log',
+        help=('File with the whole modifications log to keep track of what '
+              'has been done in the Scipion tests data. The path must be '
+              'relative to the Scipion folder.'))
+    add('-v', '--verbose', action='store_true', help='Print more details.')
     args = parser.parse_args()
 
+    #print scipion_logo
 
-    # Depending on the arguments selected, doing one thing or another
-
-    scipion_logo()
+    # Dispatch the easy cases first (list and query), and then take care of
+    # the more complex ones.
     if args.list:
-        print "List of local datasets in %(datasetsFolder)s" % ({'datasetsFolder': os.environ['SCIPION_TESTS']})
-        folders = os.listdir(os.environ['SCIPION_TESTS'])
-        for folder in folders:
-            if os.path.isdir(os.path.join(os.environ['SCIPION_TESTS'], folder)):
-                if os.path.exists(os.path.join(os.environ['SCIPION_TESTS'], folder, 'MANIFEST')):
-                    print "\t * " + folder
-                else:
-                    print "\t * " + folder + ' (not in dataset format)'
-        print ""
-        print "updating remote info..."
-        backupFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
-        try:
-            urllib.urlretrieve(args.url+'/MANIFEST', getManifestPath(basePath=os.environ['SCIPION_TMP']))
-        except:
-            print "MANIFEST"+" ...ERROR"
-            print "URL: "+args.url+'/MANIFEST'
-            print "destination: "+getManifestPath(basePath=os.environ['SCIPION_TMP'])
-            restoreFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
-        if os.path.exists(getManifestPath(basePath=os.environ['SCIPION_TMP'])):
-            print "List of remote datasets in %(urlAddress)s" % ({'urlAddress': args.url})
-            manifestFile = open(getManifestPath(basePath=os.environ['SCIPION_TMP']), 'r+')
-            manifestLines = manifestFile.readlines()
-            for line in manifestLines:
-                print "\t * "+os.path.split(line.replace("\n",""))[1]
-        delBackFile(getManifestPath(basePath=os.environ['SCIPION_TMP']))
-            
-    elif args.query_for_modifications:
-        print "Querying the modifications log file..."
-        if os.path.exists(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)):
-            print "File " + args.last_mod_file + " exists. Checking its content..."
-            if os.stat(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file)).st_size != 0: #File contains data
-                print "File's not empty. Copying the content to log file " + args.mod_log_file
-                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'r+')
-                modif_file = open(os.path.join(os.environ['SCIPION_HOME'],args.mod_log_file), 'a')
-                file_content = last_file.read()
-                modif_file.write(file_content)
-                print "Last modifications file shows following content:"
-                print file_content
-                #TODO: In case we want to add the responsible of the modifications to the blame list, this is the place to do it
-                last_file.close()
-                modif_file.close()
-                last_file = open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
-            else: #File's empty
-                print "File's empty, so no modification since last check."
-                sys.exit(1)
-        else:
-            print "File " + args.last_mod_file + " doesn't exist. Creating it..."
-            open(os.path.join(os.environ['SCIPION_HOME'],args.last_mod_file), 'w').close()
-            sys.exit(2) #We return with 2, to let Buildbot know that no modification was made (when failure there was modification)
-    elif args.dataset:
-        if len(args.dataset) != 1:
-            print "Selected datasets: %(datasets)s" % ({'datasets': " ".join(args.dataset)})
-        else:
-            print "Selected datasets: %(datasets)s" % ({'datasets': args.dataset[0]})
-        ans = ""
-        if len(args.dataset) == 1 and " ".join(args.dataset) == "all" and args.reverse_sync:
-            while ans != "y" and ans != "Y" and ans != "n" and ans != "N":
-                ans = raw_input("You've selected to synchronize all your data with the remote data. You will squash all remote data. Are you sure you want to continue? (y/n): ")
-            if ans != ("y" or "Y"):
-                sys.exit(1)
-        for dataset in args.dataset:
-            if args.reverse_sync:
-                deleteFlag=""
-                if args.delete:
-                    deleteFlag="--delete "
-                localFolder = os.path.join(os.environ['SCIPION_TESTS'], dataset)
-                remoteUser = 'scipion'
-                remoteServer = 'ramanujan.cnb.csic.es'
-                remoteFolder = os.path.join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests')
-                lastmFile = os.path.join("Scipion", 'last_m.txt')
-                localUser = None
-                localHostname = " ".join(os.uname())
-                try:
-                    import pwd
-                except ImportError:
-                    import getpass
-                    pwd = None
-                if pwd:
-                    localUser = pwd.getpwuid(os.geteuid()).pw_name
-                else:
-                    localUser = getpass.getuser()
-                
-                if not os.path.exists(localFolder):
-                    print "ERROR: local folder %(localFolder)s doesn't exist." % ({'localFolder': localFolder})
-                    sys.exit(1)
-                print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
-                ans = ''
-                while ans != 'y' and ans != 'Y' and ans != 'n' and ans != 'N':
-                    ans = raw_input("You're going to be connected to %(remoteServer)s server as %(remoteUser)s user to write in %(remoteFolder)s folder for %(dataset)s dataset. Only authorized users shall pass. Continue? (y/n): " % ({'remoteServer': remoteServer, 'remoteUser': remoteUser, 'remoteFolder': remoteFolder, 'dataset': dataset}))
-                if ans != ('y' or 'Y'):
-                    sys.exit(1)
-                
-                # If the folder is not in the proper format, create the format and then upload
-                command = '%(scipionPython)s scripts/generate_md5.py %(dataset)s %(datasetPath)s' % ({'scipionPython': os.environ['SCIPION_PYTHON'], 'dataset': dataset, 'datasetPath': os.environ['SCIPION_TESTS']})
-                Cmd(command)
-                # Synchronize files
-                command = 'rsync -av '+ deleteFlag + localFolder + ' ' + remoteUser + '@' + remoteServer + ':' + remoteFolder
-                Cmd(command)
-                # Regenerate remote MANIFEST
-                print "Regenerating remote MANIFEST file..."
-                command = "ssh " + remoteUser + '@' + remoteServer + " \"cd " + remoteFolder + ' && ' + "find -maxdepth 1 -type d -type d ! -iname '.' > MANIFEST" + "\""
-                Cmd(command)
-                
-                print "Registering modification attempt in last_m.txt file"
-                command = "ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification to " + dataset + " dataset made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\""
-                Cmd(command)
-                print "...done."
-                # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
-                #TODO: this step
+        listDatasets(args.url)
+        sys.exit(0)
+
+    if args.query_for_modifications:
+        last_mfile = join(os.environ['HOME'], 'Scipion', args.last_mod_file)
+        log_mfile = join(os.environ['HOME'], 'Scipion', args.mod_log_file)
+        queryModifications(last_mfile, log_mfile)
+        sys.exit(0)
+
+    if not args.datasets:
+        sys.exit("At least --list, -q or datasets needed. See --help for more info.")
+
+    print "Selected datasets: %s" % " ".join(args.datasets)
+
+    if args.format:
+        for dataset in args.datasets:
+            print "Formatting %s" % dataset
+            if not exists(join(os.environ['SCIPION_TESTS'], dataset)):
+                sys.exit("ERROR: %s folder doesn't exist in datasets folder %s." %
+                         (dataset, os.environ['SCIPION_TESTS']))
+            createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+        sys.exit(0)
+
+    if args.download:
+        # Download datasets.
+        for dataset in args.datasets:
+            if exists(join(os.environ['SCIPION_TESTS'], dataset)):
+                print 'Local copy of dataset %s detected.' % dataset
+                print 'Checking for updates...'
+                checkForUpdates(dataset, url=args.url, verbose=args.verbose)
             else:
-                datasetFolder = os.path.join(os.environ['SCIPION_TESTS'],"%(dataset)s" % ({'dataset': dataset}))
-                if(os.path.exists(datasetFolder)):
-                    print "Dataset %(dataset)s working copy detected. Checking checksum for updates..." % ({'dataset': dataset})
-                    downloadDataset(dataset, destination=os.environ['SCIPION_TMP'], url=args.url, verbose=args.verbose, onlyManifest=True)
-                    checkForUpdates(dataset, url=args.url, verbose=args.verbose)
-                    cleanPath(os.path.join(os.environ['SCIPION_TMP'], "%(dataset)s" % ({'dataset': dataset})))
-                else:
-                    print "dataset %(dataset)s not in local machine, trying to download..." % ({'dataset': dataset})
-                    downloadDataset(dataset, url=args.url, verbose=args.verbose)
-                
-        
+                print "Dataset %s not in local machine. Downloading..." % dataset
+                downloadDataset(dataset, url=args.url, verbose=args.verbose)
+        sys.exit(0)
+
+    if args.upload:
+        # Upload datasets. This is the tricky part.
+        for dataset in args.datasets:
+            deleteFlag = '--delete' if args.delete else ''
+            localFolder = join(os.environ['SCIPION_TESTS'], dataset)
+            remoteUser = 'scipion'
+            remoteServer = 'ramanujan.cnb.csic.es'
+            remoteFolder = join('/home', 'twiki', 'public_html', 'files', 'scipion', 'data', 'tests')
+            lastmFile = join("Scipion", 'last_m.txt')
+            localHostname = " ".join(os.uname())
+            localUser = getpass.getuser()
+
+            if not exists(localFolder):
+                sys.exit("ERROR: local folder %s doesn't exist." % localFolder)
+
+            print "Reverse synchronizing, BE CAREFUL!!! OPERATION EXTREMELY DANGEROUS!!!"
+            print ("You're going to be connected to %s server as %s user to write "
+                   "in %s folder for %s dataset. Only authorized users shall pass." %
+                   (remoteServer, remoteUser, remoteFolder, dataset))
+            while True:
+                ans = raw_input('Continue? (y/n): ')
+                if ans in ['N', 'n']:
+                    sys.exit(1)  # FIXME: why exit with 1? why is it an error? please explain
+                elif ans in ['Y', 'y']:
+                    break
+            # If the folder is not in the proper format, create the format and then upload
+            Cmd('%s scripts/generate_md5.py %s %s' % (os.environ['SCIPION_PYTHON'], dataset, os.environ['SCIPION_TESTS']))
+            # Synchronize files
+            Cmd('rsync -av %s %s %s@%s:%s' % (deleteFlag, localFolder, remoteUser, remoteServer, remoteFolder))
+            # Regenerate remote MANIFEST
+            print "Regenerating remote MANIFEST file..."
+            Cmd('ssh %s@%s "cd %s && find -maxdepth 1 -type d -type d ! -iname \'.\' > MANIFEST"' % (remoteUser, remoteServer, remoteFolder))
+
+            print "Registering modification attempt in last_m.txt file"
+            Cmd("ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " + lastmFile + " && echo 'Modification to " + dataset + " dataset made at' >> " + lastmFile + " && date >> " + lastmFile + " && echo 'by " + localUser + " at " + localHostname +"' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\"")
+            print "...done."
+            # Leave last_m.txt file indicating modifications have been done, to let buildbot trigger its automatic testing system
+            #TODO: this step
+            sys.exit(0)
+
+    parser.print_usage()
+
+
+def createMANIFEST(path):
+    """ Create a MANIFEST file in path with the md5 of all files below """
+
+    with open(join(path, 'MANIFEST'), 'w') as manifest:
+        for root, dirs, files in os.walk(path):
+            for filename in files:
+                if filename != 'MANIFEST':  # do not include ourselves
+                    fn = join(root, filename)  # file to check
+                    manifest.write('%s %s\n' % (relpath(fn, path), md5sum(fn)))
+
+
+def listDatasets(url):
+    """ Print a list of local and remote datasets """
+
+    tdir = os.environ['SCIPION_TESTS']
+    print "Local datasets in %s" % tdir
+    for folder in sorted(os.listdir(tdir)):
+        if isdir(join(tdir, folder)):
+            if exists(join(tdir, folder, 'MANIFEST')):
+                print "  * " + folder
+            else:
+                print "  * " + folder + ' (not in dataset format)'
+
+    try:
+        print "\nRemote datasets in %s" % url
+        data = urlopen(url + '/MANIFEST').read()
+        for line in sorted(data.splitlines()):
+            print "  * " + line.strip('./')
+    except Exception as e:
+        print 'Error reading %s (%s)' % (url, e)
+
+
+def queryModifications(last_mfile, log_mfile):
+    """ Show modifications stored in last_mfile, and update log_mfile if there are """
+
+    print "Querying the modifications log file (%s)..." % last_mfile
+    if exists(last_mfile):
+        print "File %s exists. Checking its content..." % last_mfile
+        if os.stat(last_mfile).st_size != 0: #File contains data
+            print "File is not empty. Copying the content to log file " + log_mfile
+            modif_file = open(log_mfile, 'a')
+            file_content = open(last_mfile).read()
+            modif_file.write(file_content)
+            print "Last modifications file shows following content:"
+            print file_content
+            # TODO: In case we want to add the responsible of the modifications
+            # to the blame list, this is the place to do it
+            modif_file.close()
+            open(last_mfile, 'w').close()  # wipe out contents
+        else: #File's empty
+            print "File is empty, so no modifications since last check."
+            sys.exit(1)
+            # FIXME: document this strange exit code - something to do with buildbot??
+    else:
+        print "File %s doesn't exist. Creating it..." % last_mfile
+        try:
+            os.makedirs(os.path.dirname(last_mfile))
+            open(last_mfile, 'w').close()  # "touch"
+            sys.exit(2)
+            # We return with 2, to let Buildbot know that no modification was made
+            # (when failure there was modification)
+        except OSError as e:
+            print 'Error creating %s: %s' % (last_mfile, e)
+
+
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

@@ -28,13 +28,14 @@ This modules handles the Project management
 """
 
 import os
+import re
 from os.path import abspath, split
 
 from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile
+from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile, timeit
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
@@ -46,12 +47,17 @@ PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
 PROJECT_SETTINGS = 'settings.sqlite'
 
+# Regex to get numbering suffix and automatically propose runName
+REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 
+
+        
 class Project(object):
     """This class will handle all information 
     related with a Project"""
     def __init__(self, path):
-        """For create a Project, the path is required""" 
+        """Create a project associated with a given path"""
+        # To create a Project, a path is required
         self.name = path
         self.path = abspath(path)
         self.pathList = [] # Store all related paths
@@ -79,6 +85,10 @@ class Project(object):
         """Return path from the project root"""
         return join(*paths)
     
+    def getDbPath(self):
+        """ Return the path to the sqlite db. """
+        return self.dbPath
+    
     def getName(self):
         return self.name
     
@@ -92,16 +102,16 @@ class Project(object):
         # Read only mode
         if not isReadOnly():
             self.settings.write()
-    
+            
     def load(self):
         """Load project data and settings
         from the project dir."""
         
         if not exists(self.path):
-            raise Exception("Project doesn't exists in '%s'" % self.path)
+            raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
-            raise Exception("Project database not found in '%s'" % self.dbPath)
+            raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.settings = loadSettings(self.settingsPath)
         #self.hostsMapper = HostMapper(self.settingsPath)
@@ -148,32 +158,31 @@ class Project(object):
         3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
         and also take care if the execution is remotely."""
         
-        # Read only mode
-        if not isReadOnly():
-            
-            self._checkProtocolDependencies(protocol, 'Cannot RE-LAUNCH protocol')
-            
-            protocol.setStatus(STATUS_LAUNCHED)
-            self._setupProtocol(protocol)
-            
-            #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
-            protocol.makePathsAndClean() # Create working dir if necessary
-            self.mapper.commit()
-            
-            # Prepare a separate db for this run
-            # NOTE: now we are simply copying the entire project db, this can be changed later
-            # to only create a subset of the db need for the run
-            copyFile(self.dbPath, protocol.getDbPath())
-            
-            # Launch the protocol, the jobId should be set after this call
-            jobs.launch(protocol, wait)
-            
-            # Commit changes
-            if wait: # This is only useful for launching tests...
-                self._updateProtocol(protocol)
-            else:
-                self.mapper.store(protocol)
-            self.mapper.commit()
+        #if protocol.getStatus() != STATUS_INTERACTIVE:
+        if not protocol.isInteractive():
+            self._checkModificationAllowed([protocol], 'Cannot RE-LAUNCH protocol')
+        
+        protocol.setStatus(STATUS_LAUNCHED)
+        self._setupProtocol(protocol)
+        
+        #protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        protocol.makePathsAndClean() # Create working dir if necessary
+        self.mapper.commit()
+        
+        # Prepare a separate db for this run
+        # NOTE: now we are simply copying the entire project db, this can be changed later
+        # to only create a subset of the db need for the run
+        copyFile(self.dbPath, protocol.getDbPath())
+        
+        # Launch the protocol, the jobId should be set after this call
+        jobs.launch(protocol, wait)
+        
+        # Commit changes
+        if wait: # This is only useful for launching tests...
+            self._updateProtocol(protocol)
+        else:
+            self.mapper.store(protocol)
+        self.mapper.commit()
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
@@ -217,68 +226,173 @@ class Project(object):
         to mark a protocol that have an interactive step
         waiting for approval that can continue
         """
-        for step in protocol._steps:
-            if step.status == STATUS_WAITING_APPROVAL:
-                step.setStatus(STATUS_FINISHED)
-                self.mapper.store(step)
-                self.mapper.commit()
-                break
+        protocol.continueFromInteractive()
         self.launchProtocol(protocol)
         
-    def _checkProtocolDependencies(self, protocol, msg):
-        """ Raise an exception if the protocol have dependencies.
-        The message will be prefixed to the exception error. 
+    def __protocolInList(self, prot, protocols):
+        """ Check if a protocol is in a list comparing the ids. """
+        for p in protocols:
+            if p.getObjId() == prot.getObjId():
+                return True
+        return False
+    
+    def __validDependency(self, prot, child, protocols):
+        """ Check if the given child is a true dependency of the protocol
+        in order to avoid any modification.
+        """
+        return (not self.__protocolInList(child, protocols) and
+                not child.isSaved()) 
+        
+    
+    def _checkProtocolsDependencies(self, protocols, msg):
+        """ Check if the protocols have depencies.
+        This method is used before delete or save protocols to be sure
+        it is not referenced from other runs. (an Exception is raised)
+        Params:
+             protocols: protocol list to be analyzed.
+             msg: String message to be prefixed to Exception error.
         """
         # Check if the protocol have any dependencies
-        node = self.getRunsGraph().getNode(protocol.strId())
-        if node is None:
-            return
-        childs = node.getChilds()
-        if len(childs):
-            deps = [' ' + c.run.getRunName() for c in childs]
-            msg += ' <%s>\n' % protocol.getRunName()
-            msg += 'It is referenced from:\n'
-            raise Exception(msg + '\n'.join(deps))
+        error = ''
+        for prot in protocols:
+            node = self.getRunsGraph().getNode(prot.strId())
+            if node:
+                childs = [node.run for node in node.getChilds() if self.__validDependency(prot, node.run, protocols)]
+                if childs:
+                    deps = [' ' + c.getRunName() for c in childs]
+                    error += '\n *%s* is referenced from:\n   - ' % prot.getRunName()
+                    error += '\n   - '.join(deps) 
+        if error:
+            raise Exception(msg + error)
         
-    def deleteProtocol(self, protocol):
-        # Read only mode
-        if not isReadOnly():
-            self._checkProtocolDependencies(protocol, 'Cannot DELETE protocol')
-            
-            self.mapper.delete(protocol) # Delete from database
-            wd = protocol.workingDir.get()
+    def _checkModificationAllowed(self, protocols, msg):
+        """ Check if any modification operation is allowed for
+        this group of protocols. 
+        """
+        if isReadOnly():
+            raise Exception(msg + " Running in READ-ONLY mode.")
+        
+        self._checkProtocolsDependencies(protocols, msg)        
+        
+    def deleteProtocol(self, *protocols):
+        self._checkModificationAllowed(protocols, 'Cannot DELETE protocols')
+        
+        for prot in protocols:
+            self.mapper.delete(prot) # Delete from database
+            wd = prot.workingDir.get()
             
             if wd.startswith(PROJECT_RUNS):
                 cleanPath(wd)
             else:
                 print "Error path: ", wd 
-          
-            self.mapper.commit()     
+      
+        self.mapper.commit()     
         
-    def newProtocol(self, protocolClass):
+    def __setProtocolLabel(self, newProt):
+        """ Set a readable label to a newly created protocol.
+        We will try to find another existing protocol of the 
+        same class and set the label from it.
+        """
+        prevLabel = None # protocol with same class as newProt
+        newProtClass = newProt.getClass()
+        
+        for prot in self.getRuns(iterate=True, refresh=False):
+            if newProtClass == prot.getClass():
+                prevLabel = prot.getObjLabel().strip()
+                
+        if prevLabel: 
+            numberSuffix = 2
+            m = REGEX_NUMBER_ENDING.match(prevLabel)
+            if m and m.groupdict()['number']:
+                numberSuffix = int(m.groupdict()['number']) + 1
+                prevLabel = m.groupdict()['prefix']
+            protLabel =  prevLabel + ' %s' % numberSuffix
+        else:
+            protLabel = newProt.getClassLabel()
+            
+        newProt.setObjLabel(protLabel)
+        
+    def newProtocol(self, protocolClass, **kwargs):
         """ Create a new protocol from a given class. """
-        newProt = protocolClass(project=self)
+        newProt = protocolClass(project=self, **kwargs)
+        self.__setProtocolLabel(newProt)
+        
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
+        
         return newProt
+                      
+    def __getIOMatches(self, node, childNode):
+        """ Check if some output of node is used as input in childNode.
+        Return the list of attribute names that matches.
+        Used from self.copyProtocol
+        """
+        matches = []
+        for oKey, oAttr in node.run.iterOutputAttributes(EMObject):
+            for iKey, iAttr in childNode.run.iterInputAttributes():
+                if oAttr is iAttr.get():
+                    matches.append((oKey, iKey))
+        
+        return matches                    
         
     def copyProtocol(self, protocol):
         """ Make a copy of the protocol, return a new one with copied values. """
-        newProt = self.newProtocol(protocol.getClass())
-        newProt.copyDefinitionAttributes(protocol)
+        result = None
         
-        return newProt
+        if isinstance(protocol, Protocol):
+            newProt = self.newProtocol(protocol.getClass())
+            newProt.copyDefinitionAttributes(protocol)
+            result = newProt
+    
+        elif isinstance(protocol, list):
+            # Handle the copy of a list of protocols
+            # for this case we need to update the references of input/outputs
+            newDict = {}
+                        
+            for prot in protocol:
+                newProt = self.newProtocol(prot.getClass())
+                newProt.copyDefinitionAttributes(prot)
+                newDict[prot.getObjId()] = newProt
+                self.saveProtocol(newProt)
+                         
+            g = self.getRunsGraph(refresh=False)
+            
+            for prot in protocol:
+                node = g.getNode(prot.strId())
+                newProt = newDict[prot.getObjId()]
+                
+                for childNode in node.getChilds():
+                    newChildProt = newDict.get(childNode.run.getObjId(), None)
+                    
+                    if newChildProt:
+                        # Get the matches between outputs/inputs of node and childNode
+                        matches = self.__getIOMatches(node, childNode)
+                        #print "%s -> %s, matches: %s" % (prot.getRunName(), childNode.runmatches
+                        # For each match, set the pointer and the extend attribute
+                        # to reproduce the dependencies in the new workflow
+                        for oKey, iKey in matches:
+                            childPointer = getattr(newChildProt, iKey)
+                            childPointer.set(newProt)
+                            childPointer.setExtendedAttribute(oKey)
+                        self.mapper.store(newChildProt)                   
+
+            self.mapper.commit()
+        else:
+            raise Exception("Project.copyProtocol: invalid input protocol type '%s'." % type(protocol))
+    
+        return result
     
     def saveProtocol(self, protocol):
-        # Read only mode
-        if not isReadOnly():
-            self._checkProtocolDependencies(protocol, 'Cannot SAVE protocol')
-            
-            protocol.setStatus(STATUS_SAVED)
-            if protocol.hasObjId():
-                self._storeProtocol(protocol)
-            else:
-                self._setupProtocol(protocol)
+        self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
+        
+        protocol.setStatus(STATUS_SAVED)
+        if protocol.hasObjId():
+            self._storeProtocol(protocol)
+        else:
+            self._setupProtocol(protocol)
+                
+    def getProtocol(self, protId):
+        return self.mapper.selectById(protId)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol
@@ -308,6 +422,7 @@ class Project(object):
             # Set important properties of the protocol
             name = protocol.getClassName() + protocol.strId()
             protocol.setProject(self)
+            print protocol.strId(), protocol.getProject().getName()
             protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
             protocol.setMapper(self.mapper)
@@ -322,6 +437,7 @@ class Project(object):
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
                 r.setProject(self)
+                r.setMapper(self.mapper)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():
@@ -329,6 +445,16 @@ class Project(object):
             self.mapper.commit()
         
         return self.runs
+    
+    def iterSubclasses(self, classesName, objectFilter=None):
+        """ Retrieve all objects from the project that are instances
+            of any of the classes in classesName list.
+        Params: 
+            classesName: String with commas separated values of classes name. 
+            objectFilter: a filter function to discard some of the retrieved objects."""
+        for objClass in classesName.split(","):
+            for obj in self.mapper.selectByClass(objClass.strip(), iterate=True, objectFilter=objectFilter):
+                yield obj
     
     def getRunsGraph(self, refresh=True):
         """ Build a graph taking into account the dependencies between
@@ -361,11 +487,10 @@ class Project(object):
                 node = g.getNode(r.strId())
                 for _, attr in r.iterInputAttributes():
                     if attr.hasValue():
-                        pointed = attr.get()
+                        pointed = attr.getObjValue()
                         # Only checking pointed object and its parent, if more levels
                         # we need to go up to get the correct dependencies
-                        (#_checkInputAttr(node, attr) or 
-                         _checkInputAttr(node, pointed) or 
+                        (_checkInputAttr(node, pointed) or 
                          _checkInputAttr(node, self.mapper.getParent(pointed))
                         )
             rootNode = g.getRoot()
@@ -470,12 +595,5 @@ class Project(object):
 
 def isReadOnly():
     """ Auxiliar method to keep a read-only mode for the environment. """
-    try:
-        mode = os.environ['READONLY']
-    except Exception, ex:
-        mode = False
-    
-    if mode:
-        print "Operation not valid for read-only mode."
-    return mode
+    return 'SCIPION_READONLY' in os.environ
         

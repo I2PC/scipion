@@ -35,6 +35,10 @@ urlpatterns = patterns('',
     url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
+    url(r'^save_selection/$', 'app.views_project.save_selection'),
+    
+    #DATA (CONTENT)
+    url(r'^data_content/$', 'app.views_data.data_content'),
     
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
@@ -42,6 +46,7 @@ urlpatterns = patterns('',
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
     url(r'^get_slice/', 'app.views_util.get_slice'), # Load slices dynamically
     url(r'^browse_objects/$', 'app.views_util.browse_objects'), # Browse objects from the database
+    url(r'^browse_relations/$', 'app.views_util.browse_relations'), # Browse relation objects from the database
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
     url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
@@ -52,20 +57,23 @@ urlpatterns = patterns('',
     url(r'^protocol/$', 'app.views_protocol.protocol'),
     url(r'^stop_protocol/$', 'app.views_protocol.stop_protocol'),
     url(r'^delete_protocol/$', 'app.views_protocol.delete_protocol'),
+    url(r'^copy_protocol/$', 'app.views_protocol.copy_protocol'),
     url(r'^form/$', 'app.views_protocol.form'),
-    
 
     #WIZARDS
     url(r'^wizard/$', 'app.em_wizard.wizard'),
-    url(r'^get_image_psd/$', 'app.em_wizard.get_image_psd'),
-    url(r'^get_image_bandpass/$', 'app.em_wizard.get_image_bandpass'),
-    url(r'^get_image_gaussian/$', 'app.em_wizard.get_image_gaussian'),
-    url(r'^get_image_filter_spider/$', 'app.em_wizard.get_image_filter_spider'),
+    url(r'^get_image_mask/$', 'app.wizards.tools.get_image_mask'),
+    url(r'^get_image_psd/$', 'app.wizards.tools.get_image_psd'),
+    url(r'^get_image_bandpass/$', 'app.wizards.tools.get_image_bandpass'),
+    url(r'^get_image_gaussian/$', 'app.wizards.tools.get_image_gaussian'),
+    url(r'^get_image_filter_spider/$', 'app.wizards.spider_wizard.get_image_filter_spider'),
+    url(r'^run_custom_mask_spider/$', 'app.wizards.spider_wizard.run_custom_mask_spider'),
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
+    url(r'^file_downloader/$', 'app.views_util.file_downloader'),
     
     #SHOWJ
     url(r'^showj/$', 'app.views_showj.showj'), #Load web
@@ -84,4 +92,7 @@ urlpatterns = patterns('',
     
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
+
+    # If no path given, load the projects view
+    url(r'^$', 'app.views_project.projects'),
 )

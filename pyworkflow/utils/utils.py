@@ -29,6 +29,7 @@ This module contains utilities functions and classes.
 
 import os, sys, re
 from datetime import datetime
+import traceback
 
 
 def prettyDate(time=False):
@@ -106,13 +107,62 @@ def prettyDelta(timedelta):
     """ Remove the milliseconds of the timedelta. """
     return str(timedelta).split('.')[0]
 
+
+class Timer(object):
+    """ Simple Timer base in datetime.now and timedelta. """
+    def tic(self):
+        self._dt = datetime.now()
+        
+    def toc(self, message='Elapsed:'):
+        print message, prettyDelta(datetime.now()-self._dt) 
+        
+
+def timeit(func):
+    """ Decorator function to have a simple measurement
+    of the execution time of a given function.
+    Just use:
+    @timeit
+    def func(...)
+        ...
+    to use it.
+    """
+    def timedFunc(*args, **kwargs):
+        t = Timer()
+        t.tic()
+        result = func(*args, **kwargs)
+        t.toc("Function '%s' took" % func)
+        
+        return result
+        
+    return timedFunc
+
+
+def trace(nlevels, separator=' --> ', stream=sys.stdout):
+    # Example:
+    #   @trace(3)
+    #   def doRefresh(...
+    # gives as output whenever doRefresh is called lines like:
+    #   text.py:486 _addFileTab --> text.py:330 __init__ --> doRefresh
+
+    def realTrace(f):
+        """ Decorator function to print stack call in a human-readable way.
+        """
+        def tracedFunc(*args, **kwargs):
+            stack = traceback.extract_stack()[-nlevels-1:-1]
+            fmt = lambda x: '%s:%d %s' % (os.path.basename(x[0]), x[1], x[2])
+            stream.write(separator.join(map(fmt, stack)+[f.__name__]) + '\n')
+            return f(*args, **kwargs)
+
+        return tracedFunc
+    return realTrace
+
     
 def prettyDict(d):
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(d)
-    
-    
+
+
 def prettyXml(elem, level=0):
     """ Add indentation for XML elements for more human readable text. """
     i = "\n" + level*"  "
@@ -406,6 +456,44 @@ def getRangeStringFromList(list):
     return ','.join(ranges)
 
 
+def getListFromValues(valuesStr, length=None):
+    """ Convert an string representing list items into the list.
+    The items should be separated by spaces and a multiplier 'x' can be used.
+    If lenght is not None, then the last element will be repeated
+    until the desired length is reached.
+    Examples:
+    '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]
+    '3x2, 4x3, 1' -> [3, 3, 4, 4, 4, 1]
+    """
+    result = []
+    
+    for chunk in valuesStr.split():
+        values = chunk.split('x')
+        n = len(values)
+        if n == 1: # 'x' is not present in the chunk, single value
+            result += values
+        elif n == 2: # multiple the values by the number after 'x'
+            result += [values[0]] * int(values[1])
+        else:
+            raise Exception("More than one 'x' is not allowed in list string value.")
+            
+    if length is not None and length > len(result):
+        item = result[-1]
+        result += [item] * (length - len(result))
+        
+    return result
+        
+    
+def getFloatListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of floats'''
+    return [float(v) for v in getListFromValues(valuesStr, length)]
+
+def getBoolListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of booleans'''
+    from pyworkflow.object import Boolean
+    return [Boolean(value=v).get() for v in getListFromValues(valuesStr, length)]
+
+
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
     If valueFirst is true, the new value will be at the beginning.
@@ -417,3 +505,6 @@ def environAdd(varName, newValue, valueFirst=False):
     varList.insert(i, newValue)
     os.environ[varName] = os.pathsep.join(varList)
 
+# To-Do: check a better implementation
+def getMemoryAvailable():
+    return int(os.popen("free -m").readlines()[1].split()[1])

@@ -26,7 +26,6 @@
 """
 This modules contains constants related to EM
 """
-
 #------------------ Constants values --------------------------------------
 
 NO_INDEX = 0  # This is the index value for single images

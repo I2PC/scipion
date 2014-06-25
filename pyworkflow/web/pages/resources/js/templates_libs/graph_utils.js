@@ -119,8 +119,6 @@ function callPaintGraph() {
 	 * This function paint the protocol graph in the template project_content.html
 	 */ 
 	
-	$("img#loading").show();
-	
 	// Draw the boxes
 	var nodeSource = $("div#graphActiv");
 	
@@ -138,7 +136,6 @@ function callPaintGraph() {
 		var id = jQuery(this).attr('id');
 		var idNew = "graph_" + id;
 
-//		var name = jQuery(this).attr('data-name');
 		var name = jQuery(this).attr('data-label');
 		if (name==""){
 			name = jQuery(this).attr('data-name');
@@ -151,81 +148,78 @@ function callPaintGraph() {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
+	
+	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
 		url : '/project_graph/?list=' + aux,
 		dataType : "json",
+		async: false,
 		success : function(json) {
-		
-			// Iterate over the nodes and position in the screen
-			// coordinates should come in the json response
-			
-			for ( var i = 0; i < json.length; i++) {
-				var top = json[i].y*0.8;
-				var left = json[i].x;
-				addStatusBox("graph_" + json[i].id,	json[i].status);
-				$("div#graph_" + json[i].id + ".window").attr(
-						"style",
-						"top:" + top + "px;left:" + left
-								+ "px;background-color:"
-								+ json[i].color + ";");
-			}
-			
-			// After all nodes are positioned, then create the edges
-			// between them
-
-			for ( var i = 0; i < json.length; i++) {
-				for ( var j = 0; j < json[i].childs.length; j++) {
-					var source = $("div#graph_" + json[i].id
-							+ ".window");
-					var target = $("div#graph_" + json[i].childs[j]
-							+ ".window");
-					connectNodes(source, target);
-				}
-			}
-			
-			// If you choose first a element in the table, the equivalent node
-			// must be flashlighted in the graph
-			
-			if ($("tr.selected").attr("id") != undefined) {
-				var selected = "graph_" + $("tr.selected").attr("id");
-				$("div#graphActiv").attr("data-option", selected);
-				var elm = $("div#" + selected + ".window");
-				var aux = elm.attr("style");
-				aux += "border:2.5px solid Firebrick;"
-				elm.attr("style", aux);
-			}
-			
-			$("img#loading").hide();
-			nodeSource.css("margin-top","0")
-			
+			processNodes(json)
 		}
 	});
+	
 	jsPlumb.draggable($(".window"));
 }
+
+function processNodes(json){
+	// Iterate over the nodes and position in the screen
+	// coordinates should come in the json response
+	
+	for ( var i = 0; i < json.length; i++) {
+		var top = json[i].y*0.8;
+		var left = json[i].x;
+		addStatusBox("graph_" + json[i].id,	json[i].status);
+		$("div#graph_" + json[i].id + ".window").attr(
+				"style",
+				"top:" + top + "px;left:" + left
+						+ "px;background-color:"
+						+ json[i].color + ";");
+	}
+	
+	// After all nodes are positioned, then create the edges
+	// between them
+
+	for ( var i = 0; i < json.length; i++) {
+		for ( var j = 0; j < json[i].childs.length; j++) {
+			var source = $("div#graph_" + json[i].id
+					+ ".window");
+			var target = $("div#graph_" + json[i].childs[j]
+					+ ".window");
+			connectNodes(source, target);
+		}
+	}
+}
+
 
 function paintBox(nodeSource, id, msg) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
 	 * The node source is passed by arguments.
+	 * 
+	 * FIX 1: Added the css property (display:none) to the divs to not show
+	 * in first instance the boxes in bad position, before to be processed.
+	 * 
 	 */
 
 	if (id != "graph_PROJECT") {
 		var objId = id.replace("graph_", "");
 		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
-//		var onclick = "updateTabs('" + projName + "', '" + objId + "',($(this)))";
-		var onclick = "launchToolbarTree('" + objId	+ "',($(this)))";
-		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+		var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
+//		var onclick = "launchToolbarTreePatata(event)";
+//		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
+		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
-		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
+//		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
+		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';
 	}
-	// + '</strong><br /><span id="nodeStatus" data-val="hola"></span></div>';
+	
 	nodeSource.append(aux);
-//	var oldSelect = $("div#graphActiv").attr("data-option");
 }
 
 function addStatusBox(id, status) {
@@ -233,7 +227,6 @@ function addStatusBox(id, status) {
 	 * Function add a new status in a node from the protocol graph.
 	 */
 	
-//	$("div#" + id + ".window").append(status);
 	$("div#" + id + ".window").find("#nodeStatus").html(status);
 }
 

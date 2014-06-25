@@ -30,7 +30,7 @@ nav ul li {
 
 /* ASIDE (BOTTOM MENU) */
 aside {
-	height: 68px;
+	height: 60px;
  	background: #e3e3e3; /* Old browsers */
 	background: -moz-linear-gradient(top, #e3e3e3 0%, #cccccc 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e3e3e3), color-stop(100%,#cccccc)); /* Chrome,Safari4+ */
@@ -307,7 +307,8 @@ section .imageTitle{
 }
 
 .image_selected {
-	background-color: #000;
+/* 	background-color: #000; */
+	background-color: Firebrick;
 }
 
 

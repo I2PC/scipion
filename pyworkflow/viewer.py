@@ -126,7 +126,9 @@ class Viewer(object):
     
     def __init__(self, tmpPath='./Tmp', **args):
         self._tmpPath = tmpPath
-        self._project = args.get('project', None)
+        self._project = args.get('project')
+        if self._project is None:
+            raise Exception('Can not initialize a Viewer with None project.')
         self.protocol = args.get('protocol', None)
         self.formWindow = args.get('parent', None)
         self._tkRoot = self.formWindow.root if self.formWindow else None
@@ -177,9 +179,12 @@ class Viewer(object):
         return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
 
     def textView(self, filelist, title=''):
-        return TextView(filelist, title, tkParent=self.formWindow)      
+        return TextView(filelist, title, tkParent=self.formWindow)    
 
-    
+    def objectView(self, path, inputType):
+        pass
+        
+        
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
     complex visualization associated with protocol results.
@@ -193,6 +198,7 @@ class ProtocolViewer(Protocol, Viewer):
         self.showPlot = True # This flag will be used to display a plot or return the plotter
         self._tkRoot = None
         self.formWindow = None
+        self.setWorkingDir(self.getProject().getTmpPath())
         
     def setProtocol(self, protocol):
         self.protocol = protocol

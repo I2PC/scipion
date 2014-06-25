@@ -31,8 +31,9 @@ inside the utils module
 import os
 import shutil
 from os.path import exists, join, splitext, isdir, isfile, expanduser, expandvars, basename, dirname, split, relpath
-import pyworkflow as pw
 from glob import glob
+
+import pyworkflow as pw
 
 
 def findFile(filename, *paths):
@@ -76,10 +77,6 @@ def removeExt(filename):
 def joinExt(*extensions):
     """ Join several path parts with a ."""
     return '.'.join(extensions)
-
-def getFile(filePath):
-    """ Given a path, remove the folders and return the file """
-    return split(filePath)[1]
 
 def getExt(filePath):
     """ Return the extesion given a file. """
@@ -145,7 +142,7 @@ def getFiles(folderPath):
 
 def copyTree(source, dest):
     """
-    Wrapper arount the shutil.copytree, but allowing
+    Wrapper around the shutil.copytree, but allowing
     that the dest folder also exists.
     """
     if not exists(dest):
@@ -187,3 +184,115 @@ def getLastFile(pattern):
     return None
 
 
+# Console (and XMIPP) escaped colors, and the related tags that we create
+# with Text.tag_config(). This dict is used in OutputText:addLine()
+# See also http://www.termsys.demon.co.uk/vtansi.htm#colors
+colorName = {'30': 'gray',
+             '31': 'red',
+             '32': 'green',
+             '33': 'yellow',
+             '34': 'blue',
+             '35': 'magenta',
+             '36': 'cyan',
+             '37': 'white'}
+
+def renderTextFile(fname, add, offset=0, lineNo=0, numberLines=True,
+                   maxSize=100, headSize=20, tailSize=None):
+    """
+    Call callback function add() on each fragment of text from file fname,
+    delimited by lines and/or color codes.
+      add: callback function add(txt, tag='normal')
+      offset: byte offset - we start reading the file from there
+      lineNo: lines will be numbered from this value on
+      numberLines: whether to prepend the line numbers
+    """
+    textfile = open(fname)
+    size = (os.stat(fname).st_size - offset) / 1024  # in kB
+
+    for line in iterBigFile(textfile, offset, size,
+                            maxSize, headSize, tailSize):
+        if line is not None:
+            lineNo += 1
+            renderLine(line, add, lineNo, numberLines)
+        else:
+            add("""\n
+    ==> Too much data to read (%d kB) -- %d kB omitted
+    ==> Click on """ % (size, size - headSize - (tailSize or headSize)))
+            add(fname, 'link:%s' % fname)
+            add(' to open it with the default viewer\n\n')
+            if numberLines:
+                add('    ==> Line numbers below are not '
+                         'in sync with the input data\n\n')
+
+    offset = textfile.tell()  # save last position in file
+    textfile.close()
+
+    return offset, lineNo
+
+
+def renderLine(line, add, lineNo=1, numberLines=True):
+    """
+    Find all the fragments of formatted text in line and call
+    add(fragment, tag) for each of them.
+    """
+    # Prepend line number
+    if numberLines and lineNo:
+        add('%05d:' % lineNo, 'cyan')
+        add('   ')
+
+    # iter 1\riter 2\riter 3  -->  iter 3
+    if '\r' in line:
+        line = line[line.rfind('\r')+1:]  # overwriting!
+
+    # Find all console escape codes and use the appropriate tag instead.
+    pos = 0  # current position in the line we are parsing
+    attribute = None
+    while True:
+        # line looks like:
+        #   'blah blah \x1b[{attr1};...;{attrn}mTEXT\x1b[0m blah blah'
+        # where {attrn} is the color code (31 is red, for example). See
+        # http://www.termsys.demon.co.uk/vtansi.htm#colors
+        start = line.find('\x1b[', pos)
+        if start < 0:  # no more escape codes, just add the remaining text
+            add(line[pos:], attribute)
+            break
+
+        add(line[pos:start], attribute)
+        end = line.find('m', start+2)
+        code = line[start+2:end]
+
+        # See what attribute to use from now on, and update pos
+        if code == '0':
+            attribute = None
+        else:
+            attribute = colorName.get(code[-2:], None)
+        pos = end + 1  # go to the character next to "m", the closing char
+
+
+def iterBigFile(textfile, offset=0, size=None,
+                maxSize=100, headSize=20, tailSize=None):
+    """
+    Yield lines from file textfile. If the size to read is bigger
+    than maxSize then yield the first lines until headSize bytes, then
+    yield None, then yield the last lines from tailSize bytes to the end.
+    """
+    if size is None:
+        # Size in kB of the part of the file that we will read
+        textfile.seek(0, 2)
+        sizeKb = (textfile.tell() - offset) / 1024
+    else:
+        sizeKb = size
+
+    headSizeB = headSize * 1024
+    tailSizeB = (tailSize or headSize) * 1024
+
+    textfile.seek(offset)
+    if sizeKb > maxSize:  # max size that we want to read (in kB)
+        for line in textfile.read(headSizeB).split('\n'):
+            yield line + '\n'
+        yield None  # Special result to mark omitting lines
+        textfile.seek(-tailSizeB, 2)  # ready to show the last bytes
+
+    # Add the remaining lines (from our last offset)
+    for line in textfile:
+        yield line

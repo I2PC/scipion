@@ -27,14 +27,6 @@
 
 import json
 
-from pyworkflow.em.viewer import ColumnsConfig, ColumnProperties
-
-
 class ColumnPropertiesEncoder(json.JSONEncoder):
     def default(self, columnProperties):
-        
-        return {"typeOfColumn":columnProperties.getColumnType(),
-                "columnLayoutProperties":columnProperties.getValues()
-                }
-        
-    
+        return columnProperties.getValues()

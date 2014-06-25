@@ -39,7 +39,8 @@ section#grid_section {
 }
 
 #asideMainContainer {
-	padding: 8px 20px;
+	width:100%;
+	padding: 8px 8px 8px 20px;
 }
 
 .layout-outer>section {

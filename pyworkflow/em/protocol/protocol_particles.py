@@ -76,19 +76,38 @@ class ProtParticlePicking(ProtParticles):
         else:
             #TODO: MOVE following line to manual picking
             summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
-            summary.append("Number of particles picked: %d" % self.outputCoordinates.getSize())
+            summary.append("Number of particles picked: ")
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append('    %d on one set' % output.getSize())
         return summary
     
     def _methods(self):
-        methods = []
-        if not hasattr(self, 'outputCoordinates'):
-            methods.append(Message.TEXT_NO_OUTPUT_CO) 
-        else:
-            #TODO: MOVE following line to manual picking
-            methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
-            methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
-        return methods
 
+        methodsMsgs = self.summary()
+        #TODO: Provide summary with more details
+        return methodsMsgs
+#         methods = []
+#         if not hasattr(self, 'outputCoordinates'):
+#             methods.append(Message.TEXT_NO_OUTPUT_CO) 
+#         else:
+#             #TODO: MOVE following line to manual picking
+#             methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
+#             methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
+#         return methods
+
+
+    def getCoordsSuffix(self):
+        count = 0;
+        for key, output in self.iterOutputAttributes(EMObject):
+            count += 1
+        
+        suffix = str(count) if count > 1 else ''
+        return suffix
+    
+    def getCoords(self):
+        suffix = self.getCoordsSuffix()
+        outputName = 'outputCoordinates' + suffix
+        return getattr(self, outputName)
 
 
 class ProtExtractParticles(ProtParticles):

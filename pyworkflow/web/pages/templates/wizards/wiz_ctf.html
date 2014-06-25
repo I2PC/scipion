@@ -5,8 +5,8 @@
 	<script type="text/javascript" src="{{raphael}}"></script>
 	<script>
 		function returnParams(){
-			putSelection('input#high_val', 'highRes_input');
-			putSelection('input#low_val', 'lowRes_input');
+			putSelection('input#high_val', '{{params.label.1}}_input');
+			putSelection('input#low_val', '{{params.label.0}}_input');
 		}
 	</script>
 {% endblock %} 
@@ -26,13 +26,13 @@
 <tr>
 	<td>
 		<div class="image">
-			<img id="loadingMic" src="../../../../resources/loading.gif"
+			<img id="loadingMic" src="{{loading}}"
 				style="display: none;" /> <img id="mic" src="" />
 		</div>Micrograph
 	</td>
 	<td>
 		<div id="wrapper" class="image">
-			<img id="loadingPsd" src="../../../../resources/loading.gif"
+			<img id="loadingPsd" src="{{loading}}"
 				style="display: none;"/> 
 			<div id="psd_freq"> </div>
 			<div id="canvas_high"></div>
@@ -47,14 +47,14 @@
 	<div id="lowFreq">
 		<span id="title_freq">Low freq<span>
 		<div id="slider" class="slider_low"></div>
-		<div id="slider_low_result">{{low_res}}</div>
-		<input id="low_val" type="hidden" value="{{low_res}}"/>
+		<div id="slider_low_result">{{params.value.0}}</div>
+		<input id="low_val" type="hidden" value="{{params.value.0}}"/>
 	</div>
 	<div id="highFreq">
 		<span id="title_freq">High freq<span>
 		<div id="slider" class="slider_high"></div>
-		<div id="slider_high_result">{{high_res}}</div>
-		<input id="high_val" type="hidden" value="{{high_res}}"/>
+		<div id="slider_high_result">{{params.value.1}}</div>
+		<input id="high_val" type="hidden" value="{{params.value.1}}"/>
 	</div>
 </fieldset>
 
@@ -62,7 +62,7 @@
 $(".slider_low").slider({
 	animate : true,
 	range : "min",
-	value : "{{low_res}}",
+	value : "{{params.value.0}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -81,7 +81,7 @@ $(".slider_low").slider({
 $(".slider_high").slider({
 	animate : true,
 	range : "min",
-	value : "{{high_res}}",
+	value : "{{params.value.1}}",
 	min : 0.00,
 	max : 0.50,
 	step : 0.01,
@@ -98,7 +98,7 @@ $(".slider_high").slider({
 	}
 });
 //Load the First Element of the list
-window.onload = previewCTF($("tr#"+firstElm));
+window.onload = previewCTF($("tr#"+firstElm));putCircle({{params.value.0}}*250, "canvas_low", "red");putCircle({{params.value.1}}*250, "canvas_high", "blue");
 </script>
 {% endblock %}
 {% block function %}

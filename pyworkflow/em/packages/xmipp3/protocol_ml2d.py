@@ -55,6 +55,7 @@ class XmippProtML2D(ProtClassify2D):
         self.oroot = ""
        
     #--------------------------- DEFINE param functions --------------------------------------------   
+    
     def _defineParams(self, form):
         form.addSection(label='Params')
         group = form.addGroup('Input')
@@ -74,17 +75,18 @@ class XmippProtML2D(ProtClassify2D):
                       pointerClass='SetOfParticles',
                       help='Image(s) that will serve as initial 2D references')
         
-        group = form.addGroup('ML-Fourier')
-        group.addParam('doMlf', BooleanParam, default=False, important=True,
+        form.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
-        group.addParam('doCorrectAmplitudes', BooleanParam, default=True, condition='doMlf',
+        
+        group = form.addGroup('ML-Fourier', condition='doMlf')
+        group.addParam('doCorrectAmplitudes', BooleanParam, default=True,
                       label='Use CTF-amplitude correction?',
                       help='If set to *Yes*, the input images file should contains'
                            'If set to *No*, provide the images pixel size in Angstrom.')
-        group.addParam('areImagesPhaseFlipped', BooleanParam, default=True, condition='doMlf',
+        group.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
-        group.addParam('highResLimit', IntParam, default=20, condition='doMlf',
+        group.addParam('highResLimit', IntParam, default=20,
                       label='High-resolution limit (Ang)',
                       help='No frequencies higher than this limit will be taken into account.'
                            'If zero is given, no limit is imposed.')
@@ -126,6 +128,7 @@ class XmippProtML2D(ProtClassify2D):
         form.addParallelSection(threads=2, mpi=4)
            
     #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):        
         self.oroot = self._getOroot()
         self.program = "xmipp_%s_align2d" % self.progId       
@@ -173,6 +176,7 @@ class XmippProtML2D(ProtClassify2D):
         self._insertRunJobStep(self.program, params)
         
     #--------------------------- STEPS functions --------------------------------------------       
+    
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
@@ -181,6 +185,7 @@ class XmippProtML2D(ProtClassify2D):
         self._defineSourceRelation(imgSet, classes2DSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
+    
     def _validate(self):
         errors = []
         return errors
@@ -217,12 +222,16 @@ class XmippProtML2D(ProtClassify2D):
         return self._summary()  # summary is quite explicit and serve as methods
     
     #--------------------------- UTILS functions --------------------------------------------
+    
     def _getIterClasses(self, it=None, block=None):
         """ Return the classes metadata for this iteration.
         block parameter can be 'info' or 'classes'.
         """
         if it is None:
             it = self._lastIteration()
+        else:
+            self.oroot = self._getOroot()
+            
         extra = self.oroot + 'extra'
         mdFile = join(extra, 'iter%03d' % it, 'iter_classes.xmd')
         if block:

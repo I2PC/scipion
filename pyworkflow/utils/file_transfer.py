@@ -3,21 +3,33 @@ Created on Apr 8, 2013
 
 @author: antonio
 '''
+
+# This file is not really being used, and its tests cannot run because
+# of this. So far we are not really using paramiko, and so all its
+# dependencies are broken.
+#
+# I am commenting out all of them today. If used in the future, please
+# fix. If not, please remove this file (remote.py) and test_remote.py
+#
+# Jordi. June 2014.
+
+
 import os
 from os.path import join
 import shutil
 import socket
-import paramiko
+#import paramiko
 import hashlib
 
-from pyworkflow.utils.path import *
-from pyworkflow.utils.log import *
+from pyworkflow.utils.path import missingPaths, exists, makeFilePath
+from pyworkflow.utils.log import ScipionLogger
 
 LOCAL_USER_AND_HOST = ''
 SSH_PORT = 22
 PAIRS_SEPARATOR = ':'
 
-log = getGeneralLogger('pyworkflow.utils.file_transfer')
+log = ScipionLogger()
+
 
 class FileTransfer():
     
@@ -25,13 +37,13 @@ class FileTransfer():
     sftp = None 
     
     def __init__(self):
-        # Default ssh session options.
-        self.ssh = paramiko.SSHClient()
-        self.ssh.load_system_host_keys()
-        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        
-        
-        
+        raise NotImplementedError('No dependence on paramiko yet')
+        #
+        # # Default ssh session options.
+        # self.ssh = paramiko.SSHClient()
+        # self.ssh.load_system_host_keys()
+        # self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
     def transferFiles(self,
                       filePaths, 
                       hostsPasswords, 
@@ -428,14 +440,14 @@ class FileTransfer():
         files -- File list with this format: userName1@hostName1:absolute_file_path1
         returns -- List with different files userName@hostName credentials.
         """
-        diferentHosts = []
+        differentHosts = []
         for filePath in filePaths:
             userAndHost = self.__getLocationAndFilePath(filePath)[0]
             if (self.__isLocalCredential(userAndHost)):
-                userAndHost = LOCAL_USER_AND_HOST; # To simplify code for local credentials.
-            if (userAndHost not in diferentHosts):
-                diferentHosts.append(userAndHost)
-        return diferentHosts;
+                userAndHost = LOCAL_USER_AND_HOST # To simplify code for local credentials.
+            if (userAndHost not in differentHosts):
+                differentHosts.append(userAndHost)
+        return differentHosts
     
     def __getFilePaths(self, filePaths, userAndHost):
         """
@@ -545,7 +557,8 @@ class FileTransfer():
             return True            
         except IOError:
             return False
-    
+
+
 ################################################################
 
 #                AUXILIARY FUNCTIONS                           #
@@ -559,11 +572,14 @@ def isRemoteDir(sftp, path):
         path: Path to check.
     Returns: True if the given path is a directory, false if it is not a directory.
     """
-    try:
-        sftp.chdir(path)
-        return True
-    except (IOError, paramiko.SFTPError):
-        return False
+    raise NotImplementedError('No dependence on paramiko yet')
+    #
+    # try:
+    #     sftp.chdir(path)
+    #     return True
+    # except (IOError, paramiko.SFTPError):
+    #     return False
+
 
 def getRemoteFolderFiles(hostName, userName, password, folderPath, recursive=True):
     """ Recover all files in the given folder.
@@ -575,17 +591,21 @@ def getRemoteFolderFiles(hostName, userName, password, folderPath, recursive=Tru
         recursive: if True go recursively inside other subfolders.
     Returns: List of files.
     """    
-    # Default ssh session options.
-    ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostName, 22, userName, password)
-    sftp = ssh.open_sftp()
-    remoteFiles = getRemoteFiles(sftp, folderPath, recursive)
-    sftp.close()
-    ssh.close()
-    return remoteFiles
-    
+    raise NotImplementedError('No dependence on paramiko yet')
+    #
+    # # Default ssh session options.
+    #
+    # ssh = paramiko.SSHClient()
+    # ssh.load_system_host_keys()
+    # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # ssh.connect(hostName, 22, userName, password)
+    # sftp = ssh.open_sftp()
+    # remoteFiles = getRemoteFiles(sftp, folderPath, recursive)
+    # sftp.close()
+    # ssh.close()
+    # return remoteFiles
+
+
 def getRemoteFiles(sftp, folderPath, recursive=True):
     """ Recover all files in the given folder.
     Params:
@@ -603,6 +623,7 @@ def getRemoteFiles(sftp, folderPath, recursive=True):
             resultFilePathList.append(join(folderPath, filePath))
     return resultFilePathList
 
+
 def removeRemoteFolder (hostName, userName, password, folderPath):
     """ Removes a remote folder and all it content.
     Params:
@@ -613,11 +634,13 @@ def removeRemoteFolder (hostName, userName, password, folderPath):
     Returns: 
         Tuple with standard input, standard output and error output.
     """
-    ssh = paramiko.SSHClient()
-    ssh.load_system_host_keys()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostName, 22, userName, password)    
-    return removeTree(ssh, folderPath)
+    raise NotImplementedError('No dependence on paramiko yet')
+    #
+    # ssh = paramiko.SSHClient()
+    # ssh.load_system_host_keys()
+    # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # ssh.connect(hostName, 22, userName, password)
+    # return removeTree(ssh, folderPath)
 
 
 def removeTree(ssh, folderPath):

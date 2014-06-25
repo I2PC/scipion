@@ -37,14 +37,25 @@ from django.core.context_processors import csrf
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
+
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
+
 
 def getPointerHtml(protVar):
     if protVar.hasValue():
         return protVar.get().getNameId(), protVar.get().getObjId()
     return '',''
-            
+
+        
+def findWizardsWeb(protocol):   
+    import em_wizard
+    
+    webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
+    
+    return findWizardsFromDict(protocol, WEB_DJANGO, webWizardsDict)
+
+     
 def form(request):
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
@@ -54,7 +65,7 @@ def form(request):
     # Patch : to fix the relion dynamic way to generate the viewer form
     #         For this is necessary to call setProtocol method
     if protRunIdViewer is not None:
-        protocol_parent = project.mapper.selectById(int(protRunIdViewer))
+        protocol_parent = project.getProtocol(int(protRunIdViewer))
         protocol.setProtocol(protocol_parent)
     
     hosts = [host.getLabel() for host in project.getSettings().getHosts()]
@@ -76,7 +87,7 @@ def form(request):
     if path != '': 
         logoPath = getResourceLogo(path)
             
-    wizards = findWizards(protocol, WEB_DJANGO)
+    wizards = findWizardsWeb(protocol)
     
     protocol.htmlCitations = parseText(protocol.citations())
     protocol.htmlDoc = parseText(protocol.getDoc())
@@ -97,6 +108,10 @@ def form(request):
                         else:
                             paramGroup = PreprocessParamForm(request, paramGroup, paramGroupName, wizards, viewerDict, visualize, protVar)
                 
+                    param.htmlCond = param.condition.get()
+                    param.htmlDepend = ','.join(param._dependants)
+                    param.htmlCondParams = ','.join(param._conditionParams)   
+                            
                 # LINE PARAM
                 if isinstance(param, Line):
                     for paramLineName, paramLine in param.iterParams():
@@ -105,11 +120,14 @@ def form(request):
                         if protVar is None:
                             pass
                         else:
-                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)
+                            paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)                  
                         
-                    if paramName in wizards:
-                        param.hasWizard = True
-                        param.wizardClassName = wizards[paramName].__name__
+                    # PATCH: This is applied to all the params in the line, maybe just need for the first one.
+                    for name, _ in param.iterParams():
+                        wizParamName = name
+                        if wizParamName in wizards:
+                            param.hasWizard = True
+                            param.wizardClassName = wizards[wizParamName].__name__
                         
                     if visualize == 1:
                         if paramName in viewerDict:
@@ -117,7 +135,11 @@ def form(request):
                     
                     if not param.help.empty():
                         param.htmlHelp = parseText(param.help.get())
-                    
+                        
+                    param.htmlCond = param.condition.get()
+                    param.htmlDepend = ','.join(param._dependants)
+                    param.htmlCondParams = ','.join(param._conditionParams)   
+                                     
             else:
                 #OTHER PARAM
                 param = PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar)
@@ -137,29 +159,40 @@ def form(request):
                'hosts':hosts,
                'comment': parseText(protocol.getObjComment())
                }
+    
     # Update the context dictionary with the special params
     for paramName in SPECIAL_PARAMS:
         context[paramName] = protocol.getAttributeValue(paramName, '')
-    
+
     # Cross Site Request Forgery protection is need it
     context.update(csrf(request))
     
     context = base_form(request, context)
     
-    return render_to_response('form.html', context)
+    return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
+    
     if isinstance(param, MultiPointerParam):
         htmlValueList = []
         htmlIdValueList = []
+        
         for pointer in protVar:
             htmlValue, htmlIdValue = getPointerHtml(pointer)
             htmlValueList.append(htmlValue)
             htmlIdValueList.append(htmlIdValue)
             
-        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)    
+        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)
+        
     elif isinstance(param, PointerParam):
         param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+        
+    elif isinstance(param, RelationParam):
+        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+        param.relationName = param.getName()
+        param.attributeName = param.getAttributeName()
+        param.direction = param.getDirection()
+        
     else:
         param.htmlValue = protVar.get(param.default.get(""))
         if isinstance(protVar, Boolean):
@@ -170,22 +203,21 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     
     if paramName in wizards:
         param.hasWizard = True
-#       param.wizardName = wizards[paramName].getView()
         param.wizardClassName = wizards[paramName].__name__
 #       print "param: ", paramName, " has wizard", " view: "
     
     if visualize == 1:
         if paramName in viewerDict:
             param.hasViewer = True
-    #                    print "param: ", paramName, " has viewer"
-        
+    #       print "param: ", paramName, " has viewer"
+    
     param.htmlCond = param.condition.get()
     param.htmlDepend = ','.join(param._dependants)
     param.htmlCondParams = ','.join(param._conditionParams)
     
     if not param.help.empty():
         param.htmlHelp = parseText(param.help.get())
-    #            param.htmlExpertLevel = param.expertLevel.get()   
+    #   param.htmlExpertLevel = param.expertLevel.get()   
     
     """ Workflow Addon """
     valueURL = request.GET.get(paramName, None) 
@@ -207,7 +239,7 @@ def protocol(request):
             project.launchProtocol(protocol)
             
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
             
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     
@@ -232,7 +264,7 @@ def updateProtocolParams(request, protocol, project):
 def getPointerValue(project, attr, value, paramName):
     if len(value.strip()) > 0:
       
-        obj = project.mapper.selectById(value)  # Get the object from its id
+        obj = project.getProtocol(value)  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
         
@@ -277,7 +309,7 @@ def save_protocol(request):
         protId = protocol.getObjId()
         res = {'success' : protId}
     except Exception, ex:
-        errors = [convertTktoHtml(str(ex))]
+        errors = [parseText(str(ex))]
         res = {'errors' : errors}
     
     jsonStr = json.dumps(res, ensure_ascii=False)
@@ -285,17 +317,44 @@ def save_protocol(request):
 
 # Method to delete a protocol #
 def delete_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+            
         try:
-            project.deleteProtocol(protocol)
+            project.deleteProtocol(*list_protocols)
             res = {'success' : 'Protocol deleted successful'}
         except Exception, ex:
-            errors = [convertTktoHtml(str(ex))]
+            errors = [parseText(str(ex))]
+            res = {'errors' : errors}
+            
+    jsonStr = json.dumps(res, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+# Method to copy a protocol #
+def copy_protocol(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        list_id = request.GET.get('id', None).split(",")
+        
+        list_protocols = []
+        for id in list_id:        
+            protocol = project.getProtocol(int(id))
+            list_protocols.append(protocol)
+        
+        try:
+            protocol = project.copyProtocol(list_protocols)
+            
+            res = {'success' : 'Protocol copied successful'}
+        except Exception, ex:
+            errors = [parseText(str(ex))]
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
@@ -303,12 +362,11 @@ def delete_protocol(request):
 
 # Method to stop a protocol #
 def stop_protocol(request):
-    # Project Id(or Name) should be stored in SESSION
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
         protId = request.GET.get('protocolId', None)
-        protocol = project.mapper.selectById(int(protId))
+        protocol = project.getProtocol(int(protId))
      
         project.stopProtocol(protocol)
         

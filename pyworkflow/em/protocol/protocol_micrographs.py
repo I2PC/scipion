@@ -25,12 +25,14 @@
 # **************************************************************************
 """
 In this module are protocol base classes related to EM Micrographs
-
 """
+
 from pyworkflow.em.protocol import *
+from pyworkflow.utils.path import copyTree
 
 class ProtMicrographs(EMProtocol):
     pass
+
 
 class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
@@ -45,58 +47,42 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
-#        form.addParam('ampContrast', FloatParam, default=0.1,
-#                      label='Amplitude Contrast',
-#                      help='It should be a positive number, typically between 0.05 and 0.3.')
 
-        line = form.addLine('Resolution', help=Message.TEXT_RES)
+        line = form.addLine('Resolution', 
+                            help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
+                                 'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
+                                 'terms where only noise exists, to interfere with CTF estimation. The default lowest '
+                                 'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
+                                 'The default highest value is 0.35, but it should '+'be increased for micrographs with '
+                                 'signals extending beyond this value. However, if your micrographs extend further than '
+                                 '0.35, you should consider sampling them at a finer rate.')
         line.addParam('lowRes', FloatParam, default=0.05,
                       label='Lowest' )
         line.addParam('highRes', FloatParam, default=0.35,
                       label='Highest')
-#        form.addParam('lowRes', FloatParam, default=0.05,
-#                      label=Message.LABEL_LOW_RES,
-#                      help=Message.TEXT_LOW_RES)
-#        form.addParam('highRes', FloatParam, default=0.35,
-#                      label=Message.LABEL_HIGH_RES, 
-#                      help=Message.TEXT_HIGH_RES)
-        form.addParam('minDefocus', FloatParam, default=0.5,
-                      label=Message.LABEL_MIN_FOCUS,
-                      help=Message.TEXT_MIN_FOCUS,
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('maxDefocus', FloatParam, default=10.,
-                      label=Message.LABEL_MAX_FOCUS,
-                      help=Message.TEXT_MAX_FOCUS,
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('windowSize', IntParam, default=256,
-                      label=Message.LABEL_WINDOW_SIZE,
-                      help=Message.TEXT_WINDOW_SIZE,
-                      expertLevel=LEVEL_ADVANCED)
         
-        form.addParallelSection(threads=2, mpi=0)       
+        line = form.addLine('Defocus search range (microns)', expertLevel=LEVEL_ADVANCED,
+                            help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
+                                 'Underfocus is represented by a positive number.')
+        line.addParam('minDefocus', FloatParam, default=0.5, 
+                      label='Min')
+        line.addParam('maxDefocus', FloatParam, default=10.,
+                      label='Max')
+        
+        form.addParam('windowSize', IntParam, default=256, expertLevel=LEVEL_ADVANCED,
+                      label='Window size', 
+                      help='The PSD is estimated from small patches of this size. Bigger patches '
+                           'allow identifying more details. However, since there are fewer windows, '
+                           'estimations are noisier.')
+        
+        form.addParallelSection(threads=2, mpi=1)       
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
-        # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
-        acquisition = self.inputMics.getAcquisition()
-         
-        self._params = {'voltage': acquisition.getVoltage(),
-                        'sphericalAberration': acquisition.getSphericalAberration(),
-                        'magnification': acquisition.getMagnification(),
-                        'ampContrast': acquisition.getAmplitudeContrast(),
-                        'samplingRate': self.inputMics.getSamplingRate(),
-                        'scannedPixelSize': self.inputMics.getScannedPixelSize(),
-                        'windowSize': self.windowSize.get(),
-                        'lowRes': self.lowRes.get(),
-                        'highRes': self.highRes.get(),
-                        # Convert from microns to Amstrongs
-                        'minDefocus': self.minDefocus.get() * 1e+4, 
-                        'maxDefocus': self.maxDefocus.get() * 1e+4
-                       }
         
+        self._defineValues()
         self._prepareCommand()
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
@@ -138,19 +124,39 @@ class ProtCTFMicrographs(ProtMicrographs):
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineValues(self):
+        """ This function get some parameters of the micrographs"""
+        # Get pointer to input micrographs 
+        self.inputMics = self.inputMicrographs.get() 
+        acquisition = self.inputMics.getAcquisition()
+        
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
+                        'samplingRate': self.inputMics.getSamplingRate(),
+                        'scannedPixelSize': self.inputMics.getScannedPixelSize(),
+                        'windowSize': self.windowSize.get(),
+                        'lowRes': self.lowRes.get(),
+                        'highRes': self.highRes.get(),
+                        # Convert from microns to Amstrongs
+                        'minDefocus': self.minDefocus.get() * 1e+4, 
+                        'maxDefocus': self.maxDefocus.get() * 1e+4
+                       }
+    
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
         return self._getExtraPath(removeBaseExt(mic.getFileName()))        
-        
+    
     def _iterMicrographs(self):
         """ Iterate over micrographs and yield
         micrograph name and a directory to process.
         """
         for mic in self.inputMics:
             micFn = mic.getFileName()
-            micDir = self._getExtraPath(removeBaseExt(micFn)) 
+            micDir = self._getMicrographDir(mic) 
             yield (micFn, micDir, mic)  
-                
+    
     def _prepareCommand(self):
         """ This function should be implemented to prepare the
         arguments template if doesn't change for each micrograph
@@ -166,6 +172,169 @@ class ProtCTFMicrographs(ProtMicrographs):
         maximum = float(max(list))/10000
         msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
         self.methodsInfo.set(msg)
+
+
+class ProtRecalculateCTF(ProtMicrographs):
+    """ Base class for all protocols that re-calculate the CTF"""
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.methodsInfo = String()
+        self.summaryInfo = String()
+        self.stepsExecutionMode = STEPS_PARALLEL
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_CTF_ESTI)
+        
+        form.addParam('inputCtf', PointerParam, important=True,
+              label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
+        form.addParam('inputValues', TextParam)
+        
+        form.addParallelSection(threads=0, mpi=1)
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        """ Insert the steps to perform ctf re-estimation on a set of CTFs.
+        """
+        self._insertFunctionStep('copyInputValues')
+        self._defineValues()
+        deps = [] # Store all steps ids, final step createOutput depends on all of them
+        # For each psd insert the steps to process it
+        for line in self.values:
+            # CTF Re-estimation with Xmipp
+            copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[])
+            stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
+            deps.append(stepId)
+        # Insert step to create output objects       
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def copyInputValues(self):
+        """ Copy a parameter file that contain the info of the
+        micrographs to recalculate its CTF to a current directory"""
+        srcFile = self.inputValues.get()
+        baseFn = basename(srcFile)
+        dstFile = self._getTmpPath(baseFn)
+        copyFile(srcFile, dstFile)
+    
+    def copyFiles(self, line):
+        """Copy micrograph's directory tree"""
+        objId = self._getObjId(line)
+        ctfModel = self.setOfCtf.__getitem__(objId)
+        mic = ctfModel.getMicrograph()
+        
+        prevDir = self._getPrevMicDir(mic)
+        micDir = self._getMicrographDir(mic)
+        # Create micrograph dir under extra directory
+        print "creating path micDir=", micDir
+        makePath(micDir)
+        if not exists(micDir):
+            raise Exception("No created dir: %s " % micDir)
+        copyTree(prevDir, micDir)
+    
+    def _estimateCTF(self, micFn, micDir):
+        """ Do the CTF estimation with the specific program
+        and the parameters required.
+        Params:
+         micFn: micrograph filename
+         micDir: micrograph directory
+        """
+        raise Exception(Message.ERROR_NO_EST_CTF)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputCTF'):
+            summary.append(Message.TEXT_NO_CTF_READY)
+        else:
+            summary.append(self.summaryInfo.get())
+        return summary
+    
+    def _methods(self):
+        methods = []
+        
+        if not hasattr(self, 'outputCTF'):
+            methods.append(Message.TEXT_NO_CTF_READY)
+        else:
+            methods.append(self.methodsInfo.get())
+            
+        return methods
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _defineValues(self):
+        """ This function get the acquisition info of the micrographs"""
+        self.setOfCtf = self.inputCtf.get()
+        self.values = self._splitFile(self.inputValues.get())
+        
+        line = self.values[0]
+        objId = self._getObjId(line)
+        ctfModel = self.inputCtf.get().__getitem__(objId)
+        mic = ctfModel.getMicrograph()
+        
+        acquisition = mic.getAcquisition()
+        scannedPixelSize = mic.getSamplingRate() * acquisition.getMagnification() / 10000
+        self._params = {'voltage': acquisition.getVoltage(),
+                        'sphericalAberration': acquisition.getSphericalAberration(),
+                        'magnification': acquisition.getMagnification(),
+                        'ampContrast': acquisition.getAmplitudeContrast(),
+                        'scannedPixelSize': scannedPixelSize,
+                        'samplingRate': mic.getSamplingRate()
+                       }
+    
+    def _getMicrographDir(self, mic):
+        """ Return an unique dir name for results of the micrograph. """
+        return self._getExtraPath(removeBaseExt(mic.getFileName()))        
+    
+    def _iterMicrographs(self):
+        """ Iterate over micrographs and yield
+        micrograph name and a directory to process.
+        """
+        for mic in self.inputMics:
+            micFn = mic.getFileName()
+            micDir = self._getMicrographDir(mic) 
+            yield (micFn, micDir, mic)  
+    
+    def _prepareCommand(self):
+        """ This function should be implemented to prepare the
+        arguments template if doesn't change for each micrograph
+        After this method self._program and self._args should be set. 
+        """
+        pass
+    
+    def _getPrevMicDir(self, mic):
+        
+        objFn = self.setOfCtf.getFileName()
+        directory = dirname(objFn)
+        return join(directory, "extra", removeBaseExt(mic.getFileName()))
+    
+    def _getObjId(self, list):
+        return int(list[0])
+    
+    def _splitFile(self, file):
+        """ This method split the parameter file into lines"""
+        list = []
+        f1 = open(file)
+        for l in f1:
+            split = l.split()
+            list.append(split)
+        f1.close()
+        return list
+    
+    def _defocusMaxMin(self, list):
+        """ This function return the minimum and maximum of the defocus
+        of a SetOfMicrographs.
+        """
+        minimum = float(min(list))/10000
+        maximum = float(max(list))/10000
+        msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
+        self.methodsInfo.set(msg)
+    
+    def _ctfCounter(self, list):
+        """ This function return the number of CTFs that was recalculated.
+        """
+        numberOfCTF = len(list)/2
+        msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
+        self.summaryInfo.set(msg)
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):
@@ -237,7 +406,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return workDir
     
     
-    
 class ProtOpticalAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
@@ -246,3 +414,4 @@ class ProtOpticalAlignment(ProtProcessMovies):
     def _defineProgram(self):
         XMP_OPT_ALIGN = 'xmipp_optical_alignment'
         self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
+        

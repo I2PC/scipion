@@ -34,17 +34,11 @@ from bibtex import _bibtex # Load bibtex dict with references
 _references = ['Shaikh2008', 'Frank1996b']
 
 from spider import *
+from protocol import *
 
-from protocol_filters import SpiderProtFilter
-from protocol_align_apsr import SpiderProtAlignAPSR
-from protocol_custommask import SpiderProtCustomMask
-from protocol_ca_pca import SpiderProtCAPCA
-from protocol_ward import SpiderProtClassifyWard
-from protocol_mda import SpiderWfMDA
-from protocol_align_pairwise import SpiderProtAlignPairwise
-
-from wizard import SpiderProtMaskWizard, SpiderParticlesMaskRadiiWizard, SpiderFilterParticlesWizard
+from wizard import (SpiderProtMaskWizard, SpiderParticlesMaskRadiiWizard,
+                    SpiderFilterParticlesWizard, SpiderCustomMaskWizard)
 
 from viewer import SpiderViewer
 from viewer_capca import SpiderViewerCAPCA
-from viewer_ward import SpiderViewerWard
+from viewer_classify import SpiderViewerWard, SpiderViewerDiday

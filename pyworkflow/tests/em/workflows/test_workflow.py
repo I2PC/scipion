@@ -1,7 +1,8 @@
-import unittest
+
+from pyworkflow.tests import BaseTest
     
     
-class TestWorkflow(unittest.TestCase):
+class TestWorkflow(BaseTest):
     
     protDict = {}
         

@@ -29,6 +29,8 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
+import sys
+
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
 # constants reflect which direction of the relation we refer
@@ -41,7 +43,7 @@ class Object(object):
     that will contains all base properties"""
     def __init__(self, value=None, **args):
         object.__init__(self)
-        self.set(value)
+        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
         self._objId =  args.get('objId', None) # Unique identifier of this object in some context
         self._objParentId =  args.get('objParentId', None) # identifier of the parent object
         self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
@@ -49,9 +51,11 @@ class Object(object):
         self._objComment = args.get('objComment', '')
         self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
         self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
-        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
-        self._objCreationTime = None
+        self._objCreation = None
         self._objParent = None # Reference to parent object
+        self._objEnabled = True
+        self.set(value)
+    
         
     def getClassName(self):
         return self.__class__.__name__
@@ -60,7 +64,7 @@ class Object(object):
         return type(self)
     
     def getDoc(self):
-        return self.__doc__
+        return self.__doc__ or ''
     
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
@@ -189,13 +193,32 @@ class Object(object):
     def setObjComment(self, comment):
         """ Set the comment to better identify this object"""
         self._objComment = comment       
+        
+    def setObjCreation(self, creation):
+        """ Set the creation time of the object. """
+        self._objCreation = creation
+        
+    def getObjCreation(self):
+        """ Return the stored creation time of the object. """
+        return self._objCreation
     
     def strId(self):
         """String representation of id"""
         return str(self._objId)
     
     def getName(self):
+        #TODO: REMOVE THIS FUNCTION, SINCE IT DOES NOT COMPLAIN WITH _objX naming
         return self._objName
+    
+    def getObjName(self):
+        return self._objName
+    
+    def setEnabled(self, enabled):
+        self._objEnabled = bool(enabled)
+        
+    def isEnabled(self):
+        """Return if object is enabled"""
+        return self._objEnabled
     
     def getNameId(self):
         """ Return an unique and readable id that identifies this object. """
@@ -283,9 +306,16 @@ class Object(object):
         self.__getObjDict('', d, includeClass)
         return d
     
-    def copy(self, other, copyId=True):
+    def copy(self, other, copyId=True, ignoreAttrs=[]):
+        """ Copy all attributes values from one object to the other.
+        The attributes will be created if needed with the corresponding type.
+        Params:
+            other: the other object from which to make the copy.
+            copyId: if true, the _objId will be also copied.
+            ignoreAttrs: pass a list with attributes names to ignore.
+        """
         copyDict = {'internalPointers': []} 
-        self._copy(other, copyDict, copyId)
+        self._copy(other, copyDict, copyId, ignoreAttrs=ignoreAttrs)
         self._updatePointers(copyDict)
         return copyDict
         
@@ -295,11 +325,11 @@ class Object(object):
         the references should be updated.
         """
         for ptr in copyDict['internalPointers']:
-            pointedId = ptr.get().getObjId()
+            pointedId = ptr.getObjValue().getObjId()
             if  pointedId in copyDict:
                 ptr.set(copyDict[pointedId])
         
-    def _copy(self, other, copyDict, copyId, level=1):
+    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
         """ This method will recursively clone all attributes from one object to the other.
         NOTE: Currently, we are not deleting attributes missing in the 'other' object.
         copyDict: this dict is used to store the ids map between 'other' and 'self' attributes
@@ -315,21 +345,22 @@ class Object(object):
         self._objComment = other._objComment
         # Copy attributes recursively
         for name, attr in other.getAttributes():
-            myAttr = getattr(self, name, None)
-
-            if myAttr is None:
-                myAttr = attr.getClass()()
-                setattr(self, name, myAttr)
-                
-            myAttr._copy(attr, copyDict, copyId, level+2)
-            # Store the attr in the copyDict
-            if attr.hasObjId():
-                #" storing in copyDict with id=", attr.getObjId()
-                copyDict[attr.getObjId()] = myAttr
-            # Use the copyDict to fix the reference in the copying object
-            # if the pointed one is inside the same object
-            if myAttr.isPointer() and myAttr.hasValue():
-                copyDict['internalPointers'].append(myAttr)
+            if name not in ignoreAttrs:
+                myAttr = getattr(self, name, None)
+    
+                if myAttr is None:
+                    myAttr = attr.getClass()()
+                    setattr(self, name, myAttr)
+                    
+                myAttr._copy(attr, copyDict, copyId, level+2)
+                # Store the attr in the copyDict
+                if attr.hasObjId():
+                    #" storing in copyDict with id=", attr.getObjId()
+                    copyDict[attr.getObjId()] = myAttr
+                # Use the copyDict to fix the reference in the copying object
+                # if the pointed one is inside the same object
+                if myAttr.isPointer() and myAttr.hasValue():
+                    copyDict['internalPointers'].append(myAttr)
     
     def clone(self):
         clone = self.getClass()()
@@ -399,11 +430,9 @@ class OrderedObject(Object):
         """
         for key in self._attributes:
             attr = getattr(self, key)
-            if attr.isPointer() and attr.get() is value:
-                print "already pointed value of: ", name, "key: ", key
-                print "  attr.get()=", attr.get(), 'type=', type(attr.get())
-                print "  value=", value, "type=", type(value)
-                return True
+            if attr.isPointer():
+                if attr.get() is value:
+                    return True
         return False
     
     def __setattr__(self, name, value):
@@ -547,25 +576,56 @@ class Boolean(Scalar):
         return self.get()  
     
     
-class Pointer(Scalar):
+class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
-        Object.__init__(self, value, objIsPointer=True, **args)   
+        Object.__init__(self, value, objIsPointer=True, **args)
+        # this will be used to point to attributes of a pointed object
+        # or the id of an item inside a set
+        self._extended = None
        
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
             return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
         return '-> None'
+
+    def hasValue(self):
+        return self._objValue is not None
     
-    def _convertValue(self, value):
-        """Avoid storing _objValue and future objects
-        obtained from .get()"""
-        #value.setStore(False)
+    def get(self, default=None):
+        """ Get the pointed object. 
+        If the _extended property is set, then the extended attribute or item id
+        will be retrieved by the call to get().
+        """
+        if self._extended is not None:
+            if isinstance(self._extended, String):
+                value = getattr(self._objValue, self._extended.get(), default)
+            elif isinstance(self._extended, Integer):
+                value = self._objValue[self._extended.get()]
+                value._parentObject = self._objValue
+            else:
+                raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))
+        else:
+            value = self._objValue
+            
         return value
     
-    def getAttributesToStore(self):
-        return []
+    def setExtendedAttribute(self, attributeName):
+        """ Point to an attribute of the pointed object. """
+        if not self._extended:
+            self._extended = String()
+        self._extended.set(attributeName)
+        
+    def setExtendedItemId(self, itemId):
+        """ Point to an specific item of a pointed Set. """
+        if not self._extended:
+            self._extended = Integer()
+        self._extended.set(itemId)
+        
+    def getAttributes(self):
+        if self._extended:
+            yield ('_extended', getattr(self, '_extended'))
     
 
 class List(Object, list):
@@ -633,6 +693,14 @@ class List(Object, list):
 class PointerList(List):
     def __init__(self, **args):
         List.__init__(self, **args)
+        
+    def _convertValue(self, value):
+        if isinstance(value, list):
+            self.clear()
+            for obj in value:
+                self.append(Pointer(value=obj))
+        else:
+            raise Exception("Could not set a PointerList value to: %s" % value)
       
             
 class CsvList(Scalar, list):
@@ -698,6 +766,146 @@ class Array(Object):
     
     def __len__(self):
         return self._objValue
+    
+    
+class Set(OrderedObject):
+    """ This class will be a container implementation for elements.
+    It will use an extra sqlite file to store the elements.
+    All items will have an unique id that identifies each element in the set.
+    """
+    ITEM_TYPE = None # This property should be defined to know the item type
+    
+    def __init__(self, filename=None, prefix='', 
+                 mapperClass=None, classesDict=None, **args):
+        # Use the object value to store the filename
+        OrderedObject.__init__(self, **args)
+        self._mapper = None
+        self._idCount = 0
+        self._size = Integer(0) # cached value of the number of images  
+        #self._idMap = {}#FIXME, remove this after id is the one in mapper
+        self.setMapperClass(mapperClass)
+        self._mapperPath = CsvList() # sqlite filename
+        self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
+        self._representative = None
+        self._classesDict = classesDict 
+        # If filename is passed in the constructor, it means that
+        # we want to create a new object, so we need to delete it if
+        # the file exists
+        if filename:
+            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
+        
+    def setMapperClass(self, MapperClass):
+        """ Set the mapper to be used for storage. """
+        if MapperClass is None:
+            from pyworkflow.mapper.sqlite import SqliteFlatMapper
+            MapperClass = SqliteFlatMapper
+        Object.__setattr__(self, '_MapperClass', MapperClass)
+        
+    def __getitem__(self, itemId):
+        """ Get the image with the given id. """
+        return self._mapper.selectById(itemId)
+
+    def _iterItems(self):        
+        return self._mapper.selectAll()#has flat mapper, iterate is true
+    
+    def getFirstItem(self):
+        """ Return the first item in the Set. """
+        return self._mapper.selectFirst()
+    
+    def __iter__(self):
+        """ Iterate over the set of images. """
+        return self._iterItems()
+       
+    def __len__(self):
+        return self._size.get()
+    
+    def getSize(self):
+        """Return the number of images"""
+        return self._size.get()
+    
+    def getFileName(self):
+        if len(self._mapperPath):
+            return self._mapperPath[0]
+        return None
+    
+    def getPrefix(self):
+        if len(self._mapperPath) > 1:
+            return self._mapperPath[1]
+        return None
+    
+    def write(self):
+        """This method will be used to persist in a file the
+        list of images path contained in this Set
+        path: output file path
+        images: list with the images path to be stored
+        """
+        #TODO: If mapper is in memory, do commit and dump to disk
+        self._mapper.setProperty('self', self.getClassName())
+        objDict = self.getObjDict()
+        for key, value in objDict.iteritems():
+            self._mapper.setProperty(key, value)
+        self._mapper.commit()
+    
+    def _loadClassesDict(self):
+        return self._classesDict or globals()
+    
+    def setClassesDict(self, classesDict):
+        """ Set the dictionary with classes where to look for classes names. """
+        self._classesDict = classesDict
+    
+    def load(self):
+        """ Load extra data from files. """
+        if self._mapperPath.isEmpty():
+            raise Exception("Set.load:  mapper path and prefix not set.")
+        fn, prefix = self._mapperPath
+        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
+        # TODO: updated size with the real size from the mapper
+           
+    def close(self):
+        self._mapper.close()
+        
+    def clear(self):
+        self._mapper.clear()
+        self._idCount = 0
+        self._size.set(0)
+         
+    def append(self, item):
+        """ Add a image to the set. """
+        if not item.hasObjId():
+            self._idCount += 1
+            item.setObjId(self._idCount)
+        self._insertItem(item)
+        self._size.increment()
+#        self._idMap[item.getObjId()] = item
+        
+    def _insertItem(self, item):
+        self._mapper.insert(item)
+        
+    def update(self, item):
+        """ Update an existing item. """
+        self._mapper.update(item)
+                
+    def __str__(self):
+        return "%-20s (%d items)" % (self.getClassName(), self.getSize())
+    
+    def getSubset(self, n):
+        """ Return a subset of n element, making a clone of each. """
+        subset = []
+        for i, item in enumerate(self):
+            subset.append(item.clone())
+            if i == n:
+                break
+        return subset
+    
+    def setRepresentative(self, representative):
+        self._representative = representative
+    
+    def getRepresentative(self):       
+        return self._representative
+    
+    def hasRepresentative(self):
+        """ Return true if have a representative image. """
+        return self._representative is not None
     
     
 def ObjectWrap(value):
