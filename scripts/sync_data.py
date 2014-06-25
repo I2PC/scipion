@@ -34,14 +34,12 @@ from __future__ import division
 
 import sys
 import os
-from os.path import join, isdir, exists, relpath
+from os.path import join, isdir, exists, relpath, dirname
 import subprocess
 import argparse
 import hashlib
 from urllib2 import urlopen
 import getpass
-
-from pyworkflow.utils.path import makePath, makeFilePath, copyFile, cleanPath
 
 
 scipion_logo = """
@@ -221,7 +219,7 @@ def downloadDataset(datasetName, destination=None, url=None, verbose=False):
     # Retrieve the dataset's MANIFEST file.
     # It contains a list of "file md5sum" of all files included in the dataset.
     datasetFolder = join(destination, datasetName)
-    makePath(datasetFolder)
+    os.makedirs(datasetFolder)
     manifest = join(destination, datasetName, 'MANIFEST')
     try:
         if verbose:
@@ -239,11 +237,13 @@ def downloadDataset(datasetName, destination=None, url=None, verbose=False):
     prevPercent = 0
     for number, line in enumerate(manifestLines):
         fname, md5InLine = line.strip().split()
-        makeFilePath(join(datasetFolder, fname))
+        fpath = join(datasetFolder, fname)
         try:
             # Create file with downloaded content
             data = urlopen('%s/%s/%s' % (url, datasetName, fname)).read()
-            open(join(datasetFolder, fname), 'w').write(data)
+            if not isdir(dirname(fpath)):
+                os.makedirs(dirname(fpath))
+            open(fpath, 'w').write(data)
 
             percent = ((number+1)/(totalNumber*1.0))*100
             if verbose:
@@ -254,22 +254,23 @@ def downloadDataset(datasetName, destination=None, url=None, verbose=False):
                 sys.stdout.flush()
             prevPercent = percent
 
-            md5 = md5sum(join(datasetFolder, fname))
+            md5 = md5sum(fpath)
             assert md5 == md5InLine, \
                 'Bad md5. Expected: %s Computed: %s' % (md5InLine, md5)
             if verbose:
-                sys.stdout.write('    \tmd5 OK\n')
+                sys.stdout.write('    \tMD5 OK\n')
         except Exception as e:
             print "\nError in %s (%s)" % (fname, e)
             print "URL: %s/%s/%s" % (url, datasetName, fname)
-            print "Destination: %s" % join(datasetFolder, fname)
+            print "Destination: %s" % fpath
             while True:
                 answer = raw_input("Continue downloading? (y/[n]): ")
                 if not answer or answer in ['N', 'n']:
-                    break
+                    return
                 if answer in ['Y', 'y']:
-                    continue
+                    break
     print
+
 
 def md5sum(fname):
     """ Return the md5 hash of file fname """
@@ -306,14 +307,17 @@ def checkForUpdates(datasetName, workingCopy=None,
 
     for fname in md5sRemote:
         vlog('\t%s' % fname)
+        fpath = join(datasetFolder, fname)
         try:
-            if exists(join(datasetFolder, fname)) and md5sLocal[fname] == md5sRemote[fname]:
+            if exists(fpath) and md5sLocal[fname] == md5sRemote[fname]:
                 vlog('\r\tOK  %s\n' % fname)
                 pass  # just to emphasize that we do nothing in this case
             else:
                 vlog('\r\tXX  %s  (downloading... ' % fname)
                 data = urlopen('%s/%s/%s' % (url, datasetName, fname)).read()
-                open(join(datasetFolder, fname), 'w').write(data)
+                if not isdir(dirname(fpath)):
+                    os.makedirs(dirname(fpath))
+                open(fpath, 'w').write(data)
                 vlog('done)\n')
                 filesUpdated += 1
         except Exception as e:
