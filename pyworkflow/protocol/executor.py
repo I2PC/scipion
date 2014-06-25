@@ -29,6 +29,7 @@ The basic one will run steps, one by one, after completion.
 There is one based on threads to execute steps in parallel
 using different threads and the last one with MPI processes.
 """
+
 from threading import Thread, Condition, Event, current_thread
 import pyworkflow.utils.process as process
 
@@ -69,11 +70,11 @@ class StepExecutor():
 
 class StepThread(Thread):
     """ Thread to run Steps in parallel. 
-    If there is not work to do in this moment, the thread
+    If there is no work to do, the thread
     should be waiting in his Event variable.
-    When the event is set to True, can happens two thing:
+    When the event is set to True, two things can happen:
     1. The step variable is None and the thread should exit
-       since there is not more work to do, or
+       since there is no more work to do, or
     2. The step will be run and reported back after completion.
     """
     def __init__(self, thId, condition):
@@ -84,9 +85,8 @@ class StepThread(Thread):
         self.step = None
         
     def isReady(self):
-        ready = not self.event.is_set()
-        return ready 
-    
+        return not self.event.is_set()
+
     def setStep(self, step):
         self.step = step
         self.event.set() # Work to do!!!
@@ -187,7 +187,6 @@ class ThreadStepExecutor(StepExecutor):
     def _launchThreads(self):
         """ Check ready steps and awake threads to work. """
         for s in self.steps:
-            #print "main, step ", i
             if self._isStepReady(s):
                 #print " step ready."
                 th = self._getReadyThread()
