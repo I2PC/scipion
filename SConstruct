@@ -349,14 +349,17 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     if setupPyFile is not None:
         copyFile(setupPyFile, os.path.join(tmp, libraryDict[DIR], 'setup.py'))
     setupPyFile = os.path.join(tmp, libraryDict[DIR], 'setup.py')
+    
     setup = None
+    command = 'cd %s && ' % os.path.join(tmp, libraryDict[DIR])
+    command += os.path.join(File(os.path.join(bin, 'python')).abspath)
+    command += ' '
+    command += 'setup.py'
     for action in actions:
-        command = os.path.join(File(os.path.join(bin, 'python')).abspath)
-        command += ' '
-        command += setupPyFile
         command += ' '
         command += action
-        setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
+    command += ' && cd -'
+    setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
                     File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
                     command)
     
