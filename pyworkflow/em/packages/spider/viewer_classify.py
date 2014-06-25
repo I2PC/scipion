@@ -35,6 +35,7 @@ from Tkinter import *
 from pyworkflow.em import ProtUserSubSet, Class2D, Particle, SetOfClasses2D
 from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_FINISHED
+from pyworkflow.utils.properties import Icon
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.path import cleanPath
@@ -147,9 +148,9 @@ class SpiderViewerWard(SpiderViewerClassify):
         self.buttonframe = Frame(root)
         self.buttonframe.grid(row=2, column=0, columnspan=2)  
         self.win.createCloseButton(self.buttonframe).grid(row=0, column=0, sticky='n', padx=5, pady=5) 
-        saveparticlesbtn = HotButton(self.buttonframe, "Create Particles", command=self.saveParticles)
+        saveparticlesbtn = HotButton(self.buttonframe, "Particles", Icon.PLUS_CIRCLE, command=self.saveParticles)
         saveparticlesbtn.grid(row=0, column=1, sticky='n', padx=5, pady=5)  
-        btn = HotButton(self.buttonframe, "Create Classes", command=self.saveClasses)
+        btn = HotButton(self.buttonframe, "Classes", Icon.PLUS_CIRCLE, command=self.saveClasses)
         btn.grid(row=0, column=2, sticky='n', padx=5, pady=5)
             
         lt = LevelTree(g)
@@ -160,52 +161,44 @@ class SpiderViewerWard(SpiderViewerClassify):
         
         return [self.win]
         
-    def saveClasses(self, e=None):
-        """ Store selected classes. """
+    def _createSubsetProtocol(self, createOutputFunc):
+        """ Create a subset of classes or particles. """
         try:
-            selectedNodes = [node for node in self.graph.getNodes() if node.selected]
-            suffix = 'Selection'
-            prot = ProtUserSubSet(inputType='Classes', outputType='Classes')
-            prot.createInputPointer(self.protocol.outputClasses)
-            self._project._setupProtocol(prot)
+            project = self.getProject()
+            prot = project.newProtocol(ProtUserSubSet)
+            prot.inputObject.set(self.protocol)
+            project._setupProtocol(prot)
             prot.makePathsAndClean()
-            classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix)
-            averages = prot._createSetOfParticles(suffix)
-            averages.copyInfo(self.protocol.outputClasses.getRepresentatives())
-            self.protocol._fillClassesFromNodes(classes, averages, selectedNodes)
-            prot.createOutputSet(classes)
+            createOutputFunc(prot)
             prot.setStatus(STATUS_FINISHED)
-            self._project._storeProtocol(prot)
+            project._storeProtocol(prot)
             #self.project.launchProtocol(prot, wait=True)
-            self.win.showInfo("Protocol %s created. " % prot.getName())
+            self.win.showInfo("Protocol %s created. " % prot.getObjLabel())
         except Exception, ex:
             import traceback
             traceback.print_exc()    
             self.win.showError(str(ex))
-            #raise
+        
+        
+    def saveClasses(self, e=None):
+        """ Store selected classes. """
+        def createClasses(prot):    
+            classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix='Selection')
+            selectedNodes = [node for node in self.graph.getNodes() if node.selected]
+            self.protocol._fillClassesFromNodes(classes, selectedNodes)
+            prot._defineOutputs(outputClasses=classes)
+            
+        self._createSubsetProtocol(createClasses)
             
     def saveParticles(self, e=None):
         """ Store particles from selected classes. """
-        try:
+        def createParticles(prot):
+            particles = prot._createSetOfParticles(suffix='Selection')
+            particles.copyInfo(self.protocol.inputParticles.get())
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
-            suffix = 'Selection'
-            prot = ProtUserSubSet(inputType='Classes', outputType='Particles')
-            prot.createInputPointer(self.protocol.outputClasses)
-            self._project._setupProtocol(prot)
-            prot.makePathsAndClean()
-            
-            particles = prot._createSetOfParticles(suffix)
-            particles.copyInfo(self.protocol.outputClasses.getImages())
             self.protocol._fillParticlesFromNodes(particles, selectedNodes)
-            prot.createOutputSet(particles)
-            prot.setStatus(STATUS_FINISHED)
-            self._project._storeProtocol(prot)
-            #self.project.launchProtocol(prot, wait=True)
-            self.win.showInfo("Protocol %s created. " % prot.getName())
-        except Exception, ex:
-            import traceback
-            traceback.print_exc()    
-            self.win.showError(str(ex))
+            prot._defineOutputs(outputParticles=particles)
+        self._createSubsetProtocol(createParticles)
         
         
 class SpiderImageBox(ImageBox):
