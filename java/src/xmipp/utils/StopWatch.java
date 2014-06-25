@@ -41,11 +41,11 @@ public class StopWatch {
     }
     
     public void printElapsedTime(String comment) {
-//        double time = getElapsedTime();
-//        if(comment != null)
-//            System.out.printf("%.2f %s\n", time, comment);
-//        else
-//            System.out.println(time);
+        double time = getElapsedTime();
+        if(comment != null)
+            System.out.printf("%.2f %s\n", time, comment);
+        else
+            System.out.println(time);
 
     }
     

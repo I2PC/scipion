@@ -10,6 +10,7 @@ import xmipp.jni.Filename;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.StopWatch;
+
 import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class Viewer

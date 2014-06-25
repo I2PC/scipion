@@ -62,6 +62,7 @@ public class GalleryData {
         protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
+
 	public Params parameters;
 	private int numberOfVols = 0;
 
@@ -110,7 +111,9 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
+
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
+
 		this.window = window;
 		try {
                         
@@ -123,6 +126,7 @@ public class GalleryData {
                         this.visibleLabels = parameters.visibleLabels;
                         this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
+
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
 			wrap = parameters.wrap;
@@ -130,6 +134,7 @@ public class GalleryData {
 			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
+
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
