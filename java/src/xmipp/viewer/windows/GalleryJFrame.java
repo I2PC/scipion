@@ -264,7 +264,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-            childFrame = new GalleryJFrame(null, md, new Param());
+            new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
