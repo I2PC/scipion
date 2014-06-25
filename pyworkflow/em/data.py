@@ -231,7 +231,7 @@ class Image(EMObject):
         pass
     
     def getDim(self):
-        """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         i, fn = self.getLocation()
         if exists(fn):
             x, y, z, n = ImageHandler().getDimensions(self.getLocation())
