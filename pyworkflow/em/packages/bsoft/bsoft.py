@@ -27,16 +27,17 @@
 This sub-package will contains Eman3.0 specific protocols
 """
 
-import os, sys
+import os
 
-from pyworkflow.em import ProtPreprocessMicrographs   
+from pyworkflow.utils import environAdd
 
 
 
 def loadEnvironment():
-    
-    BSOFT_HOME = os.environ.get('BSOFT_HOME', None)
-    os.environ['PATH'] = "%(BSOFT_HOME)s/bin" % locals() + os.pathsep + os.environ['PATH']
+    BSOFT_HOME = os.environ['BSOFT_HOME']
+    BSOFT_BIN = os.path.join(BSOFT_HOME, 'bin')
+    environAdd('PATH', BSOFT_BIN)
+    os.environ['BSOFT'] = BSOFT_HOME
     
     
     

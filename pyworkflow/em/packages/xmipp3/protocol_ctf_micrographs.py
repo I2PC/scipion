@@ -39,24 +39,26 @@ class XmippCTFBase():
     """ This class cointains the common functionalities for all protocols to
 estimate CTF on a set of micrographs using xmipp3 """
 
-    __prefix = join('%(micDir)s','xmipp_ctf')
-    _templateDict = {
-        # This templates are relative to a micDir
-        'micrographs': 'micrographs.xmd',
-        'prefix': __prefix,
-        'ctfparam': __prefix +  '.ctfparam',
-        'psd': __prefix + '.psd',
-        'enhanced_psd': __prefix + '_enhanced_psd.xmp',
-        'ctfmodel_quadrant': __prefix + '_ctfmodel_quadrant.xmp',
-        'ctfmodel_halfplane': __prefix + '_ctfmodel_halfplane.xmp'
-        }
+    def _createFilenameTemplates(self):
+        __prefix = join('%(micDir)s','xmipp_ctf')
+        _templateDict = {
+                         # This templates are relative to a micDir
+                         'micrographs': 'micrographs.xmd',
+                         'prefix': __prefix,
+                         'ctfparam': __prefix +  '.ctfparam',
+                         'psd': __prefix + '.psd',
+                         'enhanced_psd': __prefix + '_enhanced_psd.xmp',
+                         'ctfmodel_quadrant': __prefix + '_ctfmodel_quadrant.xmp',
+                         'ctfmodel_halfplane': __prefix + '_ctfmodel_halfplane.xmp'
+                         }
+        self._updateFilenamesDict(_templateDict)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _setPsdFiles(self, ctfModel, micDir):
-        ctfModel._psdFile = String(self._getFilename('psd', micDir=micDir))
-        ctfModel._xmipp_enhanced_psd = String(self._getFilename('enhanced_psd', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFilename('ctfmodel_quadrant', micDir=micDir))
-        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFilename('ctfmodel_halfplane', micDir=micDir))
+        ctfModel._psdFile = String(self._getFileName('psd', micDir=micDir))
+        ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
+        ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
         return ctfModel
     
     def _citations(self):
@@ -80,7 +82,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             raise Exception("No created dir: %s " % micDir)
         # Update _params dictionary with mic and micDir
         self._params['micFn'] = micFn
-        self._params['micDir'] = self._getFilename('prefix', micDir=micDir)
+        self._params['micDir'] = self._getFileName('prefix', micDir=micDir)
         # CTF estimation with Xmipp                
         self.runJob(self._program, self._args % self._params)    
     
@@ -89,7 +91,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         defocusList = []
         
         for _, micDir, mic in self._iterMicrographs():
-            ctfparam = self._getFilename('ctfparam', micDir=micDir)
+            ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
             ctfModel = readCTFModel(ctfparam, mic)
             ctfSet.append(self._setPsdFiles(ctfModel, micDir))
@@ -104,6 +106,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self):
+        self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'       
         self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
         
@@ -152,7 +155,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
                     mic = ctfModel.getMicrograph()
                     mic.setObjId(ctfModel.getObjId())
                     micDir = self._getMicrographDir(mic)
-                    ctfparam = self._getFilename('ctfparam', micDir=micDir)
+                    ctfparam = self._getFileName('ctfparam', micDir=micDir)
                     ctfModel2 = readCTFModel(ctfparam, mic)
                     ctfModel2 = self._setPsdFiles(ctfModel2, micDir)
                     
@@ -174,6 +177,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self, line):
+        self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_psd'       
         self._args = "--psd %(psdFn)s "
         

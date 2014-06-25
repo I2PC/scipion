@@ -1,10 +1,10 @@
-import unittest, sys
-from pyworkflow.em import *
-from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.brandeis import *
-from pyworkflow.em.packages.eman2 import *
-from pyworkflow.em.packages.relion import *
+from pyworkflow.tests import DataSet, setupTestProject
+from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
+                                           XmippProtExtractParticles,
+                                           XmippProtCropResizeParticles, XmippProtML2D)
+from pyworkflow.em.packages.brandeis import ProtCTFFind, ProtFrealign
+from pyworkflow.em.packages.eman2 import EmanProtBoxing, EmanProtInitModel
+from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
 from test_workflow import TestWorkflow
 
 

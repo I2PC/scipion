@@ -30,6 +30,8 @@ This module handles process execution
 import os
 import sys
 import resource
+from subprocess import call
+
 
 from utils import greenStr
 
@@ -54,14 +56,15 @@ def runJob(log, programname, params,
         
 
 def runCommand(command, env=None, cwd=None):
-    from subprocess import call
+    """ Execute command with given environment env and directory cwd """
+
+    # First let us create core dumps if in debug mode
     debug = env.get('SCIPION_DEBUG') if env else os.environ.get('SCIPION_DEBUG')
     if debug and debug.lower() in ['true', '1']:
         resource.setrlimit(resource.RLIMIT_CORE,
                            (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
         # This is like "ulimit -u 99999999", so we can create core dumps
 
-    retcode = 1000
     try:
         retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
         if retcode != 0:
