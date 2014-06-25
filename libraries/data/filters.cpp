@@ -787,7 +787,7 @@ void EntropySegmentation(MultidimArray<double> &V)
 double EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil,
                                bool binarizeVolume)
 {
-    V.checkDimension(3);
+    //V.checkDimension(3);
 
     // Compute the probability density function
     Histogram1D hist;

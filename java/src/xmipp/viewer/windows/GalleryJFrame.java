@@ -198,14 +198,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	GalleryData data;
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
-
 	private JComboBox imagecolumnscb;
-
 	private JMenuItem rendercolumnmi;
-
 	private Hashtable<String, ColumnInfo> imagecolumns;
-
 	protected JPanel buttonspn;
+        private GalleryJFrame childFrame;
+        
+        
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -217,7 +216,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-    
+
+
+
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -263,7 +264,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		new GalleryJFrame(null, md, new Params());
+            new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -590,10 +591,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					hdir = 1;
 					break;
                                 case KeyEvent.VK_SPACE:
+                                        int from = -1, to = -1;
                                         for (int i = 0; i < data.selection.length; ++i)
                                         if (data.selection[i])
+                                        {
+                                            if(from == -1)
+                                                from = i;
                                             data.setEnabled(i, !data.isEnabled(i));
-                                        gallery.fireTableDataChanged();
+                                            to = i;
+                                        }
+                                        if(from != -1)
+                                            gallery.fireTableRowsUpdated(from, to);
 				}
 				if (vdir != 0 || hdir != 0)
 				{
@@ -791,7 +799,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void runInBackground(int operation)
 	{
 
-		MetaData imagesmd = data.getImagesMd();
+		MetaData imagesmd, md;
+                if(data.hasSelection())
+                {
+                    int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
+                    if(result == XmippQuestionDialog.YES_OPTION)
+                        md = data.getSelectionMd();
+                    else if(result == XmippQuestionDialog.NO_OPTION)
+                        md = data.md;
+                    else
+                        return;
+                }
+                else
+                    md = data.md;
+                    
+                
+                imagesmd = data.getImagesMd(md);
 		Worker w = new Worker(operation, imagesmd);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);

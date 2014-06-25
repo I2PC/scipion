@@ -78,7 +78,7 @@ public class TiltPairPicker extends ParticlePicker
 
 			}
 			md.destroy();
-			if (micrographs.size() == 0)
+			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
 
 		}

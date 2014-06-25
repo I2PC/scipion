@@ -28,7 +28,7 @@ import sys
 from os.path import exists, join
 from xmipp import *
 from emx.emx import *
-from numpy import eye, linalg, array
+from numpy import eye, linalg, array, dot
 
 
 from protlib_filesystem import join, dirname, abspath, replaceBasenameExt, findAcquisitionInfo
@@ -458,35 +458,43 @@ def emxParticlesToXmipp(emxData,
     md.write('Particles@' + outputFileName)   
     
     
-def emxTransformToXmipp(md, objId, particle, _2D):
+def emxTransformToXmipp(md, objId, particle, doAlign):
     """ Transform the particle transformation matrix
     in the euler angles and shift as expected by Xmipp.
     """
     #eulerangle2matrix
     _array = eye(3)# unitary matrix
 
-    if _2D:
-        for i, j, label in iterTransformationMatrix():
-            if particle.has(label):
-                _array[j][i] = particle.get(label)
-    else:
-        for i, j, label in iterTransformationMatrix():
-            if particle.has(label):
-                _array[i][j] = particle.get(label)
+#    if doAlign:
+#        for i, j, label in iterTransformationMatrix():
+#            if particle.has(label):
+#                _array[j][i] = particle.get(label)
+#    else:
+    for i, j, label in iterTransformationMatrix():
+        if particle.has(label):
+            _array[i][j] = particle.get(label)
 
     rot, tilt, psi = Euler_matrix2angles(_array)
     
     _X = particle.get('transformationMatrix__t14', 0.)
     _Y = particle.get('transformationMatrix__t24', 0.)
     _Z = particle.get('transformationMatrix__t34', 0.)
-    if _2D:
-        _shift = array ([_X,_Y,_Z])
-        _X = -_shift[0]
-        _Y = -_shift[1]
-        _Z = -_shift[2]
-        #_array = linalg.inv(_array)
-        #_shift = _array.dot(_shift)
-        
+#    if doAlign:
+#        _shift = array ([_X,_Y,_Z])
+#        _X = -_shift[0]
+#        _Y = -_shift[1]
+#        _Z = -_shift[2]
+#        #_array = linalg.inv(_array)
+#        #_shift = _array.dot(_shift)
+
+    if doAlign:
+        print "DOALIGN_________________________________"
+        rot, tilt, psi = -psi, -tilt, -rot #####multiply by inverse matrix
+        tMatrix = Euler_angles2matrix(rot, tilt, psi)
+        shift = array ([-_X,-_Y,-_Z])
+        _X,_Y,_Z = dot(tMatrix, shift)
+
+    
     md.setValue(MDL_ANGLE_ROT , rot , objId)
     md.setValue(MDL_ANGLE_TILT, tilt, objId)
     md.setValue(MDL_ANGLE_PSI , psi , objId)
@@ -596,11 +604,12 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
     _writeEmxData(emxData, join(emxDir, 'micrographs.emx'))
  
 
-def xmippParticlesToEmx(imagesMd, emxData, emxDir):
+def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     """ Export particles from xmipp metadata to EMX.
     imagesMd: the filename of the images metadata
     emxData: the emxData object to be populated.
     """
+    print "INSIDE: xmippParticlesToEmx"
 
     md = MetaData(imagesMd)
     md.removeDisabled()
@@ -661,7 +670,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
         particle.set('pixelSpacing__X',pixelSpacing)
         particle.set('pixelSpacing__Y',pixelSpacing)
         if hasGeo:
-            xmippTransformToEmx(md, objId, particle)
+            xmippTransformToEmx(md, objId, particle,doAlign)
 
         particle.set(COMMENT,'original filename=%s'%fnIn)        # Add particle to emxData
         emxData.addObject(particle)
@@ -670,19 +679,30 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir):
     _writeEmxData(emxData, join(emxDir, 'particles.emx'))
        
         
-def xmippTransformToEmx(md, objId, particle):
-    rot = md.getValue(MDL_ANGLE_ROT, objId) or 0.
-    tilt = md.getValue(MDL_ANGLE_TILT, objId) or 0.
-    psi = md.getValue(MDL_ANGLE_PSI , objId) or 0.
-    
+def xmippTransformToEmx(md, objId, particle, doAlign):
+    rot   = md.getValue(MDL_ANGLE_ROT, objId) or 0.
+    tilt  = md.getValue(MDL_ANGLE_TILT, objId) or 0.
+    psi   = md.getValue(MDL_ANGLE_PSI , objId) or 0.
+    x     = md.getValue(MDL_SHIFT_X , objId) or 0.
+    y     = md.getValue(MDL_SHIFT_Y , objId) or 0.
+    z     = md.getValue(MDL_SHIFT_Z , objId) or 0.
+    #invert matrix
     tMatrix = Euler_angles2matrix(rot, tilt, psi)
-    SHIFT=[MDL_SHIFT_X,
-           MDL_SHIFT_Y,
-           MDL_SHIFT_Z]
+
+    if doAlign:
+        print "DOALIGN_________________________________"
+        rot, tilt, psi = -psi, -tilt, -rot #####multiply by inverse matrix
+        tMatrix = Euler_angles2matrix(rot, tilt, psi)
+        shift = array([-x, -y, -z])
+        shift = dot(tMatrix, shift)
+    else:
+        print "NOT-DOALIGN_____________________________"
+        shift = array([x, y, z])
+
     for i, j, label in iterTransformationMatrix():
         particle.set(label, tMatrix[i][j])
         if j==2:
-            value = md.getValue(SHIFT[i], objId) or 0.
+            value = shift[i]
             particle.set('transformationMatrix__t%d4'%(i+1), value)
 
 #    y = md.getValue(MDL_SHIFT_Y, objId) or 0.
