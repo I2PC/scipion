@@ -179,7 +179,7 @@ function updateCheckboxDataTable(element, mode){
 	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
 	
 	// The checkbox value is the second in the table
-	oTable.fnUpdate(mode, aPos[0], 1);
+	oTable.fnUpdate(mode, aPos[0], 1, false);
 	
 	//	oTable.fnDraw();
 }

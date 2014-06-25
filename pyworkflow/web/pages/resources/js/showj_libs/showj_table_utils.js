@@ -138,49 +138,13 @@ function renderElements(nRow, aData) {
 			if (columnIdReal != null) {
 
 				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
-					var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
-							+ i + '___' + aData[0] + '\" '
-					
-					var data = aData[columnId]
-							
-					if (data == "True" || data == 1 || data == true) {
-						checkbox_element += 'checked>'
-					} else {
-						checkbox_element += '>'
-					}
-					$('td:eq(' + columnIdReal + ')', nRow).html(
-							checkbox_element);
+					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
+				
 				} else if (columnLayoutConfiguration.renderable) {
-					$('td:eq(' + columnIdReal + ')', nRow).html(
-							'<span style="display:none">' + aData[columnId]
-									+ '</span>'
-									+ '<img class=\"tableImages\" id=\"' + i
-									+ '___' + aData[0]
-									+ '\" src=\"/render_column/?renderFunc='
-									+ columnLayoutConfiguration.renderFunc
-									+ '&'
-									+ columnLayoutConfiguration.extraRenderFunc
-									+ '&image=' + aData[columnId] + '\"/>');
-
+					colRenderable(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+				
 				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-					
-					$('td:eq(' + columnIdReal + ')', nRow)
-							.html(
-									'<span>'
-											+ aData[columnId]
-											+ '</span>'
-											+ '<img style="display:none" class=\"tableImages\" id=\"'
-											+ i
-											+ '___'
-											+ aData[0]
-											+ '\" data-real_src=\"/render_column/?renderFunc='
-											+ columnLayoutConfiguration.renderFunc
-											+ '&'
-											+ columnLayoutConfiguration.extraRenderFunc
-											+ '&image=' + aData[columnId]
-											+ '\"/>');
-					// $('td:eq('+columnIdReal+')', nRow).html(
-					// '<span>'+aData[columnId]+'</span>' );
+					colRenderImage(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
 				}
 			}
 		} else {
@@ -189,6 +153,59 @@ function renderElements(nRow, aData) {
 		columnId++;
 	}
 }
+
+
+function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
+	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
+			+ id + '___' + aData[0] + '\" '
+	
+	var data = aData[columnId]
+			
+	if (data == "True" || data == 1 || data == true) {
+		checkbox_element += 'checked>'
+	} else {
+		checkbox_element += '>'
+	}
+	$('td:eq(' + columnIdReal + ')', nRow).html(
+			checkbox_element);
+}
+
+
+function colRenderable(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
+	$('td:eq(' + columnIdReal + ')', nRow).html(
+			'<span style="display:none">' + aData[columnId]
+					+ '</span>'
+					+ '<img class=\"tableImages\" id=\"' + id
+					+ '___' + aData[0]
+					+ '\" src=\"/render_column/?renderFunc='
+					+ columnLayoutConfiguration.renderFunc
+					+ '&'
+					+ columnLayoutConfiguration.extraRenderFunc
+					+ '&image=' + aData[columnId] + '\"/>');
+
+}
+
+
+function colRenderImage(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
+	$('td:eq(' + columnIdReal + ')', nRow)
+			.html(
+					'<span>'
+							+ aData[columnId]
+							+ '</span>'
+							+ '<img style="display:none" class=\"tableImages\" id=\"'
+							+ id
+							+ '___'
+							+ aData[0]
+							+ '\" data-real_src=\"/render_column/?renderFunc='
+							+ columnLayoutConfiguration.renderFunc
+							+ '&'
+							+ columnLayoutConfiguration.extraRenderFunc
+							+ '&image=' + aData[columnId]
+							+ '\"/>');
+	// $('td:eq('+columnIdReal+')', nRow).html(
+	// '<span>'+aData[columnId]+'</span>' );
+}
+
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")
@@ -420,23 +437,27 @@ function setElementsEditable(elements) {
 }
 
 function valueChange(element) {
+	var elm = $(element)
 	var element_value = "";
 		
-	if ($(element).is("input:checkbox")) {
-		element_value = $(element).is(":checked")
+	if (elm.is("input:checkbox")) {
+		element_value = elm.is(":checked")
 		
 		//Fix to keep the datatable updated
 		if (!element_value){
-    		updateCheckboxDataTable($(element), "False");
+    		updateCheckboxDataTable(elm, "False");
+    		elm.prop("checked", false);
 		}else{
-			updateCheckboxDataTable($(element), "True");
+			updateCheckboxDataTable(elm, "True");
+			elm.prop("checked", true);
 		}
 		
+		
 	} else {
-		element_value = $(element).val()
+		element_value = elm.val()
 	}
 	// Keep changes in global variable
-	changes[$(element).attr("id")] = element_value
+	changes[elm.attr("id")] = element_value
 	
 }
 
@@ -640,11 +661,18 @@ function multipleEnableDisableImage(mode) {
 	var integerValue = (booleanValue) ? 1 : 0
 
 	$(".row_selected").each(
-			function() {
-				var checkbox_element = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
-				checkbox_element.prop('checked', booleanValue);
-				changes[checkbox_element.attr("id")] = integerValue
-			})
+		function() {
+			var checkbox_element = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+			checkbox_element.prop('checked', booleanValue);
+			
+//			var modeForm = document.forms['showjForm'].mode.value
+//			if(modeForm == "table"){
+//				//Fix to keep the datatable updated
+//				updateCheckboxDataTable(checkbox_element, booleanValue)
+//			}
+			
+			changes[checkbox_element.attr("id")] = integerValue
+		})
 
 	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
 		$("#saveButton").toggleClass("buttonGreyHovered")
