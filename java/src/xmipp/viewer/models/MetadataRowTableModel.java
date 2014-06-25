@@ -31,7 +31,7 @@ import javax.swing.JTable;
 
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MetaData;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippPopupMenuCreator;
 
 /** This is a data model designed for Row metadatas */
@@ -41,7 +41,7 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	
 	/** Constructor using a metadata row */
 	public MetadataRowTableModel(Window window, MetaData md) throws Exception {
-		this(new GalleryData(window, null, new Param(), md));
+		this(new GalleryData(window, null, new Params(), md));
 	}
 	
 	public MetadataRowTableModel(GalleryData data) throws Exception {

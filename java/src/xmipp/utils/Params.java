@@ -11,7 +11,7 @@ import xmipp.jni.ImageGeneric;
  *
  * @author Juanjo Vega
  */
-public class Param {
+public class Params {
 
 	//Some constants definitions
     public final static String FILE = "i";
@@ -77,10 +77,10 @@ public class Param {
     public boolean useGeo = true;
     public boolean wrap = true;
 
-    public Param() {
+    public Params() {
     }
 
-    public Param(String args[]) {
+    public Params(String args[]) {
         processArgs(args);
     }
 

@@ -100,7 +100,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
@@ -239,13 +239,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/** Constructors */
-	public GalleryJFrame(String filename, Param parameters)
+	public GalleryJFrame(String filename, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, null));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Param parameters)
+	public GalleryJFrame(String filename, MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, filename, parameters, md));
@@ -256,7 +256,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		childFrame = new GalleryJFrame(null, md, new Param());
+		childFrame = new GalleryJFrame(null, md, new Params());
 	}
 
 	/**

@@ -36,7 +36,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
 
 /** This class will serve to store important data about the gallery */
@@ -70,7 +70,7 @@ public class GalleryData {
 	private Mode mode;
 	public boolean showLabel = false;
 	public boolean globalRender;
-	public Param parameters;
+	public Params parameters;
 	private int numberOfVols = 0;
 
 	// flag to perform global normalization
@@ -98,7 +98,7 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Params param, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
@@ -110,9 +110,9 @@ public class GalleryData {
 			useGeo = param.useGeo;
 			wrap = param.wrap;
 
-			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			if (param.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (param.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
 
 			setFileName(fn);
