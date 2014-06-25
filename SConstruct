@@ -353,7 +353,7 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     for action in actions:
         command = os.path.join(File(os.path.join(bin, 'python')).abspath)
         command += ' '
-        command += os.path.join(tmp, libraryDict[DIR], 'setup.py')
+        command += setupPyFile
         command += ' '
         command += action
         setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),

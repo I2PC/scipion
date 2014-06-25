@@ -41,6 +41,7 @@ LIB_FOLDER =           TAR =   5
 MAN_FOLDER =           DEPS =  6 # explicit dependencies              
 TMP_FOLDER =           URL =   7 # URL to download from               
 INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
+LOG_FOLDER =                   9 #
 
 # We start importing the environment
 Import('env', 'SCIPION')
@@ -202,6 +203,8 @@ env.UntarLibrary('paramiko')
 # EXECUTING COMPILATIONS #
 ##########################
 
+# EXTERNAL LIBRARIES
+
 env.CompileLibrary('sqlite',
                    source=sqliteUntar,
                    flags=['CPPFLAGS=-w', 
@@ -228,6 +231,9 @@ env.CompileLibrary('tk',
                    autoTarget=os.path.join('unix','Makefile'),
                    makePath='unix')
 
+
+# PYTHON
+
 env.CompileLibrary('python',
                    source=pythonUntar,
                    flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
@@ -236,5 +242,23 @@ env.CompileLibrary('python',
                    target='libpython2.7.so',
                    autoSource='Makefile.pre.in')
 
+env.CompileWithSetupPy('python')
+
+
+# PYTHON MODULES
 
 env.CompileWithSetupPy('numpy')
+
+env.CompileWithSetupPy('matplotlib')
+
+env.CompileWithSetupPy('psutil')
+
+env.CompileWithSetupPy('mpi4py')
+
+env.CompileWithSetupPy('scipy')
+
+env.CompileWithSetupPy('bibtexparser')
+
+env.CompileWithSetupPy('django')
+
+env.CompileWithSetupPy('paramiko')
