@@ -203,10 +203,12 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 		getImagePlus().updateAndRepaintWindow();		
 	}
         
+
         public void exit()
         {
             setVisible(false);
             dispose();
             XmippApplication.removeInstance(true);
         }
+
 }

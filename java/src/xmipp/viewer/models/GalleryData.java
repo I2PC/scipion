@@ -61,6 +61,7 @@ import xmipp.viewer.windows.SaveJDialog;
  */
 public class GalleryData {
 
+
     protected MetaData md;
     protected long[] ids;
     protected String[] mdBlocks = null;
@@ -103,6 +104,7 @@ public class GalleryData {
     protected GalleryJFrame window;
     protected List<EllipseCTF> ctfs;
     
+
 
     
 
@@ -152,6 +154,7 @@ public class GalleryData {
             }
 
             setFileName(fn);
+
 
             if (md == null) {
                 this.md = new MetaData();
@@ -277,6 +280,7 @@ public class GalleryData {
             int renderLabel = ciFirstRender.label;
             ImageGeneric image = null;
             String imageFn;
+
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {

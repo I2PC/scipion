@@ -193,9 +193,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private ButtonGroup reslicegroup;
 
 	private Hashtable<String, ColumnInfo> imagecolumns;
+
 	protected JPanel buttonspn;
-        
-        
+       
+
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -207,8 +208,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-
-
 
 
 	/** Initialization function after GalleryData structure is created */
@@ -260,6 +259,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
+
             try
             {
                 new GalleryJFrame(null, md, new Params());
@@ -268,6 +268,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
             {
                 XmippDialog.showError(this, e.getMessage());
             }
+
 	}
 
 	/**

@@ -435,7 +435,8 @@ public class ScipionMetaData extends MetaData {
                 return true;
             }
         } else if (self.equals("CTFModel")) {
-            if (label.equals("_micFile") || label.equals("_psdFile")) {
+            if (label.equals("_micObj._filename") || label.equals("_psdFile") || label.equals("_xmipp_enhanced_psd") 
+                    ||label.equals("_xmipp_ctfmodel_quadrant") ||label.equals("_xmipp_ctfmodel_halfplane")) {
                 return true;
             }
         } else if (self.equals("Class2D") || self.equals("Class3D")) {
