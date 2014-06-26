@@ -28,6 +28,8 @@ package xmipp.jni;
 import ij.IJ;
 import java.io.File;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //import xmipp.utils.DEBUG;
 
@@ -568,6 +570,10 @@ public class MetaData {
             return getValueString(MDLabel.MDL_CTF_MODEL, id);
         }
         
+        public EllipseCTF getEllipseCTF(long id) {
+            return getEllipseCTF(id, -1);
+        }
+        
         public EllipseCTF getEllipseCTF(long id, int D) {
             MetaData md = new MetaData(getCTFFile(id));
             try {
@@ -594,5 +600,16 @@ public class MetaData {
     public String getPSDFile(long id) {
         return getValueString(MDLabel.MDL_PSD, id);
     }
+    
+    public CTFDescription getCTFDescription(long id)
+     {
+            try {
+                return new CTFDescription(getCTFFile(id));
+            } catch (Exception ex) {
+                Logger.getLogger(MetaData.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IllegalArgumentException(ex);
+            }
+     }
+     
 
 }

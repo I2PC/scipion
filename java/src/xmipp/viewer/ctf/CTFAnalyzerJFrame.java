@@ -3,7 +3,6 @@ package xmipp.viewer.ctf;
 import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.ProfilePlot;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -16,17 +15,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -34,10 +30,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -50,7 +44,6 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 {
 
 	private ImagePlus imp;
-	private String ctffile;
 	private JPanel graphicpn;
 	private JPanel imagepn;
 	private CTFDescription ctfmodel;
@@ -75,33 +68,61 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	private JButton exportavgbt;
 	private XmippFileChooser fc;
 	private JCheckBox differencechb;
-	
 	private final static BasicStroke plotsStroke = new BasicStroke(1.5f);
-	
-    private final static Color COLOR_PROFILE = Color.BLACK;
-    private final static Color COLOR_BACKGROUND_NOISE = Color.RED;
-    private final static Color COLOR_ENVELOPE = Color.GREEN;
-    private final static Color COLOR_PSD = Color.BLUE;
-    private final static Color COLOR_CTF = Color.MAGENTA;
-    private final static Color COLOR_DIFFERENCE = Color.orange;
-    private ImagePlus profileimp;
-	
+        private final static Color COLOR_PROFILE = Color.BLACK;
+        private final static Color COLOR_BACKGROUND_NOISE = Color.RED;
+        private final static Color COLOR_ENVELOPE = Color.GREEN;
+        private final static Color COLOR_PSD = Color.BLUE;
+        private final static Color COLOR_CTF = Color.MAGENTA;
+        private final static Color COLOR_DIFFERENCE = Color.orange;
+        private ImagePlus profileimp;
+
+        
 
 	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
+        {
+            try
+		{
+			
+			this.imp = imp;
+			this.psdfile = psdfile;
+                        this.profileimp = new ImagePlus(psdfile);
+			ctfmodel = new CTFDescription(ctffile);
+                        MetaData ctfmd = new MetaData(ctffile);
+                        double samplingRate = ctfmd.getValueDouble(MDLabel.MDL_SAMPLINGRATE, ctfmd.firstObject());
+			samples = imp.getWidth() / 2;
+			xvalues = getXValues(samples, samplingRate);
+			initComponents();
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+        }
+
+	public CTFAnalyzerJFrame(ImagePlus imp, CTFDescription ctfdescription, String psdfile, double samplingRate)
 	{
 		try
 		{
-			setTitle("CTF Analyzer");
+			
 			this.imp = imp;
-			this.ctffile = ctffile;
 			this.psdfile = psdfile;
                         this.profileimp = new ImagePlus(psdfile);
-
-			ctfmodel = new CTFDescription(ctffile);
-
+			ctfmodel = ctfdescription;
 			samples = imp.getWidth() / 2;
-			xvalues = getXValues(samples, getSamplingRate(ctffile));
-			fc = new XmippFileChooser();
+			xvalues = getXValues(samples, samplingRate);
+			initComponents();
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e);
+		}
+	}
+        
+        private void initComponents()
+        {
+                        setTitle("CTF Analyzer");
+                        fc = new XmippFileChooser();
 
 			constraints = new GridBagConstraints();
 			constraints.insets = new Insets(0, 5, 0, 5);
@@ -130,12 +151,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			enableDisplay();
 			pack();
 			setVisible(true);
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
+        }
 
 	private void initGraphicPanes()
 	{

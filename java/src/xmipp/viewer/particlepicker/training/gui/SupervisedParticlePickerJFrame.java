@@ -13,6 +13,8 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -29,6 +31,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import xmipp.jni.CTFDescription;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -595,7 +598,11 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 String psd = getMicrograph().getPSD();
                 String ctf = getMicrograph().getCTF();
                 if (psd != null && ctf != null) {
-                    new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                    try {
+                        new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                    } catch (Exception ex) {
+                        Logger.getLogger(SupervisedParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
             }

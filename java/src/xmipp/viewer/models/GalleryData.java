@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.CTFDescription;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -49,6 +50,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.jni.EllipseCTF;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.windows.AddObjectJDialog;
@@ -1618,7 +1620,7 @@ public class GalleryData {
             
 
             if (profile) {
-                ImagesWindowFactory.openCTFWindow(imp, md.getCTFFile(id), psdFile);
+                new CTFAnalyzerJFrame(imp, md.getCTFDescription(id), psdFile, md.getEllipseCTF(id).getSamplingRate());
             } else {
                 String sortfn = createSortFile(psdFile, row);
                 XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
@@ -1629,6 +1631,7 @@ public class GalleryData {
             XmippDialog.showError(window, e.getMessage());
         }
     }
+     
      
      
 

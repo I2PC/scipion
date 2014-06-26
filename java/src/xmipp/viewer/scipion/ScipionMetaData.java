@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.CTFDescription;
 import xmipp.jni.MetaData;
 import xmipp.jni.EllipseCTF;
 import xmipp.viewer.models.ColumnInfo;
@@ -870,5 +871,10 @@ public class ScipionMetaData extends MetaData {
     public String getPSDFile(long id) {
         return (String) getEMObject(id).getValue("_psdFile");
     }
+    
+    public CTFDescription getCTFDescription(long id)
+     {
+        return new CTFDescription();
+     }
 
 }

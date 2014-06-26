@@ -255,13 +255,7 @@ public class ImagesWindowFactory {
 		frameText.setVisible(true);
 	}
 
-	public static void openCTFWindow(ImagePlus imp, String ctffilename, String PSDFilename) {
-//		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
-//				PSDFilename);
-//		ctfView.setVisible(true);
-		new CTFAnalyzerJFrame(imp, ctffilename, PSDFilename);
-	}
-
+	
 	public static String getSortTitle(String title, int width,
 			FontMetrics fontMetrics) {
 		String sort = title;
