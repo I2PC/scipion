@@ -192,4 +192,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
 	public void stateChanged(ChangeEvent arg0) {
 		getImagePlus().updateAndRepaintWindow();		
 	}
+        
+        
+
 }
