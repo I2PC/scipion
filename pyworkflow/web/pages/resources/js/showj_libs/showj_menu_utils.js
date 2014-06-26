@@ -116,8 +116,11 @@ function changeMode(modeNew){
 	if (modeNew != modeOld){
 		
 		// Selected Items
-		var listSeletected = getListSelectedItems(modeOld);
-		form.listSelectedItems.value = listSeletected;
+		var listSelected = $("input#listSelected").val();
+		if(listSelected == 0 || listSelected == '0'){
+			// First execution
+			listSelected = getListSelectedItems(modeOld);
+		}
 		
 		// Enabled Items
 		var listEnabled = $("input#listEnabledItems").val();
@@ -126,6 +129,7 @@ function changeMode(modeNew){
 			listEnabled = getListEnabledItems(modeOld);
 		}
 		form.listEnabledItems.value = listEnabled;
+		
 		
 		// Submit form
 		form.mode.value = modeNew;
@@ -187,9 +191,7 @@ function updateCheckboxDataTable(element, mode){
 	 * the datatable library used to show in the table mode. 
 	 */
 	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
-	console.log(aPos)
 	
-	// The checkbox value is the second in the table
 //	  @param {object|array|string} mData Data to update the cell/row with
 //    @param {node|int} mRow TR element you want to update or the aoData index
 //    @param {int} [iColumn] The column to update (not used of mData is an array or object)
@@ -200,10 +202,22 @@ function updateCheckboxDataTable(element, mode){
 	
 }
 
-function updateListEnabled(id){
-	
+function updateListSession(id, attr){
+	switch(attr){
+		case "enabled":
+			updateList(id, "listEnabledItems");
+			break;
+		
+		case "selected":
+			updateList(id, "listSelectedItems");
+			break;
+	}
+}
+
+
+function updateList(id, list){
 	var id = id.split("___").pop();
-	var listItems = $("#listEnabledItems").val().split(",")
+	var listItems = $("#" + list).val().split(",")
 	
 	var enc=-1;
 	
@@ -222,13 +236,24 @@ function updateListEnabled(id){
 		listItems.push(id)
 	}
 	
-	
 	if(listItems[0]==""){
 		listItems.shift()
 	}
 	
-	
-	$("#listEnabledItems").val(listItems)
+	$("#" + list).val(listItems)
+}
+
+function updateSelectedTemplate(list){
+	for (var x=0;list.length>x;x++){
+		$("tr#row_container___"+ list[x]).addClass("row_selected");
+	}
+}
+
+function updateEnabledTemplate(list){
+	for (var x=0;list.length>x;x++){
+		var elem = $("input#enabled___"+ list[x])
+		elem.prop("checked", false);
+	}
 }
 
 

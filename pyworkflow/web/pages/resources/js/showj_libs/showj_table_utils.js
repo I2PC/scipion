@@ -451,7 +451,7 @@ function valueChange(element) {
 		}else{
 			elm.prop("checked", true);
 		}
-		updateListEnabled(id);
+		updateListSession(id, "enabled")
 		
 		
 	} else {
@@ -505,12 +505,14 @@ function initializeSelectionRowEvent() {
 					if (event.shiftKey) {
 						var end = $('#data_table tbody tr').index(lastChecked);
 
-						for (i = Math.min(start, end); i <= Math
-								.max(start, end); i++) {
-							if (!$('#data_table tbody tr').eq(i).hasClass(
-									'row_selected')) {
-								$('#data_table tbody tr').eq(i).addClass(
-										"row_selected");
+						for (i = Math.min(start, end); i <= Math.max(start, end); i++) {
+							
+							var elm = $('#data_table tbody tr').eq(i);
+							if (!elm.hasClass('row_selected')) {
+								elm.addClass("row_selected");
+								
+								/* Elements added to the session list */
+								updateListSession(elm.attr("id"), "selected")
 							}
 						}
 
@@ -525,14 +527,20 @@ function initializeSelectionRowEvent() {
 							document.selection.empty();
 						}
 					} else {
-						// $(lastChecked).removeClass('row_selected');
 						if (!event.metaKey && !event.ctrlKey) {
-							$('tr').each(function() {
+							$("tr.row_selected").each(function() {
 								$(this).removeClass('row_selected');
+								
+								// remove all from selectedList
+								updateListSession($(this).attr("id"), "selected")
+							
 							});
 						}
 
 						$(this).toggleClass('row_selected');
+						
+						// add/remove to selectedList
+						updateListSession($(this).attr("id"), "selected")
 					}
 
 					lastChecked = this;
