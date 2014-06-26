@@ -28,7 +28,7 @@
 """
 This script will generate the pw.bashrc and pw.cshrc file to include
 """
-import os
+import os, sys
 
 from pyworkflow import SETTINGS
 from pyworkflow.utils.path import makePath, copyFile, join
@@ -46,7 +46,18 @@ def updateProjectSettings():
         projSettings = proj.settingsPath
         print "Copying settings to: ", join(p.getName(), projSettings)
         copyFile(SETTINGS, projSettings)
-
+        
+        
+def downloadScons():
+    """ Download the scons tgz file and extract it. """
+    SCONS_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/python/"
+    SCONS_VERSION = 'scons-2.3.1.tgz'
+    print "Downloading scons from " + SCONS_URL + SCONS_VERSION
+    os.system("wget " + SCONS_URL + SCONS_VERSION)
+    os.system("tar -xzvf " + SCONS_VERSION)
+    os.remove(SCONS_VERSION)
+        
+    
 
 if __name__ == '__main__':
     
@@ -55,16 +66,23 @@ if __name__ == '__main__':
     
     print "Installing Scipion in : ", SCIPION_HOME
     
-    # Create DATA folders
-    for d in SCIPION_DIRS:
-        path = os.environ[d]
-        print "  creating %s folder: %s" % (d, path)
-        makePath(path)
-        
-    # Write default configurations
-    writeDefaults()
+    #os.system('xmipp_python %s' % join(SCIPION_HOME, 'scons', 'scons-2.3.1', 'script', 'scons'))
+    args = ' '.join(sys.argv[1:])
+    os.system('xmipp_python %s %s' % (join(SCIPION_HOME, 'scons', 'scons-2.3.1', 'script', 'scons'), args))
     
-    updateProjectSettings()
+#     # Create DATA folders
+#     for d in SCIPION_DIRS:
+#         path = os.environ[d]
+#         print "  creating %s folder: %s" % (d, path)
+#         makePath(path)
+# 
+#     # Download Scons        
+#     downloadScons()
+#     # Write default configurations
+#     writeDefaults()
+#     
+#     updateProjectSettings()
+    
     
     
         

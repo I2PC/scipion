@@ -341,7 +341,7 @@ class TestXmippProjMatching(TestWorkflow):
         print "Run Projection Matching"
         protProjMatch = XmippProtProjMatch(doCTFCorrection=False)                
         protProjMatch.inputParticles.set(protExtract.outputParticles)
-        protProjMatch.input3DReferences.set(protImportVol.getFiles())
+        protProjMatch.input3DReferences.set(protImportVol.outputVolume)
         self.launchProtocol(protProjMatch)
         self.assertIsNotNone(protProjMatch.outputVolumes, "There was a problem with Projection Matching")
 

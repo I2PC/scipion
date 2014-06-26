@@ -142,9 +142,6 @@ class ProtUserSubSet(ProtSets):
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self._inputType = String(args.get('inputType', None))
-        self._outputType = String(args.get('outputType', None))
-        self.setObjLabel(args.get('label', self.getClassName()))
         
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='EMObject')

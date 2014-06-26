@@ -76,11 +76,17 @@ class SqliteMapper(Mapper):
         self.__insert(obj)
         
     def insertChild(self, obj, key, attr, namePrefix=None):
-        if namePrefix is None:
-            namePrefix = self.__getNamePrefix(obj)
-        attr._objName = joinExt(namePrefix, key)
-        attr._objParentId = obj._objId
-        self.__insert(attr, namePrefix)
+        try:
+            if namePrefix is None:
+                namePrefix = self.__getNamePrefix(obj)
+            attr._objName = joinExt(namePrefix, key)
+            attr._objParentId = obj._objId
+            self.__insert(attr, namePrefix)
+        except Exception, ex:
+            print ">>> ERROR::insertChild"
+            print "    obj: ", obj
+            print "    key: ", key#, "attr: ", attr
+            raise ex
         
     def insertChilds(self, obj, namePrefix=None):
         """ Insert childs of an object, if namePrefix is None,

@@ -310,6 +310,7 @@ class Icon():
     
     HOME = 'fa-home.png'
     LIGHTBULB = 'fa-lightbulb-o.png'
+    PLUS_CIRCLE = 'fa-plus-circle.png'
 
 
 class Color():

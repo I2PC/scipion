@@ -24,11 +24,11 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.path import makePath
 """
 This sub-package implement projection matching using xmipp 3.1
 """
 
+from pyworkflow.utils.path import makePath, copyFile
 from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues
 from pyworkflow.em import ProtRefine3D, ProtClassify3D
 
@@ -62,15 +62,17 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def _loadInputInfo(self):
         from pyworkflow.em.packages.xmipp3 import getImageLocation
         
-        inputVols = self.input3DReferences.get()
-        # Load references filenames
-        self.referenceFileNames = []
-        for vol in inputVols:
-            self.referenceFileNames.append(getImageLocation(vol))
+        reference = self.input3DReferences.get() # Input can be either a single volume or a set of volumes.
+        
+        if isinstance(reference, Volume): # Treat the case of a single volume
+            self.referenceFileNames = [getImageLocation(reference)]
+        else:
+            self.referenceFileNames = [getImageLocation(vol) for vol in reference]
             
         self.numberOfReferences = len(self.referenceFileNames)
         self.numberOfCtfGroups = 1
-        self.resolSam = inputVols.getSamplingRate()
+        self.resolSam = reference.getSamplingRate()
+        self.ctfGroupDirectory = self._getExtraPath('CTFGroup') #FIXME: check this
         
     #--------------------------- DEFINE param functions --------------------------------------------   
         
@@ -86,10 +88,11 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def _insertAllSteps(self):
         self._initialize()
         # Insert initial steps
+        self._insertFunctionStep('convertInputStep')
         insertExecuteCtfGroupsStep(self)
         insertInitAngularReferenceFileStep(self)
         # Steps per iteration
-        self._insertIterationSteps()
+        self._insertItersSteps()
         # Final steps
         self._insertFunctionStep('createOutputStep')
         
@@ -124,8 +127,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             for refN in self.allRefs():
                 insertReconstructionStep(self, iterN, refN)
                 
-                if self.doSplitReferenceImages[iterN]:
-                    if self.doComputeResolution[iterN]:
+                if self._doSplitReferenceImages[iterN]:
+                    if self._doComputeResolution[iterN]:
                         # Reconstruct two halves of the data
                         insertReconstructionStep(self, iterN, refN, 'Split1')
                         insertReconstructionStep(self, iterN, refN, 'Split2')
@@ -137,9 +140,21 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
                     
                 
     #--------------------------- STEPS functions --------------------------------------------       
+
+    def convertInputStep(self):
+        """ Generated the input particles metadata expected 
+        by projection matching. And copy the generated file to be
+        used as initial docfile for further iterations.
+        """
+        from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
+        writeSetOfParticles(self.inputParticles.get(), 
+                            self._getFileName('inputParticlesXmd'), 
+                            blockName=self.blockWithAllExpImages)
+        copyFile(self._getFileName('inputParticlesXmd'), self._getFileName('inputParticlesDoc'))
+        
     def createIterDirsStep(self, iterN):
         """ Create the necessary directory for a given iteration. """
-        iterDirs = [self._getFileName(k) for k in ['IterDir', 'ProjMatchDirs', 'LibraryDirs']]
+        iterDirs = [self._getFileName(k, iter=iterN) for k in ['iterDir', 'projMatchDirs', 'libraryDirs']]
     
         for d in iterDirs:
             makePath(d)
@@ -186,6 +201,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         added to the list for iteration 0.
         """
         valuesStr = self.getAttributeValue(attributeName)
+        if valuesStr is None:
+            raise Exception('None value for attribute: %s' % attributeName)
         return [firstValue] + getFloatListFromValues(valuesStr, length=self.numberOfIterations.get())
     
     def itersBoolValues(self, attributeName, firstValue=False):
@@ -195,5 +212,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         added to the list for iteration 0.
         """
         valuesStr = self.getAttributeValue(attributeName)
+        if valuesStr is None:
+            raise Exception('None value for attribute: %s' % attributeName)
         return [firstValue] + getBoolListFromValues(valuesStr, length=self.numberOfIterations.get())
         

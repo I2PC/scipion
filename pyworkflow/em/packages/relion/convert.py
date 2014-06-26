@@ -169,8 +169,9 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
         ref = md.getValue(classLabel, objId)
         if not ref in clsDict: # Register a new class set if the ref was not found.
             cls = clsSet.ITEM_TYPE(objId=ref)
-            refLocation = relionToLocation(classFnTemplate % locals())
-            rep = cls.ITEM_TYPE()
+            refFn = classFnTemplate % locals()
+            refLocation = relionToLocation(refFn)
+            rep = clsSet.REP_TYPE()
             rep.setLocation(refLocation)
             cls.setRepresentative(rep)
             
