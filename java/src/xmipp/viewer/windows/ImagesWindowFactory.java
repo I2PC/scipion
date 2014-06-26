@@ -69,6 +69,7 @@ public class ImagesWindowFactory {
 				ImageGeneric img = new ImageGeneric(filename);
 
 				if (img.isSingleImage()) {
+                                        System.out.println("is single image");
 					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
 					if (parameters.mode
