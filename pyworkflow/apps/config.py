@@ -409,10 +409,6 @@ def addRCTProtocols(settings):
                   value='ProtImportImagesTiltPairs')
     
     settings.addProtocolMenu(m1)   
-        
-def getScipionHome(userHome):
-    """ Returns default SCIPION_USER_DATA from HOME. """
-    return join(userHome, 'Scipion')
   
 def setQueueSystem(host, maxCores):
     host.mpiCommand.set('mpirun -np %(JOB_NODES)d -bynode %(COMMAND)s')
