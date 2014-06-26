@@ -6,21 +6,19 @@ $(document).ready(function(){
 	var listSelectedItems = [{{listSelectedItems}}];
  	$("input#listSelectedItems").val(listSelectedItems)
 	markSelectedItems(mode, listSelectedItems)
- 	
 	
 	// Update the enabled items in the template
 	var listEnabledItems = [{{listEnabledItems}}];
  	$("input#listEnabledItems").val(listEnabledItems)
 	updateEnabledItems(mode, listEnabledItems)
 	
-	
-	// Function to update the oTable Object between pagination
+	// Update the enabled items in the template between pagination
  	$("div.dataTables_paginate").click(function(){
- 		
- 		// Update the enabled items in the template
  		var listEnabledItems = $("input#listEnabledItems").val().split(",");
-//   		updateEnabledItems(mode, listEnabledItems)
- 		
+ 		for (var x=0;listEnabledItems.length>x;x++){
+    		var elem = $("input#enabled___"+ listEnabledItems[x])
+    		elem.prop("checked", false);
+    	}
  	});
  	
 });

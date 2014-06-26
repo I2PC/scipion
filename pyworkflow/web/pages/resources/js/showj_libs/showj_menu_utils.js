@@ -171,20 +171,11 @@ function updateEnabledItems(mode, list){
 	    case "table":
 	        // Came from the gallery mode
 	    	for (var x=0;list.length>x;x++){
-	    		console.log("input#enabled___"+ list[x])
-
 	    		var elem = $("input#enabled___"+ list[x])
+	    		elem.prop("checked", false);
 	    		
-	    		console.log(elem.attr("id"))
-	    		
-	    		if(elem.attr("id")==undefined){
-	    			console.log("not found id")
-	    		}else{
-		    		elem.prop("checked", false);
-		    	
-		    		//Fix to keep the datatable updated
-		    		updateCheckboxDataTable(elem, "False");
-	    		}
+	    		//Fix to keep the datatable updated
+	    		updateCheckboxDataTable(elem, "False");
 	    	}
 	        break;
 	}
