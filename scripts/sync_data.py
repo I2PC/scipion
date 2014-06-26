@@ -35,7 +35,7 @@ from __future__ import division
 import sys
 import os
 from os.path import join, isdir, exists, relpath, dirname
-import subprocess
+from subprocess import call
 import argparse
 import hashlib
 from urllib2 import urlopen
@@ -86,12 +86,14 @@ def main():
     add = parser.add_argument  # shortcut
     add('datasets', metavar='DATASET', nargs='*', help='Name of a dataset.')
     add('--delete', action='store_true',
-        help=('Delete remote files not present in local. It leaves the remote '
-              'scipion data directory as it is in the local one. Extremely '
-              'dangerous! Only valid with -r.'))
+        help=('When uploading, delete any remote files in the dataset not'
+              'present in local. It leaves the remote scipion data directory '
+              'as it is in the local one. Dangerous, use with caution.'))
     add('-u', '--url',
         default='http://scipionwiki.cnb.csic.es/files/scipion/data/tests',
         help='URL where remote datasets will be looked for.')
+    add('--check-all', action='store_true',
+        help='See if there is any remote dataset not in sync with locals.')
     add('-q', '--query-for-modifications', action='store_true',
         help=("Look for last_m.txt file. There, there will be (1) the IP of "
               "the last modifier and date or (2) nothing. If the script finds "
@@ -122,8 +124,37 @@ def main():
         queryModifications(last_mfile, log_mfile)
         sys.exit(0)
 
+    if args.check_all:
+        vlog = lambda txt: sys.stdout.write(txt) if args.verbose else None
+        datasets = [x.strip('./') for x in
+                    urlopen('%s/MANIFEST' % args.url).read().splitlines()]
+        vlog('Datasets: %s\n' % ' '.join(datasets))
+
+        all_uptodate = True
+        for ds in datasets:
+            vlog('Checking dataset %s ... ' % ds)
+            try:
+                md5sRemote = dict(x.split() for x in
+                                  urlopen('%s/%s/MANIFEST' %
+                                          (args.url, ds)).read().splitlines())
+
+                md5sLocal = dict(x.split() for x in
+                                 open('%s/MANIFEST' %
+                                      join(os.environ['SCIPION_TESTS'], ds)))
+                if md5sRemote == md5sLocal:
+                    vlog('\tlooks up-to-date\n')
+                    pass
+                else:
+                    vlog('\thas differences\n')
+                    all_uptodate = False
+            except Exception as e:
+                vlog('\terror: %s' % e)
+                all_uptodate = False
+        sys.exit(0 if all_uptodate else 1)
+
     if not args.datasets:
-        sys.exit('At least --list, -q or datasets needed. See --help for more info.')
+        sys.exit('At least --list, --query, --check-all or datasets needed.\n'
+                 'Run with --help for more info.')
 
     print 'Selected datasets: %s' % ' '.join(args.datasets)
 
@@ -151,36 +182,30 @@ def main():
     if args.upload:
         # Upload datasets. This is the tricky part.
         for dataset in args.datasets:
-            deleteFlag = '--delete' if args.delete else ''
             localFolder = join(os.environ['SCIPION_TESTS'], dataset)
-            remoteUser = 'scipion'
-            remoteServer = 'ramanujan.cnb.csic.es'
+            remoteLoc = 'scipion@ramanujan.cnb.csic.es'
             remoteFolder = '/home/twiki/public_html/files/scipion/data/tests'
 
             if not exists(localFolder):
                 sys.exit('ERROR: local folder %s does not exist.' % localFolder)
 
-            print 'Warning: Uploading, please BE CAREFUL! This is potentially dangerous.'
-            print ('You are going to be connected to server "%s" as user "%s" to write '
-                   'in folder "%s" the dataset "%s".' %
-                   (remoteServer, remoteUser, remoteFolder, dataset))
-            while True:
-                ans = raw_input('Continue? (y/n): ')
-                if ans in ['N', 'n']:
-                    sys.exit(0)
-                elif ans in ['Y', 'y']:
-                    break
+            print 'Warning: Uploading, please BE CAREFUL! This can be dangerous.'
+            print ('You are going to be connected to "%s" to write in folder '
+                   '"%s" the dataset "%s".' % (remoteLoc, remoteFolder, dataset))
+            if ask() == 'n':
+                sys.exit(0)
 
             # First make sure we have our MANIFEST file up-to-date
             createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
 
             # Upload the dataset files (with rsync)
-            Cmd('rsync -av %s %s %s@%s:%s' % (deleteFlag, localFolder, remoteUser, remoteServer, remoteFolder))
+            call(['rsync', '-av', localFolder, '%s:%s' % (remoteLoc, remoteFolder)] +
+                 (['--delete'] if args.delete else []))
 
             # Regenerate remote MANIFEST (which contains a list of datasets)
-            print "Regenerating remote MANIFEST file..."
-            Cmd('ssh %s@%s "cd %s && find -type d -mindepth 1 -maxdepth 1 > MANIFEST"' %
-                (remoteUser, remoteServer, remoteFolder))
+            print 'Regenerating remote MANIFEST file...'
+            call(['ssh', remoteLoc,
+                  'cd %s && find -type d -mindepth 1 -maxdepth 1 > MANIFEST' % remoteFolder])
             # This is a file that just contains the name of the directories
             # in remoteFolder. Nothing to do with the MANIFEST files in
             # the datasets, which contain file names and md5s.
@@ -191,19 +216,26 @@ def main():
             localUser = getpass.getuser()
 
             print "Registering modification attempt in last_m.txt file"
-            Cmd("ssh " + remoteUser + '@' + remoteServer + " \"echo '++++' >> " +
-                lastmFile + " && echo 'Modification to " + dataset +
-                " dataset made at' >> " + lastmFile + " && date >> " +
-                lastmFile + " && echo 'by " + localUser + " at " + localHostname +
-                "' >> " + lastmFile + " && echo '----' >> " + lastmFile + "\"")
+            call(['ssh', remoteLoc,
+                  "echo '++++' >> " + lastmFile +
+                  " && echo 'Modification to " + dataset + " dataset made at' >> " + lastmFile +
+                  " && date >> " + lastmFile +
+                  " && echo 'by " + localUser + " at " + localHostname + "' >> " + lastmFile +
+                  " && echo '----' >> " + lastmFile])
             print "...done."
-            # Leave last_m.txt file indicating modifications have been
-            # done, to let buildbot trigger its automatic testing
-            #TODO: this step
         sys.exit(0)
 
     # If we get here, we did not use the right arguments. Show a little help.
     parser.print_usage()
+
+
+def ask(question='Continue? (y/n): ', allowed=['y', 'n']):
+    """ Ask the question until it returns one of the allowed responses """
+
+    while True:
+        ans = raw_input(question)
+        if ans.lower() in allowed:
+            return ans
 
 
 def downloadDataset(datasetName, destination=None, url=None, verbose=False):
@@ -266,12 +298,8 @@ def downloadDataset(datasetName, destination=None, url=None, verbose=False):
             print "\nError in %s (%s)" % (fname, e)
             print "URL: %s/%s/%s" % (url, datasetName, fname)
             print "Destination: %s" % fpath
-            while True:
-                answer = raw_input("Continue downloading? (y/[n]): ")
-                if not answer or answer in ['N', 'n']:
-                    return
-                if answer in ['Y', 'y']:
-                    break
+            if ask('Continue downloading? (y/[n]): ', ['y', 'n', '']) != 'y':
+                return
     print
 
 
@@ -333,11 +361,6 @@ def checkForUpdates(datasetName, workingCopy=None, url=None, verbose=False):
     if taintedMANIFEST:
         print 'Some files could not be updated. Regenerating local MANIFEST...'
         createMANIFEST(datasetFolder)
-
-
-def Cmd(command):
-    print ">>>>>", command
-    subprocess.call(command, shell=True)
 
 
 def createMANIFEST(path):
