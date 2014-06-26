@@ -114,10 +114,20 @@ function changeMode(modeNew){
 	var modeOld = form.mode.value
 	 
 	if (modeNew != modeOld){
+		
+		// Selected Items
 		var listSeletected = getListSelectedItems(modeOld);
-		var listEnabled = getListEnabledItems(modeOld);
-		form.listSelectedItems.value = getListSelectedItems(modeOld);
-		form.listEnabledItems.value = getListEnabledItems(modeOld);
+		form.listSelectedItems.value = listSeletected;
+		
+		// Enabled Items
+		var listEnabled = $("input#listEnabledItems").val();
+		if(listEnabled == 0 || listEnabled == '0'){
+			// First execution
+			listEnabled = getListEnabledItems(modeOld);
+		}
+		form.listEnabledItems.value = listEnabled;
+		
+		// Submit form
 		form.mode.value = modeNew;
  		form.submit();
 	}
@@ -161,11 +171,20 @@ function updateEnabledItems(mode, list){
 	    case "table":
 	        // Came from the gallery mode
 	    	for (var x=0;list.length>x;x++){
+	    		console.log("input#enabled___"+ list[x])
+
 	    		var elem = $("input#enabled___"+ list[x])
-	    		elem.prop("checked", false);
-	    	
-	    		//Fix to keep the datatable updated
-	    		updateCheckboxDataTable(elem, "False");
+	    		
+	    		console.log(elem.attr("id"))
+	    		
+	    		if(elem.attr("id")==undefined){
+	    			console.log("not found id")
+	    		}else{
+		    		elem.prop("checked", false);
+		    	
+		    		//Fix to keep the datatable updated
+		    		updateCheckboxDataTable(elem, "False");
+	    		}
 	    	}
 	        break;
 	}
@@ -177,16 +196,53 @@ function updateCheckboxDataTable(element, mode){
 	 * the datatable library used to show in the table mode. 
 	 */
 	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
+	console.log(aPos)
 	
 	// The checkbox value is the second in the table
-	oTable.fnUpdate(mode, aPos[0], 1, false);
+//	  @param {object|array|string} mData Data to update the cell/row with
+//    @param {node|int} mRow TR element you want to update or the aoData index
+//    @param {int} [iColumn] The column to update (not used of mData is an array or object)
+//    @param {bool} [bRedraw=true] Redraw the table or not
+//    @param {bool} [bAction=true] Perform pre-draw actions or not
+//    @returns {int} 0 on success, 1 on error
+	oTable.fnUpdate(mode, aPos[0], 1, true);
 	
-	//	oTable.fnDraw();
 }
 
+function updateListEnabled(id){
+	
+	var id = id.split("___").pop();
+	var listItems = $("#listEnabledItems").val().split(",")
+	
+	var enc=-1;
+	
+	var x=0;
+	do{
+		if (listItems[x] == id){
+			enc=x;
+		}
+		x++;
+	} while(x<listItems.length && enc==-1);
+	
+	
+	if(enc!=-1){
+		listItems.splice(enc, 1);
+	}else{
+		listItems.push(id)
+	}
+	
+	
+	if(listItems[0]==""){
+		listItems.shift()
+	}
+	
+	
+	$("#listEnabledItems").val(listItems)
+}
+
+
 function createSubset(){
-	var mode = document.forms['showjForm'].mode.value
-	var listSubset = getListEnabledItems(mode)
+	var listSubset = $("#listEnabledItems").val()
 	
 	alert("To do a subset without the elements:" + listSubset);
 	

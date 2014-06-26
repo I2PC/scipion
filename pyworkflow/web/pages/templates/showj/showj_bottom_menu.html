@@ -1,15 +1,28 @@
 <script>
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
-	var listSelectedItems = [{{listSelectedItems}}];
-	var listEnabledItems = [{{listEnabledItems}}];
 	
 	// Mark the selected items in the template
+	var listSelectedItems = [{{listSelectedItems}}];
+ 	$("input#listSelectedItems").val(listSelectedItems)
 	markSelectedItems(mode, listSelectedItems)
+ 	
 	
-	// Update the enable items in the template
+	// Update the enabled items in the template
+	var listEnabledItems = [{{listEnabledItems}}];
+ 	$("input#listEnabledItems").val(listEnabledItems)
 	updateEnabledItems(mode, listEnabledItems)
 	
+	
+	// Function to update the oTable Object between pagination
+ 	$("div.dataTables_paginate").click(function(){
+ 		
+ 		// Update the enabled items in the template
+ 		var listEnabledItems = $("input#listEnabledItems").val().split(",");
+//   		updateEnabledItems(mode, listEnabledItems)
+ 		
+ 	});
+ 	
 });
 </script>
 	

@@ -438,19 +438,20 @@ function setElementsEditable(elements) {
 
 function valueChange(element) {
 	var elm = $(element)
+	var id = elm.attr("id")
 	var element_value = "";
 		
+
 	if (elm.is("input:checkbox")) {
 		element_value = elm.is(":checked")
 		
 		//Fix to keep the datatable updated
 		if (!element_value){
-    		updateCheckboxDataTable(elm, "False");
     		elm.prop("checked", false);
 		}else{
-			updateCheckboxDataTable(elm, "True");
 			elm.prop("checked", true);
 		}
+		updateListEnabled(id);
 		
 		
 	} else {
