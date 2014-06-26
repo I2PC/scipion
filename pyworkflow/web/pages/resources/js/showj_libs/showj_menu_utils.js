@@ -118,6 +118,7 @@ function getListSelectedItems(mode){
     return list_selected
 }
 
+
 function changeMode(modeNew){
 	/*
 	 * Function to change the visualization mode.
@@ -131,6 +132,7 @@ function changeMode(modeNew){
 		var listSelected = $("input#listSelected").val();
 		if(listSelected == 0 || listSelected == '0'){
 			// First execution
+			blankList("selected");
 			listSelected = getListSelectedItems(modeOld);
 		}
 		
@@ -138,10 +140,10 @@ function changeMode(modeNew){
 		var listEnabled = $("input#listEnabledItems").val();
 		if(listEnabled == 0 || listEnabled == '0'){
 			// First execution
+			blankList("enabled");
 			listEnabled = getListEnabledItems(modeOld);
 		}
 		form.listEnabledItems.value = listEnabled;
-		
 		
 		// Submit form
 		form.mode.value = modeNew;
@@ -206,6 +208,18 @@ function updateCheckboxDataTable(element, mode){
 	
 }
 
+function blankList(attr){
+	switch(attr){
+		case "selected":
+			$("input#listSelectedItems").val("");
+			break;
+			
+		case "enabled":
+			$("input#listEnabledItems").val("");
+			break;
+	}
+}
+
 function updateListSession(id, attr){
 	/*
 	 * Method to update the session variable about list depending on attr.
@@ -226,23 +240,15 @@ function updateList(id, list){
 	/*
 	 * Method to add/remove the element identified into the list.
 	 */
-	var id = id.split("___").pop();
+	var id = id.split("___").pop();	
 	var listItems = $("#" + list).val().split(",")
-	
-	var enc=-1;
-	
-	var x=0;
-	do{
-		if (listItems[x] == id){
-			enc=x;
-		}
-		x++;
-	} while(x<listItems.length && enc==-1);
-	
+	var enc = containsElem(id, listItems)
 	
 	if(enc!=-1){
+		// remove element
 		listItems.splice(enc, 1);
 	}else{
+		// added the element
 		listItems.push(id)
 	}
 	
@@ -252,6 +258,21 @@ function updateList(id, list){
 	
 	$("#" + list).val(listItems)
 }
+
+function containsElem(id, list){
+	var enc=-1;
+	var x=0;
+	
+	do{
+		if (list[x] == id){
+			enc=x;
+		}
+		x++;
+	} while(x<list.length && enc==-1);
+
+	return enc;
+}
+
 
 function updateSelectedTemplate(list){
 	/*
@@ -278,9 +299,7 @@ function updateEnabledTemplate(list, persist){
 			//Fix to keep the datatable updated
     		updateCheckboxDataTable(elem, "False");
 		}
-		
 	}
-	
 }
 
 

@@ -441,7 +441,6 @@ function valueChange(element) {
 	var id = elm.attr("id")
 	var element_value = "";
 		
-
 	if (elm.is("input:checkbox")) {
 		element_value = elm.is(":checked")
 		
@@ -451,15 +450,14 @@ function valueChange(element) {
 		}else{
 			elm.prop("checked", true);
 		}
+		//Fix to keep the datatable updated
 		updateListSession(id, "enabled")
-		
 		
 	} else {
 		element_value = elm.val()
 	}
 	// Keep changes in global variable
 	changes[elm.attr("id")] = element_value
-	
 }
 
 function initializeTableWidth() {
@@ -665,24 +663,38 @@ function saveTableConfiguration() {
 function multipleEnableDisableImage(mode) {
 	var columnId = oTable.fnGetColumnIndex("enabled")
 	var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
-
-	var booleanValue = (mode == 'enable')
-	var integerValue = (booleanValue) ? 1 : 0
-
-	$(".row_selected").each(
-		function() {
-			var checkbox_element = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
-			checkbox_element.prop('checked', booleanValue);
-			
-//			var modeForm = document.forms['showjForm'].mode.value
-//			if(modeForm == "table"){
-//				//Fix to keep the datatable updated
-//				updateCheckboxDataTable(checkbox_element, booleanValue)
-//			}
-			
-			changes[checkbox_element.attr("id")] = integerValue
-		})
-
+	var element_value = "";
+	
+	switch(mode){
+		case 'enable':
+			$(".row_selected").each(
+				function() {
+					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+					if(!elm.is(":checked")){
+						elm.prop("checked", true);
+						// Update the session list
+						updateListSession(elm.attr("id"), "enabled")
+					}
+					//old code
+					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
+			});
+			break;
+	
+		case 'disable':
+			$(".row_selected").each(
+				function() {
+					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+					if(elm.is(":checked")){
+						elm.prop("checked", false);
+						// Update the session list
+						updateListSession(elm.attr("id"), "enabled")
+					}
+					//old code
+					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
+			});
+			break;
+	}
+	
 	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}
