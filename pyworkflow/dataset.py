@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.convert import ImageHandler
 """
 This modules implements a DataSet, a container of several Tables.
 This will serve as an abstraction layer from where the data will be taken.
@@ -214,6 +215,7 @@ COL_RENDER_ID = 1
 COL_RENDER_TEXT = 2
 COL_RENDER_IMAGE = 3
 COL_RENDER_CHECKBOX = 4
+COL_RENDER_VOLUME = 5
 
 
 class Column(object):
@@ -312,9 +314,11 @@ class SqliteDataSet(DataSet):
                 
                 if row['class_name'] == 'Boolean':
                     renderType = COL_RENDER_CHECKBOX   
-                # print "adding column: name=%s, label=%s" % (row['column_name'], label)
                 columns.append(Column(colName, str, label=colLabel, renderType=renderType))
         table = Table(*columns)
+        
+        checkedImgCols = {} # Check if the image columns are volumes
+        ih = ImageHandler() 
         
         # Populate the table in the DataSet
         db.executeCommand("SELECT * FROM %sObjects;" % tableName)
@@ -325,10 +329,16 @@ class SqliteDataSet(DataSet):
                     rowDict[k] = ''
                 # Set the index@filename for images columns values
                 if k in imgCols:
-                    index = rowDict[imgCols[k]]
+                    colName = imgCols[k]
+                    index = rowDict[colName]
+                    filename = rowDict[k]
+                    if not checkedImgCols.get(colName, False):
+                        x, y, z, n = ih.getDimensions((index, filename))
+                        if z > 1:
+                            table.getColumn(k).setRenderType(COL_RENDER_VOLUME)
+                        checkedImgCols[colName] = True
                     if index:
-                        rowDict[k] = '%06d@%s' % (index, rowDict[k])
-#             print "rowDict = ", rowDict
+                        rowDict[k] = '%06d@%s' % (index, filename)
             table.addRow(row['id'], **rowDict)
             
         return table
