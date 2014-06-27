@@ -307,7 +307,7 @@ public abstract class ParticlePicker {
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
-            if (f.getCommand().equals(command)) {
+            if (f.getCommand().equals(command2)) {
                 return true;
             }
         }
