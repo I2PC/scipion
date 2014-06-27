@@ -29,7 +29,7 @@ visualization program.
 """
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView
+from pyworkflow.em.viewer import DataView, ObjectView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 
 from spider import PcaFile
@@ -53,8 +53,7 @@ class SpiderViewer(XmippViewer):
         elif isinstance(obj, SpiderProtCustomMask):
             mask = obj.outputMask
             self._visualize(mask)
-            #XmippViewer(project=self.getProject()).visualize(mask)
-            # Remove location to visualize the whole stack
+            # Visualize the whole stack with all filenames
             self._views.append(DataView(mask.getFileName()))
             
         else:

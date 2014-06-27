@@ -40,6 +40,8 @@ from pyworkflow.em.packages.xmipp3.convert import *
 from pyworkflow.em.viewer import *
 from layout_configuration import *
 from views_base import * 
+from pyworkflow.dataset import COL_RENDER_VOLUME
+
 
 
 def loadDataSet(request, filename, firstTime):
@@ -136,14 +138,15 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageVolName = inputParams.get(VOL_SELECTED, None) or table.getElementById(0, label)
         
         _typeOfColumnToRender = inputParams[COLS_CONFIG].getColumnProperty(label, 'columnType')
-        
+        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
         dataset.setNumberSlices(_imageDimensions[2])
         
-        if _typeOfColumnToRender == COL_RENDER_IMAGE:
-            isVol = dataset.getNumberSlices() > 1
+        isVol = _typeOfColumnToRender == COL_RENDER_VOLUME
+        
+        if _typeOfColumnToRender == COL_RENDER_IMAGE or isVol:
             is3D = inputParams[MODE]==MODE_VOL_ASTEX or inputParams[MODE]==MODE_VOL_CHIMERA
             #Setting the _convert 
             _convert = isVol and (inputParams[MODE]==MODE_GALLERY or is3D)
@@ -158,6 +161,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[COLS_CONFIG].configColumn(label, renderFunc="get_slice")
+                print "Setting dataset.volName: ", _imageVolName
                 dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[MODE] != MODE_TABLE:
@@ -390,6 +394,8 @@ def loadDatasetXmipp(path):
     if path.endswith('.star'):
         from pyworkflow.em.packages.relion import addRelionLabels
         addRelionLabels(extended=True)
+        
+    print "creating XmippDataSet in path: ", path
     return XmippDataSet(str(path))
 
     

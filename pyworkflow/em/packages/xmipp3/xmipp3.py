@@ -33,6 +33,7 @@ import xmipp
 from collections import OrderedDict
 from constants import *
 import pyworkflow.dataset as ds
+from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
         MDL_SHIFT_X, MDL_SHIFT_Y, MDL_FLIP, MD_APPEND, MDL_MAXCC, MDL_ENABLED, MDL_CTF_MODEL, MDL_SAMPLINGRATE, DT_DOUBLE, \
@@ -286,10 +287,23 @@ class XmippDataSet(ds.DataSet):
         
         return self._convertMdToTable(md)
         
+    def _getLabelRenderType(self, label):
+        """ Return the way to render each label. """
+        if xmipp.labelIsImage(label):
+            return COL_RENDER_IMAGE
+        
+        labelType = xmipp.labelType(label)
+        if labelType == xmipp.LABEL_BOOL:
+            return COL_RENDER_CHECKBOX
+        
+        return COL_RENDER_TEXT
+        
+        
     def _convertLabelToColumn(self, label):
         """ From an Xmipp label, create the corresponding column. """
         return ds.Column(xmipp.label2Str(label), 
-                         getLabelPythonType(label))
+                         getLabelPythonType(label),
+                         renderType=self._getLabelRenderType(label))
         
     def _convertMdToTable(self, md):
         """ Convert a metatada into a table. """
