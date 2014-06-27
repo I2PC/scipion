@@ -845,8 +845,8 @@ public class ScipionMetaData extends MetaData {
 
             double Q0, Cs = 0, Ts = 0, kV = 0, defU = 0, defV = 0;
 
-            Q0 = emo.getValueDouble("_micObj._acquisition._sphericalAberration");
-            Cs = emo.getValueDouble("_micObj._acquisition._amplitudeContrast");
+            Q0 = emo.getValueDouble("_micObj._acquisition._amplitudeContrast");
+            Cs = emo.getValueDouble("_micObj._acquisition._sphericalAberration");
             Ts = emo.getValueDouble("_micObj._samplingRate");
             kV = emo.getValueDouble("_micObj._acquisition._voltage");
 
