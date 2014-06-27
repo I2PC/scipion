@@ -54,7 +54,7 @@ def _defineProjectionMatchingParams(self, form):
                  'associated with the input particles (hasProjectionAssigment=True)')
     # ReferenceFileNames      
     form.addParam('input3DReferences', PointerParam,
-                 pointerClass='SetOfVolumes',
+                 pointerClass='Volume,SetOfVolumes',
                  label='Initial 3D reference volumes', 
                  help='Input 3D reference reconstruction. You can select \n '
                       'more than one 3D input reference. \n'
@@ -388,7 +388,7 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     Set to zero to prevent discarding any images''')  
     
-    form.addParam('ScaleNumberOfSteps', NumericListParam, default=3, condition='doScale',
+    form.addParam('scaleNumberOfSteps', NumericListParam, default=3, condition='doScale',
                  label='Number of scale steps',
                  help=""" 
     Number of scale steps.
@@ -602,7 +602,7 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are less values than iterations the last value is reused
     *Note:* if there are more values than iterations the extra value are ignored
     """)
-    form.addParam('ConstantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
+    form.addParam('constantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                  label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
                  condition="doLowPassFilter!='0'",
                  help=""" The meaning of this field depends on the UseFscForFilter flag.

@@ -231,9 +231,9 @@ class Image(EMObject):
         pass
     
     def getDim(self):
-        """Return image dimensions as tuple: (Xdim, Ydim, Zdim, N)"""
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         i, fn = self.getLocation()
-        if exists(fn):
+        if exists(fn.replace(':mrc', '')):
             x, y, z, n = ImageHandler().getDimensions(self.getLocation())
             return x, y, z
         return None
@@ -1026,7 +1026,7 @@ class SetOfClasses(EMSet):
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """
     ITEM_TYPE = Class2D
-    REP_TYPE = SetOfParticles
+    REP_TYPE = Particle
 
     pass
 
@@ -1034,7 +1034,7 @@ class SetOfClasses2D(SetOfClasses):
 class SetOfClasses3D(SetOfClasses):
     """ Store results from a 3D classification of Particles. """
     ITEM_TYPE = Class3D
-    REP_TYPE = SetOfVolumes
+    REP_TYPE = Volume
     
     pass
        

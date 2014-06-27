@@ -31,6 +31,7 @@ Projection Matching.
 """
 
 from os.path import join
+from pyworkflow.object import String
 
 # taken from angular_project_library in xmipp
 
@@ -38,28 +39,30 @@ def createFilenameTemplates(self):
     """ Centralize how files are called for iterations and references. """
     # Setup some params to be used in command line formatting
     LibraryDir = "ReferenceLibrary"
+    projectLibraryRootName = join(LibraryDir, "gallery")
+    
     self._params = {
-                    'ReferenceVolumeName': 'reference_volume.vol',
-                    'LibraryDir': LibraryDir,
-                    'ProjectLibraryRootName': join(LibraryDir, "gallery"),
-                    'ProjMatchDir': "ProjMatchClasses",
-                    'ProjMatchName': self.name,
-                    'ClassAverageName': 'class_average',
+                    'referenceVolumeName': 'reference_volume.vol',
+                    'libraryDir': LibraryDir,
+                    'projectLibraryRootName': projectLibraryRootName,
+                    'projMatchDir': "ProjMatchClasses",
+                    'projMatchName': self.getClassName(), # FIXME: check if this is important
+                    'classAverageName': 'class_average',
                     #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
-                    'ForReconstructionSel': "reconstruction.sel",
-                    'ForReconstructionDoc': "reconstruction.doc",
-                    'MultiAlign2dSel': "multi_align2d.sel",
-                    'BlockWithAllExpImages' : 'all_exp_images',
-                    'DocFileWithOriginalAngles': 'original_angles.doc',
-                    'Docfile_with_current_angles': 'current_angles',
-                    'Docfile_with_final_results': 'results.xmd',
-                    'FilteredReconstruction': "filtered_reconstruction",
-                    'ReconstructedVolume': "reconstruction",
-                    'MaskReferenceVolume': "masked_reference",
-                    'OutputFsc': "resolution.fsc",
-                    'CtfGroupDirectory': "CtfGroups",
-                    'CtfGroupRootName': "ctf",
-                    'CtfGroupSubsetFileName': "ctf_images.sel",
+                    'forReconstructionSel': "reconstruction.sel",
+                    'forReconstructionDoc': "reconstruction.doc",
+                    'multiAlign2dSel': "multi_align2d.sel",
+                    'blockWithAllExpImages' : 'all_exp_images',
+                    'docFileWithOriginalAngles': 'original_angles.doc',
+                    'docfile_with_current_angles': 'current_angles',
+                    'docfile_with_final_results': 'results.xmd',
+                    'filteredReconstruction': "filtered_reconstruction",
+                    'reconstructedVolume': "reconstruction",
+                    'maskReferenceVolume': "masked_reference",
+                    'outputFsc': "resolution.fsc",
+                    'ctfGroupDirectory': "CtfGroups",
+                    'ctfGroupRootName': "ctf",
+                    'ctfGroupSubsetFileName': "ctf_images.sel",
                     }
     # Also setup as protocol attributes
     for k, v in self._params.iteritems():
@@ -69,53 +72,62 @@ def createFilenameTemplates(self):
     Ref3D = 'Ref3D_%(ref)03d'
     Ctf = 'CtfGroup_%(ctf)06d'
     IterDir = self._getExtraPath(Iter)
+    ProjMatchDirs = join(IterDir, self._params['projMatchDir'])
     
-    #ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s.doc')
-    ProjMatchDirs = join(IterDir, '%(ProjMatchDir)s')
-    _OutClassesXmd = join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.xmd')
-    _OutClassesXmdS1 = join(ProjMatchDirs, '%(ProjMatchName)s_split_1_' + Ref3D + '.xmd')
-    _OutClassesXmdS2 = join(ProjMatchDirs, '%(ProjMatchName)s_split_2_' + Ref3D + '.xmd')
-    CtfGroupBase = join(self.workingDirPath(), self.ctfGroupDirectory, '%(CtfGroupRootName)s')
-    ProjLibRootNames = join(IterDir, '%(ProjectLibraryRootName)s_' + Ref3D)
+    def iterFile(key, suffix=''):
+        return join(IterDir, (key % self._params) + suffix)
+    
+    def projmatchFile(key, suffix=''):
+        return join(ProjMatchDirs, (key % self._params) + suffix)    
+    
+    _OutClassesXmd = projmatchFile('%(projMatchName)s_', Ref3D + '.xmd')
+    _OutClassesXmdS1 = projmatchFile('%(projMatchName)s_split_1_', Ref3D + '.xmd')
+    _OutClassesXmdS2 = projmatchFile('%(projMatchName)s_split_2_', Ref3D + '.xmd')
+    CtfGroupBase = self._getPath(self.ctfGroupDirectory, '%(ctfGroupRootName)s')
+    ProjLibRootNames = join(IterDir, projectLibraryRootName + '_' + Ref3D)
+    
+    
     myDict = {
             # Global filenames templates
-            'IterDir': IterDir,
-            'ProjMatchDirs': ProjMatchDirs,
-            'DocfileInputAnglesIters': join(IterDir, '%(Docfile_with_current_angles)s.doc'),
-            'LibraryDirs': join(IterDir, '%(LibraryDir)s'),
-            'ProjectLibraryRootNames': ProjLibRootNames,
-#                'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.doc'),
-            'ProjMatchRootNames': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.sqlite'),
-            'ProjMatchRootNamesWithoutRef': join(ProjMatchDirs, '%(ProjMatchName)s.doc'),
-            'OutClasses': join(ProjMatchDirs, '%(ProjMatchName)s'),
-            'OutClassesXmd': _OutClassesXmd,
-            'OutClassesStk': join(ProjMatchDirs, '%(ProjMatchName)s_' + Ref3D + '.stk'),
-            'OutClassesDiscarded': join(ProjMatchDirs, '%(ProjMatchName)s_discarded.xmd'),
-            'ReconstructionXmd': Ref3D + '@' +_OutClassesXmd,
-            'ReconstructionXmdSplit1': Ref3D + '@' +_OutClassesXmdS1,
-            'ReconstructionXmdSplit2': Ref3D + '@' +_OutClassesXmdS2,
-            'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
-            'ReconstructedFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '.vol'),
-            'ReconstructedFileNamesItersSplit1': join(IterDir, '%(ReconstructedVolume)s_split_1_' + Ref3D + '.vol'),
-            'ReconstructedFileNamesItersSplit2': join(IterDir, '%(ReconstructedVolume)s_split_2_' + Ref3D + '.vol'),
-            'ReconstructedFilteredFileNamesIters': join(IterDir, '%(ReconstructedVolume)s_filtered_' + Ref3D + '.vol'),
-            'ResolutionXmdFile': join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
-            'ResolutionXmd': 'resolution@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
-            'ResolutionXmdMax': 'resolution_max@' + join(IterDir, '%(ReconstructedVolume)s_' + Ref3D + '_frc.xmd'),
-            'MaskedFileNamesIters': join(IterDir, '%(MaskReferenceVolume)s_' + Ref3D + '.vol'),
+            'iterDir': IterDir,
+            'projMatchDirs': ProjMatchDirs,
+            'docfileInputAnglesIters': iterFile('%(docfile_with_current_angles)s.doc'),
+            'libraryDirs': iterFile('%(libraryDir)s'),
+            'projectLibraryRootNames': ProjLibRootNames,
+            'projMatchRootNames': join(ProjMatchDirs, ('%(projMatchName)s_') + Ref3D + '.sqlite'),
+            'projMatchRootNamesWithoutRef': projmatchFile('%(projMatchName)s.doc'),
+            'outClasses': projmatchFile('%(projMatchName)s'),
+            'outClassesXmd': _OutClassesXmd,
+            'outClassesStk': projmatchFile('%(projMatchName)s_', Ref3D + '.stk'),
+            'outClassesDiscarded': projmatchFile('%(projMatchName)s_discarded.xmd'),
+            'reconstructionXmd': Ref3D + '@' +_OutClassesXmd,
+            'reconstructionXmdSplit1': Ref3D + '@' +_OutClassesXmdS1,
+            'reconstructionXmdSplit2': Ref3D + '@' +_OutClassesXmdS2,
+            'maskedFileNamesIters': iterFile('%(maskReferenceVolume)s_', Ref3D + '.vol'),
+            'reconstructedFileNamesIters': iterFile('%(reconstructedVolume)s_', Ref3D + '.vol'),
+            'reconstructedFileNamesItersSplit1': iterFile('%(reconstructedVolume)s_split_1_', Ref3D + '.vol'),
+            'reconstructedFileNamesItersSplit2': iterFile('%(reconstructedVolume)s_split_2_', Ref3D + '.vol'),
+            'reconstructedFilteredFileNamesIters': iterFile('%(reconstructedVolume)s_filtered_', Ref3D + '.vol'),
+            'resolutionXmdFile': iterFile('%(reconstructedVolume)s_', Ref3D + '_frc.xmd'),
+            'resolutionXmd': 'resolution@' + iterFile('%(reconstructedVolume)s_', Ref3D + '_frc.xmd'),
+            'resolutionXmdMax': 'resolution_max@' + iterFile('%(reconstructedVolume)s_', Ref3D + '_frc.xmd'),
+            'maskedFileNamesIters': iterFile('%(maskReferenceVolume)s_', Ref3D + '.vol'),
             # Particular templates for executeCtfGroups  
-            'ImageCTFpairs': CtfGroupBase + '_images.sel',
-            'CTFGroupSummary': CtfGroupBase + 'Info.xmd',
-            'StackCTFs': CtfGroupBase + '_ctf.stk',
-            'StackWienerFilters': CtfGroupBase + '_wien.stk',
-            'SplitAtDefocus': CtfGroupBase + '_split.doc',
+            'imageCTFpairs': CtfGroupBase + '_images.sel',
+            'cTFGroupSummary': CtfGroupBase + 'Info.xmd',
+            'stackCTFs': CtfGroupBase + '_ctf.stk',
+            'stackWienerFilters': CtfGroupBase + '_wien.stk',
+            'splitAtDefocus': CtfGroupBase + '_split.doc',
             # Particular templates for angular_project_library 
-            'ProjectLibraryStk': ProjLibRootNames + '.stk',
-            'ProjectLibraryDoc': ProjLibRootNames + '.doc',
-            'ProjectLibrarySampling': ProjLibRootNames + '_sampling.xmd',
-            'ProjectLibraryGroupSampling': ProjLibRootNames + '_group%(group)06d_sampling.xmd',
+            'projectLibraryStk': ProjLibRootNames + '.stk',
+            'projectLibraryDoc': ProjLibRootNames + '.doc',
+            'projectLibrarySampling': ProjLibRootNames + '_sampling.xmd',
+            'projectLibraryGroupSampling': ProjLibRootNames + '_group%(group)06d_sampling.xmd',
+            # ADDED FOR SCIPION
+            'inputParticlesXmd': self._getPath('input_particles.xmd'),
+            'inputParticlesDoc': self._getExtraPath(self._params['docFileWithOriginalAngles']),
             }
-
+    myDict.update(self._params)
     self._updateFilenamesDict(myDict)
     
     
@@ -123,47 +135,52 @@ def initializeLists(self):
     """ Load lists with values for iterations...values are taken from string values.
     """
     # Construct special filename list with zero special case
-    self.docFileInputAngles = [self.docFileWithOriginalAngles] + [self._getFileName('DocfileInputAnglesIters', iter=i) for i in self.allIters()]
+    self.docFileInputAngles = [self._getFileName('inputParticlesDoc')] + [self._getFileName('docfileInputAnglesIters', iter=i) for i in self.allIters()]
     #print 'self.docFileInputAngles: ', self.docFileInputAngles
     self.reconstructedFileNamesIters = [[None] + self.referenceFileNames]
     for iterN in self.allIters():
-        self.reconstructedFileNamesIters.append([None] + [self._getFileName('ReconstructedFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
+        self.reconstructedFileNamesIters.append([None] + [self._getFileName('reconstructedFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
     
     self.reconstructedFilteredFileNamesIters = [[None] + self.referenceFileNames]
     for iterN in self.allIters():
-        self.reconstructedFilteredFileNamesIters.append([None] + [self._getFileName('ReconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
+        self.reconstructedFilteredFileNamesIters.append([None] + [self._getFileName('reconstructedFilteredFileNamesIters', iter=iterN, ref=r) for r in self.allRefs()])
     
-    maxFreq = self.fourierMaxFrequencyOfInterest
+    maxFreq = self.fourierMaxFrequencyOfInterest.get()
     n2 = self.numberOfIterations.get() + 2
     
     if self.doComputeResolution=='0' or self.doComputeResolution==0:
-        self.fourierMaxFrequencyOfInterest = [maxFreq] * n2
+        self._fourierMaxFrequencyOfInterest = [maxFreq] * n2
     else:
-        self.fourierMaxFrequencyOfInterest = [-1] * n2
-        self.fourierMaxFrequencyOfInterest[1] = maxFreq
+        self._fourierMaxFrequencyOfInterest = [-1] * n2
+        self._fourierMaxFrequencyOfInterest[1] = maxFreq
     
     #parameter for projection matching
-    self.align2DIterNr = self.itersFloatValues('align2DIterNr')
-    self.align2dMaxChangeOffset = self.itersFloatValues('align2dMaxChangeOffset')
-    self.align2dMaxChangeRot = self.itersFloatValues('align2dMaxChangeRot')
-    self.angSamplingRateDeg = self.itersFloatValues('angSamplingRateDeg')
-    self.constantToAddToFiltration = self.itersFloatValues('constantToAddToFiltration')
-    self.constantToAddToMaxReconstructionFrequency = self.itersFloatValues('constantToAddToMaxReconstructionFrequency')
-    self.discardPercentage = self.itersFloatValues('discardPercentage')
-    self.discardPercentagePerClass = self.itersFloatValues('discardPercentagePerClass')
-    self.doAlign2D = self.itersBoolValues('doAlign2D')
-    self.doComputeResolution = self.itersBoolValues('doComputeResolution')
-    self.doSplitReferenceImages = self.itersBoolValues('doSplitReferenceImages')
-    self.innerRadius = self.itersFloatValues('innerRadius', firstValue=False) # FIXME: merging bool and floats
-    self.maxChangeInAngles = self.itersFloatValues('maxChangeInAngles')
-    self.maxChangeOffset = self.itersFloatValues('maxChangeOffset')
-    self.minimumCrossCorrelation = self.itersFloatValues('minimumCrossCorrelation')
-    self.onlyWinner = self.itersBoolValues('onlyWinner')
-    self.outerRadius = self.itersFloatValues('outerRadius', firstValue=False) # FIXME: merging bool and floats
-    self.perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
-    self.referenceIsCtfCorrected = self.itersFloatValues(str(self.ReferenceIsCtfCorrected.get()) + " True") # FIXME: using bool string and float list
-    self.scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')
-    self.scaleStep = self.itersFloatValues('scaleStep')
-    self.search5DShift = self.itersFloatValues('search5DShift')
-    self.search5DStep = self.itersFloatValues('search5DStep')
-    self.symmetryGroup = self.itersFloatValues('symmetryGroup')
+    self._align2DIterNr = self.itersFloatValues('align2DIterNr')
+    self._align2dMaxChangeOffset = self.itersFloatValues('align2dMaxChangeOffset')
+    self._align2dMaxChangeRot = self.itersFloatValues('align2dMaxChangeRot')
+    self._angSamplingRateDeg = self.itersFloatValues('angSamplingRateDeg')
+    self._constantToAddToFiltration = self.itersFloatValues('constantToAddToFiltration')
+    self._constantToAddToMaxReconstructionFrequency = self.itersFloatValues('constantToAddToMaxReconstructionFrequency')
+    self._discardPercentage = self.itersFloatValues('discardPercentage')
+    self._discardPercentagePerClass = self.itersFloatValues('discardPercentagePerClass')
+    self._doAlign2D = self.itersBoolValues('doAlign2D')
+    self._doComputeResolution = self.itersBoolValues('doComputeResolution')
+    self._doSplitReferenceImages = self.itersBoolValues('doSplitReferenceImages')
+    self._innerRadius = self.itersFloatValues('innerRadius', firstValue=False) # FIXME: merging bool and floats
+    self._maxChangeInAngles = self.itersFloatValues('maxChangeInAngles')
+    self._maxChangeOffset = self.itersFloatValues('maxChangeOffset')
+    self._minimumCrossCorrelation = self.itersFloatValues('minimumCrossCorrelation')
+    self._onlyWinner = self.itersBoolValues('onlyWinner')
+    self._outerRadius = self.itersFloatValues('outerRadius', firstValue=False) # FIXME: merging bool and floats
+    self._perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
+    #FIXME: this need to use later self.referenceIsCtfCorrected value or take it
+    # from the input references objects
+    self.referenceIsCtfCorrected = String('False True')
+    self._referenceIsCtfCorrected = self.itersBoolValues('referenceIsCtfCorrected') # FIXME: using bool string and float list in xmipp
+    
+    self._scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')
+    self._scaleStep = self.itersFloatValues('scaleStep')
+    self._search5DShift = self.itersFloatValues('search5DShift')
+    self._search5DStep = self.itersFloatValues('search5DStep')
+    # FIXME: check why the symmetry is treated as a list (and a float list!!!)
+    #self._symmetryGroup = self.itersFloatValues('symmetry')

@@ -138,49 +138,13 @@ function renderElements(nRow, aData) {
 			if (columnIdReal != null) {
 
 				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
-					var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
-							+ i + '___' + aData[0] + '\" '
-					
-					var data = aData[columnId]
-							
-					if (data == "True" || data == 1 || data == true) {
-						checkbox_element += 'checked>'
-					} else {
-						checkbox_element += '>'
-					}
-					$('td:eq(' + columnIdReal + ')', nRow).html(
-							checkbox_element);
+					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
+				
 				} else if (columnLayoutConfiguration.renderable) {
-					$('td:eq(' + columnIdReal + ')', nRow).html(
-							'<span style="display:none">' + aData[columnId]
-									+ '</span>'
-									+ '<img class=\"tableImages\" id=\"' + i
-									+ '___' + aData[0]
-									+ '\" src=\"/render_column/?renderFunc='
-									+ columnLayoutConfiguration.renderFunc
-									+ '&'
-									+ columnLayoutConfiguration.extraRenderFunc
-									+ '&image=' + aData[columnId] + '\"/>');
-
+					colRenderable(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+				
 				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-					
-					$('td:eq(' + columnIdReal + ')', nRow)
-							.html(
-									'<span>'
-											+ aData[columnId]
-											+ '</span>'
-											+ '<img style="display:none" class=\"tableImages\" id=\"'
-											+ i
-											+ '___'
-											+ aData[0]
-											+ '\" data-real_src=\"/render_column/?renderFunc='
-											+ columnLayoutConfiguration.renderFunc
-											+ '&'
-											+ columnLayoutConfiguration.extraRenderFunc
-											+ '&image=' + aData[columnId]
-											+ '\"/>');
-					// $('td:eq('+columnIdReal+')', nRow).html(
-					// '<span>'+aData[columnId]+'</span>' );
+					colRenderImage(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
 				}
 			}
 		} else {
@@ -189,6 +153,59 @@ function renderElements(nRow, aData) {
 		columnId++;
 	}
 }
+
+
+function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
+	var checkbox_element = '<input type=\"checkbox\" onclick=\"valueChange(this);\" id=\"'
+			+ id + '___' + aData[0] + '\" '
+	
+	var data = aData[columnId]
+			
+	if (data == "True" || data == 1 || data == true) {
+		checkbox_element += 'checked>'
+	} else {
+		checkbox_element += '>'
+	}
+	$('td:eq(' + columnIdReal + ')', nRow).html(
+			checkbox_element);
+}
+
+
+function colRenderable(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
+	$('td:eq(' + columnIdReal + ')', nRow).html(
+			'<span style="display:none">' + aData[columnId]
+					+ '</span>'
+					+ '<img class=\"tableImages\" id=\"' + id
+					+ '___' + aData[0]
+					+ '\" src=\"/render_column/?renderFunc='
+					+ columnLayoutConfiguration.renderFunc
+					+ '&'
+					+ columnLayoutConfiguration.extraRenderFunc
+					+ '&image=' + aData[columnId] + '\"/>');
+
+}
+
+
+function colRenderImage(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
+	$('td:eq(' + columnIdReal + ')', nRow)
+			.html(
+					'<span>'
+							+ aData[columnId]
+							+ '</span>'
+							+ '<img style="display:none" class=\"tableImages\" id=\"'
+							+ id
+							+ '___'
+							+ aData[0]
+							+ '\" data-real_src=\"/render_column/?renderFunc='
+							+ columnLayoutConfiguration.renderFunc
+							+ '&'
+							+ columnLayoutConfiguration.extraRenderFunc
+							+ '&image=' + aData[columnId]
+							+ '\"/>');
+	// $('td:eq('+columnIdReal+')', nRow).html(
+	// '<span>'+aData[columnId]+'</span>' );
+}
+
 
 function initializeColumnHeader() {
 	var headerRow = $("#data_table thead tr")
@@ -420,24 +437,27 @@ function setElementsEditable(elements) {
 }
 
 function valueChange(element) {
+	var elm = $(element)
+	var id = elm.attr("id")
 	var element_value = "";
 		
-	if ($(element).is("input:checkbox")) {
-		element_value = $(element).is(":checked")
+	if (elm.is("input:checkbox")) {
+		element_value = elm.is(":checked")
 		
 		//Fix to keep the datatable updated
 		if (!element_value){
-    		updateCheckboxDataTable($(element), "False");
+    		elm.prop("checked", false);
 		}else{
-			updateCheckboxDataTable($(element), "True");
+			elm.prop("checked", true);
 		}
+		//Fix to keep the datatable updated
+		updateListSession(id, "enabled")
 		
 	} else {
-		element_value = $(element).val()
+		element_value = elm.val()
 	}
 	// Keep changes in global variable
-	changes[$(element).attr("id")] = element_value
-	
+	changes[elm.attr("id")] = element_value
 }
 
 function initializeTableWidth() {
@@ -483,12 +503,14 @@ function initializeSelectionRowEvent() {
 					if (event.shiftKey) {
 						var end = $('#data_table tbody tr').index(lastChecked);
 
-						for (i = Math.min(start, end); i <= Math
-								.max(start, end); i++) {
-							if (!$('#data_table tbody tr').eq(i).hasClass(
-									'row_selected')) {
-								$('#data_table tbody tr').eq(i).addClass(
-										"row_selected");
+						for (i = Math.min(start, end); i <= Math.max(start, end); i++) {
+							
+							var elm = $('#data_table tbody tr').eq(i);
+							if (!elm.hasClass('row_selected')) {
+								elm.addClass("row_selected");
+								
+								/* Elements added to the session list */
+								updateListSession(elm.attr("id"), "selected")
 							}
 						}
 
@@ -503,14 +525,20 @@ function initializeSelectionRowEvent() {
 							document.selection.empty();
 						}
 					} else {
-						// $(lastChecked).removeClass('row_selected');
 						if (!event.metaKey && !event.ctrlKey) {
-							$('tr').each(function() {
+							$("tr.row_selected").each(function() {
 								$(this).removeClass('row_selected');
+								
+								// remove all from selectedList
+								updateListSession($(this).attr("id"), "selected")
+							
 							});
 						}
 
 						$(this).toggleClass('row_selected');
+						
+						// add/remove to selectedList
+						updateListSession($(this).attr("id"), "selected")
 					}
 
 					lastChecked = this;
@@ -635,17 +663,38 @@ function saveTableConfiguration() {
 function multipleEnableDisableImage(mode) {
 	var columnId = oTable.fnGetColumnIndex("enabled")
 	var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
-
-	var booleanValue = (mode == 'enable')
-	var integerValue = (booleanValue) ? 1 : 0
-
-	$(".row_selected").each(
-			function() {
-				var checkbox_element = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
-				checkbox_element.prop('checked', booleanValue);
-				changes[checkbox_element.attr("id")] = integerValue
-			})
-
+	var element_value = "";
+	
+	switch(mode){
+		case 'enable':
+			$(".row_selected").each(
+				function() {
+					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+					if(!elm.is(":checked")){
+						elm.prop("checked", true);
+						// Update the session list
+						updateListSession(elm.attr("id"), "enabled")
+					}
+					//old code
+					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
+			});
+			break;
+	
+		case 'disable':
+			$(".row_selected").each(
+				function() {
+					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+					if(elm.is(":checked")){
+						elm.prop("checked", false);
+						// Update the session list
+						updateListSession(elm.attr("id"), "enabled")
+					}
+					//old code
+					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
+			});
+			break;
+	}
+	
 	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}

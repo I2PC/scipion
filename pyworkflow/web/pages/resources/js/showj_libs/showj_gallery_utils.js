@@ -155,14 +155,14 @@ function initializeImageEvents(hasEnabledColumn){
 	//Selection tool
 	$(".img_container").click(
 		function(e){
-			element_id=parseInt($(this).attr("id").split("___")[1]);
+			var element_id = parseInt($(this).attr("id").split("___")[1]);
 
 			if (e.shiftKey){
-				prev_element_id=parseInt($('#id_goto').val())
+				var prev_element_id = parseInt($('#id_goto').val())
 				
 				if (prev_element_id < element_id){
-					initialIndex = prev_element_id
-					endIndex = element_id
+					var initialIndex = prev_element_id
+					var endIndex = element_id
 				}
 				else{
 					initialIndex = element_id
@@ -170,16 +170,27 @@ function initializeImageEvents(hasEnabledColumn){
 				}
 				
 				for (var x=initialIndex; x<=endIndex; x++){
-					$("#img_container___"+x).addClass("image_selected")
+					var id = "img_container___" + x
+					$("#"+id).addClass("image_selected")
+					
+					/* Update the selecte session list */
+					updateListSession(id, "selected")
 				}
 			}
 			else{
 				if (!e.ctrlKey && !e.metaKey){
 					$(".img_container").each(function(){
 						$(this).removeClass('image_selected')
+						
+						/* Update the selected session list */
+						blankList("selected")
+						
 					});	
 				}
 				$("#img_container___"+element_id).toggleClass("image_selected")
+				
+				/* Update the selecte session list */
+				updateListSession("img_container___"+element_id, "selected")
 			}
 			$('#id_goto').val(element_id);
 		})	

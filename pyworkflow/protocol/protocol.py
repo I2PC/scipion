@@ -38,7 +38,7 @@ from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
-                                   getFiles, exists, renderTextFile)
+                                   getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
@@ -567,6 +567,11 @@ class Protocol(Step):
         **args: see __insertStep
         """
         return self._insertFunctionStep('runJob', progName, progArguments, **kwargs)
+    
+    def _insertCopyFileStep(self, sourceFile, targetFile, **kwargs):
+        """ Shortcut function to insert an step for copying a file to a destiny. """
+        step = FunctionStep(copyFile, 'copyFile', sourceFile, targetFile, **kwargs)
+        return self.__insertStep(step, **kwargs)
             
     def _enterDir(self, path):
         """ Enter into a new directory path and store the current path.

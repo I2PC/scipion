@@ -129,7 +129,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
          
     #--------------------------- UTILS functions --------------------------------------------
     
-    def _fillClassesFromNodes(self, classes, averages, nodeList):
+    def _fillClassesFromNodes(self, classes, nodeList):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
@@ -154,6 +154,8 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                     img.cleanObjId()
                     img.setLocation(int(i), self.dendroImages)
                     class2D.append(img)
+                
+                classes.update(class2D)
                 
                 
     def _fillParticlesFromNodes(self, particles, nodeList):

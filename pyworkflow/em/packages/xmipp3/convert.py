@@ -336,16 +336,16 @@ def readSetOfMicrographs(filename, micSet, hasCtf=False):
     readSetOfImages(filename, micSet, rowToMicrograph, hasCtf)
 
 
-def writeSetOfMicrographs(micSet, filename, rowFunc=None):
-    writeSetOfImages(micSet, filename, micrographToRow, rowFunc)
+def writeSetOfMicrographs(micSet, filename, rowFunc=None, blockName='Micrographs'):
+    writeSetOfImages(micSet, filename, micrographToRow, rowFunc, blockName)
     
     
 def readSetOfVolumes(filename, volSet, hasCtf=False):    
     readSetOfImages(filename, volSet, rowToVolume, False)
 
 
-def writeSetOfVolumes(volSet, filename, rowFunc=None):
-    writeSetOfImages(volSet, filename, volumeToRow, rowFunc)    
+def writeSetOfVolumes(volSet, filename, rowFunc=None, blockName='Volumes'):
+    writeSetOfImages(volSet, filename, volumeToRow, rowFunc, blockName)    
     
     
 def readCTFModel(filename, mic):
@@ -509,7 +509,7 @@ def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
         imgRow.writeToMd(md, objId)
 
 
-def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
+def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, blockName='Images'):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
     Params:
         imgSet: the set of images to be written (particles, micrographs or volumes)
@@ -519,7 +519,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc):
     """
     md = xmipp.MetaData()
     setOfImagesToMd(imgSet, md, imgToFunc, rowFunc)
-    md.write(filename)
+    md.write('%s@%s' % (blockName, filename))
         
 def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
     objId = md.addObject()
@@ -542,8 +542,8 @@ def setOfMicrographsToMd(imgSet, md, rowFunc=None):
     setOfImagesToMd(imgSet, md, micrographToRow, rowFunc)
 
 
-def writeSetOfParticles(imgSet, filename, rowFunc=None):
-    writeSetOfImages(imgSet, filename, particleToRow, rowFunc)
+def writeSetOfParticles(imgSet, filename, rowFunc=None, blockName='Particles'):
+    writeSetOfImages(imgSet, filename, particleToRow, rowFunc, blockName)
 
 
 def writeSetOfCTFs(ctfSet, mdCTF):

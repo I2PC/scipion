@@ -1,7 +1,7 @@
-
 #----------------- SOFTWARE PACKAGES -----------------------
 # We define a common root to install all software packages
-# if the path are relatives, they will be taken from SCIPION_HOME
+# if the paths are relative, they will be taken from SCIPION_HOME
+
 EM_ROOT = 'software/em/'
 
 # Xmipp 3
@@ -27,3 +27,10 @@ OPT_ALIGN_HOME = EM_ROOT + 'opt_flow_alignment'
 
 # BSOFT
 BSOFT_HOME = EM_ROOT + 'bsoft'
+
+
+# TODO: maybe it would be nicer to allow the user choose where to put
+# the external packages, ask for it at installation time or something.
+#
+# Also, when a package is going to be used but cannot be found, say
+# where the system expects it (and why).
