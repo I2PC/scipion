@@ -274,7 +274,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		thumb_height = (int) (image_height * scale);
 
 		font_height = 0;
-		if (data.showLabel) {
+		if (data.isDisplayLabel()) {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
@@ -525,12 +525,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	/** Whether to display the labels */
-	public void setShowLabels(boolean value) {
-		if (data.showLabel != value) {
-			data.showLabel = value;
+	public void setShowLabels() {
+		
 			calculateCellSize();
 			fireTableDataChanged();
-		}
+		
 	}
 
 	/** Whether to display the labels */
@@ -628,7 +627,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 
 		public boolean getShowLabel() {
-			return data.showLabel;
+			return data.isDisplayLabel();
 		}
 
 		public Dimension getCellDim() {

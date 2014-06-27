@@ -27,7 +27,6 @@
 package xmipp.viewer.windows;
 
 import ij.ImagePlus;
-
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -53,9 +52,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -71,7 +68,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -107,8 +103,6 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippMenuBarCreator;
-import xmipp.utils.XmippMenuCreator;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippResource;
@@ -124,7 +118,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.models.MicrographsTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
-import xmipp.viewer.windows.ClassesJDialog;
 
 
 /**
@@ -199,13 +192,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	GalleryData data;
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
-
-	private JComboBox imagecolumnscb;
-
-	private JMenuItem rendercolumnmi;
-
 	private Hashtable<String, ColumnInfo> imagecolumns;
-        private GalleryJFrame childFrame;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -256,7 +243,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-		childFrame = new GalleryJFrame(null, md, new Params());
+		new GalleryJFrame(null, md, new Params());
 	}
 
 	/**
@@ -1528,13 +1515,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
-			addSeparator(DISPLAY);
+                        
+                        addDisplayLabelItems();
+			
+                        addSeparator(DISPLAY);
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
-			addRenderImageColumnItem();
+			addRenderImageColumnItems();
 			
-		
 			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
@@ -1614,10 +1602,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 					}
 				}
-				else if (cmd.equals(DISPLAY_SHOWLABELS))
-				{
-					gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
-				}
+				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
 					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
@@ -1789,7 +1774,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}// function handleActionPerformed
 		
 		
-		protected void addRenderImageColumnItem()
+		protected void addRenderImageColumnItems()
 		{                  
 			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image Column");
 			JMenuItem mi;
@@ -1817,6 +1802,46 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
 
 		}
+                
+                protected void addDisplayLabelItems()
+		{                  
+                        addItem(DISPLAY_SHOWLABELS, "Display Label");
+			JMenuItem mi;
+			
+                        // Create the popup menu.
+                        String id, column;
+                       
+                        id = "Display.ShowLabel.None_rb";
+                        column = "none";
+                        mi = addItem(id, column);
+                        mi.setSelected(true);
+                        mi.addActionListener(new DisplayLabelActionListener());
+                        for(ColumnInfo ci: data.getColumns())
+                        {
+                                column = ci.labelName;
+                                id = String.format("Display.ShowLabel.%s_rb", column.replace("_", ""));
+                                mi = addItem(id, column);
+                                mi.addActionListener(new DisplayLabelActionListener());
+                                
+                        }
+
+		}
+                
+                class DisplayLabelActionListener implements ActionListener
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
+				String key = mi.getText();
+                                
+				data.setDisplayLabel(key);
+				gallery.setShowLabels();
+			}
+
+		}
+		
 		
 		class RenderColumnActionListener implements ActionListener
 		{
@@ -1835,13 +1860,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}// class GalleryMenu //////////////////////////////////////////////////////////
 	
 	
-	
-	
-	
-	
-	
-	
-	
+		
 
 	class GalleryPopupMenu extends XmippPopupMenuCreator
 	{

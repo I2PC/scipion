@@ -56,6 +56,9 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
+    private ColumnInfo displayci;
+
+        
 
 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
@@ -68,7 +71,7 @@ public class GalleryData {
 	// max dimension allowed to render images
 
 	private Mode mode;
-	public boolean showLabel = false;
+	
 	public boolean globalRender;
 	public Params parameters;
 	private int numberOfVols = 0;
@@ -131,6 +134,29 @@ public class GalleryData {
 		}
 
 	}// constructor GalleryData
+        
+        
+        public boolean isDisplayLabel()
+        {
+            return displayci != null;
+        }
+        
+        public void setDisplayLabel(String key) {
+            if(key.equalsIgnoreCase("none"));
+                displayci = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                {
+                    displayci = ci;
+                    break;
+                }
+        }
+        
+        public ColumnInfo getDisplayLabel()
+        {
+            
+            return displayci;
+        }
 
 	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
