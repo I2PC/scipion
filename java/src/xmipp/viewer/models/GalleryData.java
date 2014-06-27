@@ -64,6 +64,7 @@ import xmipp.viewer.windows.SaveJDialog;
 public class GalleryData {
 
 
+    protected ColumnInfo displayci;
     protected MetaData md;
     protected long[] ids;
     protected String[] mdBlocks = null;
@@ -347,6 +348,30 @@ public class GalleryData {
         }
 
     }// function loadMd
+
+        
+               
+    public boolean isDisplayLabel()
+    {
+        return displayci != null;
+    }
+
+    public void setDisplayLabel(String key) {
+        if(key.equalsIgnoreCase("none"));
+            displayci = null;
+        for(ColumnInfo ci: labels)
+            if(ci.labelName.equals(key))
+            {
+                displayci = ci;
+                break;
+            }
+    }
+
+    public ColumnInfo getDisplayLabel()
+    {
+
+        return displayci;
+    }
 
     /**
      * Load labels info in md, try to keep previous settings of render and
