@@ -19,6 +19,7 @@ public class EllipseCTF {
     private double defocusU, defocusV;
     private long id;
     private EllipseFitter ellipseFitter;
+    private String psd;
 
     public void setEllipseFitter(EllipseFitter ellipseFitter) {
         this.ellipseFitter = ellipseFitter;
@@ -129,5 +130,20 @@ public class EllipseCTF {
         return D;
     }
    
+    public MetaData getCTFMd()
+    {
+        MetaData md = new MetaData();
+        md.setColumnFormat(true);
+        long id = md.addObject();
+        md.setValueDouble(MDLabel.MDL_CTF_Q0, Q0, id);
+        md.setValueDouble(MDLabel.MDL_CTF_CS, Cs, id);
+        md.setValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, 1, id);
+        md.setValueDouble(MDLabel.MDL_SAMPLINGRATE, Ts,id);
+        md.setValueDouble(MDLabel.MDL_CTF_VOLTAGE, kV, id);
+        md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSU, mddefU, id);
+        md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSV, mddefV, id);
+        md.print();
+        return md;       
+    }
     
 }

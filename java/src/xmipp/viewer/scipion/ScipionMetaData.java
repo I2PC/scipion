@@ -874,7 +874,15 @@ public class ScipionMetaData extends MetaData {
     
     public CTFDescription getCTFDescription(long id)
      {
-        return new CTFDescription();
+        try {
+            MetaData md = getEllipseCTF(id).getCTFMd();
+            String file = "ctf.xmd";
+            md.write(file);
+            return new CTFDescription(file);
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(ex);
+        }
      }
 
 }
