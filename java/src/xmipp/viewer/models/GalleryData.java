@@ -63,6 +63,7 @@ public class GalleryData {
 	public boolean showLabel = false;
 	public boolean renderImages;
 
+
 	public Params parameters;
 	private int numberOfVols = 0;
 
@@ -88,6 +89,7 @@ public class GalleryData {
         protected String renderLabel;
         protected String[] visibleLabels;
         protected String[] orderLabels;
+        protected ColumnInfo displayci;
 
     
 
@@ -153,6 +155,29 @@ public class GalleryData {
 		}
 
 	}// constructor GalleryData
+        
+        
+        public boolean isDisplayLabel()
+        {
+            return displayci != null;
+        }
+        
+        public void setDisplayLabel(String key) {
+            if(key.equalsIgnoreCase("none"));
+                displayci = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                {
+                    displayci = ci;
+                    break;
+                }
+        }
+        
+        public ColumnInfo getDisplayLabel()
+        {
+            
+            return displayci;
+        }
 
 	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
