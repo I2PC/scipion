@@ -12,10 +12,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 
@@ -25,7 +23,6 @@ public class XmippUtil {
 
 	public static XmippImageJ showImageJ(Tool tool) {
 		if (IJ.getInstance() == null) {
-			xij = new XmippImageJ();
 			try {
                         xij = new XmippImageJ();
 //			

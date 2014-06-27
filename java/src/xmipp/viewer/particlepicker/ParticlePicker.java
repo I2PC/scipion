@@ -20,9 +20,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 
 /**
  * Business object for ParticlePicker common GUI. SingleParticlePicker and
@@ -308,7 +306,7 @@ public abstract class ParticlePicker {
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
-            if (f.getCommand().equals(command)) {
+            if (f.getCommand().equals(command2)) {
                 return true;
             }
         }
