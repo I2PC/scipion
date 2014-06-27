@@ -47,6 +47,7 @@ from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
+from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair
 from convert import *
 from os.path import dirname, join
@@ -66,7 +67,8 @@ class XmippViewer(Viewer):
                 XmippProtScreenParticles, XmippProtKerdensom, XmippProtRotSpectra,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
-                XmippProtParticlePicking, XmippParticlePickingAutomatic]
+                XmippProtParticlePicking, XmippParticlePickingAutomatic, 
+                XmippProtParticlePickingPairs]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -199,5 +201,20 @@ class XmippViewer(Viewer):
         	runJavaIJapp("%dg" % (2), app, args, True)
             # self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
 
+        elif issubclass(cls, XmippProtParticlePickingPairs):
+            tmpDir = self._getTmpPath(obj.getName()) 
+            makePath(tmpDir)
+
+            mdFn = join(tmpDir, 'input_micrographs.xmd')
+            writeSetOfMicrographsPairs(obj.outputCoordinatesTiltPair.getUntilted().getMicrographs(),
+                                        obj.outputCoordinatesTiltPair.getTilted().getMicrographs(), 
+                                        mdFn) 
+            extraDir = obj._getExtraPath()
+            scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
+            app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
+            args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
+        
+            runJavaIJapp("%dg"%(obj.memory.get()), app, args, True)
+            
         return self._views
         

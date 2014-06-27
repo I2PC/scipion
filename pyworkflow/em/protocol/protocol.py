@@ -38,6 +38,7 @@ from pyworkflow.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.em.constants import *
 from pyworkflow.em.data import *
+from pyworkflow.em.data_tiltpairs import SetOfAngles
 from pyworkflow.utils.path import removeBaseExt, join, basename, cleanPath
 from pyworkflow.utils.properties import Message, Icon 
 
@@ -96,7 +97,10 @@ class EMProtocol(Protocol):
         alignment.setParticles(particles)
         
         return alignment
-    
+     
+    def _createSetOfAngles(self, suffix=''):
+        return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
+       
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
         self._defineRelation(RELATION_SOURCE, srcObj, dstObj)

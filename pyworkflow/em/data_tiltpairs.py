@@ -28,7 +28,8 @@
 This modules contains data classes related to Random Connical Tilt workflow.
 """
 
-from pyworkflow.em.data import SetOfMicrographs, EMObject
+from pyworkflow.em.data import EMObject, EMSet
+from pyworkflow.object import Float
 
 class MicrographsTiltPair(EMObject):
     """Represents a Micrographs Tilt Pair"""
@@ -50,4 +51,71 @@ class MicrographsTiltPair(EMObject):
     def setTilted(self, tilted):
         self._tilted = tilted
         
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getTilted().getFiles)
+        filePaths.add(self.getUntilted().getFiles)
+        
+        return filePaths 
     
+class CoordinatesTiltPair(EMObject):
+    """Represents a Coordinates Tilt Pair"""
+    
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._tilted = None#SetOfMicrographs()
+        self._untilted = None#SetOfMicrographs()
+        self._angles = SetOfAngles()
+        
+    def getUntilted(self):
+        return self._untilted
+    
+    def getTilted(self):
+        return self._tilted
+    
+    def getAngles(self):
+        return self._angles
+    
+    def setUntilted(self, untilted):
+        self._untilted = untilted
+        
+    def setTilted(self, tilted):
+        self._tilted = tilted
+        
+    def setAngles(self, setAngles):
+        self._angles = setAngles
+        
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getTilted().getFiles)
+        filePaths.add(self.getUntilted().getFiles)
+        
+        return filePaths
+         
+class Angles(EMObject):
+    """Represents a triplet of angles"""
+
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._angleY = Float()    
+        self._angleY2 = Float()
+        self._angleTilt = Float()
+        
+    def setAngles(self, angleY, angleY2, angleTilt):
+        self._angleY = angleY
+        self._angleY2 = angleY2
+        self._angleTilt = angleTilt
+        
+    def getAngles(self):
+        return (self._angleY, self._angleY2, self._angleTilt)
+    
+    
+class SetOfAngles(EMSet):
+    """ Represents a set of Images """
+    ITEM_TYPE = Angles
+    
+    def __init__(self, **args):
+        EMSet.__init__(self, **args)
+        
+    def _loadClassesDict(self):
+        return globals()  
