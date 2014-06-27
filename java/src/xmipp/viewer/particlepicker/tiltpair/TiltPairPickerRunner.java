@@ -2,7 +2,6 @@ package xmipp.viewer.particlepicker.tiltpair;
 
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.SwingUtilities;
 import org.apache.commons.cli.BasicParser;
@@ -14,10 +13,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
-import xmipp.viewer.particlepicker.training.*;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public class TiltPairPickerRunner implements Runnable {
 
@@ -51,12 +47,7 @@ public class TiltPairPickerRunner implements Runnable {
     // 1 --> output dir
     // 2 --> mode
 
-	// On Supervised
-    // 3 --> number of threads for supervised mode
-    // 4 --> fast mode for supervised mode
-    // 5 --> incore for supervised mode
-	// On Review
-    // 3 -->external auto dir
+
     public void defineArgs() {
         options = new Options();
         options.addOption(INPUTOPT, true, "");
@@ -96,7 +87,7 @@ public class TiltPairPickerRunner implements Runnable {
         try
         {
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(inputfile, outputdir, Mode.Manual);
+            ppicker = new TiltPairPicker(inputfile, outputdir, mode);
             
             ppicker.setPython(python);
             ppicker.setScipionScript(script);
