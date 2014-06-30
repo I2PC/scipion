@@ -12,13 +12,19 @@ $(document).ready(function(){
  	$("input#listEnabledItems").val(listEnabledItems)
 	updateEnabledItems(mode, listEnabledItems)
 	
-	// Update the enabled items in the template between pagination
+	/*
+	 * ---- MODE TABLE UTILS ---------------
+	 */
+	
+	//Update the enabled/selected items in the template between pagination
  	$("div.dataTables_paginate").click(function(){
- 		var listSelectedItems = $("input#listSelectedItems").val().split(",");
- 		updateSelectedTemplate(listSelectedItems);
- 		
- 		var listEnabledItems = $("input#listEnabledItems").val().split(",");
- 		updateEnabledTemplate(listEnabledItems, false);
+ 		applyChangesToUpdate()
+ 	});
+ 	
+ 	// Update the enabled/selected items in the template after change size of  
+ 	// the elements to show. 
+ 	$("div#data_table_length > label > select").change(function(){
+ 		applyChangesToUpdate()
  	});
  	
 });

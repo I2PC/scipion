@@ -61,7 +61,7 @@
  * 
  * function updateEnabledTemplate(list, persist)
  * 	->	Method to update the template with the enables elements.
- * 		Option to persist the element into the oTable object available.
+ * 		FIX DISABLED: Option to persist the element into the oTable object available.
  * 
  ******************************************************************************/
 	 
@@ -118,6 +118,17 @@ function getListSelectedItems(mode){
     return list_selected
 }
 
+function replaceList(mode, value){
+	switch(mode){
+	case "selected":
+		$("input#listSelectedItems").val(value)
+		break;
+	case "enabled":
+		$("input#listEnabledItems").val(value)
+		break;
+	}
+}
+
 
 function changeMode(modeNew){
 	/*
@@ -165,7 +176,7 @@ function markSelectedItems(mode, list){
 	        
 	    case "table":
 	        // Came from the gallery mode
-	    	updateSelectedTemplate(list)
+	    	updateSelectedTemplate(list);
 	        break;
 	}
 }
@@ -186,7 +197,7 @@ function updateEnabledItems(mode, list){
 	        
 	    case "table":
 	        // Came from the gallery mode
-	    	updateEnabledTemplate(list, true)
+	    	updateEnabledTemplate(list);
 	        break;
 	}
 }
@@ -205,7 +216,6 @@ function updateCheckboxDataTable(element, mode){
 //    @param {bool} [bAction=true] Perform pre-draw actions or not
 //    @returns {int} 0 on success, 1 on error
 	oTable.fnUpdate(mode, aPos[0], 1, true);
-	
 }
 
 function blankList(attr){
@@ -235,28 +245,27 @@ function updateListSession(id, attr){
 	}
 }
 
-
 function updateList(id, list){
 	/*
 	 * Method to add/remove the element identified into the list.
 	 */
 	var id = id.split("___").pop();	
-	var listItems = $("#" + list).val().split(",")
-	var enc = containsElem(id, listItems)
+	var listItems = $("#" + list).val().split(",");
+	var enc = containsElem(id, listItems);
 	
 	if(enc!=-1){
 		// remove element
 		listItems.splice(enc, 1);
 	}else{
 		// added the element
-		listItems.push(id)
+		listItems.push(id);
 	}
 	
-	if(listItems[0]==""){
+	if(listItems[0]=="" || listItems[0]=="0" || listItems[0]==0){
 		listItems.shift()
 	}
 	
-	$("#" + list).val(listItems)
+	$("#" + list).val(listItems);
 }
 
 function containsElem(id, list){
@@ -283,26 +292,36 @@ function updateSelectedTemplate(list){
 	}
 }
 
-function updateEnabledTemplate(list, persist){
+function updateEnabledTemplate(list){
 	/*
 	 * Method to update the template with the enables elements.
 	 * Option to persist the element into the oTable object available.
 	 */
-	if(persist == undefined)
-		persist = false;
-	 
+	
 	for (var x=0;list.length>x;x++){
-		var elem = $("input#enabled___"+ list[x])
-		elem.prop("checked", false);
-		
-		if(persist){
-			//Fix to keep the datatable updated
-    		updateCheckboxDataTable(elem, "False");
+		var elem = $("input#enabled___"+ list[x]);
+		if(elem.attr("id") != undefined){
+			elem.prop("checked", false);
+			
+//			if(persist){
+//				//Fix to keep the datatable updated
+//	    		updateCheckboxDataTable(elem, "False");
+//			}
 		}
 	}
 }
 
+function applyChangesToUpdate(){
+	console.log("Updating changes...")
+	
+	var listSelectedItems = $("input#listSelectedItems").val().split(",");
+	updateSelectedTemplate(listSelectedItems);
+	
+	var listEnabledItems = $("input#listEnabledItems").val().split(",");
+	updateEnabledTemplate(listEnabledItems);
+ }
 
+ 	
 function createSubset(){
 	var listSubset = $("#listEnabledItems").val()
 	

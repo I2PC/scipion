@@ -1,7 +1,7 @@
  /*****************************************************************************
  *
  * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
- * 			   
+ * 			   Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -28,9 +28,6 @@
  * DESCRIPTION:
  * 
  * Methods used in the showj_gallery template 
- * 
- * 
- * ATTRIBUTES LIST:
  * 
  * METHODS LIST:
  * 
@@ -173,26 +170,21 @@ function initializeImageEvents(hasEnabledColumn){
 					var id = "img_container___" + x
 					$("#"+id).addClass("image_selected")
 					
-					/* Update the selecte session list */
-					updateListSession(id, "selected")
 				}
 			}
 			else{
 				if (!e.ctrlKey && !e.metaKey){
 					$(".img_container").each(function(){
 						$(this).removeClass('image_selected')
-						
-						/* Update the selected session list */
-						blankList("selected")
-						
 					});	
 				}
 				$("#img_container___"+element_id).toggleClass("image_selected")
 				
-				/* Update the selecte session list */
-				updateListSession("img_container___"+element_id, "selected")
 			}
 			$('#id_goto').val(element_id);
+			
+			/* Update the selected session list */
+			replaceList('selected', getListSelectedItems('gallery'))
 		})	
 }
 
@@ -205,18 +197,32 @@ function initializeWindowLoadEvents(){
 }
 
 function multipleEnableDisableImage(mode){
-	if (mode=='enable'){
-		$(".image_selected").each(function(){
-			enableDisableImage($(this).find(".enabledGallery"), 'enable')
-			$(this).find(".enabledGallery").fadeOut('fast')
-		})
-	}
-	else{
-		$(".image_selected").each(function(){
-			enableDisableImage($(this).find(".enabledGallery"), 'disable')
-			$(this).find(".enabledGallery").fadeIn('fast')
-		})
-	}
+	$(".image_selected").each(function(){
+		var elm = $(this).find(".enabledGallery");
+		var id = $(this).attr("id");
+		
+		switch(mode){
+			case 'enable':
+				if(elm.hasClass('selected')){
+					// Update the session list
+					updateListSession(id, "enabled")
+				}
+	
+				enableDisableImage(elm, 'enable')
+				elm.fadeOut('fast')
+				break;
+				
+			case 'disable':
+				if(!elm.hasClass('selected')){
+					// Update the session list
+					updateListSession(id, "enabled")
+				}
+				
+				enableDisableImage(elm, 'disable')
+				elm.fadeIn('fast')
+				break;
+		}
+	});
 }
 
 function enableDisableImage(element, enableDisable){
@@ -239,6 +245,7 @@ function enableDisableImage(element, enableDisable){
 	}
 	changes[$(element).attr("id")]=element_value
 }
+
 function multipleSelect(mode){
 	element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
 	$(".img_container").each(function(){
@@ -247,3 +254,4 @@ function multipleSelect(mode){
 		}	
 	})
 }
+

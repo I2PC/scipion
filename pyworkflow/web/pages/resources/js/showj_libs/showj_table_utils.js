@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * Authors:    Adrian Quintana (aquintana@cnb.csic.es)
- * 			   
+ * 			   Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -28,9 +28,6 @@
  * DESCRIPTION:
  * 
  * Methods used in the showj_table template 
- * 
- * 
- * ATTRIBUTES LIST:
  * 
  * METHODS LIST:
  * 
@@ -665,35 +662,30 @@ function multipleEnableDisableImage(mode) {
 	var columnIdReal = oTable.fnColumnIndexToVisible(columnId)
 	var element_value = "";
 	
-	switch(mode){
-		case 'enable':
-			$(".row_selected").each(
-				function() {
-					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
-					if(!elm.is(":checked")){
-						elm.prop("checked", true);
-						// Update the session list
-						updateListSession(elm.attr("id"), "enabled")
-					}
-					//old code
-					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
-			});
-			break;
-	
-		case 'disable':
-			$(".row_selected").each(
-				function() {
-					var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
-					if(elm.is(":checked")){
-						elm.prop("checked", false);
-						// Update the session list
-						updateListSession(elm.attr("id"), "enabled")
-					}
-					//old code
-					changes[elm.attr("id")] = (mode == 'enable') ? 1 : 0
-			});
-			break;
-	}
+	$(".row_selected").each(function() {
+		var elm = $('td:eq(' + columnIdReal + ')', this).find(":checkbox")
+		var id = elm.attr("id")
+		
+		switch(mode){
+			case 'enable':
+				if(!elm.is(":checked")){
+					elm.prop("checked", true);
+					// Update the session list
+					updateListSession(id, "enabled")
+				}
+				break;
+		
+			case 'disable':
+				if(elm.is(":checked")){
+					elm.prop("checked", false);
+					// Update the session list
+					updateListSession(id, "enabled")
+				}
+				break;
+		}
+		//old code
+		changes[id] = (mode == 'enable') ? 1 : 0
+	});
 	
 	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
 		$("#saveButton").toggleClass("buttonGreyHovered")
