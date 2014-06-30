@@ -27,8 +27,18 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-from pyworkflow.em.protocol import *
-from pyworkflow.utils.path import copyTree
+import os
+from os.path import join, basename, exists, dirname, relpath
+
+from pyworkflow.object import String
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam
+from pyworkflow.utils.path import copyTree, copyFile, removeBaseExt, makePath, moveFile
+from pyworkflow.utils.properties import Message
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.data import Micrograph
+
+
 
 class ProtMicrographs(EMProtocol):
     pass
@@ -164,12 +174,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         pass
     
-    def _defocusMaxMin(self, list):
+    def _defocusMaxMin(self, defocusList):
         """ This function return the minimum and maximum of the defocus
         of a SetOfMicrographs.
         """
-        minimum = float(min(list))/10000
-        maximum = float(max(list))/10000
+        minimum = float(min(defocusList))/10000
+        maximum = float(max(defocusList))/10000
         msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
         self.methodsInfo.set(msg)
 
@@ -307,32 +317,32 @@ class ProtRecalculateCTF(ProtMicrographs):
         directory = dirname(objFn)
         return join(directory, "extra", removeBaseExt(mic.getFileName()))
     
-    def _getObjId(self, list):
-        return int(list[0])
+    def _getObjId(self, values):
+        return int(values[0])
     
-    def _splitFile(self, file):
-        """ This method split the parameter file into lines"""
-        list = []
-        f1 = open(file)
+    def _splitFile(self, filename):
+        """ This method split the parameter filename into lines"""
+        values = []
+        f1 = open(filename)
         for l in f1:
             split = l.split()
-            list.append(split)
+            values.append(split)
         f1.close()
-        return list
+        return values
     
-    def _defocusMaxMin(self, list):
+    def _defocusMaxMin(self, values):
         """ This function return the minimum and maximum of the defocus
         of a SetOfMicrographs.
         """
-        minimum = float(min(list))/10000
-        maximum = float(max(list))/10000
+        minimum = float(min(values))/10000
+        maximum = float(max(values))/10000
         msg = "The range of micrograph's experimental defocus are %(minimum)0.3f - %(maximum)0.3f microns" % locals()
         self.methodsInfo.set(msg)
     
-    def _ctfCounter(self, list):
+    def _ctfCounter(self, values):
         """ This function return the number of CTFs that was recalculated.
         """
-        numberOfCTF = len(list)/2
+        numberOfCTF = len(values)/2
         msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
         self.summaryInfo.set(msg)
 
@@ -370,7 +380,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         
         self._enterDir(movDir)
         self._defineProgram()
-        movRelFn = os.path.relpath(movFn, movDir)
+        movRelFn = relpath(movFn, movDir)
         args = "%s" % movRelFn
         self.runJob(self._program, args)
         self._leaveDir()
@@ -401,7 +411,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     
     def _movWorkingDir(self, movFn):
         """ Define which is the directory for the current movie"""
-        movDir = '%s' % movFn
         workDir = self._getTmpPath(movFn)
         return workDir
     

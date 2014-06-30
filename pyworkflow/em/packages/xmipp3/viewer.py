@@ -34,7 +34,7 @@ from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 from xmipp3 import getXmippPath
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_extract_particles import XmippProtExtractParticles, ProtImportParticles
+from protocol_extract_particles import XmippProtExtractParticles
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D

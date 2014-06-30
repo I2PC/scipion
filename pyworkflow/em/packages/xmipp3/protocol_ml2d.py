@@ -27,10 +27,14 @@
 This sub-package contains wrapper around ML2D Xmipp program
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils import *  
-import xmipp
-from convert import createXmippInputImages, readSetOfClasses2D, readSetOfParticles
+from os.path import join, exists
+
+from pyworkflow.em.protocol import ProtClassify2D
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
+
+from convert import createXmippInputImages, readSetOfClasses2D
+
 
         
 class XmippProtML2D(ProtClassify2D):

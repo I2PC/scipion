@@ -25,17 +25,25 @@
 # **************************************************************************
 """
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-
 """
-import sys
 
-from pyworkflow.em.protocol import *
-from pyworkflow.utils import expandPattern, createLink, copyFile
+import sys
+from os.path import exists, basename
+from glob import glob
+
+from pyworkflow.utils.properties import Message
+from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, 
+                                        EnumParam, IntParam, StringParam)
+from pyworkflow.utils.path import removeBaseExt, expandPattern, createLink, copyFile
+from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.data import Micrograph, Volume, Movie, PdbFile
+from protocol import EMProtocol
 
 
 
 class ProtImport(EMProtocol):
-    #TODO: getFiles and getFilesPath may be refactorized
+    """ Base class for other Import protocols. """
     pass
 
 
@@ -62,7 +70,6 @@ class ProtImportImages(ProtImport):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
-        from pyworkflow.em import findClass
         filePaths = glob(expandPattern(pattern))
         
         imgSet = self._createSet()
@@ -206,7 +213,7 @@ class ProtImportMicrographs(ProtImportImages):
         imgh = ImageHandler()
         stack = False
         for f in filePaths:
-            ext = os.path.splitext(basename(f))[1]
+            ext = removeBaseExt(f)
             _, _, _, n = imgh.getDimensions(f)
             if ext == ".mrc" and n > 1:
                 stack = True
@@ -241,7 +248,6 @@ class ProtImportParticles(ProtImportImages):
 class ProtImportVolumes(ProtImport):
     """Protocol to import a set of volumes to the project"""
     _label = 'import volumes'
-    _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
@@ -299,7 +305,6 @@ class ProtImportVolumes(ProtImport):
     
     def _getFilePaths(self, pattern):
         """ Return a sorted list with the paths of files"""
-        from glob import glob
         filePaths = glob(pattern)
         filePaths.sort()
         
@@ -345,7 +350,6 @@ class ProtImportVolumes(ProtImport):
 class ProtImportPdb(ProtImport):
     """Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
-    _path = join('Volumes', 'Import')
     
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)         
@@ -454,7 +458,6 @@ class ProtImportMovies(ProtImportImages):
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getFilePaths(self, pattern):
         """ Return a sorted list with the paths of files"""
-        from glob import glob
         filePaths = glob(expandPattern(pattern))
         filePaths.sort()
         

@@ -30,14 +30,21 @@
 This sub-package contains the XmippProtExtractParticles protocol
 """
 
+from glob import glob
+from os.path import exists
 
-from pyworkflow.em import * 
+import xmipp
+from pyworkflow.object import String
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
+from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam, 
+                                        BooleanParam, RelationParam, Positive)
+from pyworkflow.em.protocol import  ProtExtractParticles
+from pyworkflow.em.constants import RELATION_CTF
+from pyworkflow.utils.path import removeBaseExt, replaceBaseExt
 
 from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
-from pyworkflow.utils.path import makePath, removeBaseExt, replaceBaseExt, join, exists
 from xmipp3 import XmippProtocol
-from glob import glob
-import xmipp
+
 
 
 # Normalization type constants

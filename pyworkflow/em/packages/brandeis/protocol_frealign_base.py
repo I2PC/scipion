@@ -26,11 +26,18 @@
 """This module contains the protocol base class for frealign protocols"""
 
 import os
-from pyworkflow.utils import *
-from pyworkflow.em import *
-from data import *
-from brandeis import *
+from os.path import join, exists, basename
+
+from pyworkflow.object import Integer
+from pyworkflow.utils.path import copyFile, createLink, makePath
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, PointerParam,
+                                        EnumParam, FloatParam, TextParam)
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.convert import ImageHandler
+
 from constants import *
+from brandeis import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
 
 
 class ProtFrealignBase(EMProtocol):

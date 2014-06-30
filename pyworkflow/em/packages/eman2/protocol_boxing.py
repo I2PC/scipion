@@ -26,12 +26,16 @@
 
 import os
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
-import eman2
-from data import *
-from convert import readSetOfCoordinates
+from pyworkflow.object import String
+from pyworkflow.protocol.params import PointerParam, IntParam, Positive
+from pyworkflow.utils.path import copyTree
+from pyworkflow.utils.properties import Message
 from pyworkflow.gui.dialog import askYesNo
+from pyworkflow.em.data import EMObject
+from pyworkflow.em.protocol import ProtParticlePicking
+
+import eman2
+from convert import readSetOfCoordinates
 
 
 class EmanProtBoxing(ProtParticlePicking):
@@ -105,7 +109,6 @@ class EmanProtBoxing(ProtParticlePicking):
         simulating an particle picking run...this is only
         for testing purposes.
         """
-        from pyworkflow.utils.path import copyTree
 
         print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
         copyTree(self.importFolder.get(), os.getcwd())
@@ -118,7 +121,7 @@ class EmanProtBoxing(ProtParticlePicking):
         # Change to protocol working directory
         self._enterWorkingDir()
         eman2.loadEnvironment()
-        Protocol._runSteps(self, startIndex)
+        ProtParticlePicking._runSteps(self, startIndex)
     
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)

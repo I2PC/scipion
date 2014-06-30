@@ -28,9 +28,12 @@
 This sub-package contains the XmippPreprocessMicrographs protocol
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils import *  
-import xmipp
+from os.path import basename
+
+from pyworkflow.protocol.constants import STEPS_PARALLEL
+from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
+from pyworkflow.em.protocol import ProtPreprocessMicrographs
+
 
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
@@ -224,6 +227,6 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         the input Micrograph object.
         """
         fn = mic.getFileName()
-        fnOut = self._getExtraPath(os.path.basename(fn))
+        fnOut = self._getExtraPath(basename(fn))
         
         return fnOut

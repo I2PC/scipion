@@ -27,11 +27,10 @@
 This module contains the protocol base class for Relion protocols
 """
 
-import os, re
-from glob import glob
+from pyworkflow.em.data import SetOfClasses2D
+from pyworkflow.em.protocol import ProtClassify2D
 
 from protocol_base import *
-import xmipp
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
