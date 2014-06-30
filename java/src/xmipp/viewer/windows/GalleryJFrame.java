@@ -1515,20 +1515,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+                        addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
+			
                         
-                        addDisplayLabelItems();
 			
                         addSeparator(DISPLAY);
+                        addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
 			addRenderImageColumnItems();
 			
-			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
-			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+			
 			addItem(DISPLAY_RESLICE, "Reslice");
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
+                        addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(STATS, "Statistics");
@@ -1776,7 +1778,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		
 		protected void addRenderImageColumnItems()
 		{                  
-			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image Column");
+			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image");
 			JMenuItem mi;
 			
 			imagecolumns = new Hashtable<String, ColumnInfo>();
