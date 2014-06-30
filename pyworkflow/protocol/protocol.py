@@ -43,6 +43,7 @@ from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
 from params import Form, Group
+import scipion
 
 
 
@@ -971,12 +972,12 @@ class Protocol(Step):
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
         label = getattr(cls, '_label', cls.__name__)
-        label = "%s - %s" % (cls.getClassPackage().__name__.replace('pyworkflow', 'scipion'), label)
+        label = "%s - %s" % (cls.getClassPackage().__name__.replace('pyworkflow.protocol.scipion', 'scipion'), label)
         return label
     
     @classmethod
     def getClassPackage(cls):
-        return getattr(cls, '_package', pw)
+        return getattr(cls, '_package', scipion)
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
@@ -1088,7 +1089,11 @@ class Protocol(Step):
      
     def _getCite(self, citeStr):
         bibtex = self.__getPackageBibTex()
-        return self._getCiteText(bibtex[citeStr])
+        if citeStr in bibtex:
+            text = self._getCiteText(bibtex[citeStr])
+        else:
+            text = "Reference with key *%s* not found." % citeStr
+        return text
     
     def _getCiteText(self, cite, useKeyLabel=False):
         # Get the first author surname
