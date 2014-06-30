@@ -60,7 +60,7 @@ def createFilenameTemplates(self):
                     'reconstructedVolume': "reconstruction",
                     'maskReferenceVolume': "masked_reference",
                     'outputFsc': "resolution.fsc",
-                    'ctfGroupDirectory': "CtfGroups",
+                    'ctfGroupDirectory': self._getExtraPath("CtfGroups"),
                     'ctfGroupRootName': "ctf",
                     'ctfGroupSubsetFileName': "ctf_images.sel",
                     }
@@ -72,7 +72,7 @@ def createFilenameTemplates(self):
     Ref3D = 'Ref3D_%(ref)03d'
     Ctf = 'CtfGroup_%(ctf)06d'
     IterDir = self._getExtraPath(Iter)
-    ProjMatchDirs = join(IterDir, self._params['projMatchDir'])
+    ProjMatchDirs = join(IterDir, self.projMatchDir)
     
     def iterFile(key, suffix=''):
         return join(IterDir, (key % self._params) + suffix)
@@ -83,7 +83,7 @@ def createFilenameTemplates(self):
     _OutClassesXmd = projmatchFile('%(projMatchName)s_', Ref3D + '.xmd')
     _OutClassesXmdS1 = projmatchFile('%(projMatchName)s_split_1_', Ref3D + '.xmd')
     _OutClassesXmdS2 = projmatchFile('%(projMatchName)s_split_2_', Ref3D + '.xmd')
-    CtfGroupBase = self._getPath(self.ctfGroupDirectory, '%(ctfGroupRootName)s')
+    CtfGroupBase = join(self.ctfGroupDirectory, self.ctfGroupRootName)
     ProjLibRootNames = join(IterDir, projectLibraryRootName + '_' + Ref3D)
     
     
@@ -94,7 +94,7 @@ def createFilenameTemplates(self):
             'docfileInputAnglesIters': iterFile('%(docfile_with_current_angles)s.doc'),
             'libraryDirs': iterFile('%(libraryDir)s'),
             'projectLibraryRootNames': ProjLibRootNames,
-            'projMatchRootNames': join(ProjMatchDirs, ('%(projMatchName)s_') + Ref3D + '.sqlite'),
+            'projMatchRootNames': projmatchFile('%(projMatchName)s_', Ref3D + '.sqlite'),
             'projMatchRootNamesWithoutRef': projmatchFile('%(projMatchName)s.doc'),
             'outClasses': projmatchFile('%(projMatchName)s'),
             'outClassesXmd': _OutClassesXmd,
@@ -125,10 +125,11 @@ def createFilenameTemplates(self):
             'projectLibraryGroupSampling': ProjLibRootNames + '_group%(group)06d_sampling.xmd',
             # ADDED FOR SCIPION
             'inputParticlesXmd': self._getPath('input_particles.xmd'),
-            'inputParticlesDoc': self._getExtraPath(self._params['docFileWithOriginalAngles']),
+            'inputParticlesDoc': self._getExtraPath(self.docFileWithOriginalAngles),
             }
     myDict.update(self._params)
     self._updateFilenamesDict(myDict)
+    self.selFileName = self._getFileName('inputParticlesXmd')
     
     
 def initializeLists(self):
@@ -159,6 +160,7 @@ def initializeLists(self):
     self._align2dMaxChangeOffset = self.itersFloatValues('align2dMaxChangeOffset')
     self._align2dMaxChangeRot = self.itersFloatValues('align2dMaxChangeRot')
     self._angSamplingRateDeg = self.itersFloatValues('angSamplingRateDeg')
+    self._artLambda = self.itersFloatValues('artLambda')
     self._constantToAddToFiltration = self.itersFloatValues('constantToAddToFiltration')
     self._constantToAddToMaxReconstructionFrequency = self.itersFloatValues('constantToAddToMaxReconstructionFrequency')
     self._discardPercentage = self.itersFloatValues('discardPercentage')

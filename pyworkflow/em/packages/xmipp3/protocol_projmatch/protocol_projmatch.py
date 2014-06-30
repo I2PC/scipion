@@ -28,6 +28,8 @@
 This sub-package implement projection matching using xmipp 3.1
 """
 
+import xmipp
+from pyworkflow.object import Integer
 from pyworkflow.utils.path import makePath, copyFile
 from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues
 from pyworkflow.em import ProtRefine3D, ProtClassify3D
@@ -36,16 +38,19 @@ from projmatch_initialize import *
 from projmatch_form import _defineProjectionMatchingParams
 from projmatch_steps import *
 
-       
+     
         
 class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     """ 3D reconstruction and classification using multireference projection matching"""
 
     _label = 'projection matching'
+    
+    FILENAMENUMBERLENGTH = 6
 
     def __init__(self, **args):        
         ProtRefine3D.__init__(self, **args)
         ProtClassify3D.__init__(self, **args)
+        self.numberOfCtfGroups = Integer(1)
         
     def _initialize(self):
         """ This function is mean to be called after the 
@@ -70,9 +75,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             self.referenceFileNames = [getImageLocation(vol) for vol in reference]
             
         self.numberOfReferences = len(self.referenceFileNames)
-        self.numberOfCtfGroups = 1
         self.resolSam = reference.getSamplingRate()
-        self.ctfGroupDirectory = self._getExtraPath('CTFGroup') #FIXME: check this
+
         
     #--------------------------- DEFINE param functions --------------------------------------------   
         
@@ -89,8 +93,10 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         self._initialize()
         # Insert initial steps
         self._insertFunctionStep('convertInputStep')
-        insertExecuteCtfGroupsStep(self)
-        insertInitAngularReferenceFileStep(self)
+        self._insertFunctionStep('executeCtfGroupsStep')
+#         insertExecuteCtfGroupsStep(self)
+#         insertInitAngularReferenceFileStep(self)
+        self._insertFunctionStep('initAngularReferenceFileStep')
         # Steps per iteration
         self._insertItersSteps()
         # Final steps
@@ -114,17 +120,18 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
                 insertAngularProjectLibraryStep(self, iterN, refN)
                 
                 # Projection matching steps
-                projMatchStep = insertProjectionMatchingStep(self, iterN, refN)
+                projMatchStep = self._insertProjectionMatchingStep(iterN, refN)
                 projMatchSteps.append(projMatchStep)
                 
             # Select the reference that best fits each image
-            insertAssignImagesToReferencesStep(self, iterN, prerequisites=projMatchSteps)
+            self._insertFunctionStep('assignImagesToReferencesStep', iterN, prerequisites=projMatchSteps)
             
-            # Create new class averages with images assigned
-            insertAngularClassAverageStep(self, iterN)
     
             # Reconstruct each reference with new averages
             for refN in self.allRefs():
+                # Create new class averages with images assigned
+                # FIXME: This function is originally outside the loop of references. CHECK WITH ROBERTO....
+                insertAngularClassAverageStep(self, iterN, refN)
                 insertReconstructionStep(self, iterN, refN)
                 
                 if self._doSplitReferenceImages[iterN]:
@@ -137,8 +144,11 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
                     
                 # FIXME: in xmipp this step is inside the if self.doSplit.. a bug there?    
                 insertFilterVolumeStep(self, iterN, refN)
-                    
-                
+    
+    def _insertProjectionMatchingStep(self, iterN, refN):
+        args = getProjectionMatchingArgs(self, iterN)
+        return self._insertFunctionStep('projectionMatchingStep', iterN, refN, args)
+    
     #--------------------------- STEPS functions --------------------------------------------       
 
     def convertInputStep(self):
@@ -147,10 +157,9 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         used as initial docfile for further iterations.
         """
         from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
-        writeSetOfParticles(self.inputParticles.get(), 
-                            self._getFileName('inputParticlesXmd'), 
+        writeSetOfParticles(self.inputParticles.get(), self.selFileName, 
                             blockName=self.blockWithAllExpImages)
-        copyFile(self._getFileName('inputParticlesXmd'), self._getFileName('inputParticlesDoc'))
+        #copyFile(self.selFileName, self._getFileName('inputParticlesDoc'))
         
     def createIterDirsStep(self, iterN):
         """ Create the necessary directory for a given iteration. """
@@ -160,6 +169,102 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             makePath(d)
             
         return iterDirs
+    
+    def executeCtfGroupsStep(self):
+        makePath(self.ctfGroupDirectory)
+        self._log.info("Created CTF directory: '%s'" % self.ctfGroupDirectory)
+    #     printLog("executeCtfGroups01"+ CTFDatName, _log) FIXME: print in log this line
+    
+        if not self.doCTFCorrection:
+            md = xmipp.MetaData(self.selFileName)
+            block_name = self._getBlockFileName(ctfBlockName, 1, self._getFileName('imageCTFpairs'))
+            md.write(block_name)
+            self._log.info("Written a single CTF group to file: '%s'" % block_name)
+            self.numberOfCtfGroups.set(1)
+        else:
+            raise Exception("Ctf groupping not implemented yet")
+            # TODO: update self.numberOfCtfGroups with the appropiated value
+        self._store(self.numberOfCtfGroups)
+    
+    def angularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
+        runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs)
+        
+    def initAngularReferenceFileStep(self):
+        '''Create Initial angular file. Either fill it with zeros or copy input'''
+        #NOTE: if using angles, self.selFileName file should contain angles info
+        md = xmipp.MetaData(self.selFileName) 
+        
+        # Ensure this labels are always 
+        md.addLabel(xmipp.MDL_ANGLE_ROT)
+        md.addLabel(xmipp.MDL_ANGLE_TILT)
+        md.addLabel(xmipp.MDL_ANGLE_PSI)
+        
+        expImages = self._getFileName('inputParticlesDoc')
+        ctfImages = self._getFileName('imageCTFpairs')
+        
+        md.write(self._getExpImagesFileName(expImages))
+        blocklist = xmipp.getBlocksInMetaDataFile(ctfImages)
+        
+        mdCtf = xmipp.MetaData()
+        mdAux = xmipp.MetaData()
+        readLabels = [xmipp.MDL_ITEM_ID, xmipp.MDL_IMAGE]
+        
+        for block in blocklist:
+            #read ctf block from ctf file
+            mdCtf.read(block + '@' + ctfImages, readLabels)
+            #add ctf columns to images file
+            mdAux.joinNatural(md, mdCtf)
+            # write block in images file with ctf info
+            mdCtf.write(block + '@' + expImages, xmipp.MD_APPEND)
+            
+        return [expImages]
+    
+    def projectionMatchingStep(self, iterN, refN, args):
+        runProjectionMatching(self, iterN, refN, args)
+    
+    def assignImagesToReferencesStep(self, iterN):
+        runAssignImagesToReferences(self, iterN)
+        
+    def cleanVolumeStep(self, vol1, vol2):
+        cleanPath(vol1, vol2)
+    
+    def reconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs):
+        runReconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs)
+    
+    def storeResolutionStep(self, resolIterMd, sampling):
+        print "compute resolution1"
+        #compute resolution
+        mdRsol = xmipp.MetaData(resolIterMd)
+        mdResolOut = xmipp.MetaData()
+        mdResolOut.importObjects(mdRsol, xmipp.MDValueLT(xmipp.MDL_RESOLUTION_FRC, 0.5))
+        print "compute resolution2"
+        if mdResolOut.size()==0:
+            mdResolOut.clear()
+            mdResolOut.addObject()
+            id=mdResolOut.firstObject()
+            mdResolOut.setValue(xmipp.MDL_RESOLUTION_FREQREAL, sampling*2., id)
+            mdResolOut.setValue(xmipp.MDL_RESOLUTION_FRC, 0.5, id)
+        else:
+            mdResolOut.sort()
+    
+        id = mdResolOut.firstObject()
+        filterFrequence = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FREQREAL, id)
+        frc = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FRC, id)
+        
+        md = xmipp.MetaData()
+        id = md.addObject()
+        md.setColumnFormat(False)
+    
+        md.setValue(xmipp.MDL_RESOLUTION_FREQREAL, filterFrequence, id)
+        md.setValue(xmipp.MDL_RESOLUTION_FRC, frc, id)
+        md.setValue(xmipp.MDL_SAMPLINGRATE, sampling, id)
+        md.write(resolIterMd, xmipp.MD_APPEND)
+    
+    def calculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs):
+        runCalculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs)
+    
+    def filterVolumeStep(self, iterN, refN, constantToAddToFiltration, **kwargs):
+        runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration, **kwargs)
     
     def createOutputStep(self):
         print "output generated..........."
@@ -194,6 +299,11 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         for i in range(1, self.numberOfReferences+1):
             yield i
             
+    def allCtfGroups(self):
+        """ Iterate over all CTF groups. """
+        for i in range(1, self.numberOfCtfGroups.get() + 1):
+            yield i
+            
     def itersFloatValues(self, attributeName, firstValue=-1):
         """ Take the string of a given attribute and
         create a list of floats that will be used by 
@@ -216,3 +326,24 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             raise Exception('None value for attribute: %s' % attributeName)
         return [firstValue] + getBoolListFromValues(valuesStr, length=self.numberOfIterations.get())
         
+    def _getBlockFileName(self, blockName, blockNumber, filename, length=None):
+        l = length or self.FILENAMENUMBERLENGTH
+        
+        return blockName + str(blockNumber).zfill(l) + '@' + filename
+    
+    def _getExpImagesFileName(self, filename):
+        return self.blockWithAllExpImages + '@' + filename
+    
+    def _getRefBlockFileName(self, ctfBlName, ctfBlNumber, refBlName, refBlNumber, filename, length=None):
+        l = length or self.FILENAMENUMBERLENGTH
+        
+        return ctfBlName + str(ctfBlNumber).zfill(l) + '_' + refBlName + str(refBlNumber).zfill(l) + '@' + filename
+
+    def _getFourierMaxFrequencyOfInterest(self, iterN, refN):
+        """ Read the corresponding resolution metadata and return the
+        desired resolution.
+        """
+        md = xmipp.MetaData(self._getFileName('resolutionXmdMax', iter=iterN, ref=refN))
+        return md.getValue(xmipp.MDL_RESOLUTION_FREQREAL, md.firstObject())
+    
+    
