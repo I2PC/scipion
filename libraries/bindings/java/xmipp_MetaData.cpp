@@ -598,14 +598,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_jni_MetaData_setValueBoolean(JNIEnv *env,
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getStatistics(JNIEnv *env,
-        jobject jobj, jboolean applyGeo)
+        jobject jobj, jboolean applyGeo, jint label)
 {
     MetaData *md = GET_INTERNAL_METADATA(jobj);
 
     XMIPP_JAVA_TRY
     {
         double avg, stddev, min, max;
-        getStatistics((*md), avg, stddev, min, max, applyGeo);
+        getStatistics((*md), avg, stddev, min, max, applyGeo, (MDLabel) label);
 
         // Copies vector into array.
         double statistics[4];

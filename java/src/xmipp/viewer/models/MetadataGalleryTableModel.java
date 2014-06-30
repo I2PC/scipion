@@ -286,7 +286,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-			return data.md.getStatistics(false);
+			return data.md.getStatistics(false, data.ciFirstRender.label);
 		}
 		catch (Exception ex)
 		{

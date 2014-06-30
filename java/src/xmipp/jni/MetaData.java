@@ -368,7 +368,7 @@ public class MetaData {
 		return f.getParent();
 	}
 
-	public native double[] getStatistics(boolean applyGeo);
+	public native double[] getStatistics(boolean applyGeo, int label);
 
 	public native double[] getColumnValues(int label);
 
