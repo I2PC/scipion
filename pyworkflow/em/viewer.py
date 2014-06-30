@@ -28,10 +28,10 @@ This module implement viewers for some type of common objects.
 """
 
 import os
-from pyworkflow.viewer import View, MessageView, CommandView, Viewer, DESKTOP_TKINTER
-from pyworkflow.em.data import *
-from pyworkflow.em.protocol import *
-from showj import *
+from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
+from pyworkflow.em.protocol import PdbFile
+import pyworkflow as pw
+from showj import runJavaIJapp, ZOOM, ORDER, VISIBLE, MODE
 
 
 
@@ -198,7 +198,7 @@ class ChimeraViewer(Viewer):
             from protlib_gui_ext import chimera
             if obj.getPseudoAtoms():
                 # Write an script for this case to use colored spheres
-                pdb = basename(fn)
+                pdb = os.path.basename(fn)
                 fn += '_tmp_chimera.cmd'
                 f = open(fn, 'w')
                 f.write("open %s\n" % pdb)
