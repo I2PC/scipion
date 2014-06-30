@@ -560,14 +560,13 @@ function initializeMultipleSelectionTool() {
 
 				var iRow = $(this).index()
 				$("#multipleSelectionTool").data('row_id', iRow)
-
 				$("#multipleSelectionTool").fadeIn('slow')
 			}
 		}, // function = onMouseOver callback (REQUIRED)
 		out : function() {
-			if ($(this).hasClass("row_selected")) {
-				$("#multipleSelectionTool").fadeOut('slow')
-			}
+//			if ($(this).hasClass("row_selected")) {
+//				$("#multipleSelectionTool").fadeOut('slow')
+//			}
 		} // function = onMouseOut callback (REQUIRED)
 	}
 	

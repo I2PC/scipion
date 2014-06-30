@@ -144,7 +144,7 @@ function initializeImageEvents(hasEnabledColumn){
 	        out: function() { 
 	        	if ($(this).hasClass("image_selected") 
 	        			&& hoverElement == $(this).attr("id")){
-					$("#multipleSelectionTool").fadeOut('slow')
+//					$("#multipleSelectionTool").fadeOut('slow')
 				}
 	        } // function = onMouseOut callback (REQUIRED)
 	    }	

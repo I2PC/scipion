@@ -312,8 +312,6 @@ function updateEnabledTemplate(list){
 }
 
 function applyChangesToUpdate(){
-	console.log("Updating changes...")
-	
 	var listSelectedItems = $("input#listSelectedItems").val().split(",");
 	updateSelectedTemplate(listSelectedItems);
 	

@@ -18,12 +18,14 @@ $(document).ready(function(){
 	
 	//Update the enabled/selected items in the template between pagination
  	$("div.dataTables_paginate").click(function(){
+ 		initializeMultipleSelectionTool()	
  		applyChangesToUpdate()
  	});
  	
  	// Update the enabled/selected items in the template after change size of  
  	// the elements to show. 
  	$("div#data_table_length > label > select").change(function(){
+ 		initializeMultipleSelectionTool()	
  		applyChangesToUpdate()
  	});
  	
