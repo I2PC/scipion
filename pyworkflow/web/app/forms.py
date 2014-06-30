@@ -29,10 +29,10 @@ from django import forms
 from pyworkflow.hosts import HostConfig, QueueSystemConfig, QueueConfig
 from django.forms.forms import BoundField
 from pyworkflow.object import List
-import json
 import xmipp
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.viewer import *
+import pyworkflow.em.showj as sj
+
 
 #from pyworkflow.web.app.views_showj import get_image_dimensions 
 
@@ -353,50 +353,50 @@ class ShowjForm(forms.Form):
             labelsToRender = tableLayoutConfiguration.getRenderableColumns()
             if labelsToRender:
                 labelChoices = tuple(zip(labelsToRender, labelsToRender))
-                self.fields[LABEL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
+                self.fields[sj.LABEL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
                                                                 required=False,
                                                                 choices=labelChoices)
-                if self.data[MODE] != MODE_GALLERY:
-                    self.fields[LABEL_SELECTED].widget = forms.HiddenInput()
+                if self.data[sj.MODE] != sj.MODE_GALLERY:
+                    self.fields[sj.LABEL_SELECTED].widget = forms.HiddenInput()
             else:
-                self.fields[IMG_ZOOM].widget.attrs['readonly'] = True
-                if self.data[MODE] == MODE_GALLERY:
-                    self.fields[GOTO].widget.attrs['readonly'] = True
+                self.fields[sj.IMG_ZOOM].widget.attrs['readonly'] = True
+                if self.data[sj.MODE] == sj.MODE_GALLERY:
+                    self.fields[sj.GOTO].widget.attrs['readonly'] = True
                 
             if dataset.getNumberSlices() > 1:    
-                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data[LABEL_SELECTED]), dataset.getTable().getColumnValues(self.data[LABEL_SELECTED])))
-                self.fields[VOL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
+                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED]), dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED])))
+                self.fields[sj.VOL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
                                                                 required=False,
                                                                 choices=volumesToRenderComboBoxValues)
-                if self.data[MODE] == MODE_TABLE:
-                    self.fields[VOL_SELECTED].widget = forms.HiddenInput()
-                if self.data[MODE] != MODE_GALLERY:                
-                    self.fields[VOL_VIEW].widget = forms.HiddenInput()
+                if self.data[sj.MODE] == sj.MODE_TABLE:
+                    self.fields[sj.VOL_SELECTED].widget = forms.HiddenInput()
+                if self.data[sj.MODE] != sj.MODE_GALLERY:                
+                    self.fields[sj.VOL_VIEW].widget = forms.HiddenInput()
             else:
-                self.fields[VOL_VIEW].widget = forms.HiddenInput()
+                self.fields[sj.VOL_VIEW].widget = forms.HiddenInput()
                 
         else:
-            self.fields[IMG_ZOOM].widget = forms.HiddenInput()
-            self.fields[GOTO].widget = forms.HiddenInput()
+            self.fields[sj.IMG_ZOOM].widget = forms.HiddenInput()
+            self.fields[sj.GOTO].widget = forms.HiddenInput()
             
-            self.fields[VOL_VIEW].widget = forms.HiddenInput()
+            self.fields[sj.VOL_VIEW].widget = forms.HiddenInput()
 
-            self.fields[IMG_MIRRORY].widget = forms.HiddenInput()
-            self.fields[IMG_APPLY_TRANSFORM].widget = forms.HiddenInput()
-            self.fields[IMG_ONLY_SHIFTS].widget = forms.HiddenInput()
-            self.fields[IMG_WRAP].widget = forms.HiddenInput()
+            self.fields[sj.IMG_MIRRORY].widget = forms.HiddenInput()
+            self.fields[sj.IMG_APPLY_TRANSFORM].widget = forms.HiddenInput()
+            self.fields[sj.IMG_ONLY_SHIFTS].widget = forms.HiddenInput()
+            self.fields[sj.IMG_WRAP].widget = forms.HiddenInput()
                
         
-        if self.data[MODE] != MODE_GALLERY: 
-            self.fields[COLS].widget = forms.HiddenInput()
-            self.fields[ROWS].widget = forms.HiddenInput()
+        if self.data[sj.MODE] != sj.MODE_GALLERY: 
+            self.fields[sj.COLS].widget = forms.HiddenInput()
+            self.fields[sj.ROWS].widget = forms.HiddenInput()
         
-        if self.data[MANUAL_ADJUST] == 'Off':
-            self.fields[COLS].widget.attrs['readonly'] = True
-            self.fields[ROWS].widget.attrs['readonly'] = True
+        if self.data[sj.MANUAL_ADJUST] == 'Off':
+            self.fields[sj.COLS].widget.attrs['readonly'] = True
+            self.fields[sj.ROWS].widget.attrs['readonly'] = True
             
-        if self.data[MODE] == 'column':    
-            self.fields[GOTO].widget.attrs['readonly'] = True
+        if self.data[sj.MODE] == 'column':    
+            self.fields[sj.GOTO].widget.attrs['readonly'] = True
         
                                   
 class VolVisualizationForm(forms.Form):   
