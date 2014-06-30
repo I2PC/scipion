@@ -79,7 +79,5 @@ from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
-from protocol_destroy_universe import ProtDestroyUniverse
-
 # Wizards
 from wizard import *
