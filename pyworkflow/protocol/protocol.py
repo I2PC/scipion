@@ -448,12 +448,12 @@ class Protocol(Step):
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
         
-    def _getFileName(self, key, **args):
-        """ This function will retrieve filenames give a key and some
+    def _getFileName(self, key, **kwargs):
+        """ This function will retrieve filenames given a key and some
         keywords arguments. The __filenamesDict attribute should be 
-        updated with templates that accepts the given keys.
+        updated with templates that accept the given keys.
         """
-        return self.__filenamesDict[key] % args
+        return self.__filenamesDict[key] % kwargs
     
     def _updateFilenamesDict(self, fnDict):
         """ Update the dictionary with templates that will be used
@@ -582,7 +582,7 @@ class Protocol(Step):
         self._currentDir = os.getcwd()
         os.chdir(path)
         if self._log:
-            self._log.info("Entered to dir: cd '%s'" % path)
+            self._log.info("Entered into dir: cd '%s'" % path)
         
     def _leaveDir(self): 
         """ This method should be called after a call to _enterDir
