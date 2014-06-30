@@ -934,9 +934,9 @@ class FormWindow(Window):
         headerFrame = tk.Frame(parent)
         #headerFrame.grid(row=0, column=0, sticky='new')
         headerFrame.columnconfigure(0, weight=1)
-        package = self.protocol._package
+        package = self.protocol.getClassPackage()
         t = '  Protocol: %s' % (self.protocol.getClassLabel())
-        logoPath = getattr(package, '_logo', 'scipion_bn.png')
+        logoPath = getattr(package, '_logo', '')
         
         if logoPath:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 

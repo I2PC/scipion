@@ -261,14 +261,14 @@ class SqliteDataSet(DataSet):
     
     def __init__(self, filename):
         self._dbName = filename
-        from pyworkflow.mapper.sqlite_db import SqliteDb
+        from pyworkflow.mapper.sqlite import SqliteDb, SqliteFlatDb
         db = SqliteDb()
         db._createConnection(filename, 1000)
         # Tables should be at pairs:
         # PREFIX_Classes
         # PREFIX_Objects  
         # where PREFIX can be empty
-        tablePrefixes = []
+        self.tablePrefixes = OrderedDict()
         tables = db.getTables()
         for t in tables:
             if t.endswith('Classes'):
@@ -276,12 +276,23 @@ class SqliteDataSet(DataSet):
                 to = prefix + 'Objects'
                 if to not in tables:
                     raise Exception('SqliteDataSet: table "%s" found, but not "%s"' % (t, to))
-                tablePrefixes.append(prefix)
-        DataSet.__init__(self, tablePrefixes)
+                flatDb = SqliteFlatDb(filename, tablePrefix=prefix)
+                tableName = prefix + self._getPlural(flatDb.getSelfClassName())
+                self.tablePrefixes[tableName] = prefix
+                #tablePrefixes.append(prefix)
+        DataSet.__init__(self, self.tablePrefixes.keys())
         db.close()
+        
+    def _getPlural(self, className):
+        """ Get the plural of word for tables labels. """
+        if className.startswith('Class'):
+            return className.replace('Class', 'Classes')
+        return className + 's'
         
     def _loadTable(self, tableName):
         """ Load information from tables PREFIX_Classes, PREFIX_Objects. """
+        tableName = self.tablePrefixes[tableName]
+        
         BASIC_COLUMNS = [Column('id', int, renderType=COL_RENDER_ID), 
                          Column('enabled', bool ,renderType=COL_RENDER_CHECKBOX),
                          Column('label', str), 

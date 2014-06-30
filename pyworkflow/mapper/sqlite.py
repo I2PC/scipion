@@ -668,7 +668,7 @@ class SqliteFlatDb(SqliteDb):
         SqliteDb.__init__(self)
         self._reuseConnections = True
         tablePrefix = tablePrefix.strip()
-        if tablePrefix: # Avoid having _ for empty prefix
+        if tablePrefix and not tablePrefix.endswith('_'): # Avoid having _ for empty prefix
             tablePrefix += '_'
         self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
         self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix

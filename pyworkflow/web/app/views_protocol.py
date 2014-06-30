@@ -81,7 +81,7 @@ def form(request):
     elif action == 'copy':
         protocol = project.copyProtocol(protocol)
         
-    package = protocol._package
+    package = protocol.getClassPackage()
     logoPath = ''
     path = getattr(package, '_logo', '')
     if path != '': 

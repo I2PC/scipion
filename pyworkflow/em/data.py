@@ -542,9 +542,7 @@ class SetOfImages(EMSet):
         if self._firstDim.isEmpty():
             try:
                 self._firstDim.set(self.getFirstItem().getDim())
-                print "   Set firstDim:", self._firstDim
             except Exception, ex:
-                dimStr = "No Dim"
                 print "Error reading dimension: ", ex
                 import traceback
                 traceback.print_exc()

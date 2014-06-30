@@ -971,8 +971,12 @@ class Protocol(Step):
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
         label = getattr(cls, '_label', cls.__name__)
-        label = "%s - %s" % (cls._package.__name__, label)
+        label = "%s - %s" % (cls.getClassPackage().__name__.replace('pyworkflow', 'scipion'), label)
         return label
+    
+    @classmethod
+    def getClassPackage(cls):
+        return getattr(cls, '_package', pw)
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
@@ -1080,7 +1084,7 @@ class Protocol(Step):
     
     def __getPackageBibTex(self):
         """ Return the _bibtex from the package . """
-        return getattr(self._package, "_bibtex", {})
+        return getattr(self.getClassPackage(), "_bibtex", {})
      
     def _getCite(self, citeStr):
         bibtex = self.__getPackageBibTex()
@@ -1125,7 +1129,7 @@ class Protocol(Step):
         return self.__getCitationsDict(self._citations() or [])
             
     def getPackageCitations(self):
-        return self.__getCitationsDict(getattr(self._package, "_references", []))
+        return self.__getCitationsDict(getattr(self.getClassPackage(), "_references", []))
     
     def citations(self):
         """ Return a citation message to provide some information to users. """

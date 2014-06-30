@@ -49,4 +49,6 @@ SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 
 from utils.path import findResource
 
+_logo = 'scipion_logo.png'
+
 
