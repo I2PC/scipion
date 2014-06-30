@@ -37,6 +37,7 @@ from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from django.http import HttpResponse, HttpRequest
 from django.contrib.gis.shortcuts import render_to_text
 
+from pyworkflow.protocol.constants import STATUS_FAILED
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO

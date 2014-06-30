@@ -28,12 +28,17 @@ This sub-package contains wrapper around CL2D Xmipp program
 """
 
 from os.path import join, dirname, exists
-from pyworkflow.em import *  
+from glob import glob
+
 import xmipp
+from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam, 
+                                        StringParam, FloatParam, 
+                                        LEVEL_ADVANCED, LEVEL_EXPERT)
+from pyworkflow.em.protocol import ProtClassify2D
 
 from convert import createXmippInputImages, readSetOfClasses2D
-#from xmipp3 import XmippProtocol
-from glob import glob
+
+
 
 # Comparison methods enum
 CMP_CORRELATION = 0
@@ -44,7 +49,6 @@ CL_CLASSICAL = 0
 CL_ROBUST = 1
 
         
-        
 class XmippProtCL2D(ProtClassify2D):
     """ Classifies a set of images using a clustering algorithm 
             aiming at subdividing the original dataset
@@ -53,7 +57,7 @@ class XmippProtCL2D(ProtClassify2D):
     _label = 'cl2d'
     
     def __init__(self, **args):
-        Protocol.__init__(self, **args) 
+        ProtClassify2D.__init__(self, **args) 
         if self.numberOfMpi.get() < 2:
             self.numberOfMpi.set(2)       
 

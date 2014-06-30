@@ -27,6 +27,7 @@
 import os
 import xmipp
 import json
+from pyworkflow.protocol.params import RelationParam, Group, Line
 from pyworkflow.viewer import WEB_DJANGO
 from pyworkflow.em import *
 from views_base import * 
