@@ -27,9 +27,10 @@
 This module contains the protocol for 3d refinement with Relion.
 """
 
+from pyworkflow.em.data import Volume
+from pyworkflow.em.protocol import ProtRefine3D
+
 from protocol_base import *
-from pyworkflow.utils.which import which
-from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
 
 
 

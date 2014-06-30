@@ -27,8 +27,18 @@
 This module contains the protocol base class for Relion protocols
 """
 
+import os
+import re
+import glob
+from os.path import join, exists
+
+import xmipp
+from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
+                                        IntParam, EnumParam, StringParam)
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
 from pyworkflow.utils import environAdd, moveFile, cleanPattern
-from pyworkflow.em import *
+from pyworkflow.em.data import SetOfClasses3D
+from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
 from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels

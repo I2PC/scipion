@@ -602,6 +602,31 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are less values than iterations the last value is reused
     *Note:* if there are more values than iterations the extra value are ignored
     """)
+    
+    form.addParam('useFscForFilter', BooleanParam, default=True,
+                  label='Constant to be added to the estimated resolution',
+                  condition="doLowPassFilter!='0'",
+                  help=""" The meaning of this field depends on the previous flag.
+    If set to true, then the volume will be filtered at a frequency equal to
+    the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
+    provided in this field 
+    If set to false, the volume will be filtered at the resolution
+    provided in this field 
+    This value is in digital frequency, or pixel^-1: minimum 0, maximum 0.5
+
+    If you detect correlation between noisy regions decrease this value 
+    (even to negative values)
+    
+    You can specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
+    specifies 4 iterations, the first two set the constant to .15
+    and the last two to 0.1. An alternative compact notation 
+    is ("2x.15 2x0.1", i.e.,
+    4 iterations with value 0.15, and three with value .1).
+    <Note:> if there are less values than iterations the last value is reused
+    <Note:> if there are more values than iterations the extra value are ignored
+    """)
+
     form.addParam('constantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                  label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
                  condition="doLowPassFilter!='0'",

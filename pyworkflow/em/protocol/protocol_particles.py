@@ -25,12 +25,18 @@
 # **************************************************************************
 """
 In this module are protocol base classes related to EM Particles
-
 """
-from pyworkflow.em.protocol import *
+
+from pyworkflow.protocol.params import PointerParam
+from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.data import EMObject
+from pyworkflow.utils.properties import Message
+
+
 
 class ProtParticles(EMProtocol):
     pass
+
 
 class ProtProcessParticles(ProtParticles):
     """ This class will serve as a base for all protocol
@@ -51,9 +57,6 @@ class ProtProcessParticles(ProtParticles):
         to add other parameter relatives to the specific operation."""
         pass  
 
-#class ProtDenoiseParticles(ProtProcessParticles):
-#   
-#    pass
 
 class ProtFilterParticles(ProtProcessParticles):
     """ This is the base for the branch of filters, 
@@ -77,31 +80,19 @@ class ProtParticlePicking(ProtParticles):
             #TODO: MOVE following line to manual picking
             summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
             summary.append("Number of particles picked: ")
-            for key, output in self.iterOutputAttributes(EMObject):
+            for _, output in self.iterOutputAttributes(EMObject):
                 summary.append('    %d on one set' % output.getSize())
         return summary
     
     def _methods(self):
-
         methodsMsgs = self.summary()
         #TODO: Provide summary with more details
         return methodsMsgs
-#         methods = []
-#         if not hasattr(self, 'outputCoordinates'):
-#             methods.append(Message.TEXT_NO_OUTPUT_CO) 
-#         else:
-#             #TODO: MOVE following line to manual picking
-#             methods.append("Has been picked %d particles" % self.outputCoordinates.getSize())
-#             methods.append("from %d micrographs" % self.inputMicrographs.get().getSize())
-#         return methods
-
 
     def getCoordsSuffix(self):
-        count = 0;
-        for key, output in self.iterOutputAttributes(EMObject):
-            count += 1
-        
+        count = len(self.iterOutputAttributes(EMObject))
         suffix = str(count) if count > 1 else ''
+        
         return suffix
     
     def getCoords(self):
@@ -112,3 +103,4 @@ class ProtParticlePicking(ProtParticles):
 
 class ProtExtractParticles(ProtParticles):
     pass
+

@@ -360,7 +360,7 @@ def upload(dataset, delete=False):
 Modification to %s dataset made at
 %s
 by %s at %s
-----""" % (dataset, time.asctime(), getpass.getuser(), " ".join(os.uname()))
+----""" % (dataset, time.asctime(), getpass.getuser(), ' '.join(os.uname()))
     call(['ssh', remoteLoc,
           'echo "%s" >> %s' % (log, join(remoteFolder, 'modifications.log'))])
     print "...done."

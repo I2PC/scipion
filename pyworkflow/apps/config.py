@@ -406,8 +406,11 @@ def addRCTProtocols(settings):
     m1 = ProtocolConfig("Random Conical Tilt")
     
     m1.addSubMenu(' Import micrographs pairs', tag='protocol', icon='bookmark.png',
-                  value='ProtImportImagesTiltPairs')
-    
+                  value='ProtImportMicrographsTiltPairs')
+
+    m1.addSubMenu(' Picking micrographs pairs', tag='protocol',
+                  value='XmippProtParticlePickingPairs')
+        
     settings.addProtocolMenu(m1)   
   
 def setQueueSystem(host, maxCores):

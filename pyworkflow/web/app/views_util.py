@@ -29,15 +29,17 @@ import os
 import xmipp
 import json
 import mimetypes
+from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.core.servers.basehttp import FileWrapper
+
 from pyworkflow.em import emProtocolsDict
 from pyworkflow.web.pages import settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
-from django.shortcuts import render_to_response
-from django.http import (HttpResponse,
-                         HttpResponseForbidden, HttpResponseNotFound)
-from django.core.servers.basehttp import FileWrapper
 from pyworkflow.utils import *
+from pyworkflow.gui import getImage, getPILImage
+from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
 
 
 iconDict = {
@@ -342,7 +344,7 @@ def get_image_plot(request):
     
 def get_image(request):
 #    from django.http import HttpResponse
-    from pyworkflow.gui import getImage, getPILImage
+    
     
     imageNo = None
     # TO DO: Change the way to obtain the separate string of the imagePath
@@ -361,7 +363,7 @@ def get_image(request):
     try:
         # PAJM: Como vamos a gestionar lsa imagen    
         if imagePath.endswith('png') or imagePath.endswith('gif'):
-            img = getImage(imagePath, tk=False)
+            img = getImage(imagePath, tkImage=False)
         else:
             if '@' in imagePath:
                 parts = imagePath.split('@')
@@ -383,7 +385,6 @@ def get_image(request):
             imgXmipp.readPreview(imagePath, int(imageDim))
             
             if applyTransformMatrix: 
-                #print "akitikiri"
                 takarras=[tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
                 tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
                 tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
@@ -400,8 +401,7 @@ def get_image(request):
             # from PIL import Image
             img = getPILImage(imgXmipp, None)
     except Exception:
-        from pyworkflow import findResource
-        img = getImage(findResource(getResourceIcon("no_image")), tk=False)
+        img = getImage(findResource(getResourceIcon("no_image")), tkImage=False)
 
 
     response = HttpResponse(mimetype="image/png")
@@ -409,9 +409,6 @@ def get_image(request):
     return response
 
 def get_slice(request):
-#    from django.http import HttpResponse
-    from pyworkflow.gui import getImage, getPILImage
-    
     imageNo = None
     sliceNo = None
     imagePath = request.GET.get('image')
@@ -421,8 +418,7 @@ def get_slice(request):
 #    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
-#    
-      
+
     try:
             # PAJM: Como vamos a gestionar lsa imagen    
         if not '@' in imagePath:
@@ -431,7 +427,7 @@ def get_slice(request):
         parts = imagePath.split('@', 1)
         sliceNo = parts[0]
         imagePath = parts[1]
-
+        
         if '@' in imagePath:
                 parts = imagePath.split('@')
                 imageNo = parts[0]
@@ -455,12 +451,12 @@ def get_slice(request):
         if mirrorY: 
             imgXmipp.mirrorY()
         
-        
         # from PIL import Image
         img = getPILImage(imgXmipp, None, False)
-    except Exception:
-        from pyworkflow import findResource
-        img = getImage(findResource(getResourceIcon("no_image")), tk=False)         
+    
+    except Exception, ex:
+        print "error loading slice: ", ex
+        img = getImage(findResource(getResourceIcon("no_image")), tkImage=False)         
     
     response = HttpResponse(mimetype="image/png")
     img.save(response, "PNG")
@@ -476,15 +472,10 @@ def getImageDim(request, imagePath):
     img.read(str(imgFn), xmipp.HEADER)
     return img.getDimensions()
 
-
 def readDimensions(request, path, typeOfColumn):
-    print "reading dimensions with ", typeOfColumn
-    if typeOfColumn=="image":
-        img = xmipp.Image()
-        imgFn = os.path.join(request.session['projectPath'], path)
-        img.read(str(imgFn), xmipp.HEADER)
-        print "from file ", path
-        return img.getDimensions()
+    if (typeOfColumn == COL_RENDER_IMAGE or
+        typeOfColumn == COL_RENDER_VOLUME):
+        return getImageDim(request, path)
     return (300,300,1,1) 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):

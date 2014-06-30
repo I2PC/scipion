@@ -34,7 +34,7 @@ from os.path import join
 from collections import OrderedDict
 
 from pyworkflow.utils import runJob
-from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE
+from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
 
 
 #------------------------ Showj constants ---------------------------
@@ -151,7 +151,8 @@ class ColumnProperties():
         
         self.renderable = 'renderable' in defaultColumnLayoutProperties
             
-        self.allowSetRenderable = (self.columnType == COL_RENDER_IMAGE and allowRender)
+        self.allowSetRenderable = (self.columnType == COL_RENDER_IMAGE or
+                                   self.columnType == COL_RENDER_VOLUME and allowRender)
 
         self.renderFunc = "get_image"
         self.extraRenderFunc = ""

@@ -200,7 +200,7 @@ class Project(object):
                 protocol.setJobId(jobId)
                 self.mapper.store(protocol)
             except Exception, ex:
-                print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getName(), jobId, ex, tries)
+                print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 2: # 3 tries have been failed
                     import traceback
                     traceback.print_exc()
@@ -420,11 +420,11 @@ class Project(object):
         
             self._storeProtocol(protocol) # Store first to get a proper id
             # Set important properties of the protocol
-            name = protocol.getClassName() + protocol.strId()
+            workingDir = "%06d_%s" % (protocol.getObjId(), protocol.getClassName())
             protocol.setProject(self)
-            print protocol.strId(), protocol.getProject().getName()
-            protocol.setName(name)
-            protocol.setWorkingDir(self.getPath(PROJECT_RUNS, name))
+            #print protocol.strId(), protocol.getProject().getName()
+            #protocol.setName(name)
+            protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
             protocol.setMapper(self.mapper)
             self._setHostConfig(protocol)
             # Update with changes
@@ -469,16 +469,16 @@ class Project(object):
                 n = g.createNode(r.strId())
                 n.run = r
                 n.label = r.getRunName()
-                outputDict[r.getName()] = n
+                outputDict[r.getObjId()] = n
                 for _, attr in r.iterOutputAttributes(EMObject):
-                    outputDict[attr.getName()] = n # mark this output as produced by r
+                    outputDict[attr.getObjId()] = n # mark this output as produced by r
                 
             def _checkInputAttr(node, pointed):
                 """ Check if an attr is registered as output"""
                 if pointed:
-                    pointedName = pointed.getName()
-                    if pointedName in outputDict:
-                        parentNode = outputDict[pointedName]
+                    pointedId = pointed.getObjId()
+                    if pointedId in outputDict:
+                        parentNode = outputDict[pointedId]
                         parentNode.addChild(node)
                         return True
                 return False
@@ -588,7 +588,7 @@ class Project(object):
             
         connection = {}
         for node in n.iterChilds():
-            connection[node.getName()] = node.object
+            connection[node.getObjName()] = node.object
         
         return connection
             

@@ -39,6 +39,7 @@ from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 from protlib_xmipp import RowMetaData
 from collections import OrderedDict
+from itertools import izip
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 ACQUISITION_DICT = OrderedDict([ 
@@ -58,6 +59,12 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
+       ])
+
+ANGLES_DICT = OrderedDict([
+       ("_angleY", xmipp.MDL_ANGLE_Y),
+       ("_angleY2", xmipp.MDL_ANGLE_Y2),
+       ("_angleTilt", xmipp.MDL_ANGLE_TILT)
        ])
 
 def objectToRow(obj, row, attrDict):
@@ -508,6 +515,18 @@ def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
             rowFunc(img, imgRow)
         imgRow.writeToMd(md, objId)
 
+def readAnglesFromMicrographs(micFile, anglesSet):
+    """ Read the angles from a micrographs Metadata.
+    """
+    micMd = xmipp.MetaData(micFile)
+#    micMd.removeDisabled()    
+    
+    for objId in micMd:
+        angles = Angles()
+        rowToObject(micMd, objId, angles, ANGLES_DICT)
+        angles.setObjId(micMd.getValue(xmipp.MDL_ITEM_ID, objId)) 
+        anglesSet.append(angles)
+    
 
 def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, blockName='Images'):
     """ This function will write a SetOfMicrographs as Xmipp metadata.
@@ -615,6 +634,23 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 
+def writeSetOfMicrographsPairs(uSet, tSet, filename):
+    """ This function will write a MicrographsTiltPair as Xmipp metadata.
+    Params:
+        micSet: the micrographs tilt pair to be written
+        filename: the filename where to write the metadata.
+    """
+    md = xmipp.MetaData()
+
+    for micU, micT in izip(uSet, tSet):
+        objId = md.addObject()
+        pairRow = XmippMdRow()
+        pairRow.setValue(xmipp.MDL_ITEM_ID, long(micU.getObjId()))
+        pairRow.setValue(xmipp.MDL_MICROGRAPH, micU.getFileName())
+        pairRow.setValue(xmipp.MDL_MICROGRAPH_TILTED, micT.getFileName())
+        pairRow.writeToMd(md, objId)
+        
+    md.write(filename)
 
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
@@ -818,7 +854,6 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
     else:
         ctfFn = ctfMd.get()
     return ctfFn
-
 
 def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix

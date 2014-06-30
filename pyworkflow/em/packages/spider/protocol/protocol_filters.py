@@ -28,7 +28,9 @@
 This sub-package contains protocol for particles filters operations
 """
 
-from pyworkflow.em import *  
+from pyworkflow.em.protocol import ProtFilterParticles  
+from pyworkflow.protocol.params import EnumParam, BooleanParam, DigFreqParam, FloatParam
+from pyworkflow.utils.path import removeBaseExt
 
 from ..constants import FILTER_GAUSSIAN, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS
 from ..spider import SpiderShell

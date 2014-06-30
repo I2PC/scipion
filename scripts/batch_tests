@@ -1,7 +1,21 @@
+# This file contains examples of tests that can be launched.
+#
+# To see all the available tests, use:
+#   scipion tests --show
+# or
+#   scipion tests --show --mode=all
+#
+# To get more details about the tests, use:
+#   scipion tests --help
+
 ########### Basic tests (no data requirement) ###############
 
-scipion tests classes.test_object
-scipion tests classes.test_process
+scipion tests model.test_object
+
+#scipion tests classes.test_process
+# TODO: when did the last check stopped from working? What was it?
+
+# TODO: check the tests below this line.
 
 ########### Protocols and Workflow tests (require Test Dataset) ###############
 

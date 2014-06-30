@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *
+# *            
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -23,32 +23,9 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This sub-package will contains Xmipp3.1 specific protocols
+"""
 
-import os
-import os.path
-
-HOME = os.path.abspath(os.path.dirname(__file__))
-
-def join(*paths):
-    """ join paths from HOME. """
-    return os.path.join(HOME, *paths)
-
-RESOURCES = [join('resources')]
-WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
-
-if "SCIPION_USER_DATA" not in os.environ:
-    raise Exception("SCIPION_USER_DATA is not defined as environment variable")
-
-SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
-PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
-
-
-PROJECTS = os.path.join(SCIPION_USER_DATA, 'projects')
-SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
-
-
-from utils.path import findResource
 
 _logo = 'scipion_logo.png'
-
-

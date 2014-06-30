@@ -28,7 +28,8 @@
 import sys
 from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import getProtocolFromDb
-from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
+from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
+from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair, SetOfAngles
 
 
 if __name__ == '__main__':
@@ -37,7 +38,6 @@ if __name__ == '__main__':
     dbpath = sys.argv[1]
     protid = sys.argv[2]
     prot = getProtocolFromDb(dbpath, protid)
-    inputset = prot.inputMicrographs.get()
     extradir = prot._getExtraPath()
     count = 0
     
@@ -45,12 +45,41 @@ if __name__ == '__main__':
         count += 1
     
     suffix = str(count + 1) if count > 0 else ''
-    outputName = 'outputCoordinates' + suffix
-    outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
-    readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+    if prot.getClassName() == "XmippProtParticlePicking":
+        inputset = prot.inputMicrographs.get()
+        outputName = 'outputCoordinates' + suffix
+        outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+    if prot.getClassName() == "XmippProtParticlePickingPairs":
+        inputset = prot.inputMicrographsTiltedPair.get()
+        uSet = inputset.getUntilted()
+        tSet = inputset.getTilted()
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        uSuffix = 'Untilted' + suffix
+        tSuffix = 'Tilted' + suffix
+        # Create Untilted and Tilted SetOfCoordinates
+        uCoordSet = prot._createSetOfCoordinates(uSet, suffix=uSuffix)
+        readSetOfCoordinates(extradir, uSet, uCoordSet)
+        uCoordSet.write()
+        tCoordSet = prot._createSetOfCoordinates(tSet, suffix=tSuffix)
+        readSetOfCoordinates(extradir, tSet, tCoordSet)
+        tCoordSet.write()
+        
+        # Read Angles from input micrographs
+        micsFn = prot._getPath('input_micrographs.xmd')
+        setAngles = prot._createSetOfAngles(suffix=suffix)
+        readAnglesFromMicrographs(micsFn, setAngles)
+        setAngles.write()
+        # Create CoordinatesTiltPair object
+        outputset = CoordinatesTiltPair()
+        outputset.setTilted(tCoordSet)
+        outputset.setUntilted(uCoordSet)
+        outputset.setAngles(setAngles)
+
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)
     prot._defineSourceRelation(inputset, outputset)
     prot._store()
+    
         
     

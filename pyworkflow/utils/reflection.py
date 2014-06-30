@@ -31,7 +31,9 @@ This module contains reflection utilities
 import os, sys
 from os.path import exists, join
 from inspect import isclass
-    
+
+
+
 def getModules(path):
     """ Try to find possible sub-modules under path.
     A dictionary will be returned with modules names
@@ -67,9 +69,10 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
 #                 pprint(m.__dict__)
         subDict = getSubclasses(BaseClass, m.__dict__)
         for subclass in subDict.values():
-            subclass._package = m
-            if debug:
-                print "  found: ", subclass.__name__
+            if subclass.__module__.startswith(m.__name__):
+                subclass._package = m
+                if debug:
+                    print "  found: ", subclass.__name__, "module: ", subclass.__module__
         subclasses.update(subDict)
     
     return subclasses
