@@ -321,7 +321,9 @@ section .imageTitle{
 	display:none;
 	z-index:999;
 	background-color: #eaebec;
-	color: #6e6e6e;
+/* 	background-color: white; */
+/* 	color: #6e6e6e; */
+	color: black;;
 	
 	-webkit-align-items: center;
 	-moz-align-items: center;
@@ -334,12 +336,32 @@ section .imageTitle{
 	-o-flex-flow: column;
 	-ms-flex-flow: column;
 	flex-flow: column;
+
 	position: absolute;
-	padding: 10px;
+	
+	border:2px solid Firebrick;
+	border-radius: 0.5em;
+	
+}
+
+
+.multipleSelectionTitle{
+	background-color:Firebrick;
+	color:white;
+	width:100%;
+	display:block;
+	text-align: center;
+	
 }
 
 .multipleSelectionToolItem{
 	cursor: pointer;
+	padding: 5px;
+	margin: 0 5px 0px 5px;
+}
+
+.multipleSelectionToolItem:hover{
+	color:Firebrick;
 }
 
 .pressedButton{
