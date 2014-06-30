@@ -549,11 +549,9 @@ function initializeSelectionRowEvent() {
 
 function initializeMultipleSelectionTool() {
 	// Hover on multiple selection tool
-	hiConfig = {
-		sensitivity : 3, // number = sensitivity threshold (must be 1 or
-							// higher)
-		interval : 300, // number = milliseconds for onMouseOver polling
-						// interval
+	var hiConfig = {
+		sensitivity : 3, // number = sensitivity threshold (must be 1 or higher)
+		interval : 300, // number = milliseconds for onMouseOver polling interval
 		timeout : 800, // number = milliseconds delay before onMouseOut
 		over : function(e) {
 			if ($(this).hasClass("row_selected")) {
@@ -572,6 +570,7 @@ function initializeMultipleSelectionTool() {
 			}
 		} // function = onMouseOut callback (REQUIRED)
 	}
+	
 	$("tr").hoverIntent(hiConfig)
 
 }
@@ -697,12 +696,19 @@ function multipleSelect(mode) {
 
 	$("#data_table tbody tr").each(
 			function() {
-				if (mode == 'all'
-						|| (mode == 'from' && $(this).index() > row_id)
-						|| (mode == 'to' && $(this).index() < row_id)) {
-					$(this).addClass("row_selected")
+				if(!$(this).hasClass("row_selected")){
+					// Update the session list
+					updateListSession($(this).attr("id"), "selected")
+					
+					if (mode == 'all'
+							|| (mode == 'from' && $(this).index() > row_id)
+							|| (mode == 'to' && $(this).index() < row_id)) {
+						$(this).addClass("row_selected")
+						
+					}
 				}
-			})
+				
+			});
 }
 
 function updateSession(label, type, status) {

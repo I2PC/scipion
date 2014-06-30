@@ -121,31 +121,34 @@ function initializeImageEvents(hasEnabledColumn){
 			if (!$(this).find(".enabledGallery").hasClass("selected")){
 				$(this).find(".enabledGallery").fadeOut(1)
 			}
-		}) 
+		});
 		
 	if (hasEnabledColumn){	
 			
-	//Hover on multiple selection tool	
-	hiConfig = {
-        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
-        interval: 300, // number = milliseconds for onMouseOver polling interval
-        timeout: 800, // number = milliseconds delay before onMouseOut
-        over: function(e) {
-        	if ($(this).hasClass("image_selected") && $("#multipleSelectionTool").css('display')!="block"){
-        		hoverElement=$(this).attr("id")
-									
-				$("#multipleSelectionTool").css('left',e.pageX)
-				$("#multipleSelectionTool").css('top',e.pageY)
-				$("#multipleSelectionTool").data('img_container_id',hoverElement)
-				$("#multipleSelectionTool").fadeIn('slow')
-			}
-        }, // function = onMouseOver callback (REQUIRED)
-        out: function() { 
-        	if ($(this).hasClass("image_selected") && hoverElement==$(this).attr("id")){
-				$("#multipleSelectionTool").fadeOut('slow')
-			}
-        } // function = onMouseOut callback (REQUIRED)
-    }	
+		//Hover on multiple selection tool	
+		var hiConfig = {
+	        sensitivity: 3, // number = sensitivity threshold (must be 1 or higher)
+	        interval: 300, // number = milliseconds for onMouseOver polling interval
+	        timeout: 800, // number = milliseconds delay before onMouseOut
+	        over: function(e) {
+	        	if ($(this).hasClass("image_selected") 
+	        			&& $("#multipleSelectionTool").css('display')!="block"){
+	        		var hoverElement = $(this).attr("id")
+										
+					$("#multipleSelectionTool").css('left',e.pageX)
+					$("#multipleSelectionTool").css('top',e.pageY)
+					$("#multipleSelectionTool").data('img_container_id',hoverElement)
+					$("#multipleSelectionTool").fadeIn('slow')
+				}
+	        }, // function = onMouseOver callback (REQUIRED)
+	        out: function() { 
+	        	if ($(this).hasClass("image_selected") 
+	        			&& hoverElement == $(this).attr("id")){
+					$("#multipleSelectionTool").fadeOut('slow')
+				}
+	        } // function = onMouseOut callback (REQUIRED)
+	    }	
+		
 	$(".img_container").hoverIntent(hiConfig)
 	}
 	
@@ -228,30 +231,39 @@ function multipleEnableDisableImage(mode){
 function enableDisableImage(element, enableDisable){
 	if (enableDisable=='enable'){
 		$(element).removeClass("selected")
-	}
-	else if (enableDisable=='disable'){
+	} else if (enableDisable=='disable'){
 		$(element).addClass("selected")
-	}
-	else{
+	} else{
 		$(element).toggleClass("selected")
 	}
 	
-	if ($(element).hasClass("selected")){element_value = 0}
-	else{element_value = 1}
+	if ($(element).hasClass("selected")){
+		var element_value = 0
+	} else {
+		var element_value = 1
+	}
 	
 	// Keep changes in global variable
 	if (!$("#saveButton").hasClass("buttonGreyHovered")){
 		$("#saveButton").toggleClass("buttonGreyHovered")
 	}
-	changes[$(element).attr("id")]=element_value
+	changes[$(element).attr("id")] = element_value
 }
 
 function multipleSelect(mode){
-	element_id=parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
+	var element_id = parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
 	$(".img_container").each(function(){
-		if (mode=='all' || (mode=='from' && $(this).attr('id').split("___")[1]>element_id) || (mode=='to' && $(this).attr('id').split("___")[1]<element_id) ){
-			$(this).addClass("image_selected")
-		}	
+		if(!$(this).hasClass("image_selected")){
+			// Update the session list
+			updateListSession($(this).attr("id"), "selected")
+			
+			if (mode=='all' 
+				|| (mode=='from' && $(this).attr('id').split("___")[1]>element_id) 
+				|| (mode=='to' && $(this).attr('id').split("___")[1]<element_id)) {
+				$(this).addClass("image_selected")
+			}	
+		}
+		
 	})
 }
 
