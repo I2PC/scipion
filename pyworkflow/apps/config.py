@@ -410,7 +410,11 @@ def addRCTProtocols(settings):
 
     m1.addSubMenu(' Picking micrographs pairs', tag='protocol',
                   value='XmippProtParticlePickingPairs')
-        
+
+
+    m1.addSubMenu(' Extract particles pairs', tag='protocol',
+                  value='XmippProtExtractParticlesPairs')
+            
     settings.addProtocolMenu(m1)   
   
 def setQueueSystem(host, maxCores):

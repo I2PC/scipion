@@ -70,9 +70,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
-                      pointerClass='SetOfCoordinates',
-                      help='Select the SetOfCoordinates ')
+        
+        self._defineParamsInput1(form)
+        
         form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
                       default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
@@ -83,11 +83,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'particles, picking them and estimating the CTF. All downsampling '
                       'factors are always referred to the original sampling rate, and '
                       'the differences are correctly handled by Xmipp.')        
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 1',
-                      pointerClass='SetOfMicrographs',
-                      help='Select the original SetOfMicrographs')
 
+        self._defineParamsInput2(form)
+        
         form.addParam('ctfRelations', RelationParam, allowsNull=True,
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
                       label='CTF estimation', 
@@ -130,12 +128,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'deviation of the image will be affected. For cryo, 3.5 is a good value.'
                       'For high-contrast negative stain, the signal itself may be affected so '
                       'that a higher value may be preferable.')
-        form.addParam('doFlip', BooleanParam, default=True,
-                      label='Phase flipping (Recommended)', 
-                      help='Use the information from the CTF to compensate for phase reversals.')
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.')
+        
+        form.addParam('doFlip', BooleanParam, default=True,
+                      label='Phase flipping (Recommended)', 
+                      help='Use the information from the CTF to compensate for phase reversals.')
+        
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)', 
                       help='It subtract a ramp in the gray values and normalizes so that in the '
@@ -155,32 +155,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       expertLevel=LEVEL_ADVANCED)
         
         form.addParallelSection(threads=4, mpi=1)
+        
+    def _defineParamsInput1(self, form):
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+                      pointerClass='SetOfCoordinates',
+                      help='Select the SetOfCoordinates ')
+        
+    def _defineParamsInput2(self, form):
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      condition='downsampleType != 1',
+                      pointerClass='SetOfMicrographs',
+                      help='Select the original SetOfMicrographs')
+
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """       
-        # Set sampling rate and inputMics according to downsample type
-        self.inputCoords = self.inputCoordinates.get() 
-        
-        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
-        
-        if self.downsampleType.get() == SAME_AS_PICKING:
-            # If 'same as picking' get samplingRate from input micrographs  
-            self.inputMics = self.inputCoords.getMicrographs()
-            self.samplingFinal = self.samplingInput
-        else:
-            self.inputMics = self.inputMicrographs.get()
-            self.samplingOriginal = self.inputMics.getSamplingRate()
-            if self.downsampleType.get() == ORIGINAL:
-                # If 'original' get sampling rate from original micrographs
-                self.samplingFinal = self.samplingOriginal
-            else:
-                # IF 'other' multiply the original sampling rate by the factor provided
-                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
-                
-        # Convert input SetOfCoordinates to Xmipp if needed
-#        self._insertConvertStep('inputCoords', XmippSetOfCoordinates, 
-#                                 self._getExtraPath('scipion_micrographs_coordinates.xmd'))
+        self._setInputMicrographs()
                 
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
@@ -245,6 +236,26 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Insert step to create output objects      
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
+    def _setInputMicrographs(self):
+        # Set sampling rate and inputMics according to downsample type
+        self.inputCoords = self.inputCoordinates.get() 
+        
+        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
+        
+        if self.downsampleType.get() == SAME_AS_PICKING:
+            # If 'same as picking' get samplingRate from input micrographs  
+            self.inputMics = self.inputCoords.getMicrographs()
+            self.samplingFinal = self.samplingInput
+        else:
+            self.inputMics = self.inputMicrographs.get()
+            self.samplingOriginal = self.inputMics.getSamplingRate()
+            if self.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                self.samplingFinal = self.samplingOriginal
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
+                
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph on metadata format. """
@@ -449,6 +460,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         msg = "Total particles extracted: %d\n" % total
         msg += "                Enabled: %d\n" % numEnabled
         msg += "                Disabled: %d\n" % numAutoDisabled
-        msg += "Maximun ZScore value: %d\n" % zScoreMax
+        if zScoreMax is not None:
+            msg += "Maximun ZScore value: %d\n" % zScoreMax
         
         self.methodsInfo.set(msg)

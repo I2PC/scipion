@@ -29,7 +29,7 @@ This modules contains data classes related to Random Connical Tilt workflow.
 """
 
 from pyworkflow.em.data import EMObject, EMSet
-from pyworkflow.object import Float
+from pyworkflow.object import Float, Pointer
 
 class MicrographsTiltPair(EMObject):
     """Represents a Micrographs Tilt Pair"""
@@ -66,6 +66,7 @@ class CoordinatesTiltPair(EMObject):
         self._tilted = None#SetOfMicrographs()
         self._untilted = None#SetOfMicrographs()
         self._angles = SetOfAngles()
+        self._micsPair = Pointer()
         
     def getUntilted(self):
         return self._untilted
@@ -76,6 +77,9 @@ class CoordinatesTiltPair(EMObject):
     def getAngles(self):
         return self._angles
     
+    def getMicsPair(self):
+        return self._micsPair
+    
     def setUntilted(self, untilted):
         self._untilted = untilted
         
@@ -84,6 +88,9 @@ class CoordinatesTiltPair(EMObject):
         
     def setAngles(self, setAngles):
         self._angles = setAngles
+        
+    def setMicsPair(self, micsPair):
+        self._micsPair = micsPair
         
     def getFiles(self):
         filePaths = set()
@@ -119,3 +126,37 @@ class SetOfAngles(EMSet):
         
     def _loadClassesDict(self):
         return globals()  
+    
+class ParticlesTiltPair(EMObject):
+    """Represents a Particles Tilt Pair"""
+    
+    def __init__(self, **args):
+        EMObject.__init__(self, **args)
+        self._tilted = None#SetOfImages()
+        self._untilted = None#SetOfImages()
+        self._coordsPair = Pointer()
+        
+    def getUntilted(self):
+        return self._untilted
+    
+    def getTilted(self):
+        return self._tilted
+
+    def getCoordsPair(self):
+        return self._coordsPair
+        
+    def setUntilted(self, untilted):
+        self._untilted = untilted
+        
+    def setTilted(self, tilted):
+        self._tilted = tilted
+
+    def setCoordsPair(self, coordsPair):
+        self._coordsPair = coordsPair
+                
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getTilted().getFiles)
+        filePaths.add(self.getUntilted().getFiles)
+        
+        return filePaths

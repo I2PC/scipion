@@ -637,7 +637,8 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
 def writeSetOfMicrographsPairs(uSet, tSet, filename):
     """ This function will write a MicrographsTiltPair as Xmipp metadata.
     Params:
-        micSet: the micrographs tilt pair to be written
+        uSet: the untilted set of micrographs to be written
+        tSet: the tilted set of micrographs to be written
         filename: the filename where to write the metadata.
     """
     md = xmipp.MetaData()
@@ -650,8 +651,8 @@ def writeSetOfMicrographsPairs(uSet, tSet, filename):
         pairRow.setValue(xmipp.MDL_MICROGRAPH_TILTED, micT.getFileName())
         pairRow.writeToMd(md, objId)
         
-    md.write(filename)
-
+    md.write(filename)   
+    
 def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
     """read from Xmipp image metadata.
         filename: The metadata filename where the particles properties are.
