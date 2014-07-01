@@ -231,34 +231,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def reconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs):
         runReconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs)
     
-    def storeResolutionStep(self, resolIterMd, sampling):
-        print "compute resolution1"
-        #compute resolution
-        mdRsol = xmipp.MetaData(resolIterMd)
-        mdResolOut = xmipp.MetaData()
-        mdResolOut.importObjects(mdRsol, xmipp.MDValueLT(xmipp.MDL_RESOLUTION_FRC, 0.5))
-        print "compute resolution2"
-        if mdResolOut.size()==0:
-            mdResolOut.clear()
-            mdResolOut.addObject()
-            id=mdResolOut.firstObject()
-            mdResolOut.setValue(xmipp.MDL_RESOLUTION_FREQREAL, sampling*2., id)
-            mdResolOut.setValue(xmipp.MDL_RESOLUTION_FRC, 0.5, id)
-        else:
-            mdResolOut.sort()
-    
-        id = mdResolOut.firstObject()
-        filterFrequence = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FREQREAL, id)
-        frc = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FRC, id)
-        
-        md = xmipp.MetaData()
-        id = md.addObject()
-        md.setColumnFormat(False)
-    
-        md.setValue(xmipp.MDL_RESOLUTION_FREQREAL, filterFrequence, id)
-        md.setValue(xmipp.MDL_RESOLUTION_FRC, frc, id)
-        md.setValue(xmipp.MDL_SAMPLINGRATE, sampling, id)
-        md.write(resolIterMd, xmipp.MD_APPEND)
+    def storeResolutionStep(self, resolIterMd, resolIterMaxMd, sampling):
+        runStoreResolutionStep(self, resolIterMd, resolIterMaxMd, sampling)
     
     def calculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs):
         runCalculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs)
