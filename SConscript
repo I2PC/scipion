@@ -234,15 +234,14 @@ env.CompileLibrary('tk',
 
 # PYTHON
 
-env.CompileLibrary('python',
-                   source=pythonUntar,
-                   flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
-                          'CFLAGS=-I/usr/include/ncurses'
-                          ],
-                   target='libpython2.7.so',
-                   autoSource='Makefile.pre.in')
+pythonMake = env.CompileLibrary('python',
+                                source=pythonUntar,
+                                flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
+                                       'CFLAGS=-I/usr/include/ncurses'],
+                                target='libpython2.7.so',
+                                autoSource='Makefile.pre.in')
 
-env.CompileWithSetupPy('python')
+env.CompileWithSetupPy('python', deps=pythonMake)
 
 
 # PYTHON MODULES

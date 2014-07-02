@@ -233,7 +233,7 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
-        runCmd('scripts/install.py')
+        runCmd('scripts/install.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')

@@ -41,6 +41,7 @@ except ImportError:
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
         files={'micsGoldSqlite': 'gold/micrographs_gold.sqlite',
                'micsGoldXmd': 'gold/micrographs_gold.xmd',
+               'ctfGold': 'gold/xmipp_ctf.ctfparam',
                'micsSqlite': 'micrographs/micrographs.sqlite',
                'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
                'posSupervisedDir': 'pickingXmipp/pickedSupervised',
@@ -83,8 +84,8 @@ DataSet(name='ribo_movies', folder='ribo_movies',
                'movies': 'movies/1??_*.mrcs'})
 
 
-DataSet('model', 'model', 
-        {'modelGoldSqlite': 'gold/model_gold.sqlite', 
-         'modelGoldXml': 'gold/model_gold.xml',
-         'classesSelection': 'gold/classes_selection.sqlite'})
+DataSet(name='model',  folder='model', 
+        files={'modelGoldSqlite': 'gold/model_gold.sqlite', 
+               'modelGoldXml': 'gold/model_gold.xml',
+               'classesSelection': 'gold/classes_selection.sqlite'})
 
