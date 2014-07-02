@@ -81,7 +81,6 @@ def downloadScons():
 
 
 if __name__ == '__main__':
-    
 #    parser = argsparse.ArgumentParser(description=__doc__)
 #    add = parser.add_argument # shortcut
 #    add('--update', action='store_true',
@@ -94,20 +93,15 @@ if __name__ == '__main__':
                                         'software')
     SCIPION_INSTALL_PATH = os.path.join(SCIPION_SOFTWARE_PATH,
                                         'install')
+    SCIPION_INSTALL_LOG = os.path.join(SCIPION_SOFTWARE_PATH,
+                                       'log',
+                                       'scons.log')
     SCONS_VERSION = 'scons-2.3.1'
     SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
-    # To avoid collisions during installation, we unset PYTHONPATH var. We will restore it later
-    PYTHON_SAVE = ''
-    PYTHONHOME_SAVE = ''
-    if 'PYTHONPATH' in os.environ:
-        print "backup PYTHONPATH"
-        PYTHON_SAVE = os.environ['PYTHONPATH']
-        os.environ.pop('PYTHONPATH')
-    if 'PYTHONHOME' in os.environ:
-        print "backup PYTHONHOME"
-        PYTHONHOME_SAVE = os.environ['PYTHONHOME']
-        os.environ.pop('PYTHONHOME')
+    #necessary to properly build scons
+    myenv = {}
+    #myenv = os.environ.copy()
 
     print "Installing Scipion in : ", SCIPION_HOME
 
@@ -122,45 +116,54 @@ if __name__ == '__main__':
 #     writeDefaults()
 #     
 #     updateProjectSettings()
-    #os.system('xmipp_python %s' % join(SCIPION_HOME, 'scons', 'scons-2.3.1', 'script', 'scons'))
      # Download and untar Scons
     if not os.path.exists(os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
         downloadScons()
         #Compile scons
-    setupArgs=["clean",
-               "build", 
-               "install --prefix=%s" % SCIPION_SOFTWARE_PATH]
+    
+    setupArgs=[["clean"],
+               ["build"], 
+               ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
+    if os.path.exists(SCIPION_INSTALL_LOG):
+        os.remove(SCIPION_INSTALL_LOG)
+    logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
     for arg in setupArgs:
-        command = 'cd %s && python setup.py %s && cd -' % (os.path.join(SCIPION_INSTALL_PATH,
-                                                                     SCONS_VERSION), 
-                                                        arg)
-        scons = subprocess.Popen('env', 
-                                 shell=True)
-        print '>>>>>>>>>>> %s' % command
+        logFile = open(SCIPION_INSTALL_LOG, 'a')
+        command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
+        
+        print '>>>>>>>>>>> %s [from %s]' % (" ".join(command), os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION))
         scons = subprocess.Popen(command, 
-                                 shell=True)
+                                 cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
+                                 stdout=logFile,
+                                 stderr=logFile,
+                                 env=myenv)
         output = scons.communicate()[0]
+        logFile.close()
         if scons.returncode is not 0:
             sys.exit(scons.returncode)
 
     #Setting environmental vars before calling scons
-    os.environ['PATH'] += ':%s' % os.path.join(SCIPION_SOFTWARE_PATH, 'bin')
+    myenv['PATH'] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'bin'), os.environ['PATH'])
     DYN = 'LD_LIBRARY_PATH'
     if MACOSX:
         DYN = 'DYLD_FALLBACK_LIBRARY_PATH'
-    if DYN in os.environ:
-        os.environ[DYN] += ':%s' % os.path.join(SCIPION_SOFTWARE_PATH, 'lib')
-        os.environ[DYN] += ':%s' % os.path.join(SCIPION_SOFTWARE_PATH, 'lib64')
+    if DYN in myenv:
+        myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib'), myenv[DYN])
+        myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib64'), myenv[DYN])
 
+    logFile = open(SCIPION_INSTALL_LOG, 'a')
     args = ' '.join(sys.argv[1:])
-    install = subprocess.Popen('scons %s' % args, shell=True)
+    install = subprocess.Popen(['scons']+sys.argv[1:],
+                               cwd=SCIPION_HOME, 
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT,
+                               env=myenv)
+    for line in install.stdout:
+        sys.stdout.write(line)
+        logFile.write(line)
+    install.wait()
     output = install.communicate()[0]
-    
-    # We restore PYTHONPATH 
-    if PYTHON_SAVE != '':
-        os.environ['PYTHONPATH'] = PYTHON_SAVE
-    if PYTHONHOME_SAVE != '':
-        os.environ['PYTHONHOME'] = PYTHONHOME_SAVE
+    logFile.close()
     
     # This script will exit with the same exit code as scons did
     sys.exit(install.returncode)
