@@ -27,7 +27,6 @@
 package xmipp.viewer.windows;
 
 import ij.ImagePlus;
-
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -56,7 +55,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -123,7 +121,6 @@ import xmipp.viewer.models.MetadataGalleryTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.scipion.ScipionGalleryJFrame;
-
 
 /**
  * This is the main frame used in showj
@@ -198,14 +195,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	GalleryData data;
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
-
-	private JComboBox imagecolumnscb;
-
-	private JMenuItem rendercolumnmi;
-
-	private Hashtable<String, ColumnInfo> imagecolumns;
-
 	protected JPanel buttonspn;
+
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -217,7 +208,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-    
+
 
 	/** Initialization function after GalleryData structure is created */
 	private void init(GalleryData data)
@@ -590,10 +581,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					hdir = 1;
 					break;
                                 case KeyEvent.VK_SPACE:
+                                        int from = -1, to = -1;
                                         for (int i = 0; i < data.selection.length; ++i)
                                         if (data.selection[i])
+                                        {
+                                            if(from == -1)
+                                                from = i;
                                             data.setEnabled(i, !data.isEnabled(i));
-                                        gallery.fireTableDataChanged();
+                                            to = i;
+                                        }
+                                        if(from != -1)
+                                            gallery.fireTableRowsUpdated(from, to);
 				}
 				if (vdir != 0 || hdir != 0)
 				{
@@ -791,7 +789,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void runInBackground(int operation)
 	{
 
-		MetaData imagesmd = data.getImagesMd();
+		MetaData imagesmd, md;
+                if(data.hasSelection())
+                {
+                    int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
+                    if(result == XmippQuestionDialog.YES_OPTION)
+                        md = data.getSelectionMd();
+                    else if(result == XmippQuestionDialog.NO_OPTION)
+                        md = data.md;
+                    else
+                        return;
+                }
+                else
+                    md = data.md;
+                    
+                
+                imagesmd = data.getImagesMd(md);
 		Worker w = new Worker(operation, imagesmd);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
@@ -1524,19 +1537,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(DISPLAY_SHOWLABELS, "Display labels", null, "control released L");
-			addSeparator(DISPLAY);
+                        addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
+			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
+			
+                        
+			
+                        addSeparator(DISPLAY);
+                        addDisplayLabelItems();
 			addItem(DISPLAY_RENDERIMAGES, "Render images", null, "control released R");
 			
-			addRenderImageColumnItem();
+			addRenderImageColumnItems();
 			
-		
-			addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
-			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
-			addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
+			
 			addItem(DISPLAY_RESLICE, "Reslice");
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
+                        addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
 			addItem(STATS, "Statistics");
@@ -1590,6 +1606,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
                         setItemEnabled(METADATA, !(GalleryJFrame.this instanceof ScipionGalleryJFrame));
+                        addDisplayLabelItems();
+                        addRenderImageColumnItems();
 		}// function update
 
 		@Override
@@ -1611,10 +1629,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 					}
 				}
-				else if (cmd.equals(DISPLAY_SHOWLABELS))
-				{
-					gallery.setShowLabels(getItemSelected(DISPLAY_SHOWLABELS));
-				}
+				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
 					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
@@ -1788,34 +1803,84 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}// function handleActionPerformed
 		
 		
-		protected void addRenderImageColumnItem()
+		protected void addRenderImageColumnItems()
 		{                  
-			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image Column");
-			JMenuItem mi;
+                        JMenuItem mi = getItem(DISPLAY_RENDERIMAGECOLUMN);
+                        if(mi == null)
+                            mi = addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image");
+                        else
+                            mi.removeAll();
 			
-			imagecolumns = new Hashtable<String, ColumnInfo>();
-			for (ColumnInfo column : data.getColumns())
-				if (column.allowRender)
-					imagecolumns.put(column.toString(), column);
-			boolean rendercolumn = imagecolumns.size() > 0;
-			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
-			if(rendercolumn)
+			
+			boolean rendercolumn = false;
+			
+                        // Create the popup menu.
+                        String id, column;
+                        for(ColumnInfo ci: data.getColumns())
+                        {
+                            if(ci.render)
+                            {
+                                column = ci.labelName;
+                                id = String.format("Display.RenderImagesColumn.%s_rb", column.replace(".", ""));
+                                mi = addItem(id, column);
+                                mi.addActionListener(new RenderColumnActionListener());
+                                if(data.getRenderColumn().toString().equals(column))
+                                        setItemSelected(id, true);
+                                rendercolumn = true;
+                            }
+                        }
+                        setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
+
+		}
+                
+                protected void addDisplayLabelItems()
+		{                  
+                        JMenuItem mi = getItem(DISPLAY_SHOWLABELS);
+			if(mi == null)
+                            mi = addItem(DISPLAY_SHOWLABELS, "DisplayLabel");
+                        else
+                            mi.removeAll();
+			
+                        // Create the popup menu.
+                        String id, column;
+                        
+                       
+                        id = "Display.ShowLabel.None_rb";
+                        column = "none";
+                        mi = addItem(id, column);
+                        setItemSelected(id, true);
+                        mi.addActionListener(new DisplayLabelActionListener());
+                        for(ColumnInfo ci: data.getColumns())
+                        {
+                            if(ci.visible)
+                            {
+                                column = ci.labelName;
+                                id = String.format("Display.ShowLabel.%s_rb", column.replace(".", ""));
+                                mi = addItem(id, column);
+                                mi.addActionListener(new DisplayLabelActionListener());
+                                String displayLabel = data.parameters.getDisplayLabel();
+                                if(displayLabel != null && displayLabel.equals(column))
+                                        setItemSelected(id, true);
+                            }   
+                        }
+
+		}
+                
+                class DisplayLabelActionListener implements ActionListener
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e)
 			{
-				// Create the popup menu.
-				String id, column;
-				Enumeration<String> keys = imagecolumns.keys();
-				while (keys.hasMoreElements())
-				{
-					column = keys.nextElement();
-					id = String.format("Display.RenderImagesColumn.%s_rb", column);
-					mi = addItem(id, column);
-					mi.addActionListener(new RenderColumnActionListener());
-					if(data.getRenderColumn().toString().equals(column))
-						setItemSelected(id, true);
-				}
+				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
+				String key = mi.getText();
+                                
+				data.setDisplayLabel(key);
+				gallery.setShowLabels();
 			}
 
 		}
+		
 		
 		class RenderColumnActionListener implements ActionListener
 		{
@@ -1825,7 +1890,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
 				String key = mi.getText();
-				data.setRenderColumn(imagecolumns.get(key));
+				data.setRenderColumn(key);
 				reloadTableData();
 			}
 
@@ -1834,13 +1899,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}// class GalleryMenu //////////////////////////////////////////////////////////
 	
 	
-	
-	
-	
-	
-	
-	
-	
+		
 
 	class GalleryPopupMenu extends XmippPopupMenuCreator
 	{

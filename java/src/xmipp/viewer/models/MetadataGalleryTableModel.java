@@ -45,12 +45,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 {
 
 	private static final long serialVersionUID = 1L;
-
 	// Label to be rendered
 	protected ColumnInfo renderLabel;
-	protected ColumnInfo displayLabel;
 	protected ImageGeneric image;
-
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
@@ -145,7 +142,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		if (data.hasRenderLabel())
 		{
 			renderLabel = data.ciFirstRender;
-			displayLabel = renderLabel;
 			// if (renderLabels) {
 			for (int i = 0; i < data.ids.length; ++i)
 			{
@@ -176,7 +172,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception
 	{
-		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
+		return createImageItem(index, renderLabel.getLabel());
 	}
 
 	public String getLabel(int row, int col)
@@ -185,14 +181,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			if (data.isClassification)
-			{
-				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
-				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
-				return String.format("class %d (%d images)", ref, count);
-			}
-			else
-				return data.md.getValueString(displayLabel.getLabel(), objId);
+
+                        ColumnInfo displayLabel = data.getDisplayLabel();
+                        if(displayLabel == null)
+                            return null;
+                        return data.md.getValueString(data.getDisplayLabel().getLabel(), objId);
+                        
 		}
 		catch (Exception e)
 		{
@@ -204,7 +198,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	/**
 	 * Function to create an image item
 	 */
-	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception
+	protected ImageItem createImageItem(int index, int renderLabel) throws Exception
 	{
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
@@ -292,7 +286,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-			return data.md.getStatistics(false);
+			return data.md.getStatistics(false, data.ciFirstRender.label);
 		}
 		catch (Exception ex)
 		{

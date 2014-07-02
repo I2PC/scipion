@@ -62,6 +62,10 @@ public class GalleryData {
         protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
+        private ColumnInfo displayci;
+        private String displayLabel;
+
+
 	public Params parameters;
 	private int numberOfVols = 0;
 
@@ -110,7 +114,11 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
+
+
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
+
+
 		this.window = window;
 		try {
                         
@@ -123,6 +131,9 @@ public class GalleryData {
                         this.visibleLabels = parameters.visibleLabels;
                         this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
+
+                        displayLabel = parameters.getDisplayLabel();
+
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
 			wrap = parameters.wrap;
@@ -130,6 +141,8 @@ public class GalleryData {
 			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
+
+
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -141,20 +154,51 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
+        
+        
+        public boolean isDisplayLabel()
+        {
+            return displayci != null;
+        }
+        
+        public void setDisplayLabel(String key) {
+            displayci = null;
+            if(key == null || key.equalsIgnoreCase("none"))
+            {
+                displayci = null;
+                return;
+            }
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                {
+                    displayci = ci;
+                    break;
+                }
+        }
+        
+        public ColumnInfo getDisplayLabel()
+        {
+            
+            return displayci;
+        }
 
 	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
 	}
 
-	public void setRenderColumn(ColumnInfo ci) {
-		ciFirstRender = ci;
+	public void setRenderColumn(String key) {
+            if(key.equalsIgnoreCase("none"))
+                ciFirstRender = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                    ciFirstRender = ci;
 	}
 
 	public ColumnInfo getRenderColumn() {
@@ -367,6 +411,7 @@ public class GalleryData {
                         
 			labels = newLabels;
                         orderLabels();
+                        setDisplayLabel(displayLabel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -989,7 +1034,7 @@ public class GalleryData {
 		return null;
 	}
 
-	public MetaData getImagesMd() {
+	public MetaData getImagesMd(MetaData md) {
 		int idlabel = getRenderLabel();
 		if (md == null)
 			return null;
@@ -1108,4 +1153,11 @@ public class GalleryData {
 		return false;
 	}
       
+        public boolean hasSelection()
+        {
+            for(int i = 0; i < selection.length; i ++)
+                if(selection[i])
+                    return true;
+            return false;
+        }
 }// class GalleryDaa

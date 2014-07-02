@@ -239,6 +239,6 @@ String XmippError::getDefaultMessage(ErrorType e)
 void reportWarning(const String& what)
 {
     String error = formatString("=== XMIPP_WARNING ===\n%s", what.c_str());
-    std::cerr << colorString(error.c_str(), RED) << std::endl;
+    std::cerr << colorString(error.c_str(), MAGENTA) << std::endl;
 }
 

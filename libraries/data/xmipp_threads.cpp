@@ -191,7 +191,8 @@ void * _threadMain(void * data)
             {
                 std::cerr << xe << std::endl
                 << "In thread " << thArg->thread_id << std::endl;
-                pthread_exit(NULL);
+//                pthread_exit(NULL);
+                exit(-1);
             }
         }
         else //exit thread

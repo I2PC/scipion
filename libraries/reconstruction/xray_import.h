@@ -49,16 +49,18 @@ public:
     FileName fnRoot;
     /// Output Stack file
     FileName fnOut;
+    /// Input image size
+    ImageInfo imgInfo;
     /// Number of pixels to crop from each side. Set to 0 for no cropping
-    int cropSize;
+    int cropSizeX, cropSizeY;
     /// Number of threads
     int thrNum;
     /// Bad pixel factor
     double BPFactor;
     /// bad Pixel filter Mask
     FileName fnBPMask;
-    /// Flag to apply flat field correction
-    bool flatFix;
+    /// Flag to apply external flat field correction
+    bool extFlat;
     /// Flag to apply dark field correction
     bool darkFix;
     /// Flag to apply log corrections
@@ -68,7 +70,8 @@ public:
     /// Xray microscopy data origin;
     enum DataSource
     {
-        NONE,
+    	NONE,
+        GENERIC,
         MISTRAL,
         BESSY
     } dSource;
@@ -117,7 +120,7 @@ public:
     void run();
 
     /// Read an image and crop
-    void readAndCrop(const FileName &fn, Image<double> &I) const;
+    void readAndCrop(const FileName &fn, Image<double> &I, int xSize, int ySize) const;
 
     /// Read geometrical info
     void readGeoInfo(const FileName &fn, MDRow &rowGeo) const;
