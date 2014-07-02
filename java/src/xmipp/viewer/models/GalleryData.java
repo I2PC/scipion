@@ -132,6 +132,8 @@ public class GalleryData {
                         this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
 
+                        displayLabel = parameters.getDisplayLabel();
+
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
 			wrap = parameters.wrap;
@@ -152,7 +154,6 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-                        displayLabel = parameters.getDisplayLabel();
                         
 		} catch (Exception e) {
 			e.printStackTrace();
