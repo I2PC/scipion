@@ -5,7 +5,7 @@
 		<div id="modeContainer" class="sectionMenu">
 			
 			<!-- TABLE -->
-			<input type="button" value="table" name="select_mode"
+			<input type="button" id="table" name="select_mode"
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
@@ -24,7 +24,7 @@
 			  />
 			
 			<!-- GALLERY -->
-			<input type="button" value="gallery" name="select_mode" 
+			<input type="button" id="gallery" name="select_mode" 
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
@@ -45,7 +45,7 @@
 			 
 			<!-- VOLUME VISUALIZE WITH ASTEX -->
 			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
-			<input type="button" value="volume_astex" name="select_mode" 
+			<input type="button" id="volume_astex" name="select_mode" 
 			onclick="changeMode('volume_astex');"
 			class="submitButton
 			 {% if form.mode.value != 'volume_astex' %}
@@ -59,7 +59,7 @@
 			 
 			 <!-- VOLUME VISUALIZE WITH CHIMERA -->
 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
-			<input type="button" value="volume_chimera" name="select_mode" 
+			<input type="button" id="volume_chimera" name="select_mode" 
 			onclick="changeMode('volume_chimera');"
 			class="submitButton
 			 {% if form.mode.value != 'volume_chimera' %}
