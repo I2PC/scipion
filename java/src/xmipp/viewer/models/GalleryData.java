@@ -113,6 +113,7 @@ public class GalleryData {
 			resliceView = params.resliceView;
 			useGeo = params.useGeo;
 			wrap = params.wrap;
+                        displayLabel = params.getDisplayLabel();
 
 			if (params.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
@@ -128,7 +129,7 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-                        displayLabel = params.getDisplayLabel();
+                        
                         
 		} catch (Exception e) {
 			e.printStackTrace();
