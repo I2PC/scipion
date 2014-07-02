@@ -914,7 +914,7 @@ def ObjectWrap(value):
     t = type(value)
     if issubclass(t, Object):
         return value
-    if t is int:
+    if t is int or t is long:
         return Integer(value)
     if t is bool:
         return Boolean(value)
