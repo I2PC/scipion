@@ -299,9 +299,9 @@ def addProtocols(settings):
     m1 = menu.addSubMenu('Particles', tag='section')
 
     
-    m1.addSubMenu('Join Sets', value='ProtJoinSets', 
-                  tag='protocol', icon='bookmark.png')
-
+    m1.addSubMenu('Set operations', value='ProtSets', 
+                  tag='protocol_base', icon='bookmark.png')
+    
     m1.addSubMenu('Picking', value='ProtParticlePicking',
                   tag='protocol_base')
     m1.addSubMenu('Extract', value='ProtExtractParticles',

@@ -33,7 +33,7 @@ This module contains protocols related to Set operations such us:
 
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
-                                        MultiPointerParam)
+                                        MultiPointerParam, IntParam)
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses
 
 
@@ -251,7 +251,6 @@ class ProtJoinSets(ProtSets):
     def createOutputStep(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
         self.inputType = str(self.inputSets[0].get().getClassName())
-        #self.inputType = str(self.inputSet1.get().getClassName())
         outputSetFunction = getattr(self, "_create%s" % self.inputType)
         outputSet = outputSetFunction()
         
@@ -322,7 +321,6 @@ class ProtSplitSet(ProtSets):
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
-        #self.inputType = str(self.inputSet1.get().getClassName())
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
         n = self.numberOfSets.get()
         
@@ -335,48 +333,86 @@ class ProtSplitSet(ProtSets):
             
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
         for i in range(1, n+1):
-            s = subsets[i-1]
-            s.copyInfo(inputSet)
-            self._defineOutput(*{key % i: subsets[i-1]})
-        
-        #Copy info from input (sampling rate, etc)
-        outputSet.copyInfo(self.inputSets[0].get())
-       
-        for itemSet in self.inputSets:
-            for itemObj in itemSet.get():
-                itemObj.cleanObjId()
-                outputSet.append(itemObj)
-        
-        self._defineOutputs(outputImages=outputSet)
+            subset = subsets[i-1]
+            subset.copyInfo(inputSet)
+            self._defineOutputs(**{key % i: subset})
+            self._defineTransformRelation(inputSet, subset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        classList = []
-        #inputSets = [self.inputSet1, self.inputSet2]
-        for itemSet in self.inputSets:
-            itemClassName = itemSet.get().getClassName()
-            if len(classList) == 0 or itemClassName not in classList:
-                classList.append(itemClassName)
-            
         errors = []
-        if len(classList) > 1:
-            errors.append("Object should have same type")
-            errors.append("Types of objects found: " + ", ".join(classList))
+        if self.inputSet.get().getSize() < self.numberOfSets:
+            errors.append("The number of subsets requested is greater than")
+            errors.append("the number of elements in the input set.")
+        return errors   
+    
+    
+class ProtIntersectSet(ProtSets):
+    """    
+    Create a set with the intersection (common elements) 
+    from two different sets.
+    
+    Usually, there is a bigger set with all elements...
+    and a smaller one (obtained from classification, cleanning...). 
+    In that case, the desired result is the elements from the 
+    original set that are present in the smaller set. 
+    
+    Both set should be of the same type of elements 
+    (micrographs, particles, volumes)
+    """
+    _label = 'intersect sets'
+
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):    
+        form.addSection(label='Input')
+        
+        form.addParam('inputFullSet', PointerParam, label="Full images set", important=True, 
+                      pointerClass='SetOfImages', 
+                      help='Even if the intersection can be applied to two subsets,\n'
+                           'the most common use-case is to retrieve a subset of  \n'
+                           'elements from an original full set.\n' 
+                           '*Note*: the images of the result set will be the same \n'
+                           'ones of this input set.'
+                           )
+        form.addParam('inputSubSet', PointerParam, label="Subset of images", important=True, 
+                      pointerClass='SetOfImages', 
+                      help='The elements that are in this (normally smaller) set and \n'
+                           'in the full set will be included in the result set'
+                           )
+        
+    #--------------------------- INSERT steps functions --------------------------------------------   
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+    
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self):
+        inputFullSet = self.inputFullSet.get()
+        inputSubSet = self.inputSubSet.get()
+        
+        inputClassName = inputFullSet.getClassName()
+        outputSetFunction = getattr(self, "_create%s" % inputClassName)
+
+        outputSet = outputSetFunction()
+        outputSet.copyInfo(inputFullSet)    
+        # Iterate over the images in the smaller set
+        # and take the info from the full set
+        for img in inputSubSet:
+            #TODO: this can be improved if you perform an
+            # intersection directly in sqlite
+            origImg = inputFullSet[img.getObjId()]
+            outputSet.append(origImg)
+            
+        key = 'output' + inputClassName.replace('SetOf', '') 
+        self._defineOutputs(**{key: outputSet})
+        self._defineTransformRelation(inputFullSet, outputSet)
+        self._defineSourceRelation(inputSubSet, outputSet)
+        
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
+            errors.append("Both the full set and the subset should be of the same")
+            errors.append("type of elements (micrographs, particles, volumes).")
         return errors   
 
-    def _summary(self):
-        summary = []
-
-        if not hasattr(self, 'outputImages'):
-            summary.append("Protocol has not finished yet.")
-        else:
-            m = "We have joint the following sets: "
-            #inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in self.inputSets:
-                m += "%s, " % itemSet.get().getNameId()
-            summary.append(m[:-2])
-        
-        return summary
-        
-    def _methods(self):
-        return self._summary()
+    
