@@ -48,7 +48,8 @@ from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
-from pyworkflow.em.data_tiltpairs import MicrographsTiltPair
+from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair
 from convert import *
 from os.path import dirname, join
 from pyworkflow.utils import makePath, runJob, copyTree
@@ -63,12 +64,12 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
-                SetOfMovies, MicrographsTiltPair, ProtExtractParticles, 
+                SetOfMovies, MicrographsTiltPair, ParticlesTiltPair, ProtExtractParticles, 
                 XmippProtScreenParticles, XmippProtKerdensom, XmippProtRotSpectra,
                 SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
                 XmippProtParticlePicking, XmippParticlePickingAutomatic, 
-                XmippProtParticlePickingPairs]
+                XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -112,7 +113,13 @@ class XmippViewer(Viewer):
             fnT = obj.getTilted().getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
-                
+
+        elif issubclass(cls, ParticlesTiltPair):          
+            fnU = obj.getUntilted().getFileName()
+            fnT = obj.getTilted().getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+                            
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
@@ -215,6 +222,9 @@ class XmippViewer(Viewer):
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
             runJavaIJapp("%dg"%(obj.memory.get()), app, args, True)
+            
+        elif issubclass(cls, XmippProtExtractParticlesPairs):
+            self._visualize(obj.outputParticlesTiltPair)
             
         return self._views
         

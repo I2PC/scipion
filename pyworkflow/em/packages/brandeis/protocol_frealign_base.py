@@ -512,7 +512,7 @@ class ProtFrealignBase(EMProtocol):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def continueStep(self, initIter):
-        """Create a simbolic link of a previous iteration from a previous run."""
+        """Create a symbolic link of a previous iteration from a previous run."""
         continueRun = self.continueRun.get()
         iter = initIter - 1
         prevDir = continueRun._iterWorkingDir(iter)

@@ -31,7 +31,8 @@ import os
 
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView, CommandView
+from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView
+from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D

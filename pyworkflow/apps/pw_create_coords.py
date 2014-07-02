@@ -75,6 +75,7 @@ if __name__ == '__main__':
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
+        outputset.setMicsPair(prot.inputMicrographsTiltedPair)
 
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)

@@ -467,7 +467,8 @@ def runReconstructionStep(self, iterN, refN, program, method, args, mpi, threads
 def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     vol1 = self._getFileName('reconstructedFileNamesItersSplit1', iter=iterN, ref=refN)
     vol2 = self._getFileName('reconstructedFileNamesItersSplit2', iter=iterN, ref=refN)
-    resolIterMd = self._getFileName('resolutionXmdMax', iter=iterN, ref=refN)
+    resolIterMd = self._getFileName('resolutionXmd', iter=iterN, ref=refN)
+    resolIterMaxMd = self._getFileName('resolutionXmdMax', iter=iterN, ref=refN)
     samplingRate = self.resolSam
     resolutionXmdCurrIter = self._getFileName('resolutionXmd', iter=iterN, ref=refN)
     # Prevent high-resolution correlation because of discrete mask from wbp
@@ -481,7 +482,7 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     args = ' --ref %(vol1)s -i %(vol2)s --sampling_rate %(samplingRate)s -o %(resolutionXmdCurrIter)s' % locals()
     
     self._insertFunctionStep('calculateFscStep', iterN, refN, args, self._constantToAddToFiltration[iterN], **kwargs)
-    self._insertFunctionStep('storeResolutionStep', resolIterMd, samplingRate)
+    self._insertFunctionStep('storeResolutionStep', resolIterMd, resolIterMaxMd, samplingRate)
     #if cleanup=true delete split volumes 
     if self.cleanUpFiles:
         self._insertFunctionStep('cleanVolumeStep', vol1, vol2)
@@ -499,6 +500,36 @@ def runCalculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs):
         args += ' --max_sam %(maxFreq)s' % locals()
     
     self.runJob("xmipp_resolution_fsc", args, numberOfMpi=1, **kwargs)
+
+
+def runStoreResolutionStep(self, resolIterMd, resolIterMaxMd, sampling):
+    print "compute resolution1"
+    #compute resolution
+    mdRsol = xmipp.MetaData(resolIterMd)
+    mdResolOut = xmipp.MetaData()
+    mdResolOut.importObjects(mdRsol, xmipp.MDValueLT(xmipp.MDL_RESOLUTION_FRC, 0.5))
+    print "compute resolution2"
+    if mdResolOut.size()==0:
+        mdResolOut.clear()
+        mdResolOut.addObject()
+        id=mdResolOut.firstObject()
+        mdResolOut.setValue(xmipp.MDL_RESOLUTION_FREQREAL, sampling*2., id)
+        mdResolOut.setValue(xmipp.MDL_RESOLUTION_FRC, 0.5, id)
+    else:
+        mdResolOut.sort()
+    
+    id = mdResolOut.firstObject()
+    filterFrequence = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FREQREAL, id)
+    frc = mdResolOut.getValue(xmipp.MDL_RESOLUTION_FRC, id)
+    
+    md = xmipp.MetaData()
+    id = md.addObject()
+    md.setColumnFormat(False)
+    
+    md.setValue(xmipp.MDL_RESOLUTION_FREQREAL, filterFrequence, id)
+    md.setValue(xmipp.MDL_RESOLUTION_FRC, frc, id)
+    md.setValue(xmipp.MDL_SAMPLINGRATE, sampling, id)
+    md.write(resolIterMaxMd, xmipp.MD_APPEND)
 
 
 def insertFilterVolumeStep(self, iterN, refN, **kwargs):
