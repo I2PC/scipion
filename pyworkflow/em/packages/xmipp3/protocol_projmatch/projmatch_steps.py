@@ -67,7 +67,7 @@ def runExecuteCtfGroupsStep(self):
         MDsel.read(self.selFileName)
         MDctfdata.intersection(xmipp.MDsel, xmipp.MDL_IMAGE)
         tmpCtfDat = self.ctfDatName
-        MDctfdata.write(tmpCtfdat)
+        MDctfdata.write(tmpCtfDat)
         args = ' --ctfdat %(tmpCtfDat)s -o %(ctffile)s --wiener --wc %(wiener)s --pad %(pad)s'
         args += ' --sampling_rate %(sampling)s'
         
