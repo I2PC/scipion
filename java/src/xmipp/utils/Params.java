@@ -34,6 +34,7 @@ public class Params {
     public final static String RENDER_IMAGES = "render";
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
+    public final static String DISPLAY_LABEL = "label";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -61,6 +62,7 @@ public class Params {
     public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
+    public String displayLabel;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -116,7 +118,7 @@ public class Params {
         opt = new Option(ORDER_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
-        
+        options.addOption(DISPLAY_LABEL, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -188,6 +190,8 @@ public class Params {
             {
             	orderLabels = cmdLine.getOptionValues(ORDER_LABELS);
             }
+            if(cmdLine.hasOption(DISPLAY_LABEL))
+            	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
             
             debug = cmdLine.hasOption(DEBUG);
             mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
@@ -262,5 +266,10 @@ public class Params {
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
+    }
+    
+    public String getDisplayLabel()
+    {
+        return displayLabel;
     }
 }

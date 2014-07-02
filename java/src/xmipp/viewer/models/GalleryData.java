@@ -62,6 +62,8 @@ public class GalleryData {
         protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
+        private ColumnInfo displayci;
+        private String displayLabel;
 
 
 	public Params parameters;
@@ -89,7 +91,6 @@ public class GalleryData {
         protected String renderLabel;
         protected String[] visibleLabels;
         protected String[] orderLabels;
-        protected ColumnInfo displayci;
 
     
 
@@ -114,7 +115,9 @@ public class GalleryData {
 	 * @param jFrameGallery
 	 */
 
+
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
+
 
 		this.window = window;
 		try {
@@ -137,6 +140,7 @@ public class GalleryData {
 				mode = Mode.TABLE_MD;
 			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 
+
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -148,7 +152,8 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-
+                        displayLabel = parameters.getDisplayLabel();
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
@@ -163,8 +168,12 @@ public class GalleryData {
         }
         
         public void setDisplayLabel(String key) {
-            if(key.equalsIgnoreCase("none"));
+            displayci = null;
+            if(key == null || key.equalsIgnoreCase("none"))
+            {
                 displayci = null;
+                return;
+            }
             for(ColumnInfo ci: labels)
                 if(ci.labelName.equals(key))
                 {
@@ -401,6 +410,7 @@ public class GalleryData {
                         
 			labels = newLabels;
                         orderLabels();
+                        setDisplayLabel(displayLabel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
