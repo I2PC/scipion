@@ -56,7 +56,8 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
-    private ColumnInfo displayci;
+        private ColumnInfo displayci;
+    private String displayLabel;
 
         
 
@@ -101,21 +102,21 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Params param, MetaData md) {
+	public GalleryData(Window window, String fn, Params params, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
-			parameters = param;
-			zoom = param.zoom;
-			globalRender = param.renderImages;
+			parameters = params;
+			zoom = params.zoom;
+			globalRender = params.renderImages;
 			mode = Mode.GALLERY_MD;
-			resliceView = param.resliceView;
-			useGeo = param.useGeo;
-			wrap = param.wrap;
+			resliceView = params.resliceView;
+			useGeo = params.useGeo;
+			wrap = params.wrap;
 
-			if (param.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
+			if (params.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
+			else if (params.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
 
 			setFileName(fn);
@@ -127,7 +128,8 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-
+                        displayLabel = params.getDisplayLabel();
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
@@ -142,8 +144,12 @@ public class GalleryData {
         }
         
         public void setDisplayLabel(String key) {
-            if(key.equalsIgnoreCase("none"));
+            displayci = null;
+            if(key == null || key.equalsIgnoreCase("none"))
+            {
                 displayci = null;
+                return;
+            }
             for(ColumnInfo ci: labels)
                 if(ci.labelName.equals(key))
                 {
@@ -372,6 +378,7 @@ public class GalleryData {
 			}
 
 			labels = newLabels;
+                        setDisplayLabel(displayLabel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

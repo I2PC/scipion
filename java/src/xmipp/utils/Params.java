@@ -30,6 +30,7 @@ public class Params {
     public final static String OPENING_MODE_METADATA = "metadata";
     public final static String OPENING_MODE_ROTSPECTRA = "rotspectra";
     public final static String RENDER_IMAGES = "render";
+    public final static String DISPLAY_LABEL = "label";
     public final static String SINGLE_SELECTION = "singlesel";
     public final static String SELECTION_TYPE = "seltype";
     public final static String SELECTION_TYPE_ANY = "any";
@@ -61,6 +62,7 @@ public class Params {
     public int zoom = 0;
     public boolean renderImages = false;
     public String renderLabel = "first"; //Label to render, by default first
+    public String displayLabel;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -102,6 +104,7 @@ public class Params {
         options.addOption(POLL, false, "");
         options.addOption(ZOOM, true, "");
         options.addOption(RENDER_IMAGES, true, "");
+        options.addOption(DISPLAY_LABEL, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -175,6 +178,8 @@ public class Params {
             if (renderImages){
             	renderLabel = cmdLine.getOptionValue(RENDER_IMAGES);
             }
+            if(cmdLine.hasOption(DISPLAY_LABEL))
+            	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
             
             debug = cmdLine.hasOption(DEBUG);
             mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
@@ -245,5 +250,10 @@ public class Params {
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
+    }
+    
+    public String getDisplayLabel()
+    {
+        return displayLabel;
     }
 }
