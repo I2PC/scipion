@@ -1792,7 +1792,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         String id, column;
                         for(ColumnInfo ci: data.getColumns())
                         {
-                            if(ci.allowRender)
+                            if(ci.render)
                             {
                                 column = ci.labelName;
                                 id = String.format("Display.RenderImagesColumn.%s_rb", column.replace(".", ""));
@@ -1826,6 +1826,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         mi.addActionListener(new DisplayLabelActionListener());
                         for(ColumnInfo ci: data.getColumns())
                         {
+                            if(ci.visible)
+                            {
                                 column = ci.labelName;
                                 id = String.format("Display.ShowLabel.%s_rb", column.replace(".", ""));
                                 mi = addItem(id, column);
@@ -1833,7 +1835,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 String displayLabel = data.parameters.getDisplayLabel();
                                 if(displayLabel != null && displayLabel.equals(column))
                                         setItemSelected(id, true);
-                                
+                            }   
                         }
 
 		}
