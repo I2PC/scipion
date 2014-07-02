@@ -5,10 +5,15 @@ $(document).ready(function(){
     $("i#closeMenu, div#enabledSelection, div#disabledSelection").click(function(){
 		$("div#multipleSelectionTool").css("display", "none");
     });
+	
+	//To be able move the div around the windows containter.
+	$("div#multipleSelectionTool").draggable();
     
 });
 </script>
-	
+
+<script type="text/javascript" src="{{jquery_ui}}"></script>
+
 <!-- Hidden menu for multiple selection tool -->
 <div class="multipleSelectionToolContainer" id="multipleSelectionTool">
 	<span class="multipleSelectionTitle">
