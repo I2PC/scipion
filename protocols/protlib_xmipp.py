@@ -640,6 +640,7 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('  [--label_alias <alias_string>]  : Activate some metadata label alias, for example')
         self.addParamsLine('                                  : anglePsi=aPsi;shiftX=sX;shiftY:sY')
         self.addParamsLine('  [--label_relion]                : Activates the mapping to Relion labels')
+        self.addParamsLine('  [--label_bsoft]                 : Activates the mapping to Bsoft labels')
         
     def readOtherParams(self):
         params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render']
@@ -654,8 +655,10 @@ class ScriptShowJ(ScriptAppIJ):
         # Set environment var for extra label alias
         if self.checkParam('--label_alias'):
             os.environ['XMIPP_EXTRA_ALIASES'] = self.getParam('--label_alias')
-
-        if self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
+        elif self.checkParam('--label_bsoft'):
+            from protlib_import import relionLabelString
+            os.environ['XMIPP_EXTRA_ALIASES'] = bsoftLabelString()
+        elif self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
             from protlib_import import relionLabelString
             os.environ['XMIPP_EXTRA_ALIASES'] = relionLabelString()
  
