@@ -1818,10 +1818,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         String id, column;
                         for(ColumnInfo ci: data.getColumns())
                         {
-                            if(ci.allowRender)
+                            if(ci.render)
                             {
                                 column = ci.labelName;
-                                id = String.format("Display.RenderImagesColumn.%s_rb", column);
+                                id = String.format("Display.RenderImagesColumn.%s_rb", column.replace(".", ""));
                                 mi = addItem(id, column);
                                 mi.addActionListener(new RenderColumnActionListener());
                                 if(data.getRenderColumn().toString().equals(column))
@@ -1843,19 +1843,25 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			
                         // Create the popup menu.
                         String id, column;
+                        
                        
                         id = "Display.ShowLabel.None_rb";
                         column = "none";
                         mi = addItem(id, column);
-                        mi.setSelected(true);
+                        setItemSelected(id, true);
                         mi.addActionListener(new DisplayLabelActionListener());
                         for(ColumnInfo ci: data.getColumns())
                         {
+                            if(ci.visible)
+                            {
                                 column = ci.labelName;
-                                id = String.format("Display.ShowLabel.%s_rb", column.replace("_", ""));
+                                id = String.format("Display.ShowLabel.%s_rb", column.replace(".", ""));
                                 mi = addItem(id, column);
                                 mi.addActionListener(new DisplayLabelActionListener());
-                                
+                                String displayLabel = data.parameters.getDisplayLabel();
+                                if(displayLabel != null && displayLabel.equals(column))
+                                        setItemSelected(id, true);
+                            }   
                         }
 
 		}

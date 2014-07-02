@@ -41,7 +41,6 @@ public abstract class XmippMenuBarCreator extends XmippMenuCreator {
 	public void addSeparator(String key) {
 		JMenu menu = (JMenu) items.get(key);
 		menu.addSeparator();
-		group = null; //defines a new group
 	}
 
 }
