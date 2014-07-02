@@ -51,6 +51,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	 * @throws Exception
 	 */
 	public JMenuItem addItem(String key, String text, String... values){
+                
 		String name = key;
 		JMenuItem item = null;
 		JMenu parent = null;

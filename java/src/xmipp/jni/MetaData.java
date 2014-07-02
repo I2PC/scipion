@@ -57,7 +57,7 @@ public class MetaData {
         protected String renderLabel = "first";
         protected String[] visibleLabels;
         protected String[] orderLabels;
-    
+
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -89,6 +89,7 @@ public class MetaData {
 
 	// keep labels for avoid read all the time
 	int[] activeLabels;
+        
 
 	static {
 		System.loadLibrary("XmippJNI");
@@ -514,8 +515,6 @@ public class MetaData {
 	*/
 	public native double getColumnMin(int column);
 	
-	
-
 	public native double getColumnMax(int column);
 
     
@@ -555,6 +554,7 @@ public class MetaData {
            return orderLabels;
        }
        
+
 	
 	public boolean isCTFMd() {
 		try {
@@ -612,4 +612,7 @@ public class MetaData {
      }
      
 
+       
+       
+       
 }

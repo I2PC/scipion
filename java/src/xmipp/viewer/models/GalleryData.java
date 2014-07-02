@@ -28,6 +28,7 @@ package xmipp.viewer.models;
 import ij.ImagePlus;
 import ij.process.EllipseFitter;
 import java.awt.Color;
+import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,6 +40,7 @@ import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
+import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -48,9 +50,8 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
-import xmipp.viewer.ctf.CTFRecalculateImageWindow;
-import xmipp.jni.EllipseCTF;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
+import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
 import xmipp.viewer.windows.AddObjectJDialog;
@@ -106,8 +107,11 @@ public class GalleryData {
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
     protected List<EllipseCTF> ctfs;
-    
-
+    private String displayLabel;
+    protected String[] renderLabels;
+    protected String renderLabel;
+    protected String[] visibleLabels;
+    protected String[] orderLabels;
 
     
 
@@ -229,6 +233,7 @@ public class GalleryData {
                     // validate
                     // block exists
                     filename = Filename.getFilename(file);
+
                 }
             }
             if (Filename.exists(filename)) {
@@ -239,6 +244,21 @@ public class GalleryData {
             }
         }
 
+    }
+
+    public void setDisplayLabel(String key) {
+                displayci = null;
+                if(key == null || key.equalsIgnoreCase("none"))
+                {
+                    displayci = null;
+                    return;
+                }
+                for(ColumnInfo ci: labels)
+                    if(ci.labelName.equals(key))
+                    {
+                        displayci = ci;
+                        break;
+                    }
     }
 
     /**
@@ -284,6 +304,7 @@ public class GalleryData {
             ImageGeneric image = null;
             String imageFn;
 
+
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
@@ -291,6 +312,7 @@ public class GalleryData {
                         md.getValueString(renderLabel, ids[i]), filename, true);
 
 				// DEBUG.printFormat("imageFn1: %s", imageFn);
+
                 // imageFn = Filename.fixPath(md.getValueString(renderLabel,
                 // ids[i]), filename, false);
                 // DEBUG.printFormat("imageFn2: %s", imageFn);
@@ -349,6 +371,7 @@ public class GalleryData {
 
     }// function loadMd
 
+
         
                
     public boolean isDisplayLabel()
@@ -356,16 +379,7 @@ public class GalleryData {
         return displayci != null;
     }
 
-    public void setDisplayLabel(String key) {
-        if(key.equalsIgnoreCase("none"));
-            displayci = null;
-        for(ColumnInfo ci: labels)
-            if(ci.labelName.equals(key))
-            {
-                displayci = ci;
-                break;
-            }
-    }
+   
 
     public ColumnInfo getDisplayLabel()
     {
