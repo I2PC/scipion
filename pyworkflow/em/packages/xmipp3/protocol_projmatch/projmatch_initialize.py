@@ -46,7 +46,7 @@ def createFilenameTemplates(self):
                     'libraryDir': LibraryDir,
                     'projectLibraryRootName': projectLibraryRootName,
                     'projMatchDir': "ProjMatchClasses",
-                    'projMatchName': self.getClassName(), # FIXME: check if this is important
+                    'projMatchName': self.getClassName(), 
                     'classAverageName': 'class_average',
                     #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
                     'forReconstructionSel': "reconstruction.sel",
@@ -149,7 +149,7 @@ def initializeLists(self):
     maxFreq = self.fourierMaxFrequencyOfInterest.get()
     n2 = self.numberOfIterations.get() + 2
     
-    if self.doComputeResolution=='0' or self.doComputeResolution==0:
+    if self.doComputeResolution:
         self._fourierMaxFrequencyOfInterest = [maxFreq] * n2
     else:
         self._fourierMaxFrequencyOfInterest = [-1] * n2
@@ -166,19 +166,18 @@ def initializeLists(self):
     self._discardPercentage = self.itersFloatValues('discardPercentage')
     self._discardPercentagePerClass = self.itersFloatValues('discardPercentagePerClass')
     self._doAlign2D = self.itersBoolValues('doAlign2D')
-    self._doComputeResolution = self.itersBoolValues('doComputeResolution')
     self._doSplitReferenceImages = self.itersBoolValues('doSplitReferenceImages')
-    self._innerRadius = self.itersFloatValues('innerRadius', firstValue=False) # FIXME: merging bool and floats
+    self._innerRadius = self.itersFloatValues('innerRadius')
     self._maxChangeInAngles = self.itersFloatValues('maxChangeInAngles')
     self._maxChangeOffset = self.itersFloatValues('maxChangeOffset')
     self._minimumCrossCorrelation = self.itersFloatValues('minimumCrossCorrelation')
     self._onlyWinner = self.itersBoolValues('onlyWinner')
-    self._outerRadius = self.itersFloatValues('outerRadius', firstValue=False) # FIXME: merging bool and floats
+    self._outerRadius = self.itersFloatValues('outerRadius')
     self._perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
     #FIXME: this need to use later self.referenceIsCtfCorrected value or take it
     # from the input references objects
     self.referenceIsCtfCorrected = String('False True')
-    self._referenceIsCtfCorrected = self.itersBoolValues('referenceIsCtfCorrected') # FIXME: using bool string and float list in xmipp
+    self._referenceIsCtfCorrected = self.itersBoolValues('referenceIsCtfCorrected') 
     
     self._scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')
     self._scaleStep = self.itersFloatValues('scaleStep')

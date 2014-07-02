@@ -107,18 +107,13 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         
         for iterN in self.allIters():
             dirsStep = self._insertFunctionStep('createIterDirsStep', iterN)
-
-            ProjMatchRootNameList = [''] # FIXME: check the function of this list
-            
             # Insert some steps per reference volume
             projMatchSteps = []
             for refN in self.allRefs():
                 # Mask the references in the iteration
                 insertMaskReferenceStep(self, iterN, refN, prerequisites=[dirsStep])
-                
                 # Create the library of projections
                 insertAngularProjectLibraryStep(self, iterN, refN)
-                
                 # Projection matching steps
                 projMatchStep = self._insertProjectionMatchingStep(iterN, refN)
                 projMatchSteps.append(projMatchStep)
@@ -126,23 +121,20 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             # Select the reference that best fits each image
             self._insertFunctionStep('assignImagesToReferencesStep', iterN, prerequisites=projMatchSteps)
             
+            insertAngularClassAverageStep(self, iterN, refN)
     
             # Reconstruct each reference with new averages
             for refN in self.allRefs():
                 # Create new class averages with images assigned
-                # FIXME: This function is originally outside the loop of references. CHECK WITH ROBERTO....
-                insertAngularClassAverageStep(self, iterN, refN)
                 insertReconstructionStep(self, iterN, refN)
                 
-                if self._doSplitReferenceImages[iterN]:
-                    if self._doComputeResolution[iterN]:
-                        # Reconstruct two halves of the data
-                        insertReconstructionStep(self, iterN, refN, 'Split1')
-                        insertReconstructionStep(self, iterN, refN, 'Split2')
-                        # Compute the resolution
-                        insertComputeResolutionStep(self, iterN, refN)
+                if self.doComputeResolution and self._doSplitReferenceImages[iterN]:
+                    # Reconstruct two halves of the data
+                    insertReconstructionStep(self, iterN, refN, 'Split1')
+                    insertReconstructionStep(self, iterN, refN, 'Split2')
+                    # Compute the resolution
+                    insertComputeResolutionStep(self, iterN, refN)
                     
-                # FIXME: in xmipp this step is inside the if self.doSplit.. a bug there?    
                 insertFilterVolumeStep(self, iterN, refN)
     
     def _insertProjectionMatchingStep(self, iterN, refN):

@@ -536,11 +536,10 @@ def _defineProjectionMatchingParams(self, form):
     [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Wbp][xmipp wbp]]
     """)                  
     
-    form.addParam('doComputeResolution', NumericListParam, default='1',
+    form.addParam('doComputeResolution', BooleanParam, default=True,
                  label='Compute resolution?', expertLevel=LEVEL_EXPERT,
                  help=""" For details see:
-    [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution][xmipp resolution]]
-    Set to 1 to compute resolution and to 0 if you do not want to compute it.
+    [[http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution][xmipp resolution]].
     """)
     
     form.addParam('doSplitReferenceImages', NumericListParam, default='1',

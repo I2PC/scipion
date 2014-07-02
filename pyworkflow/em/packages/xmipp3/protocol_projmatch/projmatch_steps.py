@@ -338,7 +338,7 @@ def insertAngularClassAverageStep(self, iterN, refN, **kwargs):
     docFileInputAngles  = self.docFileInputAngles[iterN]
     projLibraryDoc = self._getFileName('projectLibraryDoc', iter=iterN, ref=refN)
     outClasses = self._getFileName('outClasses', iter=iterN, ref=refN)
-         # FIXME: Why is necessary ask if docFileInputAngles is empty. check if is a validation step
+    # FIXME: Why is necessary ask if docFileInputAngles is empty. check if is a validation step
 #     if xmipp.emptyMd(docFileInputAngles):
 #         print "Empty metadata file: %s" % docFileInputAngles
 #         return
@@ -377,10 +377,9 @@ def insertAngularClassAverageStep(self, iterN, refN, **kwargs):
         args += ' --iter %(alignIter)s --Ri %(innerRadius)s --Ro %(outerRadius)s'
         params['alignIter'] = self._align2DIterNr[iterN]
         params['innerRadius'] = self._innerRadius[iterN]
-#         FIXME: Check why outerRadius is not set in xmipp.
         params['outerRadius'] = self._outerRadius[iterN]
         
-    if self._doComputeResolution[iterN] and self._doSplitReferenceImages[iterN]:
+    if self.doComputeResolution and self._doSplitReferenceImages[iterN]:
         args += ' --split'
 
     processorsToUse = self.numberOfMpi.get() * self.numberOfThreads.get()                   
