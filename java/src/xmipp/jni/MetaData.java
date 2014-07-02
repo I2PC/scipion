@@ -577,7 +577,7 @@ public class MetaData {
         public EllipseCTF getEllipseCTF(long id, int D) {
             MetaData md = new MetaData(getCTFFile(id));
             try {
-                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV;
+                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
 
                 Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
                 Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
@@ -587,8 +587,9 @@ public class MetaData {
 
                 defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
                 defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
+                defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
 
-                return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, D);
+                return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, defAngle, D);
             } catch (Exception ex) {
                 IJ.error(ex.getMessage());
                 throw new IllegalArgumentException(ex);

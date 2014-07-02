@@ -843,7 +843,7 @@ public class ScipionMetaData extends MetaData {
         try {
             EMObject emo = getEMObject(id);
 
-            double Q0, Cs = 0, Ts = 0, kV = 0, defU = 0, defV = 0;
+            double Q0, Cs = 0, Ts = 0, kV = 0, defU = 0, defV = 0, defAngle;
 
             Q0 = emo.getValueDouble("_micObj._acquisition._amplitudeContrast");
             Cs = emo.getValueDouble("_micObj._acquisition._sphericalAberration");
@@ -852,9 +852,10 @@ public class ScipionMetaData extends MetaData {
 
             defU = emo.getValueDouble("_defocusU");
             defV = emo.getValueDouble("_defocusV");
+            defAngle = emo.getValueDouble("_defocusAngle");
                 //read params from sqlite
 
-            return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, D);
+            return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             throw new IllegalArgumentException(ex);

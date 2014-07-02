@@ -19,10 +19,11 @@ public class EllipseCTF {
     private double defocusU, defocusV;
     private long id;
     private EllipseFitter ellipseFitter;
-    private String psd;
+    private double defocusAngle;
 
     public void setEllipseFitter(EllipseFitter ellipseFitter) {
         this.ellipseFitter = ellipseFitter;
+        defocusAngle = ellipseFitter.angle;
     }
 
     public EllipseFitter getEllipseFitter() {
@@ -30,7 +31,9 @@ public class EllipseCTF {
     }
    
     
-    public EllipseCTF(long id, double Q0, double Cs, double Ts, double kV, double mddefU, double mddefV, int D)
+    
+    
+    public EllipseCTF(long id, double Q0, double Cs, double Ts, double kV, double mddefU, double mddefV, double defocusAngle, int D)
     {
         this.id = id;
         this.D = D;
@@ -41,6 +44,7 @@ public class EllipseCTF {
         this.lambda = EllipseCTF.lambda(kV);
         this.mddefU = mddefU;
         this.mddefV = mddefV;
+        this.defocusAngle = defocusAngle;
     }
     
     public long getId()
@@ -142,6 +146,7 @@ public class EllipseCTF {
         md.setValueDouble(MDLabel.MDL_CTF_VOLTAGE, kV, id);
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSU, mddefU, id);
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSV, mddefV, id);
+        md.setValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, defocusAngle, id);
         md.print();
         return md;       
     }
