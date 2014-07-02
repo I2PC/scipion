@@ -192,7 +192,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	GalleryData data;
 	private ExtractPickerJFrame extractframe;
 	private ButtonGroup reslicegroup;
-	private Hashtable<String, ColumnInfo> imagecolumns;
 	/** Some static initialization for fancy default dimensions */
 	static
 	{
@@ -1583,6 +1582,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
+                        addDisplayLabelItems();
+                        addRenderImageColumnItems();
 		}// function update
 
 		@Override
@@ -1778,37 +1779,41 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		
 		protected void addRenderImageColumnItems()
 		{                  
-			addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image");
-			JMenuItem mi;
+                        JMenuItem mi = getItem(DISPLAY_RENDERIMAGECOLUMN);
+                        if(mi == null)
+                            mi = addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image");
+                        else
+                            mi.removeAll();
 			
-			imagecolumns = new Hashtable<String, ColumnInfo>();
-			for (ColumnInfo column : data.getColumns())
-				if (column.allowRender)
-					imagecolumns.put(column.toString(), column);
-			boolean rendercolumn = imagecolumns.size() > 0;
-			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
-			if(rendercolumn)
-			{
-				// Create the popup menu.
-				String id, column;
-				Enumeration<String> keys = imagecolumns.keys();
-				while (keys.hasMoreElements())
-				{
-					column = keys.nextElement();
-					id = String.format("Display.RenderImagesColumn.%s_rb", column);
-					mi = addItem(id, column);
-					mi.addActionListener(new RenderColumnActionListener());
-					if(data.getRenderColumn().toString().equals(column))
-						setItemSelected(id, true);
-				}
-			}
+			
+			boolean rendercolumn = false;
+			
+                        // Create the popup menu.
+                        String id, column;
+                        for(ColumnInfo ci: data.getColumns())
+                        {
+                            if(ci.allowRender)
+                            {
+                                column = ci.labelName;
+                                id = String.format("Display.RenderImagesColumn.%s_rb", column);
+                                mi = addItem(id, column);
+                                mi.addActionListener(new RenderColumnActionListener());
+                                if(data.getRenderColumn().toString().equals(column))
+                                        setItemSelected(id, true);
+                                rendercolumn = true;
+                            }
+                        }
+                        setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
 
 		}
                 
                 protected void addDisplayLabelItems()
 		{                  
-                        addItem(DISPLAY_SHOWLABELS, "Display Label");
-			JMenuItem mi;
+                        JMenuItem mi = getItem(DISPLAY_SHOWLABELS);
+			if(mi == null)
+                            mi = addItem(DISPLAY_SHOWLABELS, "DisplayLabel");
+                        else
+                            mi.removeAll();
 			
                         // Create the popup menu.
                         String id, column;
@@ -1853,7 +1858,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
 				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
 				String key = mi.getText();
-				data.setRenderColumn(imagecolumns.get(key));
+				data.setRenderColumn(key);
 				reloadTableData();
 			}
 

@@ -162,8 +162,12 @@ public class GalleryData {
 		return labels;
 	}
 
-	public void setRenderColumn(ColumnInfo ci) {
-		ciFirstRender = ci;
+	public void setRenderColumn(String key) {
+            if(key.equalsIgnoreCase("none"))
+                ciFirstRender = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                    ciFirstRender = ci;
 	}
 
 	public ColumnInfo getRenderColumn() {

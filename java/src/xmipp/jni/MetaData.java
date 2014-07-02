@@ -49,6 +49,8 @@ public class MetaData {
 	public static final String FILL_LINEAR = "linear";
 	public static final String FILL_RAND_UNIFORM = "random uniform";
 	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
+        
+     
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -80,6 +82,7 @@ public class MetaData {
 
 	// keep labels for avoid read all the time
 	int[] activeLabels;
+        
 
 	static {
 		System.loadLibrary("XmippJNI");
@@ -501,11 +504,13 @@ public class MetaData {
 	*/
 	public native double getColumnMin(int column);
 	
+
+        public native double getColumnMax(int column);
+	
+	
 	
 
-	public native double getColumnMax(int column);
-	
-	
-	
-
+       
+       
+       
 }
