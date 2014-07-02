@@ -118,6 +118,7 @@ def createFilenameTemplates(self):
             'stackCTFs': CtfGroupBase + '_ctf.stk',
             'stackWienerFilters': CtfGroupBase + '_wien.stk',
             'splitAtDefocus': CtfGroupBase + '_split.doc',
+            'ctfGroupBase' : CtfGroupBase,
             # Particular templates for angular_project_library 
             'projectLibraryStk': ProjLibRootNames + '.stk',
             'projectLibraryDoc': ProjLibRootNames + '.doc',
@@ -131,6 +132,11 @@ def createFilenameTemplates(self):
     self._updateFilenamesDict(myDict)
     self.selFileName = self._getFileName('inputParticlesXmd')
     
+    if self.doCTFCorrection:
+        if self.setOfDefocus:
+            self.ctfDatName = self.setOfDefocus
+        else:
+            self.ctfDatName = self.selFileName
     
 def initializeLists(self):
     """ Load lists with values for iterations...values are taken from string values.
