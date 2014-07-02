@@ -282,7 +282,9 @@ section .img_container {
 }
 
 section .img_container:hover {
-	background-color:Black;
+	border:1px solid black;
+	margin: -1px;
+/* 	background-color:black; */
 }
 
 
