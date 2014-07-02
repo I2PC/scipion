@@ -245,10 +245,10 @@ class ProtJoinSets(ProtSets):
     
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
-    def createOutput(self):
+    def createOutputStep(self):
         #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
         self.inputType = str(self.inputSets[0].get().getClassName())
         #self.inputType = str(self.inputSet1.get().getClassName())
@@ -282,24 +282,101 @@ class ProtJoinSets(ProtSets):
 
     def _summary(self):
         summary = []
-#         if not hasattr(self, 'outputImages'):
-#             summary.append("Output set not ready yet.")
-#         else:
-#             summary.append("Input sets of type %s:" % self.outputImages.getClassName())
-#             inputSets = [self.inputSet1, self.inputSet2]
-#             for itemSet in inputSets:
-#                 summary.append("%s" % itemSet.get().getNameId())
-        return summary
-        
-    def _methods(self):
-        methods = []
+
         if not hasattr(self, 'outputImages'):
-            methods.append("Protocol has not finished yet.")
+            summary.append("Protocol has not finished yet.")
         else:
             m = "We have joint the following sets: "
             #inputSets = [self.inputSet1, self.inputSet2]
             for itemSet in self.inputSets:
                 m += "%s, " % itemSet.get().getNameId()
-            methods.append(m[:-2])
+            summary.append(m[:-2])
         
-        return methods
+        return summary
+        
+    def _methods(self):
+        return self._summary()
+            
+
+class ProtSplitSet(ProtSets):
+    """ Protocol to split a set in two or more subsets. 
+    """
+    _label = 'split sets'
+
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):    
+        form.addSection(label='Input')
+        
+        form.addParam('inputSet', PointerParam, label="Input images", important=True, 
+                      pointerClass='SetOfImages', 
+                      help='Select the set of images that you want to split. '
+                           )
+        form.addParam('numberOfSets', IntParam, label="Number of subsets", default=2,
+                      help='Select how many subsets do you want to create. '
+                           )    
+    #--------------------------- INSERT steps functions --------------------------------------------   
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+    
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self):
+        inputSet = self.inputSet.get()
+        inputClassName = str(inputSet.getClassName())
+        #self.inputType = str(self.inputSet1.get().getClassName())
+        outputSetFunction = getattr(self, "_create%s" % inputClassName)
+        n = self.numberOfSets.get()
+        
+        # Create as many subsets as requested by the user
+        subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
+        # Iterate over the images in the input set and assign
+        # diffent subsets
+        for i, img in enumerate(self.inputSet.get()):
+            subsets[i % n].append(img)
+            
+        key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
+        for i in range(1, n+1):
+            s = subsets[i-1]
+            s.copyInfo(inputSet)
+            self._defineOutput(*{key % i: subsets[i-1]})
+        
+        #Copy info from input (sampling rate, etc)
+        outputSet.copyInfo(self.inputSets[0].get())
+       
+        for itemSet in self.inputSets:
+            for itemObj in itemSet.get():
+                itemObj.cleanObjId()
+                outputSet.append(itemObj)
+        
+        self._defineOutputs(outputImages=outputSet)
+        
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        classList = []
+        #inputSets = [self.inputSet1, self.inputSet2]
+        for itemSet in self.inputSets:
+            itemClassName = itemSet.get().getClassName()
+            if len(classList) == 0 or itemClassName not in classList:
+                classList.append(itemClassName)
+            
+        errors = []
+        if len(classList) > 1:
+            errors.append("Object should have same type")
+            errors.append("Types of objects found: " + ", ".join(classList))
+        return errors   
+
+    def _summary(self):
+        summary = []
+
+        if not hasattr(self, 'outputImages'):
+            summary.append("Protocol has not finished yet.")
+        else:
+            m = "We have joint the following sets: "
+            #inputSets = [self.inputSet1, self.inputSet2]
+            for itemSet in self.inputSets:
+                m += "%s, " % itemSet.get().getNameId()
+            summary.append(m[:-2])
+        
+        return summary
+        
+    def _methods(self):
+        return self._summary()
