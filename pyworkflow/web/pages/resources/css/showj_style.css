@@ -281,6 +281,11 @@ section .img_container {
 	display: inline-block;
 }
 
+section .img_container:hover {
+	background-color:Black;
+}
+
+
 section .img_inner_container{
 	position: relative; 
 }
@@ -320,10 +325,10 @@ section .imageTitle{
 .multipleSelectionToolContainer{
 	display:none;
 	z-index:999;
-	background-color: #eaebec;
-/* 	background-color: white; */
+/* 	background-color: #eaebec; */
+	background-color: Firebrick;;
 /* 	color: #6e6e6e; */
-	color: black;;
+	color: black;
 	
 	-webkit-align-items: center;
 	-moz-align-items: center;
@@ -357,11 +362,14 @@ section .imageTitle{
 .multipleSelectionToolItem{
 	cursor: pointer;
 	padding: 5px;
-	margin: 0 5px 0px 5px;
+	margin: 1px;
+	border: 1px solid black;
+	background-color: white;
 }
 
 .multipleSelectionToolItem:hover{
 	color:Firebrick;
+	background-color: #eaebec;
 }
 
 .pressedButton{
