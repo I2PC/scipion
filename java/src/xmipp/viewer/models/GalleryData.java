@@ -107,7 +107,7 @@ public class GalleryData {
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
     protected List<EllipseCTF> ctfs;
-    private String displayLabel;
+    protected String displayLabel;
     protected String[] renderLabels;
     protected String renderLabel;
     protected String[] visibleLabels;
@@ -153,6 +153,7 @@ public class GalleryData {
             resliceView = parameters.resliceView;
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
+            displayLabel = parameters.getDisplayLabel();
 
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) {
                 mode = Mode.TABLE_MD;
@@ -182,9 +183,13 @@ public class GalleryData {
         return labels;
     }
 
-    public void setRenderColumn(ColumnInfo ci) {
-        ciFirstRender = ci;
-    }
+    public void setRenderColumn(String key) {
+            if(key.equalsIgnoreCase("none"))
+                ciFirstRender = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                    ciFirstRender = ci;
+	}
 
     public ColumnInfo getRenderColumn() {
         return ciFirstRender;
@@ -247,18 +252,15 @@ public class GalleryData {
     }
 
     public void setDisplayLabel(String key) {
-                displayci = null;
-                if(key == null || key.equalsIgnoreCase("none"))
-                {
-                    displayci = null;
-                    return;
-                }
-                for(ColumnInfo ci: labels)
-                    if(ci.labelName.equals(key))
-                    {
-                        displayci = ci;
-                        break;
-                    }
+        displayci = null;
+        if(key == null || key.equalsIgnoreCase("none"))
+            return;
+        for(ColumnInfo ci: labels)
+            if(ci.labelName.equals(key))
+            {
+                displayci = ci;
+                break;
+            }
     }
 
     /**
@@ -383,7 +385,6 @@ public class GalleryData {
 
     public ColumnInfo getDisplayLabel()
     {
-
         return displayci;
     }
 
@@ -453,6 +454,8 @@ public class GalleryData {
 
             labels = newLabels;
             orderLabels();
+            
+            setDisplayLabel(displayLabel);
         } catch (Exception e) {
             e.printStackTrace();
         }

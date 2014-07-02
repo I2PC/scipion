@@ -5,7 +5,6 @@
  */
 package xmipp.viewer.scipion;
 
-import ij.process.EllipseFitter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
-import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -50,6 +48,7 @@ public class ScipionGalleryData extends GalleryData {
 
     }
 
+    @Override
     public void loadLabels() {
         ScipionMetaData smd = (ScipionMetaData) md;
 
@@ -66,6 +65,7 @@ public class ScipionGalleryData extends GalleryData {
         if (ciFirstRender == null) {
             zoom = 100;
         }
+        setDisplayLabel(displayLabel);
     }
 
     public String getValueFromLabel(int index, int label) {

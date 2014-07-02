@@ -1573,7 +1573,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
-			setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, galMode);
+			setItemEnabled(DISPLAY_RENDERIMAGE, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
 			setItemEnabled(DISPLAY_COLUMNS, !galMode);
@@ -1786,9 +1786,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		
 		protected void addRenderImageColumnItems()
 		{                  
-                        JMenuItem mi = getItem(DISPLAY_RENDERIMAGECOLUMN);
+                        JMenuItem mi = getItem(DISPLAY_RENDERIMAGE);
                         if(mi == null)
-                            mi = addItem(DISPLAY_RENDERIMAGECOLUMN, "Render Image");
+                            mi = addItem(DISPLAY_RENDERIMAGE, "Render Image");
                         else
                             mi.removeAll();
 			boolean rendercolumn = false;
@@ -1800,7 +1800,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                             if(ci.allowRender)
                             {
                                 column = ci.labelName;
-                                id = String.format("Display.RenderImagesColumn.%s_rb", column);
+                                id = String.format("Display.RenderImage.%s_rb", column.replace(".", ""));
                                 mi = addItem(id, column);
                                 mi.addActionListener(new RenderColumnActionListener());
                                 if(data.getRenderColumn().toString().equals(column))
@@ -1808,7 +1808,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 rendercolumn = true;
                             }
                         }
-                        setItemEnabled(DISPLAY_RENDERIMAGECOLUMN, rendercolumn);
+                        setItemEnabled(DISPLAY_RENDERIMAGE, rendercolumn);
 
 		}
                 
