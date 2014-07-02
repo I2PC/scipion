@@ -39,6 +39,5 @@ public abstract class XmippPopupMenuCreator extends XmippMenuCreator {
 	
 	public void addSeparator(){
 		getPopupMenu().addSeparator();
-		group = null;
 	}
 }
