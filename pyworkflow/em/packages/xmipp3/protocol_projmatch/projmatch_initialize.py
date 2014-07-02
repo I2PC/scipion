@@ -30,7 +30,7 @@ This sub-module contains several initialization functions related to
 Projection Matching.
 """
 
-from os.path import join
+from os.path import join, exists
 from pyworkflow.object import String
 
 # taken from angular_project_library in xmipp
@@ -133,7 +133,7 @@ def createFilenameTemplates(self):
     self.selFileName = self._getFileName('inputParticlesXmd')
     
     if self.doCTFCorrection:
-        if self.setOfDefocus:
+        if exists(self.setOfDefocus.get()):
             self.ctfDatName = self.setOfDefocus
         else:
             self.ctfDatName = self.selFileName

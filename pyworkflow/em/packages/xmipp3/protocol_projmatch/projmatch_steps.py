@@ -31,7 +31,7 @@ form definition, we have separated in this sub-module.
 """
 
 import math
-from os.path import exists
+from os.path import exists, join
 
 import xmipp
 from pyworkflow.object import Float
@@ -43,7 +43,7 @@ ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
 
 
-def runExecuteCtfGroupsStep(self):
+def runExecuteCtfGroupsStep(self, **kwargs):
     makePath(self.ctfGroupDirectory)
     self._log.info("Created CTF directory: '%s'" % self.ctfGroupDirectory)
     #     printLog("executeCtfGroups01"+ CTFDatName, _log) FIXME: print in log this line
@@ -60,19 +60,19 @@ def runExecuteCtfGroupsStep(self):
         
     #    remove all entries not present in sel file by
     #    join between selfile and metadatafile
-        MDctfdata = xmipp.MetaData()
-        MDctfdata.read(self.ctfDatName)
+        mdCtfData = xmipp.MetaData()
+        mdCtfData.read(self.ctfDatName)
     
-        MDsel = xmipp.MetaData();
-        MDsel.read(self.selFileName)
-        MDctfdata.intersection(xmipp.MDsel, xmipp.MDL_IMAGE)
+        mdSel = xmipp.MetaData();
+        mdSel.read(self.selFileName)
+        mdCtfData.intersection(mdSel, xmipp.MDL_IMAGE)
         tmpCtfDat = self.ctfDatName
-        MDctfdata.write(tmpCtfDat)
+        mdCtfData.write(tmpCtfDat)
         args = ' --ctfdat %(tmpCtfDat)s -o %(ctffile)s --wiener --wc %(wiener)s --pad %(pad)s'
         args += ' --sampling_rate %(sampling)s'
         
         params = {'tmpCtfDat' : tmpCtfDat,
-                  'ctffile' : self._getFileName['ctfGroupBase'] + ':stk',
+                  'ctffile' : self._getFileName('ctfGroupBase') + ':stk',
                   'wiener' : self.wienerConstant.get(),
                   'pad' : self.paddingFactor.get(),
                   'sampling' : self.resolSam
@@ -90,7 +90,7 @@ def runExecuteCtfGroupsStep(self):
                 args += ' --split %(setOfDefocus)s'  
                 params['setOfDefocus'] = self.setOfDefocus.get()
         
-        self.runJob("xmipp_ctf_group", args % params, **kwargs)
+        self.runJob("xmipp_ctf_group", args % params, numberOfMpi=1, **kwargs)
         
         auxMD = xmipp.MetaData("numberGroups@" + self._getFileName['cTFGroupSummary'])
         self.numberOfCtfGroups = auxMD.getValue(xmipp.MDL_COUNT, auxMD.firstObject())
