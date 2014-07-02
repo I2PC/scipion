@@ -95,6 +95,7 @@ def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, t
     incs = [] if incs is None else incs
     libs = ["lib%s.so" % name] if libs is None else libs
     deps = [] if deps is None else deps
+    # First we add the library to the main dictionary
     SCIPION['LIBS'][name] = {DEF: dft,
                      SRC: src,
                      INCS: incs,
@@ -104,6 +105,11 @@ def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, t
                      DEPS: deps,
                      URL: url,
                      FLAGS: flags}
+    # Then we add the option, so the user can call scons with this the library as option
+    AddOption('--%s' % name,
+              dest='%s' % name,
+              action='store_true',
+              help='Library %s option' % name)
 
 def _delLibrary(env, name):
     """
@@ -132,6 +138,10 @@ def _downloadLibrary(env, name, verbose=False):
     """
     import urllib2, urlparse
     library = SCIPION['LIBS'].get(name)
+    # Check whether the library must be downloaded
+    if not GetOption('%s' % name):
+        if not library[DEF]:
+            return False
     tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], library[TAR])
     tarFile = File(tar)
     md5 = "%s.md5" % tar
@@ -186,6 +196,10 @@ def _untarLibrary(env, name, tar=None, folder=None):
     import tarfile
     # Add builders to deal with source code, donwloads, etc 
     libraryDict = SCIPION['LIBS'].get(name)
+    # Check whether the library must be untar
+    if not GetOption('%s' % name):
+        if not libraryDict[DEF]:
+            return False
     if tar is None:
         tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR])
     if folder is None:
@@ -237,6 +251,10 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
     # PREPARING ENVIRONMENT
     env['CROSS_BUILD'] = False
     libraryDict = SCIPION['LIBS'].get(name)
+    # Check whether the library must be compiled
+    if not GetOption('%s' % name):
+        if not libraryDict[DEF]:
+            return False
     tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     incs = libraryDict[INCS] if incs is None else incs
     libs = libraryDict[LIBS] if libs is None else libs
@@ -342,6 +360,10 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     from shutil import copyfile
     import subprocess
     libraryDict = SCIPION['LIBS'].get(name)
+    # Check whether the module must be compiled 
+    if not GetOption('%s' % name):
+        if not libraryDict[DEF]:
+            return False
     tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     bin = SCIPION['FOLDERS'][BIN_FOLDER]
 
@@ -506,10 +528,10 @@ env.Decider('MD5-timestamp')
 
 #Depending on the system, we have to add to the environment, the path to where dynamic libraries are, so linker can find them 
 if LINUX:
-    env.AppendUnique(LIBPATH=os.environ['LD_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
 elif MACOSX:
     print "OS not tested yet"
-    env.AppendUnique(LIBPATH=os.environ['DYLD_FALLBACK_LIBRARY_PATH'])
+    env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH'))
 elif WINDOWS:
     print "OS not tested yet"
 
@@ -540,6 +562,14 @@ AddOption('--update',
           dest='update',
           action='store_true',
           help='Check for packages or libraries updates')
+AddOption('--purge',
+          dest='purge',
+          action='store_true',
+          help='Completely clean the installation and its binaries')
+AddOption('--binary',
+          dest='binary',
+          action='store_true',
+          help='After doing the installation, create and package a binary for distribution')
 
 env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION

@@ -31,7 +31,7 @@ form definition, we have separated in this sub-module.
 """
 
 import math
-from os.path import exists
+from os.path import exists, join
 
 import xmipp
 from pyworkflow.object import Float
@@ -43,15 +43,94 @@ ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
 
 
+def runExecuteCtfGroupsStep(self, **kwargs):
+    makePath(self.ctfGroupDirectory)
+    self._log.info("Created CTF directory: '%s'" % self.ctfGroupDirectory)
+    #     printLog("executeCtfGroups01"+ CTFDatName, _log) FIXME: print in log this line
+    
+    if not self.doCTFCorrection:
+        md = xmipp.MetaData(self.selFileName)
+        block_name = self._getBlockFileName(ctfBlockName, 1, self._getFileName('imageCTFpairs'))
+        md.write(block_name)
+        self._log.info("Written a single CTF group to file: '%s'" % block_name)
+        self.numberOfCtfGroups.set(1)
+    else:
+        self._log.info('*********************************************************************')
+        self._log.info('* Make CTF groups')
+        
+    #    remove all entries not present in sel file by
+    #    join between selfile and metadatafile
+        mdCtfData = xmipp.MetaData()
+        mdCtfData.read(self.ctfDatName)
+    
+        mdSel = xmipp.MetaData();
+        mdSel.read(self.selFileName)
+        mdCtfData.intersection(mdSel, xmipp.MDL_IMAGE)
+        tmpCtfDat = self.ctfDatName
+        mdCtfData.write(tmpCtfDat)
+        args = ' --ctfdat %(tmpCtfDat)s -o %(ctffile)s --wiener --wc %(wiener)s --pad %(pad)s'
+        args += ' --sampling_rate %(sampling)s'
+        
+        params = {'tmpCtfDat' : tmpCtfDat,
+                  'ctffile' : self._getFileName('ctfGroupBase') + ':stk',
+                  'wiener' : self.wienerConstant.get(),
+                  'pad' : self.paddingFactor.get(),
+                  'sampling' : self.resolSam
+                  }
+        
+        if self.inputParticles.get().isPhaseFlipped():
+            args += ' --phase_flipped '
+    
+        if self.doAutoCTFGroup:
+            args += ' --error %(ctfGroupMaxDiff)s --resol %(ctfGroupMaxResol)s'
+            params['ctfGroupMaxDiff'] = self.ctfGroupMaxDiff.get()
+            params['ctfGroupMaxResol'] = self.ctfGroupMaxResol.get()
+        else:
+            if exists(self.setOfDefocus.get()):
+                args += ' --split %(setOfDefocus)s'  
+                params['setOfDefocus'] = self.setOfDefocus.get()
+        
+        self.runJob("xmipp_ctf_group", args % params, numberOfMpi=1, **kwargs)
+        
+        auxMD = xmipp.MetaData("numberGroups@" + self._getFileName['cTFGroupSummary'])
+        self.numberOfCtfGroups = auxMD.getValue(xmipp.MDL_COUNT, auxMD.firstObject())
+
+    self._store(self.numberOfCtfGroups)
+
+
 # # Functions outside th loop loop for xmipp_projection_matching
-def insertInitAngularReferenceFileStep(self, **kwargs):
-    #...
-    #self._insertRunJobStep('') #...
-    pass
+def runInitAngularReferenceFileStep(self):
+    '''Create Initial angular file. Either fill it with zeros or copy input'''
+    #NOTE: if using angles, self.selFileName file should contain angles info
+    md = xmipp.MetaData(self.selFileName) 
+    
+    # Ensure this labels are always 
+    md.addLabel(xmipp.MDL_ANGLE_ROT)
+    md.addLabel(xmipp.MDL_ANGLE_TILT)
+    md.addLabel(xmipp.MDL_ANGLE_PSI)
+    
+    expImages = self._getFileName('inputParticlesDoc')
+    ctfImages = self._getFileName('imageCTFpairs')
+    
+    md.write(self._getExpImagesFileName(expImages))
+    blocklist = xmipp.getBlocksInMetaDataFile(ctfImages)
+    
+    mdCtf = xmipp.MetaData()
+    mdAux = xmipp.MetaData()
+    readLabels = [xmipp.MDL_ITEM_ID, xmipp.MDL_IMAGE]
+    
+    for block in blocklist:
+        #read ctf block from ctf file
+        mdCtf.read(block + '@' + ctfImages, readLabels)
+        #add ctf columns to images file
+        mdAux.joinNatural(md, mdCtf)
+        # write block in images file with ctf info
+        mdCtf.write(block + '@' + expImages, xmipp.MD_APPEND)
+        
+    return [expImages]
+
 
 # Functions in loop for xmipp_projection_matching
-
-
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
     print "executeMask", self.maskRadius.get()

@@ -162,55 +162,15 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             
         return iterDirs
     
-    def executeCtfGroupsStep(self):
-        makePath(self.ctfGroupDirectory)
-        self._log.info("Created CTF directory: '%s'" % self.ctfGroupDirectory)
-    #     printLog("executeCtfGroups01"+ CTFDatName, _log) FIXME: print in log this line
-    
-        if not self.doCTFCorrection:
-            md = xmipp.MetaData(self.selFileName)
-            block_name = self._getBlockFileName(ctfBlockName, 1, self._getFileName('imageCTFpairs'))
-            md.write(block_name)
-            self._log.info("Written a single CTF group to file: '%s'" % block_name)
-            self.numberOfCtfGroups.set(1)
-        else:
-            raise Exception("Ctf groupping not implemented yet")
-            # TODO: update self.numberOfCtfGroups with the appropiated value
-        self._store(self.numberOfCtfGroups)
+    def executeCtfGroupsStep(self, **kwargs):
+        runExecuteCtfGroupsStep(self, **kwargs)
     
     def angularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
         runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs)
         
     def initAngularReferenceFileStep(self):
-        '''Create Initial angular file. Either fill it with zeros or copy input'''
-        #NOTE: if using angles, self.selFileName file should contain angles info
-        md = xmipp.MetaData(self.selFileName) 
+        runInitAngularReferenceFileStep(self)
         
-        # Ensure this labels are always 
-        md.addLabel(xmipp.MDL_ANGLE_ROT)
-        md.addLabel(xmipp.MDL_ANGLE_TILT)
-        md.addLabel(xmipp.MDL_ANGLE_PSI)
-        
-        expImages = self._getFileName('inputParticlesDoc')
-        ctfImages = self._getFileName('imageCTFpairs')
-        
-        md.write(self._getExpImagesFileName(expImages))
-        blocklist = xmipp.getBlocksInMetaDataFile(ctfImages)
-        
-        mdCtf = xmipp.MetaData()
-        mdAux = xmipp.MetaData()
-        readLabels = [xmipp.MDL_ITEM_ID, xmipp.MDL_IMAGE]
-        
-        for block in blocklist:
-            #read ctf block from ctf file
-            mdCtf.read(block + '@' + ctfImages, readLabels)
-            #add ctf columns to images file
-            mdAux.joinNatural(md, mdCtf)
-            # write block in images file with ctf info
-            mdCtf.write(block + '@' + expImages, xmipp.MD_APPEND)
-            
-        return [expImages]
-    
     def projectionMatchingStep(self, iterN, refN, args):
         runProjectionMatching(self, iterN, refN, args)
     
@@ -240,6 +200,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     
     def _validate(self):
         errors = []
+        if self.doCTFCorrection and not self.doAutoCTFGroup and not exists(self.setOfDefocus.get()):
+            errors.append("Error: for non-automated ctf grouping, please provide a docfile!")
         return errors
     
     def _citations(self):

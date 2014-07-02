@@ -357,6 +357,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
+        if self.doFlip:
+            imgSet.setIsPhaseFlipped(True)
         
         #imgSet.setHasCTF(self.fnCTF is not None)
         imgSet.setHasCTF(self.ctfRelations.hasValue())
