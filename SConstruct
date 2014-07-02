@@ -48,17 +48,26 @@ PYVERSION = platform.python_version() #python version present in the machine
 
 # Big scipion structure dictionary and associated vars
 # indexes
-# folders & packages | libs  | index
-SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
-CONFIG_FOLDER =        INCS =  1 # includes                           
-INSTALL_FOLDER =       LIBS =  2 # libraries to create                
-BIN_FOLDER =           SRC =   3 # source pattern                     
-PACKAGES_FOLDER =      DIR =   4 # folder name in temporal directory  
-LIB_FOLDER =           TAR =   5                                      
-MAN_FOLDER =           DEPS =  6 # explicit dependencies              
-TMP_FOLDER =           URL =   7 # URL to download from               
-INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
-LOG_FOLDER =                   9 # 
+# folders             | libs | packages           | index
+SOFTWARE_FOLDER =      DEF =   PKG_DEF =             0 
+                    # is built by default?               
+CONFIG_FOLDER =        INCS =  PKG_INSTALL_FOLDER =  1
+                    # includes                           
+INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
+                    # libraries to create                
+BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
+                    # source pattern                     
+PACKAGES_FOLDER =      DIR =                         4 
+                    # folder name in temporal directory  
+LIB_FOLDER =           TAR =                         5
+                    # tarfile name in temporal directory
+MAN_FOLDER =           DEPS =                        6 
+                    # explicit dependencies              
+TMP_FOLDER =           URL =                         7
+                    # URL to download from               
+INCLUDE_FOLDER =       FLAGS =                       8
+                    # Other flags for the compiler
+LOG_FOLDER =                                         9 # 
 
 
 # indexes for LIBS

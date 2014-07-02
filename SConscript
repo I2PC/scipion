@@ -31,17 +31,28 @@ import sys
 import platform
 
 # for acceding SCIPION dict easily
-# folders & packages | libs  | index
-SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
-CONFIG_FOLDER =        INCS =  1 # includes                           
-INSTALL_FOLDER =       LIBS =  2 # libraries to create                
-BIN_FOLDER =           SRC =   3 # source pattern                     
-PACKAGES_FOLDER =      DIR =   4 # folder name in temporal directory  
-LIB_FOLDER =           TAR =   5                                      
-MAN_FOLDER =           DEPS =  6 # explicit dependencies              
-TMP_FOLDER =           URL =   7 # URL to download from               
-INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
-LOG_FOLDER =                   9 #
+# Big scipion structure dictionary and associated vars
+# indexes
+# folders             | libs | packages           | index
+SOFTWARE_FOLDER =      DEF =   PKG_DEF =             0 
+                    # is built by default?               
+CONFIG_FOLDER =        INCS =  PKG_INSTALL_FOLDER =  1
+                    # includes                           
+INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
+                    # libraries to create                
+BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
+                    # source pattern                     
+PACKAGES_FOLDER =      DIR =                         4 
+                    # folder name in temporal directory  
+LIB_FOLDER =           TAR =                         5
+                    # tarfile name in temporal directory
+MAN_FOLDER =           DEPS =                        6 
+                    # explicit dependencies              
+TMP_FOLDER =           URL =                         7
+                    # URL to download from               
+INCLUDE_FOLDER =       FLAGS =                       8
+                    # Other flags for the compiler
+LOG_FOLDER =                                         9 #
 
 # We start importing the environment
 Import('env', 'SCIPION')
@@ -261,3 +272,6 @@ env.CompileWithSetupPy('bibtexparser')
 env.CompileWithSetupPy('django')
 
 env.CompileWithSetupPy('paramiko')
+
+
+# EM PACKAGES

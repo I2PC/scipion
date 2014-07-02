@@ -116,31 +116,30 @@ if __name__ == '__main__':
 #     writeDefaults()
 #     
 #     updateProjectSettings()
-     # Download and untar Scons
     if not os.path.exists(os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
+         # Download and untar Scons
         downloadScons()
         #Compile scons
-    
-    setupArgs=[["clean"],
-               ["build"], 
-               ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
-    if os.path.exists(SCIPION_INSTALL_LOG):
-        os.remove(SCIPION_INSTALL_LOG)
-    logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
-    for arg in setupArgs:
-        logFile = open(SCIPION_INSTALL_LOG, 'a')
-        command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
-        
-        print '>>>>>>>>>>> %s [from %s]' % (" ".join(command), os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION))
-        scons = subprocess.Popen(command, 
-                                 cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
-                                 stdout=logFile,
-                                 stderr=logFile,
-                                 env=myenv)
-        output = scons.communicate()[0]
-        logFile.close()
-        if scons.returncode is not 0:
-            sys.exit(scons.returncode)
+        setupArgs=[["clean"],
+                   ["build"], 
+                   ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
+        if os.path.exists(SCIPION_INSTALL_LOG):
+            os.remove(SCIPION_INSTALL_LOG)
+        logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
+        for arg in setupArgs:
+            logFile = open(SCIPION_INSTALL_LOG, 'a')
+            command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
+            
+            print '>>>>>>>>>>> %s [from %s]' % (" ".join(command), os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION))
+            scons = subprocess.Popen(command, 
+                                     cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
+                                     stdout=logFile,
+                                     stderr=logFile,
+                                     env=myenv)
+            output = scons.communicate()[0]
+            logFile.close()
+            if scons.returncode is not 0:
+                sys.exit(scons.returncode)
 
     #Setting environmental vars before calling scons
     myenv['PATH'] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'bin'), os.environ['PATH'])
