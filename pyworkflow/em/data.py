@@ -423,7 +423,7 @@ class SetOfImages(EMSet):
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))
         self._hasProjectionMatrix = Boolean(False)
-        self._isPhaseFlippled = Boolean(False)
+        self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
         self._firstDim = ImageDim() # Dimensions of the first image
