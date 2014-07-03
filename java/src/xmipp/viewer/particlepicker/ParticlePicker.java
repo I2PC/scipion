@@ -6,7 +6,6 @@ import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
-
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -15,16 +14,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 
 /**
  * Business object for ParticlePicker common GUI. SingleParticlePicker and
@@ -54,7 +50,7 @@ public abstract class ParticlePicker {
     protected Color color;
     protected int size;
 
-    public static final int sizemax = 1048;
+    public static final int sizemax = 2000;
     protected String block;
     Format[] formats = new Format[]{Format.Xmipp24, Format.Xmipp24a, Format.Xmipp24b, Format.Xmipp24c, Format.Xmipp30, Format.Xmipp301, Format.Eman};
 
@@ -310,7 +306,7 @@ public abstract class ParticlePicker {
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
-            if (f.getCommand().equals(command)) {
+            if (f.getCommand().equals(command2)) {
                 return true;
             }
         }
@@ -452,6 +448,8 @@ public abstract class ParticlePicker {
     }// function isFilterSelected
 
     public Format detectFileFormat(String path) {
+        
+        System.out.println("detect file format");
         if (path.endsWith(".raw.Common.pos")) {
             return Format.Xmipp24;
         }
@@ -471,6 +469,7 @@ public abstract class ParticlePicker {
      * Return the number of particles imported from a file
      */
     public void fillParticlesMdFromFile(String path, Format f, Micrograph m, MetaData md, float scale, boolean invertx, boolean inverty) {
+        
         if (f == Format.Auto) {
             f = detectFileFormat(path);
         }
@@ -480,6 +479,7 @@ public abstract class ParticlePicker {
             case Xmipp24a:
             case Xmipp24b:
             case Xmipp24c:
+                
                 md.readPlain(path, "xcoor ycoor");
                 break;
             case Xmipp30:
@@ -555,16 +555,14 @@ public abstract class ParticlePicker {
 
     public abstract void setMicrograph(Micrograph m);
 
-    public abstract boolean isValidSize(int size);
+    public abstract boolean isValidSize(JFrame parent, int size);
 
     public int getSize() {
         return size;
     }
 
     public void setSize(int size) {
-        if (size > ParticlePicker.sizemax) {
-            throw new IllegalArgumentException(String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
-        }
+       
         this.size = size;
     }
 

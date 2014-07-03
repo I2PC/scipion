@@ -46,8 +46,8 @@ import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
-import xmipp.viewer.particlepicker.training.model.UpdateTemplatesTask;
 
 public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
@@ -153,7 +153,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (!filename.equals(getMicrograph().getName())) {
             String msg = String.format("Are you sure you want to import data from file\n%s to micrograph %s ?", file, getMicrograph().getName());
             boolean importdata = XmippDialog.showQuestion(this, msg);
-            if (importdata) {
+            if (!importdata) {
                 return null;
             }
         }
@@ -167,12 +167,11 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         try {
             ppicker.resetParticleImages();
             super.updateSize(size);
-            new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+            ppicker.updateTemplatesStack();
             
 
         } catch (Exception e) {
-            String msg = (e.getMessage() != null) ? e.getMessage() : XmippMessage.getUnexpectedErrorMsg();
-            XmippDialog.showError(this, msg);
+            XmippDialog.showError(this, e.getMessage());
         }
     }
 
@@ -188,7 +187,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
 
-            new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+            ppicker.updateTemplatesStack();
             
 
         } else // only can choose file if TrainingPickerJFrame instance
@@ -283,15 +282,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             initShapePane();
             add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-            if (ppicker.getMode() != Mode.Review) {
-                autopicklb = new JLabel("Autopick:");
-                constraints.insets = new Insets(30, 5, 30, 5);
-                add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
-                constraints.insets = new Insets(0, 5, 0, 5);
-                initSupervisedPickerPane();
-                add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
-                enableSupervised(ppicker.getMode() == Mode.Supervised);
-            }
+            autopicklb = new JLabel("Autopick:");
+            constraints.insets = new Insets(30, 5, 30, 5);
+            add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
+            constraints.insets = new Insets(0, 5, 0, 5);
+            initSupervisedPickerPane();
+            add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
+            enableSupervised(ppicker.getMode() == Mode.Supervised);
             initMicrographsPane();
             add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 4, 2, 1, GridBagConstraints.HORIZONTAL));
             JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -317,7 +314,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         try {
             if (templatesdialog == null) {
                 templatesdialog = new TemplatesJDialog(this);
-                UpdateTemplatesTask.setTemplatesDialog(templatesdialog);
+                ppicker.setTemplatesDialog(templatesdialog);
                 ParticleToTemplatesTask.setTemplatesDialog(templatesdialog);
             } else {
                 templatesdialog.setVisible(true);
@@ -334,7 +331,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
         JPanel steppn = new JPanel(new FlowLayout(FlowLayout.LEFT));
         autopickchb = new JCheckBox();
-        autopickchb.setSelected(ppicker.getMode() == Mode.Supervised);
+        autopickchb.setSelected(ppicker.isAutopick());
 
         autopickchb.addActionListener(new ActionListener() {
 
@@ -350,6 +347,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
                         ppicker.setMode(Mode.Supervised);
                         ppicker.trainAndAutopick(SupervisedParticlePickerJFrame.this, rectangle);
+                        setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 
                     } else if (autopickchb.isSelected()) {
                         autopickchb.setSelected(false);
@@ -366,6 +364,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                                 autopickchb.setSelected(false);
                             }
                             canvas.refreshActive(null);
+                            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
                         } else {
                             autopickchb.setSelected(true);
                         }
@@ -393,7 +392,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     protected void enableSupervised(boolean selected) {
 
-        thresholdpn.setVisible(selected);
+        thresholdsl.setEnabled(selected);
+        thresholdtf.setEnabled(selected);
         sizesl.setEnabled(!selected);// not really, if there is some micrograph
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
@@ -416,6 +416,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             autopickchb.setEnabled(enable);
             thresholdpn.setEnabled(enable);
         }
+        saveandexitbt.setEnabled(enable);
     }
 
     public void initMenuBar() {
@@ -688,7 +689,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         ppicker.resetMicrograph(getMicrograph());
         canvas.refreshActive(null);
         updateMicrographsModel();
-        new UpdateTemplatesTask(ppicker, ppicker.getTemplatesNumber()).execute();
+        ppicker.updateTemplatesStack();
         
         if (ppicker.getMode() == Mode.Supervised) {
             ppicker.autopick(this, getMicrograph());
@@ -725,13 +726,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             rectangle = getMicrograph().getParticlesRectangle(ppicker);
         }
         canvas.repaint();
-        boolean train = XmippDialog
-                .showQuestion(this, trainmsg);
-        if (!train) {
+        int result = XmippDialog
+                .showQuestionYesNoCancel(this, trainmsg);
+        if (result == XmippQuestionDialog.CANCEL_OPTION) {
             rectangle = null;
             canvas.repaint();
         }
-        return train;
+        return result == XmippQuestionDialog.YES_OPTION;
     }
 
     public Rectangle getParticlesRectangle() {
@@ -739,7 +740,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     public void close() {
-        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised) {
+        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && ppicker.isChanged()) {
             boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
             if (iscorrect) {
                 ppicker.correct(rectangle);

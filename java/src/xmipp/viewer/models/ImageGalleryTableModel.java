@@ -35,7 +35,6 @@ import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.jni.Filename;
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -275,7 +274,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		thumb_height = (int) (image_height * scale);
 
 		font_height = 0;
-		if (data.showLabel) {
+		if (data.isDisplayLabel()) {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
@@ -436,7 +435,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
 			data.selection[i] = value;
-		fireTableDataChanged();
+		          fireTableRowsUpdated(first_row, last_row);
 	}
 
 	/** Set the class of a given selection of elements. */
@@ -526,12 +525,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	/** Whether to display the labels */
-	public void setShowLabels(boolean value) {
-		if (data.showLabel != value) {
-			data.showLabel = value;
+	public void setShowLabels() {
+		
 			calculateCellSize();
 			fireTableDataChanged();
-		}
+		
 	}
 
 	/** Whether to display the labels */
@@ -629,7 +627,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 
 		public boolean getShowLabel() {
-			return data.showLabel;
+			return data.isDisplayLabel();
 		}
 
 		public Dimension getCellDim() {

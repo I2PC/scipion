@@ -30,14 +30,13 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
-
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Param;
+import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
 
 /** This class will serve to store important data about the gallery */
@@ -57,6 +56,10 @@ public class GalleryData {
 	public int zoom;
 	private String filename;
 	public int resliceView;
+        private ColumnInfo displayci;
+    private String displayLabel;
+
+        
 
 	public enum Mode {
 		GALLERY_MD, GALLERY_VOL, TABLE_MD, GALLERY_ROTSPECTRA
@@ -69,9 +72,9 @@ public class GalleryData {
 	// max dimension allowed to render images
 
 	private Mode mode;
-	public boolean showLabel = false;
+	
 	public boolean globalRender;
-	public Param parameters;
+	public Params parameters;
 	private int numberOfVols = 0;
 
 	// flag to perform global normalization
@@ -99,21 +102,22 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
-	public GalleryData(Window window, String fn, Param param, MetaData md) {
+	public GalleryData(Window window, String fn, Params params, MetaData md) {
 		this.window = window;
 		try {
 			selectedBlock = "";
-			parameters = param;
-			zoom = param.zoom;
-			globalRender = param.renderImages;
+			parameters = params;
+			zoom = params.zoom;
+			globalRender = params.renderImages;
 			mode = Mode.GALLERY_MD;
-			resliceView = param.resliceView;
-			useGeo = param.useGeo;
-			wrap = param.wrap;
+			resliceView = params.resliceView;
+			useGeo = params.useGeo;
+			wrap = params.wrap;
+                        displayLabel = params.getDisplayLabel();
 
-			if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_METADATA))
+			if (params.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
-			else if (param.mode.equalsIgnoreCase(Param.OPENING_MODE_ROTSPECTRA))
+			else if (params.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
 				mode = Mode.GALLERY_ROTSPECTRA;
 
 			setFileName(fn);
@@ -125,20 +129,52 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-
+                        
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
+        
+        
+        public boolean isDisplayLabel()
+        {
+            return displayci != null;
+        }
+        
+        public void setDisplayLabel(String key) {
+            displayci = null;
+            if(key == null || key.equalsIgnoreCase("none"))
+            {
+                displayci = null;
+                return;
+            }
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                {
+                    displayci = ci;
+                    break;
+                }
+        }
+        
+        public ColumnInfo getDisplayLabel()
+        {
+            
+            return displayci;
+        }
 
 	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
 	}
 
-	public void setRenderColumn(ColumnInfo ci) {
-		ciFirstRender = ci;
+	public void setRenderColumn(String key) {
+            if(key.equalsIgnoreCase("none"))
+                ciFirstRender = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                    ciFirstRender = ci;
 	}
 
 	public ColumnInfo getRenderColumn() {
@@ -343,6 +379,7 @@ public class GalleryData {
 			}
 
 			labels = newLabels;
+                        setDisplayLabel(displayLabel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -953,7 +990,7 @@ public class GalleryData {
 		return null;
 	}
 
-	public MetaData getImagesMd() {
+	public MetaData getImagesMd(MetaData md) {
 		int idlabel = getRenderLabel();
 		if (md == null)
 			return null;
@@ -996,4 +1033,12 @@ public class GalleryData {
 				+ "Size: " + Filename.humanReadableByteCount(file.length());
 		return fileInfo;
 	}
+        
+        public boolean hasSelection()
+        {
+            for(int i = 0; i < selection.length; i ++)
+                if(selection[i])
+                    return true;
+            return false;
+        }
 }// class GalleryDaa

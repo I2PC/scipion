@@ -5,6 +5,7 @@ import java.util.List;
 
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.PickerParticle;
 
 public class ExtractMicrograph extends Micrograph
 {
@@ -62,4 +63,5 @@ public class ExtractMicrograph extends Micrograph
 		return null;
 	}
 
+    
 }

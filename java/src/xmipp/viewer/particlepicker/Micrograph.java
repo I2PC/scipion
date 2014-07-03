@@ -17,6 +17,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public abstract class Micrograph {
 
@@ -71,6 +72,7 @@ public abstract class Micrograph {
 		// }
 		this.name = name;
 		this.posfile = name + ext;
+                loadDimensions(); // ensure width and height get updated
 
 	}
 
@@ -178,7 +180,7 @@ public abstract class Micrograph {
 				imp = XmippImageConverter.loadImage(file);
 				if (imp == null)
 					imp = new ImagePlus(file);
-				loadDimensions(); // ensure width and height get updated
+				
 			}
 			return imp;
 		} catch (Exception e) {
@@ -208,7 +210,6 @@ public abstract class Micrograph {
 						break;
 					}
 				imp = XmippImageConverter.convertToImagePlus(ig);
-				loadDimensions();
 				ig.destroy();
 
 			}
@@ -244,5 +245,6 @@ public abstract class Micrograph {
 	}
 
 	public abstract boolean hasData();
+        
 
 }

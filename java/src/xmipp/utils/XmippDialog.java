@@ -104,6 +104,7 @@ public class XmippDialog extends JDialog implements ActionListener {
 	/** Function to display the Dialog and return the result state */
 	public boolean showDialog() {
 		setVisible(true);
+                
 		return result;
 	}
 
@@ -214,6 +215,8 @@ public class XmippDialog extends JDialog implements ActionListener {
 	}
 
 	public static boolean showError(JFrame parent, String message) {
+                if(message == null || message.isEmpty())
+                    message = XmippMessage.getUnexpectedErrorMsg();
 		XmippMessageDialog dlg = new XmippMessageDialog(parent, "ERROR",
 				message, "error.gif");
 		return dlg.showDialog();

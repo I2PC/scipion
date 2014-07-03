@@ -37,9 +37,10 @@ public class CTFCanvas extends ImageCanvas {
 		paintFreqCircle(g, master.getHighFreq());
 	}
 	
-	public void paintFreqCircle(Graphics g, double freq){
-		int outer = (int)(width * freq * 2);
-		int offset = (width - outer) / 2;
+	public void paintFreqCircle(Graphics g, double freq){ 
+                double size = width * magnification;
+		int outer = (int)(size * freq * 2);
+		int offset = (int)(size - outer) / 2;
 		g.drawOval(offset, offset, outer, outer);
 	}
 

@@ -27,10 +27,6 @@ package xmipp.jni;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.logging.Level;
-
-import xmipp.jni.MDRow;
-import xmipp.utils.StopWatch;
 
 //import xmipp.utils.DEBUG;
 
@@ -38,6 +34,7 @@ import xmipp.utils.StopWatch;
  * Binding class for accessing C++ MetaData implementation.
  */
 public class MetaData {
+    
 	/** Enum values with Labels possible types */
 	public static final int LABEL_NOTYPE = -1;
 	public static final int LABEL_INT = 0;
@@ -52,6 +49,8 @@ public class MetaData {
 	public static final String FILL_LINEAR = "linear";
 	public static final String FILL_RAND_UNIFORM = "random uniform";
 	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
+        
+     
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -83,6 +82,7 @@ public class MetaData {
 
 	// keep labels for avoid read all the time
 	int[] activeLabels;
+        
 
 	static {
 		System.loadLibrary("XmippJNI");
@@ -363,7 +363,7 @@ public class MetaData {
 		return f.getParent();
 	}
 
-	public native double[] getStatistics(boolean applyGeo);
+	public native double[] getStatistics(boolean applyGeo, int label);
 
 	public native double[] getColumnValues(int label);
 
@@ -504,11 +504,13 @@ public class MetaData {
 	*/
 	public native double getColumnMin(int column);
 	
+
+        public native double getColumnMax(int column);
+	
+	
 	
 
-	public native double getColumnMax(int column);
-	
-	
-	
-
+       
+       
+       
 }
