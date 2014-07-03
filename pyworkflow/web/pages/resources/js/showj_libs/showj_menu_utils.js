@@ -229,7 +229,7 @@ function updateEnabledItems(mode, list){
 	        break;
 	}
 }
-	
+
 	
 /** LIST UTILS **********************************************/
 
@@ -291,7 +291,7 @@ function updateListSession(id, attr){
 	switch(attr){
 		case "enabled":
 			var res = updateList(id, "listEnabledItems");
-			updateListChanges(id);
+			updateListChanges(id, res);
 			break;
 		
 		case "selected":
@@ -310,10 +310,10 @@ function updateList(id, list){
 	var enc = containsElem(id, listItems);
 	
 	if(enc!=-1){
-		// remove element
+		// remove element cause is into the list
 		listItems.splice(enc, 1);
 	}else{
-		// added the element
+		// added the element cause is not into the list
 		listItems.push(id);
 	}
 	
@@ -326,27 +326,33 @@ function updateList(id, list){
 }
 
 
-function updateListChanges(id){
+function updateListChanges(id, res){
 	var id = id.split("___").pop();	
 	
 	var listItems = $("#listChangesItems").val().split(",");
 	
-	listItems.push("["+id+":]");
+	var enc1 = containsElem(id+"-enabled", listItems);
+	var enc2 = containsElem(id+"-disabled", listItems);
 	
-//	switch(opt){
-//		case -1:
-//			//Element is in the list
-//			listItems.push("["+id+":disabled]");
-//			break;
-//		default:
-//			//Element is not in the list
-//			listItems.push("["+id+":enabled]");
-//			break;
-//	}
+	if(enc1 == enc2){
+		if(res!=-1){
+			res = "enabled"
+		}else{
+			res = "disabled"
+		}
+		listItems.push(id+"-"+res);
+	}else{
+		if(enc1!=-1){
+			listItems.splice(enc1, 1);
+		}else{
+			listItems.splice(enc2, 1);
+		}
+	}
 
 	if(listItems[0]=="" || listItems[0]=="0" || listItems[0]==0){
 		listItems.shift()
 	}
+	
 	$("#listChangesItems").val(listItems);
 }
 

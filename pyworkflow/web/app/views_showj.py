@@ -55,6 +55,9 @@ def loadDataSet(request, filename, firstTime):
     if firstTime or not sj.DATASET in request.session:
         dataset = loadDatasetXmipp(filename)
     else:
+        # Save changes in the SQLITE
+        print "CHANGES TO SAVE:", sj.CHANGES
+        
         dataset = request.session[filename][sj.DATASET]
         
     return dataset
@@ -202,7 +205,8 @@ DEFAULT_PARAMS = {
     sj.VOL_TYPE: 'map',                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
     sj.SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
-    sj.ENABLEDITEMS: 0     # List with the id for the enabled items in the before mode.
+    sj.ENABLEDITEMS: 0,     # List with the id for the enabled items in the before mode.
+    sj.CHANGES: 0,          # List with the changes done
 }
 
 def showj(request):
@@ -327,11 +331,18 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     # Library to manage the extra menu functions
     context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
+    # FIX
+    context.update({'path' : inputParams[sj.PATH]})
+    context.update({'table_name' : inputParams[sj.TABLE_NAME]})
+    
     # IMPROVE TO KEEP THE SELECTED ITEMS
     context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS]})
     
     # IMPROVE TO KEEP THE ENABLED ITEMS
     context.update({sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS]})
+    
+    # IMPROVE TO KEEP THE CHANGES ABOUT ITEMS
+    context.update({sj.CHANGES: inputParams[sj.CHANGES]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page
