@@ -153,7 +153,11 @@ XMIPP_RELION_LABELS_EXTRA = {
                        }
 
 
-
+# Map from Xmipp labels to Relion labels names
+XMIPP_BSOFT_LABELS = {
+                        MDL_ANGLE_ROT:         'rlnAngleRot'
+                       ,MDL_ANGLE_TILT:        'rlnAngleTilt'
+}
 # from data.star
 #WARNING: Ignoring unknown column: rlnMaxValueProbDistribution
 

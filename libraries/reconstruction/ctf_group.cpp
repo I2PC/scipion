@@ -609,7 +609,7 @@ void ProgCtfGroup::writeOutputToDisc()
     {
     	//ImagesMD.write("/tmp/ImagesMD");
     	//sortedCtfMD.write("/tmp/sortedCtfMD");
-        ctfImagesGroup.join1(ImagesMD, sortedCtfMD, MDL_ITEM_ID, INNER);
+        ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
     }
 
     //
