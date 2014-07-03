@@ -27,6 +27,7 @@
 This module contains some sqlite basic tools to handle Databases.
 """
 
+import os
 from sqlite3 import dbapi2 as sqlite
 
     
@@ -52,8 +53,10 @@ class SqliteDb():
             
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
-        self.executeCommand = self.cursor.execute
-        #self.executeCommand = self._debugExecute
+        if os.environ.get('SCIPION_DEBUG_SQLITE', False):
+            self.executeCommand = self._debugExecute
+        else:
+            self.executeCommand = self.cursor.execute
         self.commit = self.connection.commit
         
     def getDbName(self):
@@ -65,11 +68,16 @@ class SqliteDb():
             del self.OPEN_CONNECTIONS[self._dbName]
         
     def _debugExecute(self, *args):
-        print "COMMAND: ", args[0]
-        print "ARGUMENTS: ", args[1:]
-        self.cursor.execute(*args)
+        try:
+            return self.cursor.execute(*args)
+        except Exception, ex:
+            print ">>>> FAILED cursor.execute"
+            print "COMMAND: ", args[0]
+            print "ARGUMENTS: ", args[1:]
+            raise ex
+            
         
-        return self.cursor.fetchone()
+        #return self.cursor.fetchone()
     
     def _iterResults(self):
         row = self.cursor.fetchone()
