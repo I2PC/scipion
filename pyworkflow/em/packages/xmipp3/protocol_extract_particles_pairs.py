@@ -31,11 +31,13 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 """
 
 
-from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, ORIGINAL, SAME_AS_PICKING, OTHER 
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, REJECT_NONE, REJECT_MAXZSCORE, REJECT_PERCENTAGE 
 from pyworkflow.em import CoordinatesTiltPair
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import removeBaseExt, exists
-from pyworkflow.protocol.params import PointerParam
+from pyworkflow.protocol.params import PointerParam, IntParam, EnumParam, BooleanParam, FloatParam, Positive
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
+from pyworkflow.object import Boolean
 from itertools import izip
 from glob import glob
 import xmipp
@@ -50,56 +52,136 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         
     #--------------------------- DEFINE param functions --------------------------------------------   
 
-    def _defineParamsInput1(self, form):
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
         form.addParam('inputCoordinatesTiltedPairs', PointerParam, label="Coordinates tilted pairs", 
                       pointerClass='CoordinatesTiltPair',
                       help='Select the CoordinatesTiltPairs ')
         
-    def _defineParamsInput2(self, form):
-        form.addParam('inputMicrographsTiltedPair', PointerParam, label="Micrographs tilted pair", 
-                  condition='downsampleType != 1',
-                  pointerClass='MicrographsTiltPair',
-                  help='Select the original Micrographs tilted pair')
+        form.addParam('boxSize', IntParam, default=0,
+                      label='Particle box size', validators=[Positive],
+                      help='In pixels. The box size is the size of the boxed particles, ' 
+                      'actual particles may be smaller than this.')
+        
+        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
+                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO,
+                      label='Automatic particle rejection',
+                      help='How to automatically reject particles. It can be none (no rejection),'
+                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
+                      'Percentage (reject a given percentage in each one of the screening criteria).', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
+                      condition='rejectionMethod==%d' % REJECT_MAXZSCORE,
+                      label='Maximum Zscore',
+                      help='Maximum Zscore above which particles are rejected.')
+        
+        form.addParam('percentage', IntParam, default=5, expertLevel=LEVEL_ADVANCED, 
+                      condition='rejectionMethod==%d' % REJECT_PERCENTAGE,
+                      label='Percentage (%)',
+                      help='Percentage of particles to reject')
+        
+        form.addSection(label='Preprocess')
+        form.addParam('doRemoveDust', BooleanParam, default=True, important=True,
+                      label='Dust removal (Recommended)', 
+                      help='Sets pixels with unusually large values to random values from a Gaussian '
+                      'with zero-mean and unity-standard deviation.')
+        form.addParam('thresholdDust', FloatParam, default=3.5, 
+                      condition='doRemoveDust', expertLevel=LEVEL_ADVANCED,
+                      label='Threshold for dust removal',
+                      help='Pixels with a signal higher or lower than this value times the standard '
+                      'deviation of the image will be affected. For cryo, 3.5 is a good value.'
+                      'For high-contrast negative stain, the signal itself may be affected so '
+                      'that a higher value may be preferable.')
+        form.addParam('doInvert', BooleanParam, default=False,
+                      label='Invert contrast', 
+                      help='Invert the contrast if your particles are black over a white background.')
+        
+        form.addParam('doNormalize', BooleanParam, default=True,
+                      label='Normalize (Recommended)', 
+                      help='It subtract a ramp in the gray values and normalizes so that in the '
+                      'background there is 0 mean and standard deviation 1.')
+        form.addParam('normType', EnumParam, choices=['OldXmipp','NewXmipp','Ramp'], default=2, 
+                      condition='doNormalize', expertLevel=LEVEL_ADVANCED,
+                      display=EnumParam.DISPLAY_COMBO,
+                      label='Normalization type', 
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
+                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
+                           'Ramp (subtract background+NewXmipp).  \n  ')
+        form.addParam('backRadius', IntParam, default=-1, condition='doNormalize',
+                      label='Background radius',
+                      help='Pixels outside this circle are assumed to be noise and their stddev '
+                      'is set to 1. Radius for background circle definition (in pix.). '
+                      'If this value is 0, then half the box size is used.', 
+                      expertLevel=LEVEL_ADVANCED)
+        
+        form.addParallelSection(threads=4, mpi=1)
+
 
     def _setInputMicrographs(self):
         # Set sampling rate and inputMics according to downsample type
         
         self.samplingInput = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs().getSamplingRate()
+
+        self.uMics = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
+        self.tMics = self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
         
-        if self.downsampleType.get() == SAME_AS_PICKING:
-            # If 'same as picking' get samplingRate from input micrographs  (both tilted and untilted)
-            self.uMics = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
-            self.tMics = self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
-            
-            self.samplingFinal = self.samplingInput
-        else:
-            self.uMics = self.inputMicrographsTiltedPair.get().getUntilted()
-            self.tMics = self.inputMicrographsTiltedPair.get().getTilted()
-                                            
-            self.samplingOriginal = self.uMics.getSamplingRate()
-            if self.downsampleType.get() == ORIGINAL:
-                # If 'original' get sampling rate from original micrographs
-                self.samplingFinal = self.samplingOriginal
-            else:
-                # IF 'other' multiply the original sampling rate by the factor provided
-                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
+        self.samplingFinal = self.samplingInput
 
         self.inputMics = self._createSetOfParticles('auxMics')
         self.inputMics.copyInfo(self.uMics)
         self.inputMics.setStore(False)
         
-#        self.inputMics.appendFromImages(self.tMics)
-#        self.inputMics.appendFromImages(self.uMics)
         for micU, micT in izip(self.uMics, self.tMics):
             micU.cleanObjId()
             micT.cleanObjId()
             self.inputMics.append(micU)
             self.inputMics.append(micT)
-        # Tilted pairs cannot be flipped
-        self.doFlip.set(False)
+
+
+    def _insertAllSteps(self):
+        """for each micrograph insert the steps to preprocess it
+        """       
+        self._setInputMicrographs()
         
-        # Tilted pairs do not have ctfRelation
-        self.ctfRelations.set(None)
+        # This is necessary cause this protocol uses steps from normal xmipp extract which has this param
+        self.downsampleType = Boolean(False)
+                
+        # Write pos files for each micrograph
+        firstStepId = self._insertFunctionStep('writePosFilesStep')
+           
+        # For each micrograph insert the steps
+        #run in parallel
+        
+        deps = []
+        for mic in self.inputMics:
+            localDeps = [firstStepId]
+            micrographToExtract = mic.getFileName()
+            micName = removeBaseExt(mic.getFileName())
+            micId = mic.getObjId()
+                                            
+            # If remove dust 
+            if self.doRemoveDust:
+                fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
+                
+                thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
+                args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
+                localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
+                micrographToExtract = fnNoDust
+                                        
+            #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
+            micName = removeBaseExt(mic.getFileName())
+      
+            # Actually extract
+            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
+                                              None, micrographToExtract, self.boxSize.get(), 
+                                              prerequisites=localDeps))
+        # TODO: Delete temporary files
+                        
+        # Insert step to create output objects      
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+
                 
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
@@ -147,9 +229,6 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
         
-        if self.downsampleType == OTHER:
-            imgSetU.setSamplingRate(self.uMics.getSamplingRate()*self.downFactor.get())
-            imgSetT.setSamplingRate(self.tMics.getSamplingRate()*self.downFactor.get())
         imgSetU.setCoordinates(self.inputCoordinatesTiltedPairs.get().getUntilted())
         imgSetT.setCoordinates(self.inputCoordinatesTiltedPairs.get().getTilted())
         
@@ -196,19 +275,18 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs, outputset)
             
     #--------------------------- INFO functions -------------------------------------------- 
+    def _validate(self):
+        validateMsgs = []
+        return validateMsgs
+    
     def _citations(self):
         return ['Vargas2013b']
       
     #TODO: Refactor method below    
     def _summary(self):
-        downsampleTypeText = {
-                              ORIGINAL:'Original micrographs',
-                              SAME_AS_PICKING:'Same as picking',
-                              OTHER: 'Other downsampling factor'}
+
         summary = []
-        summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
-        if self.downsampleType == OTHER:
-            summary.append("Downsampling factor: %d" % self.downFactor.get())
+
         summary.append("Particle box size: %d" % self.boxSize.get())
         
         if not hasattr(self, 'outputParticlesTiltPair'):
