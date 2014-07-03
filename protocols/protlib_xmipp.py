@@ -532,6 +532,12 @@ def getMdSize(filename):
     """ Return the metadata size without parsing entirely. """
     return mdFirstRow(filename).getParsedLines()
 
+def getMdSizeEnabled(filename):
+    """ Return the metadata size containing only ''enabled'' lines """
+    md = MetaData(filename)
+    md.removeDisabled()
+    return md.size()
+
 def emptyMd(filename):
     """ Use getMdSize to check if metadata is empty. """
     return getMdSize(filename) == 0
