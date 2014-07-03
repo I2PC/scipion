@@ -202,7 +202,7 @@ def check(dataset, url, verbose=False):
             vlog('\thas differences\n')
             return False
     except Exception as e:
-        vlog('\terror: %s' % e)
+        vlog('\terror: %s\n' % e)
         return False
 
 
