@@ -64,6 +64,7 @@ MANUAL_ADJUST = 'colRowMode'
 
 SELECTEDITEMS = 'listSelectedItems'
 ENABLEDITEMS = 'listEnabledItems'
+CHANGES = 'listChangesItems'
 
 VOL_SELECTED = 'volumesToRenderComboBox'
 VOL_TYPE = 'typeVolume'

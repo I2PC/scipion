@@ -64,7 +64,21 @@
  * 		FIX DISABLED: Option to persist the element into the oTable object available.
  * 
  ******************************************************************************/
+
+function changeMode(modeNew){
+	/*
+	 * Function to change the visualization mode.
+	 */
+	var form = document.forms['showjForm']
+	var modeOld = form.mode.value
 	 
+	if (modeNew != modeOld){
+		// Submit form
+		form.mode.value = modeNew;
+ 		form.submit();
+	}
+}
+ 
 function getListEnabledItems(mode){
 	/*
 	 * Obtains the list of the items selected like enable.
@@ -118,50 +132,63 @@ function getListSelectedItems(mode){
     return list_selected
 }
 
-function replaceList(mode, value){
-	switch(mode){
-	case "selected":
-		$("input#listSelectedItems").val(value)
-		break;
-	case "enabled":
-		$("input#listEnabledItems").val(value)
-		break;
-	}
-}
-
-
-function changeMode(modeNew){
+function updateCheckboxDataTable(element, mode){
 	/*
-	 * Function to change the visualization mode.
+	 * This method was done to keep updated the data core in
+	 * the datatable library used to show in the table mode. 
 	 */
-	var form = document.forms['showjForm']
-	var modeOld = form.mode.value
-	 
-	if (modeNew != modeOld){
-		
-		// Selected Items
-		var listSelected = $("input#listSelected").val();
-		if(listSelected == 0 || listSelected == '0'){
-			// First execution
-			blankList("selected");
-			listSelected = getListSelectedItems(modeOld);
-		}
-		
-		// Enabled Items
-		var listEnabled = $("input#listEnabledItems").val();
-		if(listEnabled == 0 || listEnabled == '0'){
-			// First execution
-			blankList("enabled");
-			listEnabled = getListEnabledItems(modeOld);
-		}
-		form.listEnabledItems.value = listEnabled;
-		
-		// Submit form
-		form.mode.value = modeNew;
- 		form.submit();
+	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
+	
+//	  @param {object|array|string} mData Data to update the cell/row with
+//    @param {node|int} mRow TR element you want to update or the aoData index
+//    @param {int} [iColumn] The column to update (not used of mData is an array or object)
+//    @param {bool} [bRedraw=true] Redraw the table or not
+//    @param {bool} [bAction=true] Perform pre-draw actions or not
+//    @returns {int} 0 on success, 1 on error
+	oTable.fnUpdate(mode, aPos[0], 1, true);
+}
+
+function createSubset(){
+	var listSubset = getList("enabled")
+	
+	alert("To do a subset without the elements:" + listSubset);
+	
+}
+
+/** METHOD TO KEEP ITEMS BETWEEN EVENTS *********************/
+
+function applyChangesToUpdate(){
+	var listSelectedItems = getList("selected").split(",");
+	updateSelectedTemplate(listSelectedItems);
+	
+	var listEnabledItems = getList("enabled").val().split(",");
+	updateEnabledTemplate(listEnabledItems);
+}
+
+ function updateSelectedTemplate(list){
+	/*
+	 * Method to update the template with the selected elements. 
+	 */
+	for (var x=0;list.length>x;x++){
+		$("tr#row_container___"+ list[x]).addClass("row_selected");
 	}
 }
 
+function updateEnabledTemplate(list){
+	/*
+	 * Method to update the template with the enables elements.
+	 * Option to persist the element into the oTable object available.
+	 */
+	for (var x=0;list.length>x;x++){
+		var elem = $("input#enabled___"+ list[x]);
+		if(elem.attr("id") != undefined){
+			elem.prop("checked", false);
+		}
+	}
+}
+
+/** METHOD TO KEEP ITEMS BETWEEN MODES *********************/
+	
 function markSelectedItems(mode, list){
 	/*
 	 * Function to mark the items what the list contains.
@@ -189,7 +216,8 @@ function updateEnabledItems(mode, list){
 	    case "gallery":
 	        // Came from the table mode
 	        for (var x=0;list.length>x;x++){
-	        	var elm = $("img#enabled___"+ list[x]);
+	        	var id = list[x]
+	        	var elm = $("img#enabled___"+ id);
 	        	elm.css("display","inline");
 	        	elm.addClass("selected");
 	        }
@@ -201,21 +229,24 @@ function updateEnabledItems(mode, list){
 	        break;
 	}
 }
-
-function updateCheckboxDataTable(element, mode){
-	/*
-	 * This method was done to keep updated the data core in
-	 * the datatable library used to show in the table mode. 
-	 */
-	var aPos = oTable.fnGetPosition(element.parents('td').get(0))
 	
-//	  @param {object|array|string} mData Data to update the cell/row with
-//    @param {node|int} mRow TR element you want to update or the aoData index
-//    @param {int} [iColumn] The column to update (not used of mData is an array or object)
-//    @param {bool} [bRedraw=true] Redraw the table or not
-//    @param {bool} [bAction=true] Perform pre-draw actions or not
-//    @returns {int} 0 on success, 1 on error
-	oTable.fnUpdate(mode, aPos[0], 1, true);
+	
+/** LIST UTILS **********************************************/
+
+function replaceList(mode, value){
+	switch(mode){
+	case "selected":
+		$("input#listSelectedItems").val(value)
+		break;
+		
+	case "enabled":
+		$("input#listEnabledItems").val(value)
+		break;
+		
+	case "changes":
+		$("input#listChangesItems").val(value)
+		break;
+	}
 }
 
 function blankList(attr){
@@ -227,8 +258,31 @@ function blankList(attr){
 		case "enabled":
 			$("input#listEnabledItems").val("");
 			break;
+			
+		case "changes":
+			$("input#listChangesItems").val("")
+			break;
 	}
 }
+
+function getList(attr){
+	var list = null;
+	switch(attr){
+	case "selected":
+		list = $("input#listSelectedItems").val();
+		break;
+		
+	case "enabled":
+		list = $("input#listEnabledItems").val();
+		break;
+		
+	case "changes":
+		list = $("input#listChangesItems").val()
+		break;
+	}
+	return list;
+}
+
 
 function updateListSession(id, attr){
 	/*
@@ -236,7 +290,8 @@ function updateListSession(id, attr){
 	 */
 	switch(attr){
 		case "enabled":
-			updateList(id, "listEnabledItems");
+			var res = updateList(id, "listEnabledItems");
+			updateListChanges(id);
 			break;
 		
 		case "selected":
@@ -244,6 +299,7 @@ function updateListSession(id, attr){
 			break;
 	}
 }
+
 
 function updateList(id, list){
 	/*
@@ -266,7 +322,34 @@ function updateList(id, list){
 	}
 	
 	$("#" + list).val(listItems);
+	return enc
 }
+
+
+function updateListChanges(id){
+	var id = id.split("___").pop();	
+	
+	var listItems = $("#listChangesItems").val().split(",");
+	
+	listItems.push("["+id+":]");
+	
+//	switch(opt){
+//		case -1:
+//			//Element is in the list
+//			listItems.push("["+id+":disabled]");
+//			break;
+//		default:
+//			//Element is not in the list
+//			listItems.push("["+id+":enabled]");
+//			break;
+//	}
+
+	if(listItems[0]=="" || listItems[0]=="0" || listItems[0]==0){
+		listItems.shift()
+	}
+	$("#listChangesItems").val(listItems);
+}
+
 
 function containsElem(id, list){
 	var enc=-1;
@@ -278,52 +361,6 @@ function containsElem(id, list){
 		}
 		x++;
 	} while(x<list.length && enc==-1);
-
 	return enc;
-}
-
-
-function updateSelectedTemplate(list){
-	/*
-	 * Method to update the template with the selected elements. 
-	 */
-	for (var x=0;list.length>x;x++){
-		$("tr#row_container___"+ list[x]).addClass("row_selected");
-	}
-}
-
-function updateEnabledTemplate(list){
-	/*
-	 * Method to update the template with the enables elements.
-	 * Option to persist the element into the oTable object available.
-	 */
-	
-	for (var x=0;list.length>x;x++){
-		var elem = $("input#enabled___"+ list[x]);
-		if(elem.attr("id") != undefined){
-			elem.prop("checked", false);
-			
-//			if(persist){
-//				//Fix to keep the datatable updated
-//	    		updateCheckboxDataTable(elem, "False");
-//			}
-		}
-	}
-}
-
-function applyChangesToUpdate(){
-	var listSelectedItems = $("input#listSelectedItems").val().split(",");
-	updateSelectedTemplate(listSelectedItems);
-	
-	var listEnabledItems = $("input#listEnabledItems").val().split(",");
-	updateEnabledTemplate(listEnabledItems);
- }
-
- 	
-function createSubset(){
-	var listSubset = $("#listEnabledItems").val()
-	
-	alert("To do a subset without the elements:" + listSubset);
-	
 }
 
