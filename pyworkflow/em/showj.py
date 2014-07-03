@@ -80,7 +80,7 @@ IMG_WRAP = 'wrap'
 IMG_MAX_WIDTH = 'imageMaxWidth'
 IMG_MIN_WIDTH = 'imageMinWidth'
 IMG_MAX_HEIGHT = 'imageMaxHeight'
-IMG_MIN_HEIGHT  = 'imageMinHeight'
+IMG_MIN_HEIGHT = 'imageMinHeight'
 
 PROJECT_NAME = 'projectName'
 PROJECT_PATH = 'projectPath'
@@ -105,7 +105,7 @@ class ColumnsConfig():
         self._columnsDict = OrderedDict() 
          
         for col in table.iterColumns():  
-            colDefaultLayout =   defaultColumnsLayout.get(col.getName(), {})        
+            colDefaultLayout = defaultColumnsLayout.get(col.getName(), {})
             self._columnsDict[col.getName()] = ColumnProperties(col, allowRender, colDefaultLayout)
         
     def getRenderableColumns(self):
@@ -117,7 +117,7 @@ class ColumnsConfig():
         for columnLayout in self._columnsDict.values():
             if "enable" == columnLayout.label:
                 return True
-        return False;
+        return False
     
     def getColumnProperty(self, colName, propName):
         """ Get some property value of a given column. """
