@@ -79,7 +79,9 @@ def updateTable(inputParams, dataset):
     listChanges = inputParams[sj.CHANGES]
     tableName = inputParams[sj.TABLE_NAME]
     
-    if listChanges != 0:
+    print "CHANGES: ",listChanges
+    
+    if len(listChanges) > 0:
         items = listChanges.split(",")
         for x in items:
             item = x.split("-")
@@ -87,8 +89,9 @@ def updateTable(inputParams, dataset):
             state = item[1]
             
             print "CHANGES TO SAVE:", id," - "+ state
+    else:
+        print "NO CHANGES"
     
-    inputParams[sj.CHANGES] = ""
 
 
 def hasTableChanged(request, inputParams):
