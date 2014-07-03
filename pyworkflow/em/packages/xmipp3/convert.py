@@ -99,10 +99,10 @@ def _rowToObject(row, obj, attrDict):
         
     attrLabels = attrDict.values()
     
-    for label, value in row:
-        if label not in attrLabels:
-            labelStr = xmipp.label2Str(label)
-            setattr(obj, '_xmipp_%s' % labelStr, ObjectWrap(value))
+#    for label, value in row:
+#        if label not in attrLabels:
+#            labelStr = xmipp.label2Str(label)
+#            setattr(obj, '_xmipp_%s' % labelStr, ObjectWrap(value))
     
     
 def rowFromMd(md, objId):
@@ -194,6 +194,10 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
         #TODO: CHECK NEXT LINE
         #ctfModel.setMicFile(md.getValue(xmipp.MDL_MICROGRAPH, objId))
         img.setCTF(ctfModel)
+    
+    #TODO: REMOVE THIS AFTER WORKING rowToObject
+    if md.containsLabel(xmipp.MDL_ZSCORE):
+        img._xmipp_zScore = Float(md.getValue(xmipp.MDL_ZSCORE, objId))
     
     setObjId(img, rowFromMd(md, objId))
     return img
@@ -300,6 +304,43 @@ def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
     rowToObject(md, objId, ctfModel, CTF_DICT)
+    
+    #TODO: REMOVE THIS AFTER WORKING rowToObject
+    ctfModel._xmipp_ctfChromaticAberration = Float(md.getValue(xmipp.MDL_CTF_CA, objId))
+    ctfModel._xmipp_ctfEnergyLoss = Float(md.getValue(xmipp.MDL_CTF_ENERGY_LOSS, objId))
+    ctfModel._xmipp_ctfLensStability = Float(md.getValue(xmipp.MDL_CTF_LENS_STABILITY, objId))
+    ctfModel._xmipp_ctfConvergenceCone = Float(md.getValue(xmipp.MDL_CTF_CONVERGENCE_CONE, objId))
+    ctfModel._xmipp_ctfLongitudinalDisplacement = Float(md.getValue(xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT, objId))
+    ctfModel._xmipp_ctfTransversalDisplacement = Float(md.getValue(xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT, objId))
+    ctfModel._xmipp_ctfK = Float(md.getValue(xmipp.MDL_CTF_K, objId))
+    ctfModel._xmipp_ctfBgGaussianK = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_K, objId))
+    ctfModel._xmipp_ctfBgGaussianSigmaU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU, objId))
+    ctfModel._xmipp_ctfBgGaussianSigmaV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV, objId))
+    ctfModel._xmipp_ctfBgGaussianCU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_CU, objId))
+    ctfModel._xmipp_ctfBgGaussianCV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN_CV, objId))
+    ctfModel._xmipp_ctfBgSqrtK = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_K, objId))
+    ctfModel._xmipp_ctfBgSqrtU = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_U, objId))
+    ctfModel._xmipp_ctfBgSqrtV = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_V, objId))
+    ctfModel._xmipp_ctfBgSqrtAngle = Float(md.getValue(xmipp.MDL_CTF_BG_SQRT_ANGLE, objId))
+    ctfModel._xmipp_ctfBgBaseline = Float(md.getValue(xmipp.MDL_CTF_BG_BASELINE, objId))
+    ctfModel._xmipp_ctfBgGaussian2K = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_K, objId))
+    ctfModel._xmipp_ctfBgGaussian2SigmaU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU, objId))
+    ctfModel._xmipp_ctfBgGaussian2SigmaV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV, objId))
+    ctfModel._xmipp_ctfBgGaussian2CU = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_CU, objId))
+    ctfModel._xmipp_ctfBgGaussian2CV = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_CV, objId))
+    ctfModel._xmipp_ctfBgGaussian2Angle = Float(md.getValue(xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE, objId))
+    ctfModel._xmipp_ctfCritFitting = Float(md.getValue(xmipp.MDL_CTF_CRIT_FITTINGSCORE, objId))
+    ctfModel._xmipp_ctfCritCorr13 = Float(md.getValue(xmipp.MDL_CTF_CRIT_FITTINGCORR13, objId))
+    ctfModel._xmipp_ctfDownsampleFactor = Float(md.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED, objId))
+    ctfModel._xmipp_ctfCritPsdStdQ = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDVARIANCE, objId))
+    ctfModel._xmipp_ctfCritPsdPCA1 = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE, objId))
+    ctfModel._xmipp_ctfCritPsdPCARuns = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST, objId))
+    ctfModel._xmipp_ctfCritFirstZero = Float(md.getValue(xmipp.MDL_CTF_CRIT_FIRSTZEROAVG, objId))
+    ctfModel._xmipp_ctfCritDamping = Float(md.getValue(xmipp.MDL_CTF_CRIT_DAMPING, objId))
+    ctfModel._xmipp_ctfCritFirstZeroRatio = Float(md.getValue(xmipp.MDL_CTF_CRIT_FIRSTZERORATIO, objId))
+    ctfModel._xmipp_ctfCritPsdCorr90 = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDCORRELATION90, objId))
+    ctfModel._xmipp_ctfCritPsdInt = Float(md.getValue(xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL, objId))
+    ctfModel._xmipp_ctfCritNormality = Float(md.getValue(xmipp.MDL_CTF_CRIT_NORMALITY, objId))
     
     return ctfModel
 

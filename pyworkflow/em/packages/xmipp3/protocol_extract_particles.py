@@ -71,7 +71,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        self._defineParamsInput1(form)
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+                      pointerClass='SetOfCoordinates',
+                      help='Select the SetOfCoordinates ')
         
         form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
                       default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
@@ -84,7 +86,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'factors are always referred to the original sampling rate, and '
                       'the differences are correctly handled by Xmipp.')        
 
-        self._defineParamsInput2(form)
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
+                      condition='downsampleType != 1',
+                      pointerClass='SetOfMicrographs',
+                      help='Select the original SetOfMicrographs')
         
         form.addParam('ctfRelations', RelationParam, allowsNull=True,
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
@@ -155,17 +160,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       expertLevel=LEVEL_ADVANCED)
         
         form.addParallelSection(threads=4, mpi=1)
-        
-    def _defineParamsInput1(self, form):
-        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
-                      pointerClass='SetOfCoordinates',
-                      help='Select the SetOfCoordinates ')
-        
-    def _defineParamsInput2(self, form):
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 1',
-                      pointerClass='SetOfMicrographs',
-                      help='Select the original SetOfMicrographs')
 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -300,7 +294,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
-            if self.downsampleType == OTHER:
+            if self.downsampleType.get() == OTHER:
                 selfile = outputRoot + ".xmd"
                 md = xmipp.MetaData(selfile)
                 downsamplingFactor = self.samplingFinal/self.samplingInput
