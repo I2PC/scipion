@@ -59,9 +59,8 @@
  * function updateSelectedTemplate(list)
  * 	->	Method to update the template with the selected elements.
  * 
- * function updateEnabledTemplate(list, persist)
+ * function updateEnabledTemplate(list)
  * 	->	Method to update the template with the enables elements.
- * 		FIX DISABLED: Option to persist the element into the oTable object available.
  * 
  ******************************************************************************/
 
