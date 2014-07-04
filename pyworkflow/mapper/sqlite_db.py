@@ -29,7 +29,7 @@ This module contains some sqlite basic tools to handle Databases.
 
 from sqlite3 import dbapi2 as sqlite
 
-from utils import envVarOn
+from pyworkflow.utils import envVarOn
 
 
 class SqliteDb():
