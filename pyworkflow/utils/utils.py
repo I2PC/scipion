@@ -488,10 +488,17 @@ def getFloatListFromValues(valuesStr, length=None):
     ''' Convert a string to a list of floats'''
     return [float(v) for v in getListFromValues(valuesStr, length)]
 
+
 def getBoolListFromValues(valuesStr, length=None):
     ''' Convert a string to a list of booleans'''
     from pyworkflow.object import Boolean
     return [Boolean(value=v).get() for v in getListFromValues(valuesStr, length)]
+
+
+def getStringListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of booleans'''
+    from pyworkflow.object import String
+    return [String(value=v).get() for v in getListFromValues(valuesStr, length)]
 
 
 def environAdd(varName, newValue, valueFirst=False):
