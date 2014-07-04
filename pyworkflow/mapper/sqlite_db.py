@@ -27,11 +27,11 @@
 This module contains some sqlite basic tools to handle Databases.
 """
 
-import os
 from sqlite3 import dbapi2 as sqlite
 
-    
-    
+from pyworkflow.utils import envVarOn
+
+
 class SqliteDb():
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands.
@@ -53,7 +53,7 @@ class SqliteDb():
             
         self.cursor = self.connection.cursor()
         # Define some shortcuts functions
-        if os.environ.get('SCIPION_DEBUG_SQLITE', False):
+        if envVarOn('SCIPION_DEBUG_SQLITE'):
             self.executeCommand = self._debugExecute
         else:
             self.executeCommand = self.cursor.execute

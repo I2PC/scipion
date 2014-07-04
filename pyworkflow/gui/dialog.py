@@ -278,9 +278,12 @@ class YesNoDialog(MessageDialog):
 
 class EntryDialog(Dialog):
     """Dialog to ask some entry"""
-    def __init__(self, parent, title, entryLabel, entryWidth=20):
+    def __init__(self, parent, title, entryLabel, entryWidth=20, defaultValue=None, headerLabel=None):
         self.entryLabel = entryLabel
         self.entryWidth = entryWidth
+        self.headerLabel = headerLabel
+        self.tkvalue = tk.StringVar()
+        self.tkvalue.set(defaultValue)
         self.value = None
         Dialog.__init__(self, parent, title)
         
@@ -288,10 +291,15 @@ class EntryDialog(Dialog):
         bodyFrame.config(bg='white')
         frame = tk.Frame(bodyFrame, bg='white')
         frame.grid(row=0, column=0, padx=20, pady=20)
+        row = 0
+        if self.headerLabel:
+            label = tk.Label(bodyFrame, text=self.headerLabel, bg='white', bd=0)
+            label.grid(row=row, column=0, columnspan=2, sticky='nw', padx=(15, 10), pady=15)
+            row += 1
         label = tk.Label(bodyFrame, text=self.entryLabel, bg='white', bd=0)
-        label.grid(row=0, column=0, sticky='nw', padx=(15, 10), pady=15)
-        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth)
-        self.entry.grid(row=0, column=1, sticky='new', padx=(0,15), pady=15)
+        label.grid(row=row, column=0, sticky='nw', padx=(15, 10), pady=15)
+        self.entry = tk.Entry(bodyFrame, bg=gui.cfgEntryBgColor, width=self.entryWidth, textvariable=self.tkvalue)
+        self.entry.grid(row=row, column=1, sticky='new', padx=(0,15), pady=15)
         self.initial_focus = self.entry
         
     def apply(self):
@@ -387,8 +395,8 @@ def showWarning(title, msg, parent):
 def showError(title, msg, parent):
     MessageDialog(parent, title, msg, 'fa-times-circle_alert.png')
     
-def askString(title, label, parent, entryWidth=20):
-    d = EntryDialog(parent, title, label, entryWidth)
+def askString(title, label, parent, entryWidth=20, defaultValue=None, headerLabel=None):
+    d = EntryDialog(parent, title, label, entryWidth, defaultValue, headerLabel)
     return d.value
 
                 

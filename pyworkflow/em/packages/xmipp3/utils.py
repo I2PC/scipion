@@ -28,7 +28,6 @@
 This module contains utils functions to operate over xmipp metadata files.
 """
 
-import os
 import xmipp
 
 

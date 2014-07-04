@@ -30,7 +30,8 @@ inside the utils module
 
 import os
 import shutil
-from os.path import exists, join, splitext, isdir, isfile, expanduser, expandvars, basename, dirname, split, relpath
+from os.path import (exists, join, splitext, isdir, isfile, expanduser,
+                     expandvars, basename, dirname, split, relpath)
 from glob import glob
 
 import pyworkflow as pw

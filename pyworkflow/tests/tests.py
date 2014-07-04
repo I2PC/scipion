@@ -9,7 +9,7 @@ from os.path import join, relpath
 
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
-from pyworkflow.utils.utils import getColorStr
+from pyworkflow.utils.utils import getColorStr, envVarOn
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
@@ -91,7 +91,7 @@ class BaseTest(unittest.TestCase):
         and return a newly created protocol of the given class
         """
         # Try to continue from previous execution
-        if os.environ.get('SCIPION_TEST_CONTINUE', None) == '1':
+        if envVarOn('SCIPION_TEST_CONTINUE'):
             candidates = cls.proj.mapper.selectByClass(protocolClass.__name__)
             if candidates:
                 c = candidates[0]
