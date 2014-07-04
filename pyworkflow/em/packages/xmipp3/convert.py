@@ -857,5 +857,4 @@ def matrixFromGeometry(shifts, angles):
     
     M = concatenate_matrices(R, T)
     
-    return M  
-
+    return M
