@@ -31,6 +31,7 @@ import sys
 import os
 import re
 from datetime import datetime
+from psutil import virtual_memory
 import traceback
 
 
@@ -522,4 +523,4 @@ def envVarOn(varName, env=None):
 
 def getMemoryAvailable():
     """ Return the total memory of the system in MB """
-    return int(open('/proc/meminfo').readline().split()[1]) // 1024
+    return virtual_memory().total // 1024**2
