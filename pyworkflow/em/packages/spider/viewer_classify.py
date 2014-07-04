@@ -46,6 +46,7 @@ from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.viewer import ClassesView
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from protocol import SpiderProtClassifyWard, SpiderProtClassifyDiday
+from pyworkflow.gui.dialog import askString
 
 from spider import SpiderDocFile
 
@@ -148,9 +149,9 @@ class SpiderViewerWard(SpiderViewerClassify):
         self.buttonframe = Frame(root)
         self.buttonframe.grid(row=2, column=0, columnspan=2)  
         self.win.createCloseButton(self.buttonframe).grid(row=0, column=0, sticky='n', padx=5, pady=5) 
-        saveparticlesbtn = HotButton(self.buttonframe, "Particles", Icon.PLUS_CIRCLE, command=self.saveParticles)
+        saveparticlesbtn = HotButton(self.buttonframe, "Particles", Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Particles', self.getSelectedNodesCount(2)))
         saveparticlesbtn.grid(row=0, column=1, sticky='n', padx=5, pady=5)  
-        btn = HotButton(self.buttonframe, "Classes", Icon.PLUS_CIRCLE, command=self.saveClasses)
+        btn = HotButton(self.buttonframe, "Classes", Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Classes', self.getSelectedNodesCount(1)))
         btn.grid(row=0, column=2, sticky='n', padx=5, pady=5)
             
         lt = LevelTree(g)
@@ -160,12 +161,22 @@ class SpiderViewerWard(SpiderViewerClassify):
         canvas.updateScrollRegion()
         
         return [self.win]
+    
+    def askCreateSubset(self, output, size):
         
-    def _createSubsetProtocol(self, createOutputFunc):
+        headerLabel = 'Are you sure you want to create a new set of %s with %s %s?'%(output, size, 'element' if size == 1 else 'elements')
+        runname =  askString('Question','Run name:', self.win.getRoot(), 30, defaultValue='ProtUserSubSet', headerLabel=headerLabel)
+        if runname:
+            createFunc = getattr(self, 'save' + output)
+            createFunc(runname)
+        
+        
+    def _createSubsetProtocol(self, createOutputFunc, label=None):
         """ Create a subset of classes or particles. """
         try:
             project = self.getProject()
             prot = project.newProtocol(ProtUserSubSet)
+            prot.setObjLabel(label)
             prot.inputObject.set(self.protocol)
             project._setupProtocol(prot)
             prot.makePathsAndClean()
@@ -173,14 +184,26 @@ class SpiderViewerWard(SpiderViewerClassify):
             prot.setStatus(STATUS_FINISHED)
             project._storeProtocol(prot)
             #self.project.launchProtocol(prot, wait=True)
-            self.win.showInfo("Protocol %s created. " % prot.getObjLabel())
+
         except Exception, ex:
             import traceback
             traceback.print_exc()    
             self.win.showError(str(ex))
         
+    def getSelectedNodesCount(self, depth):
+        if depth == 1:
+            return len([node for node in self.graph.getNodes() if node.selected])
+        else:
+            count = 0;
+            for node in self.graph.getNodes():
+                if node.selected:
+                    for i in node.imageList:
+                        count += 1
+            return count
+    
+    
         
-    def saveClasses(self, e=None):
+    def saveClasses(self, runname=None):
         """ Store selected classes. """
         def createClasses(prot):    
             classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix='Selection')
@@ -188,9 +211,9 @@ class SpiderViewerWard(SpiderViewerClassify):
             self.protocol._fillClassesFromNodes(classes, selectedNodes)
             prot._defineOutputs(outputClasses=classes)
             
-        self._createSubsetProtocol(createClasses)
+        self._createSubsetProtocol(createClasses, runname)
             
-    def saveParticles(self, e=None):
+    def saveParticles(self, runname=None):
         """ Store particles from selected classes. """
         def createParticles(prot):
             particles = prot._createSetOfParticles(suffix='Selection')
@@ -198,7 +221,7 @@ class SpiderViewerWard(SpiderViewerClassify):
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             self.protocol._fillParticlesFromNodes(particles, selectedNodes)
             prot._defineOutputs(outputParticles=particles)
-        self._createSubsetProtocol(createParticles)
+        self._createSubsetProtocol(createParticles, runname)
         
         
 class SpiderImageBox(ImageBox):
