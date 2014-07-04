@@ -38,6 +38,7 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
+from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
 from pyworkflow.em.packages.xmipp3.utils import emptyMd
 
 ctfBlockName = 'ctfGroup'
@@ -659,78 +660,85 @@ def runCreateOutpuStep(self):
     lastIter = self.numberOfIterations.get()
     
     inDocfile = self._getFileName('docfileInputAnglesIters', iter=lastIter)
-    resultsImages = self._getPath("images.xmd")
-    resultsClasses3DRef = self._getPath("classes_ref3D.xmd")
-    resultsClasses3DRefDefGroup = self._getPath("classes_ref3D_defGroup.xmd")
-    resultsVolumes   = self._getPath("volumes.xmd")
+#     resultsImages = self._getPath("images.xmd")
+#     resultsClasses3DRef = self._getPath("classes_ref3D.xmd")
+#     resultsClasses3DRefDefGroup = self._getPath("classes_ref3D_defGroup.xmd")
+#     resultsVolumes   = self._getPath("volumes.xmd")
+    ClassFnTemplate = '%(rootDir)s/reconstruction_Ref3D_%(ref)03d.vol'
     
-    mdVolume = xmipp.MetaData()
-    
-    # create metadata file with volume names
-    for refN in self.allRefs():
-        reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIter][refN]
-        objId = mdVolume.addObject()
-        mdVolume.setValue(xmipp.MDL_IMAGE, reconstructedFilteredVolume, objId)
-#         #link also last iteration volumes
-#         createLink(log,resultVolume,join(workingDir, basename(reconstructedFilteredVolume)))
-    mdVolume.write(resultsVolumes)
-    
-    # read file with results
     allExpImagesinDocfile = xmipp.FileName()
     all_exp_images="all_exp_images"
     allExpImagesinDocfile.compose(all_exp_images, inDocfile)
-    md = MetaData(allExpImagesinDocfile)
-    #read file with ctfs
-    mdOut = xmipp.MetaData()
-    if DoCtfCorrection:
-        #read only image and ctf_model
-        mdOut = xmipp.MetaData()
-        mdCTF = xmipp.MetaData()
-        mdCTF.read(CTFDatName, [xmipp.MDL_IMAGE, xmipp.MDL_CTF_MODEL])
-        md.addIndex(xmip.MDL_IMAGE)
-        mdCTF.addIndex(xmipp.MDL_IMAGE)
-        mdOut.joinNatural(md, mdCTF)
-    else:
-        mdOut = xmipp.MetaData(md)#becareful with copy metadata since it only copies pointers
-    mdref3D = xmipp.MetaData()
-    mdrefCTFgroup = xmipp.MetaData()
-    mdref3D.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_REF3D, xmipp.MDL_REF3D, xmipp.MDL_COUNT)
-    mdrefCTFgroup.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_DEFGROUP, xmipp.MDL_DEFGROUP, xmipp.MDL_COUNT)
-    #total number Image
-    numberImages = mdOut.size()
-    #total number CTF
-    numberDefocusGroups = mdrefCTFgroup.size()
-    #total number volumes 
-    numberRef3D = mdref3D.size()
-    fnResultImages = xmipp.FileName()
-    fnResultClasses = xmipp.FileName()
     
-    fnResultImages.compose("images",resultsImages)
-    comment  = " numberImages=%d..................................................... "%numberImages
-    comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
-    comment += " numberRef3D=%d........................................................."%numberRef3D
-    #
-    mdAux1 = xmipp.MetaData()
-    mdAux2 = xmipp.MetaData()
-    mdAux1.read(selFileName,[xmipp.MDL_IMAGE, xmipp.MDL_ITEM_ID])
-    mdAux2.join1(mdOut, mdAux1, xmipp.MDL_IMAGE, xmipp.LEFT_JOIN)
-    mdAux2.setComment(comment)
-    mdAux2.write(fnResultImages)
-    #
-    #make query and store ref3d with all
-    for id in mdref3D:
-        ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
-        md.importObjects(mdOut, MDValueEQ(xmipp.MDL_REF3D, ref3D))
-        fnResultClasses.compose(("images_ref3d%06d"%ref3D),resultsClasses3DRef)
-        md.write(fnResultClasses,xmipp.MD_APPEND)
+    data_classes = self._getFileName('sqliteClasses')
     
-    md2=MetaData()
-    for id in mdref3D:
-        ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
-        #a multiquey would be better but I do not know how to implement it in python
-        md.importObjects(mdOut, MDValueEQ(xmipp.MDL_REF3D, ref3D))
-        for id in mdrefCTFgroup:
-            defocusGroup = mdrefCTFgroup.getValue(xmipp.MDL_DEFGROUP, id)
-            md2.importObjects(md, MDValueEQ(xmipp.MDL_DEFGROUP, defocusGroup))
-            fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses3DRefDefGroup)
-            md2.write(fnResultClasses, xmipp.MD_APPEND)
+    createClassesFromImages(self.inputParticles.get(), allExpImagesinDocfile, data_classes, 
+                            SetOfClasses3D, xmipp.MDL_REF, ClassFnTemplate, lastIter)
+#     mdVolume = xmipp.MetaData()
+#     
+#     # create metadata file with volume names
+#     for refN in self.allRefs():
+#         reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIter][refN]
+#         objId = mdVolume.addObject()
+#         mdVolume.setValue(xmipp.MDL_IMAGE, reconstructedFilteredVolume, objId)
+# #         #link also last iteration volumes
+# #         createLink(log,resultVolume,join(workingDir, basename(reconstructedFilteredVolume)))
+#     mdVolume.write(resultsVolumes)
+#     
+#     # read file with results
+#     md = xmipp.MetaData(allExpImagesinDocfile)
+#     #read file with ctfs
+#     mdOut = xmipp.MetaData()
+#     if self.doCTFCorrection:
+#         #read only image and ctf_model
+#         mdOut = xmipp.MetaData()
+#         mdCTF = xmipp.MetaData()
+#         mdCTF.read(self.ctfDatName, [xmipp.MDL_IMAGE, xmipp.MDL_CTF_MODEL])
+#         md.addIndex(xmipp.MDL_IMAGE)
+#         mdCTF.addIndex(xmipp.MDL_IMAGE)
+#         mdOut.joinNatural(md, mdCTF)
+#     else:
+#         mdOut = xmipp.MetaData(md)#becareful with copy metadata since it only copies pointers
+#     mdref3D = xmipp.MetaData()
+#     mdrefCTFgroup = xmipp.MetaData()
+#     mdref3D.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_REF3D, xmipp.MDL_REF3D, xmipp.MDL_COUNT)
+#     mdrefCTFgroup.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_DEFGROUP, xmipp.MDL_DEFGROUP, xmipp.MDL_COUNT)
+#     #total number Image
+#     numberImages = mdOut.size()
+#     #total number CTF
+#     numberDefocusGroups = mdrefCTFgroup.size()
+#     #total number volumes 
+#     numberRef3D = mdref3D.size()
+#     fnResultImages = xmipp.FileName()
+#     fnResultClasses = xmipp.FileName()
+#     
+#     fnResultImages.compose("images",resultsImages)
+#     comment  = " numberImages=%d..................................................... "%numberImages
+#     comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
+#     comment += " numberRef3D=%d........................................................."%numberRef3D
+#     #
+#     mdAux1 = xmipp.MetaData()
+#     mdAux2 = xmipp.MetaData()
+#     mdAux1.read(self.selFileName,[xmipp.MDL_IMAGE, xmipp.MDL_ITEM_ID])
+#     mdAux2.join1(mdOut, mdAux1, xmipp.MDL_IMAGE, xmipp.LEFT_JOIN)
+#     mdAux2.setComment(comment)
+#     mdAux2.write(fnResultImages)
+#     #
+#     mdClasses.write(fnResultClasses.compose('classes', resultsClasses3DRef)
+#     #make query and store ref3d with all
+#     for id in mdref3D:
+#         ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
+#         md.importObjects(mdOut, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3D))
+#         fnResultClasses.compose("images_ref3d%06d" % ref3D, resultsClasses3DRef)
+#         md.write(fnResultClasses,xmipp.MD_APPEND)
+#     
+#     md2 = xmipp.MetaData()
+#     for id in mdref3D:
+#         ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
+#         #a multiquey would be better but I do not know how to implement it in python
+#         md.importObjects(mdOut, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3D))
+#         for id in mdrefCTFgroup:
+#             defocusGroup = mdrefCTFgroup.getValue(xmipp.MDL_DEFGROUP, id)
+#             md2.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_DEFGROUP, defocusGroup))
+#             fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses3DRefDefGroup)
+#             md2.write(fnResultClasses, xmipp.MD_APPEND)

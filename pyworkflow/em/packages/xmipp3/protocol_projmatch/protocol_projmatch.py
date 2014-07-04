@@ -196,7 +196,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration, **kwargs)
     
     def createOutputStep(self):
-        runCreateOutputStep(self)
+        runCreateOutpuStep(self)
 
     #--------------------------- INFO functions -------------------------------------------- 
     
