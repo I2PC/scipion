@@ -38,7 +38,7 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
-from pyworkflow.em.packages.xmipp3 import emptyMd
+from pyworkflow.em.packages.xmipp3.utils import emptyMd
 
 ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
