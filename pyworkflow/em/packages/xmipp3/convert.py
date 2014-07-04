@@ -423,7 +423,6 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         for objId in posMd:
             coord = rowToCoordinate(posMd, objId)
             coord.setMicrograph(mic)
-            print "coord.getObjDict().values():", coord.getObjDict()
             coordSet.append(coord)      
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
