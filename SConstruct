@@ -33,6 +33,7 @@ import os
 import sys
 import platform
 import SCons.Script
+import shutil
 
 
 #############
@@ -460,6 +461,37 @@ def _installLibs(name, libs):
     print "Not implemented yet"
     return True
 
+def _removeInstallation(env):
+    """
+    Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
+    """
+    # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
+    UNINSTALL = {'TOCLEAN': [os.path.join('software','lib'), 
+                             os.path.join('software', 'lib64'),
+                             os.path.join('software', 'bin'),
+                             os.path.join('software', 'man'),
+                             os.path.join('software', 'share'),
+                             os.path.join('software', 'tmp'),
+                             os.path.join('software', 'log')],
+                 'TOREMOVE': [os.path.join('software', 'install', 'scons-2.3.1')]}
+#    if not _askContinue("Proceeding with Scipion purge process. Everything is going to be removed from the machine. Are you sure?"):
+#        return False
+    for dir in UNINSTALL.get('TOCLEAN'):
+        print "Cleaning %s" % dir
+        list = os.listdir(dir)
+        for thing in list:
+            path = os.path.join(dir, thing)
+            if thing == '.gitignore':
+                continue
+            if os.path.isfile(path) or os.path.islink(path):
+                os.unlink(path)
+            else:
+                shutil.rmtree(path)
+    for dir in UNINSTALL.get('TOREMOVE'):
+        print "Deleting %s" % dir
+        shutil.rmtree(dir)
+    return True
+
 def _checkMd5(file, md5):
     """
     Function that checks if the md5sum from a given file match the md5sum from a md5 file
@@ -560,6 +592,9 @@ env.AddMethod(_compileWithSetupPy, "CompileWithSetupPy")
 # Add other auxiliar functions to environment
 env.AddMethod(_scipionLogo, "ScipionLogo")
 
+# Add auxiliar function to completely clean the installation
+env.AddMethod(_removeInstallation, "RemoveInstallation")
+
 # Add main dict to environment
 env.AppendUnique(SCIPION)
 
@@ -583,6 +618,10 @@ AddOption('--binary',
 env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
+
+if GetOption('purge'):
+    print "selecting clean option"
+    SetOption('clean', True)
 
 # Only in case user didn't select help message, we run SConscript
 #if not GetOption('help') and not GetOption('clean'):

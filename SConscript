@@ -275,3 +275,9 @@ env.CompileWithSetupPy('paramiko')
 
 
 # EM PACKAGES
+
+
+
+# Purge option
+if GetOption('purge'):
+    env.RemoveInstallation()
