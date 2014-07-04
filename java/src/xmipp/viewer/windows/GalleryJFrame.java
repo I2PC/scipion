@@ -48,13 +48,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -180,7 +176,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static final float MAX_HEIGHT_RATE = 2.0f / 3.0f;
 	// this rate is width/height
 	protected static final float DIM_RATE = 4.0f / 3.0f;
-	protected static final int MIN_WIDTH = 650;
+	protected static final int MIN_WIDTH = 800;
 	protected static int MIN_HEIGHT;
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
