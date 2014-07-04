@@ -32,6 +32,7 @@ from pyworkflow.em import *
 from pyworkflow.utils.path import *  
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import runJavaIJapp
+from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 
 from convert import writeSetOfMicrographsPairs
 
@@ -71,7 +72,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         if not self.importFolder.hasValue():
             self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         else: # This is only used for test purposes
-            self._insertFunctionStep('_importFromFolderStep')       
+            self._insertFunctionStep('_importFromFolderStep')     
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -100,8 +101,36 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         """
         for f in getFiles(self.importFolder.get()):
             copyFile(f, self._getExtraPath())
-       
 
+        extradir = self._getExtraPath()  
+        
+        inputset = self.inputMicrographsTiltedPair.get()
+        uSet = inputset.getUntilted()
+        tSet = inputset.getTilted()
+
+        # Create Untilted and Tilted SetOfCoordinates
+        uCoordSet = self._createSetOfCoordinates(uSet, suffix='Untilted')
+        readSetOfCoordinates(extradir, uSet, uCoordSet)
+        uCoordSet.write()
+        tCoordSet = self._createSetOfCoordinates(tSet, suffix='Tilted')
+        readSetOfCoordinates(extradir, tSet, tCoordSet)
+        tCoordSet.write()
+        
+        # Read Angles from faked input micrographs
+        micsFn = self._getExtraPath('input_micrographs.xmd')
+        setAngles = self._createSetOfAngles()
+        readAnglesFromMicrographs(micsFn, setAngles)
+        setAngles.write()
+        # Create CoordinatesTiltPair object
+        outputset = CoordinatesTiltPair()
+        outputset.setTilted(tCoordSet)
+        outputset.setUntilted(uCoordSet)
+        outputset.setAngles(setAngles)
+        outputset.setMicsPair(self.inputMicrographsTiltedPair)
+        
+        self._defineOutputs(outputCoordinatesTiltPair=outputset)
+        self._defineSourceRelation(self.inputMicrographsTiltedPair.get(), outputset)
+        
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
         return ['Abrishami2013']

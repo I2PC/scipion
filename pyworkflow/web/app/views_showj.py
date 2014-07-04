@@ -45,19 +45,53 @@ import pyworkflow.em.showj as sj
 
 
 
-def loadDataSet(request, filename, firstTime):
+def loadDataSet(request, inputParams, firstTime):
     """ Load the DataSet from the session or from file. Also load some table.
     Params:
         request: web request variable, where dataset can be in session.
         filename: the path from where to load the dataset.
         firstTime: if True, for to load from file
     """
+    filename = inputParams[sj.PATH]
+    
     if firstTime or not sj.DATASET in request.session:
         dataset = loadDatasetXmipp(filename)
     else:
         dataset = request.session[filename][sj.DATASET]
-        
+
     return dataset
+
+def loadTable(request, dataset, inputParams):
+    if inputParams[sj.TABLE_NAME] is not None:
+        updateTable(inputParams, dataset)
+        
+    table = dataset.getTable(inputParams[sj.TABLE_NAME])
+        
+    # Update inputParams to make sure have a valid table name (if using first table)
+    inputParams[sj.TABLE_NAME] = dataset.currentTable()
+    
+    return table
+
+def updateTable(inputParams, dataset):
+    """ Save changes in the SQLITE before to load a new table
+     to keep the changes in the elements."""
+     
+    listChanges = inputParams[sj.CHANGES]
+    tableName = inputParams[sj.TABLE_NAME]
+    
+    print "CHANGES: ",listChanges
+    
+    if len(listChanges) > 0:
+        items = listChanges.split(",")
+        for x in items:
+            item = x.split("-")
+            id = item[0]
+            state = item[1]
+            
+            print "CHANGES TO SAVE:", id," - "+ state
+    else:
+        print "NO CHANGES"
+    
 
 
 def hasTableChanged(request, inputParams):
@@ -202,7 +236,8 @@ DEFAULT_PARAMS = {
     sj.VOL_TYPE: 'map',                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
 
     sj.SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
-    sj.ENABLEDITEMS: 0     # List with the id for the enabled items in the before mode.
+    sj.ENABLEDITEMS: 0,     # List with the id for the enabled items in the before mode.
+    sj.CHANGES: 0,          # List with the changes done
 }
 
 def showj(request):
@@ -258,12 +293,10 @@ def showj(request):
 
     if inputParams[sj.VOL_TYPE] != 'pdb':
         # Load the initial dataset from file or session
-        dataset = loadDataSet(request, inputParams[sj.PATH], firstTime)
-        # Load the requested table (or the first if no specified)
-        table = dataset.getTable(inputParams[sj.TABLE_NAME])
+        dataset = loadDataSet(request, inputParams, firstTime)
         
-        # Update inputParams to make sure have a valid table name (if using first table)
-        inputParams[sj.TABLE_NAME] = dataset.currentTable()
+        # Load the requested table (or the first if no specified)
+        table = loadTable(request, dataset, inputParams)
         
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
@@ -327,11 +360,18 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     # Library to manage the extra menu functions
     context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
+    # FIX
+#    context.update({'path' : inputParams[sj.PATH]})
+#    context.update({'table_name' : inputParams[sj.TABLE_NAME]})
+    
     # IMPROVE TO KEEP THE SELECTED ITEMS
     context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS]})
     
     # IMPROVE TO KEEP THE ENABLED ITEMS
     context.update({sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS]})
+    
+    # IMPROVE TO KEEP THE CHANGES ABOUT ITEMS
+    context.update({sj.CHANGES: inputParams[sj.CHANGES]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page

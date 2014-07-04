@@ -98,7 +98,56 @@ class TestConversions(BaseTest):
         mdScipion = xmipp.MetaData()
         setOfParticlesToMd(imgSet, mdScipion)
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
+        
+    def test_CTF(self):
+        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        mdCtf = xmipp.MetaData(self.dataset.getFile('ctfGold'))
+        objId = mdCtf.firstObject()
+        ctf = rowToCtfModel(mdCtf, objId)        
+        
+        ALL_CTF_LABELS = [   
+            xmipp.MDL_CTF_CA,
+            xmipp.MDL_CTF_ENERGY_LOSS,
+            xmipp.MDL_CTF_LENS_STABILITY,
+            xmipp.MDL_CTF_CONVERGENCE_CONE,
+            xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+            xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+            xmipp.MDL_CTF_K,
+            xmipp.MDL_CTF_BG_GAUSSIAN_K,
+            xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
+            xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
+            xmipp.MDL_CTF_BG_GAUSSIAN_CU,
+            xmipp.MDL_CTF_BG_GAUSSIAN_CV,
+            xmipp.MDL_CTF_BG_SQRT_K,
+            xmipp.MDL_CTF_BG_SQRT_U,
+            xmipp.MDL_CTF_BG_SQRT_V,
+            xmipp.MDL_CTF_BG_SQRT_ANGLE,
+            xmipp.MDL_CTF_BG_BASELINE,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_K,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
+            xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
+            xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+            xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+            xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
+            xmipp.MDL_CTF_CRIT_PSDVARIANCE,
+            xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
+            xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST,
+            xmipp.MDL_CTF_CRIT_FIRSTZEROAVG,
+            xmipp.MDL_CTF_CRIT_DAMPING,
+            xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
+            xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
+            xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
+            xmipp.MDL_CTF_CRIT_NORMALITY,  
+        ]      
 
+        for label in ALL_CTF_LABELS:
+            attrName = '_xmipp_%s' % xmipp.label2Str(label)
+            self.assertAlmostEquals(mdCtf.getValue(label, objId), ctf.getAttributeValue(attrName))
+            
+        
     def test_writeSetOfDefocusGroups(self):
         #reference metadata
         md = xmipp.MetaData()

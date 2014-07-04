@@ -161,8 +161,9 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
+            labels = 'id enabled comment _psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane _defocusU _defocusV _defocusAngle _xmippCTFCritFirstZero' 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
-                                          viewParams={MODE: 'metadata'}))    
+                                          viewParams={MODE: 'metadata', ORDER: labels, VISIBLE:labels, ZOOM: 50}))    
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             self._visualize(obj.outputParticles)

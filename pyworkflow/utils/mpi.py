@@ -28,9 +28,11 @@ This module contains some MPI utilities
 """
 
 import os
-from time import sleep
+from time import time, sleep
 from process import buildRunCommand, runCommand
 
+
+TIMEOUT = 60  # seconds trying to send/receive data thru a socket
 
 TAG_RUN_JOB = 1000
 
@@ -42,16 +44,22 @@ def send(command, comm, dest, tag):
 
     # Send command with isend()
     req_send = comm.isend(command, dest=dest, tag=tag)
+    t0 = time()
     while not req_send.test()[0]:
         sleep(1)
+        if time() - t0 > TIMEOUT:
+            raise Exception("Timeout, cannot send command to slave.")
 
     # Receive the exit code in a non-blocking way too (with irecv())
     req_recv = comm.irecv(dest=dest, tag=tag)
+    t0 = time()
     while True:
         done, result = req_recv.test()
         if done:
             break
         sleep(1)
+        if time() - t0 > TIMEOUT:
+            raise Exception("Timeout, cannot receive result from slave.")
 
     # Our convention: if we get a string, an error happened.
     # Else, it is the return code of our command, which we return too.
@@ -110,7 +118,11 @@ def runJobMPISlave(mpiComm):
 
         # Send result in a non-blocking way
         req_send = mpiComm.isend(result, dest=0, tag=TAG_RUN_JOB+rank)
+        t0 = time()
         while not req_send.test()[0]:
             sleep(1)
+            if time() - t0 > TIMEOUT:
+                print "Timeout, cannot send result to master."
+                break
 
     print "finishing slave...", rank

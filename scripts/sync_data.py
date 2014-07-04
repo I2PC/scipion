@@ -184,7 +184,7 @@ def check(dataset, url, verbose=False):
     """ See if our local copy of dataset is the same as the remote one.
     Return True if it is (if all the checksums are equal), False if not.
     """
-    vlog = lambda txt: sys.stdout.write(txt) if verbose else None  # verbose log
+    def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
 
     vlog('Checking dataset %s ... ' % dataset)
     try:
@@ -202,7 +202,7 @@ def check(dataset, url, verbose=False):
             vlog('\thas differences\n')
             return False
     except Exception as e:
-        vlog('\terror: %s' % e)
+        vlog('\terror: %s\n' % e)
         return False
 
 
@@ -290,7 +290,7 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     # Check that all the files mentioned in MANIFEST are up-to-date
     print "Verifying MD5s..."
 
-    vlog = lambda txt: sys.stdout.write(txt) if verbose else None  # verbose log
+    def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
     filesUpdated = 0  # number of files that have been updated
     taintedMANIFEST = False  # can MANIFEST be out of sync?
 

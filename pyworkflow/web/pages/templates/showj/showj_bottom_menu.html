@@ -12,10 +12,11 @@ $(document).ready(function(){
  	$("input#listEnabledItems").val(listEnabledItems)
 	updateEnabledItems(mode, listEnabledItems)
 	
-	/*
-	 * ---- MODE TABLE UTILS ---------------
-	 */
-	
+	// Update the ListChanges html variable
+ 	$("input#listChangesItems").val("");
+ 	
+ 	
+	/* ---- MODE TABLE UTILS ---------------*/
 	//Update the enabled/selected items in the template between pagination
  	$("div.dataTables_paginate").click(function(){
  		initializeMultipleSelectionTool()	

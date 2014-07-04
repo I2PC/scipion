@@ -216,6 +216,10 @@ class Image(EMObject):
         self._samplingRate = Float()
         self._ctfModel = None
         self._acquisition = None
+        # Both alignment and project are transformation matrices
+        # that are used in 2d and 3d, respectively
+        self._alignment = None
+        self._projection = None
         
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -300,15 +304,33 @@ class Image(EMObject):
     def setCTF(self, newCTF):
         self._ctfModel = newCTF
         
+    def hasAcquisition(self):
+        return (self._acquisition is not None and 
+                self._acquisition.getMagnification() is not None)
+        
     def getAcquisition(self):
         return self._acquisition
     
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
-    def hasAcquisition(self):
-        return (self._acquisition is not None and 
-                self._acquisition.getMagnification() is not None)
+    def hasAlignment(self):
+        return self._projection is not None
+    
+    def getAlignment(self):
+        return self._alignment
+    
+    def setAlignment(self, newAlignment):
+        self._alignment = newAlignment
+        
+    def hasProjection(self):
+        return self._projection is not None
+    
+    def getProjection(self):
+        return self._projection
+    
+    def setProjection(self, newProjection):
+        self._projection = newProjection
         
     def __str__(self):
         """ String representation of an Image. """
@@ -422,7 +444,7 @@ class SetOfImages(EMSet):
         self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
         self._hasAlignment = Boolean(args.get('alignmet', False))
-        self._hasProjectionMatrix = Boolean(False)
+        self._hasProjection = Boolean(False)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
@@ -447,11 +469,11 @@ class SetOfImages(EMSet):
     def setHasAlignment(self, value):
         self._hasAlignment.set(value)
         
-    def hasProjectionMatrix(self):
-        return self._hasProjectionMatrix.get()
+    def hasProjection(self):
+        return self._hasProjection.get()
     
-    def setHasProjectionMatrix(self, value):
-        self._hasProjectionMatrix.set(value)
+    def setHasProjection(self, value):
+        self._hasProjection.set(value)
         
     def isPhaseFlipped(self):
         return self._isPhaseFlipped.get()

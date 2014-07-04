@@ -150,6 +150,9 @@ class XmippMdRow():
         for k, v in self._labelDict.iteritems():
             s += '  %s = %s\n' % (xmipp.label2Str(k), v)
         return s + '}'
+    
+    def __iter__(self):
+        return self._labelDict.iteritems()
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
