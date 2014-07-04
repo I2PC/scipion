@@ -815,7 +815,7 @@ def createXmippInputVolumes(prot, volSet, volsFn=None):
 
 
 def createXmippInputClasses2D(prot, classSet, classFn=None):
-    if prot is not None:
+    if prot is not None and classFn is None:
         classFn = prot._getPath('input_classes.xmd')
     
     writeSetOfClasses2D(classSet, classFn)
