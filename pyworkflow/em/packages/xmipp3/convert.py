@@ -858,3 +858,52 @@ def matrixFromGeometry(shifts, angles):
     M = concatenate_matrices(R, T)
     
     return M
+
+
+def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
+                            classLabel, classFnTemplate, iter):
+    """ From an intermediate X.xmd file produced by xmipp, create
+    the set of classes in which those images are classified.
+    Params:
+        inputImages: the SetOfImages that were initially classified by relion. 
+        inputMd: the filename metadata.
+        classesFn: filename where to write the classes.
+        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        classLabel: label that is the class reference.
+        classFnTemplate: the template to get the classes averages filenames
+        iter: the iteration number, just used in Class template
+    """
+    # We asume here that the volumes (classes3d) are in the same folder than imgsFn
+    # rootDir here is defined to be used expanding locals()
+    if "@" in inputMd:
+        inputFn = os.split('@')[1]
+        tmpDir = os.path.dirname(inputFn)
+    else:
+        tmpDir = os.path.dirname(inputMd)
+    rootDir = tmpDir
+    md = xmipp.MetaData(inputMd)
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    clsSet = ClassType(filename=classesFn)
+    clsSet.setImages(inputImages)
+    
+    for objId in md:
+        ref = md.getValue(classLabel, objId)
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            cls = clsSet.ITEM_TYPE(objId=ref)
+            refFn = classFnTemplate % locals()
+            refLocation = xmippToLocation(refFn)
+            rep = clsSet.REP_TYPE()
+            rep.setLocation(refLocation)
+            cls.setRepresentative(rep)
+            
+            clsDict[ref] = cls
+            clsSet.append(cls)
+        classItem = clsDict[ref] # Try to get the class set given its ref number
+        # Set images attributes from the md row values
+        img = rowToParticle(md, objId, hasCtf=False)
+        classItem.append(img)
+        
+    for classItem in clsDict.values():
+        clsSet.update(classItem)
+        
+    clsSet.write()

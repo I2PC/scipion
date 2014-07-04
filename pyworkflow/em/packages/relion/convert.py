@@ -158,34 +158,8 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     addRelionLabels(replace=True, extended=True)
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
-    rootDir = os.path.dirname(inputStar)
-    
-    md = xmipp.MetaData(inputStar)
-    clsDict = {} # Dictionary to store the (classId, classSet) pairs
-    clsSet = ClassType(filename=classesFn)
-    clsSet.setImages(inputImages)
-    
-    for objId in md:
-        ref = md.getValue(classLabel, objId)
-        if not ref in clsDict: # Register a new class set if the ref was not found.
-            cls = clsSet.ITEM_TYPE(objId=ref)
-            refFn = classFnTemplate % locals()
-            refLocation = relionToLocation(refFn)
-            rep = clsSet.REP_TYPE()
-            rep.setLocation(refLocation)
-            cls.setRepresentative(rep)
-            
-            clsDict[ref] = cls
-            clsSet.append(cls)
-        class2D = clsDict[ref] # Try to get the class set given its ref number
-        # Set images attributes from the md row values
-        img = xmipp3.rowToParticle(md, objId, hasCtf=False)
-        class2D.append(img)
-        
-    for class2D in clsDict.values():
-        clsSet.update(class2D)
-        
-    clsSet.write()
+    xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
+                                   classLabel, classFnTemplate, iter)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):
