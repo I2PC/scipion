@@ -27,8 +27,11 @@
 This module contains utilities functions and classes.
 """
 
-import os, sys, re
+import sys
+import os
+import re
 from datetime import datetime
+from psutil import virtual_memory
 import traceback
 
 
@@ -414,13 +417,12 @@ def isPower2(num):
 # Parsing of arguments
 #---------------------------------------------------------------------------
 def getListFromRangeString(rangeStr):
-    ''' Create a list of integer from a string with range definitions.
-    Used from 
+    """ Create a list of integers from a string with range definitions.
     Examples:
     "1,5-8,10" -> [1,5,6,7,8,10]
     "2,6,9-11" -> [2,6,9,10,11]
     "2 5, 6-8" -> [2,5,6,7,8]
-    '''
+    """
     elements = rangeStr.split(',')
     values = []
     for e in elements:
@@ -457,9 +459,9 @@ def getRangeStringFromList(list):
 
 
 def getListFromValues(valuesStr, length=None):
-    """ Convert an string representing list items into the list.
+    """ Convert a string representing list items into a list.
     The items should be separated by spaces and a multiplier 'x' can be used.
-    If lenght is not None, then the last element will be repeated
+    If length is not None, then the last element will be repeated
     until the desired length is reached.
     Examples:
     '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]
@@ -488,10 +490,17 @@ def getFloatListFromValues(valuesStr, length=None):
     ''' Convert a string to a list of floats'''
     return [float(v) for v in getListFromValues(valuesStr, length)]
 
+
 def getBoolListFromValues(valuesStr, length=None):
     ''' Convert a string to a list of booleans'''
     from pyworkflow.object import Boolean
     return [Boolean(value=v).get() for v in getListFromValues(valuesStr, length)]
+
+
+def getStringListFromValues(valuesStr, length=None):
+    ''' Convert a string to a list of booleans'''
+    from pyworkflow.object import String
+    return [String(value=v).get() for v in getListFromValues(valuesStr, length)]
 
 
 def environAdd(varName, newValue, valueFirst=False):
@@ -505,6 +514,13 @@ def environAdd(varName, newValue, valueFirst=False):
     varList.insert(i, newValue)
     os.environ[varName] = os.pathsep.join(varList)
 
-# To-Do: check a better implementation
+
+def envVarOn(varName, env=None):
+    """ Is variable set to True in the environment? """
+    v = env.get(varName) if env else os.environ.get(varName)
+    return v is not None and v.lower() in ['true', 'yes', 'on', '1']
+
+
 def getMemoryAvailable():
-    return int(os.popen("free -m").readlines()[1].split()[1])
+    """ Return the total memory of the system in MB """
+    return virtual_memory().total // 1024**2

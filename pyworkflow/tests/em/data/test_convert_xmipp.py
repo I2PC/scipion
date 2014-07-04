@@ -13,7 +13,9 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
 
-class TestConversions(BaseTest):
+
+
+class TestXmippConversions(BaseTest):
     
     @classmethod
     def setUpClass(cls):
@@ -146,7 +148,6 @@ class TestConversions(BaseTest):
         for label in ALL_CTF_LABELS:
             attrName = '_xmipp_%s' % xmipp.label2Str(label)
             self.assertAlmostEquals(mdCtf.getValue(label, objId), ctf.getAttributeValue(attrName))
-            
         
     def test_writeSetOfDefocusGroups(self):
         #reference metadata
@@ -187,8 +188,3 @@ class TestConversions(BaseTest):
         mdAux = xmipp.MetaData(fnXmipp)
         self.assertEqual(md,mdAux, "test writeSetOfDefocusGroups fails")
        
-if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testCopy')
-#    unittest.TextTestRunner(verbosity=2).run(suite)
-    
-    unittest.main()

@@ -38,6 +38,7 @@ from pyworkflow.object import Float
 from pyworkflow.em.data import Volume
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
+from pyworkflow.em.packages.xmipp3.utils import emptyMd
 
 ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
@@ -92,9 +93,9 @@ def runExecuteCtfGroupsStep(self, **kwargs):
         
         self.runJob("xmipp_ctf_group", args % params, numberOfMpi=1, **kwargs)
         
-        auxMD = xmipp.MetaData("numberGroups@" + self._getFileName['cTFGroupSummary'])
-        self.numberOfCtfGroups = auxMD.getValue(xmipp.MDL_COUNT, auxMD.firstObject())
-
+        auxMD = xmipp.MetaData("numberGroups@" + self._getFileName('cTFGroupSummary'))
+        self.numberOfCtfGroups.set(auxMD.getValue(xmipp.MDL_COUNT, auxMD.firstObject()))
+    
     self._store(self.numberOfCtfGroups)
 
 
@@ -149,7 +150,13 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     
         self._insertRunJobStep('xmipp_transform_mask', args % locals(), **kwargs)
     else:
-        self._insertCopyFileStep(reconstructedFilteredVolume, maskedFileName)
+        self._insertFunctionStep('volumeConvertStep', reconstructedFilteredVolume, maskedFileName)
+
+
+def runVolumeConvertStep(self, reconstructedFilteredVolume, maskedFileName):
+    from pyworkflow.em.convert import ImageHandler
+    img = ImageHandler()
+    img.convert(reconstructedFilteredVolume, maskedFileName)
 
 
 def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
@@ -172,7 +179,7 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
               'experimentalImages' : expImages,
               'projectLibraryRootName' : projectLibraryRootName,
               'samplingRate' : self._angSamplingRateDeg[iterN],
-              'symmetry' : self.symmetry.get(),
+              'symmetry' : self._symmetry[iterN],
               }
         
     if self.maxChangeInAngles < 181:
@@ -190,7 +197,7 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
         params['tiltF'] = self.tiltF.get()
  
     if self.doCTFCorrection:
-        params['ctfGroupSubsetFileName'] = self.ctfGroupSubsetFileName
+        params['ctfGroupSubsetFileName'] = self._getFileName('imageCTFpairs')
         args += ' --groups %(ctfGroupSubsetFileName)s'
 
     if len(self.symmetryGroupNeighbourhood.get()) > 1:
@@ -241,7 +248,7 @@ def runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
         stepParams['mpiJobSize'] = self.mpiJobSize.get()
         args += ' --mpi_job_size %(mpiJobSize)s'
     
-    print '* Create projection library'
+    self._log.info('* Create projection library')
     self.runJob('xmipp_angular_project_library', args % stepParams, numberOfMpi=processorsToUse, **kwargs)
 
 
@@ -291,7 +298,7 @@ def runProjectionMatching(self, iterN, refN, args, **kwargs):
     refname = self._getFileName('projectLibraryStk', iter=iterN, ref=refN)
     
     numberOfCtfGroups = self.numberOfCtfGroups.get()
-    ctfGroupName = self._getPath(self.ctfGroupDirectory, '%(ctfGroupRootName)s')
+#     ctfGroupName = self._getPath(self.ctfGroupDirectory, '%(ctfGroupRootName)s')
     #remove output metadata
     cleanPath(projMatchRootName)
     
@@ -308,9 +315,9 @@ def runProjectionMatching(self, iterN, refN, args, **kwargs):
         copyFile(neighbFileb, neighbFile)
         
         if self.doCTFCorrection and self._referenceIsCtfCorrected[iterN]:
-            ctfArgs += ' --ctf %s' % self._getBlockFileName('', ctfN, ctfGroupName + '_ctf.stk')
+            ctfArgs += ' --ctf %s' % self._getBlockFileName('', ctfN, self._getFileName('stackCTFs'))
     
-        progArgs = ctfArgs % locals() + args 
+        progArgs = ctfArgs % locals() + args
         self.runJob('xmipp_angular_projection_matching', progArgs, **kwargs)
 
 
@@ -470,21 +477,7 @@ def insertAngularClassAverageStep(self, iterN, refN, **kwargs):
 
 
 def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
-    # FIXME: Why is necessary ask if input metadata is empty. check if this is a validation step
-#         #if inout metadata is empty create a Blanck image
-#     if emptyMd(ReconstructionXmd):
-#         from protlib_utils import printLog
-#         img = Image()
-#         img.read(maskedFileNamesIter, DATA)
-#         #(x,y,z,n) = img.getDimensions()
-#         printLog("Metadata %s is empty. Creating a Black file named %s" % (ReconstructionXmd, ReconstructedVolume))
-#         #createEmptyFile(ReconstructedVolume,x,y,z,n)
-#         img.initRandom()
-#         img.write(ReconstructedVolume)
-#         return
     
-    print '*********************************************************************'
-    print '* Reconstruct volume using '
     mpi = self.numberOfMpi.get()
     threads = self.numberOfThreads.get()
     method = self.getEnumText('reconstructionMethod')
@@ -494,7 +487,7 @@ def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
     args = ' -i %(reconsXmd)s -o %(reconsVol)s --sym %(symmetry)s'
     params = {'reconsXmd' : self._getFileName(reconsXmd, iter=iterN, ref=refN),
               'reconsVol' : self._getFileName(reconsVol, iter=iterN, ref=refN),
-              'symmetry' : self.symmetry.get()
+              'symmetry' : self._symmetry[iterN]
               }
     
     if method == 'wbp':
@@ -519,27 +512,46 @@ def insertReconstructionStep(self, iterN, refN, suffix='', **kwargs):
         params['threads'] = self.numberOfThreads.get()
         params['pad'] = self.paddingFactor.get()
         
-    self._insertFunctionStep('reconstructionStep', iterN, refN, program, method, args % params, mpi, threads, **kwargs)
+    self._insertFunctionStep('reconstructionStep', iterN, refN, program, method, args % params, suffix, mpi, threads, **kwargs)
 
 
-def runReconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs):
-    if method == 'fourier':
-        if self._fourierMaxFrequencyOfInterest[iterN] == -1:
-            fourierMaxFrequencyOfInterest = self._getFourierMaxFrequencyOfInterest(iterN-1, refN)
-            fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToFiltration[iterN]
+def runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs):
+    #if input metadata is empty create a Blanck image
+    reconsXmd = 'reconstructionXmd' + suffix
+    reconsVol = 'reconstructedFileNamesIters' + suffix
+    mdFn = self._getFileName(reconsXmd, iter=iterN, ref=refN)
+    volFn = self._getFileName(reconsVol, iter=iterN, ref=refN)
+    maskFn = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
+    
+    if emptyMd(mdFn):
+        img = xmipp.Image()
+        img.read(maskFn)
+        #(x,y,z,n) = img.getDimensions()
+        self._log.warning("Metadata '%s' is empty. \n Creating a random volume file '%s'" % (mdFn, volFn))
+        #createEmptyFile(ReconstructedVolume,x,y,z,n)
+        img.initRandom()
+        img.write(volFn)
+    else:
+        if method == 'fourier':
+            if self._fourierMaxFrequencyOfInterest[iterN] == -1:
+                fourierMaxFrequencyOfInterest = self._getFourierMaxFrequencyOfInterest(iterN-1, refN)
+                fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToFiltration[iterN]
+                
+                if fourierMaxFrequencyOfInterest > 0.5:
+                    fourierMaxFrequencyOfInterest = 0.5
+                elif fourierMaxFrequencyOfInterest < 0.:
+                    fourierMaxFrequencyOfInterest = 0.001
+            else:
+                fourierMaxFrequencyOfInterest = self._fourierMaxFrequencyOfInterest[iterN]
             
-            if fourierMaxFrequencyOfInterest > 0.5:
-                fourierMaxFrequencyOfInterest = 0.5
-            elif fourierMaxFrequencyOfInterest < 0.:
-                fourierMaxFrequencyOfInterest = 0.001
-        else:
-            fourierMaxFrequencyOfInterest = self._fourierMaxFrequencyOfInterest[iterN]
+            args += ' --max_resolution %s' % fourierMaxFrequencyOfInterest
+    
+        if mpi > 1:
+            args += ' --mpi_job_size %s' % self.mpiJobSize.get()
         
-        args += ' --max_resolution %s' % fourierMaxFrequencyOfInterest
-
-    if mpi > 1:
-        args += ' --mpi_job_size %s' % self.mpiJobSize.get()
-    self.runJob( program, args, numberOfMpi=mpi, numberOfThreads=threads, **kwargs)
+        self._log.info('*********************************************************************')
+        self._log.info('* Reconstruct volume using %s' % method)
+        self.runJob( program, args, numberOfMpi=mpi, numberOfThreads=threads, **kwargs)
 
 
 def insertComputeResolutionStep(self, iterN, refN, **kwargs):
@@ -581,12 +593,12 @@ def runCalculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs):
 
 
 def runStoreResolutionStep(self, resolIterMd, resolIterMaxMd, sampling):
-    print "compute resolution1"
+    self._log.info("compute resolution 1")
     #compute resolution
     mdRsol = xmipp.MetaData(resolIterMd)
     mdResolOut = xmipp.MetaData()
     mdResolOut.importObjects(mdRsol, xmipp.MDValueLT(xmipp.MDL_RESOLUTION_FRC, 0.5))
-    print "compute resolution2"
+    self._log.info("compute resolution 2")
     if mdResolOut.size()==0:
         mdResolOut.clear()
         mdResolOut.addObject()
@@ -623,7 +635,6 @@ def insertFilterVolumeStep(self, iterN, refN, **kwargs):
 def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
     reconstructedVolume = self._getFileName('reconstructedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN][refN]
-    
     if self.useFscForFilter:
         if self._fourierMaxFrequencyOfInterest[iterN+1] == -1:
             fourierMaxFrequencyOfInterest = self.resolSam / self._getFourierMaxFrequencyOfInterest(iterN, refN)
@@ -641,3 +652,85 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
                   }
         self.runJob('xmipp_transform_filter', args % params)
 
+
+def runCreateOutpuStep(self):
+    ''' Create standard output results_images, result_classes'''
+    #creating results files
+    lastIter = self.numberOfIterations.get()
+    
+    inDocfile = self._getFileName('docfileInputAnglesIters', iter=lastIter)
+    resultsImages = self._getPath("images.xmd")
+    resultsClasses3DRef = self._getPath("classes_ref3D.xmd")
+    resultsClasses3DRefDefGroup = self._getPath("classes_ref3D_defGroup.xmd")
+    resultsVolumes   = self._getPath("volumes.xmd")
+    
+    mdVolume = xmipp.MetaData()
+    
+    # create metadata file with volume names
+    for refN in self.allRefs():
+        reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIter][refN]
+        objId = mdVolume.addObject()
+        mdVolume.setValue(xmipp.MDL_IMAGE, reconstructedFilteredVolume, objId)
+#         #link also last iteration volumes
+#         createLink(log,resultVolume,join(workingDir, basename(reconstructedFilteredVolume)))
+    mdVolume.write(resultsVolumes)
+    
+    # read file with results
+    allExpImagesinDocfile = xmipp.FileName()
+    all_exp_images="all_exp_images"
+    allExpImagesinDocfile.compose(all_exp_images, inDocfile)
+    md = MetaData(allExpImagesinDocfile)
+    #read file with ctfs
+    mdOut = xmipp.MetaData()
+    if DoCtfCorrection:
+        #read only image and ctf_model
+        mdOut = xmipp.MetaData()
+        mdCTF = xmipp.MetaData()
+        mdCTF.read(CTFDatName, [xmipp.MDL_IMAGE, xmipp.MDL_CTF_MODEL])
+        md.addIndex(xmip.MDL_IMAGE)
+        mdCTF.addIndex(xmipp.MDL_IMAGE)
+        mdOut.joinNatural(md, mdCTF)
+    else:
+        mdOut = xmipp.MetaData(md)#becareful with copy metadata since it only copies pointers
+    mdref3D = xmipp.MetaData()
+    mdrefCTFgroup = xmipp.MetaData()
+    mdref3D.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_REF3D, xmipp.MDL_REF3D, xmipp.MDL_COUNT)
+    mdrefCTFgroup.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_DEFGROUP, xmipp.MDL_DEFGROUP, xmipp.MDL_COUNT)
+    #total number Image
+    numberImages = mdOut.size()
+    #total number CTF
+    numberDefocusGroups = mdrefCTFgroup.size()
+    #total number volumes 
+    numberRef3D = mdref3D.size()
+    fnResultImages = xmipp.FileName()
+    fnResultClasses = xmipp.FileName()
+    
+    fnResultImages.compose("images",resultsImages)
+    comment  = " numberImages=%d..................................................... "%numberImages
+    comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
+    comment += " numberRef3D=%d........................................................."%numberRef3D
+    #
+    mdAux1 = xmipp.MetaData()
+    mdAux2 = xmipp.MetaData()
+    mdAux1.read(selFileName,[xmipp.MDL_IMAGE, xmipp.MDL_ITEM_ID])
+    mdAux2.join1(mdOut, mdAux1, xmipp.MDL_IMAGE, xmipp.LEFT_JOIN)
+    mdAux2.setComment(comment)
+    mdAux2.write(fnResultImages)
+    #
+    #make query and store ref3d with all
+    for id in mdref3D:
+        ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
+        md.importObjects(mdOut, MDValueEQ(xmipp.MDL_REF3D, ref3D))
+        fnResultClasses.compose(("images_ref3d%06d"%ref3D),resultsClasses3DRef)
+        md.write(fnResultClasses,xmipp.MD_APPEND)
+    
+    md2=MetaData()
+    for id in mdref3D:
+        ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
+        #a multiquey would be better but I do not know how to implement it in python
+        md.importObjects(mdOut, MDValueEQ(xmipp.MDL_REF3D, ref3D))
+        for id in mdrefCTFgroup:
+            defocusGroup = mdrefCTFgroup.getValue(xmipp.MDL_DEFGROUP, id)
+            md2.importObjects(md, MDValueEQ(xmipp.MDL_DEFGROUP, defocusGroup))
+            fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses3DRefDefGroup)
+            md2.write(fnResultClasses, xmipp.MD_APPEND)

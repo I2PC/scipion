@@ -47,16 +47,28 @@ class TestXmippBase(BaseTest):
         cls.protImport = ProtImportVolumes(pattern=pattern, samplingRate=samplingRate)
         cls.proj.launchProtocol(cls.protImport, wait=True)
         return cls.protImport
-#     
-#     @classmethod
-#     def runCL2DAlign(cls, particles):
-#         cls.CL2DAlign = XmippProtCL2DAlign(maximumShift=2, numberOfIterations=2, 
-#                                  numberOfMpi=4, numberOfThreads=1, useReferenceImage=False)
-#         cls.CL2DAlign.inputParticles.set(particles)
-#         cls.proj.launchProtocol(cls.CL2DAlign, wait=True)
-#         return cls.CL2DAlign
-
-
+    
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles, 
+                                         pattern=pattern, samplingRate=samplingRate, 
+                                         checkStack=checkStack)
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
+    def runClassify(cls, particles):
+        cls.ProtClassify = cls.newProtocol(XmippProtML2D, 
+                                           numberOfReferences=8, maxIters=4, doMlf=False,
+                                           numberOfMpi=2, numberOfThreads=2)
+        cls.ProtClassify.inputParticles.set(particles)
+        cls.launchProtocol(cls.ProtClassify)
+        return cls.ProtClassify
+    
 class TestXmippCeateMask3D(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -241,6 +253,42 @@ class TestXmippProtHelicalParameters(TestXmippBase):
         self.proj.launchProtocol(protHelical, wait=True)        
         
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
+
+
+class TestXmippSimAnnealing(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
+    
+    def test_simAnnealing(self):
+        print "Run Simulating annealing"
+        protSimAnneal = self.newProtocol(XmippProtInitVolSimAnneal, 
+                                         symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
+        protSimAnneal.inputClasses.set(self.Class2D.outputClasses)
+        self.launchProtocol(protSimAnneal)        
+        self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
+
+
+class TestXmippRansac(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('mda')
+        cls.particlesFn = cls.dataset.getFile('particles')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
+    
+    def test_ransac(self):
+        print "Run Ransac"
+        protRansac = self.newProtocol(XmippProtRansac, 
+                                      symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
+                                      dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)
+        protRansac.inputClasses.set(self.Class2D.outputClasses)
+        self.launchProtocol(protRansac) 
+        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with simulating annealing protocol")
 
 
 class TestXmippProjMatching(TestXmippBase):

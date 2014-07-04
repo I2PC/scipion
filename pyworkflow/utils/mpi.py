@@ -52,14 +52,11 @@ def send(command, comm, dest, tag):
 
     # Receive the exit code in a non-blocking way too (with irecv())
     req_recv = comm.irecv(dest=dest, tag=tag)
-    t0 = time()
     while True:
         done, result = req_recv.test()
         if done:
             break
         sleep(1)
-        if time() - t0 > TIMEOUT:
-            raise Exception("Timeout, cannot receive result from slave.")
 
     # Our convention: if we get a string, an error happened.
     # Else, it is the return code of our command, which we return too.

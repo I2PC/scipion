@@ -27,13 +27,12 @@
 """
 This module handles process execution
 """
-import os
+
 import sys
 import resource
 from subprocess import call
 
-
-from utils import greenStr
+from utils import greenStr, envVarOn
 
 
 # The job should be launched from the working directory!
@@ -57,8 +56,7 @@ def runCommand(command, env=None, cwd=None):
     """ Execute command with given environment env and directory cwd """
 
     # First let us create core dumps if in debug mode
-    debug = env.get('SCIPION_DEBUG') if env else os.environ.get('SCIPION_DEBUG')
-    if debug and debug.lower() in ['true', '1']:
+    if envVarOn('SCIPION_DEBUG', env):
         resource.setrlimit(resource.RLIMIT_CORE,
                            (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
         # This is like "ulimit -u 99999999", so we can create core dumps

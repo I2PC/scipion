@@ -549,9 +549,10 @@ class ProtFrealignBase(EMProtocol):
         copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
     def constructParamFilesStep(self, numberOfBlocks, iterDir, iter):
-        """ This function construct a parameter file (.par) with the information of the SetOfParticle.
-        This function will execute only in iteration 1.
-        """
+        """ Construct a parameter file (.par) with the information of the SetOfParticles. """
+
+        #  This function will be called only in iteration 1.
+
         self._enterDir(iterDir)
         
         imgSet = self.inputParticles.get()
@@ -579,7 +580,8 @@ class ProtFrealignBase(EMProtocol):
                 
                 if partCounter == lastPart: # The last particle in the block
                     more = 0
-                particleLine = '1, %05d,' % magnification + ' %05d,'% film + ' %05f,'% defocusU + ' %05f,'% defocusV + ' %02f,'% astig + ' %01d\n' % more
+                particleLine = ('1, %05d, %05d, %05f, %05f, %02f, %01d\n' %
+                                magnification, film, defocusU, defocusV, astig, more)
                 self.__writeParamParticle(f, particleLine)
                 
                 if more == 0: # close the block.

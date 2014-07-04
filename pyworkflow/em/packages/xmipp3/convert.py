@@ -423,7 +423,6 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         for objId in posMd:
             coord = rowToCoordinate(posMd, objId)
             coord.setMicrograph(mic)
-            print "coord.getObjDict().values():", coord.getObjDict()
             coordSet.append(coord)      
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
@@ -816,7 +815,7 @@ def createXmippInputVolumes(prot, volSet, volsFn=None):
 
 
 def createXmippInputClasses2D(prot, classSet, classFn=None):
-    if prot is not None:
+    if prot is not None and classFn is None:
         classFn = prot._getPath('input_classes.xmd')
     
     writeSetOfClasses2D(classSet, classFn)
@@ -857,5 +856,4 @@ def matrixFromGeometry(shifts, angles):
     
     M = concatenate_matrices(R, T)
     
-    return M  
-
+    return M

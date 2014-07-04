@@ -23,16 +23,21 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippRansac protocol
-"""
-from pyworkflow.em import *  
-from convert import readSetOfClasses2D, createXmippInputClasses2D, createXmippInputVolumes, readSetOfVolumes
+
+import os
 from math import floor
-from xmipp import MetaData, MD_APPEND, MDL_MAXCC, MDL_WEIGHT, MDL_IMAGE, \
-    MDL_VOLUME_SCORE_SUM, MDL_VOLUME_SCORE_SUM_TH, MDL_VOLUME_SCORE_MEAN, MDL_VOLUME_SCORE_MIN
-from pyworkflow.utils.path import moveFile, cleanPath, copyFile, removeExt
-from protlib_xmipp import getMdSize
+
+import xmipp
+from pyworkflow.object import String
+from pyworkflow.utils.path import cleanPath, moveFile, copyFile
+from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
+                                        IntParam, StringParam, 
+                                        STEPS_PARALLEL, LEVEL_EXPERT)
+from pyworkflow.em.protocol import ProtInitialVolume
+
+from convert import writeSetOfClasses2D, readSetOfVolumes
+from utils import emptyMd
+
 
 
 class XmippProtRansac(ProtInitialVolume):
@@ -43,8 +48,6 @@ class XmippProtRansac(ProtInitialVolume):
         ProtInitialVolume.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
         self.summaryInfo = String()
-#        self.progId = "ransac"
-#        self.oroot = ""
 
     #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
@@ -122,20 +125,13 @@ class XmippProtRansac(ProtInitialVolume):
          
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-        # Convert input images if necessary
-        self.imgsFn = createXmippInputClasses2D(self, self.inputClasses.get())
-        
-        """ Filter the """
-        initialStepId = self.initialize()
-        
-        # Generate projection gallery from the initial volume
-        if self.initialVolume.hasValue():
-            self._insertFunctionStep("projectInitialVolume",self)
+        # Insert some initialization steps
+        initialStepId = self._insertInitialSteps()
         
         deps = [] # Store all steps ids, final step createOutput depends on all of them    
         for n in range(self.nRansac.get()):
             # CTF estimation with Xmipp
-            stepId = self._insertFunctionStep('ransacIteration', n,
+            stepId = self._insertFunctionStep('ransacIterationStep', n,
                                     prerequisites=[initialStepId]) # Make estimation steps indepent between them
             deps.append(stepId)
         
@@ -144,9 +140,9 @@ class XmippProtRansac(ProtInitialVolume):
             #ToDo: remove rm command and check what to clean
             self._insertRunJobStep("rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
             
-        self._insertFunctionStep("getCorrThresh", prerequisites=deps) # Make estimation steps indepent between them)
-        self._insertFunctionStep("evaluateVolumes")
-        bestVolumesStepId = self._insertFunctionStep("getBestVolumes")        
+        self._insertFunctionStep("getCorrThreshStep", prerequisites=deps) # Make estimation steps indepent between them)
+        self._insertFunctionStep("evaluateVolumesStep")
+        bestVolumesStepId = self._insertFunctionStep("getBestVolumesStep")        
         
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # Refine the best volumes
@@ -155,14 +151,14 @@ class XmippProtRansac(ProtInitialVolume):
             fnRoot=self._getPath(fnBase)
                     
             # Simulated annealing
-            self._insertFunctionStep('reconstruct',fnRoot,
+            self._insertFunctionStep('reconstructStep',fnRoot,
                                                prerequisites=[bestVolumesStepId]) # Make estimation steps indepent between them
             if self.useSA.get():
                 self._insertFunctionStep('simulatedAnnealingStep',fnRoot)
         
             for it in range(self.numIter.get()):    
-                self._insertFunctionStep('reconstruct',fnRoot) 
-                self._insertFunctionStep('projMatch',fnBase)
+                self._insertFunctionStep('reconstructStep',fnRoot) 
+                self._insertFunctionStep('projMatchStep',fnBase)
             
             stepId =  self._insertRunJobStep("xmipp_image_resize","-i %s.vol -o %s.vol --dim %d %d" 
                                           %(fnRoot,fnRoot,self.Xdim,self.Xdim))
@@ -175,7 +171,11 @@ class XmippProtRansac(ProtInitialVolume):
         
         self._insertFunctionStep('createOutputStep')
     
-    def initialize(self):
+    def _insertInitialSteps(self):
+        # Convert the input classes to a metadata ready for xmipp
+        self.imgsFn = self._getExtraPath('input_classes.xmd')
+        self._insertFunctionStep('convertClassesStep', self.imgsFn)
+        
         self.Xdim=self.inputClasses.get().getDimensions()[0]
         
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")
@@ -188,7 +188,7 @@ class XmippProtRansac(ProtInitialVolume):
         if K<1:
             K=1
         self.Xdim2 = self.Xdim/K
-        if (self.Xdim2 < 32):
+        if self.Xdim2 < 32:
             self.Xdim2 = 32
             K = self.Xdim/self.Xdim2
             
@@ -197,16 +197,26 @@ class XmippProtRansac(ProtInitialVolume):
 
         self._insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
-        return self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
+        lastId = self._insertRunJobStep("xmipp_image_resize","-i %s --fourier %d -o %s" %(fnOutputReducedClass,self.Xdim2,fnOutputReducedClassNoExt))
 
+        # Generate projection gallery from the initial volume
+        if self.initialVolume.hasValue():
+            lastId = self._insertFunctionStep("projectInitialVolume",self)
+            
+        return lastId
+
+    #--------------------------- STEPS functions --------------------------------------------
+
+    def convertClassesStep(self, classesFn):
+        writeSetOfClasses2D(self.inputClasses.get(), classesFn)
+        
     def simulatedAnnealingStep(self, fnRoot):
         self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
                          %(fnRoot,fnRoot,fnRoot,self.symmetryGroup.get(),self.nIterRandom.get(),self.rejection.get()))
         moveFile(fnRoot+"_sa.vol", fnRoot+".vol")
         cleanPath(fnRoot+"_sa.xmd")
-
-    #--------------------------- STEPS functions --------------------------------------------
-    def ransacIteration(self, n):
+    
+    def ransacIterationStep(self, n):
     
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")  
         fnBase="ransac%05d"%n
@@ -229,7 +239,7 @@ class XmippProtRansac(ProtInitialVolume):
                    %(fnRoot,fnRoot,fnGallery,str(self.Xdim/2),str(self.Xdim/20)))
     
         # Reconstruct with the small sample
-        self.reconstruct(fnRoot)
+        self.reconstructStep(fnRoot)
         
         fnVol = fnRoot+'.vol'
         
@@ -258,30 +268,29 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
     
-    
-    def reconstruct(self, fnRoot):
+    def reconstructStep(self, fnRoot):
         self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))
         self.runJob("xmipp_transform_mask","-i %s.vol --mask circular -%d "%(fnRoot,self.Xdim2/2))
      
      
-    def getCorrThresh(self):
+    def getCorrThreshStep(self):
         corrVector = []
         fnCorr=self._getExtraPath("correlations.xmd")               
-        mdCorr= MetaData()
+        mdCorr= xmipp.MetaData()
     
         for n in range(self.nRansac.get()):
             fnRoot="ransac%05d"%n
             fnAngles=self._getTmpPath("angles_"+fnRoot+".xmd")
-            md=MetaData(fnAngles)
+            md = xmipp.MetaData(fnAngles)
             
             for objId in md:
-                corr = md.getValue(MDL_MAXCC, objId)
+                corr = md.getValue(xmipp.MDL_MAXCC, objId)
                 corrVector.append(corr)
                 objIdCorr = mdCorr.addObject()
-                mdCorr.setValue(MDL_MAXCC,float(corr),objIdCorr)
+                mdCorr.setValue(xmipp.MDL_MAXCC,float(corr),objIdCorr)
     
-        mdCorr.write("correlations@"+fnCorr,MD_APPEND)                            
-        mdCorr= MetaData()
+        mdCorr.write("correlations@"+fnCorr,xmipp.MD_APPEND)                            
+        mdCorr= xmipp.MetaData()
         sortedCorrVector = sorted(corrVector)
         indx = int(floor(self.corrThresh.get()*(len(sortedCorrVector)-1)))    
         
@@ -289,41 +298,41 @@ class XmippProtRansac(ProtInitialVolume):
         #CorrThresh = sortedCorrVector[indx]#
             
         objId = mdCorr.addObject()
-        mdCorr.setValue(MDL_WEIGHT,self.corrThresh.get(),objId)
-        mdCorr.write("corrThreshold@"+fnCorr,MD_APPEND)
+        mdCorr.setValue(xmipp.MDL_WEIGHT,self.corrThresh.get(),objId)
+        mdCorr.write("corrThreshold@"+fnCorr,xmipp.MD_APPEND)
         print "Correlation threshold: "+str(self.corrThresh.get())
     
     
-    def evaluateVolumes(self):
+    def evaluateVolumesStep(self):
         fnCorr=self._getExtraPath("correlations.xmd")
         fnCorr = 'corrThreshold@'+fnCorr
-        mdCorr= MetaData(fnCorr)
+        mdCorr= xmipp.MetaData(fnCorr)
         objId = mdCorr.firstObject()    
-        CorrThresh = mdCorr.getValue(MDL_WEIGHT,objId)
+        CorrThresh = mdCorr.getValue(xmipp.MDL_WEIGHT,objId)
         for n in range(self.nRansac.get()):        
             fnRoot="ransac%05d"%n              
             fnAngles=self._getTmpPath("angles_"+fnRoot+".xmd")    
-            md=MetaData(fnAngles)
+            md = xmipp.MetaData(fnAngles)
             numInliers=0
             for objId in md:
-                corr = md.getValue(MDL_MAXCC, objId)
+                corr = md.getValue(xmipp.MDL_MAXCC, objId)
                
                 if (corr >= CorrThresh) :
                     numInliers = numInliers+corr
     
-            md= MetaData()
+            md= xmipp.MetaData()
             objId = md.addObject()
-            md.setValue(MDL_WEIGHT,float(numInliers),objId)
-            md.write("inliers@"+fnAngles,MD_APPEND)
+            md.setValue(xmipp.MDL_WEIGHT,float(numInliers),objId)
+            md.write("inliers@"+fnAngles,xmipp.MD_APPEND)
     
-    def getBestVolumes(self):
+    def getBestVolumesStep(self):
         volumes = []
         inliers = []
         
         for n in range(self.nRansac.get()):
             fnAngles = self._getTmpPath("angles_ransac%05d"%n+".xmd")
-            md=MetaData("inliers@"+fnAngles)
-            numInliers=md.getValue(MDL_WEIGHT,md.firstObject())
+            md=xmipp.MetaData("inliers@"+fnAngles)
+            numInliers=md.getValue(xmipp.MDL_WEIGHT,md.firstObject())
             volumes.append(fnAngles)
             inliers.append(numInliers)
         
@@ -331,16 +340,16 @@ class XmippProtRansac(ProtInitialVolume):
         fnBestAngles = ''
         threshold=self.getCCThreshold()
      
-        i=self.nRansac.get()-1
+        i = self.nRansac.get()-1
         indx = 0
-        while i>=0 and indx<self.numVolumes.get():
+        while i >= 0 and indx < self.numVolumes:
             fnBestAngles = volumes[index[i]]
-            fnBestAnglesOut=self._getPath("proposedVolume%05d"%indx+".xmd")
-            copyFile(fnBestAngles,fnBestAnglesOut)
-            print("Best volume "+str(indx)+" = "+fnBestAngles)
-            if not self.useAll.get():
+            fnBestAnglesOut = self._getPath("proposedVolume%05d"%indx+".xmd")
+            copyFile(fnBestAngles, fnBestAnglesOut)
+            self._log.info("Best volume %d = %s" % (indx, fnBestAngles))
+            if not self.useAll:
                 self.runJob("xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
-                if getMdSize(fnBestAnglesOut) > 0:
+                if not emptyMd(fnBestAnglesOut):
                     indx += 1
             else:
                 indx += 1
@@ -351,7 +360,7 @@ class XmippProtRansac(ProtInitialVolume):
             fnAngles = self._getTmpPath("angles_ransac%05d"%n+".xmd")
             cleanPath(fnAngles)
              
-    def projMatch(self,fnBase):
+    def projMatchStep(self,fnBase):
         fnRoot=self._getPath(fnBase)
         fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
@@ -370,19 +379,19 @@ class XmippProtRansac(ProtInitialVolume):
     
     def scoreFinalVolumes(self):
         threshold=self.getCCThreshold()
-        mdOut=MetaData()
+        mdOut=xmipp.MetaData()
         for n in range(self.numVolumes.get()):
             fnRoot=self._getPath('proposedVolume%05d'%n)
             fnAssignment=fnRoot+".xmd"
-            if exists(fnAssignment):
+            if os.path.exists(fnAssignment):
                 self.runJob("xmipp_metadata_utilities","-i %s --fill weight constant 1"%fnAssignment)
-                MDassignment=MetaData(fnAssignment)
+                MDassignment=xmipp.MetaData(fnAssignment)
                 sum=0
                 thresholdedSum=0
                 N=0
                 minCC=2
                 for id in MDassignment:
-                    cc=MDassignment.getValue(MDL_MAXCC,id)
+                    cc=MDassignment.getValue(xmipp.MDL_MAXCC,id)
                     sum+=cc
                     thresholdedSum+=cc-threshold
                     if cc<minCC:
@@ -390,11 +399,11 @@ class XmippProtRansac(ProtInitialVolume):
                     N+=1
                 avg=sum/N
                 id=mdOut.addObject()
-                mdOut.setValue(MDL_IMAGE,fnRoot+".vol",id)
-                mdOut.setValue(MDL_VOLUME_SCORE_SUM,float(sum),id)
-                mdOut.setValue(MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)
-                mdOut.setValue(MDL_VOLUME_SCORE_MEAN,float(avg),id)
-                mdOut.setValue(MDL_VOLUME_SCORE_MIN,float(minCC),id)
+                mdOut.setValue(xmipp.MDL_IMAGE,fnRoot+".vol",id)
+                mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM,float(sum),id)
+                mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)
+                mdOut.setValue(xmipp.MDL_VOLUME_SCORE_MEAN,float(avg),id)
+                mdOut.setValue(xmipp.MDL_VOLUME_SCORE_MIN,float(minCC),id)
         mdOut.write(self._getPath("proposedVolumes.xmd"))
 
 
@@ -447,8 +456,8 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- UTILS functions --------------------------------------------        
     def getCCThreshold(self):
         fnCorr=self._getExtraPath("correlations.xmd")               
-        mdCorr=MetaData("corrThreshold@"+fnCorr)
-        return mdCorr.getValue(MDL_WEIGHT, mdCorr.firstObject())
+        mdCorr=xmipp.MetaData("corrThreshold@"+fnCorr)
+        return mdCorr.getValue(xmipp.MDL_WEIGHT, mdCorr.firstObject())
     
     def _storeSummaryInfo(self, numVolumes):
         """ Store some information when the protocol finishes. """
@@ -460,7 +469,7 @@ class XmippProtRansac(ProtInitialVolume):
             fnRoot = self._getPath(fnBase + ".xmd")
                                
             if os.path.isfile(fnRoot):
-                md = MetaData(fnRoot)
+                md = xmipp.MetaData(fnRoot)
                 size = md.size()
                 if (size < 5):
                     msg1 = "Num of inliers for model %d too small and equal to %d \n" % (n, size)
@@ -468,7 +477,7 @@ class XmippProtRansac(ProtInitialVolume):
                  
         fnRoot = self._getTmpPath("ransac00000.xmd")
         if os.path.isfile(fnRoot):
-            md = MetaData(fnRoot)
+            md = xmipp.MetaData(fnRoot)
             size = md.size()
             if (size < 5):
                 msg2 = "Num of random samples too small and equal to %d.\n" % size

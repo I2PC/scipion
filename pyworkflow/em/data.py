@@ -489,8 +489,12 @@ class SetOfImages(EMSet):
         
     def append(self, image):
         """ Add a image to the set. """
-        if not image.getSamplingRate():
+        # If the sampling rate was set before, the same value
+        # will be set for each image added to the set
+        if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
+        # Store the dimensions of the first image, just to 
+        # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
             self._firstDim.set(image.getDim())
         EMSet.append(self, image)
