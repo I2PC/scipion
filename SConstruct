@@ -58,9 +58,9 @@ INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
                     # libraries to create                
 BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
                     # source pattern                     
-PACKAGES_FOLDER =      DIR =                         4 
+PACKAGES_FOLDER =      DIR =   PKG_URL =             4 
                     # folder name in temporal directory  
-LIB_FOLDER =           TAR =                         5
+LIB_FOLDER =           TAR =   PKG_TAR =             5
                     # tarfile name in temporal directory
 MAN_FOLDER =           DEPS =                        6 
                     # explicit dependencies              
@@ -100,7 +100,7 @@ def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, t
     if dir is None: 
         dir = splitext(tar)[0] if tar is not None else name
     tar = '%s.tgz' % dir if tar is None else tar
-    src = dir if src is None else dir
+    src = dir if src is None else src
     url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar if url is None else url
     incs = [] if incs is None else incs
     libs = ["lib%s.so" % name] if libs is None else libs
@@ -127,13 +127,26 @@ def _delLibrary(env, name):
     """
     del SCIPION['LIBS'][name]
 
-def _addPackage(env, name, installFolder, libFolder, binFolder):
+def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin=None):
     """
     This method is for adding a package to the main dict
     """
-    SCIPION['PACKAGES'][name] = {INSTALL_FOLDER: installFolder,
-                                 LIB_FOLDER: libFolder,
-                                 BIN_FOLDER: binFolder}
+    
+    if dir is None:
+        dir = splitext(tar)[0] if tar is not None else name
+    tar = '%s.tgz' % dir if tar is None else tar
+    url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/em/%s' % tar if url is None else url
+    
+    SCIPION['PACKAGES'][name] = {PKG_DEF: dft,
+                                 PKG_TAR: tar,
+                                 PKG_URL: url,
+                                 PKG_INSTALL_FOLDER: dir,
+                                 PKG_LIB_FOLDER: lib,
+                                 PKG_BIN_FOLDER: bin}
+    AddOption('--%s' % name,
+              dest='%s' % name,
+              action='store_true',
+              help='EM Package %s option')
 
 def _delPackage(env, name):
     """
@@ -619,9 +632,6 @@ env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
 
-if GetOption('purge'):
-    print "selecting clean option"
-    SetOption('clean', True)
 
 # Only in case user didn't select help message, we run SConscript
 #if not GetOption('help') and not GetOption('clean'):

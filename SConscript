@@ -276,8 +276,13 @@ env.CompileWithSetupPy('paramiko')
 
 # EM PACKAGES
 
-
+# Xmipp3.1
+AddPackage('xmipp', 
+           tar='Xmipp-3.1-src.tgz',
+           url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz')
 
 # Purge option
 if GetOption('purge'):
+    print "Purge option implies clean. Activating clean..."
+    SetOption('clean', True)
     env.RemoveInstallation()

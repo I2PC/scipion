@@ -131,7 +131,7 @@ if __name__ == '__main__':
                 logFile = open(SCIPION_INSTALL_LOG, 'a')
                 command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
                 
-                print '>>>>>>>>>>> %s [from %s]' % (" ".join(command), os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION))
+                print 'Executing %s on scons' % (arg)
                 scons = subprocess.Popen(command, 
                                          cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
                                          stdout=logFile,
