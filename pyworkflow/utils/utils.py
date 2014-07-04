@@ -27,7 +27,9 @@
 This module contains utilities functions and classes.
 """
 
-import os, sys, re
+import sys
+import os
+import re
 from datetime import datetime
 import traceback
 
@@ -414,13 +416,12 @@ def isPower2(num):
 # Parsing of arguments
 #---------------------------------------------------------------------------
 def getListFromRangeString(rangeStr):
-    ''' Create a list of integer from a string with range definitions.
-    Used from 
+    """ Create a list of integers from a string with range definitions.
     Examples:
     "1,5-8,10" -> [1,5,6,7,8,10]
     "2,6,9-11" -> [2,6,9,10,11]
     "2 5, 6-8" -> [2,5,6,7,8]
-    '''
+    """
     elements = rangeStr.split(',')
     values = []
     for e in elements:
@@ -457,9 +458,9 @@ def getRangeStringFromList(list):
 
 
 def getListFromValues(valuesStr, length=None):
-    """ Convert an string representing list items into the list.
+    """ Convert a string representing list items into a list.
     The items should be separated by spaces and a multiplier 'x' can be used.
-    If lenght is not None, then the last element will be repeated
+    If length is not None, then the last element will be repeated
     until the desired length is reached.
     Examples:
     '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]

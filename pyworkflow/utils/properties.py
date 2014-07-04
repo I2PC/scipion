@@ -112,7 +112,7 @@ class Message():
     LABEL_EXPERT_EXPERT = 'Expert'
     
     HELP_RUNMODE = """  
-Normally, each protocol is composed by more atomic steps.
+Normally, each protocol is composed by several atomic steps.
 Each step could be computationally intensive, that's why
 the *Resume* execution mode will try to continue from the
 last completed step. On the other hand, the *Restart* mode
@@ -120,8 +120,8 @@ will clean the whole run directory and start from scratch.
     """    
     HELP_MPI_THREADS = """  
 Define the number of processors to be used in the execution.
-*MPI*: This are a number of independent process 
-       that comunicates throught message passing 
+*MPI*: This is a number of independent processes
+       that communicate through message passing
        over the network (or the same computer).
 *Threads*: This refers to different execution threads 
        in the same process that can share memory. They run in
@@ -324,7 +324,3 @@ class Color():
     LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
     LIGHT_GREY_COLOR_2 = '#F2F2F2' # Very light grey for odd rows, input background, etc
     DARK_GREY_COLOR = '#6E6E6E' # Very dark grey for project title, tubes, etc
-    
-    
-    
-    
