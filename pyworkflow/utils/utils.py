@@ -513,6 +513,13 @@ def environAdd(varName, newValue, valueFirst=False):
     varList.insert(i, newValue)
     os.environ[varName] = os.pathsep.join(varList)
 
-# To-Do: check a better implementation
+
+def envVarOn(varName, env=None):
+    """ Is variable set to True in the environment? """
+    v = env.get(varName) if env else os.environ.get(varName)
+    return v is not None and v.lower() in ['true', 'yes', 'on', '1']
+
+
 def getMemoryAvailable():
-    return int(os.popen("free -m").readlines()[1].split()[1])
+    """ Return the total memory of the system in MB """
+    return int(open('/proc/meminfo').readline().split()[1]) // 1024
