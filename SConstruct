@@ -131,7 +131,7 @@ def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin
     """
     This method is for adding a package to the main dict
     """
-    
+    from os.path import splitext
     if dir is None:
         dir = splitext(tar)[0] if tar is not None else name
     tar = '%s.tgz' % dir if tar is None else tar
