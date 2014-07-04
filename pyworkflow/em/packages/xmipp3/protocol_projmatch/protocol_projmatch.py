@@ -31,7 +31,7 @@ This sub-package implement projection matching using xmipp 3.1
 import xmipp
 from pyworkflow.object import Integer
 from pyworkflow.utils.path import makePath, copyFile
-from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues
+from pyworkflow.utils import getFloatListFromValues, getBoolListFromValues, getStringListFromValues
 from pyworkflow.em import ProtRefine3D, ProtClassify3D
 
 from projmatch_initialize import *
@@ -162,6 +162,9 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
             
         return iterDirs
     
+    def volumeConvertStep(self, reconstructedFilteredVolume, maskedFileName):
+        runVolumeConvertStep(self, reconstructedFilteredVolume, maskedFileName)
+    
     def executeCtfGroupsStep(self, **kwargs):
         runExecuteCtfGroupsStep(self, **kwargs)
     
@@ -180,8 +183,8 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def cleanVolumeStep(self, vol1, vol2):
         cleanPath(vol1, vol2)
     
-    def reconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs):
-        runReconstructionStep(self, iterN, refN, program, method, args, mpi, threads, **kwargs)
+    def reconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs):
+        runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi, threads, **kwargs)
     
     def storeResolutionStep(self, resolIterMd, resolIterMaxMd, sampling):
         runStoreResolutionStep(self, resolIterMd, resolIterMaxMd, sampling)
@@ -193,8 +196,7 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration, **kwargs)
     
     def createOutputStep(self):
-        print "output generated..........."
-
+        runCreateOutputStep(self)
 
     #--------------------------- INFO functions -------------------------------------------- 
     
@@ -253,6 +255,17 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         if valuesStr is None:
             raise Exception('None value for attribute: %s' % attributeName)
         return [firstValue] + getBoolListFromValues(valuesStr, length=self.numberOfIterations.get())
+        
+    def itersStringValues(self, attributeName, firstValue='c1'):
+        """ Take the string of a given attribute and
+        create a list of strings that will be used by 
+        the iteratioins. An special first value will be
+        added to the list for iteration 0.
+        """
+        valuesStr = self.getAttributeValue(attributeName)
+        if valuesStr is None:
+            raise Exception('None value for attribute: %s' % attributeName)
+        return [firstValue] + getStringListFromValues(valuesStr, length=self.numberOfIterations.get())
         
     def _getBlockFileName(self, blockName, blockNumber, filename, length=None):
         l = length or self.FILENAMENUMBERLENGTH

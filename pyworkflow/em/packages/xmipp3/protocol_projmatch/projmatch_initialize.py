@@ -156,10 +156,10 @@ def initializeLists(self):
     n2 = self.numberOfIterations.get() + 2
     
     if self.doComputeResolution:
-        self._fourierMaxFrequencyOfInterest = [maxFreq] * n2
-    else:
         self._fourierMaxFrequencyOfInterest = [-1] * n2
         self._fourierMaxFrequencyOfInterest[1] = maxFreq
+    else:
+        self._fourierMaxFrequencyOfInterest = [maxFreq] * n2
     
     #parameter for projection matching
     self._align2DIterNr = self.itersFloatValues('align2DIterNr')
@@ -189,5 +189,4 @@ def initializeLists(self):
     self._scaleStep = self.itersFloatValues('scaleStep')
     self._search5DShift = self.itersFloatValues('search5DShift')
     self._search5DStep = self.itersFloatValues('search5DStep')
-    # FIXME: check why the symmetry is treated as a list (and a float list!!!)
-    #self._symmetryGroup = self.itersFloatValues('symmetry')
+    self._symmetry = self.itersStringValues('symmetry')

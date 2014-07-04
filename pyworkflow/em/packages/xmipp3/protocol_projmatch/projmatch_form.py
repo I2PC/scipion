@@ -222,8 +222,8 @@ def _defineProjectionMatchingParams(self, form):
     """)   
     
     # Changed from String to Int 
-    form.addParam('projectionMethod', EnumParam, choices=['fourier', 'real space'], 
-                 default=xmipp3.PROJECT_FOURIER, expertLevel=LEVEL_EXPERT, 
+    form.addParam('projectionMethod', EnumParam, choices=['fourier', 'real_space'], 
+                 default=xmipp3.PROJECT_REALSPACE, expertLevel=LEVEL_EXPERT, 
                  label="Projection method", display=EnumParam.DISPLAY_COMBO,
                  help='select projection method, by default Fourier with padding 1 and interpolation bspline')        
     
@@ -544,7 +544,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('doSplitReferenceImages', NumericListParam, default='1',
                  label='Split references averages?', expertLevel=LEVEL_EXPERT,
-                 condition="doComputeResolution!='0'",
+                 condition="doComputeResolution==True",
                  help="""In theory each reference average should be splited
     in two when computing the resolution. In this way each
     projection direction will be represented in each of the
@@ -568,21 +568,25 @@ def _defineProjectionMatchingParams(self, form):
     """)            
     
     form.addParam('doLowPassFilter', BooleanParam, default=True,
-                 label="Low-pass filter the reference?",  expertLevel=LEVEL_ADVANCED,
-                 help="""If set to true, the volume will be filtered at a frecuency equal to
-    the  resolution computed with a FSC=0.5 threshold, possibly 
-    plus a constant provided by the user in the next input box. 
+                 label="Low-pass filter the reference?")
     
-    If set to false, then the filtration will be made at the constant 
-    value provided by the user in the next box (in digital frequency, 
-    i.e. pixel-1: minimum 0, maximum 0.5) 
+    form.addParam('useFscForFilter', BooleanParam, default=True,
+                  label='Use estimated resolution for low-pass filtering?',
+                  condition="doLowPassFilter==True",
+                  help=""" If set to true, the volume will be filtered at a frecuency equal to
+   the  resolution computed with a FSC=0.5 threshold, possibly 
+   plus a constant provided by the user in the next input box. 
+
+   If set to false, then the filtration will be made at the constant 
+   value provided by the user in the next box (in digital frequency, 
+   i.e. pixel^-1: minimum 0, maximum 0.5)
     """)
     
-    form.addParam('constantToAddToFiltration', NumericListParam, default='0.1 0',
-                 label='Constant to be added to the estimated resolution', expertLevel=LEVEL_ADVANCED,
-                 condition="doLowPassFilter!='0'",
+    form.addParam('constantToAddToFiltration', NumericListParam, default='0.05',
+                 label='Constant to be added to the estimated resolution',
+                 condition="doLowPassFilter==True",
                  help=""" The meaning of this field depends on the previous flag.
-    If set to true, then the volume will be filtered at a frecuency equal to
+    If set to true, then the volume will be filtered at a frequency equal to
     the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
     provided in this field 
     If set to false, the volume will be filtered at the resolution
@@ -593,7 +597,7 @@ def _defineProjectionMatchingParams(self, form):
     (even to negative values)
     
     You can specify this option for each iteration. 
-    This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
+    This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1"
     specifies 4 iterations, the first two set the constant to .15
     and the last two to 0.1. An alternative compact notation 
     is ("2x.15 2x0.1", i.e.,
@@ -601,35 +605,11 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are less values than iterations the last value is reused
     *Note:* if there are more values than iterations the extra value are ignored
     """)
-    
-    form.addParam('useFscForFilter', BooleanParam, default=True,
-                  label='Constant to be added to the estimated resolution',
-                  condition="doLowPassFilter!='0'",
-                  help=""" The meaning of this field depends on the previous flag.
-    If set to true, then the volume will be filtered at a frequency equal to
-    the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
-    provided in this field 
-    If set to false, the volume will be filtered at the resolution
-    provided in this field 
-    This value is in digital frequency, or pixel^-1: minimum 0, maximum 0.5
-
-    If you detect correlation between noisy regions decrease this value 
-    (even to negative values)
-    
-    You can specify this option for each iteration. 
-    This can be done by a sequence of numbers (for instance, ".15 .15 .1 .1" 
-    specifies 4 iterations, the first two set the constant to .15
-    and the last two to 0.1. An alternative compact notation 
-    is ("2x.15 2x0.1", i.e.,
-    4 iterations with value 0.15, and three with value .1).
-    <Note:> if there are less values than iterations the last value is reused
-    <Note:> if there are more values than iterations the extra value are ignored
-    """)
 
     form.addParam('constantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                  label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
-                 condition="doLowPassFilter!='0'",
-                 help=""" The meaning of this field depends on the UseFscForFilter flag.
+                 condition="doLowPassFilter==True",
+                 help=""" The meaning of this field depends on the <use FSC for filter> flag.
     If set to true, then the volume will be reconstructed up to the frequency equal to
     the resolution computed with resolution_fsc (FSC=0.5) plus the value 
     provided in this field 
@@ -648,7 +628,7 @@ def _defineProjectionMatchingParams(self, form):
     """)
     
     form.addParam('mpiJobSize', IntParam, default=2,
-                  label='MPI job size',
+                  label='MPI job size', expertLevel=LEVEL_EXPERT,
                   help="""Minimum size of jobs in mpi processes.
     Set to 1 for large images (e.g. 500x500)
     and to 10 for small images (e.g. 100x100)
