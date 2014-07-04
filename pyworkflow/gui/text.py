@@ -36,7 +36,8 @@ import ttk
 import gui
 from widgets import Scrollable, IconButton
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
-                              parseHyperText, renderLine, renderTextFile, colorName, which)
+                              parseHyperText, renderLine, renderTextFile, colorName,
+                              which, envVarOn)
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
@@ -551,7 +552,7 @@ class TextFileViewer(tk.Frame):
         
     def _openExternal(self):
         """ Open a new window with an external viewer. """
-        if os.environ.get('SCIPION_EXTERNAL_VIEWER', 'False').lower() in ['true', '1']:
+        if envVarOn('SCIPION_EXTERNAL_VIEWER'):
             if not self.taList:
                 return
             _open_cmd(self.taList[max(self.getIndex(), 0)].filename)
