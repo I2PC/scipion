@@ -85,9 +85,7 @@ SCIPION = {
                 INCLUDE_FOLDER: os.path.join('software', 'include'),
                 LOG_FOLDER: os.path.join('software', 'log')},
     'LIBS': {},
-    'PACKAGES': {'xmipp': {INSTALL_FOLDER: 'xmipp',
-                           LIB_FOLDER: os.path.join('xmipp', 'lib'),
-                           BIN_FOLDER: os.path.join('xmipp', 'bin'),}}}
+    'EMPACKAGES': {}}
 
 ######################
 # AUXILIAR FUNCTIONS #
@@ -137,7 +135,7 @@ def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin
     tar = '%s.tgz' % dir if tar is None else tar
     url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/em/%s' % tar if url is None else url
     
-    SCIPION['PACKAGES'][name] = {PKG_DEF: dft,
+    SCIPION['EMPACKAGES'][name] = {PKG_DEF: dft,
                                  PKG_TAR: tar,
                                  PKG_URL: url,
                                  PKG_INSTALL_FOLDER: dir,
@@ -152,26 +150,41 @@ def _delPackage(env, name):
     """
     This method is for removing a package from the main dict
     """
-    del SCIPION['PACKAGES'][name]
+    del SCIPION['EMPACKAGES'][name]
 
-def _downloadLibrary(env, name, verbose=False):
+def _download(env, name, type='Library', verbose=False):
     """
-    This method is for downloading a library and placing it in tmp dir
-    It will download first the .md5
+    This method is for downloading either a package or a library.
     """
     import urllib2, urlparse
-    library = SCIPION['LIBS'].get(name)
+    targetDict = {}
+    library = type == 'Library'
+    em = type == 'EMPackage' 
+    if library:
+        targetDict = SCIPION['LIBS'].get(name)
+        DEFAULT = DEF
+        TARFILE = TAR
+        URLADD = URL
+    elif em:
+        targetDict = SCIPION['EMPACKAGES'].get(name)
+        DEFAULT = PKG_DEF
+        TARFILE = PKG_TAR
+        URLADD = PKG_URL
+    else:
+        print "Error: type %s not allowed for downloading" % type
+        return []
+        
     # Check whether the library must be downloaded
     if not GetOption('%s' % name):
-        if not library[DEF]:
-            return False
-    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], library[TAR])
+        if not targetDict[DEFAULT]:
+            return []
+    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], targetDict[TARFILE])
     tarFile = File(tar)
     md5 = "%s.md5" % tar
     md5File = File(tar)
     folder = SCIPION['FOLDERS'][TMP_FOLDER]
     folderDir = Dir(folder)
-    url = library[URL]
+    url = targetDict[URLADD]
     urlMd5 = "%s.md5" % url
     go = True
     message = message2 = ''
@@ -185,7 +198,7 @@ def _downloadLibrary(env, name, verbose=False):
         md5check = True
     
     if md5check:
-        print "Downloading md5 file for %s library..." % name
+        print "Downloading md5 file for %s %s..." % (name, type)
         go, message = _downloadFile(urlMd5, md5)
         print "Checking md5 checksum..."
         if _checkMd5(tar, md5) == 1:
@@ -196,7 +209,7 @@ def _downloadLibrary(env, name, verbose=False):
             print "Downloading %s in folder %s" % (url, folder)
             down, message2 = _downloadFile(url, tar)
             if not down:
-                print "\t ...Library %s not downloaded. Server says: \n %s" % (name, message2)
+                print "\t ...%s %s not downloaded. Server says: \n %s" % (type, name, message2)
             if _checkMd5(tar, md5) == 0:
                 if not _askContinue("Downloaded %s file doesn't match md5 its md5 checksum. Download it again?" % tar):
                     go = False
@@ -204,13 +217,26 @@ def _downloadLibrary(env, name, verbose=False):
                 go = False
         return tar
     elif verbose:
-        if _askContinue("\t ...%s library was not downloaded. Proceed anyway?" % name):
+        if _askContinue("\t ...%s %s was not downloaded. Proceed anyway?" % (name, type)):
             return True
         else:
             raise SCons.Errors.StopError("User defined stop")
     else:
-        print "\t ...%s not downloaded" % (name)
+        print "\t ...%s %s not downloaded" % (name, type)
         return tarFile
+
+def _downloadEMPackage(env, name, verbose=False):
+    """
+    This method is for downloading an EM package and place it in the em directory, so it can be compiled and installed
+    """
+    return _download(env, name, type='EMPackage', verbose=verbose)
+
+def _downloadLibrary(env, name, verbose=False):
+    """
+    This method is for downloading a library and placing it in tmp dir
+    It will download first the .md5
+    """
+    return _download(env, name, type='Library', verbose=verbose)
 
 def _untarLibrary(env, name, tar=None, folder=None):
     """
@@ -222,7 +248,7 @@ def _untarLibrary(env, name, tar=None, folder=None):
     # Check whether the library must be untar
     if not GetOption('%s' % name):
         if not libraryDict[DEF]:
-            return False
+            return []
     if tar is None:
         tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR])
     if folder is None:
@@ -277,7 +303,7 @@ def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, sour
     # Check whether the library must be compiled
     if not GetOption('%s' % name):
         if not libraryDict[DEF]:
-            return False
+            return []
     tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     incs = libraryDict[INCS] if incs is None else incs
     libs = libraryDict[LIBS] if libs is None else libs
@@ -386,7 +412,7 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     # Check whether the module must be compiled 
     if not GetOption('%s' % name):
         if not libraryDict[DEF]:
-            return False
+            return []
     tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     bin = SCIPION['FOLDERS'][BIN_FOLDER]
 
@@ -597,7 +623,9 @@ env.AddMethod(_addPackage, "AddPackage")
 env.AddMethod(_delPackage, "DelPackage")
 
 # Add pseudo-builder methods in order to perfectly manage what we want, and not depend only on the builders methods
+env.AddMethod(_download, "Download")
 env.AddMethod(_downloadLibrary, "DownloadLibrary")
+env.AddMethod(_downloadEMPackage, "DownloadEMPackage")
 env.AddMethod(_untarLibrary, "UntarLibrary")
 env.AddMethod(_compileLibrary, "CompileLibrary")
 env.AddMethod(_compileWithSetupPy, "CompileWithSetupPy")

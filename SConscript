@@ -181,18 +181,18 @@ env.AddLibrary('paramiko',
 #############
 
 if not GetOption('clean'):
-    env.DownloadLibrary('sqlite')
-    env.DownloadLibrary('tcl')
-    env.DownloadLibrary('tk')
-    env.DownloadLibrary('python')
-    env.DownloadLibrary('numpy')
-    env.DownloadLibrary('matplotlib')
-    env.DownloadLibrary('psutil')
-    env.DownloadLibrary('mpi4py')
-    env.DownloadLibrary('scipy')
-    env.DownloadLibrary('bibtexparser')
-    env.DownloadLibrary('django')
-    env.DownloadLibrary('paramiko')
+    env.Download('sqlite')
+    env.Download('tcl')
+    env.Download('tk')
+    env.Download('python')
+    env.Download('numpy')
+    env.Download('matplotlib')
+    env.Download('psutil')
+    env.Download('mpi4py')
+    env.Download('scipy')
+    env.Download('bibtexparser')
+    env.Download('django')
+    env.Download('paramiko')
 
 #########
 # UNTAR #
@@ -252,26 +252,19 @@ pythonMake = env.CompileLibrary('python',
                                 target='libpython2.7.so',
                                 autoSource='Makefile.pre.in')
 
-env.CompileWithSetupPy('python', deps=pythonMake)
+EMPackagesDeps = env.CompileWithSetupPy('python', deps=pythonMake)
 
 
 # PYTHON MODULES
 
-env.CompileWithSetupPy('numpy')
-
-env.CompileWithSetupPy('matplotlib')
-
-env.CompileWithSetupPy('psutil')
-
-env.CompileWithSetupPy('mpi4py')
-
-env.CompileWithSetupPy('scipy')
-
-env.CompileWithSetupPy('bibtexparser')
-
-env.CompileWithSetupPy('django')
-
-env.CompileWithSetupPy('paramiko')
+EMPackagesDeps += env.CompileWithSetupPy('numpy')
+EMPackagesDeps += env.CompileWithSetupPy('matplotlib')
+EMPackagesDeps += env.CompileWithSetupPy('psutil')
+EMPackagesDeps += env.CompileWithSetupPy('mpi4py')
+EMPackagesDeps += env.CompileWithSetupPy('scipy')
+EMPackagesDeps += env.CompileWithSetupPy('bibtexparser')
+EMPackagesDeps += env.CompileWithSetupPy('django')
+EMPackagesDeps += env.CompileWithSetupPy('paramiko')
 
 
 # EM PACKAGES
@@ -279,7 +272,50 @@ env.CompileWithSetupPy('paramiko')
 # Xmipp3.1
 env.AddPackage('xmipp', 
                tar='Xmipp-3.1-src.tgz',
+               dir='xmipp',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz')
+
+# Bsoft
+env.AddPackage('bsoft',
+               dft=False,
+               tar='bsoft1_8_8_Fedora_12.tgz',
+               dir='bsoft')
+
+# CtfFind
+env.AddPackage('ctffind',
+               dft=False,
+               tar='ctffind_V3.5.tgz',
+               dir='ctf')
+
+# EMAN2
+env.AddPackage('eman2',
+               dft=False,
+               tar='eman2.1beta3.linux64.tar.gz',
+               dir='EMAN2')
+
+# frealign
+env.AddPackage('frealign',
+               dft=False,
+               tar='frealign_v9.07.tgz')
+
+# relion
+env.AddPackage('relion',
+               dft=False,
+               tar='relion-1.2.tgz')
+# spider
+env.AddPackage('spider',
+               dft=False,
+               tar='spider-web-21.13.tgz',
+               dir='spider-web')
+
+if not GetOption('clean'):
+    env.Download('xmipp', type='EMPackage')
+    env.Download('bsoft', type='EMPackage')
+    env.Download('ctffind', type='EMPackage')
+    env.Download('eman2', type='EMPackage')
+    env.Download('frealign', type='EMPackage')
+    env.Download('relion', type='EMPackage')
+    env.Download('spider', type='EMPackage')
 
 # Purge option
 if GetOption('purge'):
