@@ -279,18 +279,24 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     # Get default values for variables if we got none
     workingCopy = workingCopy or os.environ['SCIPION_TESTS']
 
+    # Verbose log
+    def vlog(txt): sys.stdout.write(txt) if verbose else None
+
     # Read contents of *remote* MANIFEST file, and create a dict {fname: md5}
     manifestRaw = urlopen('%s/%s/MANIFEST' % (url, dataset)).read()
     md5sRemote = dict(x.split() for x in manifestRaw.splitlines())
 
-    # Read contents of *local* MANIFEST file, and create a dict {fname: md5}
+    # Update and read contents of *local* MANIFEST file, and create a dict
     datasetFolder = join(workingCopy, dataset)
+    last = max(os.stat(join(datasetFolder, x)).st_mtime for x in md5sRemote)
+    if os.stat(join(datasetFolder, 'MANIFEST')).st_mtime < last:
+        print 'MANIFEST younger than some of the files. Regenerating...'
+        createMANIFEST(datasetFolder)
     md5sLocal = dict(x.split() for x in open(join(datasetFolder, 'MANIFEST')))
 
     # Check that all the files mentioned in MANIFEST are up-to-date
     print "Verifying MD5s..."
 
-    def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
     filesUpdated = 0  # number of files that have been updated
     taintedMANIFEST = False  # can MANIFEST be out of sync?
 
@@ -316,10 +322,11 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
     print '...done. Updated files: %d' % filesUpdated
 
     # Save the new MANIFEST file in the folder of the downloaded dataset
-    open(join(datasetFolder, 'MANIFEST'), 'w').write(manifestRaw)
+    if filesUpdated > 0:
+        open(join(datasetFolder, 'MANIFEST'), 'w').write(manifestRaw)
 
     if taintedMANIFEST:
-        print 'Some files could not be updated. Regenerating local MANIFEST...'
+        print 'Some files could not be updated. Regenerating local MANIFEST ...'
         createMANIFEST(datasetFolder)
 
 
