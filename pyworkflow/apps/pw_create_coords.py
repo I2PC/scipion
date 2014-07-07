@@ -27,9 +27,9 @@
 
 import sys
 from pyworkflow.em.data import EMObject
-from pyworkflow.em.protocol import getProtocolFromDb
+from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
-from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair, SetOfAngles
+from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair
 
 
 if __name__ == '__main__':
