@@ -230,7 +230,7 @@ def main():
         os.environ['SCIPION_HOME'] = SCIPION_HOME
         for path in DIRS.values():
             if not exists(path):
-                print "  creating %s folder: %s" % (path)
+                print "  creating %s folder" % (path)
                 os.makedirs(path) 
         from scripts.install import build
         returncode = build(args=sys.argv[2:])
