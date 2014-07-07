@@ -216,7 +216,7 @@ def micrographToRow(mic, micRow):
     imageToRow(mic, micRow, imgLabel=xmipp.MDL_MICROGRAPH)
     
     
-def rowToMicrograph(md, objId, hasCtf):
+def rowToMicrograph(md, objId, hasCtf, hasAlignment=False):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf, hasAlignment=False)
 
@@ -226,9 +226,9 @@ def volumeToRow(vol, volRow):
     imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE)
 
 
-def rowToVolume(md, objId, hasCtf):
+def rowToVolume(md, objId, hasCtf, hasAlignment=False):
     """ Create a Volume object from a row of Xmipp metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False)
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False, hasAlignment=False)
 
 
 def coordinateToRow(coord, coordRow):
