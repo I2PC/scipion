@@ -875,7 +875,7 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     if "@" in inputMd:
-        inputFn = os.split('@')[1]
+        inputFn = inputMd.split('@')[1]
         tmpDir = os.path.dirname(inputFn)
     else:
         tmpDir = os.path.dirname(inputMd)

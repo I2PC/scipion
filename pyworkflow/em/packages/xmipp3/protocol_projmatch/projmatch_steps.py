@@ -35,7 +35,7 @@ from os.path import exists, join
 
 import xmipp
 from pyworkflow.object import Float
-from pyworkflow.em.data import Volume
+from pyworkflow.em.data import Volume, SetOfClasses3D
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
 from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
@@ -672,8 +672,8 @@ def runCreateOutpuStep(self):
     
     data_classes = self._getFileName('sqliteClasses')
     
-    createClassesFromImages(self.inputParticles.get(), allExpImagesinDocfile, data_classes, 
-                            SetOfClasses3D, xmipp.MDL_REF, ClassFnTemplate, lastIter)
+    createClassesFromImages(self.inputParticles.get(), str(allExpImagesinDocfile), data_classes, 
+                            SetOfClasses3D, xmipp.MDL_REF3D, ClassFnTemplate, lastIter)
 #     mdVolume = xmipp.MetaData()
 #     
 #     # create metadata file with volume names
