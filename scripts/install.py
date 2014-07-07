@@ -116,9 +116,9 @@ def build(args):
             # Download and untar Scons
             downloadScons()
             #Compile scons
-            setupArgs = [("clean", ),
-                         ("build", ),
-                         ("install", "--prefix=%s" % SCIPION_SOFTWARE_PATH)]
+            setupArgs = [["clean"],
+                         ["build"],
+                         ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
             if exists(SCIPION_INSTALL_LOG):
                 os.remove(SCIPION_INSTALL_LOG)
             for arg in setupArgs:

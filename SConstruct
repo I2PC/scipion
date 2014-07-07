@@ -661,6 +661,12 @@ env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
 
 
+# Purge option
+if GetOption('purge'):
+    print "Purge option implies clean. Activating clean..."
+    SetOption('clean', True)
+    _removeInstallation(env)
+
 # Only in case user didn't select help message, we run SConscript
 #if not GetOption('help') and not GetOption('clean'):
 if not GetOption('help'):

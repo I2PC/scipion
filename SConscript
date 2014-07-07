@@ -317,8 +317,3 @@ if not GetOption('clean'):
     env.Download('relion', type='EMPackage')
     env.Download('spider', type='EMPackage')
 
-# Purge option
-if GetOption('purge'):
-    print "Purge option implies clean. Activating clean..."
-    SetOption('clean', True)
-    env.RemoveInstallation()
