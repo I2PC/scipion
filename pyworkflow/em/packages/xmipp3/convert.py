@@ -33,6 +33,7 @@ This module contains converter functions that will serve to:
 import os
 from collections import OrderedDict
 from itertools import izip
+import numpy
 
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType
@@ -118,6 +119,14 @@ def rowToObject(md, objId, obj, attrDict):
     _rowToObject(rowFromMd(md, objId), obj, attrDict)
     
     
+def _rowToObjectFunc(obj):
+    """ From a given object, return the function rowTo{OBJECT_CLASS_NAME}. """
+    return globals()['rowTo' + obj.getClassName()]
+
+def _readSetFunc(obj):
+    """ From a given object, return the function read{OBJECT_CLASS_NAME}. """
+    return globals()['read' + obj.getClassName()]
+    
 def locationToXmipp(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Xmipp.
@@ -185,7 +194,7 @@ def imageToRow(img, imgRow, imgLabel):
         acquisitionToRow(img.getAcquisition(), imgRow)
         
         
-def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
+def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
     """ Create a Particle from a row of a metadata. """
     img = imgClass()
     # Decompose Xmipp filename
@@ -194,6 +203,9 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf):
     if hasCtf:
         ctfModel = rowToCtfModel(md, objId)
         img.setCTF(ctfModel)
+        
+    if hasAlignment:
+        img.setAlignment(rowToAlignment(md, objId))
     
     setObjId(img, rowFromMd(md, objId))
     return img
@@ -206,7 +218,7 @@ def micrographToRow(mic, micRow):
     
 def rowToMicrograph(md, objId, hasCtf):
     """ Create a Micrograph object from a row of Xmipp metadata. """
-    return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf)
+    return rowToImage(md, objId, xmipp.MDL_MICROGRAPH, Micrograph, hasCtf, hasAlignment=False)
 
 
 def volumeToRow(vol, volRow):
@@ -233,9 +245,9 @@ def rowToCoordinate(md, objId):
     return coord
 
 
-def rowToParticle(md, objId, hasCtf):
+def rowToParticle(md, objId, hasCtf, hasAlignment=False):
     """ Create a Particle from a row of a metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf)
+    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf, hasAlignment)
     
     
 def particleToRow(part, partRow):
@@ -243,35 +255,20 @@ def particleToRow(part, partRow):
     imageToRow(part, partRow, imgLabel=xmipp.MDL_IMAGE)
 
 
-def rowToClassLabel(md, objId, classLabel, imgClass):
+def rowToClass(md, objId, classItem):
     """ Method base to create a class2D, class3D or classVol from
     a row of a metadata
     """
-    setObjId(classLabel, rowFromMd(md, objId), label=xmipp.MDL_REF)
+    setObjId(classItem, rowFromMd(md, objId), label=xmipp.MDL_REF)
 
     if md.containsLabel(xmipp.MDL_IMAGE):
         index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
-        img = imgClass()
-        img.copyObjId(classLabel)
+        img = classItem.REP_TYPE()
+        img.copyObjId(classItem)
         img.setLocation(index, filename)
-        classLabel.setRepresentative(img)
+        classItem.setRepresentative(img)
     
-    return classLabel
-
-
-def rowToClass2D(md, objId, class2D):
-    """ Create a Class2D from a row of a metadata. """
-    return rowToClassLabel(md, objId, class2D, Particle)
-
-
-def rowToClass3D(md, objId, class3D):
-    """ Create a Class3D from a row of a metadata. """
-    return rowToClassLabel(md, objId, class3D, Volume)
-
-
-def rowToClassVol(md, objId, classVol):
-    """ Create a ClassVol from a row of a metadata. """
-    return rowToClassLabel(md, objId, classVol, Volume)
+    return classItem
 
 
 def class2DToRow(class2D, classRow):
@@ -452,18 +449,16 @@ def readPosCoordinates(posFile):
     return md
 
 
-def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
+def readSetOfImages(filename, imgSet, rowToFunc, hasCtf, hasAlignment=False):
     """read from Xmipp image metadata.
         filename: The metadata filename where the image are.
         imgSet: the SetOfParticles that will be populated.
         rowToFunc: this function will be used to convert the row to Object
         hasCtf: is True if the ctf information exists.
+        hasAlignment: True if want to read alignment parameters
     """    
     imgMd = xmipp.MetaData(filename)
     imgMd.removeDisabled()
-    for objId in imgMd:
-        img = rowToFunc(imgMd, objId, hasCtf)
-        imgSet.append(img)
     # Read the sampling rate from the acquisition info file if exists
     
     acqFile = join(dirname(filename), 'acquisition_info.xmd')
@@ -473,6 +468,10 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf):
         imgSet.setSamplingRate(samplingRate)
     else:
         pass # TODO: what to do if not exists
+    
+    for objId in imgMd:
+        img = rowToFunc(imgMd, objId, hasCtf, hasAlignment)
+        imgSet.append(img)
 
 
 def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc):
@@ -526,8 +525,10 @@ def writeImgToMetadata(md, img, hasCtf, imgToFunc, rowFunc):
     imgRow.writeToMd(md, objId)        
     
 
-def readSetOfParticles(filename, partSet, hasCtf=False):
-    readSetOfImages(filename, partSet, rowToParticle, hasCtf)
+def readSetOfParticles(filename, partSet, 
+                       hasCtf=False, 
+                       hasAlignment=False):
+    readSetOfImages(filename, partSet, rowToParticle, hasCtf, hasAlignment)
 
 
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
@@ -629,88 +630,48 @@ def writeSetOfMicrographsPairs(uSet, tSet, filename):
         pairRow.writeToMd(md, objId)
         
     md.write(filename)   
+
     
-def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **args):
-    """read from Xmipp image metadata.
-        filename: The metadata filename where the particles properties are.
-        imgSet: the SetOfParticles that will be populated.
-        hasCtf: is True if the ctf information exists.
+def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
+    """ Read a set of classes from an Xmipp metadata with the given
+    convention of a block for classes and another block for each set of 
+    images assigned to each class.
+    Params:
+        classesSet: the SetOfClasses object that will be populated.
+        filename: the file path where to read the Xmipp metadata.
+        classesBlock (by default 'classes'):
+            the block name of the classes group in the metadata.
     """
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classes2DSet.getImages().getSamplingRate()
+    samplingRate = classesSet.getSamplingRate()
+    hasCtf = classesSet.getImages().hasCTF()
     
     for objId in classesMd:
-        class2D = Class2D()
-        class2D = rowToClass2D(classesMd, objId, class2D)
-        class2D.setSamplingRate(samplingRate)
-        classes2DSet.append(class2D)
-        ref = class2D.getObjId()
+        classItem = classesSet.ITEM_TYPE()
+        classItem = rowToClass(classesMd, objId, classItem)
+        classItem.setSamplingRate(samplingRate)
+        classesSet.append(classItem)
+        ref = classItem.getObjId()
         b = 'class%06d_images' % ref
         
         if b in blocks:
-            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
-            
-            for imgId in classImagesMd:
-                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                class2D.append(img)
-        # Update with new properties of class2D such as _size
-        classes2DSet.update(class2D)
-
-# def writeSetOfClasses3D(classes3DSet, filename, classesBlock='classes'):    
-#     """ This function will write a SetOfClasses3D as Xmipp metadata.
-#     Params:
-#         classes3DSet: the SetOfClasses3D instance.
-#         filename: the filename where to write the metadata.
-#     """
-#     classFn = '%s@%s' % (classesBlock, filename)
-#     classMd = xmipp.MetaData()
-#     classMd.write(classFn) # Empty write to ensure the classes is the first block
-#     
-#     classRow = XmippMdRow()
-#     for class3D in classes3DSet:        
-#         class3DToRow(class3D, classRow)
-#         classRow.writeToMd(classMd, classMd.addObject())
-#         ref = class3D.getObjId()
-#         imagesFn = 'class%06d_images@%s' % (ref, filename)
-#         imagesMd = xmipp.MetaData()
-#         imgRow = XmippMdRow()
-#         
-#         for vol in class3D:
-#             volumeToRow(vol, imgRow)
-#             imgRow.writeToMd(imagesMd, imagesMd.addObject())
-#         imagesMd.write(imagesFn, xmipp.MD_APPEND)
-#     
-#     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
+            #FIXME: we need to adapt the following line
+            # when we face classes of volumes and not just particles
+            readSetOfParticles('%s@%s' % (b, filename), classItem, hasCtf=hasCtf, hasAlignment=True)
+        # Update with new properties of classItem such as _size
+        classesSet.update(classItem)
+        
+        
+def readSetOfClasses2D(classes2DSet, filename, classesBlock='classes', **kwargs):
+    """ Just a wrapper to readSetOfClasses. """
+    readSetOfClasses(classes2DSet, filename, classesBlock, **kwargs)
 
 
-def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **args):
-    """read from Xmipp image metadata.
-        filename: The metadata filename where the particles properties are.
-        imgSet: the SetOfParticles that will be populated.
-        hasCtf: is True if the ctf information exists.
-    """
-    blocks = xmipp.getBlocksInMetaDataFile(filename)
-    classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classes3DSet.getImages().getSamplingRate()
-     
-    for objId in classesMd:
-        class3D = Class3D()
-        class3D = rowToClass3D(classesMd, objId, class3D)
-        class3D.setSamplingRate(samplingRate)
-        classes3DSet.append(class3D)
-        ref = class3D.getObjId()
-        b = 'class%06d_images' % ref
-         
-        if b in blocks:
-            classImagesMd = xmipp.MetaData('%s@%s' % (b, filename))
-             
-            for imgId in classImagesMd:
-                img = rowToParticle(classImagesMd, imgId, hasCtf=False)
-                class3D.append(img)
-        # Update with new properties of class2D such as _size
-        classes3DSet.update(class3D)
+def readSetOfClasses3D(classes3DSet, filename, classesBlock='classes', **kwargs):
+    """ Just a wrapper to readSetOfClasses. """
+    readSetOfClasses(classes3DSet, filename, classesBlock, **kwargs)
 
 
 def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):    
@@ -859,6 +820,26 @@ def matrixFromGeometry(shifts, angles):
     return M
 
 
+def rowToAlignment(md, objId):
+    """ Fill the alignment matrix reading
+    the geometry values from Xmipp metadata row. """
+    alignment = Alignment()
+    angles = numpy.zeros(3)
+    shifts = numpy.zeros(3)
+    angles[2] = md.getValue(xmipp.MDL_ANGLE_PSI, objId)
+    shifts[0] = md.getValue(xmipp.MDL_SHIFT_X, objId)
+    shifts[1] = md.getValue(xmipp.MDL_SHIFT_Y, objId)
+    M = matrixFromGeometry(shifts, angles)
+    alignment.setMatrix(M)
+    #FIXME: remove this after the conversions from Transform matrix
+    # is completed tested
+    alignment._xmipp_anglePsi = Float(angles[2])
+    alignment._xmipp_shiftX = Float(shifts[0])
+    alignment._xmipp_shiftY = Float(shifts[1])
+    
+    return alignment
+
+
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
                             classLabel, classFnTemplate, iter):
     """ From an intermediate X.xmd file produced by xmipp, create
@@ -906,3 +887,4 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         clsSet.update(classItem)
         
     clsSet.write()
+    
