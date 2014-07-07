@@ -1,7 +1,7 @@
 
 import unittest, sys
 from pyworkflow.em import ProtImportMicrographsTiltPairs
-from pyworkflow.em.packages.xmipp3 import XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs
+from pyworkflow.em.packages.xmipp3 import XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs, XmippProtRCT
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 
@@ -171,6 +171,17 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
         #self.validateFiles('protExtract', protExtract)  
         self.assertIsNotNone(protExtract.outputParticlesTiltPair, "There was a problem with the extract particles")
+
+        # Random Conical Tilt    
+        print "Run Random Conical Tilt"
+        protRCT = XmippProtRCT()
+        protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)
+        protRCT.inputImages.set(protExtract.outputParticlesTiltPair.getUntilted())
+
+        self.proj.launchProtocol(protRCT, wait=True)
+        
+        #self.validateFiles('protExtract', protExtract)  
+        self.assertIsNotNone(protRCT.outputVolumes, "There was a problem with the RCT")
 
         
 if __name__ == "__main__":
