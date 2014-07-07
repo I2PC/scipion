@@ -32,14 +32,13 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 
 
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, REJECT_NONE, REJECT_MAXZSCORE, REJECT_PERCENTAGE 
-from pyworkflow.em import CoordinatesTiltPair
+from pyworkflow.em import CoordinatesTiltPair, PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
+from pyworkflow.protocol.params import Positive
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import removeBaseExt, exists
-from pyworkflow.protocol.params import PointerParam, IntParam, EnumParam, BooleanParam, FloatParam, Positive
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.object import Boolean
 from itertools import izip
-from glob import glob
 import xmipp
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair
                
@@ -272,7 +271,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         outputset.setUntilted(imgSetU)
         outputset.setCoordsPair(self.inputCoordinatesTiltedPairs)
         self._defineOutputs(outputParticlesTiltPair=outputset)
-        self._defineSourceRelation(self.inputCoordinatesTiltedPairs, outputset)
+        self._defineSourceRelation(self.inputCoordinatesTiltedPairs.get(), outputset)
             
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

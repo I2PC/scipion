@@ -414,6 +414,9 @@ def addRCTProtocols(settings):
 
     m1.addSubMenu(' Extract particles pairs', tag='protocol',
                   value='XmippProtExtractParticlesPairs')
+    
+    m1.addSubMenu(' Random Conical Tilt', tag='protocol',
+                  value='XmippProtRCT')
             
     settings.addProtocolMenu(m1)   
   
