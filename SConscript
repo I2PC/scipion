@@ -271,6 +271,7 @@ EMPackagesDeps += env.CompileWithSetupPy('paramiko')
 
 # Xmipp3.1
 env.AddPackage('xmipp', 
+               dft=False,
                tar='Xmipp-3.1-src.tgz',
                dir='xmipp',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz')
@@ -316,4 +317,8 @@ if not GetOption('clean'):
     env.Download('frealign', type='EMPackage')
     env.Download('relion', type='EMPackage')
     env.Download('spider', type='EMPackage')
+
+# Purge option
+if GetOption('purge'):
+    env.RemoveInstallation()
 
