@@ -233,6 +233,8 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
+        global SCIPION_PYTHON
+        SCIPION_PYTHON='python'
         runCmd('scripts/install.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_STATS:
