@@ -155,7 +155,6 @@ if __name__ == '__main__':
         myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib64'), myenv[DYN])
 
     logFile = open(SCIPION_INSTALL_LOG, 'a')
-    args = ' '.join(sys.argv[1:])
     install = subprocess.Popen(['scons']+sys.argv[1:],
                                cwd=SCIPION_HOME, 
                                stdout=subprocess.PIPE,

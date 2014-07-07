@@ -119,8 +119,9 @@ for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME',
             'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
     
-for k,v in VARS.iteritems():
-    SCIPION_ENV[k] = v
+#for k,v in VARS.iteritems():
+#    SCIPION_ENV[k] = v
+SCIPION_ENV.update(VARS)
 
 def runApp(app, args=''):
     runCmd('%s %s' % (PW_APPS_TEMP % app, args))

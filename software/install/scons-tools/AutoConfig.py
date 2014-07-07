@@ -18,19 +18,19 @@ def parms(target, source, env):
     """Assemble various AutoConfig parameters."""
     workdir = os.path.dirname(str(source[0]))
     params = None
-    if 'AutoConfigParams' in env.Dictionary().keys():
+    if 'AutoConfigParams' in env:
         params = env['AutoConfigParams']
         if not isinstance(params, list):
             print 'AutoConfigParams must be a sequence'
             Exit(1)
     targetfile = 'config.h'
-    if 'AutoConfigTarget' in env.Dictionary().keys():
+    if 'AutoConfigTarget' in env:
         targetfile = env['AutoConfigTarget']
     sourcefile = 'Makefile.in'
-    if 'AutoConfigSource' in env.Dictionary().keys():
+    if 'AutoConfigSource' in env:
         sourcefile = env['AutoConfigSource']
     stdout = None
-    if 'AutoConfigStdOut' in env.Dictionary().keys():
+    if 'AutoConfigStdOut' in env:
         stdout = env['AutoConfigStdOut']
     return (workdir, params, targetfile, sourcefile, stdout)
 
@@ -41,7 +41,7 @@ def message(target, source, env):
      targetfile,
      sourcefile,
      stdout) = parms(target, source, env)
-    if 'AUTOCONFIGCOMSTR' in env.Dictionary().keys():
+    if 'AUTOCONFIGCOMSTR' in env:
         return env.subst(env['AUTOCONFIGCOMSTR'],
                          target = target, source = source, raw = 1) + " > %s " % stdout
     msg = 'cd ' + dirname + ' && ./configure'
@@ -79,7 +79,7 @@ def builder(target, source, env):
       sourcefile,
       stdout) = parms(target, source, env)
     real_stdout = subprocess.PIPE
-    if 'AUTOCONFIGCOMSTR' not in env.Dictionary().keys():
+    if 'AUTOCONFIGCOMSTR' not in env:
         real_stdout = None
     else:
         real_stdout = open(stdout, 'w+')
