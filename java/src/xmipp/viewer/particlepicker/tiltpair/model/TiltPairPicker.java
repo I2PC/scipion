@@ -116,11 +116,12 @@ public class TiltPairPicker extends ParticlePicker
 			id = uIds[i];
 			x = uMd.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = uMd.getValueInt(MDLabel.MDL_YCOOR, id);
-			up = new UntiltedParticle(x, y, um, this);
-			um.addParticle(up);
+			
 			// Set tilted pair particle
 			if (i < tIds.length)
 			{
+                                up = new UntiltedParticle(x, y, um, this);
+                                um.addParticle(up);
 				id = tIds[i];
 				x = tMd.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = tMd.getValueInt(MDLabel.MDL_YCOOR, id);
@@ -135,8 +136,10 @@ public class TiltPairPicker extends ParticlePicker
 				tm.addParticle(tp);
 			}
 			else
-				result += String.format("Particle at %s centered on %s,%s without tilted pair.\n", getMicrograph().getName(), x, y);
+				result += String.format("%s centered on (%s,%s),  ", getMicrograph().getName(), x, y);
 		}
+                if(!result.isEmpty())
+                    result = "Particles at: " + result + "without tilted pairs dismissed";
 
 		um.initAligner();
 

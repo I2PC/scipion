@@ -995,8 +995,12 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+x;
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev)+y;
-        SF.setValue(MDL_SHIFT_X,-shiftX,DFmov_objId);
-        SF.setValue(MDL_SHIFT_Y,-shiftY,DFmov_objId);
+        SF.setValue(MDL_SHIFT_X,shiftX,DFmov_objId);
+        SF.setValue(MDL_SHIFT_Y,shiftY,DFmov_objId);
+        //ROB: totally anoying behaviour in xmipp
+        shiftX=-shiftX;
+        shiftY=-shiftY;
+
 #ifdef DEBUG
 
         mdShifts.addObject();
