@@ -30,19 +30,19 @@
 This script will generate the pw.bashrc and pw.cshrc file to include
 """
 
+import sys
 import os
 from os.path import join, exists
-import sys
 import platform
+
 from urllib2 import urlopen
-import subprocess
+from subprocess import call
 import tarfile
 
-
 # OS boolean vars
-MACOSX = platform.system() == 'Darwin'
-WINDOWS = platform.system() == 'Windows'
-LINUX = platform.system() == 'Linux'
+MACOSX = (platform.system() == 'Darwin')
+WINDOWS = (platform.system() == 'Windows')
+LINUX = (platform.system() == 'Linux')
 
 SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 
@@ -91,9 +91,7 @@ def downloadScons():
     """ Download the scons tgz file and extract it. """
     SCONS_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/python/"
     SCONS_VERSION = 'scons-2.3.1.tgz'
-    INSTALL_PATH = join(os.environ['SCIPION_HOME'],
-                                'software',
-                                'install')
+    INSTALL_PATH = join(os.environ['SCIPION_HOME'], 'software', 'install')
     print "Downloading scons from " + SCONS_URL + SCONS_VERSION
     try:
         data = urlopen("%s/%s" % (SCONS_URL, SCONS_VERSION)).read()
@@ -110,12 +108,7 @@ def downloadScons():
     os.remove(join(INSTALL_PATH, SCONS_VERSION))
 
 
-def build(args=[]):
-#    parser = argsparse.ArgumentParser(description=__doc__)
-#    add = parser.add_argument # shortcut
-#    add('--update', action='store_true',
-    #necessary to properly build scons
-
+def build(args):
     print "Scipion Home in : ", SCIPION_HOME
 
     if not '--purge' in args:
@@ -123,51 +116,26 @@ def build(args=[]):
             # Download and untar Scons
             downloadScons()
             #Compile scons
-            setupArgs=[["clean"],
-                       ["build"], 
-                       ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
+            setupArgs = [("clean", ),
+                         ("build", ),
+                         ("install", "--prefix=%s" % SCIPION_SOFTWARE_PATH)]
             if exists(SCIPION_INSTALL_LOG):
                 os.remove(SCIPION_INSTALL_LOG)
-            logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
             for arg in setupArgs:
-                logFile = open(SCIPION_INSTALL_LOG, 'a')
                 command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
-                
-                print 'Executing %s on scons' % (arg)
-                scons = subprocess.Popen(command, 
-                                         cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
-                                         stdout=logFile,
-                                         stderr=logFile)
-                scons.wait()
-                output = scons.communicate()[0]
-                logFile.close()
-                if scons.returncode is not 0:
-                    sys.exit(scons.returncode)
+                print 'Executing %s on scons' % arg
+                with open(SCIPION_INSTALL_LOG, 'a') as logFile:
+                    r = call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
+                             stdout=logFile, stderr=logFile)
+                if r != 0:
+                    sys.exit(r)
 
-    logFile = open(SCIPION_INSTALL_LOG, 'a')
-    install = subprocess.Popen([join('software', 'bin', 'scons')] + args,
-                               cwd=SCIPION_HOME, 
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT
-                               )#env=myenv)
-    for line in install.stdout:
-        install.stdout.flush()
-        sys.stdout.flush()
-        sys.stdout.write(line)
-        logFile.write(line)
-    install.wait()
-    returncode = install.communicate()[0]
-    logFile.close()
-    
-    return returncode
+    return call('software/bin/scons %s | tee -a %s' % (' '.join(args), SCIPION_INSTALL_LOG),
+                shell=True)
 
-#        help='update local installation')
-#    add(name='name', metavar='METAVAR', nargs='*', help='help')
-#    args = parser.parse_args()    
+
 
 if __name__ == '__main__':
-    returncode = build(args=sys.argv[1:])
+    returncode = build(sys.argv[1:])
     # This script will exit with the same exit code as scons did
     sys.exit(returncode)
-
-
