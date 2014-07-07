@@ -29,24 +29,52 @@
 """
 This script will generate the pw.bashrc and pw.cshrc file to include
 """
-import os, sys, platform
 
-
+import os
+from os.path import join, exists
+import sys
+import platform
 from urllib2 import urlopen
 import subprocess
 import tarfile
+
 
 # OS boolean vars
 MACOSX = platform.system() == 'Darwin'
 WINDOWS = platform.system() == 'Windows'
 LINUX = platform.system() == 'Linux'
 
+SCIPION_HOME = os.environ['SCIPION_HOME']
+SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 
+                                    'software')
+SCIPION_INSTALL_PATH = join(SCIPION_SOFTWARE_PATH,
+                                    'install')
+SCIPION_INSTALL_LOG = join(SCIPION_SOFTWARE_PATH,
+                                   'log',
+                                   'scons.log')
+SCONS_VERSION = 'scons-2.3.1'
+SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
-def updateProjectSettings():
+
+
+def createDirs():
+    """ Create necessary folder before installing Scipion. """
+    for d in SCIPION_DIRS:
+        path = os.environ[d]
+        if not exists(path):
+            print "  creating %s folder: %s" % (d, path)
+            os.makedirs(path) 
+               
+    
+def updateSettings():
+    """ Write the settings.sqlite default configuration
+    and also update each project settings.
+    """
     from pyworkflow import SETTINGS
     from pyworkflow.utils.path import copyFile
     from pyworkflow.apps.config import writeDefaults
 
+    writeDefaults()
     # Update the settings to all existing projects
     from pyworkflow.manager import Manager
     manager = Manager()
@@ -55,7 +83,7 @@ def updateProjectSettings():
     for p in projects:
         proj = manager.loadProject(p.getName())
         projSettings = proj.settingsPath
-        print "Copying settings to: ", os.path.join(p.getName(), projSettings)
+        print "Copying settings to: ", join(p.getName(), projSettings)
         copyFile(SETTINGS, projSettings)
 
 
@@ -63,113 +91,83 @@ def downloadScons():
     """ Download the scons tgz file and extract it. """
     SCONS_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/python/"
     SCONS_VERSION = 'scons-2.3.1.tgz'
-    INSTALL_PATH = os.path.join(os.environ['SCIPION_HOME'],
+    INSTALL_PATH = join(os.environ['SCIPION_HOME'],
                                 'software',
                                 'install')
     print "Downloading scons from " + SCONS_URL + SCONS_VERSION
     try:
         data = urlopen("%s/%s" % (SCONS_URL, SCONS_VERSION)).read()
-        open(os.path.join(INSTALL_PATH, SCONS_VERSION), 'w').write(data)
+        open(join(INSTALL_PATH, SCONS_VERSION), 'w').write(data)
     except Exception as e:
         print "\tError downloading %s (%s)" % (SCONS_VERSION, e)
         print "destination: %s" % INSTALL_PATH
         print "URL: %s/%s" % (SCONS_URL, SCONS_VERSION)
         return -1
     print "Unpacking scons"
-    sourceTar = tarfile.open(os.path.join(INSTALL_PATH, SCONS_VERSION), 'r')
+    sourceTar = tarfile.open(join(INSTALL_PATH, SCONS_VERSION), 'r')
     sourceTar.extractall(INSTALL_PATH)
     sourceTar.close()
-    os.remove(os.path.join(INSTALL_PATH, SCONS_VERSION))
+    os.remove(join(INSTALL_PATH, SCONS_VERSION))
 
 
-if __name__ == '__main__':
+def build(args=[]):
 #    parser = argsparse.ArgumentParser(description=__doc__)
 #    add = parser.add_argument # shortcut
 #    add('--update', action='store_true',
-#        help='update local installation')
-#    add(name='name', metavar='METAVAR', nargs='*', help='help')
-#    args = parser.parse_args()
-    
-    SCIPION_HOME = os.environ['SCIPION_HOME']
-    SCIPION_SOFTWARE_PATH = os.path.join(SCIPION_HOME, 
-                                        'software')
-    SCIPION_INSTALL_PATH = os.path.join(SCIPION_SOFTWARE_PATH,
-                                        'install')
-    SCIPION_INSTALL_LOG = os.path.join(SCIPION_SOFTWARE_PATH,
-                                       'log',
-                                       'scons.log')
-    SCONS_VERSION = 'scons-2.3.1'
-    SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
-
     #necessary to properly build scons
-    myenv = {}
-    #myenv = os.environ.copy()
 
     print "Scipion Home in : ", SCIPION_HOME
 
-    if not '--purge' in sys.argv:
-        # Create DATA folders
-        for d in SCIPION_DIRS:
-            path = os.environ[d]
-            if not os.path.exists(path):
-                print "  creating %s folder: %s" % (d, path)
-                os.makedirs(path)
-        
-         # Write default configurations
-#         writeDefaults()
-#         
-#         updateProjectSettings()
-        if not os.path.exists(os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
-             # Download and untar Scons
+    if not '--purge' in args:
+        if not exists(join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
+            # Download and untar Scons
             downloadScons()
             #Compile scons
             setupArgs=[["clean"],
                        ["build"], 
                        ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
-            if os.path.exists(SCIPION_INSTALL_LOG):
+            if exists(SCIPION_INSTALL_LOG):
                 os.remove(SCIPION_INSTALL_LOG)
             logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
             for arg in setupArgs:
                 logFile = open(SCIPION_INSTALL_LOG, 'a')
-                command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
+                command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
                 
                 print 'Executing %s on scons' % (arg)
                 scons = subprocess.Popen(command, 
-                                         cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
+                                         cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
                                          stdout=logFile,
-                                         stderr=logFile,
-                                         env=myenv)
+                                         stderr=logFile)
                 scons.wait()
                 output = scons.communicate()[0]
                 logFile.close()
                 if scons.returncode is not 0:
                     sys.exit(scons.returncode)
 
-    #Setting environmental vars before calling scons
-    myenv['PATH'] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'bin'), os.environ['PATH'])
-    DYN = 'LD_LIBRARY_PATH'
-    if MACOSX:
-        DYN = 'DYLD_FALLBACK_LIBRARY_PATH'
-    if DYN in myenv:
-        myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib'), myenv[DYN])
-        myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib64'), myenv[DYN])
-
     logFile = open(SCIPION_INSTALL_LOG, 'a')
-    install = subprocess.Popen(['scons']+sys.argv[1:],
+    install = subprocess.Popen([join('software', 'bin', 'scons')] + args,
                                cwd=SCIPION_HOME, 
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT,
-                               env=myenv)
+                               stderr=subprocess.STDOUT
+                               )#env=myenv)
     for line in install.stdout:
         install.stdout.flush()
         sys.stdout.flush()
         sys.stdout.write(line)
         logFile.write(line)
     install.wait()
-    output = install.communicate()[0]
+    returncode = install.communicate()[0]
     logFile.close()
     
+    return returncode
+
+#        help='update local installation')
+#    add(name='name', metavar='METAVAR', nargs='*', help='help')
+#    args = parser.parse_args()    
+
+if __name__ == '__main__':
+    returncode = build(args=sys.argv[1:])
     # This script will exit with the same exit code as scons did
-    sys.exit(install.returncode)
+    sys.exit(returncode)
 
 
