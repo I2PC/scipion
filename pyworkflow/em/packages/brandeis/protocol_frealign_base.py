@@ -581,7 +581,7 @@ class ProtFrealignBase(EMProtocol):
                 if partCounter == lastPart: # The last particle in the block
                     more = 0
                 particleLine = ('1, %05d, %05d, %05f, %05f, %02f, %01d\n' %
-                                magnification, film, defocusU, defocusV, astig, more)
+                                (magnification, film, defocusU, defocusV, astig, more))
                 self.__writeParamParticle(f, particleLine)
                 
                 if more == 0: # close the block.

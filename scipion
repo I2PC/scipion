@@ -233,6 +233,8 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
+        global SCIPION_PYTHON
+        SCIPION_PYTHON='python'
         runCmd('scripts/install.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_STATS:
@@ -264,8 +266,8 @@ def main():
             
         sys.exit(0)
 
-    # If we reach this point, bad arguments were passed
-    print """
+    elif mode == MODE_HELP:
+        print """
 USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
@@ -313,6 +315,14 @@ USAGE:
 
         download               Download external packages (EMAN, SPIDER, Relion, etc)
 """
+        sys.exit(0)
+
+    # If we reach this point, bad arguments were passed
+    print "Unknown mode: %s" % sys.argv[1]
+    print ("Valid modes are: "
+           "browser help install manager project stats tests testdata viewer webserver printenv download")
+    print 'Run "%s help" for a full description.' % sys.argv[0]
+    sys.exit(1)
 
 
 

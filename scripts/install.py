@@ -31,9 +31,7 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import os, sys, platform
 
-from pyworkflow import SETTINGS
-from pyworkflow.utils.path import makePath, copyFile, join
-from pyworkflow.apps.config import writeDefaults
+
 from urllib2 import urlopen
 import subprocess
 import tarfile
@@ -45,6 +43,10 @@ LINUX = platform.system() == 'Linux'
 
 
 def updateProjectSettings():
+    from pyworkflow import SETTINGS
+    from pyworkflow.utils.path import copyFile
+    from pyworkflow.apps.config import writeDefaults
+
     # Update the settings to all existing projects
     from pyworkflow.manager import Manager
     manager = Manager()
@@ -53,7 +55,7 @@ def updateProjectSettings():
     for p in projects:
         proj = manager.loadProject(p.getName())
         projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
+        print "Copying settings to: ", os.path.join(p.getName(), projSettings)
         copyFile(SETTINGS, projSettings)
 
 
@@ -67,17 +69,17 @@ def downloadScons():
     print "Downloading scons from " + SCONS_URL + SCONS_VERSION
     try:
         data = urlopen("%s/%s" % (SCONS_URL, SCONS_VERSION)).read()
-        open(INSTALL_PATH).write(data)
+        open(os.path.join(INSTALL_PATH, SCONS_VERSION), 'w').write(data)
     except Exception as e:
         print "\tError downloading %s (%s)" % (SCONS_VERSION, e)
         print "destination: %s" % INSTALL_PATH
         print "URL: %s/%s" % (SCONS_URL, SCONS_VERSION)
         return -1
     print "Unpacking scons"
-    sourceTar = tarfile.open(SCONS_VERSION, 'r')
+    sourceTar = tarfile.open(os.path.join(INSTALL_PATH, SCONS_VERSION), 'r')
     sourceTar.extractall(INSTALL_PATH)
     sourceTar.close()
-    os.remove(SCONS_VERSION)
+    os.remove(os.path.join(INSTALL_PATH, SCONS_VERSION))
 
 
 if __name__ == '__main__':
@@ -103,44 +105,45 @@ if __name__ == '__main__':
     myenv = {}
     #myenv = os.environ.copy()
 
-    print "Installing Scipion in : ", SCIPION_HOME
+    print "Scipion Home in : ", SCIPION_HOME
 
-    # Create DATA folders
-    for d in SCIPION_DIRS:
-        path = os.environ[d]
-        if not os.path.exists(path):
-            print "  creating %s folder: %s" % (d, path)
-            makePath(path)
-
-     # Write default configurations
-#     writeDefaults()
-#     
-#     updateProjectSettings()
-     # Download and untar Scons
-    if not os.path.exists(os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
-        downloadScons()
-        #Compile scons
-    
-    setupArgs=[["clean"],
-               ["build"], 
-               ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
-    if os.path.exists(SCIPION_INSTALL_LOG):
-        os.remove(SCIPION_INSTALL_LOG)
-    logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
-    for arg in setupArgs:
-        logFile = open(SCIPION_INSTALL_LOG, 'a')
-        command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
+    if not '--purge' in sys.argv:
+        # Create DATA folders
+        for d in SCIPION_DIRS:
+            path = os.environ[d]
+            if not os.path.exists(path):
+                print "  creating %s folder: %s" % (d, path)
+                os.makedirs(path)
         
-        print '>>>>>>>>>>> %s [from %s]' % (" ".join(command), os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION))
-        scons = subprocess.Popen(command, 
-                                 cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
-                                 stdout=logFile,
-                                 stderr=logFile,
-                                 env=myenv)
-        output = scons.communicate()[0]
-        logFile.close()
-        if scons.returncode is not 0:
-            sys.exit(scons.returncode)
+         # Write default configurations
+#         writeDefaults()
+#         
+#         updateProjectSettings()
+        if not os.path.exists(os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
+             # Download and untar Scons
+            downloadScons()
+            #Compile scons
+            setupArgs=[["clean"],
+                       ["build"], 
+                       ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
+            if os.path.exists(SCIPION_INSTALL_LOG):
+                os.remove(SCIPION_INSTALL_LOG)
+            logFile = open(SCIPION_INSTALL_LOG, 'w+').close()
+            for arg in setupArgs:
+                logFile = open(SCIPION_INSTALL_LOG, 'a')
+                command = ['python', os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
+                
+                print 'Executing %s on scons' % (arg)
+                scons = subprocess.Popen(command, 
+                                         cwd=os.path.join(SCIPION_INSTALL_PATH, SCONS_VERSION),
+                                         stdout=logFile,
+                                         stderr=logFile,
+                                         env=myenv)
+                scons.wait()
+                output = scons.communicate()[0]
+                logFile.close()
+                if scons.returncode is not 0:
+                    sys.exit(scons.returncode)
 
     #Setting environmental vars before calling scons
     myenv['PATH'] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'bin'), os.environ['PATH'])
@@ -159,6 +162,8 @@ if __name__ == '__main__':
                                stderr=subprocess.STDOUT,
                                env=myenv)
     for line in install.stdout:
+        install.stdout.flush()
+        sys.stdout.flush()
         sys.stdout.write(line)
         logFile.write(line)
     install.wait()

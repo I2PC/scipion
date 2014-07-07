@@ -644,6 +644,7 @@ class SetOfParticles(SetOfImages):
     both are considered Images
     """
     ITEM_TYPE = Particle
+    REP_TYPE = Particle
     
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
@@ -901,6 +902,11 @@ class Transform(EMObject):
         
     def __str__(self):
         return str(self._matrix)
+    
+    
+class Alignment(Transform):
+    """ Transform used for 2D alignment agains a reference. """
+    pass
         
 
 class SetOfAlignment(EMSet):
@@ -909,7 +915,7 @@ class SetOfAlignment(EMSet):
     alignment of a SetOfPartices. Each Transformation modifies the original
     image to be the same of a given reference.
     """
-    ITEM_TYPE = Transform
+    ITEM_TYPE = Alignment
     
     def __init__(self, **args):
         EMSet.__init__(self, **args)

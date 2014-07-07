@@ -171,9 +171,10 @@
 			</div>
 		{% endif %}
 		
-		<div id="saveContainer" class="sectionMenu">
-			<a id="saveButton" href="javascript:saveShowjTable('{{ csrf_token }}');" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-save"></i></a>
-		</div>
+<!-- 		OLD SAVE BUTTON -->
+<!-- 		<div id="saveContainer" class="sectionMenu"> -->
+<!-- 			<a id="saveButton" href="javascript:saveShowjTable('{{ csrf_token }}');" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-save"></i></a> -->
+<!-- 		</div> -->
 		
 		{% if not form.mirrorY.is_hidden or not form.applyTransformMatrix.is_hidden or not form.onlyShifts.is_hidden or not form.wrap.is_hidden %}
 			<div id="optionsContainer" class="sectionMenu">
@@ -195,12 +196,9 @@
 <!-- 		 <input type="hidden" id="path" name="path" value="{{path}}"> -->
 <!-- 		 <input type="hidden" id="tableName" name="tableName" value="{{table_name}}"> -->
 	    
-		 <!-- Hidden field to storage temporally the selection. -->
+		 <!-- Hidden fields to storage temporally some list attributes. -->
 		 <input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
-		 <!-- Hidden field to storage temporally the enabled items. -->
 		 <input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
-		 
-		 <!-- Hidden field to storage temporally the changes about enable flag. -->
 		 <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
 	</form>
 </div>	

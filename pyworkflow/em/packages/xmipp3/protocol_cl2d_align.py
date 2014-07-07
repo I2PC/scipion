@@ -23,6 +23,7 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
 """
 This sub-package contains wrapper around align2d Xmipp program
 """
@@ -103,53 +104,40 @@ class XmippProtCL2DAlign(ProtAlign2D):
         self._defineSourceRelation(particles, avg)
             
         # Generate the SetOfAlignmet
-        alignment = self._createSetOfAlignment(particles)
-        md = xmipp.MetaData(self._getExtraPath('images.xmd'))
-        import numpy
-        angles = numpy.zeros(3)
-        shifts = numpy.zeros(3)
-        t = Transform()
+        alignedSet = self._createSetOfParticles()
+        alignedSet.copyInfo(particles)
         
-        for objId in md:
-            angles[2] = md.getValue(xmipp.MDL_ANGLE_PSI, objId)
-            shifts[0] = md.getValue(xmipp.MDL_SHIFT_X, objId)
-            shifts[1] = md.getValue(xmipp.MDL_SHIFT_Y, objId)
-            M = matrixFromGeometry(shifts, angles)
-            t.setMatrix(M)
-            itemId = md.getValue(xmipp.MDL_ITEM_ID, objId)
-            t.setObjId(itemId)
-            img = particles[itemId]
-            t._image = img
-            alignment.append(t)
-            
-        self._defineOutputs(outputAlignment=alignment)
-        self._defineSourceRelation(particles, alignment)
+        readSetOfParticles(self._getExtraPath('images.xmd'), alignedSet, 
+                           particles.hasCTF(), hasAlignment=True)
+        
+        self._defineOutputs(outputParticles=alignedSet)
+        self._defineSourceRelation(particles, alignedSet)
                 
-        # Produce aligned images if requested and generate output
-        if self.writeAlignedParticles:
-            lastMdFn = self._getExtraPath("images.xmd")
-            alignedMd = self._getPath("particles_aligned.xmd")
-            alignedStk = self._getPath("particles_aligned.stk")
-            params = "%(lastMdFn)s -o %(alignedStk)s --save_metadata_stack %(alignedMd)s"
-            params += " --apply_transform --keep_input_columns" 
-            
-            # Apply transformation
-            self.runJob("xmipp_transform_geometry", params % locals())
-            md = xmipp.MetaData(alignedMd)
-            
-            for label in [xmipp.MDL_ANGLE_PSI, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_FLIP]:
-                md.removeLabel(label)
-            if md.containsLabel(xmipp.MDL_ZSCORE):
-                md.sort(xmipp.MDL_ZSCORE)
-            md.write(alignedMd)
-            
-            # Define the output of aligned particles
-            imgSet = self._createSetOfParticles()
-            imgSet.copyInfo(particles)
-            imgSet.setHasAlignment(True)
-            readSetOfParticles(alignedMd, imgSet, imgSet.hasCTF())
-            self._defineOutputs(outputParticles=imgSet)
-            self._defineTransformRelation(particles, imgSet)
+#         # Produce aligned images if requested and generate output
+#         if self.writeAlignedParticles:
+#             lastMdFn = self._getExtraPath("images.xmd")
+#             alignedMd = self._getPath("particles_aligned.xmd")
+#             alignedStk = self._getPath("particles_aligned.stk")
+#             params = "%(lastMdFn)s -o %(alignedStk)s --save_metadata_stack %(alignedMd)s"
+#             params += " --apply_transform --keep_input_columns" 
+#             
+#             # Apply transformation
+#             self.runJob("xmipp_transform_geometry", params % locals())
+#             md = xmipp.MetaData(alignedMd)
+#             
+#             #for label in [xmipp.MDL_ANGLE_PSI, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_FLIP]:
+#             #    md.removeLabel(label)
+#             if md.containsLabel(xmipp.MDL_ZSCORE):
+#                 md.sort(xmipp.MDL_ZSCORE)
+#             md.write(alignedMd)
+#             
+#             # Define the output of aligned particles
+#             imgSet = self._createSetOfParticles()
+#             imgSet.copyInfo(particles)
+#             imgSet.setHasAlignment(True)
+#             readSetOfParticles(alignedMd, imgSet, imgSet.hasCTF())
+#             self._defineOutputs(outputParticles=imgSet)
+#             self._defineTransformRelation(particles, imgSet)
 
         
 

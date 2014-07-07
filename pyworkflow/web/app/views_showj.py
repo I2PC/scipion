@@ -79,7 +79,7 @@ def updateTable(inputParams, dataset):
     listChanges = inputParams[sj.CHANGES]
     tableName = inputParams[sj.TABLE_NAME]
     
-    print "CHANGES: ",listChanges
+#    print "CHANGES: ",listChanges
     
     if len(listChanges) > 0:
         items = listChanges.split(",")
@@ -87,10 +87,10 @@ def updateTable(inputParams, dataset):
             item = x.split("-")
             id = item[0]
             state = item[1]
-            
-            print "CHANGES TO SAVE:", id," - "+ state
+#            print "CHANGES TO SAVE:", id," - "+ state
     else:
-        print "NO CHANGES"
+#        print "NO CHANGES"
+        pass
     
 
 
@@ -113,7 +113,7 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
 
         columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         
-        request.session[sj.COLS_CONFIG] = columnsConfig
+        request.session[sj.COLS_CONFIG] = columnsConfig 
     else:
         columnsConfig = request.session[sj.COLS_CONFIG]
             
@@ -326,9 +326,6 @@ def cleanSession(request, filename):
     if filename in request.session:
         del request.session[filename]
         
-#     for key in [sj.DATASET, sj.LABEL_SELECTED, sj.TABLE_NAME, sj.IMG_DIMS]:
-#         if key in request.session:
-#             del request.session[key]
        
 def storeToSession(request, inputParams, dataset, _imageDimensions):
     # Store dataset and labelsToRender in session 
@@ -361,17 +358,13 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
     # FIX
-#    context.update({'path' : inputParams[sj.PATH]})
-#    context.update({'table_name' : inputParams[sj.TABLE_NAME]})
+#    context.update({'path' : inputParams[sj.PATH],
+#                    'table_name' : inputParams[sj.TABLE_NAME]})
     
-    # IMPROVE TO KEEP THE SELECTED ITEMS
-    context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS]})
-    
-    # IMPROVE TO KEEP THE ENABLED ITEMS
-    context.update({sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS]})
-    
-    # IMPROVE TO KEEP THE CHANGES ABOUT ITEMS
-    context.update({sj.CHANGES: inputParams[sj.CHANGES]})
+    # IMPROVE TO KEEP THE ITEMS (SELECTED, ENABLED, CHANGES)
+    context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS],
+                    sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS],
+                    sj.CHANGES: inputParams[sj.CHANGES]})
         
     return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page
@@ -380,12 +373,10 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
 def createContext(dataset, table, columnsConfig, request, showjForm, inputParams):
     # Create context to be send
     
-    context = {
-            sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
+    context = {sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
             sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
             sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
-            'form': showjForm,
-            }
+            'form': showjForm}
     
     if dataset is not None:
         context.update({sj.DATASET: dataset})
@@ -409,6 +400,7 @@ def getExtraParameters(extraParams, table):
     defaultColumnsLayoutProperties = {}
     if extraParams != None and extraParams != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
+        
         for key, value in extraParams.iteritems():
             try:
                 label, attribute = key.rsplit('___')

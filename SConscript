@@ -31,17 +31,28 @@ import sys
 import platform
 
 # for acceding SCIPION dict easily
-# folders & packages | libs  | index
-SOFTWARE_FOLDER =      DEF =   0 # is built by default?               
-CONFIG_FOLDER =        INCS =  1 # includes                           
-INSTALL_FOLDER =       LIBS =  2 # libraries to create                
-BIN_FOLDER =           SRC =   3 # source pattern                     
-PACKAGES_FOLDER =      DIR =   4 # folder name in temporal directory  
-LIB_FOLDER =           TAR =   5                                      
-MAN_FOLDER =           DEPS =  6 # explicit dependencies              
-TMP_FOLDER =           URL =   7 # URL to download from               
-INCLUDE_FOLDER =       FLAGS = 8 # Other flags for the compiler
-LOG_FOLDER =                   9 #
+# Big scipion structure dictionary and associated vars
+# indexes
+# folders             | libs | packages           | index
+SOFTWARE_FOLDER =      DEF =   PKG_DEF =             0 
+                    # is built by default?               
+CONFIG_FOLDER =        INCS =  PKG_INSTALL_FOLDER =  1
+                    # includes                           
+INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
+                    # libraries to create                
+BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
+                    # source pattern                     
+PACKAGES_FOLDER =      DIR =                         4 
+                    # folder name in temporal directory  
+LIB_FOLDER =           TAR =                         5
+                    # tarfile name in temporal directory
+MAN_FOLDER =           DEPS =                        6 
+                    # explicit dependencies              
+TMP_FOLDER =           URL =                         7
+                    # URL to download from               
+INCLUDE_FOLDER =       FLAGS =                       8
+                    # Other flags for the compiler
+LOG_FOLDER =                                         9 #
 
 # We start importing the environment
 Import('env', 'SCIPION')
@@ -170,18 +181,18 @@ env.AddLibrary('paramiko',
 #############
 
 if not GetOption('clean'):
-    env.DownloadLibrary('sqlite')
-    env.DownloadLibrary('tcl')
-    env.DownloadLibrary('tk')
-    env.DownloadLibrary('python')
-    env.DownloadLibrary('numpy')
-    env.DownloadLibrary('matplotlib')
-    env.DownloadLibrary('psutil')
-    env.DownloadLibrary('mpi4py')
-    env.DownloadLibrary('scipy')
-    env.DownloadLibrary('bibtexparser')
-    env.DownloadLibrary('django')
-    env.DownloadLibrary('paramiko')
+    env.Download('sqlite')
+    env.Download('tcl')
+    env.Download('tk')
+    env.Download('python')
+    env.Download('numpy')
+    env.Download('matplotlib')
+    env.Download('psutil')
+    env.Download('mpi4py')
+    env.Download('scipy')
+    env.Download('bibtexparser')
+    env.Download('django')
+    env.Download('paramiko')
 
 #########
 # UNTAR #
@@ -241,23 +252,73 @@ pythonMake = env.CompileLibrary('python',
                                 target='libpython2.7.so',
                                 autoSource='Makefile.pre.in')
 
-env.CompileWithSetupPy('python', deps=pythonMake)
+EMPackagesDeps = env.CompileWithSetupPy('python', deps=pythonMake)
 
 
 # PYTHON MODULES
 
-env.CompileWithSetupPy('numpy')
+EMPackagesDeps += env.CompileWithSetupPy('numpy')
+EMPackagesDeps += env.CompileWithSetupPy('matplotlib')
+EMPackagesDeps += env.CompileWithSetupPy('psutil')
+EMPackagesDeps += env.CompileWithSetupPy('mpi4py')
+EMPackagesDeps += env.CompileWithSetupPy('scipy')
+EMPackagesDeps += env.CompileWithSetupPy('bibtexparser')
+EMPackagesDeps += env.CompileWithSetupPy('django')
+EMPackagesDeps += env.CompileWithSetupPy('paramiko')
 
-env.CompileWithSetupPy('matplotlib')
 
-env.CompileWithSetupPy('psutil')
+# EM PACKAGES
 
-env.CompileWithSetupPy('mpi4py')
+# Xmipp3.1
+env.AddPackage('xmipp', 
+               tar='Xmipp-3.1-src.tgz',
+               dir='xmipp',
+               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz')
 
-env.CompileWithSetupPy('scipy')
+# Bsoft
+env.AddPackage('bsoft',
+               dft=False,
+               tar='bsoft1_8_8_Fedora_12.tgz',
+               dir='bsoft')
 
-env.CompileWithSetupPy('bibtexparser')
+# CtfFind
+env.AddPackage('ctffind',
+               dft=False,
+               tar='ctffind_V3.5.tgz',
+               dir='ctf')
 
-env.CompileWithSetupPy('django')
+# EMAN2
+env.AddPackage('eman2',
+               dft=False,
+               tar='eman2.1beta3.linux64.tar.gz',
+               dir='EMAN2')
 
-env.CompileWithSetupPy('paramiko')
+# frealign
+env.AddPackage('frealign',
+               dft=False,
+               tar='frealign_v9.07.tgz')
+
+# relion
+env.AddPackage('relion',
+               dft=False,
+               tar='relion-1.2.tgz')
+# spider
+env.AddPackage('spider',
+               dft=False,
+               tar='spider-web-21.13.tgz',
+               dir='spider-web')
+
+if not GetOption('clean'):
+    env.Download('xmipp', type='EMPackage')
+    env.Download('bsoft', type='EMPackage')
+    env.Download('ctffind', type='EMPackage')
+    env.Download('eman2', type='EMPackage')
+    env.Download('frealign', type='EMPackage')
+    env.Download('relion', type='EMPackage')
+    env.Download('spider', type='EMPackage')
+
+# Purge option
+if GetOption('purge'):
+    print "Purge option implies clean. Activating clean..."
+    SetOption('clean', True)
+    env.RemoveInstallation()

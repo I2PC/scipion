@@ -278,13 +278,7 @@ def isInFile(text, filePath):
     returns: True if the given text is in the given file, 
              False if it is not in the file.
     """
-    f = open(filePath, 'r')
-    for line in f:
-        if text in line:
-            f.close()
-            return True
-    f.close()
-    return False
+    return any(text in line for line in open(filePath))
 
 
 def getLineInFile(text, fileName):
@@ -294,14 +288,10 @@ def getLineInFile(text, fileName):
        filePath : File path to check.
     returns: File number where the text was located.
     """
-    f = open(fileName, 'r')
-    cont = 0
-    for line in f:
-        cont += 1
-        if text in line:
-            f.close()
-            return cont
-    f.close()
+    with open(fileName) as f:
+        for i, line in enumerate(f):
+            if text in line:
+                return i + 1
     return None
 
 
