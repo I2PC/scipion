@@ -81,5 +81,6 @@ from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from protocol_random_conical_tilt import XmippProtRCT
 # Wizards
 from wizard import *
