@@ -98,7 +98,7 @@ class DataView(View):
             'allowSetVisible':'allowSetVisible',
             'editable':'editable',
             'allowSetEditable':'allowSetEditable',
-            'render': 'renderable',
+#            'render': 'renderable',
             'allowSetRenderable':'allowSetRenderable',
             'renderFunc':'renderFunc',
             'extraRenderFunc':'extraRenderFunc',

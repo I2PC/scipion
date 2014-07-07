@@ -113,6 +113,7 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
 
         columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         
+        
         request.session[sj.COLS_CONFIG] = columnsConfig 
     else:
         columnsConfig = request.session[sj.COLS_CONFIG]
@@ -173,7 +174,8 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
         
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
+#        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
+       
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -182,7 +184,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
-            is3D = inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA
+            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA
             #Setting the _convert 
             _convert = isVol and (inputParams[sj.MODE]==sj.MODE_GALLERY or is3D)
             #Setting the _reslice 
@@ -281,13 +283,15 @@ def showj(request):
             if key in inputParams:
                 inputParams[key] = value
         # extraParams will be read from SESSION
-        
-        
+    
     request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]    
+#    print "zoom: ", request.session[sj.IMG_ZOOM_DEFAULT]
     
     #=DEBUG=====================================================================
 #    from pprint import pprint
+#    print "INPUT PARAMS:"
 #    pprint(inputParams)
+#    print "EXTRA PARAMS:"
 #    pprint(extraParams)
     #===========================================================================
 
@@ -302,7 +306,7 @@ def showj(request):
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
         
         volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
-    
+        
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
     else:
