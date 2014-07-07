@@ -975,11 +975,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 	  maxcorr=-99.e99;
     bool opt_flip=false;
     int opt_refno=-1;
-
+    size_t itemId=-1;
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
-
     // Call threads to calculate the rotational alignment of each image in the selfile
     pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
 
@@ -1073,7 +1072,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         // Output
         DFexp.getValue(MDL_IMAGE, fn, imgid);
+        DFexp.getValue(MDL_ITEM_ID, itemId, imgid);
+        
         idNew = DFo.addObject();
+        DFo.setValue(MDL_ITEM_ID,itemId,idNew);
         DFo.setValue(MDL_IMAGE, fn,idNew);
         DFo.setValue(MDL_ANGLE_ROT, opt_rot,idNew);
         DFo.setValue(MDL_ANGLE_TILT,opt_tilt,idNew);
