@@ -577,8 +577,8 @@ class Project(object):
         return objects
     
     def _getConnectedObjects(self, obj, graph):
-        """ Give a TRANSFORM graph, return the elements that
-        are connected, either childs, ancestors or siblings. 
+        """ Given a TRANSFORM graph, return the elements that
+        are connected to an object, either childs, ancestors or siblings. 
         """
         n = graph.getNode(obj.strId())
         # Get the oldest ancestor of a node, before 
@@ -588,7 +588,7 @@ class Project(object):
             
         connection = {}
         for node in n.iterChilds():
-            connection[node.getObjName()] = node.object
+            connection[node.object.strId()] = node.object
         
         return connection
             
