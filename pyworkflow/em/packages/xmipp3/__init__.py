@@ -71,6 +71,7 @@ from protocol_nma import XmippProtNMA
 from protocol_nma_alignment import XmippProtAlignmentNMA
 #from protocol_nma_choose import XmippProtNMAChoose
 from protocol_align_volume import XmippProtAlignVolume
+from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_cltomo import XmippProtCLTomo
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_helical_parameters import XmippProtHelicalParameters

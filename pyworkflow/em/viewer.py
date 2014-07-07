@@ -101,10 +101,12 @@ class DataView(View):
             'render': 'renderable',
             'allowSetRenderable':'allowSetRenderable',
             'renderFunc':'renderFunc',
-            'extraRenderFunc':'extraRenderFunc',        
+            'extraRenderFunc':'extraRenderFunc',
+            'mode': 'mode', # FOR MODE TABLE OR GALLERY
             
-            # FOR MODE TABLE OR GALLERY
-            'mode': 'mode'
+            # NEW PARAMETERS
+#            'order': 'order',
+#            'zoom': 'zoom',
         }
         
         params = {}
@@ -114,10 +116,12 @@ class DataView(View):
                 if key == 'mode':
                     if value=='metadata':
                         params[key]='table'
+                elif key == 'order' or key == 'zoom':
+                    params[key] = value
                 else:    
                     for val in value.split(' '):
                         params[val] = '%s___%s' % (val, parameters[key])
-                                
+                     
         return params
         
     def getPath(self):

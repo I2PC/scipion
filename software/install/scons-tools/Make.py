@@ -21,22 +21,22 @@ from SCons.Script import *
 def parms(target, source, env):
     """Assemble various Make parameters."""
 
-    if 'MakePath' in env.Dictionary().keys():
+    if 'MakePath' in env:
         make_path = env.subst(str(env['MakePath']))
     else:
         print "Make builder requires MakePath variable"
         Exit(1)
 
     make_cmd = 'make'
-    if 'MakeCmd' in env.Dictionary().keys():
+    if 'MakeCmd' in env:
         make_cmd = env.subst(env['MakeCmd'])
-    elif 'MAKE' in env.Dictionary().keys():
+    elif 'MAKE' in env:
         make_cmd = env.subst(env['MAKE'])
 
     make_env = None
     if env['CROSS_BUILD']:
         make_env = env['CROSS_ENV']
-    if 'MakeEnv' in env.Dictionary().keys():
+    if 'MakeEnv' in env:
         if make_env == None:
             make_env = {}
         else:
@@ -47,19 +47,19 @@ def parms(target, source, env):
             make_env[k] = v
 
     make_opts = None
-    if 'MakeOpts' in env.Dictionary().keys():
+    if 'MakeOpts' in env:
         make_opts = env.subst(env['MakeOpts'])
 
     make_jobs = GetOption('num_jobs')
-    if 'MakeOneThread' in env.Dictionary().keys() and env['MakeOneThread']:
+    if 'MakeOneThread' in env and env['MakeOneThread']:
         make_jobs = 1
 
     make_targets = None
-    if 'MakeTargets' in env.Dictionary().keys():
+    if 'MakeTargets' in env:
         make_targets = env.subst(env['MakeTargets'])
 
     stdout = None
-    if 'MakeStdOut' in env.Dictionary().keys():
+    if 'MakeStdOut' in env:
         stdout = env['MakeStdOut']
 
     return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, stdout)
@@ -77,12 +77,12 @@ def message(target, source, env):
 
     myenv = env.Clone()
     # Want to use MakeTargets in the MAKECOMSTR, but make it pretty first.
-    if 'MakeTargets' in myenv.Dictionary().keys():
+    if 'MakeTargets' in myenv:
         myenv['MakeTargets'] += ' '
     else:
         myenv['MakeTargets'] = ''
 
-    if 'MAKECOMSTR' in myenv.Dictionary().keys():
+    if 'MAKECOMSTR' in myenv:
         return myenv.subst(myenv['MAKECOMSTR'],
                             target = target, source = source, raw = 1) + " > %s " % stdout
 
@@ -130,7 +130,7 @@ def builder(target, source, env):
 
     # Capture the make command's output, unless we're verbose
     real_stdout = subprocess.PIPE
-    if 'MAKECOMSTR' not in env.Dictionary().keys():
+    if 'MAKECOMSTR' not in env:
         real_stdout = None
     else:
         real_stdout = open(stdout, 'w+')

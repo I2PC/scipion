@@ -95,18 +95,19 @@ def viewToUrl(request, view):
     # SHOWJ
     elif isinstance(view, DataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
-        if view.getShowJWebParams():
-            params = view.getShowJWebParams()
-            for key in params:
-                if key == 'mode':
-                    url += '&mode=%s' % params[key]
+        showjParams = view.getShowJWebParams()
+        if showjParams:
+            for key in showjParams:
+                if key == 'mode' or key == 'order' or key=='zoom':
+                    url += '&%s=%s' % (key, showjParams[key])
                 else:
-                    url += '&%s=True' % params[key]
+                    # False cases ??
+                    url += '&%s=True' % showjParams[key]
         
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
         url = 'showj::' + url
-    
+        
     # TEXT VIEWER
     elif isinstance(view, TextView):
         fn  = view.getFileList()[0]

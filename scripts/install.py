@@ -31,9 +31,7 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 """
 import os, sys, platform
 
-from pyworkflow import SETTINGS
-from pyworkflow.utils.path import makePath, copyFile, join
-from pyworkflow.apps.config import writeDefaults
+
 from urllib2 import urlopen
 import subprocess
 import tarfile
@@ -45,6 +43,10 @@ LINUX = platform.system() == 'Linux'
 
 
 def updateProjectSettings():
+    from pyworkflow import SETTINGS
+    from pyworkflow.utils.path import copyFile
+    from pyworkflow.apps.config import writeDefaults
+
     # Update the settings to all existing projects
     from pyworkflow.manager import Manager
     manager = Manager()
@@ -53,7 +55,7 @@ def updateProjectSettings():
     for p in projects:
         proj = manager.loadProject(p.getName())
         projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
+        print "Copying settings to: ", os.path.join(p.getName(), projSettings)
         copyFile(SETTINGS, projSettings)
 
 
@@ -111,7 +113,7 @@ if __name__ == '__main__':
             path = os.environ[d]
             if not os.path.exists(path):
                 print "  creating %s folder: %s" % (d, path)
-                makePath(path)
+                os.makedirs(path)
         
          # Write default configurations
 #         writeDefaults()
@@ -153,7 +155,6 @@ if __name__ == '__main__':
         myenv[DYN] = '%s:%s' % (os.path.join(SCIPION_SOFTWARE_PATH, 'lib64'), myenv[DYN])
 
     logFile = open(SCIPION_INSTALL_LOG, 'a')
-    args = ' '.join(sys.argv[1:])
     install = subprocess.Popen(['scons']+sys.argv[1:],
                                cwd=SCIPION_HOME, 
                                stdout=subprocess.PIPE,
