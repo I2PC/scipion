@@ -48,11 +48,8 @@ def findHome():
             absPath = r   
     return os.path.dirname(absPath)
 
-SCIPION_ENV = {}
 SCIPION_HOME = findHome()
 os.environ['SCIPION_HOME'] = SCIPION_HOME
-
-SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
 
 PW_APPS = join(SCIPION_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = join(PW_APPS, '%s')
@@ -101,12 +98,8 @@ SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
-SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
-SCIPION_ENV['SCIPION_PYTHON'] = SCIPION_PYTHON
-
 for k,v in SCIPION_DIRS.iteritems():
     os.environ[k] = v
-    SCIPION_ENV[k] = v
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -119,9 +112,6 @@ for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME',
             'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
     
-#for k,v in VARS.iteritems():
-#    SCIPION_ENV[k] = v
-SCIPION_ENV.update(VARS)
 
 def runApp(app, args=''):
     runCmd('%s %s' % (PW_APPS_TEMP % app, args))
@@ -262,9 +252,12 @@ def main():
         runApp('pw_download_packages.py', args)
         
     elif mode == MODE_ENV:
-        for k,v in SCIPION_ENV.iteritems():
-            print "%s=%s" % (k, v)
-            
+        # Print all the environment variables needed to run scipion.
+        d = VARS.copy()
+        d.update({k:v for k,v in os.environ.items() if k.startswith('SCIPION')})
+        for k,v in d.iteritems():
+            print '%s="%s"' % (k, v)
+
         sys.exit(0)
 
     elif mode == MODE_HELP:
