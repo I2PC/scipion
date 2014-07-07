@@ -28,13 +28,14 @@
 This sub-package contains the XmippParticlePicking protocol
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils.path import *  
+from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, EMObject
+from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import runJavaIJapp
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
-
 from convert import writeSetOfMicrographsPairs
+
+import xmipp
 
 
 class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):

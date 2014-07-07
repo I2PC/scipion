@@ -29,7 +29,9 @@ This modules contains data classes related to Random Connical Tilt workflow.
 """
 
 from pyworkflow.em.data import EMObject, EMSet
-from pyworkflow.object import Float, Pointer
+from pyworkflow.object import Float, Pointer, Integer, String # Some of this import are needed by the mapper
+
+
 
 class MicrographsTiltPair(EMObject):
     """Represents a Micrographs Tilt Pair"""
@@ -109,12 +111,12 @@ class Angles(EMObject):
         self._angleTilt = Float()
         
     def setAngles(self, angleY, angleY2, angleTilt):
-        self._angleY = angleY
-        self._angleY2 = angleY2
-        self._angleTilt = angleTilt
+        self._angleY.set(angleY)
+        self._angleY2.set(angleY2)
+        self._angleTilt.set(angleTilt)
         
     def getAngles(self):
-        return (self._angleY, self._angleY2, self._angleTilt)
+        return (self._angleY.get(), self._angleY2.get(), self._angleTilt.get())
     
     
 class SetOfAngles(EMSet):
