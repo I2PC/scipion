@@ -123,7 +123,7 @@ def build(args):
                 os.remove(SCIPION_INSTALL_LOG)
             for arg in setupArgs:
                 command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
-                print 'Executing %s on scons' % arg
+                print 'Executing %s on scons' % " ".join(arg)
                 with open(SCIPION_INSTALL_LOG, 'a') as logFile:
                     r = call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
                              stdout=logFile, stderr=logFile)
