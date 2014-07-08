@@ -288,9 +288,12 @@ def update(dataset, workingCopy=None, url=None, verbose=False):
 
     # Update and read contents of *local* MANIFEST file, and create a dict
     datasetFolder = join(workingCopy, dataset)
-    last = max(os.stat(join(datasetFolder, x)).st_mtime for x in md5sRemote)
-    if os.stat(join(datasetFolder, 'MANIFEST')).st_mtime < last:
-        print 'MANIFEST younger than some of the files. Regenerating...'
+    try:
+        last = max(os.stat(join(datasetFolder, x)).st_mtime for x in md5sRemote)
+        t_manifest = os.stat(join(datasetFolder, 'MANIFEST')).st_mtime
+        assert t_manifest > last and time.time() - t_manifest < 60*60*24*7
+    except (OSError, IOError, AssertionError) as e:
+        print 'Regenerating local MANIFEST...'
         createMANIFEST(datasetFolder)
     md5sLocal = dict(x.split() for x in open(join(datasetFolder, 'MANIFEST')))
 
@@ -347,9 +350,11 @@ def upload(dataset, delete=False):
         return
 
     # First make sure we have our MANIFEST file up-to-date
+    print 'Updating local MANIFEST file with MD5 info...'
     createMANIFEST(localFolder)
 
     # Upload the dataset files (with rsync)
+    print 'Uploading files...'
     call(['rsync', '-av', localFolder, '%s:%s' % (remoteLoc, remoteFolder)] +
          (['--delete'] if delete else []))
 
