@@ -170,6 +170,13 @@ env.AddLibrary('paramiko',
                url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz',
                deps=['python'])
 
+# PIL
+env.AddLibrary('pil',
+               tar='Imaging-1.1.7.tar.gz',
+               dir='Imaging-1.1.7',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Imaging-1.1.7.tar.gz',
+               deps=['python'])
+
 ######################
 # CONFIGURATION FILE #
 ######################
@@ -193,6 +200,7 @@ if not GetOption('clean'):
     env.Download('bibtexparser')
     env.Download('django')
     env.Download('paramiko')
+    env.Download('pil')
 
 #########
 # UNTAR #
@@ -209,6 +217,7 @@ env.UntarLibrary('scipy')
 env.UntarLibrary('bibtexparser')
 env.UntarLibrary('django')
 env.UntarLibrary('paramiko')
+env.UntarLibrary('pil')
 
 ##########################
 # EXECUTING COMPILATIONS #
@@ -265,6 +274,7 @@ EMPackagesDeps += env.CompileWithSetupPy('scipy')
 EMPackagesDeps += env.CompileWithSetupPy('bibtexparser')
 EMPackagesDeps += env.CompileWithSetupPy('django')
 EMPackagesDeps += env.CompileWithSetupPy('paramiko')
+EMPackagesDeps += env.CompileWithSetupPy('pil')
 
 
 # EM PACKAGES

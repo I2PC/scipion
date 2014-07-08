@@ -56,7 +56,6 @@ SCONS_VERSION = 'scons-2.3.1'
 SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
 
-
 def createDirs():
     """ Create necessary folder before installing Scipion. """
     for d in SCIPION_DIRS:
