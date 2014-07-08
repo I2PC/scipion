@@ -157,7 +157,9 @@ class ColumnProperties():
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
 
         # RENDER FUNCTION
-        self.setRenderFunc(col.getLabel())
+        self.renderFunc = "get_image"
+#        self.setRenderFunc(col.getLabel())
+        
         self.extraRenderFunc = ""
         
     def getLabel(self):
