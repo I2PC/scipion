@@ -127,10 +127,10 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
-        outputset.setMicsPair(self.inputMicrographsTiltedPair)
+        outputset.setMicsPair(inputset)
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
-        self._defineSourceRelation(self.inputMicrographsTiltedPair.get(), outputset)
+        self._defineSourceRelation(inputset, outputset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
