@@ -95,33 +95,30 @@ class DataView(View):
     #===========================================================================
     
         parameters = {
-            'visible':'visible',
-            'allowSetVisible':'allowSetVisible',
-            'editable':'editable',
-            'allowSetEditable':'allowSetEditable',
+            'mode', # FOR MODE TABLE OR GALLERY
+            'visible',
+            'zoom',
+#            'order',
+#            'allowSetVisible':'allowSetVisible',
+#            'editable':'editable',
+#            'allowSetEditable':'allowSetEditable',
 #            'render': 'renderable',
-            'allowSetRenderable':'allowSetRenderable',
-            'renderFunc':'renderFunc',
-            'extraRenderFunc':'extraRenderFunc',
-            'mode': 'mode', # FOR MODE TABLE OR GALLERY
-            'zoom': 'zoom',
-            
-            # NEW PARAMETERS
-#            'order': 'order',
+#            'allowSetRenderable':'allowSetRenderable',
+#            'renderFunc':'renderFunc',
+#            'extraRenderFunc':'extraRenderFunc',
         }
         
         params = {}
         for key, value in self._viewParams.items():
             
             if key in parameters:
-                if key == 'mode':
-                    if value=='metadata':
-                        params[key]='table'
-                elif key == 'order' or key == 'zoom':
+                if key in {'order','zoom', 'mode'}:
+                    if key == 'mode' and value =='metadata':
+                        value = 'table'
                     params[key] = value
                 else:    
                     for val in value.split(' '):
-                        params[val] = '%s___%s' % (val, parameters[key])
+                        params[val] = '%s___%s' % (val, key)
                      
         return params
         

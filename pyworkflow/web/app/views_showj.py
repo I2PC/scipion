@@ -43,7 +43,6 @@ from pyworkflow.dataset import COL_RENDER_VOLUME
 import pyworkflow.em.showj as sj
 
 
-
 def loadDataSet(request, inputParams, firstTime):
     """ Load the DataSet from the session or from file. Also load some table.
     Params:
@@ -403,12 +402,15 @@ def getExtraParameters(extraParams, table):
     if extraParams != None and extraParams != {}:
         defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
         
+        print "Extra Params:    "
         for key, value in extraParams.iteritems():
             try:
                 label, attribute = key.rsplit('___')
             except Exception, ex:
                 raise Exception('Showj Web visualizer: Incorrect extra parameter')
-
+            
+            print label," ", attribute,":",value
+            
             if table.hasColumn(label):
                 defaultColumnsLayoutProperties[label].update({attribute:value})
                 

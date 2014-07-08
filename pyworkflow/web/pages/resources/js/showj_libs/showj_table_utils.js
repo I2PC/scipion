@@ -109,6 +109,7 @@
  *       
  ******************************************************************************/
 
+/* CONSTANTS */
 var COL_RENDER_NONE = 0;
 var COL_RENDER_ID = 1;
 var COL_RENDER_TEXT = 2;
@@ -224,19 +225,21 @@ function initializeColumnHeader() {
 
 function getHeaderWithIcon(text, columnLayoutProperties) {
 	var iconElements = ''
-	// NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
-	// var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
-	// if (columnLayoutProperties.visible &&
-	// columnLayoutProperties.allowSetVisible){
-	// iconElements+="<span class=\"css_right\"><img
-	// src=\"/resources/showj/delete.png\" class=\"arrowImage\"
-	// onclick=\"enableDisableColumn(event,this)\" ></span>"
-	// }
+	 
+	// Set visible 
+	/*
+	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+		iconElements+="<span class=\"css_right\">"
+		iconElements+="<a class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\">"
+		iconElements+="<i class='fa fa-times'></i></a></span>"	
+	}
+	*/
 
+	// Set Editable
 	if (columnLayoutProperties.allowSetEditable) {
 		iconElements += "<span class=\"css_right fa-stack\"><a id=\""
 				+ text
-				+ "_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
+				+ "_editable_icon\" onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
 		iconElements += "\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
 		if (columnLayoutProperties.renderable) {
 			iconElements += "fa-times"
@@ -244,10 +247,11 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 		iconElements += "\"></i></a></span>"
 	}
 	
+	// Set Renderable
 	if (columnLayoutProperties.allowSetRenderable) {
 		iconElements += "<span class=\"css_right\"><a id=\""
 				+ text
-				+ "_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
+				+ "_renderable_icon\" onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
 		if (columnLayoutProperties.renderable) {
 			iconElements += "fa-eye-slash"
 		} else {
@@ -275,7 +279,6 @@ function getColumnsDefinition() {
 		
 		columnId++;
 	}
-
 	return dataForTable;
 }
 
@@ -703,7 +706,7 @@ function updateSession(label, type, status) {
 		error: function(){
 //			alert("error")
 		}
-		
-
 	});
 }
+
+
