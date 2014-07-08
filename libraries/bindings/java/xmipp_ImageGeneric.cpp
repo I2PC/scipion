@@ -1018,4 +1018,28 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
     XMIPP_JAVA_CATCH;
 }
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
+  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble anglepsi)
+{
+	XMIPP_JAVA_TRY
+	   {
+
+		   ImageGeneric *img = GET_INTERNAL_IMAGE_GENERIC(jobj);
+		   img->convert2Datatype(DT_Double);
+
+		   MultidimArray<double> *I, Iaux;
+		   MULTIDIM_ARRAY_GENERIC(*img).getMultidimArrayPointer(I);
+
+		   Matrix2D<double> transformM;
+	       rotation2DMatrix(anglepsi, transformM, true);
+           dMij(transformM, 0, 2) = shiftx;
+	       dMij(transformM, 1, 2) = shifty;
+	       // Ver geo2TransformationMatrix en transformations.cpp
+
+		   applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, true);
+           *I=Iaux;
+	   }
+	   XMIPP_JAVA_CATCH;
+
+}
 

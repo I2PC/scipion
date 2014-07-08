@@ -2,14 +2,12 @@ package xmipp.viewer.particlepicker.tiltpair.model;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;

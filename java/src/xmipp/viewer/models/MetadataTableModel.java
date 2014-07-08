@@ -28,23 +28,17 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-
-import xmipp.ij.commons.ImagePlusLoader;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -221,8 +215,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-				String file = getImageFilename(index, ci.getLabel());
-                                openXmippImageWindow(file);
+                                openXmippImageWindow(index, ci.getLabel());
 				return true;
 			}
 		} catch (Exception e) {

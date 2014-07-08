@@ -30,11 +30,12 @@ import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import xmipp.ij.commons.Geometry;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
+import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
@@ -1041,4 +1042,18 @@ public class GalleryData {
                     return true;
             return false;
         }
+        
+        
+        public Geometry getGeometry(long id)
+        {
+            if(!containsGeometryInfo())
+                return null;
+            double shiftx, shifty, psiangle;
+            shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
+            shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
+            psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
+            return new Geometry(shiftx, shifty, psiangle);
+        }
+        
+       
 }// class GalleryDaa
