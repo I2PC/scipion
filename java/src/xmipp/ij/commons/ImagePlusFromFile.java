@@ -60,7 +60,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                         }
                         else if(ig != null)
                         {
-                             if(index == -1 || !ig.isStackOrVolume())
+                             if(index == -1 || !ig.isStackOrVolume())//if index is not -1 ig read it already
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {

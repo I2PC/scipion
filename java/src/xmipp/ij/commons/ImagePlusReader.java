@@ -21,7 +21,7 @@ public abstract class ImagePlusReader {
     protected ImageGeneric ig;
     protected boolean allowsPoll;
     protected boolean useGeometry;
-    
+    protected boolean wrap;
     protected long modified;
     
     protected long index = -1;
@@ -84,7 +84,7 @@ public abstract class ImagePlusReader {
             try {
                 
                 ImageGeneric tempig = XmippImageConverter.convertToImageGeneric(imp);
-                tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle);
+                tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, wrap);
                 imp = XmippImageConverter.convertToImagePlus(tempig);
             } catch (Exception ex) {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
@@ -162,5 +162,14 @@ public abstract class ImagePlusReader {
 //        this.width = width;
 //        this.height = height;
 //    }
+    
+    public void setWrap(boolean value) {
+        wrap = value;
+
+    }
+
+    public boolean isWrap() {
+        return wrap;
+    }
 
 }
