@@ -291,6 +291,7 @@ function initializeImageLoad(forceRecall){
 	});
 }
 
+/* OLD CODE
 function saveShowjTable(csrf_token){
 	if ($("#saveButton").hasClass("buttonGreyHovered")){
 		$.ajax({
@@ -314,6 +315,7 @@ function saveShowjTable(csrf_token){
 		});
 	}
 }
+*/
 
 function showHideOptionMenu(){
 	$("#optionsButton").toggleClass("buttonGreyHovered")
