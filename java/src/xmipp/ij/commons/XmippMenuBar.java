@@ -175,7 +175,7 @@ public class XmippMenuBar extends MenuBar
 		});
 		
 		ugmi = new CheckboxMenuItem("Use Geometry");
-		ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+		//ugmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
 		ugmi.setState(xw.getImagePlusLoader().getUseGeometry());
 		ugmi.addItemListener(new ItemListener()
 		{
@@ -191,7 +191,7 @@ public class XmippMenuBar extends MenuBar
 
 		
 		wrapmi = new CheckboxMenuItem("Wrap");
-		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
+//		wrapmi.setEnabled(xw.getImagePlusLoader().allowsGeometry());
 		wrapmi.setState(xw.getImagePlusLoader().isWrap());
 		wrapmi.addItemListener(new ItemListener()
 		{

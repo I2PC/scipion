@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MDRow;
@@ -363,16 +364,18 @@ public class ScipionGalleryData extends GalleryData {
         window.fireTableRowUpdated(row);
     }
     
-    public MDRow getGeometryInfo(long id)
-    {
-        if(!containsGeometryInfo())
-            return null;
-        ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-        MDRow row = new MDRow();
-        row.setValueDouble(MDLabel.MDL_SHIFT_X, emo.getValueDouble("_alignment._xmipp_shiftX"));
-        row.setValueDouble(MDLabel.MDL_SHIFT_Y, emo.getValueDouble("_alignment._xmipp_shiftY"));
-        row.setValueDouble(MDLabel.MDL_ANGLE_PSI, emo.getValueDouble("_alignment._xmipp_anglePsi"));
-        return row;
-    }
+    
+    public Geometry getGeometry(long id)
+        {
+            if(!containsGeometryInfo())
+                return null;
+            ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
+            double shiftx, shifty, psiangle;
+            shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
+            shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
+            psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
+            return new Geometry(shiftx, shifty, psiangle);
+        }
+        
     
 }

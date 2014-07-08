@@ -666,7 +666,7 @@ class ScriptShowJ(ScriptAppIJ):
         if self.checkParam('--label_alias'):
             os.environ['XMIPP_EXTRA_ALIASES'] = self.getParam('--label_alias')
         elif self.checkParam('--label_bsoft'):
-            from protlib_import import relionLabelString
+            from protlib_import import bsoftLabelString
             os.environ['XMIPP_EXTRA_ALIASES'] = bsoftLabelString()
         elif self.checkParam('--label_relion') or self.getParam('-i').endswith('.star'):
             from protlib_import import relionLabelString

@@ -334,6 +334,17 @@ def addRelionLabels(replace=False, extended=False):
         for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
             addLabelAlias(k, v, replace)        
         
+def addBsoftLabels(replace=False, extended=False):
+    '''Add bsoft labels as aliases
+    '''
+    from xmipp import addLabelAlias
+    for k, v in XMIPP_BSOFT_LABELS.iteritems():
+        addLabelAlias(k, v, replace)
+    if extended:
+        print "No available extended bsoft labels"
+        #for k, v in XMIPP_BSOFT_LABELS_EXTRA.iteritems():    
+        #    addLabelAlias(k, v, replace)        
+        
 def relionLabelString():
     """ create an string that can be used for XMIPP_EXTRA_ALIASES
     for adding the labels of Relion.
@@ -344,6 +355,18 @@ def relionLabelString():
         pairs.append('%s=%s' % (label2Str(k), v))
     for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
         pairs.append('%s=%s' % (label2Str(k), v))        
+    return ';'.join(pairs)
+
+def bsoftLabelString():
+    """ create an string that can be used for XMIPP_EXTRA_ALIASES
+    for adding the labels of bsoft.
+    """
+    from xmipp import label2Str
+    pairs = []
+    for k, v in XMIPP_BSOFT_LABELS.iteritems():
+        pairs.append('%s=%s' % (label2Str(k), v))
+    #for k, v in XMIPP_BSOFT_LABELS_EXTRA.iteritems():
+    #    pairs.append('%s=%s' % (label2Str(k), v))        
     return ';'.join(pairs)
 
 

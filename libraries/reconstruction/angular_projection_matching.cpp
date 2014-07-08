@@ -68,7 +68,7 @@ void ProgAngularProjectionMatching::readParams()
         scale_step = getDoubleParam("--scale",0);
         //Scale Step can't be 0
         if (scale_step == 0)
-        	scale_step = 1;
+            scale_step = 1;
         scale_nsteps = getDoubleParam("--scale",1);
     }
 
@@ -225,7 +225,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     }
     else
         DFexp.read(fn_exp);
-	//DFexp.removeDisabled();
+    //DFexp.removeDisabled();
 
 
     ////////DFexp.write("kk.xmd");
@@ -813,7 +813,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
         opt_xoff = opt_yoff = 0.;
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr<<"optimal shift "<<opt_xoff<<" "<<opt_yoff<<std::endl;
@@ -919,15 +919,15 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         scale += 0.01 * scale_step)
     {
 
-    	if(scale == 1.)
-    		continue;
+        if(scale == 1.)
+            continue;
 
-    	// apply current scale
+        // apply current scale
         A.initIdentity();
         A /= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
-    	//Image spread correction (if scale != 1) for scale search
+        //Image spread correction (if scale != 1) for scale search
         Mscale = Mscale / (scale * scale * old_scale * old_scale);
 
         corr = correlationIndex(Mref,Mscale);
@@ -966,20 +966,19 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 {
     Image<double> img;
     double
-	  opt_rot=0.,
-	  opt_tilt=0.,
-	  opt_psi=0.,
-	  opt_xoff=0.,
-	  opt_yoff=0.,
-	  opt_scale=0.,
-	  maxcorr=-99.e99;
+    opt_rot=0.,
+            opt_tilt=0.,
+                     opt_psi=0.,
+                             opt_xoff=0.,
+                                      opt_yoff=0.,
+                                               opt_scale=0.,
+                                                         maxcorr=-99.e99;
     bool opt_flip=false;
     int opt_refno=-1;
-
+    size_t itemId=0;
     size_t nr_images = imagesToProcess.size();
     size_t idNew, imgid;
     FileName fn;
-
     // Call threads to calculate the rotational alignment of each image in the selfile
     pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
 
@@ -1027,27 +1026,28 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         if (opt_refno>=0)
         {
-        	opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
-        	opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+            opt_rot  = XX(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
+            opt_tilt = YY(mysampling.no_redundant_sampling_points_angles[convert_refno_to_stack_position[opt_refno]]);
         }
         else
         {
-        	opt_rot=0;
-        	opt_tilt=0;
+            opt_rot=0;
+            opt_tilt=0;
         }
 
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
-      std::cerr << "DEBUG_ROB, img.name():" << img.name() << std::endl;
+        std::cerr << "DEBUG_ROB, img.name():" << img.name() << std::endl;
 #endif
 #undef DEBUG
+
         translationallyAlignOneImage(img(),
-        		                     opt_refno,
-        		                     opt_psi,
-        		                     opt_flip,
-        		                     opt_xoff,
-        		                     opt_yoff,
-        		                     maxcorr);
+                                     opt_refno,
+                                     opt_psi,
+                                     opt_flip,
+                                     opt_xoff,
+                                     opt_yoff,
+                                     maxcorr);
 
         /* FIXME ROB     */
         //opt_psi += img.psi();
@@ -1073,7 +1073,10 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
 
         // Output
         DFexp.getValue(MDL_IMAGE, fn, imgid);
+        DFexp.getValue(MDL_ITEM_ID, itemId, imgid);
+
         idNew = DFo.addObject();
+        DFo.setValue(MDL_ITEM_ID,itemId,idNew);
         DFo.setValue(MDL_IMAGE, fn,idNew);
         DFo.setValue(MDL_ANGLE_ROT, opt_rot,idNew);
         DFo.setValue(MDL_ANGLE_TILT,opt_tilt,idNew);

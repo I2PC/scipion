@@ -38,6 +38,7 @@ import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
+import xmipp.ij.commons.Geometry;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -1671,16 +1672,18 @@ public class GalleryData {
         }
     }
      
-     public MDRow getGeometryInfo(long id)
-    {
-        if(!containsGeometryInfo())
-            return null;
-        MDRow row = new MDRow();
-        row.setValueDouble(MDLabel.MDL_SHIFT_X, md.getValueDouble(MDLabel.MDL_SHIFT_X, id));
-        row.setValueDouble(MDLabel.MDL_SHIFT_Y, md.getValueDouble(MDLabel.MDL_SHIFT_Y, id));
-        row.setValueDouble(MDLabel.MDL_ANGLE_PSI, md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id));
-        return row;
-    }
-     
 
+
+        
+        public Geometry getGeometry(long id)
+        {
+            if(!containsGeometryInfo())
+                return null;
+            double shiftx, shifty, psiangle;
+            shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
+            shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
+            psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
+            return new Geometry(shiftx, shifty, psiangle);
+        }
+        
 }// class GalleryDaa
