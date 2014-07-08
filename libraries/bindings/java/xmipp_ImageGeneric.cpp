@@ -1019,7 +1019,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getRadialAvg
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
-  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble anglepsi)
+  (JNIEnv * env, jobject jobj, jdouble shiftx, jdouble shifty, jdouble anglepsi, jboolean wrap)
 {
 	XMIPP_JAVA_TRY
 	   {
@@ -1036,7 +1036,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
 	       dMij(transformM, 1, 2) = shifty;
 	       // Ver geo2TransformationMatrix en transformations.cpp
 
-		   applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, true);
+		   applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
            *I=Iaux;
 	   }
 	   XMIPP_JAVA_CATCH;

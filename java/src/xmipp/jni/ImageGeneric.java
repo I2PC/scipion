@@ -308,6 +308,6 @@ public class ImageGeneric {
 		}
 	}
         
-        public native void applyGeo(double shiftX, double shiftY, double anglepsi);
+        public native void applyGeo(double shiftX, double shiftY, double anglepsi, boolean wrap);
     
 }

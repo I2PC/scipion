@@ -33,7 +33,7 @@ import xmipp.jni.ImageGeneric;
 public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
-    protected boolean wrap;
+    
     private boolean existsfile;
     
 
@@ -58,7 +58,7 @@ public class ImagePlusLoader {
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
         this(fileName, null, null, useGeometry);
-        this.wrap = wrap;
+        setWrap(wrap);
     }
 
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo) {
@@ -103,12 +103,12 @@ public class ImagePlusLoader {
     }
 
     public void setWrap(boolean value) {
-        wrap = value;
+        impreader.setWrap(value);
 
     }
 
     public boolean isWrap() {
-        return wrap;
+        return impreader.isWrap();
     }
 
     public static String getFile(ImagePlus imp) {
