@@ -98,6 +98,11 @@ env.AddLibrary('sqlite',
                tar='sqlite-3.6.23.tgz',
                libs=['libsqlite3.so'])
 
+# zlib
+env.AddLibrary('zlib',
+               tar='zlib-1.2.8.tar.gz',
+               dir='zlib-1.2.8',
+               libs=['libz.so'])
 
 #############################
 # SECOND LEVEL DEPENDENCIES #
@@ -175,7 +180,7 @@ env.AddLibrary('pil',
                tar='Imaging-1.1.7.tar.gz',
                dir='Imaging-1.1.7',
                url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Imaging-1.1.7_xmipp_setup.tgz',
-               deps=['python'])
+               deps=['python', 'zlib'])
 
 ######################
 # CONFIGURATION FILE #
@@ -191,6 +196,7 @@ if not GetOption('clean'):
     env.Download('sqlite')
     env.Download('tcl')
     env.Download('tk')
+    env.Download('zlib')
     env.Download('python')
     env.Download('numpy')
     env.Download('matplotlib')
@@ -208,6 +214,7 @@ if not GetOption('clean'):
 sqliteUntar = env.UntarLibrary('sqlite')
 tclUntar = env.UntarLibrary('tcl')
 tkUntar = env.UntarLibrary('tk')
+zlibUntar = env.UntarLibrary('zlib')
 pythonUntar = env.UntarLibrary('python')
 env.UntarLibrary('numpy')
 env.UntarLibrary('matplotlib')
@@ -251,6 +258,12 @@ env.CompileLibrary('tk',
                    autoTarget=os.path.join('unix','Makefile'),
                    makePath='unix')
 
+env.CompileLibrary('zlib',
+                   source=zlibUntar,
+                   autoSource='configure',
+                   autoTarget='configure.log',
+                   flags=['--prefix=%s' % os.path.join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
+                   target='libz.so')
 
 # PYTHON
 

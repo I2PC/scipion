@@ -590,7 +590,6 @@ def _md5Sum(file):
 #########################
 
 # We create the environment the whole build will use
-env = None
 env = Environment(ENV=os.environ,
                   tools=['Make',
                          'Unpack',
