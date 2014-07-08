@@ -68,7 +68,7 @@ public class ImagePlusLoader {
 
         int index = -1;
         if (fileName != null) {
-            if (fileName != null && fileName.contains("@")) {
+            if (fileName.contains("@")) {
                 int arrobaindex = fileName.lastIndexOf("@");
                 String header = fileName.substring(0, arrobaindex);
 
@@ -165,8 +165,8 @@ public class ImagePlusLoader {
         return impreader.isVolume();
     }
 
-    public void setAllowsGeometry(boolean allowsGeometry) {
-        this.allowsGeometry = allowsGeometry;
+    public void setAllowsGeometry(boolean allowsGeo) {
+        allowsGeometry = allowsGeo;
     }
 
     public boolean isStackOrVolume() {

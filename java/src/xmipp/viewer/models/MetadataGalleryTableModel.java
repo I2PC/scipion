@@ -257,6 +257,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			{
                             int index = getIndex(row, col);
                             String file = getImageFilename(index, renderLabel.label);
+                            ImageGeneric ig = new ImageGeneric(file);
+                            
+                            ig.applyGeo(normalize_min, normalize_min, normalize_min);
                             openXmippImageWindow(file);
                             return true;
 			}

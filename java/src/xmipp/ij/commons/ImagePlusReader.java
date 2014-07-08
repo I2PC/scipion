@@ -55,9 +55,6 @@ public abstract class ImagePlusReader {
                                     imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
                              }
                         }
-                            
-                        
-			
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);

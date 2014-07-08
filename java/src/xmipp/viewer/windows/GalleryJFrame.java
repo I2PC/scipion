@@ -1532,7 +1532,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
-                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");

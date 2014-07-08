@@ -26,9 +26,7 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-import ij.process.EllipseFitter;
 import java.awt.Color;
-import java.awt.Window;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,7 +37,6 @@ import java.util.logging.Logger;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
-import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -54,9 +51,9 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
-import xmipp.viewer.windows.ImagesWindowFactory;
 import xmipp.viewer.windows.SaveJDialog;
 
 /**
@@ -1674,7 +1671,16 @@ public class GalleryData {
         }
     }
      
-     
+     public MDRow getGeometryInfo(long id)
+    {
+        if(!containsGeometryInfo())
+            return null;
+        MDRow row = new MDRow();
+        row.setValueDouble(MDLabel.MDL_SHIFT_X, md.getValueDouble(MDLabel.MDL_SHIFT_X, id));
+        row.setValueDouble(MDLabel.MDL_SHIFT_Y, md.getValueDouble(MDLabel.MDL_SHIFT_Y, id));
+        row.setValueDouble(MDLabel.MDL_ANGLE_PSI, md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id));
+        return row;
+    }
      
 
 }// class GalleryDaa

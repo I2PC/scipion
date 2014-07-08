@@ -19,6 +19,8 @@ import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MetaData;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -146,7 +148,7 @@ public class ScipionMetaData extends MetaData {
                 id = rs.getInt("id");
                 label = rs.getString("label");
                 comment = rs.getString("comment");
-                enabled = (rs.getInt("enabled") == 1) ? true : false;
+                enabled = rs.getInt("enabled") == 1;
                 emo = new EMObject(id, label, comment, enabled, this);
                 for (ColumnInfo column : columns) {
                     if (!column.isEnable()) {
@@ -452,10 +454,6 @@ public class ScipionMetaData extends MetaData {
         if (self.equals("Particle")) {
             return true;
         }
-        return false;
-    }
-
-    public boolean containsGeometryInfo() {
         return false;
     }
 
@@ -874,7 +872,7 @@ public class ScipionMetaData extends MetaData {
     }
     
     public CTFDescription getCTFDescription(long id)
-     {
+    {
         try {
             MetaData md = getEllipseCTF(id).getCTFMd();
             String file = "ctf.xmd";
@@ -884,6 +882,17 @@ public class ScipionMetaData extends MetaData {
             Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
             throw new IllegalArgumentException(ex);
         }
-     }
-
+    }
+    
+    // Check if the underlying data has geometrical information
+    public boolean containsGeometryInfo() {
+//        if(!self.equals("Class2D") || self.equals("Class3D"))
+//            return false;
+        return getColumnInfo("_alignment._matrix") != null;
+    }
+    
+    
+    
+    
+   
 }
