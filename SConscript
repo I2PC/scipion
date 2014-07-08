@@ -103,10 +103,10 @@ env.AddLibrary('sqlite',
 # SECOND LEVEL DEPENDENCIES #
 #############################
 
-# python 2.7.7
-env.AddLibrary('python',  
-               tar='Python-2.7.7.tgz',
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz',
+# python 2.7.8
+env.AddLibrary('python',
+               tar='Python-2.7.8.tgz',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.8.tgz',
                libs=['libpython2.7.so'],
                deps=['sqlite', 'tcl', 'tk'])
 
