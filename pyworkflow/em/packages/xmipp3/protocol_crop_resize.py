@@ -88,7 +88,7 @@ class XmippProtResize():
         form.addParam('windowOperation', EnumParam,
                       choices=['crop', 'window'],
                       condition='doWindow',
-                      default=0,
+                      default=1,
                       label="Window operation", display=EnumParam.DISPLAY_COMBO,
                       help='Select how do you want to change the size of the particles. \n '
                       '_resize_: you will provide the new size (in pixels) for your particles. \n '
@@ -143,9 +143,10 @@ class XmippProtResize():
         self.runJob(self._programResize, args % locals())
     
     def windowStep(self, inputFn):
+        dim = self._getSetSize()
         if self.getEnumText('windowOperation') == "crop":
             cropSize = self.cropSize.get() * 2
-            windowSize = x - cropSize
+            windowSize = dim - cropSize
             args = self._args + " --crop %(cropSize)s "
         else:
             windowSize = self.windowSize.get()
