@@ -292,7 +292,9 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
- 
+    m1.addSubMenu('Destroy Universe', value='ProtDestroyUniverse',
+                  tag='protocol')
+
     
         
     # ------------------- Particles ----------------------------
@@ -508,13 +510,29 @@ def writeDefaults():
         print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
         os.rename(dbPath, dbPathBackup)
     settings.write(dbPath)
+  
+  
+def updateSettings():
+    """ Write the settings.sqlite default configuration
+    and also update each project settings.
+    """
+    writeDefaults()
+    # Update the settings to all existing projects
+    from pyworkflow.manager import Manager
+    from pyworkflow.utils.path import copyFile
+    
+    manager = Manager()
+    projects = manager.listProjects()
+    
+    for p in projects:
+        proj = manager.loadProject(p.getName())
+        projSettings = proj.settingsPath
+        print "Copying settings to: ", join(p.getName(), projSettings)
+        copyFile(pw.SETTINGS, projSettings)    
     
     
     
 if __name__ == '__main__':
     #Write default configurations
-    writeDefaults()
-    # Read and print to check
-    settings = loadSettings(pw.SETTINGS)
-    settings.printAll()
-    
+    updateSettings()
+

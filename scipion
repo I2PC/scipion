@@ -48,8 +48,11 @@ def findHome():
             absPath = r   
     return os.path.dirname(absPath)
 
+SCIPION_ENV = {}
 SCIPION_HOME = findHome()
 os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
 
 PW_APPS = join(SCIPION_HOME, 'pyworkflow', 'apps')
 PW_APPS_TEMP = join(PW_APPS, '%s')
@@ -98,8 +101,12 @@ SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
 os.environ['SCIPION_HOME'] = SCIPION_HOME
 os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
 
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+SCIPION_ENV['SCIPION_PYTHON'] = SCIPION_PYTHON
+
 for k,v in SCIPION_DIRS.iteritems():
     os.environ[k] = v
+    SCIPION_ENV[k] = v
 
 VARS = {
         'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
@@ -112,6 +119,8 @@ for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME',
             'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
     
+for k,v in VARS.iteritems():
+    SCIPION_ENV[k] = v
 
 def runApp(app, args=''):
     runCmd('%s %s' % (PW_APPS_TEMP % app, args))
@@ -224,9 +233,7 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
-        global SCIPION_PYTHON
-        SCIPION_PYTHON='python'
-        runCmd('scripts/install.py %s' % ' '.join(sys.argv[2:]))
+        runCmd('scripts/install.py')
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
@@ -252,16 +259,13 @@ def main():
         runApp('pw_download_packages.py', args)
         
     elif mode == MODE_ENV:
-        # Print all the environment variables needed to run scipion.
-        d = VARS.copy()
-        d.update({k:v for k,v in os.environ.items() if k.startswith('SCIPION')})
-        for k,v in d.iteritems():
-            print '%s="%s"' % (k, v)
-
+        for k,v in SCIPION_ENV.iteritems():
+            print "%s=%s" % (k, v)
+            
         sys.exit(0)
 
-    elif mode == MODE_HELP:
-        print """
+    # If we reach this point, bad arguments were passed
+    print """
 USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
@@ -309,14 +313,6 @@ USAGE:
 
         download               Download external packages (EMAN, SPIDER, Relion, etc)
 """
-        sys.exit(0)
-
-    # If we reach this point, bad arguments were passed
-    print "Unknown mode: %s" % sys.argv[1]
-    print ("Valid modes are: "
-           "browser help install manager project stats tests testdata viewer webserver printenv download")
-    print 'Run "%s help" for a full description.' % sys.argv[0]
-    sys.exit(1)
 
 
 

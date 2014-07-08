@@ -158,7 +158,7 @@ def _download(env, name, type='Library', verbose=False):
     """
     import urllib2, urlparse
     targetDict = {}
-    library = type == 'Library'
+    library = (type == 'Library')
     em = type == 'EMPackage' 
     if library:
         targetDict = SCIPION['LIBS'].get(name)
@@ -415,6 +415,7 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
             return []
     tmp = SCIPION['FOLDERS'][TMP_FOLDER]
     bin = SCIPION['FOLDERS'][BIN_FOLDER]
+    log = SCIPION['FOLDERS'][LOG_FOLDER]
 
     deps = [] if deps is None else deps
     if setupPyFile is not None:
@@ -422,17 +423,17 @@ def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setup
     setupPyFile = os.path.join(tmp, libraryDict[DIR], 'setup.py')
     
     setup = None
-    command = 'cd %s && ' % os.path.join(tmp, libraryDict[DIR])
+    command = 'cd %s &> /dev/null && ' % os.path.join(tmp, libraryDict[DIR])
     command += os.path.join(File(os.path.join(bin, 'python')).abspath)
     command += ' '
     command += 'setup.py'
     for action in actions:
         command += ' '
         command += action
-    command += ' && cd -'
+    command += ' &> %s && cd - &> /dev/null' % (os.path.join(os.environ['SCIPION_HOME'], log, '%s.log' % name))
     setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
-                    File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
-                    command)
+                        File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
+                        Action(command, 'Compiling %s > %s' % (name, os.path.join(log, '%s.log' % name))))
     
     for dep in deps:
         if dep in SCIPION['LIBS']:
@@ -660,6 +661,10 @@ env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
 env['PYVERSION'] = PYVERSION
 Export('env', 'SCIPION')
 
+# Purge option
+if GetOption('purge'):
+    print "Purge option implies clean. Activating clean..."
+    SetOption('clean', True)
 
 # Only in case user didn't select help message, we run SConscript
 #if not GetOption('help') and not GetOption('clean'):

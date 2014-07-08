@@ -29,6 +29,7 @@ This sub-package will contains Xmipp3.1 specific protocols
 """
 
 import os
+from os.path import join
 import xmipp
 from collections import OrderedDict
 from constants import *
@@ -46,6 +47,13 @@ LABEL_TYPES = {
                xmipp.LABEL_BOOL: bool              
                }
 
+def getEnviron():
+    """ Create the needed environment for Xmipp programs. """
+    return {
+            'PATH': join(os.environ['XMIPP_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib'),
+            }
+    
 def getLabelPythonType(label):
     """ From xmipp label to python variable type """
     labelType = xmipp.labelType(label)
@@ -159,6 +167,36 @@ class XmippMdRow():
         print str(self)
     
     
+class RowMetaData():
+    """ This class is a wrapper for MetaData in row mode.
+    Where only one object is used.
+    """
+    def __init__(self, filename=None):
+        self._md = xmipp.MetaData()
+        self._md.setColumnFormat(False)
+        self._id = self._md.addObject()
+        
+        if filename:
+            self.read(filename)
+        
+    def setValue(self, label, value):
+        self._md.setValue(label, value, self._id)
+        
+    def getValue(self, label):
+        return self._md.getValue(label, self._id)
+        
+    def write(self, filename, mode=xmipp.MD_APPEND):
+        self._md.write(filename, mode)
+        
+    def read(self, filename):
+        self._md.read(filename)
+        self._md.setColumnFormat(False)
+        self._id = self._md.firstObject()
+        
+    def __str__(self):
+        return str(self._md)
+    
+        
 def findRow(md, label, value):
     """ Query the metadata for a row with label=value.
     Params:

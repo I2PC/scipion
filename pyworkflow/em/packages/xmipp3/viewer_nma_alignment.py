@@ -37,8 +37,6 @@ from pyworkflow.gui.dialog import showError, showWarning
 import numpy as np
 from plotter import XmippPlotter
 
-# FIXME: REMOVE DEPENDENCIES FROM XMIPP
-from protlib_gui_ext import chimera, showj
 
 CLASSES = 0
 CLASS_CORES = 1

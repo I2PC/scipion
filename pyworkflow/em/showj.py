@@ -153,8 +153,8 @@ class ColumnProperties():
         
         self.renderable = 'renderable' in defaultColumnLayoutProperties
             
-        self.allowSetRenderable = (self.columnType == COL_RENDER_IMAGE or
-                                   self.columnType == COL_RENDER_VOLUME) and allowRender
+        self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
+                                   self.columnType == COL_RENDER_VOLUME) and allowRender)
 
         # RENDER FUNCTION
         self.setRenderFunc(col.getLabel())

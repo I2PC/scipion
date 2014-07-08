@@ -103,10 +103,10 @@ env.AddLibrary('sqlite',
 # SECOND LEVEL DEPENDENCIES #
 #############################
 
-# python 2.7.7
-env.AddLibrary('python',  
-               tar='Python-2.7.7.tgz',
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.7.tgz',
+# python 2.7.8
+env.AddLibrary('python',
+               tar='Python-2.7.8.tgz',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.8.tgz',
                libs=['libpython2.7.so'],
                deps=['sqlite', 'tcl', 'tk'])
 
@@ -170,6 +170,13 @@ env.AddLibrary('paramiko',
                url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/paramiko-1.14.0.tar.gz',
                deps=['python'])
 
+# PIL
+env.AddLibrary('pil',
+               tar='Imaging-1.1.7.tar.gz',
+               dir='Imaging-1.1.7',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Imaging-1.1.7_xmipp_setup.tgz',
+               deps=['python'])
+
 ######################
 # CONFIGURATION FILE #
 ######################
@@ -193,6 +200,7 @@ if not GetOption('clean'):
     env.Download('bibtexparser')
     env.Download('django')
     env.Download('paramiko')
+    env.Download('pil')
 
 #########
 # UNTAR #
@@ -209,6 +217,7 @@ env.UntarLibrary('scipy')
 env.UntarLibrary('bibtexparser')
 env.UntarLibrary('django')
 env.UntarLibrary('paramiko')
+env.UntarLibrary('pil')
 
 ##########################
 # EXECUTING COMPILATIONS #
@@ -265,12 +274,14 @@ EMPackagesDeps += env.CompileWithSetupPy('scipy')
 EMPackagesDeps += env.CompileWithSetupPy('bibtexparser')
 EMPackagesDeps += env.CompileWithSetupPy('django')
 EMPackagesDeps += env.CompileWithSetupPy('paramiko')
+EMPackagesDeps += env.CompileWithSetupPy('pil')
 
 
 # EM PACKAGES
 
 # Xmipp3.1
 env.AddPackage('xmipp', 
+               dft=False,
                tar='Xmipp-3.1-src.tgz',
                dir='xmipp',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz')
@@ -319,6 +330,5 @@ if not GetOption('clean'):
 
 # Purge option
 if GetOption('purge'):
-    print "Purge option implies clean. Activating clean..."
-    SetOption('clean', True)
     env.RemoveInstallation()
+

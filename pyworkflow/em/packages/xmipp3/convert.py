@@ -36,14 +36,12 @@ from itertools import izip
 import numpy
 
 import xmipp
-from xmipp3 import XmippMdRow, getLabelPythonType
+from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
 from pyworkflow.em.constants import NO_INDEX
 from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 
-#FIXME: remove any dependency from protlib_*
-from protlib_xmipp import RowMetaData
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
