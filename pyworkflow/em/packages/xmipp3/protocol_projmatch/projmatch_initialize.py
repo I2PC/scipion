@@ -68,7 +68,7 @@ def createFilenameTemplates(self):
     for k, v in self._params.iteritems():
         setattr(self, k, v)
                           
-    Iter = 'Iter_%(iter)03d'
+    Iter = 'iter_%(iter)03d'
     Ref3D = 'Ref3D_%(ref)03d'
     Ctf = 'CtfGroup_%(ctf)06d'
     IterDir = self._getExtraPath(Iter)
