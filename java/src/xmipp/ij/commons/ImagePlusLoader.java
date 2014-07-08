@@ -25,50 +25,47 @@
  */
 package xmipp.ij.commons;
 
+import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import ij.ImagePlus;
 
 public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
     protected boolean wrap;
-    protected boolean allowsGeometry = false;
-    protected boolean useGeometry;
     private boolean existsfile;
+    
 
     public ImagePlusLoader() {
 
     }
 
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null);
+        this(getFile(imp), imp, null, false);
 
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig);
+        this(getFile(ig), null, ig, false);
         impreader.setIndex(index);
 
     }
 
     public ImagePlusLoader(String fileName) {
-        this(fileName, null, null);
+        this(fileName, null, null, false);
     }
 
-    public ImagePlusLoader(String fileName, boolean allowsGeometry, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null);
-        this.allowsGeometry = allowsGeometry;
-        this.useGeometry = useGeometry;
+    public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
+        this(fileName, null, null, useGeometry);
         this.wrap = wrap;
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig) {
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo) {
 
         int index = -1;
         if (fileName != null) {
-            if (fileName != null && fileName.contains("@")) {
+            if (fileName.contains("@")) {
                 int arrobaindex = fileName.lastIndexOf("@");
                 String header = fileName.substring(0, arrobaindex);
 
@@ -89,7 +86,7 @@ public class ImagePlusLoader {
             impreader = new ImagePlusNotFromFile(imp, ig);
         
         impreader.setIndex(index);
-
+        impreader.setUseGeometry(useGeo);
     }
 
     public ImagePlusLoader(ImageGeneric ig) {
@@ -103,19 +100,6 @@ public class ImagePlusLoader {
 
     public ImagePlus getImagePlus() {
         return impreader.getImagePlus();
-    }
-
-    public boolean allowsGeometry() {
-        return allowsGeometry;
-    }
-
-    public boolean getUseGeometry() {
-        return useGeometry;
-    }
-
-    public void setUseGeometry(boolean value) {
-        useGeometry = value;
-
     }
 
     public void setWrap(boolean value) {
@@ -165,12 +149,26 @@ public class ImagePlusLoader {
         return impreader.isVolume();
     }
 
-    public void setAllowsGeometry(boolean allowsGeometry) {
-        this.allowsGeometry = allowsGeometry;
-    }
-
+   
     public boolean isStackOrVolume() {
         return impreader.isStackOrVolume();
     }
+    
+     public boolean getUseGeometry() {
+        return impreader.getUseGeometry();
+    }
+
+     public void setUseGeometry(boolean value) {
+        impreader.setUseGeometry(value);
+
+    }
+     
+     public void setGeometry(Geometry geometry)
+    {
+        impreader.setGeometry(geometry);
+    }
+
+    
+    
 
 }

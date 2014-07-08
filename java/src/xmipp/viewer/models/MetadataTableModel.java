@@ -221,8 +221,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-				String file = getImageFilename(index, ci.getLabel());
-                                openXmippImageWindow(file);
+                                openXmippImageWindow(index, ci.getLabel());
 				return true;
 			}
 		} catch (Exception e) {

@@ -105,14 +105,16 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	
 	
 
-	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
+	public ImagePlus getImage(long id, String imagepath, boolean useGeo, boolean wrap)
 	{
 		ImagePlus imp = null;
 		if (imagepath != null && Filename.exists(imagepath))
 		{
 			try
 			{
-				imp = XmippImageConverter.readMdRowToImagePlus(imagepath, data.md, id, width, height, useGeo, wrap);
+                            ImagePlusLoader loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
+                            loader.setGeometry(data.getGeometry(id));
+                            return loader.getImagePlus();
 			}
 			catch (Exception ex)
 			{
@@ -204,7 +206,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
 		boolean useGeo = data.useGeo && renderLabel == MDLabel.MDL_IMAGE;
-		ImagePlus imp = getImage(objId, imageFn, thumb_width, thumb_height, useGeo, data.wrap);
+		ImagePlus imp = getImage(objId, imageFn, useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
@@ -259,8 +261,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			if (data.isImageFile(renderLabel))
 			{
                             int index = getIndex(row, col);
-                            String file = getImageFilename(index, renderLabel.getLabel());
-                            openXmippImageWindow(file);
+                            openXmippImageWindow(index, renderLabel.getLabel());
                             return true;
 			}
 		}
@@ -271,11 +272,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		return false;
 	}// function handleDoubleClick
         
-        protected void openXmippImageWindow(String file)
+        protected void openXmippImageWindow(int index, int label)
         {
-                boolean allowsGeometry = data.md.containsGeometryInfo();
-                ImagePlusLoader loader = new ImagePlusLoader(file, allowsGeometry, data.useGeo, data.wrap);
-                
+                String file = getImageFilename(index, label);
+                ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap);
+                if(data.containsGeometryInfo())
+                    loader.setGeometry(data.getGeometry(data.ids[index]));
                 if (getNormalized())
                     loader.setNormalize(normalize_min, normalize_max);
                 ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
@@ -312,6 +314,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
+                    
                     ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.getLabel(), data.md, data.useGeo, data.wrap);
                     return new ImagePlusLoader(imp);
 		}
