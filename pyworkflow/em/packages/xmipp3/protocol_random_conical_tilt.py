@@ -121,7 +121,7 @@ class XmippProtRCT(ProtInitialVolume):
         
         uImages = self.inputImages.get()
         tImages = self.inputParticlesTiltPair.get().getTilted()
-        sangles = self.inputParticlesTiltPair.get().getCoordsPair().get().getAngles()
+        sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
         uMics = uImages.getCoordinates().getMicrographs()
         tMics = tImages.getCoordinates().getMicrographs()
         print "ANGLES"

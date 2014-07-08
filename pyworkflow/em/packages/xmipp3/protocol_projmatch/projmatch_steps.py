@@ -141,17 +141,22 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     
     if self.getEnumText('maskType') != 'None':
         
-        args = ' -i %(reconstructedFilteredVolume)s -o %(reconstructedFilteredVolume)'
+        args = ' -i %(reconstructedFilteredVolume)s -o %(maskedFileName)s'
         if self.getEnumText('maskType') == 'circular':
             maskRadius = self.maskRadius.get()
             args += ' --mask circular -%(maskRadius)s'
         else:
             maskFn = self.maskFile.get()
             args += ' --mask binary_file -%(maskFn)s'
-    
-        self._insertRunJobStep('xmipp_transform_mask', args % locals(), **kwargs)
+        
+        # Here is used _insertFunctionStep instead of _insertRunJobStep cause xmipp_transform_mask is not implemented with mpi
+        self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
     else:
         self._insertFunctionStep('volumeConvertStep', reconstructedFilteredVolume, maskedFileName)
+
+
+def runTransformMaskStep(self, args, **kwargs):
+    self.runJob("xmipp_transform_mask", args, numberOfMpi=1, **kwargs)
 
 
 def runVolumeConvertStep(self, reconstructedFilteredVolume, maskedFileName):
@@ -190,7 +195,7 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     
     if self._perturbProjectionDirections[iterN]:
         args +=' --perturb %(perturb)s'
-        params['perturb'] = math.sin(math.radians(self.angSamplingRateDeg[iterN])) / 4.
+        params['perturb'] = math.sin(math.radians(self._angSamplingRateDeg[iterN])) / 4.
 
     if self.doRestricSearchbyTiltAngle:
         args += ' --min_tilt_angle %(tilt0)s --max_tilt_angle %(tiltF)s'
@@ -568,7 +573,7 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     outputVolumes = [vol1, vol2]
     for vol in outputVolumes:
         args = ' -i %(vol)s --mask  raised_cosine -%(innerRadius)s -%(outRadius)s'
-        self._insertRunJobStep("xmipp_transform_mask", args % locals(), **kwargs)
+        self._insertFunctionStep('transformMaskStep', args % locals(), **kwargs)
     
     args = ' --ref %(vol1)s -i %(vol2)s --sampling_rate %(samplingRate)s -o %(resolutionXmdCurrIter)s' % locals()
     
@@ -651,94 +656,48 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
                   'filteredVol': reconstructedFilteredVolume,
                   'filter' : filterInPxAt
                   }
-        self.runJob('xmipp_transform_filter', args % params)
+        self.runJob("xmipp_transform_filter", args % params)
 
 
 def runCreateOutpuStep(self):
     ''' Create standard output results_images, result_classes'''
     #creating results files
+    imgSet = self.inputParticles.get()
     lastIter = self.numberOfIterations.get()
+    if self.numberOfReferences != 1:
+        inDocfile = self._getFileName('docfileInputAnglesIters', iter=lastIter)
+        ClassFnTemplate = '%(rootDir)s/reconstruction_Ref3D_%(ref)03d.vol'
+        
+        allExpImagesinDocfile = xmipp.FileName()
+        all_exp_images="all_exp_images"
+        allExpImagesinDocfile.compose(all_exp_images, inDocfile)
+        
+        dataClasses = self._getFileName('sqliteClasses')
+        
+        createClassesFromImages(imgSet, str(allExpImagesinDocfile), dataClasses, 
+                                SetOfClasses3D, xmipp.MDL_REF3D, ClassFnTemplate, lastIter)
+        
+        classes = self._createSetOfClasses3D(imgSet)
+        clsSet = SetOfClasses3D(dataClasses)
+        classes3DSet.appendFromClasses(classes, clsSet)
+        
+        volumes = self._createSetOfVolumes()
+        volumes.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        
+        for refN in self.allRefs():
+            volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=refN)
+            vol = Volume()
+            vol.setFileName(volFn)
+            volumes.append(vol)
     
-    inDocfile = self._getFileName('docfileInputAnglesIters', iter=lastIter)
-#     resultsImages = self._getPath("images.xmd")
-#     resultsClasses3DRef = self._getPath("classes_ref3D.xmd")
-#     resultsClasses3DRefDefGroup = self._getPath("classes_ref3D_defGroup.xmd")
-#     resultsVolumes   = self._getPath("volumes.xmd")
-    ClassFnTemplate = '%(rootDir)s/reconstruction_Ref3D_%(ref)03d.vol'
-    
-    allExpImagesinDocfile = xmipp.FileName()
-    all_exp_images="all_exp_images"
-    allExpImagesinDocfile.compose(all_exp_images, inDocfile)
-    
-    data_classes = self._getFileName('sqliteClasses')
-    
-    createClassesFromImages(self.inputParticles.get(), str(allExpImagesinDocfile), data_classes, 
-                            SetOfClasses3D, xmipp.MDL_REF3D, ClassFnTemplate, lastIter)
-#     mdVolume = xmipp.MetaData()
-#     
-#     # create metadata file with volume names
-#     for refN in self.allRefs():
-#         reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[lastIter][refN]
-#         objId = mdVolume.addObject()
-#         mdVolume.setValue(xmipp.MDL_IMAGE, reconstructedFilteredVolume, objId)
-# #         #link also last iteration volumes
-# #         createLink(log,resultVolume,join(workingDir, basename(reconstructedFilteredVolume)))
-#     mdVolume.write(resultsVolumes)
-#     
-#     # read file with results
-#     md = xmipp.MetaData(allExpImagesinDocfile)
-#     #read file with ctfs
-#     mdOut = xmipp.MetaData()
-#     if self.doCTFCorrection:
-#         #read only image and ctf_model
-#         mdOut = xmipp.MetaData()
-#         mdCTF = xmipp.MetaData()
-#         mdCTF.read(self.ctfDatName, [xmipp.MDL_IMAGE, xmipp.MDL_CTF_MODEL])
-#         md.addIndex(xmipp.MDL_IMAGE)
-#         mdCTF.addIndex(xmipp.MDL_IMAGE)
-#         mdOut.joinNatural(md, mdCTF)
-#     else:
-#         mdOut = xmipp.MetaData(md)#becareful with copy metadata since it only copies pointers
-#     mdref3D = xmipp.MetaData()
-#     mdrefCTFgroup = xmipp.MetaData()
-#     mdref3D.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_REF3D, xmipp.MDL_REF3D, xmipp.MDL_COUNT)
-#     mdrefCTFgroup.aggregate(mdOut, xmipp.AGGR_COUNT, xmipp.MDL_DEFGROUP, xmipp.MDL_DEFGROUP, xmipp.MDL_COUNT)
-#     #total number Image
-#     numberImages = mdOut.size()
-#     #total number CTF
-#     numberDefocusGroups = mdrefCTFgroup.size()
-#     #total number volumes 
-#     numberRef3D = mdref3D.size()
-#     fnResultImages = xmipp.FileName()
-#     fnResultClasses = xmipp.FileName()
-#     
-#     fnResultImages.compose("images",resultsImages)
-#     comment  = " numberImages=%d..................................................... "%numberImages
-#     comment += " numberDefocusGroups=%d................................................."%numberDefocusGroups
-#     comment += " numberRef3D=%d........................................................."%numberRef3D
-#     #
-#     mdAux1 = xmipp.MetaData()
-#     mdAux2 = xmipp.MetaData()
-#     mdAux1.read(self.selFileName,[xmipp.MDL_IMAGE, xmipp.MDL_ITEM_ID])
-#     mdAux2.join1(mdOut, mdAux1, xmipp.MDL_IMAGE, xmipp.LEFT_JOIN)
-#     mdAux2.setComment(comment)
-#     mdAux2.write(fnResultImages)
-#     #
-#     mdClasses.write(fnResultClasses.compose('classes', resultsClasses3DRef)
-#     #make query and store ref3d with all
-#     for id in mdref3D:
-#         ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
-#         md.importObjects(mdOut, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3D))
-#         fnResultClasses.compose("images_ref3d%06d" % ref3D, resultsClasses3DRef)
-#         md.write(fnResultClasses,xmipp.MD_APPEND)
-#     
-#     md2 = xmipp.MetaData()
-#     for id in mdref3D:
-#         ref3D = mdref3D.getValue(xmipp.MDL_REF3D, id)
-#         #a multiquey would be better but I do not know how to implement it in python
-#         md.importObjects(mdOut, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3D))
-#         for id in mdrefCTFgroup:
-#             defocusGroup = mdrefCTFgroup.getValue(xmipp.MDL_DEFGROUP, id)
-#             md2.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_DEFGROUP, defocusGroup))
-#             fnResultClasses.compose(("images_ref3d%06d_defocusGroup%06d"%(ref3D,defocusGroup)),resultsClasses3DRefDefGroup)
-#             md2.write(fnResultClasses, xmipp.MD_APPEND)
+        self._defineOutputs(outputVolumes=volumes)
+        self._defineOutputs(outputClasses=classes)
+        self._defineSourceRelation(imgSet, volumes)
+        self._defineSourceRelation(imgSet, classes)
+    else:
+        volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=1)
+        vol = Volume()
+        vol.setFileName(volFn)
+        vol.setSamplingRate(imgSet.getSamplingRate())
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, vol)

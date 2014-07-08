@@ -269,7 +269,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         outputset = ParticlesTiltPair()
         outputset.setTilted(imgSetT)
         outputset.setUntilted(imgSetU)
-        outputset.setCoordsPair(self.inputCoordinatesTiltedPairs)
+        outputset.setCoordsPair(self.inputCoordinatesTiltedPairs.get())
         self._defineOutputs(outputParticlesTiltPair=outputset)
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs.get(), outputset)
             

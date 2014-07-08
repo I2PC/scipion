@@ -247,20 +247,31 @@ marginal likelihood.
         self._createFilenameTemplates(lastIter)
         numberOfClasses = self.numberOfRef
         imgSet = self.inputParticles.get()
+        volumes = self._createSetOfVolumes()
+        volumes.setSamplingRate(imgSet.getSamplingRate())
+        
         fileparList = []
         volumeList = []
         
         for ref in range(1, numberOfClasses + 1):
+            vol = Volume()
             filepar = self._getFileName('output_par_class', iter=lastIter, ref=ref)
             volFn = self._getFileName('iter_vol_class', iter=lastIter, ref=ref)
+            vol.setFileName(volFn)
+            volumes.append(vol)
             fileparList.append(filepar)
             volumeList.append(volFn)
         
         classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, fileparList, volumeList)
+        
+        # Define the outputs and relations
         self._defineOutputs(outputClasses=classes)
+        self._defineOutputs(outputVolumes=volumes)
         self._defineSourceRelation(imgSet, classes)
         self._defineSourceRelation(self.input3DReference.get(), classes)
+        self._defineSourceRelation(imgSet, volumes)
+        self._defineSourceRelation(self.input3DReference.get(), volumes)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

@@ -98,6 +98,7 @@ class ProtFrealignBase(EMProtocol):
                   'vol2_class' : 'volume_2_iter_%(iter)03d_class_%(ref)02d.mrc',
                   'phase_class' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d.mrc',
                   'spread_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d.mrc',
+                  'logFileRecons' : 'logRecons_iter_%(iter)03d_class_%(ref)02d.log',
                   # dictionary for each processing block and class
                   'input_par_block_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
                   'output_par_block_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
@@ -107,7 +108,8 @@ class ProtFrealignBase(EMProtocol):
                   'vol1_block_class' : 'volume_1_%(iter)03d_class_%(ref)02d_%(block)02d_iter',
                   'vol2_block_class' : 'volume_2_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
                   'phase_block_class' : 'volume_phasediffs_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
-                  'spread_block_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d_%(block)02d'
+                  'spread_block_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
+                  'logFileRefine' : 'logRefine_iter_%(iter)03d_class_%(ref)02d_%(block)02d.log'
                   }
         
         self._updateFilenamesDict(myDict)
@@ -474,8 +476,8 @@ class ProtFrealignBase(EMProtocol):
             if self.continueIter.get() == 'last':
                 initIter = continueRun._getLastIter() + 1
             else:
-                initIter = int(self.continueIter.get()) + 1
-            self._setLastIter(initIter-1)
+                initIter = int(self.continueIter.get())
+            self._setLastIter(initIter)
             self._insertFunctionStep('continueStep', initIter)
         else:
             initIter = 1
@@ -514,13 +516,12 @@ class ProtFrealignBase(EMProtocol):
     def continueStep(self, initIter):
         """Create a symbolic link of a previous iteration from a previous run."""
         continueRun = self.continueRun.get()
-        iter = initIter - 1
-        prevDir = continueRun._iterWorkingDir(iter)
-        currDir = self._iterWorkingDir(iter)
+        prevDir = continueRun._iterWorkingDir(initIter)
+        currDir = self._iterWorkingDir(initIter)
         createLink(prevDir, currDir)
         
         imgSet = self.inputParticles.get()
-        self._createFilenameTemplates(iter)
+        self._createFilenameTemplates(initIter)
         imgFn = self._getFileName('particles')
         imgSet.writeStack(imgFn)
         
@@ -655,6 +656,13 @@ class ProtFrealignBase(EMProtocol):
         errors = []
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
+        partSizeX, _, _ = self.inputParticles.get().getDim()
+        volSizeX, _, _ = self.input3DReference.get().getDim()
+        halfX = partSizeX % 2
+        if halfX != 0:
+            errors.append('Particle dimensions must be even!!!')
+        if partSizeX != volSizeX:
+            errors.append('Volume and particles dimensions must be equal!!!')
         return errors
     
     def _summary(self):
