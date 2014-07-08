@@ -163,8 +163,7 @@ function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
 	} else {
 		checkbox_element += '>'
 	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(
-			checkbox_element);
+	$('td:eq(' + columnIdReal + ')', nRow).html(checkbox_element);
 }
 
 
@@ -217,7 +216,7 @@ function initializeColumnHeader() {
 			var textName = cols[x].sSubTitle
 			
 			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sSubTitle]
-			
+
 			elm.append(getHeaderWithIcon(textName,properties)) 
 			
 			$('th:eq(' + cellIndex + ')', headerRow).attr("id",
@@ -247,7 +246,7 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 		}
 		iconElements += "\"></i></a></span>"
 	}
-
+	
 	if (columnLayoutProperties.allowSetRenderable) {
 		iconElements += "<span class=\"css_right\"><a id=\""
 				+ text
@@ -419,7 +418,7 @@ function setElementsEditable(elements) {
 				$("#saveButton").toggleClass("buttonGreyHovered")
 			}
 
-			changes[label + "___" + rowId] = value
+//			changes[label + "___" + rowId] = value
 			return (value);
 		}, {
 			"callback" : function(sValue, y) {
@@ -454,7 +453,7 @@ function valueChange(element) {
 		element_value = elm.val()
 	}
 	// Keep changes in global variable
-	changes[elm.attr("id")] = element_value
+//	changes[elm.attr("id")] = element_value
 }
 
 function initializeTableWidth() {
@@ -682,7 +681,7 @@ function multipleEnableDisableImage(mode) {
 				break;
 		}
 		//old code
-		changes[id] = (mode == 'enable') ? 1 : 0
+//		changes[id] = (mode == 'enable') ? 1 : 0
 	});
 	
 	if (!$("#saveButton").hasClass("buttonGreyHovered")) {

@@ -107,21 +107,22 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         inputParams[sj.VOL_SELECTED] = None
         
     if firstTime or tableChanged:
+        # getting defaultColumnsLayoutProperties
         columns_properties = getExtraParameters(extraParams, table)
-        
         request.session[sj.COLS_CONFIG_DEFAULT] = columns_properties
-
+        
+        # getting tableLayoutConfiguration
         columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
-        
-        
         request.session[sj.COLS_CONFIG] = columnsConfig 
+        
     else:
+        # getting tableLayoutConfiguration from Session
         columnsConfig = request.session[sj.COLS_CONFIG]
             
     inputParams[sj.COLS_CONFIG] = columnsConfig
     
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
-     
+    
      
 def addProjectPrefix(request, fn):
     """ Split path in block and filename and add the project path to filename. """
@@ -139,8 +140,10 @@ def addProjectPrefix(request, fn):
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
-    if (not inputParams.get(sj.LABEL_SELECTED, False) or 
-        hasTableChanged(request, inputParams)):
+    labelAux = inputParams.get(sj.LABEL_SELECTED, False)
+    hasChanged = hasTableChanged(request, inputParams)
+    
+    if (not labelAux or hasChanged):
         labelsToRender = inputParams[sj.COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
@@ -198,12 +201,13 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                print "Setting dataset.volName: ", _imageVolName
+#                print "Setting dataset.volName: ", _imageVolName
                 dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
-                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
+#                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
+               
                 #dataset.setVolumeName(None)  
                 #dataset.setNumberSlices(0)         
                 
@@ -378,9 +382,9 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     # Create context to be send
     
     context = {sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
-            sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
-            sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
-            'form': showjForm}
+               sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
+               sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
+               'form': showjForm}
     
     if dataset is not None:
         context.update({sj.DATASET: dataset})

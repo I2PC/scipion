@@ -31,8 +31,12 @@ jQuery(function($) {
 </script>
 
 <script type="text/javascript">
-/*  Initialize variable to keep changes*/
-var changes={}
+
+/* DEPRECATED
+ * //Initialize variable to keep changes
+ * var changes={}
+ */
+
 /*  Dimension of the last image sent by the server*/
 var currentImageDim=parseInt('{{defaultZoom}}')
 /*  If true images are regenerated in the server*/
@@ -41,19 +45,19 @@ var recallServer=false
 var forceRecallServer=false
 /*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 var previousZoom='{{defaultZoom}}'
-/* Initialize Table Layout Configuration from json variable*/
+/* Initialize Table Layout Configuration from json variable */
 var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
-console.log("json",jsonTableLayoutConfiguration)
 
-$(document).ready(function(){ 
-	
-	
+// DEBUG
+console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
+
+$(document).ready(function(){
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
-	setImageSize(true)
-	initializeZoomEvents();
+		setImageSize(true)
+		initializeZoomEvents();
 		{% if form.mode.value == 'gallery' %}
-		initializeColRowModeEvents('{{form.mode.value}}')
-		initializeColsRowsEvents()
+			initializeColRowModeEvents('{{form.mode.value}}')
+			initializeColsRowsEvents()
 		{% endif %}
 	{% endif %}
 	initializeComboBoxEvents('{{defaultZoom}}')
@@ -68,9 +72,9 @@ $(document).ready(function(){
 	    return false;
 	  }
 	});
-	
 }); 
 </script>
+
 {% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
 <script type="text/javascript">	
 function setImageSize(refreshElement){
@@ -108,7 +112,7 @@ function setImageSize(refreshElement){
 		}
 	}
 	
-	/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
+	/* CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN */
 	tableImages_height=tableImages_width*ratio
 	
 	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
