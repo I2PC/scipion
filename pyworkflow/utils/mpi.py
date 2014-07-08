@@ -68,8 +68,7 @@ def send(command, comm, dest, tag):
 
 def runJobMPI(log, programname, params, mpiComm, mpiDest,
               numberOfMpi=1, numberOfThreads=1,
-              runInBackground=False, hostConfig=None, 
-              env=None, cwd=None):
+              runInBackground=False, hostConfig=None, cwd=None):
     """ Send the command to the MPI node in which it will be executed. """
 
     command = buildRunCommand(log, programname, params,

@@ -31,15 +31,14 @@ This module is responsible for launching protocol executions.
 import sys
 import os
 from os.path import join, isabs, exists
+import __builtin__
 
-__version__ = 'v.0.1.5 Phosphorus'
+__version__ = 'v.0.1.2 Magnesium'
 
 
 
-def __findScipionHome():
-    """ Find Scipion home from the __file__ location. 
-    It also take into account the links.
-    """
+def findHome():
+    """ Find Scipion home from the __file__ location. """
     absPath = os.path.abspath(__file__)
     if os.path.islink(absPath):
         r = os.readlink(absPath)
@@ -49,7 +48,18 @@ def __findScipionHome():
             absPath = r   
     return os.path.dirname(absPath)
 
-SCIPION_HOME = __findScipionHome()
+SCIPION_ENV = {}
+SCIPION_HOME = findHome()
+os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+
+PW_APPS = join(SCIPION_HOME, 'pyworkflow', 'apps')
+PW_APPS_TEMP = join(PW_APPS, '%s')
+
+# ensure SCIPION_HOME is available within apache, to be able to find em_packages
+if not SCIPION_HOME in sys.path:
+    sys.path.append(SCIPION_HOME)
 
 
 import config
@@ -70,62 +80,55 @@ def getUserDataPath():
     if not getattr(config, 'SCIPION_USER_DATA', None):
         return join(os.environ['HOME'], 'ScipionUserData')
     return getConfigPath('SCIPION_USER_DATA')
+        
 
+XMIPP_HOME = getConfigPath('XMIPP_HOME') #os.environ['XMIPP_HOME']
+XMIPP_BIN = join(XMIPP_HOME, 'bin')
+XMIPP_LIB = join(XMIPP_HOME, 'lib')
 
-SCIPION_SOFTWARE = join(SCIPION_HOME, 'software')
-SCIPION_BIN = join(SCIPION_SOFTWARE, 'bin')
-SCIPION_PATH = os.pathsep.join([join(SCIPION_SOFTWARE, 'bin'),
-                               os.environ.get('LD_LIBRARY_PATH', ''),
-                               ])
-XMIPP_LIB = join(getConfigPath('XMIPP_HOME'), 'lib')
-SCIPION_LIB = os.pathsep.join([join(SCIPION_SOFTWARE, 'lib'),
-                               join(SCIPION_SOFTWARE, 'lib64'),
-                               XMIPP_LIB, 
-                               os.environ.get('LD_LIBRARY_PATH', '') # Keep previous value of LD_LIBRARY_PATH
-                               ]
-                              )
-SCIPION_PYTHONPATH = os.pathsep.join([SCIPION_HOME, 
-                                      join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
-                                      XMIPP_LIB, 
-                                      os.environ.get('PYTHONPATH', '')
-                                      ]
-                                     )
+if not XMIPP_LIB in sys.path:
+    sys.path.append(XMIPP_LIB)
+
+SCIPION_DIRS = {
+    'SCIPION_DATA': join(SCIPION_HOME, 'data'),
+    'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
+    'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
+    'SCIPION_USER_DATA': getUserDataPath(),
+    'SCIPION_TMP': join(getUserDataPath(), 'tmp')}
+
+SCIPION_PYTHON = join(XMIPP_BIN, 'xmipp_python')
+
+os.environ['SCIPION_HOME'] = SCIPION_HOME
+os.environ['SCIPION_PYTHON'] = SCIPION_PYTHON
+
+SCIPION_ENV['SCIPION_HOME'] = SCIPION_HOME
+SCIPION_ENV['SCIPION_PYTHON'] = SCIPION_PYTHON
+
+for k,v in SCIPION_DIRS.iteritems():
+    os.environ[k] = v
+    SCIPION_ENV[k] = v
+
 VARS = {
-       'SCIPION_HOME': SCIPION_HOME,
-       'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
-       'SCIPION_PYTHON': 'python',#join(SCIPION_BIN, 'python'),
-       'PATH': SCIPION_PATH,
-       'PYTHONPATH': SCIPION_PYTHONPATH,
-       'PYTHONHOME': SCIPION_SOFTWARE,
-       'LD_LIBRARY_PATH': SCIPION_LIB,
-       }
-
-DIRS = {
-        'SCIPION_DATA': join(SCIPION_HOME, 'data'),
-        'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
-        'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
-        'SCIPION_SOFTWARE': SCIPION_SOFTWARE,
-        'SCIPION_USER_DATA': getUserDataPath(),
-        'SCIPION_TMP': join(getUserDataPath(), 'tmp')
+        'PYTHONPATH': os.pathsep.join([SCIPION_HOME, XMIPP_LIB, os.environ.get('PYTHONPATH', '')]),
+        'PATH': os.pathsep.join([XMIPP_BIN, PW_APPS, os.environ['PATH']]),
+        'LD_LIBRARY_PATH': os.pathsep.join([XMIPP_LIB, os.environ.get('LD_LIBRARY_PATH', '')]),
+        'XMIPP_HOME': XMIPP_HOME,
         }
 
-VARS.update(DIRS)
-
-for package in ['XMIPP_HOME', 'SPIDER_DIR', 'EMAN2DIR',
-                'CTFFIND_HOME', 'FREALIGN_HOME',
-                'RELION_HOME', 'BSOFT_HOME']:
-    VARS[package] = getConfigPath(package)
+for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 
+            'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
+    VARS[var] = getConfigPath(var)
     
+for k,v in VARS.iteritems():
+    SCIPION_ENV[k] = v
 
-# The following functions required that the SCIPION_PYTHON 
-# is sucessfully compiled and installed
 def runApp(app, args=''):
-    runCmd('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
+    runCmd('%s %s' % (PW_APPS_TEMP % app, args))
 
 def runCmd(cmd):
     os.environ.update(VARS)
     os.chdir(SCIPION_HOME)
-    cmd = '%s %s' % (VARS['SCIPION_PYTHON'], cmd)
+    cmd = '%s %s' % (SCIPION_PYTHON, cmd)
     print ">>>>>", cmd
     result = os.system(cmd)
     if not -256 < result < 256:
@@ -143,13 +146,11 @@ MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
-MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
 MODE_DOWNLOAD = 'download'
 MODE_ENV = 'printenv'
-
 
 
 def main():
@@ -162,7 +163,8 @@ def main():
     # Create SCIPION_HOME folder if it does not exist
     if mode != MODE_INSTALL:
         error = ''
-        for d, path in DIRS.iteritems():
+        for d in SCIPION_DIRS:
+            path = os.environ[d]
             if not exists(path):
                 error += "Missing %s folder: '%s'\n" % (d, path)
         if error:
@@ -231,20 +233,8 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
-        os.environ['SCIPION_HOME'] = SCIPION_HOME
-        for path in DIRS.values():
-            if not exists(path):
-                print "  creating %s folder" % (path)
-                os.makedirs(path) 
-        from scripts.install import build
-        returncode = build(args=sys.argv[2:])
-        if not returncode: # If not error, write settings
-            runApp('config.py')
-        sys.exit(returncode)
-        
-    elif mode == MODE_CONFIG:
-        runApp('config.py')
-        
+        runCmd('scripts/install.py')
+
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
         if not exists(statsDir):
@@ -269,17 +259,13 @@ def main():
         runApp('pw_download_packages.py', args)
         
     elif mode == MODE_ENV:
-        # Print all the environment variables needed to run scipion.
-        #d = VARS.copy()
-        #d.update({k:v for k,v in os.environ.items() if k.startswith('SCIPION')})
+        for k,v in SCIPION_ENV.iteritems():
+            print "%s=%s" % (k, v)
             
-        for k, v in VARS.iteritems():
-            print 'export %s="%s"' % (k, v)
-
         sys.exit(0)
 
-    elif mode == MODE_HELP:
-        print """
+    # If we reach this point, bad arguments were passed
+    print """
 USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
@@ -288,8 +274,6 @@ USAGE:
         help                   Print this help message.
 
         install                Create needed folders and settings to run Scipion.
-        
-        config                 Write default configuration.
 
         manager                Open the manager with list of all projects.
 
@@ -329,14 +313,6 @@ USAGE:
 
         download               Download external packages (EMAN, SPIDER, Relion, etc)
 """
-        sys.exit(0)
-
-    # If we reach this point, bad arguments were passed
-    print "Unknown mode: %s" % sys.argv[1]
-    print ("Valid modes are: "
-           "browser help install manager project stats tests testdata viewer webserver printenv download")
-    print 'Run "%s help" for a full description.' % sys.argv[0]
-    sys.exit(1)
 
 
 
@@ -345,7 +321,6 @@ if __name__ == '__main__':
         main()
     except Exception, e:
         sys.exit(str(e))
-        
 elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
     os.environ.update(VARS)
