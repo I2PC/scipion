@@ -229,12 +229,6 @@ function enableDisableImage(element, enableDisable){
 	} else {
 		var element_value = 1
 	}
-	
-	// Keep changes in global variable
-	if (!$("#saveButton").hasClass("buttonGreyHovered")){
-		$("#saveButton").toggleClass("buttonGreyHovered")
-	}
-	changes[$(element).attr("id")] = element_value
 }
 
 function multipleSelect(mode){

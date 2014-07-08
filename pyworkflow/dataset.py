@@ -317,11 +317,20 @@ class SqliteDataSet(DataSet):
                 # Keep track of _index and _filename pairs to mark as renderable images
                 if colLabel.endswith('_index'):
                     imgCols[colLabel.replace('_index', '')] = colName
+                
                 elif colLabel.endswith('_filename'):
                     prefix = colLabel.replace('_filename', '')
                     if prefix in imgCols:
                         renderType = COL_RENDER_IMAGE
                         imgCols[colName] = imgCols[prefix]
+                
+                #CTF FIX
+                elif (colLabel.endswith('_psdFile') or 
+                      colLabel.endswith('_enhanced_psd') or 
+                      colLabel.endswith('_ctfmodel_quadrant') or 
+                      colLabel.endswith('_ctfmodel_halfplane')):
+                    
+                    renderType = COL_RENDER_IMAGE
                 
                 if row['class_name'] == 'Boolean':
                     renderType = COL_RENDER_CHECKBOX   

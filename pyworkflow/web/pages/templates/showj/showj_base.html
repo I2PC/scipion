@@ -31,8 +31,7 @@ jQuery(function($) {
 </script>
 
 <script type="text/javascript">
-/*  Initialize variable to keep changes*/
-var changes={}
+
 /*  Dimension of the last image sent by the server*/
 var currentImageDim=parseInt('{{defaultZoom}}')
 /*  If true images are regenerated in the server*/
@@ -41,19 +40,19 @@ var recallServer=false
 var forceRecallServer=false
 /*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 var previousZoom='{{defaultZoom}}'
-/* Initialize Table Layout Configuration from json variable*/
-var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe }}
-console.log("json",jsonTableLayoutConfiguration)
+/* Initialize Table Layout Configuration from json variable */
+var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe}}
 
-$(document).ready(function(){ 
-	
-	
+// DEBUG
+console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
+
+$(document).ready(function(){
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
-	setImageSize(true)
-	initializeZoomEvents();
+		setImageSize(true)
+		initializeZoomEvents();
 		{% if form.mode.value == 'gallery' %}
-		initializeColRowModeEvents('{{form.mode.value}}')
-		initializeColsRowsEvents()
+			initializeColRowModeEvents('{{form.mode.value}}')
+			initializeColsRowsEvents()
 		{% endif %}
 	{% endif %}
 	initializeComboBoxEvents('{{defaultZoom}}')
@@ -63,14 +62,14 @@ $(document).ready(function(){
 	/* Avoid enter key submit form */
 	$('.menuInputNumber').keypress(function(e) {
 	  var code = e.keyCode || e.which; 
-	  if (code  == 13) {               
+	  if (code == 13) {               
 	    e.preventDefault();
 	    return false;
 	  }
 	});
-	
 }); 
 </script>
+
 {% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
 <script type="text/javascript">	
 function setImageSize(refreshElement){
@@ -90,32 +89,24 @@ function setImageSize(refreshElement){
 		if (imageHeight_val<imageWidth_val){
 			tableImages_width=zoom_val
 			zoom_val_perc=Math.round((zoom_val/imageWidth_val)*100)
-		} 
-		else{
+		}else{
 			tableImages_width=Math.round(zoom_val*(imageWidth_val/imageHeight_val))+1
 			zoom_val_perc=Math.round((zoom_val/imageHeight_val)*100)
 		}
-	}
-	else{
+	}else{
 		zoom_val_perc=zoom_element.val()
 		if (imageHeight_val<imageWidth_val){
 			zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
 			tableImages_width=zoom_val_pixel
-		} 
-		else{
+		}else{
 			zoom_val_pixel=Math.round((zoom_val_perc*imageHeight_val)/100)
 			tableImages_width=zoom_val_pixel
 		}
 	}
 	
-	/*  CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN*/
+	/* CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN */
 	tableImages_height=tableImages_width*ratio
 	
-	
-	console.log("tableImages_width:"+tableImages_width)
-	console.log("tableImages_height:"+tableImages_height)
-	
-		
 	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
 		alert('{{msg.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
 		zoom_element.val(previousZoom)
@@ -157,7 +148,7 @@ function setImageSize(refreshElement){
    /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */
    if (recallServer){reloadImages(false)}
 	
-	if ($("#colRowModeImage").length >0 && $("#colRowModeImage").attr("src").indexOf("On")!=-1){initializeColsRows()}
+	if ($("#colRowModeImage").length > 0 && $("#colRowModeImage").attr("src").indexOf("On") != -1){initializeColsRows()}
 }
 </script>
 {% endif %}

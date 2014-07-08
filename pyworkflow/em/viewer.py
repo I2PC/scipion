@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -98,15 +99,15 @@ class DataView(View):
             'allowSetVisible':'allowSetVisible',
             'editable':'editable',
             'allowSetEditable':'allowSetEditable',
-            'render': 'renderable',
+#            'render': 'renderable',
             'allowSetRenderable':'allowSetRenderable',
             'renderFunc':'renderFunc',
             'extraRenderFunc':'extraRenderFunc',
             'mode': 'mode', # FOR MODE TABLE OR GALLERY
+            'zoom': 'zoom',
             
             # NEW PARAMETERS
 #            'order': 'order',
-#            'zoom': 'zoom',
         }
         
         params = {}

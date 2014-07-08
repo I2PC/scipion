@@ -343,10 +343,8 @@ def get_image_plot(request):
     return response   
     
 def get_image(request):
-#    from django.http import HttpResponse
-    
-    
     imageNo = None
+    
     # TO DO: Change the way to obtain the separate string of the imagePath
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -379,24 +377,28 @@ def get_image(request):
             if imageNo:
                 imagePath = '%s@%s' % (imageNo, imagePath) 
                 
-            #imgXmipp = xmipp.Image(imagePath)
             imgXmipp = xmipp.Image()
-    
             imgXmipp.readPreview(imagePath, int(imageDim))
             
+            #===================================================================
+            # Transform Matrix
             if applyTransformMatrix: 
                 takarras=[tMatrix[0][0], tMatrix[0][1], tMatrix[0][2], x if x!=None else 0,
                 tMatrix[1][0], tMatrix[1][1], tMatrix[1][2], y if y!=None else 0,
                 tMatrix[2][0], tMatrix[2][1], tMatrix[2][2], z if z!=None else 0]
-#                imgXmipp.applyTransforMatScipion(matrix, 
-#                                                 onlyShifts,
-#                                                 wrap)
-                imgXmipp.applyTransforMatScipion(takarras, 
-                                                 onlyShifts,
-                                                 wrap)
+#               imgXmipp.applyTransforMatScipion(matrix, onlyShifts, wrap)
+                imgXmipp.applyTransforMatScipion(takarras, onlyShifts, wrap)
+            #===================================================================
             
+            #===================================================================
+            # Invert Y axis
             if mirrorY: 
                 imgXmipp.mirrorY()
+            #===================================================================
+            
+            #TO DO: PSD FIX
+            if imagePath.endswith('.psd'):
+                imgXmipp.convertPSD()
             
             # from PIL import Image
             img = getPILImage(imgXmipp, None)

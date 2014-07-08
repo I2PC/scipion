@@ -291,30 +291,6 @@ function initializeImageLoad(forceRecall){
 	});
 }
 
-function saveShowjTable(csrf_token){
-	if ($("#saveButton").hasClass("buttonGreyHovered")){
-		$.ajax({
-			type : "POST",
-			url : "/save_showj_table/",
-			dataType : "json",
-			data : {
-				changes: JSON.stringify(changes),
-				csrfmiddlewaretoken: csrf_token
-			}, 
-			success : function(json) {
-				message = json.message;
-				if (message == 'Ok'){
-					changes={}
-					$("#saveButton").toggleClass("buttonGreyHovered")
-				}
-				else{
-					alert(message)
-				}
-			}
-		});
-	}
-}
-
 function showHideOptionMenu(){
 	$("#optionsButton").toggleClass("buttonGreyHovered")
 	$("#optionsList").toggleClass("optionsListOn")

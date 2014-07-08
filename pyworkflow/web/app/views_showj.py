@@ -3,7 +3,6 @@
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *             Adrian Quintana (aquintana@cnb.csic.es)
 # *             
-# *                
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -107,20 +106,22 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         inputParams[sj.VOL_SELECTED] = None
         
     if firstTime or tableChanged:
+        # getting defaultColumnsLayoutProperties
         columns_properties = getExtraParameters(extraParams, table)
-        
         request.session[sj.COLS_CONFIG_DEFAULT] = columns_properties
-
-        columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         
+        # getting tableLayoutConfiguration
+        columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         request.session[sj.COLS_CONFIG] = columnsConfig 
+        
     else:
+        # getting tableLayoutConfiguration from Session
         columnsConfig = request.session[sj.COLS_CONFIG]
             
     inputParams[sj.COLS_CONFIG] = columnsConfig
     
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
-     
+    
      
 def addProjectPrefix(request, fn):
     """ Split path in block and filename and add the project path to filename. """
@@ -138,8 +139,10 @@ def addProjectPrefix(request, fn):
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
-    if (not inputParams.get(sj.LABEL_SELECTED, False) or 
-        hasTableChanged(request, inputParams)):
+    labelAux = inputParams.get(sj.LABEL_SELECTED, False)
+    hasChanged = hasTableChanged(request, inputParams)
+    
+    if (not labelAux or hasChanged):
         labelsToRender = inputParams[sj.COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
@@ -173,7 +176,8 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
         
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
+#        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
+       
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -182,7 +186,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
-            is3D = inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA
+            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA
             #Setting the _convert 
             _convert = isVol and (inputParams[sj.MODE]==sj.MODE_GALLERY or is3D)
             #Setting the _reslice 
@@ -196,12 +200,13 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                print "Setting dataset.volName: ", _imageVolName
+#                print "Setting dataset.volName: ", _imageVolName
                 dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
-                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
+#                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
+               
                 #dataset.setVolumeName(None)  
                 #dataset.setNumberSlices(0)         
                 
@@ -281,13 +286,14 @@ def showj(request):
             if key in inputParams:
                 inputParams[key] = value
         # extraParams will be read from SESSION
-        
-        
-    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]    
+    
+    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]
     
     #=DEBUG=====================================================================
 #    from pprint import pprint
+#    print "INPUT PARAMS:"
 #    pprint(inputParams)
+#    print "EXTRA PARAMS:"
 #    pprint(extraParams)
     #===========================================================================
 
@@ -302,7 +308,7 @@ def showj(request):
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
         
         volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
-    
+        
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
     else:
@@ -322,13 +328,12 @@ def showj(request):
 
 def cleanSession(request, filename):
     """ Clean data stored in session for a new visualization. """
-    # Store dataset and labelsToRender in session 
     if filename in request.session:
         del request.session[filename]
         
        
 def storeToSession(request, inputParams, dataset, _imageDimensions):
-    # Store dataset and labelsToRender in session 
+    # Store some parameters into session variable 
     datasetDict = {}
     datasetDict[sj.DATASET] = dataset
     datasetDict[sj.LABEL_SELECTED] = inputParams[sj.LABEL_SELECTED]
@@ -353,9 +358,6 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[sj.MODE] + '_utils')})
-        
-    # Library to manage the extra menu functions
-    context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
     # FIX
 #    context.update({'path' : inputParams[sj.PATH],
@@ -374,9 +376,9 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     # Create context to be send
     
     context = {sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
-            sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
-            sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
-            'form': showjForm}
+               sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
+               sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
+               'form': showjForm}
     
     if dataset is not None:
         context.update({sj.DATASET: dataset})
@@ -412,9 +414,6 @@ def getExtraParameters(extraParams, table):
                 
     return defaultColumnsLayoutProperties
 
-#===============================================================================
-# BEGIN SAVE & LOAD
-#===============================================================================
 
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
@@ -430,35 +429,6 @@ def loadDatasetXmipp(path):
         
     print "creating XmippDataSet in path: ", path
     return XmippDataSet(str(path))
-
-    
-def save_showj_table(request):
-    if request.is_ajax():
-        changes = request.POST.get('changes')
-        jsonChanges = json.loads(changes)
-        
-        dataset = request.session[sj.DATASET]
-        blockComboBox = request.session[sj.TABLE_NAME]
-        
-        table = dataset.getTable(blockComboBox)
-        
-        for key in jsonChanges:
-            element_split = key.rsplit('___')
-            if len(element_split)!=2: 
-                print "this fails and sth has to be done"
-            
-            #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
-            #columnsConfig.columnsLayout[element_split[0]].typeOfColumn
-
-            dictelement = {element_split[0]:jsonChanges[key]}
-            table.updateRow(int(element_split[1]),**dictelement)
-        
-        dataset.writeTable(blockComboBox, table)
-        
-        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-#===========================================================================
-# END SAVE & LOAD
-#===========================================================================
 
 
 def testingSSH(request):

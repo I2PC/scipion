@@ -163,8 +163,7 @@ function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
 	} else {
 		checkbox_element += '>'
 	}
-	$('td:eq(' + columnIdReal + ')', nRow).html(
-			checkbox_element);
+	$('td:eq(' + columnIdReal + ')', nRow).html(checkbox_element);
 }
 
 
@@ -179,7 +178,6 @@ function colRenderable(id, nRow, aData, columnId, columnIdReal, columnLayoutConf
 					+ '&'
 					+ columnLayoutConfiguration.extraRenderFunc
 					+ '&image=' + aData[columnId] + '\"/>');
-
 }
 
 
@@ -199,8 +197,6 @@ function colRenderImage(id, nRow, aData, columnId, columnIdReal, columnLayoutCon
 							+ columnLayoutConfiguration.extraRenderFunc
 							+ '&image=' + aData[columnId]
 							+ '\"/>');
-	// $('td:eq('+columnIdReal+')', nRow).html(
-	// '<span>'+aData[columnId]+'</span>' );
 }
 
 
@@ -217,7 +213,7 @@ function initializeColumnHeader() {
 			var textName = cols[x].sSubTitle
 			
 			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sSubTitle]
-			
+
 			elm.append(getHeaderWithIcon(textName,properties)) 
 			
 			$('th:eq(' + cellIndex + ')', headerRow).attr("id",
@@ -247,15 +243,15 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 		}
 		iconElements += "\"></i></a></span>"
 	}
-
+	
 	if (columnLayoutProperties.allowSetRenderable) {
 		iconElements += "<span class=\"css_right\"><a id=\""
 				+ text
 				+ "_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
 		if (columnLayoutProperties.renderable) {
-			iconElements += "fa-eye"
-		} else {
 			iconElements += "fa-eye-slash"
+		} else {
+			iconElements += "fa-eye"
 		}
 		iconElements += "\"></i></a></span>"
 	}
@@ -323,7 +319,7 @@ function enableDisableRenderColumn(event, element) {
 	var nTrs = oTable.fnGetNodes();
 	$('td:nth-child(' + (iCol + 1) + ')', nTrs).each(
 			function() {
-				if ($(element).find("i").hasClass("fa-eye")
+				if ($(element).find("i").hasClass("fa-eye-slash")
 						&& $(this).find("img").attr('src') == undefined) {
 					/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
 					setImageSize(false)
@@ -335,11 +331,11 @@ function enableDisableRenderColumn(event, element) {
 
 	// Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
-	jsonTableLayoutConfiguration.columnsLayout[labelColumn].renderable = $(element).find("i").hasClass("fa-eye")
+	jsonTableLayoutConfiguration.columnsLayout[labelColumn].renderable = $(element).find("i").hasClass("fa-eye-slash")
 
 	// Update the session variable
 	var status = "enable";
-	if ($(element).find("i").attr("class") == "fa fa-eye-slash") {
+	if ($(element).find("i").attr("class") == "fa fa-eye") {
 		status = "disable";
 	}
 	updateSession(labelColumn, "renderable", status)
@@ -414,12 +410,6 @@ function setElementsEditable(elements) {
 			var nTd = aoData[aPos[0]]._anHidden[oTable.fnGetColumnIndex("id")];
 			var rowId = $(nTd).text()
 
-			// Keep changes in global variable
-			if (!$("#saveButton").hasClass("buttonGreyHovered")) {
-				$("#saveButton").toggleClass("buttonGreyHovered")
-			}
-
-			changes[label + "___" + rowId] = value
 			return (value);
 		}, {
 			"callback" : function(sValue, y) {
@@ -453,8 +443,6 @@ function valueChange(element) {
 	} else {
 		element_value = elm.val()
 	}
-	// Keep changes in global variable
-	changes[elm.attr("id")] = element_value
 }
 
 function initializeTableWidth() {
@@ -681,13 +669,7 @@ function multipleEnableDisableImage(mode) {
 				}
 				break;
 		}
-		//old code
-		changes[id] = (mode == 'enable') ? 1 : 0
 	});
-	
-	if (!$("#saveButton").hasClass("buttonGreyHovered")) {
-		$("#saveButton").toggleClass("buttonGreyHovered")
-	}
 }
 
 function multipleSelect(mode) {
@@ -719,7 +701,7 @@ function updateSession(label, type, status) {
 //			 alert(jsonTableLayoutConfiguration.columnsLayout[label].renderable);
 		},
 		error: function(){
-			alert("error")
+//			alert("error")
 		}
 		
 

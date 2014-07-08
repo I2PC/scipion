@@ -106,7 +106,8 @@ class ColumnsConfig():
          
         for col in table.iterColumns():  
             colDefaultLayout = defaultColumnsLayout.get(col.getName(), {})
-            self._columnsDict[col.getName()] = ColumnProperties(col, allowRender, colDefaultLayout)
+            col_properties = ColumnProperties(col, allowRender, colDefaultLayout)
+            self._columnsDict[col.getName()] = col_properties
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
@@ -173,7 +174,7 @@ class ColumnProperties():
     def setValues(self, defaultColumnLayoutProperties):
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
-    
+
     def getValues(self):
         return {"visible":self.visible,
                 "allowSetVisible":self.allowSetVisible,
