@@ -156,10 +156,7 @@ class ColumnProperties():
         self.allowSetRenderable = ((self.columnType == COL_RENDER_IMAGE or
                                    self.columnType == COL_RENDER_VOLUME) and allowRender)
 
-        # RENDER FUNCTION
         self.renderFunc = "get_image"
-#        self.setRenderFunc(col.getLabel())
-        
         self.extraRenderFunc = ""
         
     def getLabel(self):
@@ -178,14 +175,6 @@ class ColumnProperties():
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
 
-    def setRenderFunc(self, label):
-        if label.endswith("_psdFile"):
-            # PSD MODE
-            self.renderFunc = "get_image_psd"
-        else:
-            # NORMAL MODE
-            self.renderFunc = "get_image"
-    
     def getValues(self):
         return {"visible":self.visible,
                 "allowSetVisible":self.allowSetVisible,

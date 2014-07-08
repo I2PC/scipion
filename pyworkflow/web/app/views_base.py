@@ -125,6 +125,7 @@ def base_showj(request, context):
                     'showj_js':getResourceJs('showj_utils'),
                     'jquery_ui':getResourceJs('jquery_ui'),
                     'transpose_lib':getResourceJs('transpose'),
+                    'showj_menu_utils': getResourceJs('showj_menu_utils')
                     }
     
     context = base_grid(request, context)

@@ -3,7 +3,6 @@
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *             Adrian Quintana (aquintana@cnb.csic.es)
 # *             
-# *                
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -288,8 +287,7 @@ def showj(request):
                 inputParams[key] = value
         # extraParams will be read from SESSION
     
-    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]    
-#    print "zoom: ", request.session[sj.IMG_ZOOM_DEFAULT]
+    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]
     
     #=DEBUG=====================================================================
 #    from pprint import pprint
@@ -330,13 +328,12 @@ def showj(request):
 
 def cleanSession(request, filename):
     """ Clean data stored in session for a new visualization. """
-    # Store dataset and labelsToRender in session 
     if filename in request.session:
         del request.session[filename]
         
        
 def storeToSession(request, inputParams, dataset, _imageDimensions):
-    # Store dataset and labelsToRender in session 
+    # Store some parameters into session variable 
     datasetDict = {}
     datasetDict[sj.DATASET] = dataset
     datasetDict[sj.LABEL_SELECTED] = inputParams[sj.LABEL_SELECTED]
@@ -361,9 +358,6 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[sj.MODE] + '_utils')})
-        
-    # Library to manage the extra menu functions
-    context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
     # FIX
 #    context.update({'path' : inputParams[sj.PATH],
@@ -420,9 +414,6 @@ def getExtraParameters(extraParams, table):
                 
     return defaultColumnsLayoutProperties
 
-#===============================================================================
-# BEGIN SAVE & LOAD
-#===============================================================================
 
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
@@ -438,35 +429,6 @@ def loadDatasetXmipp(path):
         
     print "creating XmippDataSet in path: ", path
     return XmippDataSet(str(path))
-
-    
-def save_showj_table(request):
-    if request.is_ajax():
-        changes = request.POST.get('changes')
-        jsonChanges = json.loads(changes)
-        
-        dataset = request.session[sj.DATASET]
-        blockComboBox = request.session[sj.TABLE_NAME]
-        
-        table = dataset.getTable(blockComboBox)
-        
-        for key in jsonChanges:
-            element_split = key.rsplit('___')
-            if len(element_split)!=2: 
-                print "this fails and sth has to be done"
-            
-            #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
-            #columnsConfig.columnsLayout[element_split[0]].typeOfColumn
-
-            dictelement = {element_split[0]:jsonChanges[key]}
-            table.updateRow(int(element_split[1]),**dictelement)
-        
-        dataset.writeTable(blockComboBox, table)
-        
-        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-#===========================================================================
-# END SAVE & LOAD
-#===========================================================================
 
 
 def testingSSH(request):
