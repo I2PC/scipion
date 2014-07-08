@@ -343,10 +343,8 @@ def get_image_plot(request):
     return response   
     
 def get_image(request):
-#    from django.http import HttpResponse
-    
-    
     imageNo = None
+    
     # TO DO: Change the way to obtain the separate string of the imagePath
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
@@ -397,6 +395,10 @@ def get_image(request):
             
             if mirrorY: 
                 imgXmipp.mirrorY()
+            
+            #TO DO: PSD FIX
+            if imagePath.endswith('.psd'):
+                imgXmipp.convertPSD()
             
             # from PIL import Image
             img = getPILImage(imgXmipp, None)
