@@ -48,8 +48,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
 			if (ig == null || hasChanged())
                         {
                             ig = new ImageGeneric(fileName);//to read again file
-//                            if(geometry != null && useGeometry)
-//                                 ig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle);
                             if(index == -1)
                                 imp = XmippImageConverter.readToImagePlus(ig);
                             else 
@@ -62,9 +60,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                         }
                         else if(ig != null)
                         {
-//                            if(geometry != null && useGeometry)
-//                                 ig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle);
-                             if(index == -1)
+                             if(index == -1 || !ig.isStackOrVolume())
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
@@ -74,10 +70,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                                     imp = XmippImageConverter.convertToImagePlus(ig, (int)index);//read slice
                              }
                         }
-                        
                         checkResizeAndGeo();
-                        
-			
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
@@ -97,9 +90,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		return new File(fileName).lastModified() > modified;
 	}
         
-
-
-	
 
 	public String getFileName()
 	{
