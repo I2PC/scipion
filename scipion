@@ -73,27 +73,30 @@ def getUserDataPath():
 
 
 SCIPION_SOFTWARE = join(SCIPION_HOME, 'software')
-SCIPION_BIN = os.pathsep.join([join(SCIPION_SOFTWARE, 'bin'),
+SCIPION_BIN = join(SCIPION_SOFTWARE, 'bin')
+SCIPION_PATH = os.pathsep.join([join(SCIPION_SOFTWARE, 'bin'),
                                os.environ.get('LD_LIBRARY_PATH', ''),
-                               ]
-                              )
+                               ])
+XMIPP_LIB = join(getConfigPath('XMIPP_HOME'), 'lib')
 SCIPION_LIB = os.pathsep.join([join(SCIPION_SOFTWARE, 'lib'),
                                join(SCIPION_SOFTWARE, 'lib64'),
-                               join(getConfigPath('XMIPP_HOME'), 'lib'), # XMIPP_LIB
+                               XMIPP_LIB, 
                                os.environ.get('LD_LIBRARY_PATH', '') # Keep previous value of LD_LIBRARY_PATH
                                ]
                               )
 SCIPION_PYTHONPATH = os.pathsep.join([SCIPION_HOME, 
-                                      join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'), 
+                                      join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
+                                      XMIPP_LIB, 
                                       os.environ.get('PYTHONPATH', '')
                                       ]
                                      )
 VARS = {
        'SCIPION_HOME': SCIPION_HOME,
        'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
-       'SCIPION_PYTHON': 'python',
+       'SCIPION_PYTHON': 'python',#join(SCIPION_BIN, 'python'),
+       'PATH': SCIPION_PATH,
        'PYTHONPATH': SCIPION_PYTHONPATH,
-       'PATH': SCIPION_BIN,
+       'PYTHONHOME': SCIPION_SOFTWARE,
        'LD_LIBRARY_PATH': SCIPION_LIB,
        }
 
@@ -101,7 +104,7 @@ DIRS = {
         'SCIPION_DATA': join(SCIPION_HOME, 'data'),
         'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
         'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
-        'SCIPION_SOFTWARE': join(SCIPION_HOME, 'software'),
+        'SCIPION_SOFTWARE': SCIPION_SOFTWARE,
         'SCIPION_USER_DATA': getUserDataPath(),
         'SCIPION_TMP': join(getUserDataPath(), 'tmp')
         }
@@ -140,6 +143,7 @@ MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
+MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
@@ -234,7 +238,12 @@ def main():
                 os.makedirs(path) 
         from scripts.install import build
         returncode = build(args=sys.argv[2:])
+        if not returncode: # If not error, write settings
+            runApp('config.py')
         sys.exit(returncode)
+        
+    elif mode == MODE_CONFIG:
+        runApp('config.py')
         
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
@@ -279,6 +288,8 @@ USAGE:
         help                   Print this help message.
 
         install                Create needed folders and settings to run Scipion.
+        
+        config                 Write default configuration.
 
         manager                Open the manager with list of all projects.
 

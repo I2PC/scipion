@@ -82,6 +82,7 @@ from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_random_conical_tilt import XmippProtRCT
-from protocol_destroy_universe import ProtDestroyUniverse
 # Wizards
 from wizard import *
+
+_environ = getEnviron()

@@ -174,7 +174,7 @@ env.AddLibrary('paramiko',
 env.AddLibrary('pil',
                tar='Imaging-1.1.7.tar.gz',
                dir='Imaging-1.1.7',
-               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Imaging-1.1.7.tar.gz',
+               url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Imaging-1.1.7_xmipp_setup.tgz',
                deps=['python'])
 
 ######################

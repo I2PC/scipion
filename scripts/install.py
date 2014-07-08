@@ -56,36 +56,7 @@ SCONS_VERSION = 'scons-2.3.1'
 SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
 
-def createDirs():
-    """ Create necessary folder before installing Scipion. """
-    for d in SCIPION_DIRS:
-        path = os.environ[d]
-        if not exists(path):
-            print "  creating %s folder: %s" % (d, path)
-            os.makedirs(path) 
-               
     
-def updateSettings():
-    """ Write the settings.sqlite default configuration
-    and also update each project settings.
-    """
-    from pyworkflow import SETTINGS
-    from pyworkflow.utils.path import copyFile
-    from pyworkflow.apps.config import writeDefaults
-
-    writeDefaults()
-    # Update the settings to all existing projects
-    from pyworkflow.manager import Manager
-    manager = Manager()
-    projects = manager.listProjects()
-    
-    for p in projects:
-        proj = manager.loadProject(p.getName())
-        projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
-        copyFile(SETTINGS, projSettings)
-
-
 def downloadScons():
     """ Download the scons tgz file and extract it. """
     SCONS_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/python/"
