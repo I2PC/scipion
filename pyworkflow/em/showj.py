@@ -29,6 +29,7 @@ The name of ShowJ is due historical reasons. This data visualization tools
 was first called xmipp_show. And later was re-written using Java and 
 became xmipp_showj.
 """
+
 import os
 from os.path import join
 from collections import OrderedDict
@@ -49,6 +50,7 @@ LABEL_SELECTED = 'labelsToRenderComboBox'
 MODE = 'mode'
 MODE_GALLERY = 'gallery'
 MODE_TABLE = 'table'
+MODE_MD = 'metadata'
 MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
 RENDER = 'render'

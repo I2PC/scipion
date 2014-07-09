@@ -32,7 +32,8 @@ import os
 from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
 from pyworkflow.em.protocol import PdbFile
 import pyworkflow as pw
-from showj import runJavaIJapp, ZOOM, ORDER, VISIBLE, MODE, PATH, TABLE_NAME
+from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
+                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
 # PATH is used by app/em_viewer.py
 
 
