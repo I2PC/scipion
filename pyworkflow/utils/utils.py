@@ -455,7 +455,7 @@ def getListFromValues(valuesStr, length=None):
     until the desired length is reached.
     Examples:
     '1 1 2x2 4 4' -> [1, 1, 2, 2, 4, 4]
-    '3x2, 4x3, 1' -> [3, 3, 4, 4, 4, 1]
+    '2x3, 3x4, 1' -> [3, 3, 4, 4, 4, 1]
     """
     result = []
     
@@ -465,7 +465,7 @@ def getListFromValues(valuesStr, length=None):
         if n == 1: # 'x' is not present in the chunk, single value
             result += values
         elif n == 2: # multiple the values by the number after 'x'
-            result += [values[0]] * int(values[1])
+            result += [values[1]] * int(values[0])
         else:
             raise Exception("More than one 'x' is not allowed in list string value.")
             
