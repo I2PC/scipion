@@ -88,6 +88,11 @@ public class XmippImageConverter {
 			throws Exception {
 		return readToImagePlus(image, image.getXDim(), image.getYDim(), nslice);
 	}
+        
+        public static ImagePlus readToImagePlus(ImageGeneric image, long nimage, int nslice)
+			throws Exception {
+		return readToImagePlus(image, image.getXDim(), image.getYDim(), nslice, nimage);
+	}
 
 	public static ImagePlus readToImagePlus(ImageGeneric image, long nimage)
 			throws Exception {
@@ -183,6 +188,7 @@ public class XmippImageConverter {
 			slice = ImageGeneric.FIRST_SLICE;
 			lastSlice = image.getZDim();
 		}
+                
 		for (; slice <= lastSlice; slice++)
 			is.addSlice("", pc.getProcessor(image, select_image, slice));
 

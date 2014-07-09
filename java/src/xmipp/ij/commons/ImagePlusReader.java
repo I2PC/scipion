@@ -24,7 +24,7 @@ public abstract class ImagePlusReader {
     protected boolean wrap;
     protected long modified;
     
-    protected long index = -1;
+    protected long index = -1, index2 = -1;
     protected boolean normalize;
     protected double normalize_min;
     protected double normalize_max;
@@ -53,10 +53,11 @@ public abstract class ImagePlusReader {
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
-                                 if(ig.isStack())
+                                if(ig.isStack())
                                     imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
                                 else
                                     imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
+                                
                              }
                              
                         }
@@ -125,22 +126,21 @@ public abstract class ImagePlusReader {
             }
     }
 
-    void setIndex(int index) {
+    void setIndexes(int index, int index2) {
         this.index = index;
+        this.index2 = index2;
     }
+    
+    
 
     public abstract String getName() ;
 
-    public boolean isStackOrVolume() {
-        try {
 
-            if (imp != null)
-                return imp.getStackSize() > 1;
-            return false;
-        } catch (Exception ex) {
-            Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return false;
+    boolean isStackOrVolume() {
+        if(imp == null)
+            loadImagePlus();
+        return imp.getStackSize() > 1;
+        
     }
     
    

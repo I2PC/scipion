@@ -33,7 +33,6 @@ import xmipp.jni.ImageGeneric;
 public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
-    
     private boolean existsfile;
     
 
@@ -42,42 +41,44 @@ public class ImagePlusLoader {
     }
 
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null, false);
+        this(getFile(imp), imp, null, false, -1);
 
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig, false);
-        impreader.setIndex(index);
+        this(getFile(ig), null, ig, false, index);
 
     }
 
     public ImagePlusLoader(String fileName) {
-        this(fileName, null, null, false);
+        this(fileName, null, null, false, -1);
     }
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null, useGeometry);
+        this(fileName, null, null, useGeometry, -1);
         setWrap(wrap);
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo) {
-
-        int index = -1;
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
+        int index2 = -1;
         if (fileName != null) {
+            
             if (fileName.contains("@")) {
+                
                 int arrobaindex = fileName.lastIndexOf("@");
                 String header = fileName.substring(0, arrobaindex);
 
                 int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
                 String textindex = fileName.substring(sepindex + 1, arrobaindex);
-                index = Integer.parseInt(textindex);
+                if(index == -1)
+                    index = Integer.parseInt(textindex);
+                else
+                    index2 = Integer.parseInt(textindex);
                 fileName = fileName.substring(arrobaindex + 1);
                 if (sepindex != -1) {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
             }
-
             existsfile = new File(fileName).exists();
         }
         if (existsfile) 
@@ -85,7 +86,7 @@ public class ImagePlusLoader {
         else 
             impreader = new ImagePlusNotFromFile(imp, ig);
         
-        impreader.setIndex(index);
+        impreader.setIndexes(index, index2);
         impreader.setUseGeometry(useGeo);
     }
 
