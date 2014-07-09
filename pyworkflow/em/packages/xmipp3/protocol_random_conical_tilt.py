@@ -119,23 +119,22 @@ class XmippProtRCT(ProtInitialVolume):
         
         rctImagesMd = xmipp.MetaData()
         
-        uImages = self.inputImages.get()
+        uImages = self.inputParticlesTiltPair.get().getUntilted()
         tImages = self.inputParticlesTiltPair.get().getTilted()
         sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
-        uMics = uImages.getCoordinates().getMicrographs()
+        #uMics = uImages.getCoordinates().getMicrographs()
+        uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
         tMics = tImages.getCoordinates().getMicrographs()
-        print "ANGLES"
-        sangles.printAll()
                     
-        for uImg in uImages:
-            imgId = uImg.getObjId()
+        for img in self.inputImages.get():
+            imgId = img.getObjId()
+            uImg = uImages[imgId]
             tImg = tImages[imgId]
             objId = rctImagesMd.addObject()
             pairRow = XmippMdRow()
             pairRow.setValue(xmipp.MDL_IMAGE, getImageLocation(uImg))
             uCoord = uImg.getCoordinate()
             micId = uCoord.getMicId()
-            print "MICID=%s" % micId
             uMic = uMics[micId]
             angles = sangles[micId]
             pairRow.setValue(xmipp.MDL_MICROGRAPH, uMic.getFileName())
@@ -143,12 +142,13 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_YCOOR, uCoord.getY())
             pairRow.setValue(xmipp.MDL_ENABLED, 1)
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-            #TODO: WHERE DO WE GET ALL THISINFO FROM??? (ask J.M.)
+            alignment = img.getAlignment()
             pairRow.setValue(xmipp.MDL_REF, 1)
-            pairRow.setValue(xmipp.MDL_FLIP, bool(1))
-            pairRow.setValue(xmipp.MDL_SHIFT_X, float(1))
-            pairRow.setValue(xmipp.MDL_SHIFT_Y, float(1))
-            pairRow.setValue(xmipp.MDL_ANGLE_PSI, float(1))
+            #TODO: We should get the angles and shift from transformation matrix
+            pairRow.setValue(xmipp.MDL_FLIP, False)
+            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
+            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+            pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
             
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]

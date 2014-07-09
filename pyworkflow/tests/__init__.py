@@ -92,3 +92,9 @@ DataSet(name='model',  folder='model',
                'modelGoldXml': 'gold/model_gold.xml',
                'classesSelection': 'gold/classes_selection.sqlite'})
 
+DataSet(name='rct',  folder='rct', 
+        files={'positions': 'positions',
+               'untilted': 'micrographs/F_rct_u*.tif',
+               'tilted': 'micrographs/F_rct_t*.tif',
+               'classes': 'classes/classes2D_stable_core.sqlite'})
+
