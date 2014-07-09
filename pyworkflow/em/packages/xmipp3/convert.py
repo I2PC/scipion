@@ -62,6 +62,57 @@ CTF_DICT = OrderedDict([
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
        ])
 
+CTF_EXTRA_LABELS = [   
+    xmipp.MDL_CTF_CA,
+    xmipp.MDL_CTF_ENERGY_LOSS,
+    xmipp.MDL_CTF_LENS_STABILITY,
+    xmipp.MDL_CTF_CONVERGENCE_CONE,
+    xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+    xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+    xmipp.MDL_CTF_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CV,
+    xmipp.MDL_CTF_BG_SQRT_K,
+    xmipp.MDL_CTF_BG_SQRT_U,
+    xmipp.MDL_CTF_BG_SQRT_V,
+    xmipp.MDL_CTF_BG_SQRT_ANGLE,
+    xmipp.MDL_CTF_BG_BASELINE,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
+    xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+    xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
+    xmipp.MDL_CTF_CRIT_PSDVARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST,
+    xmipp.MDL_CTF_CRIT_FIRSTZEROAVG,
+    xmipp.MDL_CTF_CRIT_DAMPING,
+    xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
+    xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
+    xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
+    xmipp.MDL_CTF_CRIT_NORMALITY,  
+    ]
+
+# Some extra labels to take into account the zscore
+IMAGE_EXTRA_LABELS = [
+    xmipp.MDL_ZSCORE,
+    xmipp.MDL_ZSCORE_HISTOGRAM,
+    xmipp.MDL_ZSCORE_RESMEAN,
+    xmipp.MDL_ZSCORE_RESVAR,
+    xmipp.MDL_ZSCORE_RESCOV,
+    xmipp.MDL_ZSCORE_SHAPE1,
+    xmipp.MDL_ZSCORE_SHAPE2,
+    xmipp.MDL_ZSCORE_SNR1,
+    xmipp.MDL_ZSCORE_SNR2,
+    ]
+
 ANGLES_DICT = OrderedDict([
        ("_angleY", xmipp.MDL_ANGLE_Y),
        ("_angleY2", xmipp.MDL_ANGLE_Y2),
@@ -83,13 +134,15 @@ def objectToRow(obj, row, attrDict):
             row.setValue(label, valueType(getattr(obj, attr).get()))
 
 
-def _rowToObject(row, obj, attrDict):
+def _rowToObject(row, obj, attrDict, extraLabels={}):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
         obj: the EMObject instance (output)
         attrDict: dictionary with the map between obj attributes(keys) and 
             row MDLabels in Xmipp (values).
+        extraLabels: a list with extra labels that could be included
+            as _xmipp_labelName
     """
     for attr, label in attrDict.iteritems():
         value = row.getValue(label)
@@ -100,8 +153,9 @@ def _rowToObject(row, obj, attrDict):
         
     attrLabels = attrDict.values()
     
-    for label, value in row:
-        if label not in attrLabels:
+    for label in extraLabels:
+        if label not in attrLabels and row.hasLabel(label):
+            value = row.getValue(label)
             labelStr = xmipp.label2Str(label)
             setattr(obj, '_xmipp_%s' % labelStr, ObjectWrap(value))
     
@@ -112,9 +166,9 @@ def rowFromMd(md, objId):
     return row
     
     
-def rowToObject(md, objId, obj, attrDict):
+def rowToObject(md, objId, obj, attrDict, extraLabels={}):
     """ Same as rowToObject, but creating the row from md and objId. """
-    _rowToObject(rowFromMd(md, objId), obj, attrDict)
+    _rowToObject(rowFromMd(md, objId), obj, attrDict, extraLabels)
     
     
 def _rowToObjectFunc(obj):
@@ -209,6 +263,9 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
         img.setAlignment(rowToAlignment(md, objId))
     
     setObjId(img, rowFromMd(md, objId))
+    # Read some extra labels
+    rowToObject(md, objId, img, {}, IMAGE_EXTRA_LABELS)
+    
     return img
     
     
@@ -297,7 +354,7 @@ def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
 def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
-    rowToObject(md, objId, ctfModel, CTF_DICT)
+    rowToObject(md, objId, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
     
     return ctfModel
 
