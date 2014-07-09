@@ -30,8 +30,6 @@ This will serve as an abstraction layer from where the data will be taken.
 """
 from collections import OrderedDict, namedtuple
 
-
-
 class DataSet(object):
     """ Holds several Tables
     All tables should have an unique tableName. 

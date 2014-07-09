@@ -109,6 +109,7 @@
  *       
  ******************************************************************************/
 
+/* CONSTANTS */
 var COL_RENDER_NONE = 0;
 var COL_RENDER_ID = 1;
 var COL_RENDER_TEXT = 2;
@@ -138,10 +139,10 @@ function renderElements(nRow, aData) {
 					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
 				
 				} else if (columnLayoutConfiguration.renderable) {
-					colRenderable(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+					colRenderImg('colRenderable', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
 				
 				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
-					colRenderImage(i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+					colRenderImg('colRenderImage', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
 				}
 			}
 		} else {
@@ -166,37 +167,56 @@ function colRenderCheckbox(id, nRow, aData, columnId, columnIdReal){
 	$('td:eq(' + columnIdReal + ')', nRow).html(checkbox_element);
 }
 
-
-function colRenderable(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
-	$('td:eq(' + columnIdReal + ')', nRow).html(
-			'<span style="display:none">' + aData[columnId]
-					+ '</span>'
-					+ '<img class=\"tableImages\" id=\"' + id
-					+ '___' + aData[0]
-					+ '\" src=\"/render_column/?renderFunc='
-					+ columnLayoutConfiguration.renderFunc
-					+ '&'
-					+ columnLayoutConfiguration.extraRenderFunc
-					+ '&image=' + aData[columnId] + '\"/>');
+function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
+	var renderFunc = columnLayoutConfiguration.renderFunc
+	var extraRenderFunc = columnLayoutConfiguration.extraRenderFunc
+	var content_html = "";
+	
+	switch(mode){
+		case "colRenderable":
+			content_html += colRenderable(id, aData, columnId, renderFunc, extraRenderFunc)
+			break;
+			
+		case "colRenderImage":
+			content_html += colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc)
+			break;
+	}
+	$('td:eq(' + columnIdReal + ')', nRow).html(content_html);
 }
 
 
-function colRenderImage(id, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration){
-	$('td:eq(' + columnIdReal + ')', nRow)
-			.html(
-					'<span>'
-							+ aData[columnId]
-							+ '</span>'
-							+ '<img style="display:none" class=\"tableImages\" id=\"'
-							+ id
-							+ '___'
-							+ aData[0]
-							+ '\" data-real_src=\"/render_column/?renderFunc='
-							+ columnLayoutConfiguration.renderFunc
-							+ '&'
-							+ columnLayoutConfiguration.extraRenderFunc
-							+ '&image=' + aData[columnId]
-							+ '\"/>');
+function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
+	
+	var content_html = '<span style="display:none">' 
+			+ aData[columnId] + '</span>'
+			+ '<img class=\"tableImages\" id=\"'
+			+ id + '___' + aData[0]
+			+ '\" src=\"/render_column/?renderFunc='
+			+ renderFunc;
+			
+	if(extraRenderFunc.length > 0){
+		content_html += '&'	+ extraRenderFunc
+	}
+	content_html += '&image=' + aData[columnId] + '\"/>';
+	
+	return content_html;
+}
+
+
+function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
+	var content_html = '<span>' 
+			+ aData[columnId] + '</span>'
+			+ '<img style="display:none" class=\"tableImages\" id=\"'
+			+ id + '___' + aData[0]
+			+ '\" data-real_src=\"/render_column/?renderFunc='
+			+ renderFunc;
+			
+	if(extraRenderFunc.length > 0){
+		content_html += '&'	+ extraRenderFunc
+	}
+	content_html += '&image=' + aData[columnId] + '\"/>';
+
+	return content_html;
 }
 
 
@@ -224,19 +244,21 @@ function initializeColumnHeader() {
 
 function getHeaderWithIcon(text, columnLayoutProperties) {
 	var iconElements = ''
-	// NAPA DE LUXE HABRIA QUE PONERLE UN MARGIN AL LABEL DEL HEADER
-	// var iconElements = '<span style=\"margin:8px\">'+text+'</span>'
-	// if (columnLayoutProperties.visible &&
-	// columnLayoutProperties.allowSetVisible){
-	// iconElements+="<span class=\"css_right\"><img
-	// src=\"/resources/showj/delete.png\" class=\"arrowImage\"
-	// onclick=\"enableDisableColumn(event,this)\" ></span>"
-	// }
+	 
+	/*
+	// allowSetVisible 
+	if (columnLayoutProperties.visible && columnLayoutProperties.allowSetVisible){
+		iconElements+="<span class=\"css_right\">"
+		iconElements+="<a class=\"arrowImage\" onclick=\"enableDisableColumn(event,this)\">"
+		iconElements+="<i class='fa fa-times'></i></a></span>"	
+	}
+	*/
 
+	// allowSetEditable
 	if (columnLayoutProperties.allowSetEditable) {
 		iconElements += "<span class=\"css_right fa-stack\"><a id=\""
 				+ text
-				+ "_editable_icon\" href='#' onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
+				+ "_editable_icon\" onclick=\"enableDisableEditableColumn(event,this);\"><i class=\"fa fa-pencil fa-stack-1x"
 		iconElements += "\"></i><i id=\"banElement\" class=\"fa fa-stack-1x "
 		if (columnLayoutProperties.renderable) {
 			iconElements += "fa-times"
@@ -244,10 +266,11 @@ function getHeaderWithIcon(text, columnLayoutProperties) {
 		iconElements += "\"></i></a></span>"
 	}
 	
+	// allowSetRenderable
 	if (columnLayoutProperties.allowSetRenderable) {
 		iconElements += "<span class=\"css_right\"><a id=\""
 				+ text
-				+ "_renderable_icon\" href='#' onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
+				+ "_renderable_icon\" onclick=\"javascript:enableDisableRenderColumn(event,this);\"><i class=\"fa "
 		if (columnLayoutProperties.renderable) {
 			iconElements += "fa-eye-slash"
 		} else {
@@ -275,7 +298,6 @@ function getColumnsDefinition() {
 		
 		columnId++;
 	}
-
 	return dataForTable;
 }
 
@@ -703,7 +725,7 @@ function updateSession(label, type, status) {
 		error: function(){
 //			alert("error")
 		}
-		
-
 	});
 }
+
+

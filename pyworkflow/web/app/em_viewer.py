@@ -98,10 +98,9 @@ def viewToUrl(request, view):
         showjParams = view.getShowJWebParams()
         if showjParams:
             for key in showjParams:
-                if key == 'mode' or key == 'order' or key=='zoom':
+                if key in {'order', 'zoom', 'mode'}:
                     url += '&%s=%s' % (key, showjParams[key])
                 else:
-                    # False cases ??
                     url += '&%s=True' % showjParams[key]
         
         if view.getTableName():
