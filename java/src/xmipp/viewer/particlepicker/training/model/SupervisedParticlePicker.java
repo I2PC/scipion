@@ -815,7 +815,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException("Unable to detect format");
 
-		String filename;
 		String result = "";
 
 		String particlesfile = getExportFile(path);
@@ -847,11 +846,8 @@ public class SupervisedParticlePicker extends ParticlePicker
                         }
                 
 
-//			filename = getImportMicrographName(path, m.getFile(), f);
-//			if (Filename.exists(filename))
-//				result += importParticlesFromFile(filename, f, m, scale, invertx, inverty);
+                    
 		}
-
 		return result;
 	}// function importParticlesFromFolder
 
@@ -894,13 +890,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 			if (!m.fits(x, y, size))// ignore out of bounds particles
 			{
 				result += XmippMessage.getOutOfBoundsMsg(String.format("Particle on x:%s y:%s\n", x, y)) + " dismissed\n";
-
 				continue;
 			}
 			m.addManualParticle(new ManualParticle(x, y, this, m, 2), this);
 
 		}
 		saveData(m);
+                
 		return result;
 	}// function importParticlesFromMd
 
