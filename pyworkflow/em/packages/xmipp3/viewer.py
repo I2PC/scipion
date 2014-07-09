@@ -29,9 +29,11 @@ visualization program.
 """
 
 import os
+
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
+
 from xmipp3 import getXmippPath
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_extract_particles import XmippProtExtractParticles
@@ -74,7 +76,6 @@ class XmippViewer(Viewer):
     def __init__(self, **args):
         Viewer.__init__(self, **args)
         self._views = []   
-        
         
     def visualize(self, obj, **args):
         self._visualize(obj, **args)
@@ -143,9 +144,11 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
+            labels = 'id enabled _index _filename _xmipp_zScore _sampling _ctfModel._xmipp_zScore '
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle'
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+                                          viewParams={ORDER: labels, VISIBLE: labels}))
                
-                    
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
@@ -161,22 +164,24 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
-            labels = 'id enabled comment _psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane _defocusU _defocusV _defocusAngle _xmippCTFCritFirstZero' 
+            psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
-                                          viewParams={MODE: 'metadata', ORDER: labels, VISIBLE:labels, ZOOM: 50}))    
+                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
-            self._visualize(obj.outputParticles)
-            fn = getattr(obj.outputParticles, '_xmippMd', None)
-            if fn:
-                md = xmipp.MetaData(fn) 
-                # If Zscore on output images plot Zscore particle sorting
-                if md.containsLabel(xmipp.MDL_ZSCORE):
-                    from plotter import XmippPlotter
-                    xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
-                    xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                    xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
-                    self._views.append(xplotter)
+            particles = obj.outputParticles
+            self._visualize(particles)
+            
+            fn = obj._getPath('images.xmd')
+            md = xmipp.MetaData(fn) 
+            # If Zscore on output images plot Zscore particle sorting
+            if md.containsLabel(xmipp.MDL_ZSCORE):
+                from plotter import XmippPlotter
+                xplotter = XmippPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_ZSCORE)
+                self._views.append(xplotter)
     
         elif issubclass(cls, XmippProtRotSpectra):
             self._visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
