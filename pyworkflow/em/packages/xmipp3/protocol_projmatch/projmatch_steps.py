@@ -682,7 +682,7 @@ def runCreateOutpuStep(self):
         classes3DSet.appendFromClasses(classes, clsSet)
         
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        volumes.setSamplingRate(imgSet.getSamplingRate())
         
         for refN in self.allRefs():
             volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=refN)

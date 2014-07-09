@@ -382,6 +382,7 @@ class ProtocolsView(tk.Frame):
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
+        self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
         c = self.createContent()

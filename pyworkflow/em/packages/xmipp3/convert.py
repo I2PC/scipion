@@ -191,6 +191,9 @@ def imageToRow(img, imgRow, imgLabel):
     if img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
         
+    if img.hasAlignment():
+        alignmentToRow(img.getAlignment(), imgRow)
+        
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
     """ Create a Particle from a row of a metadata. """
@@ -527,6 +530,7 @@ def readSetOfParticles(filename, partSet,
                        hasCtf=False, 
                        hasAlignment=False):
     readSetOfImages(filename, partSet, rowToParticle, hasCtf, hasAlignment)
+    partSet.setHasAlignment(hasAlignment)
 
 
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
@@ -836,6 +840,13 @@ def rowToAlignment(md, objId):
     alignment._xmipp_shiftY = Float(shifts[1])
     
     return alignment
+
+
+def alignmentToRow(alignment, mdRow):
+    shifts, angles = geometryFromMatrix(alignment.getMatrix())
+    mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
+    mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])    
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
