@@ -54,9 +54,9 @@ public abstract class ImagePlusReader {
                             else 
                              {
                                  if(ig.isStack())
-                                    imp = XmippImageConverter.convertToImagePlus(ig, index);
+                                    imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
                                 else
-                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
                              }
                              
                         }

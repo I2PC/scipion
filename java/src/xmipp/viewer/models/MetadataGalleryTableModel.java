@@ -26,13 +26,9 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-
-import java.io.File;
 import java.util.ArrayList;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
