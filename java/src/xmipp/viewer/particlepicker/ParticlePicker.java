@@ -499,6 +499,7 @@ public abstract class ParticlePicker {
             default:
                 md.clear();
         }
+        
         int width = (int) (m.width / scale);// original width
         int height = (int) (m.height / scale);// original height
         if (invertx) {
@@ -510,7 +511,7 @@ public abstract class ParticlePicker {
         if (scale != 1.f) {
             md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
         }
-
+        md.print();
     }// function importParticlesFromFile
     
     public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
