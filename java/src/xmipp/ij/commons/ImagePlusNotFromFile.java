@@ -32,12 +32,13 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
 
     @Override
     public String getName() {
-        if(imp != null)
-        {
-            if(index != -1)
-                return String.format("%d@%s", index, imp.getTitle());
-            return imp.getTitle();
-        }
-        return null;
+        if(imp == null && ig == null)
+            return null;
+        String name = (ig != null)? ig.getFilename(): imp.getTitle();
+        if(index2 != -1)
+            name = String.format("%d@%s", index2, name);
+        if(index != -1)
+            name = String.format("%d@%s", index, name);
+        return name;
     }
 }

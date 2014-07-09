@@ -143,7 +143,6 @@ public class ImagesWindowFactory {
 	}
 	public static XmippIJWindow openXmippImageWindow(Window window,
 			ImagePlusLoader impLoader, String title, boolean poll) {
-		ImagePlus imp = impLoader.getImagePlus();
                 
 		XmippIJWindow iw;
 		

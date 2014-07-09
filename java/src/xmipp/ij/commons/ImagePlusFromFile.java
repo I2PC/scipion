@@ -42,7 +42,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
         @Override
     	public ImagePlus loadImagePlus()
 	{
-		imp = null;
+                imp = null;
 		try
 		{
 			if (ig == null || hasChanged())
@@ -53,7 +53,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                             else 
                             {
                                 if(ig.isStack())
-                                    imp = XmippImageConverter.readToImagePlus(ig, index);//read image or volume on index
+                                    imp = XmippImageConverter.readToImagePlus(ig, index, ImageGeneric.ALL_SLICES);//read image or volume on indexn
                                 else
                                     imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read image slice on volume
                             }
@@ -109,11 +109,12 @@ public class ImagePlusFromFile extends ImagePlusReader{
 
     @Override
     public String getName() {
-        String name;
+        String name = fileName;
+        
+        if(index2 != -1)
+            name = String.format("%d@%s", index2, name);
         if(index != -1)
-            name = String.format("%d@%s", index, fileName);
-        else
-            name = fileName;
+            name = String.format("%d@%s", index, name);
         return name;
     }
         
