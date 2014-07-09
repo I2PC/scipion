@@ -29,7 +29,7 @@ public abstract class ImagePlusReader {
     protected double normalize_min;
     protected double normalize_max;
     protected Geometry geometry;
-//    protected int width, height;
+    protected int width, height;
     
 
     public abstract boolean getAllowsPoll();
@@ -92,13 +92,13 @@ public abstract class ImagePlusReader {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-//        if(width != 0  && height != 0)
-//        {
-//            ImageProcessor processor = imp.getProcessor();
-//            processor.setInterpolate(true);
-//            processor = processor.resize(width, height);
-//            imp = new ImagePlus("", processor);
-//        }
+        if(width != 0  && height != 0)
+        {
+            ImageProcessor processor = imp.getProcessor();
+            processor.setInterpolate(true);
+            processor = processor.resize(width, height);
+            imp = new ImagePlus("", processor);
+        }
     }
     
     public void setNormalize(double normalize_min, double normalize_max)
@@ -160,10 +160,10 @@ public abstract class ImagePlusReader {
 
     }
 
-//    void setDimension(int width, int height) {
-//        this.width = width;
-//        this.height = height;
-//    }
+    public void setDimension(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
     
     public void setWrap(boolean value) {
         wrap = value;
