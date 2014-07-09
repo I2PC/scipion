@@ -37,11 +37,9 @@ from pyworkflow.em.viewer import *
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
 def launch_viewer(request):
-    #if request.is_ajax():
     projectName = request.session['projectName']
     project = loadProject(projectName)
     objId = request.GET.get('objectId', None)
-#    obj = project.mapper.selectById(int(objId))
     obj = project.getProtocol(int(objId))
     
     if obj.isPointer():
