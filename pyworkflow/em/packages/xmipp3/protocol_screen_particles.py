@@ -28,10 +28,14 @@
 This sub-package contains wrapper around Screen Particles Xmipp program
 """
 
-from pyworkflow.em import *
-from pyworkflow.utils import replaceBaseExt
+from pyworkflow.object import String
+from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
+                                        LEVEL_EXPERT)
+from pyworkflow.em.protocol import ProtProcessParticles
+from pyworkflow.utils.path import copyFile, replaceBaseExt
 
-from convert import createXmippInputImages, readSetOfParticles
+from convert import writeSetOfParticles, readSetOfParticles
+
 
 # Automatic Particle rejection enum
 REJ_NONE = 0
@@ -63,19 +67,16 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputParticles.get())
-        
-        self._insertFunctionStep('sortImages', imgsFn) 
+        self._insertFunctionStep('sortImages', self.inputParticles.getObjId()) 
         
         self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------
-    def sortImages(self, inputFile):
-        outputMd = self._getPath(replaceBaseExt(inputFile, 'xmd'))
-        args = "-i %s --addToInput " % outputMd
-        # copy file to run path
-        if inputFile != outputMd:
-            copyFile(inputFile, outputMd)
+    def sortImages(self, inputId):
+        imagesMd = self._getPath('images.xmd')
+        writeSetOfParticles(self.inputParticles.get(), imagesMd)
+        
+        args = "-i %s --addToInput " % imagesMd
         
         if self.autoParRejection == REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
@@ -85,7 +86,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
         self.runJob("xmipp_image_sort_by_statistics", args)
         
-        self.outputMd = String(outputMd)
+        self.outputMd = String(imagesMd)
 
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
