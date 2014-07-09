@@ -53,9 +53,9 @@ public class ImagePlusFromFile extends ImagePlusReader{
                             else 
                             {
                                 if(ig.isStack())
-                                    imp = XmippImageConverter.readToImagePlus(ig, index);
+                                    imp = XmippImageConverter.readToImagePlus(ig, index);//read image or volume on index
                                 else
-                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read slice
+                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read image slice on volume
                             }
                         }
                         else if(ig != null)
@@ -65,9 +65,9 @@ public class ImagePlusFromFile extends ImagePlusReader{
                             else 
                              {
                                  if(ig.isStack())
-                                    imp = XmippImageConverter.convertToImagePlus(ig, index);
+                                    imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
                                 else
-                                    imp = XmippImageConverter.convertToImagePlus(ig, (int)index);//read slice
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
                              }
                         }
                         checkResizeAndGeo();
