@@ -91,14 +91,14 @@ def build(args):
                          ["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
             if exists(SCIPION_INSTALL_LOG):
                 os.remove(SCIPION_INSTALL_LOG)
-            for arg in setupArgs:
-                command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + arg
-                print 'Executing %s on scons' % " ".join(arg)
+            for sargs in setupArgs:
+                command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + sargs
+                print 'Executing %s on scons' % " ".join(sargs)
                 with open(SCIPION_INSTALL_LOG, 'a') as logFile:
                     r = call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
                              stdout=logFile, stderr=logFile)
                 if r != 0:
-                    sys.exit(r)
+                    return r
 
     return call('software/bin/scons %s | tee -a %s' % (' '.join(args), SCIPION_INSTALL_LOG),
                 shell=True)
