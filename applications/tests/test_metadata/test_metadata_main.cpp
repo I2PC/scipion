@@ -1,8 +1,10 @@
+#include <unistd.h> 
+#include <stdlib.h>
+#include <stdio.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_convert.h>
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
-#include <stdlib.h>
 #include <string.h>
 #include <fstream>
 /*
@@ -287,21 +289,16 @@ TEST_F( MetadataTest, Copy)
 
 TEST_F( MetadataTest, MDInfo)
 {
-//    char sfn[64] = "";
-//    strncpy(sfn, "/tmp/MDInfo_XXXXXX", sizeof sfn);
-//    if (mkstemp(sfn)==-1)
-//    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
-
-    char sfnStar[64] = "";
-    char sfnSqlite[64] = "";
-    strncpy(sfnStar, "/tmp/MDInfo_XXXXXX.xmd", sizeof sfnStar);
-    if (mkstemps(sfnStar,4)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
-    strncpy(sfnSqlite, "/tmp/MDInfo_XXXXXX.sqlite", sizeof sfnSqlite);
-    if (mkstemps(sfnSqlite,7)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary SQLITE file");
-    FileName fnDB   =(String)sfnSqlite;
-    FileName fnSTAR =(String)sfnStar;
+    //char sfnStar[64] = "";
+    //char sfnSqlite[64] = "";
+    //strncpy(sfnStar, "MDInfo_XXXXXX.xmd", sizeof "MDInfo_XXXXXX.xmd");
+    //strncpy(sfnSqlite, "MDInfo_XXXXXX.sqlite", sizeof "MDInfo_XXXXXX.sqlite");
+    FileName fn;
+    fn.initUniqueName("MDInfo_XXXXXX");
+    FileName fnDB;
+    fnDB = fn + ".sqlite";
+    FileName fnSTAR;
+    fnSTAR = fn + ".xmd";
 
     XMIPP_TRY
 
@@ -328,12 +325,14 @@ TEST_F( MetadataTest, MDInfo)
 
     XMIPP_CATCH
 
+    unlink(fn.c_str());
     unlink(fnDB.c_str());
     unlink(fnSTAR.c_str());
 }
 
 TEST_F( MetadataTest,multiWrite)
 {
+/*
 	char sfnStar[64] = "";
 	char sfnSqlite[64] = "";
 	char sfnXML[64] = "";
@@ -346,11 +345,17 @@ TEST_F( MetadataTest,multiWrite)
     strncpy(sfnXML, "/tmp/testReadMultipleBlocks_XXXXXX.xml", sizeof sfnXML);
     if (mkstemps(sfnXML,4)==-1)
     	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary XML file");
+*/
 
-
-    FileName fnDB   =(String)sfnSqlite;
-    FileName fnXML  =(String)sfnXML;
-    FileName fnSTAR =(String)sfnStar;
+    FileName fn   ;
+    FileName fnDB   ;
+    FileName fnXML  ;
+    FileName fnSTAR ;
+    fn.initUniqueName("/tmp/testReadMultipleBlocks_XXXXXX");
+    fnDB = fn + ".sqlite";
+    fnXML = fn + ".xml";
+    fnSTAR = fn + ".xmd";
+    
     FileName fnDBref   =(String)"metadata/mDsource.sqlite";
     FileName fnXMLref  =(String)"metadata/mDsource.xml";
     FileName fnSTARref =(String)"metadata/mDsource.xmd";
@@ -365,6 +370,7 @@ TEST_F( MetadataTest,multiWrite)
     EXPECT_TRUE(compareTwoFiles(fnXML, fnXMLref));
     EXPECT_TRUE(compareTwoFiles(fnSTAR, fnSTARref));
 
+    unlink(fn.c_str());
     unlink(fnDB.c_str());
     unlink(fnXML.c_str());
     unlink(fnSTAR.c_str());
@@ -372,11 +378,14 @@ TEST_F( MetadataTest,multiWrite)
 
 TEST_F( MetadataTest,multiWriteSqlite)
 {
-    char sfn[64] = "";
-    strncpy(sfn, "/tmp/multiWriteSqlite_XXXXXX.sqlite", sizeof sfn);
-    if (mkstemps(sfn,7)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
-    FileName fnDB   =(String)sfn;
+    //char sfn[64] = "";
+    //strncpy(sfn, "/tmp/multiWriteSqlite_XXXXXX.sqlite", sizeof sfn);
+    //if (mkstemps(sfn,7)==-1)
+    // 	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary file");
+    FileName fn   ;
+    FileName fnDB   ;
+    fn.initUniqueName("/tmp/multiWriteSqlite_XXXXXX");
+    fnDB = fn + ".sqlite";
     FileName fnDBref   =(String)"metadata/mDsource.sqlite";
 
     MetaData md = MetaData();
@@ -430,6 +439,7 @@ TEST_F( MetadataTest,multiWriteSqlite)
     EXPECT_EQ(readBlockList[2],"block003");
 
     XMIPP_CATCH
+    unlink(fn.c_str());
     unlink(fnDB.c_str());
 }
 
@@ -894,15 +904,19 @@ TEST_F( MetadataTest, RegularExp)
     XMIPP_TRY
 
     //create temporal file with three metadas
-    char sfnStar[64] = "";
-    char sfnSqlite[64] = "";
-    strncpy(sfnStar, "/tmp/testReadMultipleBlocks_XXXXXX.xmd", sizeof sfnStar);
-    if (mkstemps(sfnStar,4)==-1)
-    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
+    //char sfnStar[64] = "";
+    //char sfnSqlite[64] = "";
+    //strncpy(sfnStar, "/tmp/testReadMultipleBlocks_XXXXXX.xmd", sizeof sfnStar);
+    //if (mkstemps(sfnStar,4)==-1)
+    //	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary STAR file");
 //    strncpy(sfnSqlite, "/tmp/testReadMultipleBlocks_XXXXXX.sqlite", sizeof sfnSqlite);
 //    if (mkstemps(sfnSqlite,7)==-1)
 //    	REPORT_ERROR(ERR_IO_NOTOPEN,"Cannot create temporary SQLITE file");
 
+    FileName fn;
+    fn.initUniqueName("/tmp/testReadMultipleBlocks_XXXXXX");
+    FileName sfnStar;
+    sfnStar = fn + ".xmd";
     MetaData auxMetadata;
     auxMetadata.setValue(MDL_IMAGE,(String)"image_1.xmp",auxMetadata.addObject());
     auxMetadata.setValue(MDL_IMAGE,(String)"image_2.xmp",auxMetadata.addObject());
@@ -945,7 +959,8 @@ TEST_F( MetadataTest, RegularExp)
 //    md.read((String)"block_000001@"+sfnSqlite);
     //compare with reference metada
 //    EXPECT_EQ(md,auxMetadata2);
-    unlink(sfnStar);
+    unlink(fn.c_str());
+    unlink(sfnStar.c_str());
     //unlink(sfnSqlite);
 
     XMIPP_CATCH
