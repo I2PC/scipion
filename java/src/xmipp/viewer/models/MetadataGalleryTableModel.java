@@ -111,6 +111,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			{
                             ImagePlusLoader loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
                             loader.setGeometry(data.getGeometry(id));
+                            loader.setDimension(thumb_width, thumb_height);
                             return loader.getImagePlus();
 			}
 			catch (Exception ex)

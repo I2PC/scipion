@@ -169,6 +169,9 @@ public class ImagePlusLoader {
     }
 
     
-    
+    public void setDimension(int width, int height)
+    {
+        impreader.setDimension(width, height);
+    }
 
 }
