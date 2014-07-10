@@ -53,9 +53,16 @@ def downloadPackage(package):
     """ Download and untar the package files. """
     try:
         packageTar = PACKAGES[package]
-        #system("wget -c %s/%s" % (URL_BASE, packageTar))
-        system("tar -xzf %s &> /dev/null" % packageTar)
-        os.symlink(packageTar.replace('.tgz', ''), package)
+        if not os.path.exists(packageTar):
+            system("wget -c %s/%s &> /dev/null" % (URL_BASE, packageTar))
+        
+        packageDir = packageTar.replace('.tgz', '')
+        if not os.path.exists(packageDir):
+            system("tar -xzf %s &> /dev/null" % packageTar)
+        
+        if not os.path.exists(package):
+            os.symlink(packageDir, package)
+        
     except KeyError as e:
         print 'Unknown package: %s' % e
     
