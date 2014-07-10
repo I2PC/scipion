@@ -90,7 +90,7 @@ OBJECT_ID = 'objectId'
 
 
 class ColumnsConfig():
-    """ Store the configuration of the columsn for a given table in a dataset.
+    """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
     For each column, we store properties:
     - visible
@@ -107,7 +107,7 @@ class ColumnsConfig():
         self._columnsDict = OrderedDict() 
          
         for col in table.iterColumns():  
-            colDefaultLayout = defaultColumnsLayout.get(col.getName(), {})
+            colDefaultLayout = defaultColumnsLayout.get(col.getLabel(), {})
             col_properties = ColumnProperties(col, allowRender, colDefaultLayout)
             self._columnsDict[col.getName()] = col_properties
         
@@ -147,7 +147,11 @@ class ColumnProperties():
         self._column = col        
         self.columnType = col.getRenderType()
         
-        self.visible = not (self.columnType == COL_RENDER_ID)
+        if 'visible' in defaultColumnLayoutProperties:
+            self.visible = defaultColumnLayoutProperties['visible']
+        else:
+            self.visible = not (self.columnType == COL_RENDER_ID)
+            
         self.allowSetVisible = True 
         
         self.editable = (self.columnType == COL_RENDER_TEXT)
