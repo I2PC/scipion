@@ -5,7 +5,7 @@
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
 # *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -43,14 +43,14 @@ tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
-    libs=['lib/libtcl8.6.so'],
+    targets=['lib/libtcl8.6.so'],
     flags=['--enable-threads'])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
-    libs=['lib/libtk8.6.so'],
+    targets=['lib/libtk8.6.so'],
     flags=['--enable-threads'],
     deps=[tcl])
 
@@ -58,7 +58,7 @@ tk = env.AddLibrary(
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
-    libs=['lib/libsqlite3.so'],
+    targets=['lib/libsqlite3.so'],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
@@ -67,14 +67,14 @@ zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
     buildDir='zlib-1.2.8',
-    libs=['lib/libz.so'],
+    targets=['lib/libz.so'],
     autoConfigTarget='configure.log')
 
 # Python
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    libs=['lib/libpython2.7.a', 'bin/python'],
+    targets=['lib/libpython2.7.a', 'bin/python'],
     flags=['--enable-shared',
            'CFLAGS=-I/usr/include/ncurses'],
     deps=[sqlite, tk])

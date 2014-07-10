@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
 # *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -46,12 +47,14 @@ import shutil
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
-MANDATORY_PYVERSION = '2.7.8'  # what Scipion requires
+
+MANDATORY_PYVERSION = '2.7.8'  # Python version required by Scipion
 PYVERSION = platform.python_version()
 
 # TODO: use those vars to actually build a virtualenv instead of
 # compiling python if appropriate.
 
+URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
 #######################
 # AUXILIARY FUNCTIONS #
@@ -72,19 +75,32 @@ env['CROSS_BUILD'] = False
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling $TARGET from $SOURCES "
 
-def addLibrary(env, name, tar=None, buildDir=None, libs=None,
+
+def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], default=True):
-    # Get reasonable defaults.
-    tar = tar or '%s.tgz' % name
-    url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar
+    """Add library "name" to the construction process.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file, configures the library with the given flags, compiles it
+    (in the given buildDir) and installs it. It also tells SCons about
+    the proper dependencies (deps).
+
+    If default=False, the library will not be build unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/external/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    libs = libs or ['lib/lib%s.so' % name]
-    # TODO: find a better name than "libs"
+    targets = targets or ['lib/lib%s.so' % name]
     flags += ['--prefix=%s' % abspath('software')]
 
-    # Add the option --with-name, so the user can call scons with this
-    # to activate the library even if it is not on by default
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate the library even if it is not on by default.
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
@@ -94,17 +110,19 @@ def addLibrary(env, name, tar=None, buildDir=None, libs=None,
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload)
-    tConfig = env.AutoConfig(source=Dir('software/tmp/%s' % buildDir),
-                             AutoConfigTarget=autoConfigTarget,
-                             AutoConfigSource='configure',
-                             AutoConfigParams=flags,
-                             AutoConfigStdOut='software/log/%s_config.log' % name)
-    tMake = env.Make(source=tConfig,
-                     target=['software/%s' % x for x in libs],
-                     MakePath='software/tmp/%s' % buildDir,
-                     MakeEnv=os.environ,
-                     MakeTargets='install',
-                     MakeStdOut='software/log/%s_make.log' % name)
+    tConfig = env.AutoConfig(
+        source=Dir('software/tmp/%s' % buildDir),
+        AutoConfigTarget=autoConfigTarget,
+        AutoConfigSource='configure',
+        AutoConfigParams=flags,
+        AutoConfigStdOut='software/log/%s_config.log' % name)
+    tMake = env.Make(
+        source=tConfig,
+        target=['software/%s' % t for t in targets],
+        MakePath='software/tmp/%s' % buildDir,
+        MakeEnv=os.environ,
+        MakeTargets='install',
+        MakeStdOut='software/log/%s_make.log' % name)
 
     # Add the dependencies.
     for dep in deps:
@@ -115,14 +133,27 @@ def addLibrary(env, name, tar=None, buildDir=None, libs=None,
 
 def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
               deps=[], default=True):
-    # Get reasonable defaults.
-    tar = tar or '%s.tgz' % name
-    url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s' % tar
+    """Add Python module "name" to the construction process.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file, configures the module with the given flags, compiles it
+    (in the given buildDir) and installs it. It also tells SCons about
+    the proper dependencies (deps).
+
+    If default=False, the module will not be build unless the option
+    --with-<name> is used.
+
+    Returns the final target (software/lib/python2.7/site-packages/<name>)
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/python/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     flags += ['--prefix=%s' % abspath('software')]
 
-    # Add the option --with-name, so the user can call scons with this
-    # to activate the library even if it is not on by default
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate the module even if it is not on by default.
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate module %s' % name)
@@ -132,14 +163,11 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
-
-    root = abspath('software')
-
     tDir = env.Command(
         Dir('software/lib/python2.7/site-packages/%s' % name),
         tUntar,
         Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' %
-               (root, root, name),
+               (abspath('software'), abspath('software'), name),
                'Compiling %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
@@ -150,42 +178,6 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     return tDir
 
 
-
-# def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, tar=None, deps=None, url=None, flags=[]):
-#     """
-#     Add a library to the main dict.
-#     """
-#     from os.path import splitext
-#     if dir is None: 
-#         dir = splitext(tar)[0] if tar is not None else name
-#     tar = '%s.tgz' % dir if tar is None else tar
-#     src = dir if src is None else src
-#     url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar if url is None else url
-#     incs = [] if incs is None else incs
-#     libs = ["lib%s.so" % name] if libs is None else libs
-#     deps = [] if deps is None else deps
-#     # First we add the library to the main dictionary
-#     SCIPION['LIBS'][name] = {DEF: dft,
-#                      SRC: src,
-#                      INCS: incs,
-#                      LIBS: libs,
-#                      DIR: dir,
-#                      TAR: tar,
-#                      DEPS: deps,
-#                      URL: url,
-#                      FLAGS: flags}
-#     # Then we add the option, so the user can call scons with this the library as option
-#     AddOption('--%s' % name,
-#               dest='%s' % name,
-#               action='store_true',
-#               help='Library %s option' % name)
-
-
-# def _delLibrary(env, name):
-#     """
-#     This method is for removing a library from the main dict
-#     """
-#     del SCIPION['LIBS'][name]
 
 
 # def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin=None):
