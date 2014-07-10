@@ -279,7 +279,7 @@ class Icon():
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
     RUNS_LIST = 'fa-bars.png'
-    ACTION_NEW = 'new_object.gif',
+    ACTION_NEW = 'fa-plus-circle.png'
     ACTION_EDIT = 'fa-pencil.png'
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
@@ -307,6 +307,8 @@ class Icon():
     BUTTON_SELECT = 'fa-check.png'
     BUTTON_CLOSE = 'fa-times.png'
     BUTTON_CANCEL = 'fa-ban.png'
+    BUTTON_SAVE = ACTION_SAVE
+    BUTTON_PC = 'fa-laptop.png'
     
     ARROW_UP = 'fa-arrow-up.png'
     ARROW_LEFT = 'fa-arrow-left.png'
