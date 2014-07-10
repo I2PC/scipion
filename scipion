@@ -116,7 +116,7 @@ VARS = {
         }
 
 for var in ['SPIDER_DIR', 'EMAN2DIR', 'CTFFIND_HOME', 'FREALIGN_HOME', 
-            'OPT_ALIGN_HOME', 'RELION_HOME', 'BSOFT_HOME']:
+            'RELION_HOME', 'BSOFT_HOME']:
     VARS[var] = getConfigPath(var)
     
 for k,v in VARS.iteritems():
