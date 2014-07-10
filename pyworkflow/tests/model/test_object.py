@@ -145,10 +145,10 @@ class TestUtils(BaseTest):
         """ Test of some methods that retrieve lists from string. """
         from pyworkflow.utils import getListFromValues, getFloatListFromValues, getBoolListFromValues
         
-        results = [('1x2 2x2 4 5', None, getListFromValues, ['1', '1', '2', '2', '4', '5']),
-                   ('1x2 2x2 4 5', None, getFloatListFromValues, [1., 1., 2., 2., 4., 5.]),
+        results = [('2x1 2x2 4 5', None, getListFromValues, ['1', '1', '2', '2', '4', '5']),
+                   ('2x1 2x2 4 5', None, getFloatListFromValues, [1., 1., 2., 2., 4., 5.]),
                    ('1 2 3x3 0.5', 8, getFloatListFromValues, [1., 2., 3., 3., 3., 0.5, 0.5, 0.5]),
-                   ('1x3 0x3 1', 8, getBoolListFromValues, [True, True, True, False, False, False, True, True]),
+                   ('3x1 3x0 1', 8, getBoolListFromValues, [True, True, True, False, False, False, True, True]),
                    ]
         for s, n, func, goldList in results:
             l = func(s, length=n)#)

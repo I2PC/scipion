@@ -83,7 +83,7 @@ class HostsTreeProvider(TreeProvider):
     def getObjectInfo(self, obj):
         return {'key': obj.getObjId(),
                 'text': ' ' + obj.getLabel(),
-                'image': 'computer.png',
+                'image': Icon.BUTTON_PC,
                 'values': (obj.getHostName(), obj.getUserName(),
                            obj.getHostPath())}
       
@@ -167,8 +167,9 @@ class HostsView(tk.Frame):
         self.hostsTree.after(1000, self.refresh)
         
     def _deleteHost(self, host):
-        if askYesNo(Message.TITLE_HOST_DELETE, Message.LABEL_HOST_DELETE + "(%s)" % host.getLabel()
-                    , self.windows.root):
+        if askYesNo(Message.TITLE_HOST_DELETE_FORM, 
+                    Message.LABEL_HOST_DELETE_FORM + "(%s)" % host.getLabel(),
+                    self.windows.root):
             self.setting.delete(host, commit=True)
             self.refresh()
         

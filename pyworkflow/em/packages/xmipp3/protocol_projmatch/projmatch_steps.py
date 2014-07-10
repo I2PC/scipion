@@ -262,7 +262,6 @@ def getProjectionMatchingArgs(self, iterN):
     """ Get the arguments for the projection matching program that
     does not vary with the CTF groups. 
     """
-    CtfGroupName = self._getPath(self.ctfGroupDirectory, '%(ctfGroupRootName)s')
     
     args = ' --Ri %(innerRadius)s'
     args += ' --Ro %(outerRadius)s --max_shift %(maxShift)s --search5d_shift %(search5dShift)s'
@@ -319,7 +318,7 @@ def runProjectionMatching(self, iterN, refN, args, **kwargs):
         cleanPath(neighbFile)
         neighbFileb = baseTxtFile + '_group' + str(ctfN).zfill(self.FILENAMENUMBERLENGTH) + '_sampling.xmd'
         copyFile(neighbFileb, neighbFile)
-        
+        print "copied file ", neighbFileb, "to", neighbFile
         if self.doCTFCorrection and self._referenceIsCtfCorrected[iterN]:
             ctfArgs += ' --ctf %s' % self._getBlockFileName('', ctfN, self._getFileName('stackCTFs'))
     
@@ -541,7 +540,7 @@ def runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi,
         if method == 'fourier':
             if self._fourierMaxFrequencyOfInterest[iterN] == -1:
                 fourierMaxFrequencyOfInterest = self._getFourierMaxFrequencyOfInterest(iterN-1, refN)
-                fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToFiltration[iterN]
+                fourierMaxFrequencyOfInterest = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToMaxReconstructionFrequency[iterN]
                 
                 if fourierMaxFrequencyOfInterest > 0.5:
                     fourierMaxFrequencyOfInterest = 0.5
@@ -577,7 +576,7 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     
     args = ' --ref %(vol1)s -i %(vol2)s --sampling_rate %(samplingRate)s -o %(resolutionXmdCurrIter)s' % locals()
     
-    self._insertFunctionStep('calculateFscStep', iterN, refN, args, self._constantToAddToFiltration[iterN], **kwargs)
+    self._insertFunctionStep('calculateFscStep', iterN, refN, args, self._constantToAddToMaxReconstructionFrequency[iterN], **kwargs)
     self._insertFunctionStep('storeResolutionStep', resolIterMd, resolIterMaxMd, samplingRate)
     #if cleanup=true delete split volumes 
     if self.cleanUpFiles:
@@ -588,7 +587,7 @@ def runCalculateFscStep(self, iterN, refN, args, constantToAdd, **kwargs):
     if self.getEnumText('reconstructionMethod') == 'fourier':
         if self._fourierMaxFrequencyOfInterest[iterN] == -1:
             fourierMaxFrequencyOfInterest = self._getFourierMaxFrequencyOfInterest(iterN-1, refN)
-            normalizedFreq = self.resolSam / fourierMaxFrequencyOfInterest + self._constantToAddToFiltration[iterN]
+            normalizedFreq = self.resolSam / fourierMaxFrequencyOfInterest + constantToAdd
             fourierMaxFrequencyOfInterest = self.resolSam / normalizedFreq
         else:
             fourierMaxFrequencyOfInterest = self.resolSam / self._fourierMaxFrequencyOfInterest[iterN]
@@ -644,6 +643,7 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
     if self.useFscForFilter:
         if self._fourierMaxFrequencyOfInterest[iterN+1] == -1:
             fourierMaxFrequencyOfInterest = self.resolSam / self._getFourierMaxFrequencyOfInterest(iterN, refN)
+            print "el valor de la resolucion es :", self._getFourierMaxFrequencyOfInterest(iterN, refN)
             filterInPxAt = fourierMaxFrequencyOfInterest + constantToAddToFiltration
         else:
             filterInPxAt = constantToAddToFiltration

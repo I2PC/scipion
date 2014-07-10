@@ -39,23 +39,46 @@ PACKAGES = {
     #'xmipp': 'xmipp.tgz',
     'bsoft': 'bsoft1_8_8_Fedora_12.tgz',
     'ctffind': 'ctffind_V3.5.tgz',
-    'eman': 'eman2.1beta3.linux64.tar.gz',
+    'eman': 'eman2.1beta3.linux64.tgz',
     'frealign': 'frealign_v9.07.tgz',
     'relion': 'relion-1.2.tgz',
     'spider': 'spider-web-21.13.tgz'}
 
 
-def download(packages=None):
-    if not packages:
-        packages = PACKAGES.keys()
-    for package in packages:
-        try:
-            os.system("wget -c %s/%s" % (URL_BASE, PACKAGES[package]))
-        except KeyError as e:
-            print 'Unknown package: %s' % e
+def system(cmd):
+    print ">>> %s" % cmd
+    os.system(cmd)
+    
+def downloadPackage(package):
+    """ Download and untar the package files. """
+    try:
+        packageTar = PACKAGES[package]
+        if not os.path.exists(packageTar):
+            system("wget -c %s/%s &> /dev/null" % (URL_BASE, packageTar))
+        
+        packageDir = packageTar.replace('.tgz', '')
+        if not os.path.exists(packageDir):
+            system("tar -xzf %s &> /dev/null" % packageTar)
+        
+        if not os.path.exists(package):
+            os.symlink(packageDir, package)
+        
+    except KeyError as e:
+        print 'Unknown package: %s' % e
+    
+def downloadAll(packages=None):
+    downloadPackage('bsoft')
+    downloadPackage('ctffind')
+    downloadPackage('eman')
+    downloadPackage('frealign')
+    downloadPackage('relion')
+    downloadPackage('spider')
 
 
 if __name__ == '__main__':
     # Enter into the EM packages directory
     os.chdir(os.path.join(os.environ['SCIPION_HOME'], 'software', 'em'))
-    download(sys.argv[1:])
+    if len(sys.argv) == 1:
+        downloadAll()
+    else:
+        downloadPackage(sys.argv[1:])

@@ -57,6 +57,7 @@ RENDER = 'render'
 ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
+SORT_BY = 'sortby'
 
 GOTO = 'goto'
 ROWS = 'rows'

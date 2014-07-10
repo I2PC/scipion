@@ -75,8 +75,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def sortImages(self, inputId):
         imagesMd = self._getPath('images.xmd')
         writeSetOfParticles(self.inputParticles.get(), imagesMd)
-        
-        args = "-i %s --addToInput " % imagesMd
+        args = "-i Particles@%s --addToInput " % imagesMd
         
         if self.autoParRejection == REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
