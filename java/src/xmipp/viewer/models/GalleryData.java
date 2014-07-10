@@ -138,6 +138,7 @@ public class GalleryData {
         this.parameters = parameters;
         md.setRenderLabels(parameters.renderLabels);
         md.setRenderLabel(parameters.getRenderLabel());
+        md.setSortByLabel(parameters.sortby);
         md.setVisibleLabels(parameters.visibleLabels);
         md.setOrderLabels(parameters.orderLabels);
         try {

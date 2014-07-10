@@ -34,6 +34,7 @@ public class Params {
     public final static String RENDER_IMAGES = "render";
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
+    public final static String SORTBY_LABEL = "sortby";
     public final static String DISPLAY_LABEL = "label";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
@@ -82,6 +83,7 @@ public class Params {
     protected CommandLine cmdLine;
     public String[] visibleLabels;
     public String[] orderLabels;
+    public String sortby;
 
     
     
@@ -118,6 +120,7 @@ public class Params {
         opt = new Option(ORDER_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
+        options.addOption(SORTBY_LABEL, true, "");
         options.addOption(DISPLAY_LABEL, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
@@ -189,6 +192,10 @@ public class Params {
             if(cmdLine.hasOption(ORDER_LABELS))
             {
             	orderLabels = cmdLine.getOptionValues(ORDER_LABELS);
+            }
+            if(cmdLine.hasOption(SORTBY_LABEL))
+            {
+            	sortby = cmdLine.getOptionValue(SORTBY_LABEL);
             }
             if(cmdLine.hasOption(DISPLAY_LABEL))
             	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
