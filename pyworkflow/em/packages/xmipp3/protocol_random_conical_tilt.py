@@ -26,15 +26,20 @@
 """
 This sub-package contains the XmippRCT protocol
 """
-from pyworkflow.em import ProtInitialVolume, String, PointerParam, IntParam, StringParam, BooleanParam, FloatParam, STEPS_PARALLEL
+
+from os.path import exists
+
+import xmipp
+from pyworkflow.object import String
 from pyworkflow.protocol.constants import  LEVEL_EXPERT
-from convert import readSetOfVolumes, getImageLocation
-from pyworkflow.utils import exists
-from pyworkflow.em.data import Volume
+from pyworkflow.protocol.params import (PointerParam, IntParam, StringParam, 
+                                        BooleanParam, FloatParam, STEPS_PARALLEL)
+from pyworkflow.em.protocol import ProtInitialVolume
+from pyworkflow.em.data import Volume, SetOfParticles
+
+from convert import getImageLocation
 from xmipp3 import XmippMdRow
 
-from itertools import izip
-import xmipp
 
 
 class XmippProtRCT(ProtInitialVolume):
@@ -55,10 +60,10 @@ class XmippProtRCT(ProtInitialVolume):
                       pointerClass='ParticlesTiltPair',
                       help='Select the input particles tilt pair from the project.')   
         
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfImages',
+        form.addParam('inputParticles', PointerParam, label="Input classes", important=True, 
+                      pointerClass='SetOfParticles,SetOfClasses',
                       help='Select the input images or classes from the project.')    
-
+        
         form.addSection(label='Alignment parameters')
 
         form.addParam('thinObject', BooleanParam, default=False, 
@@ -94,30 +99,41 @@ class XmippProtRCT(ProtInitialVolume):
          
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
-
-        rctImagesFn = self._getExtraPath('rct_images.xmd')
+        self.inputSet = self.inputParticles.get()
+        self.inputSet.setStore(False)
+        self.rctClassesFn = self._getExtraPath('rct_classes.xmd')
+                
+        if isinstance(self.inputSet, SetOfParticles):
+            self._insertSetSteps(self.inputSet)
+        else:
+            for class2D in self.inputSet:
+                self._insertSetSteps(class2D)
+                
+        self._insertFunctionStep('createOutputStep')      
         
-        #We are now using setofimages but in the future it should work with setofclasses
-        classNo = 1
-        blockMd = "class%06d_images@%s" % (classNo, rctImagesFn)
-        self.appendRctImages(blockMd)
+    def _insertSetSteps(self, particles):
+        """ ... """
+
+        
+        classNo = particles.getObjId()
+        blockMd = "class%06d_images@%s" % (classNo, self.rctClassesFn)
+        self.appendRctImages(particles, blockMd)
                                         
         classNameIn = blockMd
         classNameOut = self._getExtraPath("rct_images_%06d.xmd" % classNo)
         classVolumeOut = self._getPath("rct_%06d.vol" % classNo)
         
-        if self.inputImages.get().hasRepresentative():
-            classImage = self.inputImages.get().getRepresentative()
+        if particles.hasRepresentative():
+            classImage = getImageLocation(particles.getRepresentative())
         else:
-            classImage = ""
+            classImage = None
         
-        self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut)
-        
-        self._insertFunctionStep('createOutputStep', classVolumeOut)
+        self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut)        
+
        
-    def appendRctImages(self, blockMd):
+    def appendRctImages(self, particles, blockMd):
         
-        rctImagesMd = xmipp.MetaData()
+        classMd = xmipp.MetaData()
         
         uImages = self.inputParticlesTiltPair.get().getUntilted()
         tImages = self.inputParticlesTiltPair.get().getTilted()
@@ -126,11 +142,11 @@ class XmippProtRCT(ProtInitialVolume):
         uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
         tMics = tImages.getCoordinates().getMicrographs()
                     
-        for img in self.inputImages.get():
+        for img in particles:
             imgId = img.getObjId()
             uImg = uImages[imgId]
             tImg = tImages[imgId]
-            objId = rctImagesMd.addObject()
+            objId = classMd.addObject()
             pairRow = XmippMdRow()
             pairRow.setValue(xmipp.MDL_IMAGE, getImageLocation(uImg))
             uCoord = uImg.getCoordinate()
@@ -142,13 +158,18 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_YCOOR, uCoord.getY())
             pairRow.setValue(xmipp.MDL_ENABLED, 1)
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-            alignment = img.getAlignment()
             pairRow.setValue(xmipp.MDL_REF, 1)
             #TODO: We should get the angles and shift from transformation matrix
             pairRow.setValue(xmipp.MDL_FLIP, False)
-            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
-            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
-            pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
+            if img.hasAlignment():
+                alignment = img.getAlignment()
+                pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
+                pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+                pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
+            else:
+                pairRow.setValue(xmipp.MDL_SHIFT_X, float(1))
+                pairRow.setValue(xmipp.MDL_SHIFT_Y, float(1))
+                pairRow.setValue(xmipp.MDL_ANGLE_PSI, float(1))               
             
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]
@@ -158,14 +179,13 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ANGLE_Y2, float(angleY2))
             pairRow.setValue(xmipp.MDL_ANGLE_TILT, float(angleTilt))
             
-            #pairRow.appendToMd(rctImagesMd, objId)
-            pairRow.writeToMd(rctImagesMd, objId)
-            rctImagesMd.write(blockMd)
+            pairRow.writeToMd(classMd, objId)
+            classMd.write(blockMd, xmipp.MD_APPEND)
             
     def reconstructClass(self, classIn, classOut, classImage, classVolumeOut):
 
     # If class image doesn't exists, generate it by averaging
-        if len(classImage) == 0:
+        if classImage is None:
             classRootOut = classOut.replace(".xmd", "") + "_"
             statsFn = self._getExtraPath('stats.xmd')
             args = "-i %(classIn)s --save_image_stats %(classRootOut)s -o %(statsFn)s"
@@ -174,6 +194,7 @@ class XmippProtRCT(ProtInitialVolume):
             classImage = classRootOut + "average.xmp"
             
         centerMaxShift = self.maxShift.get()
+
         args = "-i %(classIn)s -o %(classOut)s --ref %(classImage)s --max_shift %(centerMaxShift)d" % locals()
         
         if self.thinObject.get():
@@ -208,22 +229,31 @@ class XmippProtRCT(ProtInitialVolume):
             md.write(mdFn)
                     
          
-    def createOutputStep(self, classVolumeOut):
+    def createOutputStep(self):
+        self.volumesSet = self._createSetOfVolumes()
+        self.volumesSet.setStore(False)
+        self.volumesSet.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
+      
+        if isinstance(self.inputSet, SetOfParticles):
+            self._createOutputVolume(self.inputSet)
+        else:
+            for class2D in self.inputSet:
+                self._createOutputVolume(class2D)
+ 
+    def _createOutputVolume(self, particles):               
+        classVolumeOut = self._getPath("rct_%06d.vol" % particles.getObjId())    
+        
         if self.doFilter.get():
             classVolumeOut = classVolumeOut.replace('.vol','_filtered.vol')
-                    
-        volumesSet = self._createSetOfVolumes()
-        volumesSet.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
-        
-        #TODO: Change when we have more than one class
-        #for k in range(1, self.numberOfClasses):
             
+        
         vol = Volume()
         vol.setFileName(classVolumeOut)
-        volumesSet.append(vol)
+        vol.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
+        self.volumesSet.append(vol)
 
-        self._defineOutputs(outputVolumes=volumesSet)
-        self._defineSourceRelation(self.inputParticlesTiltPair.get(), volumesSet)
+        self._defineOutputs(outputVolumes=self.volumesSet)
+        self._defineSourceRelation(self.inputParticlesTiltPair.get(), self.volumesSet)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
