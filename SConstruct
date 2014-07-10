@@ -31,7 +31,7 @@
 #
 
 import os
-from os.path import join
+from os.path import join, abspath
 import sys
 import platform
 import SCons.Script
@@ -94,53 +94,98 @@ SCIPION = {
 # AUXILIARY FUNCTIONS #
 #######################
 
-# We create the environment the whole build will use
+# Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
-                  tools=['Make',
-                         'Unpack',
-                         'AutoConfig',
-#                         'ConfigureJNI',
-#                         'install',
-#                         'cuda'
-                         ],
+                  tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
-# To decide if a target must be rebuilt, both md5 and timestamp will be used together
+
+# Use both md5 and timestamp to decide if a target must be rebuilt.
 env.Decider('MD5-timestamp')
-# For certain files or folders which change could affect the
-# compilation, here there could exist also a user-defined decider
-# function. At this moment MD5-timestamp will be enough
 
+# Stop Make from trying to do a cross-building.
 env['CROSS_BUILD'] = False
-# We need this so Make doesn't try to do a cross-building. Strange enough.
 
+# Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling $TARGET from $SOURCES "
-# Message from autoconf and make, so we don't see all its verbosity.
 
-def _addLibrary(env, name, dirname=None, dft=True, src=None, incs=None,
-                libs=None, tar=None, deps=None, url=None, flags=[]):
-
+def addLibrary(env, name, tar=None, buildDir=None, libs=None,
+               url=None, flags=[], autoConfigTarget='Makefile',
+               deps=[], default=True):
+    # Get reasonable defaults.
     tar = tar or '%s.tgz' % name
     url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar
-    dirname = dirname or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     libs = libs or ['lib%s.so' % name]
+    flags += ['--prefix=%s' % abspath('software')]
 
-    x = Download(env, 'software/tmp/%s' % tar, Value(url))
-    y = Untar(env, 'software/tmp/%s/configure' % dirname, x)
-    z = env.AutoConfig(source=Dir('software/tmp/%s' % dirname),
-                       AutoConfigTarget='Makefile',
-                       AutoConfigSource='configure',
-                       AutoConfigParams=['CPPFLAGS=-w',
-                                         'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
-                                         '--prefix=%s' % os.path.abspath('software')],
-                       AutoConfigStdOut='software/log/%s_config.log' % name)
-    # TODO: remove fixed flags (use the ones passed as an argument
-    env.Make(source=z,
-             target=['software/lib/%s' % x for x in libs],
-             MakePath='software/tmp/%s' % dirname,
-             MakeEnv=os.environ,
-             MakeTargets='install',
-             MakeStdOut='software/log/%s_make.log' % name)
+    # Add the option --with-name, so the user can call scons with this
+    # to activate the library even if it is not on by default
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate library %s' % name)
+        if  not GetOption(name):
+            return ''
+
+    # Create and concatenate the builders.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload)
+    tConfig = env.AutoConfig(source=Dir('software/tmp/%s' % buildDir),
+                             AutoConfigTarget=autoConfigTarget,
+                             AutoConfigSource='configure',
+                             AutoConfigParams=flags,
+                             AutoConfigStdOut='software/log/%s_config.log' % name)
+    tMake = env.Make(source=tConfig,
+                     target=['software/lib/%s' % x for x in libs],
+                     MakePath='software/tmp/%s' % buildDir,
+                     MakeEnv=os.environ,
+                     MakeTargets='install',
+                     MakeStdOut='software/log/%s_make.log' % name)
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tConfig, dep)
+
+    env.Alias(name, tMake)
+
+    return tMake
+
+
+def addModule(env, name, tar=None, buildDir=None,
+              url=None, flags=[], deps=[], default=True):
+    # Get reasonable defaults.
+    tar = tar or '%s.tgz' % name
+    url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s' % tar
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    flags += ['--prefix=%s' % abspath('software')]
+    deps += ['python']
+
+    # Add the option --with-name, so the user can call scons with this
+    # to activate the library even if it is not on by default
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate module %s' % name)
+        if  not GetOption(name):
+            return ''
+
+    # Create and concatenate the builders.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
+
+    root = abspath('software')
+    tDir = env.Command(
+        Dir('software/lib/python2.7/site-packages/%s' % name),
+        tUntar,
+        Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' % (root, root, name),
+               'Compiling %s > software/log/%s.log' % (name, name),
+               chdir='software/tmp/%s' % buildDir))
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tDir, dep)
+
+    return tDir
+
 
 
 # def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, tar=None, deps=None, url=None, flags=[]):
@@ -667,7 +712,9 @@ elif WINDOWS:
 
 
 # # Add methods to manage main dict to the environment to put them available from SConscript
-env.AddMethod(_addLibrary, "AddLibrary")
+env.AddMethod(addLibrary, "AddLibrary")
+env.AddMethod(addModule, "AddModule")
+
 # env.AddMethod(_delLibrary, "DelLibrary")
 # env.AddMethod(_addPackage, "AddPackage")
 # env.AddMethod(_delPackage, "DelPackage")
@@ -695,7 +742,7 @@ Untar = Builder(action='tar -C software/tmp --skip-old-files -xzf $SOURCE')
 # env.AddMethod(_compileWithSetupPy, "CompileWithSetupPy")
 
 # Add other auxiliar functions to environment
-env.AddMethod(_scipionLogo, "ScipionLogo")
+#env.AddMethod(_scipionLogo, "ScipionLogo")
 
 # # Add auxiliar function to completely clean the installation
 # env.AddMethod(_removeInstallation, "RemoveInstallation")
@@ -729,7 +776,4 @@ Export('env', 'SCIPION')
 #     print "Purge option implies clean. Activating clean..."
 #     SetOption('clean', True)
 
-# Only in case user didn't select help message, we run SConscript
-#if not GetOption('help') and not GetOption('clean'):
-if not GetOption('help'):
-    env.SConscript('SConscript')
+env.SConscript('SConscript')
