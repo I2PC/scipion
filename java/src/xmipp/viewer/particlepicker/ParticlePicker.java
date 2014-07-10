@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -509,7 +510,8 @@ public abstract class ParticlePicker {
             md.operate(String.format("ycoor=%d-ycoor", height));
         }
         if (scale != 1.f) {
-            md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
+            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
+            md.operate(command);
         }
         md.print();
     }// function importParticlesFromFile
