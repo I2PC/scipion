@@ -28,6 +28,8 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -130,7 +132,11 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_SIZET:
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
-				return md.getValueString(label, data.ids[row]);
+                                String str = md.getValueString(label, data.ids[row]);
+                                if(ci.labelName.equals("_alignment._matrix"))
+                                    return String.format("<html>%s</html>", formatNumbers(str).replace("],", "]<br>"));
+                                
+				return str;
 			case MetaData.LABEL_VECTOR_DOUBLE:
 			case MetaData.LABEL_VECTOR_SIZET:
 				return md.getValueString(label, data.ids[row]);
@@ -144,6 +150,20 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
                 return null;
 	}// function getValueAt
+        
+        public String formatNumbers(String str)
+        {
+            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
+            Matcher m = p.matcher(str);
+            StringBuffer sb = new StringBuffer(str.length());
+            while(m.find())
+            {
+                String number = m.group(1);
+                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
+            }
+            m.appendTail(sb);
+            return sb.toString();
+        }
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
