@@ -824,7 +824,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			return "";
 		}
 		importSize(path, f);
-                
                
 
                 File[] files = new File(path).listFiles(new FilenameFilter() {
@@ -844,9 +843,6 @@ public class SupervisedParticlePicker extends ParticlePicker
                             result += importParticlesFromFile(fit.getAbsolutePath(), f, m, scale, invertx, inverty);
                             imported = true;
                         }
-                
-
-                    
 		}
 		return result;
 	}// function importParticlesFromFolder
