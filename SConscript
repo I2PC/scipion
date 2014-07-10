@@ -38,7 +38,6 @@ Import('env')
 #  *                                                                      *
 #  ************************************************************************
 
-# Tcl/Tk
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
@@ -54,7 +53,6 @@ tk = env.AddLibrary(
     flags=['--enable-threads'],
     deps=[tcl])
 
-# sqlite
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -62,7 +60,6 @@ sqlite = env.AddLibrary(
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
-# zlib
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
@@ -70,7 +67,6 @@ zlib = env.AddLibrary(
     targets=['lib/libz.so'],
     autoConfigTarget='configure.log')
 
-# Python
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
@@ -92,132 +88,35 @@ def addModule(*args, **kwargs):
     return env.AddModule(*args, **kwargs)
 
 
-# numpy
 addModule('numpy',
           tar='numpy-1.8.1.tgz')
 
-# matplotlib
 addModule('matplotlib',
           tar='matplotlib-1.3.1.tgz')
 
-# psutil
 addModule('psutil',
           tar='psutil-2.1.1.tgz')
 
-# mpi4py
 addModule('mpi4py',
           tar='mpi4py-1.3.1.tgz')
 
-# scipy
 addModule('scipy',
           tar='scipy-0.14.0.tgz',
           default=False)
 
-# bibtex
 addModule('bibtexparser',
           tar='bibtexparser-0.5.tgz')
 
-# django
 addModule('django',
           tar='Django-1.5.5.tgz')
 
-# paramiko
 addModule('paramiko',
           tar='paramiko-1.14.0.tgz',
           default=False)
 
-# PIL
 addModule('PIL',
           tar='Imaging-1.1.7.tgz',
           deps=[zlib])
-
-
-
-# ##########################
-# # EXECUTING COMPILATIONS #
-# ##########################
-
-# # EXTERNAL LIBRARIES
-
-# t= env.AutoConfig(source=Dir('software/tmp/%s' % SCIPION['LIBS']['sqlite'][DIR]),
-#                AutoConfigTarget='Makefile',
-#                AutoConfigSource='configure',
-#                AutoConfigParams=['CPPFLAGS=-w',
-#                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
-#                                  '--prefix=%s' % abspath(SCIPION['FOLDERS'][SOFTWARE_FOLDER])])
-
-# # env.AutoConfig(source=Dir('software/tmp/%s' % SCIPION['LIBS']['sqlite'][DIR]),
-# #                target='makefile-sqlite',
-# #                AutoConfigTarget='Makefile',
-# #                AutoConfigSource='configure',
-# #                AutoConfigParams=['CPPFLAGS=-w',
-# #                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
-# #                                  '--prefix=%s' % abspath(SCIPION['FOLDERS'][SOFTWARE_FOLDER])])
-# env['CROSS_BUILD'] = False
-# env.Make(source=t,
-#          target='software/lib/libsqlite3.so',
-#          MakePath='software/tmp/%s' % SCIPION['LIBS']['sqlite'][DIR],
-#          MakeEnv=os.environ,
-#          MakeTargets='install',
-#          MakeStdOut='aaaaa')
-
-# # env.CompileLibrary('sqlite',
-# #                    source=sqliteUntar,
-# #                    flags=['CPPFLAGS=-w',
-# #                           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
-# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-# #                    target='libsqlite3.so',
-# #                    autoSource='configure') #SCIPION['LIBS']['sqlite'][DIR])
-
-# # env.CompileLibrary('tcl',
-# #                    source=tclUntar,
-# #                    flags=['--enable-threads',
-# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-# #                    target='libtcl.so',
-# #                    autoSource=join('unix','Makefile.in'),
-# #                    autoTarget=join('unix','Makefile'),
-# #                    makePath='unix')
-
-# # env.CompileLibrary('tk',
-# #                    source=tkUntar,
-# #                    flags=['--enable-threads',
-# # #                          '--with-tcl="%s"' % join(Dir(join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
-# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-# #                    target='libtk.so',
-# #                    autoSource=join('unix','Makefile.in'),
-# #                    autoTarget=join('unix','Makefile'),
-# #                    makePath='unix')
-
-# # env.CompileLibrary('zlib',
-# #                    source=zlibUntar,
-# #                    autoSource='configure',
-# #                    autoTarget='configure.log',
-# #                    flags=['--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
-# #                    target='libz.so')
-
-# # # PYTHON
-
-# # pythonMake = env.CompileLibrary('python',
-# #                                 source=pythonUntar,
-# #                                 flags=['--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath),
-# #                                        'CFLAGS=-I/usr/include/ncurses'],
-# #                                 target='libpython2.7.so',
-# #                                 autoSource='Makefile.pre.in')
-
-# # EMPackagesDeps = env.CompileWithSetupPy('python', deps=pythonMake)
-
-
-# # # PYTHON MODULES
-
-# # EMPackagesDeps += env.CompileWithSetupPy('numpy')
-# # EMPackagesDeps += env.CompileWithSetupPy('matplotlib')
-# # EMPackagesDeps += env.CompileWithSetupPy('psutil')
-# # EMPackagesDeps += env.CompileWithSetupPy('mpi4py')
-# # EMPackagesDeps += env.CompileWithSetupPy('scipy')
-# # EMPackagesDeps += env.CompileWithSetupPy('bibtexparser')
-# # EMPackagesDeps += env.CompileWithSetupPy('django')
-# # EMPackagesDeps += env.CompileWithSetupPy('paramiko')
-# # EMPackagesDeps += env.CompileWithSetupPy('pil')
 
 
 # # # EM PACKAGES
