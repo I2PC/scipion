@@ -46,48 +46,11 @@ import shutil
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
-MANDATORY_PYVERSION = '2.7.7' #python version that is obligatory for executing Scipion
-PYVERSION = platform.python_version() #python version present in the machine
+MANDATORY_PYVERSION = '2.7.8'  # what Scipion requires
+PYVERSION = platform.python_version()
 
-# Big scipion structure dictionary and associated vars
-# indexes
-# folders             | libs | packages           | index
-SOFTWARE_FOLDER =      DEF =   PKG_DEF =             0 
-                    # is built by default?               
-CONFIG_FOLDER =        INCS =  PKG_INSTALL_FOLDER =  1
-                    # includes                           
-INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
-                    # libraries to create                
-BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
-                    # source pattern                     
-PACKAGES_FOLDER =      DIR =   PKG_URL =             4 
-                    # folder name in temporal directory  
-LIB_FOLDER =           TAR =   PKG_TAR =             5
-                    # tarfile name in temporal directory
-MAN_FOLDER =           DEPS =                        6 
-                    # explicit dependencies              
-TMP_FOLDER =           URL =                         7
-                    # URL to download from               
-INCLUDE_FOLDER =       FLAGS =                       8
-                    # Other flags for the compiler
-LOG_FOLDER =                                         9 # 
-
-
-# indexes for LIBS
-
-SCIPION = {
-    'FOLDERS': {SOFTWARE_FOLDER: 'software',
-                CONFIG_FOLDER: join('software', 'cfg'),
-                INSTALL_FOLDER: join('software', 'install'),
-                BIN_FOLDER: join('software', 'bin'),
-                PACKAGES_FOLDER: join('software', 'em'),
-                LIB_FOLDER: join('software', 'lib'),
-                MAN_FOLDER: join('software', 'man'),
-                TMP_FOLDER: join('software', 'tmp'),
-                INCLUDE_FOLDER: join('software', 'include'),
-                LOG_FOLDER: join('software', 'log')},
-    'LIBS': {},
-    'EMPACKAGES': {}}
+# TODO: use those vars to actually build a virtualenv instead of
+# compiling python if appropriate.
 
 
 #######################
@@ -116,7 +79,8 @@ def addLibrary(env, name, tar=None, buildDir=None, libs=None,
     tar = tar or '%s.tgz' % name
     url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    libs = libs or ['lib%s.so' % name]
+    libs = libs or ['lib/lib%s.so' % name]
+    # TODO: find a better name than "libs"
     flags += ['--prefix=%s' % abspath('software')]
 
     # Add the option --with-name, so the user can call scons with this
@@ -136,7 +100,7 @@ def addLibrary(env, name, tar=None, buildDir=None, libs=None,
                              AutoConfigParams=flags,
                              AutoConfigStdOut='software/log/%s_config.log' % name)
     tMake = env.Make(source=tConfig,
-                     target=['software/lib/%s' % x for x in libs],
+                     target=['software/%s' % x for x in libs],
                      MakePath='software/tmp/%s' % buildDir,
                      MakeEnv=os.environ,
                      MakeTargets='install',
@@ -146,19 +110,16 @@ def addLibrary(env, name, tar=None, buildDir=None, libs=None,
     for dep in deps:
         Depends(tConfig, dep)
 
-    env.Alias(name, tMake)
-
     return tMake
 
 
-def addModule(env, name, tar=None, buildDir=None,
-              url=None, flags=[], deps=[], default=True):
+def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
+              deps=[], default=True):
     # Get reasonable defaults.
     tar = tar or '%s.tgz' % name
     url = url or 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s' % tar
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     flags += ['--prefix=%s' % abspath('software')]
-    deps += ['python']
 
     # Add the option --with-name, so the user can call scons with this
     # to activate the library even if it is not on by default
@@ -173,10 +134,12 @@ def addModule(env, name, tar=None, buildDir=None,
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
 
     root = abspath('software')
+
     tDir = env.Command(
         Dir('software/lib/python2.7/site-packages/%s' % name),
         tUntar,
-        Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' % (root, root, name),
+        Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' %
+               (root, root, name),
                'Compiling %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
@@ -748,7 +711,7 @@ Untar = Builder(action='tar -C software/tmp --skip-old-files -xzf $SOURCE')
 # env.AddMethod(_removeInstallation, "RemoveInstallation")
 
 # Add main dict to environment
-env.AppendUnique(SCIPION)
+#env.AppendUnique(SCIPION)
 
 # ########################
 # # Command-line options #
@@ -767,9 +730,7 @@ env.AppendUnique(SCIPION)
 #           action='store_true',
 #           help='After doing the installation, create and package a binary for distribution')
 
-env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
-env['PYVERSION'] = PYVERSION
-Export('env', 'SCIPION')
+Export('env')
 
 # # Purge option
 # if GetOption('purge'):

@@ -27,45 +27,30 @@
 # *
 # **************************************************************************
 
-from os.path import join, abspath
+
+# First import the environment (this comes from SConstruct)
+Import('env')
 
 
-# We start by importing the environment (this comes from SConstruct)
-Import('env', 'SCIPION')
-
-
-#################
-# PREREQUISITES #
-#################
-
-# TODO: describe this variable
-USER_COMMANDS = False
-
-# Scipion uses Python 2.7.6. If we don't have it, we will compile
-# it. If we do have it, we will use it with a virtual environment.
-
-COMPILE_PYTHON = (env['PYVERSION'] != env['MANDATORY_PYVERSION'] and
-                  not USER_COMMANDS)
-# TODO: are we really using any of the prerequisites?
-
-
-############################
-# FIRST LEVEL DEPENDENCIES #
-############################
+#  ************************************************************************
+#  *                                                                      *
+#  *                              Libraries                               *
+#  *                                                                      *
+#  ************************************************************************
 
 # Tcl/Tk
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
-    libs=['libtcl8.6.so'],
+    libs=['lib/libtcl8.6.so'],
     flags=['--enable-threads'])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
-    libs=['libtk8.6.so'],
+    libs=['lib/libtk8.6.so'],
     flags=['--enable-threads'],
     deps=[tcl])
 
@@ -73,7 +58,7 @@ tk = env.AddLibrary(
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
-    libs=['libsqlite3.so'],
+    libs=['lib/libsqlite3.so'],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
@@ -82,90 +67,69 @@ zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
     buildDir='zlib-1.2.8',
-    libs=['libz.so'],
+    libs=['lib/libz.so'],
     autoConfigTarget='configure.log')
 
-
-#############################
-# SECOND LEVEL DEPENDENCIES #
-#############################
-
-# python 2.7.8
+# Python
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    url='http://scipionwiki.cnb.csic.es/files/scipion/software/python/Python-2.7.8.tgz',
-    libs=['libpython2.7.a'],
-    flags=['CFLAGS=-I/usr/include/ncurses'],
-    deps=[sqlite, tcl, tk])
+    libs=['lib/libpython2.7.a', 'bin/python'],
+    flags=['--enable-shared',
+           'CFLAGS=-I/usr/include/ncurses'],
+    deps=[sqlite, tk])
 
 
-############################
-# THIRD LEVEL DEPENDENCIES #
-############################
+#  ************************************************************************
+#  *                                                                      *
+#  *                           Python Modules                             *
+#  *                                                                      *
+#  ************************************************************************
+
+# Helper function to include the python dependency automatically.
+def addModule(*args, **kwargs):
+    kwargs['deps'] = kwargs.get('deps', []) + python
+    return env.AddModule(*args, **kwargs)
+
 
 # numpy
-env.AddModule(
-    'numpy',
-    tar='numpy-1.8.1.tgz',
-    buildDir='numpy-1.8.1',
-    deps=[python])
+addModule('numpy',
+          tar='numpy-1.8.1.tgz')
 
 # matplotlib
-env.AddModule(
-    'matplotlib',
-    tar='matplotlib-1.3.1.tgz',
-    buildDir='matplotlib-1.3.1',
-    deps=[python])
+addModule('matplotlib',
+          tar='matplotlib-1.3.1.tgz')
 
 # psutil
-env.AddModule(
-    'psutil',
-    tar='psutil-2.1.1.tgz',
-    buildDir='psutil-2.1.1',
-    deps=[python])
+addModule('psutil',
+          tar='psutil-2.1.1.tgz')
 
 # mpi4py
-env.AddModule(
-    'mpi4py',
-    tar='mpi4py-1.3.1.tgz',
-    buildDir='mpi4py-1.3.1',
-    deps=[python])
+addModule('mpi4py',
+          tar='mpi4py-1.3.1.tgz')
 
 # scipy
-env.AddModule(
-    'scipy', 
-    tar='scipy-0.14.0.tgz', 
-    buildDir='scipy-0.14.0', 
-    deps=[python],
-    default=False)
+addModule('scipy',
+          tar='scipy-0.14.0.tgz',
+          default=False)
 
 # bibtex
-env.AddModule(
-    'bibtexparser', 
-    tar='bibtexparser-0.5.tgz',  
-#    deps=[python])
-    )
+addModule('bibtexparser',
+          tar='bibtexparser-0.5.tgz')
 
 # django
-env.AddModule(
-    'django', 
-    tar='Django-1.5.5.tgz', 
-    deps=[python])
+addModule('django',
+          tar='Django-1.5.5.tgz')
 
 # paramiko
-env.AddModule(
-    'paramiko',
-    tar='paramiko-1.14.0.tgz',
-    buildDir='paramiko-1.14.0',
-    deps=[python],
-    default=False)
+addModule('paramiko',
+          tar='paramiko-1.14.0.tgz',
+          default=False)
 
 # PIL
-env.AddModule(
-    'pil',
-    tar='Imaging-1.1.7.tgz',
-    deps=[python, zlib])
+addModule('PIL',
+          tar='Imaging-1.1.7.tgz',
+          deps=[zlib])
 
 
 
@@ -174,20 +138,20 @@ env.AddModule(
 # ##########################
 
 # # EXTERNAL LIBRARIES
-    
+
 # t= env.AutoConfig(source=Dir('software/tmp/%s' % SCIPION['LIBS']['sqlite'][DIR]),
 #                AutoConfigTarget='Makefile',
 #                AutoConfigSource='configure',
-#                AutoConfigParams=['CPPFLAGS=-w', 
-#                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
+#                AutoConfigParams=['CPPFLAGS=-w',
+#                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
 #                                  '--prefix=%s' % abspath(SCIPION['FOLDERS'][SOFTWARE_FOLDER])])
 
 # # env.AutoConfig(source=Dir('software/tmp/%s' % SCIPION['LIBS']['sqlite'][DIR]),
 # #                target='makefile-sqlite',
 # #                AutoConfigTarget='Makefile',
 # #                AutoConfigSource='configure',
-# #                AutoConfigParams=['CPPFLAGS=-w', 
-# #                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
+# #                AutoConfigParams=['CPPFLAGS=-w',
+# #                                  'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
 # #                                  '--prefix=%s' % abspath(SCIPION['FOLDERS'][SOFTWARE_FOLDER])])
 # env['CROSS_BUILD'] = False
 # env.Make(source=t,
@@ -199,26 +163,26 @@ env.AddModule(
 
 # # env.CompileLibrary('sqlite',
 # #                    source=sqliteUntar,
-# #                    flags=['CPPFLAGS=-w', 
-# #                           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1', 
-# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+# #                    flags=['CPPFLAGS=-w',
+# #                           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
+# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
 # #                    target='libsqlite3.so',
 # #                    autoSource='configure') #SCIPION['LIBS']['sqlite'][DIR])
 
-# # env.CompileLibrary('tcl', 
+# # env.CompileLibrary('tcl',
 # #                    source=tclUntar,
-# #                    flags=['--enable-threads', 
+# #                    flags=['--enable-threads',
 # #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
 # #                    target='libtcl.so',
 # #                    autoSource=join('unix','Makefile.in'),
 # #                    autoTarget=join('unix','Makefile'),
 # #                    makePath='unix')
 
-# # env.CompileLibrary('tk', 
+# # env.CompileLibrary('tk',
 # #                    source=tkUntar,
-# #                    flags=['--enable-threads', 
+# #                    flags=['--enable-threads',
 # # #                          '--with-tcl="%s"' % join(Dir(join(SCIPION['FOLDERS'][SOFTWARE_FOLDER], 'lib64')).abspath),
-# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)], 
+# #                           '--prefix=%s' % join(Dir(SCIPION['FOLDERS'][SOFTWARE_FOLDER]).abspath)],
 # #                    target='libtk.so',
 # #                    autoSource=join('unix','Makefile.in'),
 # #                    autoTarget=join('unix','Makefile'),
@@ -259,7 +223,7 @@ env.AddModule(
 # # # EM PACKAGES
 
 # # # Xmipp3.1
-# # env.AddPackage('xmipp', 
+# # env.AddPackage('xmipp',
 # #                dft=False,
 # #                tar='Xmipp-3.1-src.tgz',
 # #                dir='xmipp',
@@ -310,4 +274,3 @@ env.AddModule(
 # # # Purge option
 # # if GetOption('purge'):
 # #     env.RemoveInstallation()
-
