@@ -232,13 +232,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public GalleryJFrame(String filename, Params parameters)
 	{
 		super();
-		init(new GalleryData(this, filename, parameters, null));
+		init(new GalleryData(this, filename, parameters));
 	}
 
 	public GalleryJFrame(String filename, MetaData md, Params parameters)
 	{
 		super();
-		init(new GalleryData(this, filename, parameters, md));
+		init(new GalleryData(this, parameters, md));
 	}
         
         public GalleryJFrame(GalleryData data)

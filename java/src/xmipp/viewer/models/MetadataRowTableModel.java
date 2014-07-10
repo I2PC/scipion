@@ -42,7 +42,7 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	
 	/** Constructor using a metadata row */
 	public MetadataRowTableModel(GalleryJFrame window, MetaData md) throws Exception {
-		this(new GalleryData(window, null, new Params(), md));
+		this(new GalleryData(window, new Params(), md));
 	}
 	
 	public MetadataRowTableModel(GalleryData data) throws Exception {

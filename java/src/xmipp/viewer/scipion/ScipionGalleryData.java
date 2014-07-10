@@ -30,11 +30,11 @@ import xmipp.viewer.models.GalleryData;
 public class ScipionGalleryData extends GalleryData {
     
     public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters) {
-        this(window, fn, parameters, new ScipionMetaData(fn));
+        this(window, parameters, new ScipionMetaData(fn));
     }
 
-    public ScipionGalleryData(ScipionGalleryJFrame window, String fn, Params parameters, ScipionMetaData md) {
-        super(window, fn, parameters, md);
+    public ScipionGalleryData(ScipionGalleryJFrame window, Params parameters, ScipionMetaData md) {
+        super(window, parameters, md);
 
         mdBlocks = md.getBlocks();
         selectedBlock = mdBlocks[0];

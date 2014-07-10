@@ -287,7 +287,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             {
                 String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
                 ScipionParams params = new ScipionParams(args);
-                new ScipionGalleryJFrame(new ScipionGalleryData(this, data.getFileName(), params, (ScipionMetaData)md));
+                new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
             }
             catch(Exception e)
             {

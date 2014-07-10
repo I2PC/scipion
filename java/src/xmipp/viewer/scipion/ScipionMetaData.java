@@ -349,7 +349,7 @@ public class ScipionMetaData extends MetaData {
         return null;
     }
 
-    private ColumnInfo getColumnInfo(String labelName) {
+    public ColumnInfo getColumnInfo(String labelName) {
         for (ColumnInfo ci : columns) {
             if (ci.labelName.equals(labelName)) {
                 return ci;

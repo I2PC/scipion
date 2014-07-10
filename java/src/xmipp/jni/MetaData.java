@@ -55,7 +55,6 @@ public class MetaData {
         
         protected String[] renderLabels;
         protected String renderLabel = "first";
-        protected String sortby;
         protected String[] visibleLabels;
         protected String[] orderLabels;
 
@@ -540,14 +539,6 @@ public class MetaData {
             return renderLabel;
         }
         
-        public void setSortByLabel(String sortBy) {
-            this.sortby = sortBy;
-        }
-        
-        public String getSortByLabel()
-        {
-            return sortby;
-        }
         
          public String[] getRenderLabels()
        {

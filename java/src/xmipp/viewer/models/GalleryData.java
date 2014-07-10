@@ -110,7 +110,7 @@ public class GalleryData {
     protected String renderLabel;
     protected String[] visibleLabels;
     protected String[] orderLabels;
-
+    protected String sortby;
     
 
     public enum Mode {
@@ -124,7 +124,7 @@ public class GalleryData {
 
     public GalleryData(GalleryJFrame window, String fn, Params parameters) 
     {
-        this(window, fn, parameters, new MetaData(fn));
+        this(window, parameters, new MetaData(fn));
     }
 	// max dimension allowed to render images
     /**
@@ -133,12 +133,12 @@ public class GalleryData {
      *
      * @param jFrameGallery
      */
-    public GalleryData(GalleryJFrame window, String fn, Params parameters, MetaData md) {
+    public GalleryData(GalleryJFrame window, Params parameters, MetaData md) {
         this.window = window;
         this.parameters = parameters;
         md.setRenderLabels(parameters.renderLabels);
         md.setRenderLabel(parameters.getRenderLabel());
-        md.setSortByLabel(parameters.sortby);
+        sortby = parameters.sortby;
         md.setVisibleLabels(parameters.visibleLabels);
         md.setOrderLabels(parameters.orderLabels);
         try {
@@ -160,16 +160,9 @@ public class GalleryData {
                 mode = Mode.GALLERY_ROTSPECTRA;
             }
 
-            setFileName(fn);
-
-
-            if (md == null) {
-                this.md = new MetaData();
-                readMetadata(fn);
-            } else {
-                this.md = md;
-                loadMd();
-            }
+            setFileName(md.getFilename());
+            this.md = md;
+            loadMd();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -369,10 +362,21 @@ public class GalleryData {
             mode = Mode.TABLE_MD;
             zoom = 100;
         }
-
+        ColumnInfo sortci = getColumnInfo(sortby);
+        if(sortci != null)
+            sortMd(sortci.label, true);
     }// function loadMd
 
+    
 
+    public ColumnInfo getColumnInfo(String labelName) {
+        for (ColumnInfo ci : labels) {
+            if (ci.labelName.equals(labelName)) {
+                return ci;
+            }
+        }
+        return null;
+    }
         
                
     public boolean isDisplayLabel()
@@ -481,9 +485,9 @@ public class GalleryData {
      * Sort the metadata by a given column. The sort could be ascending or
      * descending
      */
-    public void sortMd(int col, boolean ascending) {
+    public void sortMd(int label, boolean ascending) {
         try {
-            md.sort(getLabelFromCol(col), ascending);
+            md.sort(label, ascending);
             clearSelection();
             hasMdChanges = true;
             ids = md.findObjects();
@@ -491,6 +495,8 @@ public class GalleryData {
             e.printStackTrace();
         }
     }
+    
+    
 
     void clearSelection() {
         for (int i = 0; i < selection.length; ++i) {

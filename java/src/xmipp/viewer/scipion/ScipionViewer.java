@@ -57,7 +57,7 @@ public class ScipionViewer extends Viewer {
             MetaData md;
             if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
             {
-                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters, new ScipionMetaData(filename));
+                ScipionGalleryData data = new ScipionGalleryData(null, parameters, new ScipionMetaData(filename));
                 ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
                 
             }

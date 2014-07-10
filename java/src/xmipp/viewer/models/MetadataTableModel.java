@@ -433,7 +433,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				ascending = !ascending;
 			else
 				sortColumnIndex = modelIndex;
-			data.sortMd(sortColumnIndex, ascending);
+			data.sortMd(data.labels.get(sortColumnIndex).label, ascending);
 			clearSelection();
 			updateTableSelection(table);
 			cache.clear();

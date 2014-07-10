@@ -191,7 +191,7 @@ public class ImagesWindowFactory {
 			String mode) throws Exception {
                 if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
                 {
-                    ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters, new ScipionMetaData(filename));
+                    ScipionGalleryData data = new ScipionGalleryData(null, parameters, new ScipionMetaData(filename));
                     return new GalleryJFrame(data);
                 }
                 else
