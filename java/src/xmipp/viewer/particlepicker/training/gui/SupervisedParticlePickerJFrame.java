@@ -46,7 +46,6 @@ import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 
 public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {

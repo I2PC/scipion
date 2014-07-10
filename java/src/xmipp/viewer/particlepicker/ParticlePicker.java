@@ -596,7 +596,7 @@ public abstract class ParticlePicker {
         return size / 2;
     }
     
-    public void importSize(String path, Format f)
+    public void importSize(String path, Format f, double scale)
     {
         if(f == Format.Xmipp301)
                 {
@@ -605,6 +605,7 @@ public abstract class ParticlePicker {
                     {
                         MetaData configmd = new MetaData(configfile);
                         int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        size = (int)(size * scale);
                         setSize(size);
                         saveConfig();
                     }
