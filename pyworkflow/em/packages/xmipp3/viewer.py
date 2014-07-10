@@ -51,7 +51,7 @@ from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
-from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
 from pyworkflow.utils import makePath, runJob, copyTree
@@ -66,9 +66,9 @@ class XmippViewer(Viewer):
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
-                SetOfMovies, MicrographsTiltPair, ParticlesTiltPair, ProtExtractParticles, 
-                XmippProtScreenParticles, XmippProtKerdensom, XmippProtRotSpectra,
-                SetOfCTF, NormalModes, XmippProtScreenClasses,
+                SetOfMovies, MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair, 
+                ProtExtractParticles, XmippProtScreenParticles, XmippProtKerdensom, 
+                XmippProtRotSpectra, SetOfCTF, NormalModes, XmippProtScreenClasses,
                 XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
                 XmippProtParticlePicking, XmippParticlePickingAutomatic, 
                 XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs]
@@ -168,6 +168,29 @@ class XmippViewer(Viewer):
             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
+
+        elif issubclass(cls, CoordinatesTiltPair):
+            tmpDir = self._getTmpPath(obj.getName()) 
+            makePath(tmpDir)
+
+            mdFn = join(tmpDir, 'input_micrographs.xmd')
+            writeSetOfMicrographsPairs(obj.getUntilted().getMicrographs(),
+                                        obj.getTilted().getMicrographs(), 
+                                        mdFn) 
+            parentProtId = obj.getObjParentId()
+            parentProt = self.getProject().mapper.selectById(parentProtId)
+            extraDir = parentProt._getExtraPath()
+            
+            extraDir = parentProt._getExtraPath()
+            #TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
+#             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
+#             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
+            
+            scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
+            app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
+            args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
+        
+            runJavaIJapp("%dg"%(2), app, args, True)
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
