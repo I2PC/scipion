@@ -8,22 +8,19 @@ EM_ROOT = 'software/em/'
 XMIPP_HOME = EM_ROOT + 'xmipp'
 
 # Spider 
-SPIDER_DIR = EM_ROOT + 'spider'
+SPIDER_DIR = EM_ROOT + 'spider/spider'
 
 # Eman2
-EMAN2DIR = EM_ROOT + 'EMAN2'
+EMAN2DIR = EM_ROOT + 'eman'
 
 # frealign 8.11
-FREALIGN_HOME = EM_ROOT + 'brandeis/frealign_v9.07'
+FREALIGN_HOME = EM_ROOT + 'frealign'
 
 # Ctffind 3
-CTFFIND_HOME = EM_ROOT + 'brandeis/ctffind'
+CTFFIND_HOME = EM_ROOT + 'ctffind'
 
 # Relion
-RELION_HOME = EM_ROOT + 'relion-1.2'
-
-# xmipp_optical_alignment
-OPT_ALIGN_HOME = EM_ROOT + 'opt_flow_alignment'
+RELION_HOME = EM_ROOT + 'relion'
 
 # BSOFT
 BSOFT_HOME = EM_ROOT + 'bsoft'
