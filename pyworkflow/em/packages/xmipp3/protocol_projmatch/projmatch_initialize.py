@@ -183,7 +183,7 @@ def initializeLists(self):
     self._perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
     #FIXME: this need to use later self.referenceIsCtfCorrected value or take it
     # from the input references objects
-    self.referenceIsCtfCorrected = String('False True')
+    self.referenceIsCtfCorrected = String('True')
     self._referenceIsCtfCorrected = self.itersBoolValues('referenceIsCtfCorrected') 
     
     self._scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')

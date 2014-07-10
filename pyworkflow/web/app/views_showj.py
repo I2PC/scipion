@@ -111,12 +111,13 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         
         # getting tableLayoutConfiguration
         columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
+        
         request.session[sj.COLS_CONFIG] = columnsConfig 
         
     else:
         # getting tableLayoutConfiguration from Session
         columnsConfig = request.session[sj.COLS_CONFIG]
-            
+    
     inputParams[sj.COLS_CONFIG] = columnsConfig
     
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
@@ -383,10 +384,10 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
         context.update({sj.DATASET: dataset})
     if columnsConfig is not None:
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-                                                               #'colsOrder': columnsConfig.colsOrder
-                                                               },
-                                                               ensure_ascii=False,
-                                                               cls=ColumnPropertiesEncoder)})
+                                                   #'colsOrder': columnsConfig.colsOrder
+                                                   },
+                                                   ensure_ascii=False,
+                                                   cls=ColumnPropertiesEncoder)})
     if table is not None:
         context.update({'tableDataset': table})
     
@@ -399,21 +400,34 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
 
 def getExtraParameters(extraParams, table):
     defaultColumnsLayoutProperties = {}
+    _mapCol = {}
+    enc_visible = False
+    
     if extraParams != None and extraParams != {}:
-        defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
+        for k in table.iterColumns():
+            defaultColumnsLayoutProperties[k.getLabel()] = {}
+            _mapCol[k.getLabel()] = k.getName()
         
-        print "Extra Params:    "
         for key, value in extraParams.iteritems():
             try:
                 label, attribute = key.rsplit('___')
+                if attribute == 'visible':
+                    enc_visible = True
+                
             except Exception, ex:
                 raise Exception('Showj Web visualizer: Incorrect extra parameter')
             
-            print label," ", attribute,":",value
-            
-            if table.hasColumn(label):
-                defaultColumnsLayoutProperties[label].update({attribute:value})
+            if not label in _mapCol:
+                print label, "is not in mapCol"
+            else:
+                if table.hasColumn(_mapCol[label]):
+                    defaultColumnsLayoutProperties[label].update({attribute:value})
                 
+        if enc_visible:
+            for x in defaultColumnsLayoutProperties:
+                if not 'visible' in defaultColumnsLayoutProperties[x]:
+                    defaultColumnsLayoutProperties[x].update({'visible':'False'})
+        
     return defaultColumnsLayoutProperties
 
 
@@ -497,10 +511,14 @@ def updateSessionTable(request):
     type = request.GET.get('type', None)
     option = request.GET.get('option', None)
     
+    cols_config = request.session[sj.COLS_CONFIG]
+    
     if type == "renderable":
-        request.session[sj.COLS_CONFIG].configColumn(label, renderable=option)
+        cols_config.configColumn(label, renderable=option)
     elif type == "editable":    
-        request.session[sj.COLS_CONFIG].configColumn(label, editable=option)
+        cols_config.configColumn(label, editable=option)
+    elif type == 'visible':
+        cols_config.configColumn(label, visible=option)
         
     return HttpResponse(mimetype='application/javascript')
 
