@@ -324,6 +324,7 @@ def rowToClass(md, objId, classItem):
         img = classItem.REP_TYPE()
         img.copyObjId(classItem)
         img.setLocation(index, filename)
+        img.setSamplingRate(classItem.getSamplingRate())
         classItem.setRepresentative(img)
     
     return classItem
