@@ -119,57 +119,51 @@ addModule('PIL',
           deps=[zlib])
 
 
-# # # EM PACKAGES
+#  ************************************************************************
+#  *                                                                      *
+#  *                       External (EM) Packages                         *
+#  *                                                                      *
+#  ************************************************************************
 
-# # # Xmipp3.1
-# # env.AddPackage('xmipp',
-# #                dft=False,
-# #                tar='Xmipp-3.1-src.tgz',
-# #                dir='xmipp',
-# #                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tgz')
+env.AddPackage('xmipp',
+               tar='Xmipp-3.1-src.tgz',
+               instDir='xmipp',
+               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tgz',
+               default=False)
+# TODO: fix the url of this package!
 
-# # # Bsoft
-# # env.AddPackage('bsoft',
-# #                dft=False,
-# #                tar='bsoft1_8_8_Fedora_12.tgz',
-# #                dir='bsoft')
+env.AddPackage('bsoft',
+               tar='bsoft1_8_8_Fedora_12.tgz',
+               instDir='bsoft',
+               default=False)
 
-# # # CtfFind
-# # env.AddPackage('ctffind',
-# #                dft=False,
-# #                tar='ctffind_V3.5.tgz',
-# #                dir='ctf')
+env.AddPackage('ctffind',
+               tar='ctffind_V3.5.tgz',
+               instDir='ctffind',
+               default=False)
+# TODO: check if instDir should be brandeis/ctffind instead
 
-# # # EMAN2
-# # env.AddPackage('eman2',
-# #                dft=False,
-# #                tar='eman2.1beta3.linux64.tgz',
-# #                dir='EMAN2')
+env.AddPackage('eman2',
+               tar='eman2.1beta3.linux64.tgz',
+               instDir='EMAN2',
+               default=False)
 
-# # # frealign
-# # env.AddPackage('frealign',
-# #                dft=False,
-# #                tar='frealign_v9.07.tgz')
+env.AddPackage('frealign',
+               tar='frealign_v9.07.tgz',
+               default=False)
 
-# # # relion
-# # env.AddPackage('relion',
-# #                dft=False,
-# #                tar='relion-1.2.tgz')
-# # # spider
-# # env.AddPackage('spider',
-# #                dft=False,
-# #                tar='spider-web-21.13.tgz',
-# #                dir='spider-web')
+env.AddPackage('relion',
+               tar='relion-1.2.tgz',
+               default=False)
 
-# # if not GetOption('clean'):
-# #     env.Download('xmipp', type='EMPackage')
-# #     env.Download('bsoft', type='EMPackage')
-# #     env.Download('ctffind', type='EMPackage')
-# #     env.Download('eman2', type='EMPackage')
-# #     env.Download('frealign', type='EMPackage')
-# #     env.Download('relion', type='EMPackage')
-# #     env.Download('spider', type='EMPackage')
+env.AddPackage('spider',
+               tar='spider-web-21.13.tgz',
+               instDir='spider-web',
+               default=False)
 
-# # # Purge option
-# # if GetOption('purge'):
-# #     env.RemoveInstallation()
+
+# TODO: check if we have to use the "purge" option below:
+
+# # Purge option
+# if GetOption('purge'):
+#     env.RemoveInstallation()

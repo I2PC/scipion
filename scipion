@@ -238,8 +238,10 @@ def main():
                 os.makedirs(path) 
         from scripts.install import build
         returncode = build(args=sys.argv[2:])
-        if not returncode: # If not error, write settings
+        if returncode == 0:
             runApp('config.py')
+        # FIXME: I am not sure this is a good idea. To begin with,
+        # right now it expects xmipp to be installed.
         sys.exit(returncode)
         
     elif mode == MODE_CONFIG:

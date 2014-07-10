@@ -33,10 +33,8 @@
 
 import os
 from os.path import join, abspath
-import sys
 import platform
 import SCons.Script
-import shutil
 
 
 #############
@@ -54,7 +52,9 @@ PYVERSION = platform.python_version()
 # TODO: use those vars to actually build a virtualenv instead of
 # compiling python if appropriate.
 
+# URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
+
 
 #######################
 # AUXILIARY FUNCTIONS #
@@ -86,7 +86,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     (in the given buildDir) and installs it. It also tells SCons about
     the proper dependencies (deps).
 
-    If default=False, the library will not be build unless the option
+    If default=False, the library will not be built unless the option
     --with-<name> is used.
 
     Returns the final targets, the ones that Make will create.
@@ -140,7 +140,7 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     (in the given buildDir) and installs it. It also tells SCons about
     the proper dependencies (deps).
 
-    If default=False, the module will not be build unless the option
+    If default=False, the module will not be built unless the option
     --with-<name> is used.
 
     Returns the final target (software/lib/python2.7/site-packages/<name>)
@@ -178,7 +178,52 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     return tDir
 
 
+def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
+               deps=[], default=True):
+    """Add external (EM) package "name" to the construction process.
 
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file and copies its content from buildDir into the
+    installation directory instDir. It also tells SCons about the
+    proper dependencies (deps).
+
+    If default=False, the package will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final target (software/em/<instDir>)
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/em/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    instDir = instDir or tar.split('-', 1)[0].split('_', 1)[0]
+
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate the package even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate package %s' % name)
+        if  not GetOption(name):
+            return ''
+
+    # Create and concatenate the builders.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tUntar = Untar(env, Dir('software/tmp/%s' % buildDir), tDownload)
+    tDir = env.Command(
+        Dir('software/em/%s' % instDir),
+        Dir('software/tmp/%s' % buildDir),
+        Action('cp -ar software/tmp/%s software/em/%s' % (buildDir, instDir),
+               'Putting contents of %s in software/em/%s' % (name, instDir)))
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tDir, dep)
+
+    return tDir
+
+
+# TODO: check if we have to use any of the commented lines below.
 
 # def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin=None):
 #     """
@@ -331,6 +376,7 @@ elif WINDOWS:
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
+env.AddMethod(addPackage, "AddPackage")
 
 # Extra (simple) builders
 Download = Builder(action='wget $SOURCE -c -O $TARGET')
