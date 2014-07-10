@@ -823,7 +823,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			importAllParticles(particlesfile);
 			return "";
 		}
-		importSize(path, f);
+		importSize(path, f, scale);
                
 
                 File[] files = new File(path).listFiles(new FilenameFilter() {
