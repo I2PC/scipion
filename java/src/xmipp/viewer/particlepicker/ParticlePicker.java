@@ -641,15 +641,13 @@ public abstract class ParticlePicker {
      
      public boolean isScipionSave()
      {
-         return script != null;
+         return script != null && mode != Mode.ReadOnly;
      }
 
     public String[] getScipionSaveCommand() {
-       
         String[] cmd = new String[]{python, script, projectid, protid};
-        
         return cmd;
-       }
+    }
      
     
     public abstract int getParticlesCount();
