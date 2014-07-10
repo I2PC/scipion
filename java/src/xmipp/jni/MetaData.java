@@ -83,7 +83,7 @@ public class MetaData {
 
 	public static final int MD_OVERWRITE = 0;
 	public static final int MD_APPEND = 1;
-	private String filename;
+	protected String filename;
 	// hold pointer to Image class in C++ space
 	private long peer;
 

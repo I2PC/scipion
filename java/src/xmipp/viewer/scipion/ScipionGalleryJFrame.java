@@ -5,13 +5,11 @@
  */
 package xmipp.viewer.scipion;
 
-import ij.ImagePlus;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -22,7 +20,6 @@ import javax.swing.JButton;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
-import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -46,6 +43,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String runNameKey = "Run name:";
     private String other;
     private JButton representativesbt;
+    ScipionMessageDialog dlg;
     
    
 
@@ -95,6 +93,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
         });
         buttonspn.add(closebt);
+       
         if (type != null) {
             cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
@@ -104,17 +103,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     
                     if(data.hasClasses())
                     {
-                        
                         for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEnabledObjects())
                             if(emo.childmd != null)
                                 size += emo.childmd.getEnabledObjects().size();
                     }
                     else
                         size = data.getEnabledIds().size();
-                    String question = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", type, size, (size > 1)?"elements":"element");
-                    ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", question, msgfields);
-                    int create = dlg.action;
-                    if (create == ScipionMessageDialog.OK_OPTION) 
+                    if (confirmCreate(type, size)) 
                     {
                         String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
                         runCommand(command, "Creating set ...");
@@ -128,10 +123,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         int size = data.getEnabledIds().size();
-                        String msg = String.format("<html>Are you sure you want to create a new set of Classes with <font color=red>%s</font> %s?", size, (size > 1)?"elements":"element");
-                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
-                        int create = dlg.action;
-                        if (create == ScipionMessageDialog.OK_OPTION) {
+                       
+                        if (confirmCreate("Classes", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
                             runCommand(command, "Creating set ...");
@@ -146,10 +139,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     public void actionPerformed(ActionEvent ae) {
                         MetaData md = data.getMd(data.getEnabledIds());
                         int size = md.size();
-                        String msg = String.format("<html>Are you sure you want to create a new set of Representatives with <font color=red>%s</font> %s?", size, (size > 1)?"elements":"element");
-                        ScipionMessageDialog dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
-                        int create = dlg.action;
-                        if (create == ScipionMessageDialog.OK_OPTION) {
+                        
+                        if (confirmCreate("Representatives", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
                             runCommand(command, "Creating set ...");
@@ -192,6 +183,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             });
         }
 
+    }
+    
+    public boolean confirmCreate(String output, int size)
+    {
+        String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
+        if(data.size() == size)
+            msg += "<br><font color=red>Note:</font> There are no disabled items to dismiss";
+        dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
+                        int create = dlg.action;
+        return (create == ScipionMessageDialog.OK_OPTION);
     }
 
     public void reloadTableData(boolean changed)
@@ -268,6 +269,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 //                    }
 
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     throw new IllegalArgumentException(ex.getMessage());
                 }
 

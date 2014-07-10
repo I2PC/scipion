@@ -29,7 +29,6 @@ import xmipp.viewer.models.ColumnInfo;
  */
 public class ScipionMetaData extends MetaData {
 
-    private String dbfile;
     private List<ColumnInfo> columns;
     private String self, selfalias;
     private List<EMObject> emobjects;
@@ -53,7 +52,7 @@ public class ScipionMetaData extends MetaData {
     }
 
     public ScipionMetaData(String dbfile) {
-        this.dbfile = dbfile;
+        this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         loadData();
@@ -73,7 +72,7 @@ public class ScipionMetaData extends MetaData {
 
     public ScipionMetaData(String dbfile, String prefix) {
 
-        this.dbfile = dbfile;
+        this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         this.prefix = prefix;
@@ -111,7 +110,7 @@ public class ScipionMetaData extends MetaData {
             columns.add(commentci);
 
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
+            c = DriverManager.getConnection("jdbc:sqlite:" + filename);
             stmt = c.createStatement();
             ResultSet rs;
 
@@ -310,9 +309,7 @@ public class ScipionMetaData extends MetaData {
         return prefix + self + "s";
     }
 
-    public String getDBFile() {
-        return dbfile;
-    }
+   
 
     public List<EMObject> getEMObjects() {
         return emobjects;
