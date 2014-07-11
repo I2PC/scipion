@@ -429,7 +429,13 @@ public class ScipionMetaData extends MetaData {
         return columns;
     }
 
-    public static boolean isImage(String self, String label) {
+    public boolean isImage(String self, String label) {
+        if(label.contains("_filename"))
+        {
+            String indexLabel = label.replace("_filename", "_index");
+            if(getColumnInfo(indexLabel) != null)
+                return true;
+        }
         if (self.equals("Micrograph") || self.equals("Particle") || self.equals("Volume")) {
             if (label.equals("_filename")) {
                 return true;
