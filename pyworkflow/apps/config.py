@@ -292,9 +292,6 @@ def addProtocols(settings):
                   tag='protocol_base')
     m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
                   tag='protocol_base')
-    m1.addSubMenu('Destroy Universe', value='ProtDestroyUniverse',
-                  tag='protocol')
-
     
         
     # ------------------- Particles ----------------------------
