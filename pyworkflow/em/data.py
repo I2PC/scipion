@@ -429,12 +429,13 @@ class EMXObject(EMObject):
     def getBinaryFile(self):
         return self._binaryFile.get()        
                 
-      
-class EMSet(EMObject, Set):
-    def __init__(self, **args):
-        Set.__init__(self, **args)
-        EMObject.__init__(self, **args)
+#       
+# class EMSet(EMObject, Set):
+#     def __init__(self, *args, **kwargs):
+#         Set.__init__(self, *args, **kwargs)
+#         EMObject.__init__(self, *args, **kwargs)
 
+class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()
   
