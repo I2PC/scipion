@@ -99,18 +99,20 @@ class ProtUserSubSet(ProtSets):
               
     def _createSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
-        output = self._createSetOfMicrographs()
+        outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
-        SetOfImages.copyInfo(output, setOfMics)
+        SetOfImages.copyInfo(outputMics, setOfMics)
         
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
         
         for ctf in modifiedSet:
             if ctf.isEnabled():
                 mic = ctf.getMicrograph()
-                output.append(mic)
+                outputMics.append(mic)
                 
-        self._defineOutputs(outputMicrographs=output)
+        self._defineOutputs(outputMicrographs=outputMics)
+        self._defineTransformRelation(setOfMics, outputMics)
+        
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
         """ Create a new set of images joining all images

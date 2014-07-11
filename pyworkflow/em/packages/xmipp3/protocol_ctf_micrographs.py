@@ -144,7 +144,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.inputMicrographs.get())
+        ctfSet.setMicrographs(self.inputMics)
         defocusList = []
         
         for ctfModel in self.setOfCtf:
