@@ -631,7 +631,12 @@ class SqliteFlatMapper(Mapper):
             self.__loadObjDict()
         objRows = self.db.selectAll()
         
-        return self.__objectsFromRows(objRows, iterate, objectFilter)    
+        return self.__objectsFromRows(objRows, iterate, objectFilter) 
+    
+    def count(self):
+        if self.doCreateTables:
+            return 0
+        return self.db.count()   
     
     def __objectsFromIds(self, objIds):
         """Return a list of objects, given a list of id's
@@ -822,6 +827,11 @@ class SqliteFlatDb(SqliteDb):
     def selectAll(self, iterate=True):
         self.executeCommand(self.selectCmd('1'))
         return self._results(iterate)
+    
+    def count(self):
+        """ Return the number of element in the table. """
+        self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(*)'))
+        return self.cursor.fetchone()[0]
     
     def selectObjectsBy(self, iterate=False, **args):     
         """More flexible select where the constrains can be passed

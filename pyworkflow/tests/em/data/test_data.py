@@ -36,15 +36,15 @@ class TestImage(unittest.TestCase):
         
 class TestSetOfMicrographs(BaseTest):
     
-    
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
-        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.dbGold = cls.dataset.getFile('micsGoldSqlite')
         cls.micsPattern = cls.dataset.getFile('allMics')
         cls.dbFn = cls.getOutputPath('micrographs.sqlite')
-        cls.acquisition = Acquisition(magnification=60000, voltage=300, sphericalAberration=2, amplitudeContrast=0.1)
+        cls.acquisition = Acquisition(magnification=60000, voltage=300, 
+                                      sphericalAberration=2, amplitudeContrast=0.1)
         
         #cls.mics = glob(cls.micsPattern)
         cls.mics = []
@@ -55,7 +55,6 @@ class TestSetOfMicrographs(BaseTest):
             raise Exception('There are not micrographs matching pattern')
         cls.mics.sort()                 
     
-        
     def checkSet(self, micSet):
         idCount = 1
     
@@ -93,6 +92,7 @@ class TestSetOfMicrographs(BaseTest):
     def testRead(self):
         """ Read micrographs from a SetOfMicrographs """
         micSet = SetOfMicrographs(filename=self.dbGold)
+        self.assertEqual(3, micSet.getSize())
         self.checkSet(micSet)
 
 
