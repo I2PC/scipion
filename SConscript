@@ -31,6 +31,7 @@
 # First import the environment (this comes from SConstruct)
 Import('env')
 
+from os.path import abspath
 
 #  ************************************************************************
 #  *                                                                      *
@@ -43,14 +44,16 @@ tcl = env.AddLibrary(
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
     targets=['lib/libtcl8.6.so'],
-    flags=['--enable-threads'])
+    flags=['--enable-threads',
+           '--bindir=%s' % abspath('software/bin')])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
     targets=['lib/libtk8.6.so'],
-    flags=['--enable-threads'],
+    flags=['--enable-threads',
+           '--bindir=%s' % abspath('software/bin')],
     deps=[tcl])
 
 sqlite = env.AddLibrary(
@@ -58,7 +61,8 @@ sqlite = env.AddLibrary(
     tar='sqlite-3.6.23.tgz',
     targets=['lib/libsqlite3.so'],
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
+           '--bindir=%s' % abspath('software/bin')])
 
 zlib = env.AddLibrary(
     'zlib',
