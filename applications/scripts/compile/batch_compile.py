@@ -61,7 +61,7 @@ class ScriptCompile(XmippScript):
                  "-L"+xmippDir+"/lib "+\
                  "-I"+xmippDir+"/libraries "+\
                  "-I"+xmippDir+" "+\
-                 "-lXmippClassif -lXmippData -lXmippExternal -lXmippInterface -lXmippRecons -lfftw3 -lfftw3_threads -lsqlite3 -ltiff -ljpeg"
+                 "-lXmippClassif -lXmippData -lXmippExternal -lXmippInterface -lXmippRecons -lXmippDimred -lfftw3 -lfftw3_threads -lsqlite3 -ltiff -ljpeg"
         command +=" -I"+xmippDir+"/external/python/Python-2.7.2/Include -I"+xmippDir+"/external/python/Python-2.7.2 -L"+\
                   xmippDir+"/external/python/Python-2.7.2 -lpython2.7 -I"+xmippDir+"/lib/python2.7/site-packages/numpy/core/include"
         os.system(command)
