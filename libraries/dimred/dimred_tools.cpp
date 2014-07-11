@@ -351,7 +351,7 @@ double intrinsicDimensionalityMLE(const Matrix2D<double> &X, DimRedDistance2 f)
 // By correlation dimension
 double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2 f)
 {
-	int K=5;
+	int K=3;
 	Matrix2D<int> idx;
 	Matrix2D<double> distance;
 	kNearestNeighbours(X,K,idx,distance,f);
@@ -363,6 +363,8 @@ double intrinsicDimensionalityCorrDim(const Matrix2D<double> &X, DimRedDistance2
 	double maxVal=MATRIX2D_ARRAY(distance)[N-1];
 	median*=median; // Because we compute dist^2 instead of dist
 	maxVal*=maxVal;
+	if (maxVal==0)
+		return 0;
 
 	// Compute the distance of all versus all
 	double countLessMedianK=0, countLessMaxK=0;
