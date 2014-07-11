@@ -380,7 +380,7 @@ env.AddMethod(addPackage, "AddPackage")
 
 # Extra (simple) builders
 Download = Builder(action='wget $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C software/tmp --skip-old-files -xzf $SOURCE')
+Untar = Builder(action='tar -C software/tmp -xzf $SOURCE')
 
 
 # ########################
