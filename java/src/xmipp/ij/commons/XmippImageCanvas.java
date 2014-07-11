@@ -8,11 +8,8 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import xmipp.utils.XmippDialog;
 
 public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 {

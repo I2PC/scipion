@@ -25,62 +25,60 @@
  */
 package xmipp.ij.commons;
 
+import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import ij.ImagePlus;
 
 public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
-    protected boolean wrap;
-    protected boolean allowsGeometry = false;
-    protected boolean useGeometry;
     private boolean existsfile;
+    
 
     public ImagePlusLoader() {
 
     }
 
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null);
+        this(getFile(imp), imp, null, false, -1);
 
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig);
-        impreader.setIndex(index);
+        this(getFile(ig), null, ig, false, index);
 
     }
 
     public ImagePlusLoader(String fileName) {
-        this(fileName, null, null);
+        this(fileName, null, null, false, -1);
     }
 
-    public ImagePlusLoader(String fileName, boolean allowsGeometry, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null);
-        this.allowsGeometry = allowsGeometry;
-        this.useGeometry = useGeometry;
-        this.wrap = wrap;
+    public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
+        this(fileName, null, null, useGeometry, -1);
+        setWrap(wrap);
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig) {
-
-        int index = -1;
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
+        int index2 = -1;
         if (fileName != null) {
-            if (fileName != null && fileName.contains("@")) {
+            
+            if (fileName.contains("@")) {
+                
                 int arrobaindex = fileName.lastIndexOf("@");
                 String header = fileName.substring(0, arrobaindex);
 
                 int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
                 String textindex = fileName.substring(sepindex + 1, arrobaindex);
-                index = Integer.parseInt(textindex);
+                if(index == -1)
+                    index = Integer.parseInt(textindex);
+                else
+                    index2 = Integer.parseInt(textindex);
                 fileName = fileName.substring(arrobaindex + 1);
                 if (sepindex != -1) {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
             }
-
             existsfile = new File(fileName).exists();
         }
         if (existsfile) 
@@ -88,8 +86,8 @@ public class ImagePlusLoader {
         else 
             impreader = new ImagePlusNotFromFile(imp, ig);
         
-        impreader.setIndex(index);
-
+        impreader.setIndexes(index, index2);
+        impreader.setUseGeometry(useGeo);
     }
 
     public ImagePlusLoader(ImageGeneric ig) {
@@ -105,26 +103,13 @@ public class ImagePlusLoader {
         return impreader.getImagePlus();
     }
 
-    public boolean allowsGeometry() {
-        return allowsGeometry;
-    }
-
-    public boolean getUseGeometry() {
-        return useGeometry;
-    }
-
-    public void setUseGeometry(boolean value) {
-        useGeometry = value;
-
-    }
-
     public void setWrap(boolean value) {
-        wrap = value;
+        impreader.setWrap(value);
 
     }
 
     public boolean isWrap() {
-        return wrap;
+        return impreader.isWrap();
     }
 
     public static String getFile(ImagePlus imp) {
@@ -165,12 +150,29 @@ public class ImagePlusLoader {
         return impreader.isVolume();
     }
 
-    public void setAllowsGeometry(boolean allowsGeometry) {
-        this.allowsGeometry = allowsGeometry;
-    }
-
+   
     public boolean isStackOrVolume() {
         return impreader.isStackOrVolume();
+    }
+    
+     public boolean getUseGeometry() {
+        return impreader.getUseGeometry();
+    }
+
+     public void setUseGeometry(boolean value) {
+        impreader.setUseGeometry(value);
+
+    }
+     
+     public void setGeometry(Geometry geometry)
+    {
+        impreader.setGeometry(geometry);
+    }
+
+    
+    public void setDimension(int width, int height)
+    {
+        impreader.setDimension(width, height);
     }
 
 }

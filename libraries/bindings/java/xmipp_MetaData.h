@@ -276,7 +276,7 @@ extern "C"
      * Signature: (Z)[D
      */
     JNIEXPORT jdoubleArray JNICALL Java_xmipp_jni_MetaData_getStatistics
-    (JNIEnv *, jobject, jboolean);
+    (JNIEnv *, jobject, jboolean, jint);
 
     /*
      * Class:     xmipp_MetaData

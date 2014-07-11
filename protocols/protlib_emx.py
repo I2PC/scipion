@@ -476,9 +476,9 @@ def emxTransformToXmipp(md, objId, particle, doAlign):
 
     rot, tilt, psi = Euler_matrix2angles(_array)
     
-    _X = particle.get('transformationMatrix__t14', 0.)
-    _Y = particle.get('transformationMatrix__t24', 0.)
-    _Z = particle.get('transformationMatrix__t34', 0.)
+    _X = -particle.get('transformationMatrix__t14', 0.)
+    _Y = -particle.get('transformationMatrix__t24', 0.)
+    _Z = -particle.get('transformationMatrix__t34', 0.)
 #    if doAlign:
 #        _shift = array ([_X,_Y,_Z])
 #        _X = -_shift[0]
@@ -491,9 +491,9 @@ def emxTransformToXmipp(md, objId, particle, doAlign):
         print "DOALIGN_________________________________"
         rot, tilt, psi = -psi, -tilt, -rot #####multiply by inverse matrix
         tMatrix = Euler_angles2matrix(rot, tilt, psi)
-        shift = array ([-_X,-_Y,-_Z])
+        shift = array ([_X,_Y,_Z])
         _X,_Y,_Z = dot(tMatrix, shift)
-
+    
     
     md.setValue(MDL_ANGLE_ROT , rot , objId)
     md.setValue(MDL_ANGLE_TILT, tilt, objId)
@@ -697,7 +697,7 @@ def xmippTransformToEmx(md, objId, particle, doAlign):
         shift = dot(tMatrix, shift)
     else:
         print "NOT-DOALIGN_____________________________"
-        shift = array([x, y, z])
+        shift = array([-x, -y, -z])
 
     for i, j, label in iterTransformationMatrix():
         particle.set(label, tMatrix[i][j])

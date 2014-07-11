@@ -2,14 +2,12 @@ package xmipp.viewer.particlepicker.tiltpair.model;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -116,11 +114,12 @@ public class TiltPairPicker extends ParticlePicker
 			id = uIds[i];
 			x = uMd.getValueInt(MDLabel.MDL_XCOOR, id);
 			y = uMd.getValueInt(MDLabel.MDL_YCOOR, id);
-			up = new UntiltedParticle(x, y, um, this);
-			um.addParticle(up);
+			
 			// Set tilted pair particle
 			if (i < tIds.length)
 			{
+                                up = new UntiltedParticle(x, y, um, this);
+                                um.addParticle(up);
 				id = tIds[i];
 				x = tMd.getValueInt(MDLabel.MDL_XCOOR, id);
 				y = tMd.getValueInt(MDLabel.MDL_YCOOR, id);
@@ -135,8 +134,10 @@ public class TiltPairPicker extends ParticlePicker
 				tm.addParticle(tp);
 			}
 			else
-				result += String.format("Particle at %s centered on %s,%s without tilted pair.\n", getMicrograph().getName(), x, y);
+				result += String.format("%s centered on (%s,%s),  ", getMicrograph().getName(), x, y);
 		}
+                if(!result.isEmpty())
+                    result = "Particles at: " + result + "without tilted pairs dismissed";
 
 		um.initAligner();
 
@@ -308,7 +309,7 @@ public class TiltPairPicker extends ParticlePicker
 
 		String uFn, tFn;
 		String result = "";
-                importSize(path, f);
+                importSize(path, f, scale);
 		for (UntiltedMicrograph um : micrographs)
 		{
 			uFn = getImportMicrographName(path, um.getFile(), f);

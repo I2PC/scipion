@@ -12,6 +12,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -307,7 +308,7 @@ public abstract class ParticlePicker {
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
-            if (f.getCommand().equals(command)) {
+            if (f.getCommand().equals(command2)) {
                 return true;
             }
         }
@@ -499,6 +500,7 @@ public abstract class ParticlePicker {
             default:
                 md.clear();
         }
+        
         int width = (int) (m.width / scale);// original width
         int height = (int) (m.height / scale);// original height
         if (invertx) {
@@ -508,9 +510,10 @@ public abstract class ParticlePicker {
             md.operate(String.format("ycoor=%d-ycoor", height));
         }
         if (scale != 1.f) {
-            md.operate(String.format("xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale));
+            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
+            md.operate(command);
         }
-
+        md.print();
     }// function importParticlesFromFile
     
     public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
@@ -597,7 +600,7 @@ public abstract class ParticlePicker {
         return size / 2;
     }
     
-    public void importSize(String path, Format f)
+    public void importSize(String path, Format f, double scale)
     {
         if(f == Format.Xmipp301)
                 {
@@ -606,6 +609,7 @@ public abstract class ParticlePicker {
                     {
                         MetaData configmd = new MetaData(configfile);
                         int size = configmd.getValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, configmd.firstObject());
+                        size = (int)(size * scale);
                         setSize(size);
                         saveConfig();
                     }

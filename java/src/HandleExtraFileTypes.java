@@ -323,7 +323,9 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // is not available..."
         try{
             System.err.println(path);
-            Params param=new Params();
+
+            Params param = new Params();
+
         	imp=ImagesWindowFactory.openFileAsImagePlus(path, param);
             if (imp == null) {
                 width = PLUGIN_NOT_FOUND;

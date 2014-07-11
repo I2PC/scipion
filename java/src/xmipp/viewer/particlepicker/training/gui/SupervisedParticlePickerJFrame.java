@@ -47,7 +47,6 @@ import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker.UpdateTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
 import xmipp.viewer.scipion.ScipionMessageDialog;
 
@@ -183,7 +182,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
-            ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+            result = ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);

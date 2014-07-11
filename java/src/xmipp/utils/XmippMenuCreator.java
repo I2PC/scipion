@@ -4,6 +4,7 @@ package xmipp.utils;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	 * A new menu defines a new group and also a separator 
 	 * in the same menu defines a new group;
 	 */
-	protected ButtonGroup group; 
+	protected Map<String, ButtonGroup> groups; 
 	protected JComponent menu;
 	
 	/** Constructor */
@@ -33,12 +34,14 @@ public abstract class XmippMenuCreator implements ActionListener {
 		try {
 			this.menu = menu;
 			items = new Hashtable<String, JMenuItem>();
-			group = null;
+			groups = new HashMap<String, ButtonGroup>();
 			createItems();
 		} catch (Exception e){
 			e.printStackTrace();
 		}
 	}
+        
+       
 	
 	/**
 	 * The idea behind this method is simplify the creation of menu options. The
@@ -50,8 +53,10 @@ public abstract class XmippMenuCreator implements ActionListener {
 	 * @return the created MenuItem, null if an error occurs
 	 * @throws Exception
 	 */
-	public JMenuItem addItem(String key, String text, String... values){
+	public JMenuItem addItem(String key, String text,  String... values){
+                
 		String name = key;
+                String parentname = null;
 		JMenuItem item = null;
 		JMenu parent = null;
 		boolean isMenu = false;
@@ -60,24 +65,31 @@ public abstract class XmippMenuCreator implements ActionListener {
 		if (key.contains(".")) {
 			int pos = key.lastIndexOf(".");
 			name = key.substring(pos + 1);
-			parent = (JMenu)getItem(key.substring(0, pos));
+                        parentname = key.substring(0, pos);
+			parent = (JMenu)getItem(parentname);
 		}
 
 		// Create the right type of menu item
 		if (name.endsWith("cb"))
 			item = new JCheckBoxMenuItem();
 		else if (name.endsWith("rb")){
+                        ButtonGroup group = groups.get(parentname);
 			if (group == null)
+                        {
 				group = new ButtonGroup();
+                                groups.put(parentname, group);
+                        }
 			item = new JRadioButtonMenuItem();
 			group.add(item);
 		}
 		else if (name.endsWith("mi"))
+                {
 			item = new JMenuItem();
+                        
+                }
 		else {
 			item = new JMenu();
 			isMenu = true;
-			group = null; //define a new group
 		}
 		// Setup the item
 		item.setText(text);
@@ -179,7 +191,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE_EXIT = "File.Exit_mi";
 	public final String DISPLAY = "Display";
 	public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
-	public final String DISPLAY_SHOWLABELS = "Display.ShowLabels_cb";
+	public final String DISPLAY_SHOWLABELS = "Display.ShowLabel";
 	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 	
 	public final String DISPLAY_RENDERIMAGECOLUMN = "Display.RenderImagesColumn";

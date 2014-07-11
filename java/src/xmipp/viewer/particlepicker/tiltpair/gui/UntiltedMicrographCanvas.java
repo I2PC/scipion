@@ -2,13 +2,9 @@ package xmipp.viewer.particlepicker.tiltpair.gui;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;

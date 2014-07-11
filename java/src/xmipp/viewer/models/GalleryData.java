@@ -32,11 +32,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.Geometry;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
-import xmipp.jni.MetaData;
 import xmipp.jni.MDRow;
+import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippStringUtils;
@@ -62,6 +63,10 @@ public class GalleryData {
         protected Mode mode;
 	public boolean showLabel = false;
 	public boolean renderImages;
+        private ColumnInfo displayci;
+        private String displayLabel;
+
+
 	public Params parameters;
 	private int numberOfVols = 0;
 
@@ -110,7 +115,11 @@ public class GalleryData {
 	 * 
 	 * @param jFrameGallery
 	 */
+
+
 	public GalleryData(Window window, String fn, Params parameters, MetaData md) {
+
+
 		this.window = window;
 		try {
                         
@@ -123,6 +132,9 @@ public class GalleryData {
                         this.visibleLabels = parameters.visibleLabels;
                         this.orderLabels = parameters.orderLabels;
 			mode = Mode.GALLERY_MD;
+
+                        displayLabel = parameters.getDisplayLabel();
+
 			resliceView = parameters.resliceView;
 			useGeo = parameters.useGeo;
 			wrap = parameters.wrap;
@@ -130,6 +142,8 @@ public class GalleryData {
 			if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA))
 				mode = Mode.TABLE_MD;
 			else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
+
+
 				mode = Mode.GALLERY_ROTSPECTRA;
                         
 			setFileName(fn);
@@ -141,20 +155,51 @@ public class GalleryData {
 				this.md = md;
 				loadMd();
 			}
-
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			md = null;
 		}
 
 	}// constructor GalleryData
+        
+        
+        public boolean isDisplayLabel()
+        {
+            return displayci != null;
+        }
+        
+        public void setDisplayLabel(String key) {
+            displayci = null;
+            if(key == null || key.equalsIgnoreCase("none"))
+            {
+                displayci = null;
+                return;
+            }
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                {
+                    displayci = ci;
+                    break;
+                }
+        }
+        
+        public ColumnInfo getDisplayLabel()
+        {
+            
+            return displayci;
+        }
 
 	public ArrayList<ColumnInfo> getColumns() {
 		return labels;
 	}
 
-	public void setRenderColumn(ColumnInfo ci) {
-		ciFirstRender = ci;
+	public void setRenderColumn(String key) {
+            if(key.equalsIgnoreCase("none"))
+                ciFirstRender = null;
+            for(ColumnInfo ci: labels)
+                if(ci.labelName.equals(key))
+                    ciFirstRender = ci;
 	}
 
 	public ColumnInfo getRenderColumn() {
@@ -367,6 +412,7 @@ public class GalleryData {
                         
 			labels = newLabels;
                         orderLabels();
+                        setDisplayLabel(displayLabel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1115,4 +1161,18 @@ public class GalleryData {
                     return true;
             return false;
         }
+        
+        
+        public Geometry getGeometry(long id)
+        {
+            if(!containsGeometryInfo())
+                return null;
+            double shiftx, shifty, psiangle;
+            shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
+            shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
+            psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
+            return new Geometry(shiftx, shifty, psiangle);
+        }
+        
+       
 }// class GalleryDaa

@@ -105,8 +105,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.getLabel(), ci.getLabel(),
-							key);
+					item = createImageItem(row, ci.getLabel());
 					cache.put(key, item);
 				}
 				setupItem(item, row);
@@ -222,8 +221,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-				String file = getImageFilename(index, ci.getLabel());
-                                openXmippImageWindow(file);
+                                openXmippImageWindow(index, ci.getLabel());
 				return true;
 			}
 		} catch (Exception e) {

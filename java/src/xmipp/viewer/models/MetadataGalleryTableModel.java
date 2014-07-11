@@ -26,13 +26,9 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-
-import java.io.File;
 import java.util.ArrayList;
-
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -45,12 +41,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 {
 
 	private static final long serialVersionUID = 1L;
-
 	// Label to be rendered
 	protected ColumnInfo renderLabel;
-	protected ColumnInfo displayLabel;
 	protected ImageGeneric image;
-
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
@@ -108,14 +101,17 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	
 	
 
-	public ImagePlus getImage(long id, String imagepath, int width, int height, boolean useGeo, boolean wrap)
+	public ImagePlus getImage(long id, String imagepath, boolean useGeo, boolean wrap)
 	{
 		ImagePlus imp = null;
 		if (imagepath != null && Filename.exists(imagepath))
 		{
 			try
 			{
-				imp = XmippImageConverter.readMdRowToImagePlus(imagepath, data.md, id, width, height, useGeo, wrap);
+                            ImagePlusLoader loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
+                            loader.setGeometry(data.getGeometry(id));
+                            loader.setDimension(thumb_width, thumb_height);
+                            return loader.getImagePlus();
 			}
 			catch (Exception ex)
 			{
@@ -145,7 +141,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		if (data.hasRenderLabel())
 		{
 			renderLabel = data.ciFirstRender;
-			displayLabel = renderLabel;
 			// if (renderLabels) {
 			for (int i = 0; i < data.ids.length; ++i)
 			{
@@ -176,7 +171,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	@Override
 	protected ImageItem createItem(int index, String key) throws Exception
 	{
-		return createImageItem(index, renderLabel.getLabel(), displayLabel.getLabel(), key);
+		return createImageItem(index, renderLabel.getLabel());
 	}
 
 	public String getLabel(int row, int col)
@@ -185,14 +180,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			int index = getIndex(row, col);
 			long objId = data.ids[index];
-			if (data.isClassification)
-			{
-				int ref = data.md.getValueInt(MDLabel.MDL_REF, objId);
-				long count = data.md.getValueLong(MDLabel.MDL_CLASS_COUNT, objId);
-				return String.format("class %d (%d images)", ref, count);
-			}
-			else
-				return data.md.getValueString(displayLabel.getLabel(), objId);
+
+                        ColumnInfo displayLabel = data.getDisplayLabel();
+                        if(displayLabel == null)
+                            return null;
+                        return data.md.getValueString(data.getDisplayLabel().getLabel(), objId);
+                        
 		}
 		catch (Exception e)
 		{
@@ -204,13 +197,13 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	/**
 	 * Function to create an image item
 	 */
-	protected ImageItem createImageItem(int index, int renderLabel, int displayLabel, String key) throws Exception
+	protected ImageItem createImageItem(int index, int renderLabel) throws Exception
 	{
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
 		boolean useGeo = data.useGeo && renderLabel == MDLabel.MDL_IMAGE;
-		ImagePlus imp = getImage(objId, imageFn, thumb_width, thumb_height, useGeo, data.wrap);
+		ImagePlus imp = getImage(objId, imageFn, useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;
 	}
@@ -265,8 +258,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			if (data.isImageFile(renderLabel))
 			{
                             int index = getIndex(row, col);
-                            String file = getImageFilename(index, renderLabel.getLabel());
-                            openXmippImageWindow(file);
+                            openXmippImageWindow(index, renderLabel.getLabel());
                             return true;
 			}
 		}
@@ -277,11 +269,12 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		return false;
 	}// function handleDoubleClick
         
-        protected void openXmippImageWindow(String file)
+        protected void openXmippImageWindow(int index, int label)
         {
-                boolean allowsGeometry = data.md.containsGeometryInfo();
-                ImagePlusLoader loader = new ImagePlusLoader(file, allowsGeometry, data.useGeo, data.wrap);
-                
+                String file = getImageFilename(index, label);
+                ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap);
+                if(data.containsGeometryInfo())
+                    loader.setGeometry(data.getGeometry(data.ids[index]));
                 if (getNormalized())
                     loader.setNormalize(normalize_min, normalize_max);
                 ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
@@ -292,7 +285,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
-			return data.md.getStatistics(false);
+			return data.md.getStatistics(false, data.ciFirstRender.label);
 		}
 		catch (Exception ex)
 		{
@@ -318,6 +311,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		try
 		{
+                    
                     ImagePlus imp = XmippImageConverter.readMetadataToImagePlus(renderLabel.getLabel(), data.md, data.useGeo, data.wrap);
                     return new ImagePlusLoader(imp);
 		}

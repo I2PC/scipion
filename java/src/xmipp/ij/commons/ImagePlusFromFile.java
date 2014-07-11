@@ -42,7 +42,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
         @Override
     	public ImagePlus loadImagePlus()
 	{
-		imp = null;
+                imp = null;
 		try
 		{
 			if (ig == null || hasChanged())
@@ -53,25 +53,25 @@ public class ImagePlusFromFile extends ImagePlusReader{
                             else 
                             {
                                 if(ig.isStack())
-                                    imp = XmippImageConverter.readToImagePlus(ig, index);
+                                    imp = XmippImageConverter.readToImagePlus(ig, index, ImageGeneric.ALL_SLICES);//read image or volume on indexn
                                 else
-                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read slice
+                                    imp = XmippImageConverter.readToImagePlus(ig, (int)index);//read image slice on volume
                             }
                         }
                         else if(ig != null)
                         {
-                            
-                             if(index == -1)
+                             if(index == -1 || !ig.isStackOrVolume())//if index is not -1 ig read it already
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
                                  if(ig.isStack())
-                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);
+                                    imp = XmippImageConverter.convertToImagePlus(ig, index);//read image or volume on index
                                 else
-                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read slice
+                                    imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
                              }
                         }
-                            
+                        
+                        checkResizeAndGeo();
                         
 			
 			if(normalize)
@@ -110,11 +110,12 @@ public class ImagePlusFromFile extends ImagePlusReader{
     @Override
     public String getName() {
 
-        String name;
+        String name = fileName;
+        
+        if(index2 != -1)
+            name = String.format("%d@%s", index2, name);
         if(index != -1)
-            name = String.format("%d@%s", index, fileName);
-        else
-            name = fileName;
+            name = String.format("%d@%s", index, name);
         return name;
 
     }
