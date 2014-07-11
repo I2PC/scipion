@@ -109,17 +109,22 @@ class XmippViewer(Viewer):
             writeSetOfMovies(obj, fn)
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))    
 
-        elif issubclass(cls, MicrographsTiltPair):          
-            fnU = obj.getUntilted().getFileName()
-            fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
-
-        elif issubclass(cls, ParticlesTiltPair):          
-            fnU = obj.getUntilted().getFileName()
-            fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+        elif issubclass(cls, MicrographsTiltPair) or issubclass(cls, ParticlesTiltPair):          
+#             fnU = obj.getUntilted().getFileName()
+#             fnT = obj.getTilted().getFileName()
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+            labels = 'id enabled _untilted._filename _tilted._filename'
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
+                                          viewParams={ORDER: labels, 
+                                                      VISIBLE: labels,
+                                                      MODE: MODE_MD}))
+            
+#         elif issubclass(cls, ParticlesTiltPair):          
+#             fnU = obj.getUntilted().getFileName()
+#             fnT = obj.getTilted().getFileName()
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
                             
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
