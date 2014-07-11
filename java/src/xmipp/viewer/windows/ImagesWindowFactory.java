@@ -72,7 +72,6 @@ public class ImagesWindowFactory {
 				ImageGeneric img = new ImageGeneric(filename);
 
 				if (img.isSingleImage()) {
-                                        System.out.println("is single image");
 					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
 					if (parameters.mode
@@ -104,7 +103,6 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Params parameters) {
 		try {
-                    System.out.println("open file as image");
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters.poll);

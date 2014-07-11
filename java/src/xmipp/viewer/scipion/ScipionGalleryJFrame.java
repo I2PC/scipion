@@ -35,7 +35,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String projectid;
     private JButton cmdbutton;
     private String sqlitefile;
-    private String outputdir;
     private JButton classcmdbutton;
     private String python;
     private String inputid;
@@ -43,7 +42,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String runNameKey = "Run name:";
     private String other;
     private JButton representativesbt;
-    ScipionMessageDialog dlg;
+    private ScipionMessageDialog dlg;
+    private String tmpdir;
     
    
 
@@ -67,8 +67,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             ctfscript = parameters.scripts + File.separator + "pw_recalculate_ctf.py";
             projectid = parameters.projectid;
             inputid = parameters.inputid;
-            outputdir = new File(data.getFileName()).getParent();
-            sqlitefile = String.format("%s%sselection%s", outputdir, File.separator, data.getFileExtension());
+            tmpdir = new File(data.getFileName()).getParent() + File.separator + "tmp";
+            sqlitefile = String.format("%s%sselection%s", tmpdir, File.separator, data.getFileExtension());
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             other = parameters.other;
@@ -112,6 +112,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     if (confirmCreate(type, size)) 
                     {
                         String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
+                        ((ScipionGalleryData)data).overwrite(sqlitefile);
                         runCommand(command, "Creating set ...");
                     }
                 }
@@ -127,6 +128,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         if (confirmCreate("Classes", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+                            ((ScipionGalleryData)data).overwrite(sqlitefile);
                             runCommand(command, "Creating set ...");
                             
                         }
@@ -143,6 +145,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         if (confirmCreate("Representatives", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+                            ((ScipionGalleryData)data).overwrite(sqlitefile);
                             runCommand(command, "Creating set ...");
                             
                         }
@@ -164,7 +167,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        String recalculatefile = outputdir + File.separator + "ctfrecalculate.txt";
+                        String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
                         ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                         String[] command = new String[]{python, ctfscript, projectid, inputid, recalculatefile};
                         runCommand(command, "Recalculating CTFs ...");
@@ -188,7 +191,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public boolean confirmCreate(String output, int size)
     {
         String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
-        if(data.size() == size)
+        if( data.getEnabledIds().size() == data.size())
             msg += "<br><font color=red>Note:</font> There are no disabled items to dismiss";
         dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
@@ -259,11 +262,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             public void run() {
 
                 try {
-                    ((ScipionGalleryData)data).overwrite(sqlitefile);
+                    
                     String output = XmippUtil.executeCommand(command);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-//                    if (output != null && !output.isEmpty()) {
-//                        System.out.println(output);
+                    if (output != null && !output.isEmpty()) 
+                        System.out.println(output);
 //                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
 //                        
 //                    }
