@@ -60,7 +60,9 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'volumes': 'volumes/*.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
-               'vol3': 'volumes/volume_1_iter_002.mrc'})
+               'vol3': 'volumes/volume_1_iter_002.mrc',
+               'aligned_particles': 'gold/aligned_particles.sqlite',
+               })
 
 
 DataSet(name='mda', folder='hemoglobin_mda', 

@@ -315,7 +315,7 @@ class Image(EMObject):
         self._acquisition = acquisition
         
     def hasAlignment(self):
-        return self._projection is not None
+        return self._alignment is not None
     
     def getAlignment(self):
         return self._alignment
@@ -430,7 +430,11 @@ class EMXObject(EMObject):
         return self._binaryFile.get()        
                 
       
-class EMSet(Set, EMObject):
+class EMSet(EMObject, Set):
+    def __init__(self, **args):
+        Set.__init__(self, **args)
+        EMObject.__init__(self, **args)
+
     def _loadClassesDict(self):
         return globals()
   

@@ -244,7 +244,7 @@ def imageToRow(img, imgRow, imgLabel):
         
     if img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
-        
+    
     if img.hasAlignment():
         alignmentToRow(img.getAlignment(), imgRow)
         
@@ -889,6 +889,8 @@ def rowToAlignment(md, objId):
     angles[2] = md.getValue(xmipp.MDL_ANGLE_PSI, objId)
     shifts[0] = md.getValue(xmipp.MDL_SHIFT_X, objId)
     shifts[1] = md.getValue(xmipp.MDL_SHIFT_Y, objId)
+    flip = md.getValue(xmipp.MDL_FLIP, objId)
+    
     M = matrixFromGeometry(shifts, angles)
     alignment.setMatrix(M)
     #FIXME: remove this after the conversions from Transform matrix
@@ -896,15 +898,21 @@ def rowToAlignment(md, objId):
     alignment._xmipp_anglePsi = Float(angles[2])
     alignment._xmipp_shiftX = Float(shifts[0])
     alignment._xmipp_shiftY = Float(shifts[1])
+    alignment._xmipp_flip = Boolean(flip)
     
     return alignment
 
 
 def alignmentToRow(alignment, mdRow):
-    shifts, angles = geometryFromMatrix(alignment.getMatrix())
-    mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
-    mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
-    mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])    
+    #FIXME: we should use the transformation matrix
+    #shifts, angles = geometryFromMatrix(alignment.getMatrix())
+    #mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
+    #mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    #mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+    mdRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
+    mdRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
+    mdRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+    mdRow.setValue(xmipp.MDL_FLIP, bool(alignment.getAttributeValue('_xmipp_flip', False)))     
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
