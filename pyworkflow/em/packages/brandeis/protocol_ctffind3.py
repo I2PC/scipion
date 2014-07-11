@@ -97,6 +97,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
+        ctfSet.setMicrographs(self.inputMicrographs.get())
         defocusList = []
         
         for fn, micDir, mic in self._iterMicrographs():
@@ -161,6 +162,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
+        ctfSet.setMicrographs(self.inputMicrographs.get())
         defocusList = []
         
         for ctfModel in self.setOfCtf:

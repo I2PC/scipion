@@ -690,9 +690,17 @@ class SetOfCTF(EMSet):
     ITEM_TYPE = CTFModel
     
     def __init__(self, **args):
-        EMSet.__init__(self, **args)    
+        EMSet.__init__(self, **args)
+        self._micrographsPointer = Pointer()
         
-        
+    def getMicrographs(self):
+        """ Return the SetOFImages used to create the SetOfClasses. """
+        return self._micrographsPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        self._micrographsPointer.set(micrographs)
+
+
 class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
         id min/max/avg exists the corresponding flaf must be

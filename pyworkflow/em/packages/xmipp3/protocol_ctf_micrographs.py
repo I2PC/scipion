@@ -88,6 +88,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
+        ctfSet.setMicrographs(self.inputMicrographs.get())
         defocusList = []
         
         for _, micDir, mic in self._iterMicrographs():
@@ -143,6 +144,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
+        ctfSet.setMicrographs(self.inputMicrographs.get())
         defocusList = []
         
         for ctfModel in self.setOfCtf:
