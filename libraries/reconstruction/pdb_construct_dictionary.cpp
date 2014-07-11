@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "pdb_construct_dictionary.h"
+#include <data/xmipp_image_extension.h>
 
 void ProgConstructPDBDictionary::defineParams()
 {
@@ -65,6 +66,8 @@ void ProgConstructPDBDictionary::show()
 void ProgConstructPDBDictionary::run()
 {
     show();
+    if (fileExists(fnRoot+"_low.mrcs"))
+    	loadDictionaries();
 
     MetaData mdlow, mdhigh;
     mdlow.read(fnLow);
@@ -91,8 +94,8 @@ void ProgConstructPDBDictionary::run()
     	const MultidimArray<double> &mVlow=Vlow();
     	const MultidimArray<double> &mVhigh=Vhigh();
 
-    	double minLow, maxLow, meanLow, stdLow;
-    	double minHigh, maxHigh, meanHigh, stdHigh;
+    	double minLow, maxLow, meanLow, stdLow=0;
+    	double minHigh, maxHigh, meanHigh, stdHigh=0;
     	mVlow.computeStats(meanLow,stdLow,minLow,maxLow);
     	mVhigh.computeStats(meanHigh,stdHigh,minHigh,maxHigh);
 #ifdef DEBUG
@@ -101,17 +104,17 @@ void ProgConstructPDBDictionary::run()
 
     	size_t Npatches=0, NcandidatePatches=0, NsuccessfulPatches=0;
     	init_progress_bar(ZSIZE(mVlow));
-        for (int k=patchSize_2; k<ZSIZE(mVlow)-patchSize_2; ++k)
+        for (int k=patchSize_2; k<(int)ZSIZE(mVlow)-patchSize_2; ++k)
         {
-            for (int i=patchSize_2; i<ZSIZE(mVlow)-patchSize_2; ++i)
-                for (int j=patchSize_2; j<ZSIZE(mVlow)-patchSize_2; ++j)
+            for (int i=patchSize_2; i<(int)ZSIZE(mVlow)-patchSize_2; ++i)
+                for (int j=patchSize_2; j<(int)ZSIZE(mVlow)-patchSize_2; ++j)
                 {
                 	 ++Npatches;
                      mVlow.window(patchLow,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
                      mVhigh.window(patchHigh,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
 
-                 	double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow;
-                 	double minPatchHigh, maxPatchHigh, meanPatchHigh, stdPatchHigh;
+                 	double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
+                 	double minPatchHigh, maxPatchHigh, meanPatchHigh, stdPatchHigh=0;
                  	patchLow.computeStats(meanPatchLow,stdPatchLow,minPatchLow,maxPatchLow);
                  	patchHigh.computeStats(meanPatchHigh,stdPatchHigh,minPatchHigh,maxPatchHigh);
 
@@ -162,6 +165,25 @@ bool ProgConstructPDBDictionary::notInDictionary(const MultidimArray<double> &ca
 			return false;
 	}
 	return true;
+}
+
+void ProgConstructPDBDictionary::loadDictionaries()
+{
+	std::cout << "Loading dictionaries .." << std::endl;
+	size_t Xdim, Ydim, Zdim, Ndim;
+	FileName fnLow=fnRoot+"_low.mrcs";
+	FileName fnHigh=fnRoot+"_high.mrcs";
+	getImageSize(fnLow, Xdim, Ydim, Zdim, Ndim);
+	dictionaryLow.reserve(Ndim);
+	dictionaryHigh.reserve(Ndim);
+	Image<double> aux;
+	for (size_t n=0; n<Ndim; ++n)
+	{
+		aux.read(fnLow,DATA,n+1);
+		dictionaryLow.push_back(aux());
+		aux.read(fnHigh,DATA,n+1);
+		dictionaryHigh.push_back(aux());
+	}
 }
 
 void ProgConstructPDBDictionary::saveDictionaries() const

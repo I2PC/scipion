@@ -63,6 +63,9 @@ public:
     /** True if the patch is not already in the low resolution dictionary */
     bool notInDictionary(const MultidimArray<double> &candidatePatch) const;
 
+    /** Load dictionaries */
+    void loadDictionaries();
+
     /** Save dictionaries */
     void saveDictionaries() const;
 };
