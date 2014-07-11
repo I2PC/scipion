@@ -75,7 +75,7 @@ def getUserDataPath():
 SCIPION_SOFTWARE = join(SCIPION_HOME, 'software')
 SCIPION_BIN = join(SCIPION_SOFTWARE, 'bin')
 SCIPION_PATH = os.pathsep.join([join(SCIPION_SOFTWARE, 'bin'),
-                               os.environ.get('LD_LIBRARY_PATH', ''),
+                               os.environ.get('PATH', ''),
                                ])
 XMIPP_LIB = join(getConfigPath('XMIPP_HOME'), 'lib')
 SCIPION_LIB = os.pathsep.join([join(SCIPION_SOFTWARE, 'lib'),
