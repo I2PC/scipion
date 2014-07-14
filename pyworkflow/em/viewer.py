@@ -153,8 +153,9 @@ class ObjectView(DataView):
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
-        defaultViewParams = {ORDER: 'enabled id _size _representative._filename',
-                             VISIBLE: 'enabled id _size _representative._filename',
+        labels =  'enabled id _size _representative._filename'
+        defaultViewParams = {ORDER:labels,
+                             VISIBLE: labels, RENDER:'_representative._filename'
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
