@@ -84,7 +84,7 @@ public class Params {
     protected CommandLine cmdLine;
     public String[] visibleLabels;
     public String[] orderLabels;
-    public String sortby;
+    public String[] sortby;
     protected static boolean iscipion;
     
     
@@ -121,7 +121,11 @@ public class Params {
         opt = new Option(ORDER_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
-        options.addOption(SORTBY_LABEL, true, "");
+        
+        opt = new Option(SORTBY_LABEL, "");
+        opt.setArgs(2);
+        options.addOption(opt);
+        
         options.addOption(DISPLAY_LABEL, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
@@ -197,7 +201,9 @@ public class Params {
             }
             if(cmdLine.hasOption(SORTBY_LABEL))
             {
-            	sortby = cmdLine.getOptionValue(SORTBY_LABEL);
+                
+            	sortby = cmdLine.getOptionValues(SORTBY_LABEL);
+                
             }
             if(cmdLine.hasOption(DISPLAY_LABEL))
             	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);

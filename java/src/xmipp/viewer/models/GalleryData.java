@@ -110,7 +110,7 @@ public class GalleryData {
     protected String renderLabel;
     protected String[] visibleLabels;
     protected String[] orderLabels;
-    protected String sortby;
+    protected String[] sortby;
     
 
     public enum Mode {
@@ -361,9 +361,14 @@ public class GalleryData {
             mode = Mode.TABLE_MD;
             zoom = 100;
         }
-        ColumnInfo sortci = getColumnInfo(sortby);
-        if(sortci != null)
-            sortMd(sortci.label, true);
+        if(sortby != null)
+        {
+            ColumnInfo sortci = getColumnInfo(sortby[0]);
+            boolean asc = sortby.length == 1 || sortby[1].equals("asc");
+            System.out.printf(sortci.labelName, asc);
+            if(sortci != null)
+                sortMd(sortci.label, asc);
+        }
     }// function loadMd
 
     
