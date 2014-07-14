@@ -29,7 +29,7 @@ This module contains the protocol base class for Relion protocols
 
 import os
 import re
-import glob
+from glob import glob
 from os.path import join, exists
 
 import xmipp
