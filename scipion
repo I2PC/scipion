@@ -93,7 +93,7 @@ SCIPION_PYTHONPATH = os.pathsep.join([SCIPION_HOME,
 VARS = {
        'SCIPION_HOME': SCIPION_HOME,
        'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
-       'SCIPION_PYTHON': 'python',#join(SCIPION_BIN, 'python'),
+       'SCIPION_PYTHON': join(SCIPION_BIN, 'python'),
        'PATH': SCIPION_PATH,
        'PYTHONPATH': SCIPION_PYTHONPATH,
        'PYTHONHOME': SCIPION_SOFTWARE,

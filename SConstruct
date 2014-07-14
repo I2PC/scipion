@@ -73,7 +73,7 @@ env['CROSS_BUILD'] = False
 
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
-env['MAKECOMSTR'] = "Compiling $TARGET from $SOURCES "
+env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
@@ -97,12 +97,8 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     url = url or ('%s/external/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     targets = targets or ['lib/lib%s.so' % name]
-    flags += [
-              '--prefix=%s' % abspath('software'),
-              '--libdir=%s' % abspath('software/lib'),
-#              '--mandir=%s' % abspath('software/man'),
-              '--includedir=%s' % abspath('software/include')
-              ]
+    flags += ['--prefix=%s' % abspath('software'),
+              '--libdir=%s' % abspath('software/lib')]  # not lib64
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the library even if it is not on by default.
@@ -168,14 +164,12 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
-#    print "Dir - ", Dir('software/lib/python2.7/site-packages/%s' % name)
-#    print "Dir"
-        tDir = env.Command(
+    tDir = env.Command(
         Dir('software/lib/python2.7/site-packages/%s' % name),
         tUntar,
         Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' %
                (abspath('software'), abspath('software'), name),
-               'Compiling %s > software/log/%s.log' % (name, name),
+               'Compiling & installing %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
     # Add the dependencies.
@@ -387,7 +381,7 @@ env.AddMethod(addPackage, "AddPackage")
 
 # Extra (simple) builders
 Download = Builder(action='wget $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C software/tmp -xzf $SOURCE')
+Untar = Builder(action='tar -C software/tmp --recursive-unlink -xzf $SOURCE')
 
 
 # ########################

@@ -31,7 +31,6 @@
 # First import the environment (this comes from SConstruct)
 Import('env')
 
-from os.path import abspath
 
 #  ************************************************************************
 #  *                                                                      *
@@ -44,16 +43,14 @@ tcl = env.AddLibrary(
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
     targets=['lib/libtcl8.6.so'],
-    flags=['--enable-threads',
-           '--bindir=%s' % abspath('software/bin')])
+    flags=['--enable-threads'])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
     targets=['lib/libtk8.6.so'],
-    flags=['--enable-threads',
-           '--bindir=%s' % abspath('software/bin')],
+    flags=['--enable-threads'],
     deps=[tcl])
 
 sqlite = env.AddLibrary(
@@ -61,8 +58,7 @@ sqlite = env.AddLibrary(
     tar='sqlite-3.6.23.tgz',
     targets=['lib/libsqlite3.so'],
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1',
-           '--bindir=%s' % abspath('software/bin')])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
 zlib = env.AddLibrary(
     'zlib',
@@ -74,7 +70,7 @@ zlib = env.AddLibrary(
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    targets=['lib/libpython2.7.a', 'bin/python'],
+    targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared',
            'CFLAGS=-I/usr/include/ncurses'],
     deps=[sqlite, tk])
@@ -92,35 +88,46 @@ def addModule(*args, **kwargs):
     return env.AddModule(*args, **kwargs)
 
 
-addModule('numpy',
-          tar='numpy-1.8.1.tgz')
+numpy = addModule(
+    'numpy',
+    tar='numpy-1.8.1.tgz')
 
-addModule('matplotlib',
-          tar='matplotlib-1.3.1.tgz')
+matplotlib = addModule(
+    'matplotlib',
+    tar='matplotlib-1.3.1.tgz',
+    deps=[numpy])
 
-addModule('psutil',
-          tar='psutil-2.1.1.tgz')
+addModule(
+    'psutil',
+    tar='psutil-2.1.1.tgz')
 
-addModule('mpi4py',
-          tar='mpi4py-1.3.1.tgz')
+addModule(
+    'mpi4py',
+    tar='mpi4py-1.3.1.tgz')
 
-addModule('scipy',
-          tar='scipy-0.14.0.tgz',
-          default=False)
+addModule(
+    'scipy',
+    tar='scipy-0.14.0.tgz',
+    default=False,
+    deps=[numpy, matplotlib])
 
-addModule('bibtexparser',
-          tar='bibtexparser-0.5.tgz')
+addModule(
+    'bibtexparser',
+    tar='bibtexparser-0.5.tgz')
 
-addModule('django',
-          tar='Django-1.5.5.tgz')
+addModule(
+    'django',
+    tar='Django-1.5.5.tgz')
 
-addModule('paramiko',
-          tar='paramiko-1.14.0.tgz',
-          default=False)
+addModule(
+    'paramiko',
+    tar='paramiko-1.14.0.tgz',
+    default=False)
 
-addModule('PIL',
-          tar='Imaging-1.1.7.tgz',
-          deps=[zlib])
+addModule(
+    'PIL',
+    tar='Imaging-1.1.7.tgz',
+    deps=[zlib])
 
 
 #  ************************************************************************
