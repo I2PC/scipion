@@ -33,15 +33,18 @@ public class SupervisedPickerRunner implements Runnable {
         try
         {
             SupervisedParticlePicker ppicker = null;
+            
             if (params.mode == Mode.Manual) 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
-            ppicker.setPython(params.python);
-            ppicker.setScipionScript(params.script);
-            ppicker.setProjectId(params.projectid);
-            ppicker.setProtId(params.protid);
-
+            if(ParticlePickerParams.isScipion())
+            {
+                ppicker.setPython(params.python);
+                ppicker.setScipionScript(params.script);
+                ppicker.setProjectId(params.projectid);
+                ppicker.setProtId(params.protid);
+            }
             new SupervisedParticlePickerJFrame(ppicker);
         } catch (Exception e) {
             System.out.println("Error catched on main");

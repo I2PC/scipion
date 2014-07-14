@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import xmipp.viewer.particlepicker.training.model.Mode;
@@ -60,9 +61,11 @@ public class ParticlePickerParams {
         options.addOption(INPUTOPT, true, "");
         options.addOption(OUTPUTOPT, true, "");
         options.addOption(MODEOPT, true, "");
+        options.addOption(THREADSOPT, true, "");
+        options.addOption(FASTOPT, true, "");
+        options.addOption(INCOREOPT, true, "");
 
-        Option cmdoption = new Option(SCIPIONOPT, "");
-        cmdoption.setArgs(4);
+        Option cmdoption = OptionBuilder.hasOptionalArgs(4).create(SCIPIONOPT);
         options.addOption(cmdoption);
     }
 
@@ -84,12 +87,15 @@ public class ParticlePickerParams {
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
             isscipion = true;
-            cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
-            python = cmdargs[0];
-            script = cmdargs[1];
-            projectid = cmdargs[2];
-            protid = cmdargs[3];
             
+            cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
+            if(cmdargs != null)
+            {
+                python = cmdargs[0];
+                script = cmdargs[1];
+                projectid = cmdargs[2];
+                protid = cmdargs[3];
+            }
         }
 
     }
