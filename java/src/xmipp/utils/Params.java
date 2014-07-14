@@ -60,7 +60,6 @@ public class Params {
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
     public String displayLabel;
@@ -184,6 +183,7 @@ public class Params {
             if(cmdLine.hasOption(RENDER_IMAGES))
             {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+                
             }
             if(cmdLine.hasOption(VISIBLE_LABELS))
             {

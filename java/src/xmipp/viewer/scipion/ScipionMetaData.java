@@ -895,7 +895,10 @@ public class ScipionMetaData extends MetaData {
     }
     
     
-    
+    public boolean containsMicrographsInfo()
+    {
+        return false;
+    }
     
    
 }

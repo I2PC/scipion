@@ -52,7 +52,6 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
-import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -146,8 +145,7 @@ public class GalleryData {
             selectedBlock = "";
 
             zoom = parameters.zoom;
-            this.renderImages = parameters.renderImages;//always true, customized by models or renderLabels
-
+            this.renderImages = md.getRenderLabels() != null && !md.getRenderLabel().equals("first");
             mode = Mode.GALLERY_MD;
             resliceView = parameters.resliceView;
             useGeo = parameters.useGeo;
@@ -411,7 +409,7 @@ public class GalleryData {
             }
 
             for (int i = 0; i < labelids.length; ++i) {
-                ci = new ColumnInfo(labelids[i]);
+                ci = initColumnInfo(labelids[i]);
                 if (labels != null) {
                     for (ColumnInfo ci2 : labels) {
                         if (ci.label == ci2.label) {
@@ -423,30 +421,22 @@ public class GalleryData {
                     ci.visible = isVisibleLabel(ci);
                 }
                 newLabels.add(ci);
-                if (inputRenderLabel == labelids[i] && ci.render) {
+                if (inputRenderLabel == labelids[i] && ci.render) {//render label specified and included on renders
                     ciFirstRender = ci;
                     if (ci.visible) {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE)
-                        && ci.render)// favor mdl_image over mdl_micrograph
-                {
+                if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender)// favor mdl_image over mdl_micrograph
                     ciFirstRender = ci;
-                }
-                if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE)
-                        && ci.render && ci.visible) {
+                if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender && ci.visible) 
                     ciFirstRenderVisible = ci;
-                }
-
             }
             if (ciFirstRenderVisible != null) {
                 ciFirstRender = ciFirstRenderVisible;
             }
             // Add MDL_ENABLED if not present
-            if (!md.containsLabel(MDLabel.MDL_ENABLED)
-                    && (md.containsLabel(MDLabel.MDL_IMAGE) || md
-                    .containsLabel(MDLabel.MDL_MICROGRAPH))) {
+            if (!md.containsLabel(MDLabel.MDL_ENABLED) && (md.containsLabel(MDLabel.MDL_IMAGE) || md.containsLabel(MDLabel.MDL_MICROGRAPH))) {
                 newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
                 md.addLabel(MDLabel.MDL_ENABLED);
                 for (long id : ids) {
@@ -459,10 +449,16 @@ public class GalleryData {
             orderLabels();
             
             setDisplayLabel(displayLabel);
+//////            System.out.printf("render: %s %s \n", ciFirstRender, ciFirstRenderVisible);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }// function loadLabels
+    
+    public ColumnInfo initColumnInfo(int label)
+    {
+        return new ColumnInfo(label);
+    }
 
     /**
      * Read metadata and store ids
@@ -1577,9 +1573,7 @@ public class GalleryData {
 
     public boolean isRenderLabel(ColumnInfo ci) {
 
-        if (md.getRenderLabel().equals("first")) {
-            return ci.allowRender && ci.visible;
-        }
+        
         for (String i : md.getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
                 return true;

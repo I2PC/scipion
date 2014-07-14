@@ -2,8 +2,6 @@ package xmipp.viewer.particlepicker.training;
 
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import javax.swing.SwingUtilities;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
