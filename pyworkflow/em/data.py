@@ -315,7 +315,7 @@ class Image(EMObject):
         self._acquisition = acquisition
         
     def hasAlignment(self):
-        return self._projection is not None
+        return self._alignment is not None
     
     def getAlignment(self):
         return self._alignment
@@ -429,7 +429,12 @@ class EMXObject(EMObject):
     def getBinaryFile(self):
         return self._binaryFile.get()        
                 
-      
+#       
+# class EMSet(EMObject, Set):
+#     def __init__(self, *args, **kwargs):
+#         Set.__init__(self, *args, **kwargs)
+#         EMObject.__init__(self, *args, **kwargs)
+
 class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()
@@ -685,9 +690,17 @@ class SetOfCTF(EMSet):
     ITEM_TYPE = CTFModel
     
     def __init__(self, **args):
-        EMSet.__init__(self, **args)    
+        EMSet.__init__(self, **args)
+        self._micrographsPointer = Pointer()
         
-        
+    def getMicrographs(self):
+        """ Return the SetOFImages used to create the SetOfClasses. """
+        return self._micrographsPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        self._micrographsPointer.set(micrographs)
+
+
 class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
         id min/max/avg exists the corresponding flaf must be

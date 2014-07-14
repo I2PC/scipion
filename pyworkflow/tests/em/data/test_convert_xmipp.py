@@ -65,6 +65,22 @@ class TestXmippConversions(BaseTest):
         writeSetOfMicrographs(micSet, self.getOutputPath("micrographs.xmd"))
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
+    def test_alignedParticlesToMd(self):
+        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        imgSet = SetOfParticles(filename=self.dataset.getFile('aligned_particles')) 
+        
+        md = xmipp.MetaData()
+        setOfParticlesToMd(imgSet, md)
+        
+        # test that the metadata contains some geometry labels
+        self.assertTrue(md.containsLabel(xmipp.MDL_SHIFT_X))
+        fn = self.getOutputPath("aligned_particles.xmd")
+        #print "Aligned particles written to: ", fn
+        #md.write(fn)
+        
+        #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
+
+        
     def test_particlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
         imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
@@ -101,6 +117,7 @@ class TestXmippConversions(BaseTest):
         setOfParticlesToMd(imgSet, mdScipion)
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
+                
     def test_CTF(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
         mdCtf = xmipp.MetaData(self.dataset.getFile('ctfGold'))

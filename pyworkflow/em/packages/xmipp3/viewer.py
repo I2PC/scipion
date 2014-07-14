@@ -90,7 +90,7 @@ class XmippViewer(Viewer):
             fn = getImageLocation(obj)
             if fn.endswith('.mrc'):
                 fn += ":mrc"
-            self._views.append(DataView(fn))
+            self._views.append(DataView(fn, viewParams={RENDER: 'image'}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
@@ -102,24 +102,32 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfMicrographs):
             
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: MODE_MD}, **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))    
 
-        elif issubclass(cls, MicrographsTiltPair):          
-            fnU = obj.getUntilted().getFileName()
-            fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
 
+        elif issubclass(cls, MicrographsTiltPair):          
+#             fnU = obj.getUntilted().getFileName()
+#             fnT = obj.getTilted().getFileName()
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
+#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+            labels = 'id enabled _untilted._filename _tilted._filename'
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
+                                          viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, 
+                                                      MODE: MODE_MD}))
+            
         elif issubclass(cls, ParticlesTiltPair):          
-            fnU = obj.getUntilted().getFileName()
-            fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+            labels = 'id enabled _untilted._filename _tilted._filename'
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
+                                          viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, RENDER:'_untilted._filename _tilted._filename',
+                                                      MODE: MODE_MD}))
+
                             
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
@@ -149,7 +157,7 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      'sortby': '_xmipp_zScore'}))
+                                                      'sortby': '_xmipp_zScore', RENDER:'_filename'}))
                
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()

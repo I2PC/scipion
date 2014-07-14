@@ -24,19 +24,25 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from itertools import izip
 """
 This module contains protocols classes related to Random Conical Tilt.
 """
 
 import sys
+from os.path import basename
 from glob import glob
-from protocol_import import ProtImport
+
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import copyFile, basename, createLink, expandPattern
+from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath
 from pyworkflow.protocol.params import PathParam, FloatParam, BooleanParam, EnumParam, IntParam
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data_tiltpairs import MicrographsTiltPair
+from pyworkflow.em.data import SetOfMicrographs
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
+
+from protocol_import import ProtImport
+
 
 
 class ProtImportMicrographsTiltPairs(ProtImport):
@@ -44,8 +50,10 @@ class ProtImportMicrographsTiltPairs(ProtImport):
     
     _className = 'Micrograph'
     _label = 'import tilted micrographs'
+    OUTPUT_NAME = "outputMicrographsTiltPair"
         
     #--------------------------- DEFINE param functions --------------------------------------------
+    
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('patternUntilted', PathParam, label=Message.LABEL_PATTERNU,
@@ -73,15 +81,22 @@ class ProtImportMicrographsTiltPairs(ProtImport):
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
+    
+    #--------------------------- INSERT steps functions -------------------------------------------- 
+    
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createTiltedPairsStep')
+        
     #--------------------------- STEPS functions ---------------------------------------------------
+    
     def importMicrographs(self, pattern, suffix, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
-        from pyworkflow.em import findClass
         filePaths = glob(expandPattern(pattern))
         
-        imgSet = self._createSetOfMicrographs(suffix)
+        #imgSet = SetOfMicrographs(filename=self.micsPairsSqlite, prefix=suffix)
+        imgSet = self._createSetOfMicrographs(suffix=suffix)
         acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
         acquisition.setVoltage(voltage)
@@ -129,18 +144,24 @@ class ProtImportMicrographsTiltPairs(ProtImport):
         
         return imgSet
     
-    def createTiltedPairs(self):
+    def createTiltedPairsStep(self):
         args = {} 
-        micsTiltPair = MicrographsTiltPair()
-        micsU = self.importMicrographs(self.patternUntilted.get(), 'untilted',
+        self.micsPairsSqlite = self._getPath('micrographs_pairs.sqlite')
+        cleanPath(self.micsPairsSqlite) # Delete if exists
+        
+        micsTiltPair = MicrographsTiltPair(filename=self.micsPairsSqlite)
+        micsU = self.importMicrographs(self.patternUntilted.get(), 'Untilted',
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
-        micsT = self.importMicrographs(self.patternTilted.get(), 'tilted',
+        micsT = self.importMicrographs(self.patternTilted.get(), 'Tilted',
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
         
         micsTiltPair.setUntilted(micsU)
         micsTiltPair.setTilted(micsT)
-        output = self._getOutput()
-        args[output] = micsTiltPair
+        
+        for micU, micT in izip(micsU, micsT):
+            micsTiltPair.append(TiltPair(micU, micT))
+        
+        args[self.OUTPUT_NAME] = micsTiltPair
         self._defineOutputs(**args)
     
     #--------------------------- INFO functions ----------------------------------------------------
@@ -160,13 +181,13 @@ class ProtImportMicrographsTiltPairs(ProtImport):
     def _summary(self):
         summary = []
         output = self._getOutput()
-        if not hasattr(self, output):
-            summary.append("Output " + output + " not ready yet.") 
+        if not output:
+            summary.append("Output not ready yet.") 
             if self.copyToProj:
                 summary.append("*Warning*: Import step could take a long time due to the images are copying in the project.")
         else:
-            summary.append("Import of %d " % getattr(self, output).getTilted().getSize() + self._className + "s tilted from %s" % self.patternTilted.get())
-            summary.append("Import of %d " % getattr(self, output).getUntilted().getSize() + self._className + "s untilted from %s" % self.patternUntilted.get())
+            summary.append("Import of %d " % output.getTilted().getSize() + self._className + "s tilted from %s" % self.patternTilted.get())
+            summary.append("Import of %d " % output.getUntilted().getSize() + self._className + "s untilted from %s" % self.patternUntilted.get())
             summary.append("Sampling rate : %0.2f A/px" % self.samplingRate.get())
         
         return summary
@@ -174,9 +195,9 @@ class ProtImportMicrographsTiltPairs(ProtImport):
     def _methods(self):
         methods = []
         output = self._getOutput()
-        if hasattr(self, output):
-            methods.append("%d " % getattr(self, output).getTilted().getSize() + self._className + "s tilted has been imported")
-            methods.append("%d " % getattr(self, output).getUntilted().getSize() + self._className + "s untilted has been imported")
+        if output:
+            methods.append("%d " % output.getTilted().getSize() + self._className + "s tilted has been imported")
+            methods.append("%d " % output.getUntilted().getSize() + self._className + "s untilted has been imported")
             methods.append("with a sampling rate : %0.2f A/px" % self.samplingRate.get())
             
         return methods
@@ -186,11 +207,7 @@ class ProtImportMicrographsTiltPairs(ProtImport):
         return getattr(self, self._getOutput().getFiles())
     
     def _getOutput(self):
-        return "outputMicrographsTiltPair"
-
-    
-    def _insertAllSteps(self):
-        self._insertFunctionStep('createTiltedPairs')
+        return getattr(self, self.OUTPUT_NAME, None)
         
     def _setOtherPars(self, micSet):
         micSet.getAcquisition().setMagnification(self.magnification.get())

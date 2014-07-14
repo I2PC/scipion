@@ -174,7 +174,9 @@ class TestSqliteFlatMapper(BaseTest):
         print ">>> test_SqliteFlatDb: dbName = '%s'" % self.modelGoldSqlite
         db = SqliteFlatDb(self.modelGoldSqlite)
         # Test the 'self' class name is correctly retrieved
-        self.assertEqual('Micrograph', db.getSelfClassName())        
+        self.assertEqual('Micrograph', db.getSelfClassName())  
+        # Check the count is equal to 3
+        self.assertEqual(3, db.count()) 
         db.close()
         
     def test_insertObjects(self):

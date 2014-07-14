@@ -153,8 +153,10 @@ class ObjectView(DataView):
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
-        defaultViewParams = {ORDER: 'enabled id _size _representative._filename',
-                             VISIBLE: 'enabled id _size _representative._filename',
+        labels =  'enabled id _size _representative._filename'
+        defaultViewParams = {ORDER:labels,
+                             VISIBLE: labels, RENDER:'_representative._filename',
+                             'sortby': '_size', 'label': '_size',
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
@@ -175,7 +177,6 @@ class CoordinatesObjectView(DataView):
         self.python = pw.PYTHON
         self.script = pw.join('apps', 'pw_create_coords_subset.py')
         self.outputdir = outputdir
-        
         
     def getShowJParams(self):
         params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)

@@ -40,7 +40,9 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.object import Boolean
 from itertools import izip
 import xmipp
-from pyworkflow.em.data_tiltpairs import ParticlesTiltPair
+from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
+               
+               
                
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
@@ -266,9 +268,12 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         self._storeMethodsInfo(fnUntilted)
         
         # Define output ParticlesTiltPair 
-        outputset = ParticlesTiltPair()
+        outputset = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         outputset.setTilted(imgSetT)
         outputset.setUntilted(imgSetU)
+        for imgU, imgT in izip(imgSetU, imgSetT):
+            outputset.append(TiltPair(imgU, imgT))
+            
         outputset.setCoordsPair(self.inputCoordinatesTiltedPairs.get())
         self._defineOutputs(outputParticlesTiltPair=outputset)
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs.get(), outputset)
