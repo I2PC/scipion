@@ -21,26 +21,23 @@ $(document).ready(function(){
 
 {% block content_view %}	
 
-
 	{% if dataset.getNumberSlices == 1 %}
 	    
 		{% for id,enable,data,transformationMatrix in tableDataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">
 					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunc=get_image&image={{data}}"/>
-					
-					{% if tableDataset.hasEnabledColumn %}
-					<img class="enabledGallery
-					{% if enable == 0 %}
-					selected
-					{% endif %}
-					" src="/resources/showj/enabled_gallery.png" id="enabled___{{id}}" onclick="enableDisableImage(this);" 
-					{% if enable == 0 %} 
-					style="display:block;"
-					{% endif %}	
-					/>
+						{% if tableDataset.hasEnabledColumn %}
+						<img class="enabledGallery
+						{% if enable == 0 %}
+						selected
+						{% endif %}
+						" src="/resources/showj/enabled_gallery.png" id="enabled___{{id}}" onclick="enableDisableImage(this);" 
+						{% if enable == 0 %} 
+						style="display:block;"
+						{% endif %}	
+						/>
 					{% endif %} 
-					
 				</div>
 				<div id="column_label">{{id}}</div> 
 			</div>
@@ -51,7 +48,9 @@ $(document).ready(function(){
 		{% for i in dataset.getNumberSlicesForTemplate %}
 			<div class="img_container" id="img_container___{{i}}">
 				<div class="img_inner_container">
-					<img class="tableImages" title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" data-real_src="/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
+					<img class="tableImages" 
+					title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" 
+					data-real_src="/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
 				</div>
 				<div id="column_label">{{i|add:1}}</div> 
 			</div>
