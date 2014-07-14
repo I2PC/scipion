@@ -157,7 +157,7 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      'sortby': '_xmipp_zScore', RENDER:'_filename'}))
+                                                      'sortby': '_ctfModel._xmipp_zScore desc', RENDER:'_filename'}))
                
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
