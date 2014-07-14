@@ -109,7 +109,7 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!Params.isScipion())
+                if(!Params.isScipion() && !ParticlePickerParams.isScipion())
                     btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;

@@ -11,36 +11,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.utils.ParticlePickerParams;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 public class TiltPairPickerRunner implements Runnable {
 
-    private Options options;
-
-    public final static String SCIPIONOPT = "scipion";
-    public final static String INPUTOPT = "input";
-    public final static String OUTPUTOPT = "output";
-    public final static String MODEOPT = "mode";
-    public final static String THREADSOPT = "threads";
-    public final static String FASTOPT = "fast";
-    public final static String INCOREOPT = "incore";
-    public boolean isscipionsave;
     
-    public String python;
-    public String script;
-    public String inputfile;
-    public String outputdir;
-    public String protid;
-    public String projectid;
-    public Mode mode;
-    private CommandLine cmdLine;
+    
+    private final ParticlePickerParams params;
+
 
     public TiltPairPickerRunner(String[] args) throws ParseException {
 
-        defineArgs();
-        processArgs(args);
+        params = new ParticlePickerParams(args);
 
     }
 	// 0 --> input metadata
@@ -48,51 +33,19 @@ public class TiltPairPickerRunner implements Runnable {
     // 2 --> mode
 
 
-    public void defineArgs() {
-        options = new Options();
-        options.addOption(INPUTOPT, true, "");
-        options.addOption(OUTPUTOPT, true, "");
-        options.addOption(MODEOPT, true, "");
-
-        Option cmdoption = new Option(SCIPIONOPT, "");
-        cmdoption.setArgs(4);
-        options.addOption(cmdoption);
-    }
-
-    public void processArgs(String args[]) throws ParseException {
-
-        String[] cmdargs;
-        BasicParser parser = new BasicParser();
-        cmdLine = parser.parse(options, args);
-        inputfile = cmdLine.getOptionValue(INPUTOPT);
-        outputdir = cmdLine.getOptionValue(OUTPUTOPT);
-        mode = Mode.getMode(cmdLine.getOptionValue(MODEOPT));
-        
-        
-       
-        if (cmdLine.hasOption(SCIPIONOPT)) {
-            isscipionsave = true;
-            cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
-            python = cmdargs[0];
-            script = cmdargs[1];
-            projectid = cmdargs[2];
-            protid = cmdargs[3];
-            
-        }
-
-    }
+    
 
     @Override
     public void run() {
         try
         {
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(inputfile, outputdir, mode);
+            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode);
             
-            ppicker.setPython(python);
-            ppicker.setScipionScript(script);
-            ppicker.setProjectId(projectid);
-            ppicker.setProtId(protid);
+            ppicker.setPython(params.python);
+            ppicker.setScipionScript(params.script);
+            ppicker.setProjectId(params.projectid);
+            ppicker.setProtId(params.protid);
 
             new TiltPairPickerJFrame(ppicker);
         } catch (Exception e) {

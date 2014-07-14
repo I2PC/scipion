@@ -11,106 +11,36 @@ import org.apache.commons.cli.ParseException;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.utils.ParticlePickerParams;
 import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public class SupervisedPickerRunner implements Runnable {
+    private final ParticlePickerParams params;
 
-    private Options options;
-
-    public final static String SCIPIONOPT = "scipion";
-    public final static String INPUTOPT = "input";
-    public final static String OUTPUTOPT = "output";
-    public final static String MODEOPT = "mode";
-    public final static String THREADSOPT = "threads";
-    public final static String FASTOPT = "fast";
-    public final static String INCOREOPT = "incore";
-    public boolean isscipionsave;
-    
-    public String python;
-    public String script;
-    public String inputfile;
-    public String outputdir;
-    public String protid;
-    public String projectid;
-    public Mode mode;
-    public int threads;
-    public boolean fast;
-    public boolean incore;
-    private CommandLine cmdLine;
+   
 
     public SupervisedPickerRunner(String[] args) throws ParseException {
 
-        defineArgs();
-        processArgs(args);
+        params = new ParticlePickerParams(args);
 
     }
-	// 0 --> input metadata
-    // 1 --> output dir
-    // 2 --> mode
 
-	// On Supervised
-    // 3 --> number of threads for supervised mode
-    // 4 --> fast mode for supervised mode
-    // 5 --> incore for supervised mode
-	// On Review
-    // 3 -->external auto dir
-    public void defineArgs() {
-        options = new Options();
-        options.addOption(INPUTOPT, true, "");
-        options.addOption(OUTPUTOPT, true, "");
-        options.addOption(MODEOPT, true, "");
-        options.addOption(THREADSOPT, true, "");
-        options.addOption(FASTOPT, true, "");
-        options.addOption(INCOREOPT, true, "");
-
-        Option cmdoption = new Option(SCIPIONOPT, "");
-        cmdoption.setArgs(4);
-        options.addOption(cmdoption);
-    }
-
-    public void processArgs(String args[]) throws ParseException {
-
-        String[] cmdargs;
-        BasicParser parser = new BasicParser();
-        cmdLine = parser.parse(options, args);
-        inputfile = cmdLine.getOptionValue(INPUTOPT);
-        outputdir = cmdLine.getOptionValue(OUTPUTOPT);
-        mode = Mode.getMode(cmdLine.getOptionValue(MODEOPT));
-        if (cmdLine.hasOption(THREADSOPT)) 
-            threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
-        if (cmdLine.hasOption(FASTOPT)) 
-            fast = Boolean.parseBoolean(cmdLine.getOptionValue(FASTOPT));
-        if (cmdLine.hasOption(INCOREOPT)) 
-            incore = Boolean.parseBoolean(cmdLine.getOptionValue(INCOREOPT));
-        
-       
-        if (cmdLine.hasOption(SCIPIONOPT)) {
-            isscipionsave = true;
-            cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
-            python = cmdargs[0];
-            script = cmdargs[1];
-            projectid = cmdargs[2];
-            protid = cmdargs[3];
-            
-        }
-
-    }
 
     @Override
     public void run() {
         try
         {
             SupervisedParticlePicker ppicker = null;
-            if (mode == Mode.Manual) 
-                ppicker = new SupervisedParticlePicker(inputfile, outputdir, threads, fast, incore);
+            if (params.mode == Mode.Manual) 
+                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
-                ppicker = new SupervisedParticlePicker(inputfile, outputdir, mode);
-            ppicker.setPython(python);
-            ppicker.setScipionScript(script);
-            ppicker.setProjectId(projectid);
-            ppicker.setProtId(protid);
+                ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
+            ppicker.setPython(params.python);
+            ppicker.setScipionScript(params.script);
+            ppicker.setProjectId(params.projectid);
+            ppicker.setProtId(params.protid);
 
             new SupervisedParticlePickerJFrame(ppicker);
         } catch (Exception e) {
