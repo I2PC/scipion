@@ -112,14 +112,14 @@ class XmippViewer(Viewer):
         elif issubclass(cls, MicrographsTiltPair):          
             fnU = obj.getUntilted().getFileName()
             fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, viewParams={MODE: MODE_MD}, **args))            
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, viewParams={MODE: MODE_MD}, **args))
 
         elif issubclass(cls, ParticlesTiltPair):          
             fnU = obj.getUntilted().getFileName()
             fnT = obj.getTilted().getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, viewParams={RENDER: '_filename'}, **args))            
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, viewParams={RENDER: '_filename'}, **args))
                             
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
