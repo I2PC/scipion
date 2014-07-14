@@ -111,15 +111,13 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         
         # getting tableLayoutConfiguration
         columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
-        
         request.session[sj.COLS_CONFIG] = columnsConfig 
-        
+    
     else:
         # getting tableLayoutConfiguration from Session
         columnsConfig = request.session[sj.COLS_CONFIG]
     
     inputParams[sj.COLS_CONFIG] = columnsConfig
-    
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
     
      
@@ -143,7 +141,7 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     hasChanged = hasTableChanged(request, inputParams)
     
     if (not labelAux or hasChanged):
-        labelsToRender = inputParams[sj.COLS_CONFIG].getRenderableColumns()
+        labelsToRender, _ = inputParams[sj.COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
             inputParams[sj.LABEL_SELECTED] = labelsToRender[0]
@@ -176,7 +174,6 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
         
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-#        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
        
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
@@ -200,16 +197,11 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-#                print "Setting dataset.volName: ", _imageVolName
                 dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
-#                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
                
-                #dataset.setVolumeName(None)  
-                #dataset.setNumberSlices(0)         
-                
         volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
     
     return volPath, _stats, _imageDimensions
@@ -225,6 +217,8 @@ DEFAULT_PARAMS = {
     sj.MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
     sj.COLS: None,                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
     sj.ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
+    
+    sj.ORDER: None,
     
     sj.IMG_ZOOM: '128px',                     # Zoom set by default
     sj.IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
@@ -287,6 +281,7 @@ def showj(request):
                 inputParams[key] = value
         # extraParams will be read from SESSION
     
+    # Image zoom 
     request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]
     
     #=DEBUG=====================================================================
@@ -383,8 +378,9 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     if dataset is not None:
         context.update({sj.DATASET: dataset})
     if columnsConfig is not None:
+        
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-                                                   #'colsOrder': columnsConfig.colsOrder
+#                                                    'colsOrder': inputParams[sj.ORDER]
                                                    },
                                                    ensure_ascii=False,
                                                    cls=ColumnPropertiesEncoder)})
@@ -409,20 +405,20 @@ def getExtraParameters(extraParams, table):
             _mapCol[k.getLabel()] = k.getName()
         
         for key, value in extraParams.iteritems():
-            try:
-                label, attribute = key.rsplit('___')
-                if attribute == 'visible':
-                    enc_visible = True
-                
-            except Exception, ex:
-                raise Exception('Showj Web visualizer: Incorrect extra parameter')
+            if key == sj.ORDER:
+                pass
             
-            if not label in _mapCol:
-                print label, "is not in mapCol"
             else:
-                if table.hasColumn(_mapCol[label]):
-                    defaultColumnsLayoutProperties[label].update({attribute:value})
+                try:
+                    label, attribute = key.rsplit('___')
+                    if attribute == sj.VISIBLE:
+                        enc_visible = True
+                except Exception, ex:
+                    raise Exception('Showj Web visualizer: Incorrect extra parameter')
                 
+                if label in _mapCol and table.hasColumn(_mapCol[label]):
+                    defaultColumnsLayoutProperties[label].update({attribute:value})
+                    
         if enc_visible:
             for x in defaultColumnsLayoutProperties:
                 if not 'visible' in defaultColumnsLayoutProperties[x]:
@@ -449,12 +445,12 @@ def loadDatasetXmipp(path):
 
 def testingSSH(request):
     context = {}
-#    return render_to_response("testing_ssh.html", RequestContext(request, context))
+#   return render_to_response("testing_ssh.html", RequestContext(request, context))
     return render_to_response("scipion.html", RequestContext(request, context))
 
 
 def create_context_volume(request, inputParams, volPath, param_stats):
-#        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
+#   volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
 
     threshold = calculateThreshold(param_stats)
     
@@ -502,7 +498,7 @@ def create_context_chimera(volPath):
     
 def calculateThreshold(params):
     threshold = (params[2] + params[3])/2 if params != None else 1
-        
+    
     return threshold
 
 
@@ -517,8 +513,8 @@ def updateSessionTable(request):
         cols_config.configColumn(label, renderable=option)
     elif type == "editable":    
         cols_config.configColumn(label, editable=option)
-    elif type == 'visible':
-        cols_config.configColumn(label, visible=option)
+#    elif type == 'visible':
+#        cols_config.configColumn(label, visible=option)
         
     return HttpResponse(mimetype='application/javascript')
 

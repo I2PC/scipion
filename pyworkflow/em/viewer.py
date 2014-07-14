@@ -99,7 +99,7 @@ class DataView(View):
             'mode', # FOR MODE TABLE OR GALLERY
             'visible',
             'zoom',
-#            'order',
+            'order',
 #            'allowSetVisible':'allowSetVisible',
 #            'editable':'editable',
 #            'allowSetEditable':'allowSetEditable',
