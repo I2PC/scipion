@@ -40,7 +40,7 @@ class ProtHG3D(ProtHG3DBase):
         WorkingDirStructure = os.path.join(self.WorkingDir,"Structure%05d"%nI)
         self.insertStep('createDir',path=WorkingDirStructure)
         fnClasses=self.RemainingClasses
-        self.defineRANSACSteps(fnClasses,WorkingDirStructure,False,self.NRansacInitial,self.NumVolumesInitial)
+        self.defineRANSACSteps(fnClasses,WorkingDirStructure,False,self.NRansacInitial,self.NumVolumesInitial,True)
         self.defineRefinementSteps(fnClasses,WorkingDirStructure,self.NumVolumesInitial)
         
         if (self.InitialVolume != ''):
@@ -55,7 +55,7 @@ class ProtHG3D(ProtHG3DBase):
 
         # Compute RANSAC with the core
         fnClasses=os.path.join(WorkingDirStructureCore,'imagesCore.xmd')
-        self.defineRANSACSteps(fnClasses,WorkingDirStructureCore,True,self.NRansacCore,self.NumVolumesFinal)
+        self.defineRANSACSteps(fnClasses,WorkingDirStructureCore,True,self.NRansacCore,self.NumVolumesFinal,False)
         self.defineRefinementSteps(fnClasses,WorkingDirStructureCore,self.NumVolumesFinal)
                                
         # Match the rest of images and extend the core
@@ -78,12 +78,16 @@ class ProtHG3D(ProtHG3DBase):
         
         self.insertStep("scoreFinalVolumes",WorkingDir=self.WorkingDir,NumVolumes=self.NumVolumesFinal)
 
-    def defineRANSACSteps(self,fnClasses,WorkingDirStructure,useAll,NRansac,NumVolumes):
+    def defineRANSACSteps(self,fnClasses,WorkingDirStructure,useAll,NRansac,NumVolumes,UseInitial):
         # RANSAC iterations
+        if UseInitial:
+            InitialVolume=self.InitialVolume
+        else:
+            InitialVolume=""
         for n in range(NRansac):
             self.insertParallelStep('ransacIteration',WorkingDir=self.WorkingDir,fnClasses=fnClasses,
                                     n=n,SymmetryGroup=self.SymmetryGroup,Xdim=self.Xdim,
-                                    Xdim2=self.Xdim2,NumSamples=self.NumSamples,InitialVolume=self.InitialVolume,
+                                    Xdim2=self.Xdim2,NumSamples=self.NumSamples,InitialVolume=InitialVolume,
                                     AngularSampling=self.AngularSampling,
                                     parent_step_id=XmippProjectDb.FIRST_STEP)
         
