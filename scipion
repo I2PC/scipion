@@ -231,7 +231,7 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
-        os.environ['SCIPION_HOME'] = SCIPION_HOME
+        os.environ.update(VARS)
         for path in DIRS.values():
             if not exists(path):
                 print "  creating %s folder" % (path)

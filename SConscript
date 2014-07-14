@@ -60,13 +60,6 @@ sqlite = env.AddLibrary(
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
-zlib = env.AddLibrary(
-    'zlib',
-    tar='zlib-1.2.8.tgz',
-    buildDir='zlib-1.2.8',
-    targets=['lib/libz.so'],
-    autoConfigTarget='configure.log')
-
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
@@ -97,6 +90,10 @@ matplotlib = addModule(
     tar='matplotlib-1.3.1.tgz',
     deps=[numpy])
 
+setuptools =addModule(
+    'setuptools',
+    tar='setuptools-5.4.1.tgz')
+
 addModule(
     'psutil',
     tar='psutil-2.1.1.tgz')
@@ -125,9 +122,9 @@ addModule(
     default=False)
 
 addModule(
-    'PIL',
-    tar='Imaging-1.1.7.tgz',
-    deps=[zlib])
+    'Pillow',
+    tar='Pillow-2.5.1.tgz',
+    deps=[setuptools])
 
 
 #  ************************************************************************

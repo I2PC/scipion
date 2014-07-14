@@ -94,12 +94,12 @@ def build(args):
                 print 'Executing %s on scons' % " ".join(sargs)
                 with open(SCIPION_INSTALL_LOG, 'a') as logFile:
                     r = call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
-                             stdout=logFile, stderr=logFile)
+                             stdout=logFile, stderr=logFile, env=os.environ)
                 if r != 0:
                     return r
 
     return call('software/bin/scons %s | tee -a %s' % (' '.join(args), SCIPION_INSTALL_LOG),
-                shell=True)
+                shell=True, env=os.environ)
 
 
 

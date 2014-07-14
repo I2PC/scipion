@@ -167,8 +167,8 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     tDir = env.Command(
         Dir('software/lib/python2.7/site-packages/%s' % name),
         tUntar,
-        Action('%s/bin/python setup.py install > %s/log/%s.log 2>&1' %
-               (abspath('software'), abspath('software'), name),
+        Action('%s/bin/python setup.py install %s > %s/log/%s.log 2>&1' %
+               (abspath('software'), ' '.join(flags), abspath('software'), name),
                'Compiling & installing %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
@@ -224,113 +224,7 @@ def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
     return tDir
 
 
-# TODO: check if we have to use any of the commented lines below.
-
-# def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin=None):
-#     """
-#     This method is for adding a package to the main dict
-#     """
-#     from os.path import splitext
-#     if dir is None:
-#         dir = splitext(tar)[0] if tar is not None else name
-#     tar = '%s.tgz' % dir if tar is None else tar
-#     url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/em/%s' % tar if url is None else url
-    
-#     SCIPION['EMPACKAGES'][name] = {PKG_DEF: dft,
-#                                  PKG_TAR: tar,
-#                                  PKG_URL: url,
-#                                  PKG_INSTALL_FOLDER: dir,
-#                                  PKG_LIB_FOLDER: lib,
-#                                  PKG_BIN_FOLDER: bin}
-#     AddOption('--%s' % name,
-#               dest='%s' % name,
-#               action='store_true',
-#               help='EM Package %s option')
-
-
-# def _delPackage(env, name):
-#     """
-#     This method is for removing a package from the main dict
-#     """
-#     del SCIPION['EMPACKAGES'][name]
-
-
-# def _download(target, source, env, name, type='Library'):
-#     """
-#     Download either a package or a library.
-#     """
-#     # Used to construct a builder.
-#     import urllib2, urlparse
-#     targetDict = {}
-#     library = (type == 'Library')
-#     em = type == 'EMPackage' 
-#     if library:
-#         targetDict = SCIPION['LIBS'].get(name)
-#         DEFAULT = DEF
-#         TARFILE = TAR
-#         URLADD = URL
-#     elif em:
-#         targetDict = SCIPION['EMPACKAGES'].get(name)
-#         DEFAULT = PKG_DEF
-#         TARFILE = PKG_TAR
-#         URLADD = PKG_URL
-#     else:
-#         print "Error: type %s not allowed for downloading" % type
-#         return []
-        
-#     # Check whether the library must be downloaded
-#     if not GetOption('%s' % name):
-#         if not targetDict[DEFAULT]:
-#             return []
-#     tar = join(SCIPION['FOLDERS'][TMP_FOLDER], targetDict[TARFILE])
-#     tarFile = File(tar)
-#     md5 = "%s.md5" % tar
-#     md5File = File(tar)
-#     folder = SCIPION['FOLDERS'][TMP_FOLDER]
-#     folderDir = Dir(folder)
-#     url = targetDict[URLADD]
-#     urlMd5 = "%s.md5" % url
-#     go = True
-#     message = message2 = ''
-    
-#     md5check = GetOption('update')
-#     if GetOption('update') is None:
-#         md5check = False
-#         go = False
-    
-#     if not os.path.exists(md5):
-#         md5check = True
-    
-#     if md5check:
-#         print "Downloading md5 file for %s %s..." % (name, type)
-#         go, message = _downloadFile(urlMd5, md5)
-#         print "Checking md5 checksum..."
-#         if _checkMd5(tar, md5) == 1:
-#             go = False
-    
-#     if go:
-#         while go:
-#             print "Downloading %s in folder %s" % (url, folder)
-#             down, message2 = _downloadFile(url, tar)
-#             if not down:
-#                 print "\t ...%s %s not downloaded. Server says: \n %s" % (type, name, message2)
-#             if _checkMd5(tar, md5) == 0:
-#                 if _ask("Downloaded file %s doesn't match its md5 checksum. "
-#                         "Download it again?" % tar) != 'y':
-#                     go = False
-#             else:
-#                 go = False
-#         return 0  # it worked
-
-#         raise RuntimeError("\t ...%s %s was not downloaded" % (name, type))
-
-
-# def _downloadEMPackage(target, source, env, name):
-#     """
-#     This method is for downloading an EM package and place it in the em directory, so it can be compiled and installed
-#     """
-#     return _download(target, source, env, name, type='EMPackage')
-
+# TODO: check the code below to see if we can do a nice "purge".
 
 # def _removeInstallation(env):
 #     """
