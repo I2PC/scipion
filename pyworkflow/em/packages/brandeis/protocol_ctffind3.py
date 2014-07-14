@@ -162,11 +162,10 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.inputMicrographs.get())
+        ctfSet.setMicrographs(self.setOfCtf.getMicrographs())
         defocusList = []
         
         for ctfModel in self.setOfCtf:
-            ctfNotUp = True
             
             for line in self.values:
                 objId = self._getObjId(line)
@@ -184,6 +183,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
                     ctfModel2 = self._getCTFModel(defocusU, defocusV, defocusAngle, psdfile)
                     ctfModel2.setObjId(mic.getObjId())
                     ctfModel2.setMicrograph(mic)
+                    ctfModel.copy(ctfModel2)
                     
                     # save the values of defocus for each micrograph in a list
                     defocusList.append(ctfModel2.getDefocusU())
@@ -191,10 +191,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
                     ctfNotUp = False
                     break
             
-            if ctfNotUp:
-                ctfSet.append(ctfModel)
-            else:
-                ctfSet.append(ctfModel2)
+            ctfSet.append(ctfModel)
         
         self._defineOutputs(outputCTF=ctfSet)
         self._defineSourceRelation(self.setOfCtf, ctfSet)
