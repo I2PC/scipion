@@ -92,10 +92,10 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         
         copyId = self._insertFunctionStep('copyInputFilesStep')
         # Get micrographs to pick
-        self.inputMicrographs.set(self.getInputMicrographs())
+        #self.inputMicrographs.set(self.getInputMicrographs())
             
         deps = []
-        for mic in self.inputMicrographs.get():
+        for mic in self.getInputMicrographs():
             stepId = self._insertFunctionStep('autopickMicrographStep', mic.getFileName(), prerequisites=[copyId])
             deps.append(stepId)
                     
@@ -141,10 +141,11 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                   
     def createOutputStep(self):
         posDir = self._getExtraPath()
-        coordSet = self._createSetOfCoordinates(self.micrographs)
-        readSetOfCoordinates(posDir, self.micrographs, coordSet)
+        inputMicrographs = self.getInputMicrographs()
+        coordSet = self._createSetOfCoordinates(inputMicrographs)
+        readSetOfCoordinates(posDir, inputMicrographs, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.micrographs, coordSet)
+        self._defineSourceRelation(inputMicrographs, coordSet)
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
