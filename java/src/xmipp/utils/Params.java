@@ -7,6 +7,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import xmipp.jni.ImageGeneric;
+import xmipp.viewer.scipion.ScipionParams;
 
 
 /**
@@ -53,6 +54,7 @@ public class Params {
     
     
     
+    
     public String directory;
     public String files[];
     public int port;
@@ -83,7 +85,7 @@ public class Params {
     public String[] visibleLabels;
     public String[] orderLabels;
     public String sortby;
-
+    protected static boolean iscipion;
     
     
     
@@ -282,5 +284,10 @@ public class Params {
     public String getDisplayLabel()
     {
         return displayLabel;
+    }
+    
+    public static boolean isScipion()
+    {
+        return iscipion;
     }
 }

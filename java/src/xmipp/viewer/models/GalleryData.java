@@ -52,6 +52,7 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionParams;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -1546,10 +1547,7 @@ public class GalleryData {
         return selmd;
     }
 
-    public void openMetadata(MetaData md) {
-        new GalleryJFrame(null, md, new Params());
-    }
-
+   
     public void setWindow(GalleryJFrame frame) {
         window = frame;
     }
@@ -1686,5 +1684,6 @@ public class GalleryData {
             psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
             return new Geometry(shiftx, shifty, psiangle);
         }
+        
         
 }// class GalleryDaa
