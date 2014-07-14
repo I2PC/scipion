@@ -92,17 +92,11 @@ class PointerVar():
             obj = self.value
             suffix = ''
             
-        if obj:
+        if obj is not None:
             if hasattr(obj, '_parentObject'):
                 label = obj.strId()
             else:
-                label = obj.getObjLabel()
-                if not len(label.strip()):
-                    parent = self._protocol.mapper.getParent(obj)
-                    if parent:
-                        label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-                    else:
-                        label = obj.getLastName()
+                label = _getObjectLabel(obj, self._protocol.mapper)
         
         return label + suffix
            
@@ -189,6 +183,27 @@ class ProtocolClassTreeProvider(TreeProvider):
                 'values': (obj.get(),)}
     
     
+def _getObjectLabel(obj, mapper):
+    """ Retrieve a readable label for an object
+    taking into account the parents of the object. 
+    """
+    from pyworkflow.protocol import Protocol
+    
+    label = obj.getObjLabel()
+    if not len(label.strip()):
+        labelList = [obj.getLastName()]
+        parent = mapper.getParent(obj)
+        
+        while not isinstance(parent, Protocol):
+            labelList.insert(0, parent.getLastName())
+            parent = mapper.getParent(parent)  
+            
+        labelList.insert(0, parent.getObjLabel())
+        label = '->'.join(labelList)
+        
+    return label    
+    
+    
 def getObjectLabel(obj, mapper):
     """ We will try to show in the list the string representation
     that is more readable for the user to pick the desired object.
@@ -196,13 +211,8 @@ def getObjectLabel(obj, mapper):
     if hasattr(obj, '_parentObject'):
         label = "Item %s" % obj.strId()
     else:
-        label = obj.getObjLabel()
-        if not len(label.strip()):
-            parent = mapper.getParent(obj)
-            if parent:
-                label = "%s -> %s" % (parent.getObjLabel(), obj.getLastName())
-            else:
-                label = obj.getLastName()
+        label = _getObjectLabel(obj, mapper)
+
     return label
 
     

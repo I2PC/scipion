@@ -2,6 +2,7 @@
 import unittest, sys
 from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtUserSubSet
 from pyworkflow.em.packages.xmipp3 import XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs, XmippProtCL2D, XmippProtRCT
+from pyworkflow.em import SetOfParticles
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 
@@ -188,20 +189,22 @@ class TestXmippRCTWorkflow(TestWorkflow):
         #self.validateFiles('protCL2D', protCL2D) 
         
         # Make a subset of images with only particles from class 5
-        print "Run ProtUserSubset"
-        protSubset = self.newProtocol(ProtUserSubSet)
-        protSubset.inputObject.set(protCL2D.outputClasses[5])
-        protSubset.outputClassName.set("SetOfImages")
-        protSubset.sqliteFile.set("%s," % self.classesSqlite)
-        self.launchProtocol(protSubset)        
-        self.assertIsNotNone(protSubset.outputImages, "There was a problem with ProtUSerSubset")
+#         print "Run ProtUserSubset"
+#         protSubset = self.newProtocol(ProtUserSubSet)
+# 
+#         protSubset.inputObject.set(protCL2D.outputClasses)
+#         protSubset.inputObject.setExtendedItemId(5)
+#         protSubset.outputClassName.set("SetOfParticles")
+#         protSubset.sqliteFile.set("%s," % self.classesSqlite)
+#         self.launchProtocol(protSubset)        
+#         self.assertIsNotNone(protSubset.outputParticles, "There was a problem with ProtUSerSubset")
         #self.validateFiles('ProtUserSubSet', ProtUserSubSet) 
         
         # Random Conical Tilt    
         print "Run Random Conical Tilt"
         protRCT = XmippProtRCT()
         protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)
-        protRCT.inputImages.set(protSubset.outputImages)
+        protRCT.inputParticles.set(protCL2D.outputClasses)
 
         self.proj.launchProtocol(protRCT, wait=True)
         

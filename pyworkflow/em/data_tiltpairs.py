@@ -28,16 +28,27 @@
 This modules contains data classes related to Random Connical Tilt workflow.
 """
 
-from pyworkflow.em.data import EMObject, EMSet
-from pyworkflow.object import Float, Pointer, Integer, String # Some of this import are needed by the mapper
+#NOTE: Some of this importS are needed by the mapper,
+# not directly in the code
+from pyworkflow.em.data import (EMObject, EMSet, Micrograph, 
+                                Acquisition, Particle, Coordinate)
+from pyworkflow.object import Float, Pointer, Integer, String, Object 
 
 
 
-class MicrographsTiltPair(EMObject):
+class TiltPair(EMObject):
+    def __init__(self, untilted=None, tilted=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._untilted = untilted
+        self._tilted = tilted
+        
+        
+class MicrographsTiltPair(EMSet):
     """Represents a Micrographs Tilt Pair"""
+    ITEM_TYPE = TiltPair
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._tilted = None#SetOfMicrographs()
         self._untilted = None#SetOfMicrographs()
         
@@ -59,6 +70,10 @@ class MicrographsTiltPair(EMObject):
         filePaths.add(self.getUntilted().getFiles)
         
         return filePaths 
+    
+    def _loadClassesDict(self):
+        return globals() 
+    
     
 class CoordinatesTiltPair(EMObject):
     """Represents a Coordinates Tilt Pair"""
@@ -129,11 +144,13 @@ class SetOfAngles(EMSet):
     def _loadClassesDict(self):
         return globals()  
     
-class ParticlesTiltPair(EMObject):
+    
+class ParticlesTiltPair(EMSet):
     """Represents a Particles Tilt Pair"""
+    ITEM_TYPE = TiltPair
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._tilted = None#SetOfImages()
         self._untilted = None#SetOfImages()
         self._coordsPair = Pointer()
@@ -161,4 +178,7 @@ class ParticlesTiltPair(EMObject):
         filePaths.add(self.getTilted().getFiles)
         filePaths.add(self.getUntilted().getFiles)
         
-        return filePaths
+        return filePaths    
+    
+    def _loadClassesDict(self):
+        return globals() 

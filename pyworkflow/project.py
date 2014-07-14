@@ -475,8 +475,9 @@ class Project(object):
                 
             def _checkInputAttr(node, pointed):
                 """ Check if an attr is registered as output"""
-                if pointed:
+                if pointed is not None:
                     pointedId = pointed.getObjId()
+                    
                     if pointedId in outputDict:
                         parentNode = outputDict[pointedId]
                         parentNode.addChild(node)
@@ -490,9 +491,9 @@ class Project(object):
                         pointed = attr.getObjValue()
                         # Only checking pointed object and its parent, if more levels
                         # we need to go up to get the correct dependencies
-                        (_checkInputAttr(node, pointed) or 
-                         _checkInputAttr(node, self.mapper.getParent(pointed))
-                        )
+                        if not _checkInputAttr(node, pointed):
+                            parent = self.mapper.getParent(pointed)
+                            _checkInputAttr(node, parent)
             rootNode = g.getRoot()
             rootNode.run = None
             rootNode.label = "PROJECT"
