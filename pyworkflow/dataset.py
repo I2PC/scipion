@@ -362,3 +362,22 @@ class SqliteDataSet(DataSet):
         return table
         
         
+class SingleFileDataSet(DataSet):
+    """ DataSet implementation for single files such as Images or Volumes. 
+    """
+    
+    def __init__(self, filename):
+        self._filename = filename
+        self._tableName = ""
+        DataSet.__init__(self, [self._tableName])
+        self._table = self._createSingleTable()
+        
+    def _createSingleTable(self):
+        table = Table(Column('filename', str, 
+                            renderType=COL_RENDER_VOLUME)) #FIXME: for single images we need to read the dimensions
+        table.addRow(1, filename=self._filename)
+        
+        return table
+        
+    def _loadTable(self, tableName):
+        return self._table

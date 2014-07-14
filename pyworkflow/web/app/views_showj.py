@@ -77,8 +77,6 @@ def updateTable(inputParams, dataset):
     listChanges = inputParams[sj.CHANGES]
     tableName = inputParams[sj.TABLE_NAME]
     
-#    print "CHANGES: ",listChanges
-    
     if len(listChanges) > 0:
         items = listChanges.split(",")
         for x in items:
@@ -434,12 +432,11 @@ def loadDatasetXmipp(path):
         from pyworkflow.dataset import SqliteDataSet
         return SqliteDataSet(path)
     
-    from pyworkflow.em.packages.xmipp3 import XmippDataSet
-    if path.endswith('.star'):
-        from pyworkflow.em.packages.relion import addRelionLabels
-        addRelionLabels(extended=True)
-        
-    print "creating XmippDataSet in path: ", path
+    if path.endswith('.vol') or path.endswith('mrc'):
+        from pyworkflow.dataset import SingleFileDataSet
+        return SingleFileDataSet(path)
+    
+    from pyworkflow.em.packages.xmipp3 import XmippDataSet  
     return XmippDataSet(str(path))
 
 
