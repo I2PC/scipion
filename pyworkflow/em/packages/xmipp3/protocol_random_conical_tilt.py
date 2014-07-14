@@ -81,7 +81,7 @@ class XmippProtRCT(ProtInitialVolume):
 
         form.addSection(label='Reconstruction')
 
-        form.addParam('additionalParams', StringParam, default="-n 5 -l 0.01",
+        form.addParam('additionalParams', StringParam, default="-n 5 -l 0.01", expertLevel=LEVEL_EXPERT,
                       label='Additional reconstruction parameters', 
                       help='See: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Reconstruct_art_v31')
         
@@ -102,48 +102,42 @@ class XmippProtRCT(ProtInitialVolume):
         self.inputSet = self.inputParticles.get()
         self.inputSet.setStore(False)
         self.rctClassesFn = self._getExtraPath('rct_classes.xmd')
+        
+        self._insertFunctionStep('createRctImagesStep')
                 
         if isinstance(self.inputSet, SetOfParticles):
-            self._insertSetSteps(self.inputSet)
+            self._reconstructImages(self.inputSet)
         else:
             for class2D in self.inputSet:
-                self._insertSetSteps(class2D)
+                self._reconstructImages(class2D)
                 
         self._insertFunctionStep('createOutputStep')      
         
-    def _insertSetSteps(self, particles):
-        """ ... """
-
-        
-        classNo = particles.getObjId()
-        blockMd = "class%06d_images@%s" % (classNo, self.rctClassesFn)
-        self.appendRctImages(particles, blockMd)
-                                        
-        classNameIn = blockMd
-        classNameOut = self._getExtraPath("rct_images_%06d.xmd" % classNo)
-        classVolumeOut = self._getPath("rct_%06d.vol" % classNo)
-        
-        if particles.hasRepresentative():
-            classImage = getImageLocation(particles.getRepresentative())
+    def createRctImagesStep(self):
+        """ Function to create the Xmipp metadata needed to run the Xmipp protocol """
+        if isinstance(self.inputSet, SetOfParticles):
+            self._appendRctImages(self.inputSet)
         else:
-            classImage = None
+            for class2D in self.inputSet:
+                self._appendRctImages(class2D)
         
-        self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut)        
-
        
-    def appendRctImages(self, particles, blockMd):
+    def _appendRctImages(self, particles):
+
+        blockMd = "class%06d_images@%s" % (particles.getObjId(), self.rctClassesFn)
         
         classMd = xmipp.MetaData()
         
-        uImages = self.inputParticlesTiltPair.get().getUntilted()
-        tImages = self.inputParticlesTiltPair.get().getTilted()
-        sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
-        #uMics = uImages.getCoordinates().getMicrographs()
-        uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
-        tMics = tImages.getCoordinates().getMicrographs()
-                    
         for img in particles:
             imgId = img.getObjId()
+ 
+            uImages = self.inputParticlesTiltPair.get().getUntilted()
+            tImages = self.inputParticlesTiltPair.get().getTilted()
+            sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
+
+            uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
+            tMics = tImages.getCoordinates().getMicrographs()
+                        
             uImg = uImages[imgId]
             tImg = tImages[imgId]
             objId = classMd.addObject()
@@ -159,17 +153,12 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ENABLED, 1)
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
             pairRow.setValue(xmipp.MDL_REF, 1)
-            #TODO: We should get the angles and shift from transformation matrix
+
             pairRow.setValue(xmipp.MDL_FLIP, False)
-            if img.hasAlignment():
-                alignment = img.getAlignment()
-                pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
-                pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
-                pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
-            else:
-                pairRow.setValue(xmipp.MDL_SHIFT_X, float(1))
-                pairRow.setValue(xmipp.MDL_SHIFT_Y, float(1))
-                pairRow.setValue(xmipp.MDL_ANGLE_PSI, float(1))               
+            alignment = img.getAlignment()
+            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
+            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+            pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
             
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]
@@ -182,6 +171,23 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.writeToMd(classMd, objId)
             classMd.write(blockMd, xmipp.MD_APPEND)
             
+    def _reconstructImages(self, particles):
+        """ Function to insert the step needed to reconstruct a class (or setOfParticles) """
+
+        classNo = particles.getObjId()
+        blockMd = "class%06d_images@%s" % (classNo, self.rctClassesFn)
+                                                      
+        classNameIn = blockMd
+        classNameOut = self._getExtraPath("rct_images_%06d.xmd" % classNo)
+        classVolumeOut = self._getPath("rct_%06d.vol" % classNo)
+        
+        if particles.hasRepresentative():
+            classImage = getImageLocation(particles.getRepresentative())
+        else:
+            classImage = None
+        
+        self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut)        
+
     def reconstructClass(self, classIn, classOut, classImage, classVolumeOut):
 
     # If class image doesn't exists, generate it by averaging
@@ -230,34 +236,56 @@ class XmippProtRCT(ProtInitialVolume):
                     
          
     def createOutputStep(self):
+        
+        #TODO: Refactor following code if possible
         self.volumesSet = self._createSetOfVolumes()
         self.volumesSet.setStore(False)
-        self.volumesSet.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
-      
+        self.volumesSet.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())       
+
+        if self.doFilter.get():
+            self.volumesFilterSet = self._createSetOfVolumes('filtered')
+            self.volumesFilterSet.setStore(False)
+            self.volumesFilterSet.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
+                  
         if isinstance(self.inputSet, SetOfParticles):
-            self._createOutputVolume(self.inputSet)
+            volumeOut = self._getPath("rct_%06d.vol" % self.inputSet.getObjId())                
+            self._appendOutputVolume(volumeOut)
         else:
             for class2D in self.inputSet:
-                self._createOutputVolume(class2D)
- 
-    def _createOutputVolume(self, particles):               
-        classVolumeOut = self._getPath("rct_%06d.vol" % particles.getObjId())    
-        
-        if self.doFilter.get():
-            classVolumeOut = classVolumeOut.replace('.vol','_filtered.vol')
-            
-        
-        vol = Volume()
-        vol.setFileName(classVolumeOut)
-        vol.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
-        self.volumesSet.append(vol)
+                volumeOut = self._getPath("rct_%06d.vol" % class2D.getObjId())       
+                self._appendOutputVolume(volumeOut) 
 
         self._defineOutputs(outputVolumes=self.volumesSet)
-        self._defineSourceRelation(self.inputParticlesTiltPair.get(), self.volumesSet)
+        
+        if self.doFilter.get():
+            self._defineOutputs(outputFilteredVolumes=self.volumesFilterSet)
+            
+        self._defineSourceRelation(self.inputParticlesTiltPair.get(), self.volumesSet)  
+             
+    def _appendOutputVolume(self, volumeOut):  
+                                  
+        vol = Volume()
+        vol.setFileName(volumeOut)
+        vol.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
+        self.volumesSet.append(vol)
+        
+        if self.doFilter.get():
+            volumeFilterOut = volumeOut.replace('.vol','_filtered.vol')  
+            volf = Volume()
+            volf.setFileName(volumeFilterOut)
+            volf.setSamplingRate(self.inputParticlesTiltPair.get().getUntilted().getSamplingRate())
+            self.volumesFilterSet.append(volf)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if isinstance(self.inputParticles.get(), SetOfParticles):
+            if not self.inputParticles.get().hasAlignment():
+                errors.append("The input particles should have alignment information.")
+        else:
+            for class2D in self.inputParticles.get():
+                if not class2D.hasAlignment():
+                    errors.append("The input classes should have alignment information.")
         return errors
     
     def _summary(self):
