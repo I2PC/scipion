@@ -54,11 +54,11 @@ def downloadPackage(package):
     try:
         packageTar = PACKAGES[package]
         if not os.path.exists(packageTar):
-            system("wget -c %s/%s &> /dev/null" % (URL_BASE, packageTar))
+            system("wget -c %s/%s > /dev/null 2>&1" % (URL_BASE, packageTar))
         
         packageDir = packageTar.replace('.tgz', '')
         if not os.path.exists(packageDir):
-            system("tar -xzf %s &> /dev/null" % packageTar)
+            system("tar -xzf %s > /dev/null 2>&1" % packageTar)
         
         if not os.path.exists(package):
             os.symlink(packageDir, package)
