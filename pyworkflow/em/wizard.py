@@ -615,12 +615,8 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        
-#        print "LOW", self.getLowFreq()
-#        print "HIGH", self.getHighFreq()
-#        print "DECAY", self.getFreqDecay()
-        
-        xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
+        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -647,6 +643,7 @@ class BandPassFilterDialog(DownsampleDialog):
                 return self.freqDecaySlider.get()
         return 0.    
     
+    
 class GaussianFilterDialog(BandPassFilterDialog):
     
     def _createControls(self, frame):
@@ -666,7 +663,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
+        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj), self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):

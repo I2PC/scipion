@@ -28,16 +28,16 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
-import numpy as np
 import json
+
+from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
+from pyworkflow.object import *
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 
 from constants import *
 from convert import ImageHandler
-from pyworkflow.object import *
-from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
+import numpy as np
 import xmipp
-
 
 
 class EMObject(OrderedObject):
@@ -498,6 +498,8 @@ class SetOfImages(EMSet):
         # will be set for each image added to the set
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
+        # Copy the acquistion from the set to images
+        image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
