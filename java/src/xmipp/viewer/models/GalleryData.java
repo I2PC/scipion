@@ -365,7 +365,6 @@ public class GalleryData {
         {
             ColumnInfo sortci = getColumnInfo(sortby[0]);
             boolean asc = sortby.length == 1 || sortby[1].equals("asc");
-            System.out.printf(sortci.labelName, asc);
             if(sortci != null)
                 sortMd(sortci.label, asc);
         }
