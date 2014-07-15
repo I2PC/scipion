@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Josue Gomez Blanco     (jgomez@cnb.csic.es)
-# *              I. Foche Perez (ifoche@cnb.csic.es)
+# *              I. Foche Perez         (ifoche@cnb.csic.es)
+# *              J. Burguet Castell     (jburguet@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -26,24 +28,24 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
-This script will generate the pw.bashrc and pw.cshrc file to include
+Launch the build process for a fresh installation of Scipion.
+
+It will first download and install SCons, and then let it execute the
+SConscript, which will install all the libraries, python modules and
+em packages that are needed.
 """
 
 import sys
 import os
 from os.path import join, exists, dirname, abspath
-import platform
 
 from urllib2 import urlopen
 from StringIO import StringIO
 import subprocess
 import tarfile
 
-# OS boolean vars
-MACOSX = (platform.system() == 'Darwin')
-WINDOWS = (platform.system() == 'Windows')
-LINUX = (platform.system() == 'Linux')
 
 SCIPION_HOME = os.environ.get('SCIPION_HOME', dirname(dirname(abspath(__file__))))
 SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 'software')
@@ -51,9 +53,6 @@ SCIPION_INSTALL_PATH = join(SCIPION_SOFTWARE_PATH, 'install')
 SCIPION_INSTALL_LOG = join(SCIPION_SOFTWARE_PATH, 'log', 'scons.log')
 
 SCONS = 'scons-2.3.1'
-
-SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
-
 
 
 def build(args):
@@ -91,6 +90,4 @@ def build(args):
 
 
 if __name__ == '__main__':
-    returncode = build(sys.argv[1:])
-    # This script will exit with the same exit code as scons did
-    sys.exit(returncode)
+    sys.exit(build(sys.argv[1:]))

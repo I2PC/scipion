@@ -231,18 +231,19 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
-        # Please do not update vars here. Scons need to use the system python
+        # We do not os.environ.update(VARS) here. SCons needs to use
+        # the python installed in the system by default.
         for path in DIRS.values():
             if not exists(path):
-                print "  creating %s folder" % (path)
+                print "  Creating folder %s ..." % path
                 os.makedirs(path) 
         from scripts.install import build
-        returncode = build(args=sys.argv[2:])
-        if returncode == 0:
+        ret = build(args=sys.argv[2:])
+        if ret == 0:
             runApp('config.py')
         # FIXME: I am not sure this is a good idea. To begin with,
         # right now it expects xmipp to be installed.
-        sys.exit(returncode)
+        sys.exit(ret)
         
     elif mode == MODE_CONFIG:
         runApp('config.py')
