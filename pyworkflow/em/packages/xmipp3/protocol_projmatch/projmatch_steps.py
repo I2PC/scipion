@@ -135,6 +135,8 @@ def runInitAngularReferenceFileStep(self):
 # Functions in loop for xmipp_projection_matching
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
+    if maskRadius < 0:
+        maskRadius, _, _ = self.input3DReferences.get().getDim() / 2
     print "executeMask", self.maskRadius.get()
     maskedFileName = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
@@ -143,7 +145,6 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
         
         args = ' -i %(reconstructedFilteredVolume)s -o %(maskedFileName)s'
         if self.getEnumText('maskType') == 'circular':
-            maskRadius = self.maskRadius.get()
             args += ' --mask circular -%(maskRadius)s'
         else:
             maskFn = self.maskFile.get()
@@ -571,6 +572,8 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     resolutionXmdCurrIter = self._getFileName('resolutionXmd', iter=iterN, ref=refN)
     # Prevent high-resolution correlation because of discrete mask from wbp
     outRadius = self._outerRadius[iterN]
+    if outRadius < 0:
+        outRadius, _, _ = self.input3DReferences.get().getDim() / 2
     innerRadius = outRadius - 2
     outputVolumes = [vol1, vol2]
     for vol in outputVolumes:
