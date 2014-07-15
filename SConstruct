@@ -144,7 +144,7 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     If default=False, the module will not be built unless the option
     --with-<name> is used.
 
-    Returns the final target (software/lib/python2.7/site-packages/<name>)
+    Returns the final target (software/lib/python2.7/site-packages/<name>).
 
     """
     # Use reasonable defaults.
@@ -191,7 +191,7 @@ def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
     If default=False, the package will not be built unless the option
     --with-<name> is used.
 
-    Returns the final target (software/em/<instDir>)
+    Returns the final target (software/em/<instDir>).
 
     """
     # Use reasonable defaults.
