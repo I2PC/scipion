@@ -64,10 +64,9 @@ class XmippProtCL2D(ProtClassify2D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
+                      help='Select the input images to be classified.')        
         form.addParam('numberOfReferences', IntParam, default=64,
                       label='Number of references:',
                       help='Number of references (or classes) to be generated.')
@@ -116,7 +115,8 @@ class XmippProtCL2D(ProtClassify2D):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        #FIXME: this should be done in an step, not in _insert*
+        imgsFn = createXmippInputImages(self, self.inputParticles.get())
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 
@@ -200,12 +200,12 @@ class XmippProtCL2D(ProtClassify2D):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        inputImages = self.inputImages.get()
-        classes2DSet = self._createSetOfClasses2D(inputImages, subset)
+        inputParticles = self.inputParticles.get()
+        classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputImages, classes2DSet)
+        self._defineSourceRelation(inputParticles, classes2DSet)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -223,7 +223,7 @@ class XmippProtCL2D(ProtClassify2D):
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classes not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getName())
+            summary.append("Input Images: %s" % self.inputParticles.get().getName())
             summary.append("Number of references: %d" % self.numberOfReferences.get())
             summary.append("Output classes: %s" % self.outputClasses.getName())
             if self.hasAttribute('outputClasses_core'):
@@ -235,7 +235,7 @@ class XmippProtCL2D(ProtClassify2D):
     def _methods(self):
         methods = []
         if hasattr(self, 'outputClasses'):
-            methods.append("The SetOfParticles with *%d* particles" % self.inputImages.get().getSize())
+            methods.append("The SetOfParticles with *%d* particles" % self.inputParticles.get().getSize())
             methods.append("has been classified in *%d* classes." % self.numberOfReferences.get())
             methods.append("The method used to compare was *%s*" % self.getEnumText('comparisonMethod'))
             methods.append("and to clustering was *%s*" % self.getEnumText('clusteringMethod'))
