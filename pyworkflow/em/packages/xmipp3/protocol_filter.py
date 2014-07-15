@@ -27,6 +27,7 @@
 This sub-package contains protocol for particles filters operations
 """
 
+from pyworkflow.protocol.params import FloatParam, EnumParam, DigFreqParam
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp

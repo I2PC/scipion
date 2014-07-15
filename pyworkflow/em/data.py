@@ -28,16 +28,16 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
-import numpy as np
 import json
+
+from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
+from pyworkflow.object import *
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 
 from constants import *
 from convert import ImageHandler
-from pyworkflow.object import *
-from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
+import numpy as np
 import xmipp
-
 
 
 class EMObject(OrderedObject):
@@ -315,7 +315,7 @@ class Image(EMObject):
         self._acquisition = acquisition
         
     def hasAlignment(self):
-        return self._projection is not None
+        return self._alignment is not None
     
     def getAlignment(self):
         return self._alignment
@@ -429,7 +429,12 @@ class EMXObject(EMObject):
     def getBinaryFile(self):
         return self._binaryFile.get()        
                 
-      
+#       
+# class EMSet(EMObject, Set):
+#     def __init__(self, *args, **kwargs):
+#         Set.__init__(self, *args, **kwargs)
+#         EMObject.__init__(self, *args, **kwargs)
+
 class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()
@@ -493,6 +498,8 @@ class SetOfImages(EMSet):
         # will be set for each image added to the set
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
+        # Copy the acquistion from the set to images
+        image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
@@ -502,7 +509,7 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate')
+        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected')
         self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):
@@ -553,6 +560,11 @@ class SetOfImages(EMSet):
             return None
         x, y, z = self._firstDim
         return x, y, z
+    
+    def isOddX(self):
+        """ Return True if the first item x dimension is odd. """
+        x, _, _ = self.getDim()
+        return x % 2 == 1
     
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
@@ -685,9 +697,17 @@ class SetOfCTF(EMSet):
     ITEM_TYPE = CTFModel
     
     def __init__(self, **args):
-        EMSet.__init__(self, **args)    
+        EMSet.__init__(self, **args)
+        self._micrographsPointer = Pointer()
         
-        
+    def getMicrographs(self):
+        """ Return the SetOFImages used to create the SetOfClasses. """
+        return self._micrographsPointer.get()
+    
+    def setMicrographs(self, micrographs):
+        self._micrographsPointer.set(micrographs)
+
+
 class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
         id min/max/avg exists the corresponding flaf must be
@@ -953,7 +973,7 @@ class Class2D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
     
 class Class3D(SetOfParticles):
@@ -965,7 +985,7 @@ class Class3D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
 
 
 class ClassVol(SetOfVolumes):
@@ -1046,6 +1066,7 @@ class SetOfClasses(EMSet):
             if cls.isEnabled():
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
+                newCls.setObjId(cls.getObjId())
                 self.append(newCls)
                 for img in cls:
                     if img.isEnabled():                

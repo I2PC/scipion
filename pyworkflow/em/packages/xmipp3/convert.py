@@ -62,6 +62,57 @@ CTF_DICT = OrderedDict([
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
        ])
 
+CTF_EXTRA_LABELS = [   
+    xmipp.MDL_CTF_CA,
+    xmipp.MDL_CTF_ENERGY_LOSS,
+    xmipp.MDL_CTF_LENS_STABILITY,
+    xmipp.MDL_CTF_CONVERGENCE_CONE,
+    xmipp.MDL_CTF_LONGITUDINAL_DISPLACEMENT,
+    xmipp.MDL_CTF_TRANSVERSAL_DISPLACEMENT,
+    xmipp.MDL_CTF_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN_CV,
+    xmipp.MDL_CTF_BG_SQRT_K,
+    xmipp.MDL_CTF_BG_SQRT_U,
+    xmipp.MDL_CTF_BG_SQRT_V,
+    xmipp.MDL_CTF_BG_SQRT_ANGLE,
+    xmipp.MDL_CTF_BG_BASELINE,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_K,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_SIGMAV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CU,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_CV,
+    xmipp.MDL_CTF_BG_GAUSSIAN2_ANGLE,
+    xmipp.MDL_CTF_CRIT_FITTINGSCORE,
+    xmipp.MDL_CTF_CRIT_FITTINGCORR13,
+    xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,
+    xmipp.MDL_CTF_CRIT_PSDVARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCA1VARIANCE,
+    xmipp.MDL_CTF_CRIT_PSDPCARUNSTEST,
+    xmipp.MDL_CTF_CRIT_FIRSTZEROAVG,
+    xmipp.MDL_CTF_CRIT_DAMPING,
+    xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
+    xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
+    xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
+    xmipp.MDL_CTF_CRIT_NORMALITY,  
+    ]
+
+# Some extra labels to take into account the zscore
+IMAGE_EXTRA_LABELS = [
+    xmipp.MDL_ZSCORE,
+    xmipp.MDL_ZSCORE_HISTOGRAM,
+    xmipp.MDL_ZSCORE_RESMEAN,
+    xmipp.MDL_ZSCORE_RESVAR,
+    xmipp.MDL_ZSCORE_RESCOV,
+    xmipp.MDL_ZSCORE_SHAPE1,
+    xmipp.MDL_ZSCORE_SHAPE2,
+    xmipp.MDL_ZSCORE_SNR1,
+    xmipp.MDL_ZSCORE_SNR2,
+    ]
+
 ANGLES_DICT = OrderedDict([
        ("_angleY", xmipp.MDL_ANGLE_Y),
        ("_angleY2", xmipp.MDL_ANGLE_Y2),
@@ -83,13 +134,15 @@ def objectToRow(obj, row, attrDict):
             row.setValue(label, valueType(getattr(obj, attr).get()))
 
 
-def _rowToObject(row, obj, attrDict):
+def _rowToObject(row, obj, attrDict, extraLabels={}):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
         obj: the EMObject instance (output)
         attrDict: dictionary with the map between obj attributes(keys) and 
             row MDLabels in Xmipp (values).
+        extraLabels: a list with extra labels that could be included
+            as _xmipp_labelName
     """
     for attr, label in attrDict.iteritems():
         value = row.getValue(label)
@@ -100,8 +153,9 @@ def _rowToObject(row, obj, attrDict):
         
     attrLabels = attrDict.values()
     
-    for label, value in row:
-        if label not in attrLabels:
+    for label in extraLabels:
+        if label not in attrLabels and row.hasLabel(label):
+            value = row.getValue(label)
             labelStr = xmipp.label2Str(label)
             setattr(obj, '_xmipp_%s' % labelStr, ObjectWrap(value))
     
@@ -112,9 +166,9 @@ def rowFromMd(md, objId):
     return row
     
     
-def rowToObject(md, objId, obj, attrDict):
+def rowToObject(md, objId, obj, attrDict, extraLabels={}):
     """ Same as rowToObject, but creating the row from md and objId. """
-    _rowToObject(rowFromMd(md, objId), obj, attrDict)
+    _rowToObject(rowFromMd(md, objId), obj, attrDict, extraLabels)
     
     
 def _rowToObjectFunc(obj):
@@ -137,7 +191,11 @@ def locationToXmipp(index, filename):
 
 
 def getImageLocation(image):
-    return locationToXmipp(*image.getLocation())
+    xmippFn = locationToXmipp(*image.getLocation())
+    if isinstance(image, Volume) and xmippFn.endswith('.mrc'):
+        xmippFn += ':mrc'
+        
+    return xmippFn
 
 
 def xmippToLocation(xmippFilename):
@@ -190,6 +248,9 @@ def imageToRow(img, imgRow, imgLabel):
         
     if img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
+    
+    if img.hasAlignment():
+        alignmentToRow(img.getAlignment(), imgRow)
         
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
@@ -206,6 +267,9 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
         img.setAlignment(rowToAlignment(md, objId))
     
     setObjId(img, rowFromMd(md, objId))
+    # Read some extra labels
+    rowToObject(md, objId, img, {}, IMAGE_EXTRA_LABELS)
+    
     return img
     
     
@@ -262,8 +326,10 @@ def rowToClass(md, objId, classItem):
     if md.containsLabel(xmipp.MDL_IMAGE):
         index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
         img = classItem.REP_TYPE()
-        img.copyObjId(classItem)
+        classItem.setObjId(objId)
+#         img.copyObjId(classItem)
         img.setLocation(index, filename)
+        img.setSamplingRate(classItem.getSamplingRate())
         classItem.setRepresentative(img)
     
     return classItem
@@ -294,7 +360,7 @@ def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
 def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
-    rowToObject(md, objId, ctfModel, CTF_DICT)
+    rowToObject(md, objId, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
     
     return ctfModel
 
@@ -527,6 +593,7 @@ def readSetOfParticles(filename, partSet,
                        hasCtf=False, 
                        hasAlignment=False):
     readSetOfImages(filename, partSet, rowToParticle, hasCtf, hasAlignment)
+    partSet.setHasAlignment(hasAlignment)
 
 
 def setOfParticlesToMd(imgSet, md, rowFunc=None):
@@ -643,13 +710,15 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classesSet.getSamplingRate()
+    #samplingRate = classesSet.getSamplingRate()
     hasCtf = classesSet.getImages().hasCTF()
+    print "readSetOfClasses.hasCtf = ", hasCtf
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
+        classItem.setObjId(objId)
         classItem = rowToClass(classesMd, objId, classItem)
-        classItem.setSamplingRate(samplingRate)
+        classItem.copyInfo(classesSet.getImages())
         classesSet.append(classItem)
         ref = classItem.getObjId()
         b = 'class%06d_images' % ref
@@ -827,6 +896,8 @@ def rowToAlignment(md, objId):
     angles[2] = md.getValue(xmipp.MDL_ANGLE_PSI, objId)
     shifts[0] = md.getValue(xmipp.MDL_SHIFT_X, objId)
     shifts[1] = md.getValue(xmipp.MDL_SHIFT_Y, objId)
+    flip = md.getValue(xmipp.MDL_FLIP, objId)
+    
     M = matrixFromGeometry(shifts, angles)
     alignment.setMatrix(M)
     #FIXME: remove this after the conversions from Transform matrix
@@ -834,8 +905,21 @@ def rowToAlignment(md, objId):
     alignment._xmipp_anglePsi = Float(angles[2])
     alignment._xmipp_shiftX = Float(shifts[0])
     alignment._xmipp_shiftY = Float(shifts[1])
+    alignment._xmipp_flip = Boolean(flip)
     
     return alignment
+
+
+def alignmentToRow(alignment, mdRow):
+    #FIXME: we should use the transformation matrix
+    #shifts, angles = geometryFromMatrix(alignment.getMatrix())
+    #mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
+    #mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    #mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+    mdRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
+    mdRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
+    mdRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+    mdRow.setValue(xmipp.MDL_FLIP, bool(alignment.getAttributeValue('_xmipp_flip', False)))     
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
@@ -863,6 +947,7 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
     clsDict = {} # Dictionary to store the (classId, classSet) pairs
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
+    hasCtf = inputImages.hasCTF()
     
     for objId in md:
         ref = md.getValue(classLabel, objId)
@@ -878,7 +963,8 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
             clsSet.append(cls)
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
-        img = rowToParticle(md, objId, hasCtf=False)
+        img = rowToParticle(md, objId, 
+                            hasCtf=hasCtf, hasAlignment=True)
         classItem.append(img)
         
     for classItem in clsDict.values():

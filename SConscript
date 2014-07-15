@@ -140,25 +140,20 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='Xmipp-3.1-src.tgz',
-               instDir='xmipp',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tgz',
                default=False)
 # TODO: fix the url of this package!
 
 env.AddPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
-               instDir='bsoft',
                default=False)
 
 env.AddPackage('ctffind',
                tar='ctffind_V3.5.tgz',
-               instDir='ctffind',
                default=False)
-# TODO: check if instDir should be brandeis/ctffind instead
 
-env.AddPackage('eman2',
+env.AddPackage('eman',
                tar='eman2.1beta3.linux64.tgz',
-               instDir='EMAN2',
                default=False)
 
 env.AddPackage('frealign',
@@ -171,7 +166,6 @@ env.AddPackage('relion',
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
-               instDir='spider-web',
                default=False)
 
 

@@ -90,7 +90,7 @@ class ProtParticlePicking(ProtParticles):
         return methodsMsgs
 
     def getCoordsSuffix(self):
-        count = len(self.iterOutputAttributes(EMObject))
+        count = len(list(self.iterOutputAttributes(EMObject)))
         suffix = str(count) if count > 1 else ''
         
         return suffix

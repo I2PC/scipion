@@ -38,7 +38,7 @@ __version__ = 'v.0.1.5 Phosphorus'
 
 def __findScipionHome():
     """ Find Scipion home from the __file__ location. 
-    It also take into account the links.
+    It also takes into account the links.
     """
     absPath = os.path.abspath(__file__)
     if os.path.islink(absPath):
@@ -79,7 +79,6 @@ SCIPION_PATH = os.pathsep.join([join(SCIPION_SOFTWARE, 'bin'),
                                ])
 XMIPP_LIB = join(getConfigPath('XMIPP_HOME'), 'lib')
 SCIPION_LIB = os.pathsep.join([join(SCIPION_SOFTWARE, 'lib'),
-                               join(SCIPION_SOFTWARE, 'lib64'),
                                XMIPP_LIB, 
                                os.environ.get('LD_LIBRARY_PATH', '') # Keep previous value of LD_LIBRARY_PATH
                                ]
@@ -117,7 +116,7 @@ for package in ['XMIPP_HOME', 'SPIDER_DIR', 'EMAN2DIR',
     VARS[package] = getConfigPath(package)
     
 
-# The following functions required that the SCIPION_PYTHON 
+# The following functions require that SCIPION_PYTHON 
 # is sucessfully compiled and installed
 def runApp(app, args=''):
     runCmd('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
@@ -273,9 +272,6 @@ def main():
         
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        #d = VARS.copy()
-        #d.update({k:v for k,v in os.environ.items() if k.startswith('SCIPION')})
-            
         for k, v in VARS.iteritems():
             print 'export %s="%s"' % (k, v)
 

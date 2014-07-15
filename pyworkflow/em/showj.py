@@ -29,6 +29,7 @@ The name of ShowJ is due historical reasons. This data visualization tools
 was first called xmipp_show. And later was re-written using Java and 
 became xmipp_showj.
 """
+
 import os
 from os.path import join
 from collections import OrderedDict
@@ -49,12 +50,14 @@ LABEL_SELECTED = 'labelsToRenderComboBox'
 MODE = 'mode'
 MODE_GALLERY = 'gallery'
 MODE_TABLE = 'table'
+MODE_MD = 'metadata'
 MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
 RENDER = 'render'
 ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
+SORT_BY = 'sortby'
 
 GOTO = 'goto'
 ROWS = 'rows'
@@ -88,7 +91,7 @@ OBJECT_ID = 'objectId'
 
 
 class ColumnsConfig():
-    """ Store the configuration of the columsn for a given table in a dataset.
+    """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
     For each column, we store properties:
     - visible
@@ -102,16 +105,26 @@ class ColumnsConfig():
     """
     def __init__(self, table, allowRender=True, defaultColumnsLayout={}):
         
-        self._columnsDict = OrderedDict() 
+        self._columnsDict = OrderedDict()
          
         for col in table.iterColumns():  
-            colDefaultLayout = defaultColumnsLayout.get(col.getName(), {})
-            self._columnsDict[col.getName()] = ColumnProperties(col, allowRender, colDefaultLayout)
+            colDefaultLayout = defaultColumnsLayout.get(col.getLabel(), {})
+            col_properties = ColumnProperties(col, allowRender, colDefaultLayout)
+            self._columnsDict[col.getName()] = col_properties
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
-        columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
-        return columns
+        
+        columnsName = []
+        columnsLabel = []
+        
+        for col in self._columnsDict.values():
+            if col.isRenderable():
+                columnsName.append(col.getName())
+                columnsLabel.append(col.getLabel())
+        
+#       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
+        return columnsName, columnsLabel
     
     def hasEnableColumn(self):
         for columnLayout in self._columnsDict.values():
@@ -144,7 +157,11 @@ class ColumnProperties():
         self._column = col        
         self.columnType = col.getRenderType()
         
-        self.visible = not (self.columnType == COL_RENDER_ID)
+        if 'visible' in defaultColumnLayoutProperties:
+            self.visible = defaultColumnLayoutProperties['visible']
+        else:
+            self.visible = not (self.columnType == COL_RENDER_ID)
+            
         self.allowSetVisible = True 
         
         self.editable = (self.columnType == COL_RENDER_TEXT)
@@ -173,7 +190,7 @@ class ColumnProperties():
     def setValues(self, defaultColumnLayoutProperties):
         for key in defaultColumnLayoutProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
-    
+
     def getValues(self):
         return {"visible":self.visible,
                 "allowSetVisible":self.allowSetVisible,

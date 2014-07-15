@@ -40,11 +40,12 @@ from protocol_classify2d import ProtRelionClassify2D
 # MASKS
 #===============================================================================
 
-class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [(ProtRelionClassify2D, ['maskRadiusA']),
+class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
+    _targets = [(ProtRelionClassify2D, ['backRadius']),
                 (ProtRelionRefine3D, ['backRadius']),
                 (ProtRelionClassify3D, ['backRadius']),
                 (ProtRelionClassify2D, ['backRadius'])]
+    _unit = UNIT_PIXEL
     
     def _getParameters(self, protocol):
         
@@ -64,32 +65,15 @@ class RelionPartMaskRadiusWizard(ParticleMaskRadiusWizard):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
-    
-    
-class RelionVolMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(ProtRelionClassify3D, ['maskRadiusA']),
-                (ProtRelionRefine3D, ['maskRadiusA'])]
-    
-    def _getParameters(self, protocol):
-        
-        label, value = self._getInputProtocol(self._targets, protocol)
-        
-        protParams = {}
-        protParams['input']= protocol.referenceVolume
-        protParams['label']= label
-        protParams['value']= value
-        return protParams  
-    
-    def _getProvider(self, protocol):
-        _objs = self._getParameters(protocol)['input']    
-        return VolumeMaskRadiusWizard._getListProvider(self, _objs)
-    
-    def show(self, form):
-        params = self._getParameters(form.protocol)
-        _value = params['value']
-        _label = params['label']
-        VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, units=self._unit)
+
+
+class RelionPartMaskRadiusWizard(RelionBackRadiusWizard):
+    _targets = [(ProtRelionClassify2D, ['maskRadiusA']),
+                (ProtRelionRefine3D, ['maskRadiusA']),
+                (ProtRelionClassify3D, ['maskRadiusA']),
+                (ProtRelionClassify2D, ['maskRadiusA'])]
+    _unit = UNIT_ANGSTROM
         
 
 #===============================================================================
@@ -136,3 +120,30 @@ class RelionBandpassWizard(FilterParticlesWizard):
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)
 
+
+class RelionVolFilterWizard(FilterVolumesWizard):
+    _targets = [(ProtRelionClassify3D, ['initialLowPassFilterA']),
+                (ProtRelionRefine3D, ['initialLowPassFilterA'])]
+    
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.referenceVolume
+        protParams['label']= [None, label]
+        protParams['value']= [0., value]
+        return protParams  
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']    
+        return FilterVolumesWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        FilterVolumesWizard.show(self, form, _value, _label, 
+                                 mode=FILTER_LOW_PASS_NO_DECAY, 
+                                 units=UNIT_ANGSTROM)
+        

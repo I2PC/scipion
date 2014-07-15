@@ -3,7 +3,6 @@
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *             Adrian Quintana (aquintana@cnb.csic.es)
 # *             
-# *                
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -44,7 +43,6 @@ from pyworkflow.dataset import COL_RENDER_VOLUME
 import pyworkflow.em.showj as sj
 
 
-
 def loadDataSet(request, inputParams, firstTime):
     """ Load the DataSet from the session or from file. Also load some table.
     Params:
@@ -79,8 +77,6 @@ def updateTable(inputParams, dataset):
     listChanges = inputParams[sj.CHANGES]
     tableName = inputParams[sj.TABLE_NAME]
     
-#    print "CHANGES: ",listChanges
-    
     if len(listChanges) > 0:
         items = listChanges.split(",")
         for x in items:
@@ -107,20 +103,21 @@ def loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTi
         inputParams[sj.VOL_SELECTED] = None
         
     if firstTime or tableChanged:
+        # getting defaultColumnsLayoutProperties
         columns_properties = getExtraParameters(extraParams, table)
-        
         request.session[sj.COLS_CONFIG_DEFAULT] = columns_properties
-
-        columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         
+        # getting tableLayoutConfiguration
+        columnsConfig = sj.ColumnsConfig(table, inputParams[sj.ALLOW_RENDER], columns_properties)
         request.session[sj.COLS_CONFIG] = columnsConfig 
-    else:
-        columnsConfig = request.session[sj.COLS_CONFIG]
-            
-    inputParams[sj.COLS_CONFIG] = columnsConfig
     
+    else:
+        # getting tableLayoutConfiguration from Session
+        columnsConfig = request.session[sj.COLS_CONFIG]
+    
+    inputParams[sj.COLS_CONFIG] = columnsConfig
     setLabelToRender(request, table, inputParams, extraParams, firstTime)
-     
+    
      
 def addProjectPrefix(request, fn):
     """ Split path in block and filename and add the project path to filename. """
@@ -138,9 +135,11 @@ def addProjectPrefix(request, fn):
 
 def setLabelToRender(request, table, inputParams, extraParams, firstTime):
     """ If no label is set to render, set the first one if exists """
-    if (not inputParams.get(sj.LABEL_SELECTED, False) or 
-        hasTableChanged(request, inputParams)):
-        labelsToRender = inputParams[sj.COLS_CONFIG].getRenderableColumns()
+    labelAux = inputParams.get(sj.LABEL_SELECTED, False)
+    hasChanged = hasTableChanged(request, inputParams)
+    
+    if (not labelAux or hasChanged):
+        labelsToRender, _ = inputParams[sj.COLS_CONFIG].getRenderableColumns()
         
         if labelsToRender:
             inputParams[sj.LABEL_SELECTED] = labelsToRender[0]
@@ -173,7 +172,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
         
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-        print "_typeOfColumnToRender = ", _typeOfColumnToRender, " label = ", label
+       
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -182,7 +181,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
-            is3D = inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA
+            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA
             #Setting the _convert 
             _convert = isVol and (inputParams[sj.MODE]==sj.MODE_GALLERY or is3D)
             #Setting the _reslice 
@@ -196,15 +195,11 @@ def setRenderingOptions(request, dataset, table, inputParams):
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                print "Setting dataset.volName: ", _imageVolName
                 dataset.setVolumeName(_imageVolName)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
-                inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_image")
-                #dataset.setVolumeName(None)  
-                #dataset.setNumberSlices(0)         
-                
+               
         volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
     
     return volPath, _stats, _imageDimensions
@@ -220,6 +215,8 @@ DEFAULT_PARAMS = {
     sj.MANUAL_ADJUST: 'Off',                 # In gallery mode 'On' means columns can be adjust manually by the user. When 'Off' columns are adjusted automatically to screen width.
     sj.COLS: None,                         # In gallery mode (and colRowMode set to 'On') cols define number of columns to be displayed
     sj.ROWS: None,                          # In gallery mode (and colRowMode set to 'On') rows define number of columns to be displayed
+    
+    sj.ORDER: None,
     
     sj.IMG_ZOOM: '128px',                     # Zoom set by default
     sj.IMG_MIRRORY: False,                    # When 'True' image are mirrored in Y Axis 
@@ -281,13 +278,15 @@ def showj(request):
             if key in inputParams:
                 inputParams[key] = value
         # extraParams will be read from SESSION
-        
-        
-    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]    
+    
+    # Image zoom 
+    request.session[sj.IMG_ZOOM_DEFAULT] = inputParams[sj.IMG_ZOOM]
     
     #=DEBUG=====================================================================
 #    from pprint import pprint
+#    print "INPUT PARAMS:"
 #    pprint(inputParams)
+#    print "EXTRA PARAMS:"
 #    pprint(extraParams)
     #===========================================================================
 
@@ -302,7 +301,7 @@ def showj(request):
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
         
         volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
-    
+        
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
     else:
@@ -322,13 +321,12 @@ def showj(request):
 
 def cleanSession(request, filename):
     """ Clean data stored in session for a new visualization. """
-    # Store dataset and labelsToRender in session 
     if filename in request.session:
         del request.session[filename]
         
        
 def storeToSession(request, inputParams, dataset, _imageDimensions):
-    # Store dataset and labelsToRender in session 
+    # Store some parameters into session variable 
     datasetDict = {}
     datasetDict[sj.DATASET] = dataset
     datasetDict[sj.LABEL_SELECTED] = inputParams[sj.LABEL_SELECTED]
@@ -353,9 +351,6 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[sj.MODE] + '_utils')})
-        
-    # Library to manage the extra menu functions
-    context.update({"showj_menu_utils": getResourceJs('showj_menu_utils')})
     
     # FIX
 #    context.update({'path' : inputParams[sj.PATH],
@@ -374,18 +369,19 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     # Create context to be send
     
     context = {sj.IMG_DIMS: request.session[inputParams[sj.PATH]].get(sj.IMG_DIMS, 0),
-            sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
-            sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
-            'form': showjForm}
+               sj.IMG_ZOOM_DEFAULT: request.session.get(sj.IMG_ZOOM_DEFAULT, 0),
+               sj.PROJECT_NAME: request.session[sj.PROJECT_NAME],
+               'form': showjForm}
     
     if dataset is not None:
         context.update({sj.DATASET: dataset})
     if columnsConfig is not None:
+        
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-                                                               #'colsOrder': columnsConfig.colsOrder
-                                                               },
-                                                               ensure_ascii=False,
-                                                               cls=ColumnPropertiesEncoder)})
+#                                                    'colsOrder': inputParams[sj.ORDER]
+                                                   },
+                                                   ensure_ascii=False,
+                                                   cls=ColumnPropertiesEncoder)})
     if table is not None:
         context.update({'tableDataset': table})
     
@@ -398,23 +394,36 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
 
 def getExtraParameters(extraParams, table):
     defaultColumnsLayoutProperties = {}
+    _mapCol = {}
+    enc_visible = False
+    
     if extraParams != None and extraParams != {}:
-        defaultColumnsLayoutProperties = {k.getName(): {} for k in table.iterColumns()}
+        for k in table.iterColumns():
+            defaultColumnsLayoutProperties[k.getLabel()] = {}
+            _mapCol[k.getLabel()] = k.getName()
         
         for key, value in extraParams.iteritems():
-            try:
-                label, attribute = key.rsplit('___')
-            except Exception, ex:
-                raise Exception('Showj Web visualizer: Incorrect extra parameter')
-
-            if table.hasColumn(label):
-                defaultColumnsLayoutProperties[label].update({attribute:value})
+            if key == sj.ORDER:
+                pass
+            
+            else:
+                try:
+                    label, attribute = key.rsplit('___')
+                    if attribute == sj.VISIBLE:
+                        enc_visible = True
+                except Exception, ex:
+                    raise Exception('Showj Web visualizer: Incorrect extra parameter')
                 
+                if label in _mapCol and table.hasColumn(_mapCol[label]):
+                    defaultColumnsLayoutProperties[label].update({attribute:value})
+                    
+        if enc_visible:
+            for x in defaultColumnsLayoutProperties:
+                if not 'visible' in defaultColumnsLayoutProperties[x]:
+                    defaultColumnsLayoutProperties[x].update({'visible':'False'})
+        
     return defaultColumnsLayoutProperties
 
-#===============================================================================
-# BEGIN SAVE & LOAD
-#===============================================================================
 
 #### Load an Xmipp Dataset ###
 def loadDatasetXmipp(path):
@@ -423,52 +432,22 @@ def loadDatasetXmipp(path):
         from pyworkflow.dataset import SqliteDataSet
         return SqliteDataSet(path)
     
-    from pyworkflow.em.packages.xmipp3 import XmippDataSet
-    if path.endswith('.star'):
-        from pyworkflow.em.packages.relion import addRelionLabels
-        addRelionLabels(extended=True)
-        
-    print "creating XmippDataSet in path: ", path
-    return XmippDataSet(str(path))
-
+    if path.endswith('.vol') or path.endswith('mrc'):
+        from pyworkflow.dataset import SingleFileDataSet
+        return SingleFileDataSet(path)
     
-def save_showj_table(request):
-    if request.is_ajax():
-        changes = request.POST.get('changes')
-        jsonChanges = json.loads(changes)
-        
-        dataset = request.session[sj.DATASET]
-        blockComboBox = request.session[sj.TABLE_NAME]
-        
-        table = dataset.getTable(blockComboBox)
-        
-        for key in jsonChanges:
-            element_split = key.rsplit('___')
-            if len(element_split)!=2: 
-                print "this fails and sth has to be done"
-            
-            #NAPA de LUXE ahora mismo se realiza una conversion a int pero habria que ver de que tipo de datos se trata 
-            #columnsConfig.columnsLayout[element_split[0]].typeOfColumn
-
-            dictelement = {element_split[0]:jsonChanges[key]}
-            table.updateRow(int(element_split[1]),**dictelement)
-        
-        dataset.writeTable(blockComboBox, table)
-        
-        return HttpResponse(json.dumps({'message':'Ok'}), mimetype='application/javascript')
-#===========================================================================
-# END SAVE & LOAD
-#===========================================================================
+    from pyworkflow.em.packages.xmipp3 import XmippDataSet  
+    return XmippDataSet(str(path))
 
 
 def testingSSH(request):
     context = {}
-#    return render_to_response("testing_ssh.html", RequestContext(request, context))
+#   return render_to_response("testing_ssh.html", RequestContext(request, context))
     return render_to_response("scipion.html", RequestContext(request, context))
 
 
 def create_context_volume(request, inputParams, volPath, param_stats):
-#        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
+#   volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
 
     threshold = calculateThreshold(param_stats)
     
@@ -516,7 +495,7 @@ def create_context_chimera(volPath):
     
 def calculateThreshold(params):
     threshold = (params[2] + params[3])/2 if params != None else 1
-        
+    
     return threshold
 
 
@@ -525,10 +504,14 @@ def updateSessionTable(request):
     type = request.GET.get('type', None)
     option = request.GET.get('option', None)
     
+    cols_config = request.session[sj.COLS_CONFIG]
+    
     if type == "renderable":
-        request.session[sj.COLS_CONFIG].configColumn(label, renderable=option)
+        cols_config.configColumn(label, renderable=option)
     elif type == "editable":    
-        request.session[sj.COLS_CONFIG].configColumn(label, editable=option)
+        cols_config.configColumn(label, editable=option)
+#    elif type == 'visible':
+#        cols_config.configColumn(label, visible=option)
         
     return HttpResponse(mimetype='application/javascript')
 

@@ -859,7 +859,7 @@ class Set(OrderedObject):
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
         self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
-        # TODO: updated size with the real size from the mapper
+        self._size.set(self._mapper.count())
            
     def close(self):
         self._mapper.close()

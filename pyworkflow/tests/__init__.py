@@ -60,7 +60,9 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'volumes': 'volumes/*.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
-               'vol3': 'volumes/volume_1_iter_002.mrc'})
+               'vol3': 'volumes/volume_1_iter_002.mrc',
+               'aligned_particles': 'gold/aligned_particles.sqlite',
+               })
 
 
 DataSet(name='mda', folder='hemoglobin_mda', 
@@ -91,4 +93,10 @@ DataSet(name='model',  folder='model',
         files={'modelGoldSqlite': 'gold/model_gold.sqlite', 
                'modelGoldXml': 'gold/model_gold.xml',
                'classesSelection': 'gold/classes_selection.sqlite'})
+
+DataSet(name='rct',  folder='rct', 
+        files={'positions': 'positions',
+               'untilted': 'micrographs/F_rct_u*.tif',
+               'tilted': 'micrographs/F_rct_t*.tif',
+               'classes': 'classes/classes2D_stable_core.sqlite'})
 

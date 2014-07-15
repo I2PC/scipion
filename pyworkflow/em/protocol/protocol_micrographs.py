@@ -200,7 +200,7 @@ class ProtRecalculateCTF(ProtMicrographs):
               label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
         form.addParam('inputValues', TextParam)
         
-        form.addParallelSection(threads=0, mpi=1)
+        form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -294,15 +294,6 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _getMicrographDir(self, mic):
         """ Return an unique dir name for results of the micrograph. """
         return self._getExtraPath(removeBaseExt(mic.getFileName()))        
-    
-    def _iterMicrographs(self):
-        """ Iterate over micrographs and yield
-        micrograph name and a directory to process.
-        """
-        for mic in self.inputMics:
-            micFn = mic.getFileName()
-            micDir = self._getMicrographDir(mic) 
-            yield (micFn, micDir, mic)  
     
     def _prepareCommand(self):
         """ This function should be implemented to prepare the

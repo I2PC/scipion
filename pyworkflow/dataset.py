@@ -30,8 +30,6 @@ This will serve as an abstraction layer from where the data will be taken.
 """
 from collections import OrderedDict, namedtuple
 
-
-
 class DataSet(object):
     """ Holds several Tables
     All tables should have an unique tableName. 
@@ -317,11 +315,20 @@ class SqliteDataSet(DataSet):
                 # Keep track of _index and _filename pairs to mark as renderable images
                 if colLabel.endswith('_index'):
                     imgCols[colLabel.replace('_index', '')] = colName
+                
                 elif colLabel.endswith('_filename'):
                     prefix = colLabel.replace('_filename', '')
                     if prefix in imgCols:
                         renderType = COL_RENDER_IMAGE
                         imgCols[colName] = imgCols[prefix]
+                
+                #CTF FIX
+                elif (colLabel.endswith('_psdFile') or 
+                      colLabel.endswith('_enhanced_psd') or 
+                      colLabel.endswith('_ctfmodel_quadrant') or 
+                      colLabel.endswith('_ctfmodel_halfplane')):
+                    
+                    renderType = COL_RENDER_IMAGE
                 
                 if row['class_name'] == 'Boolean':
                     renderType = COL_RENDER_CHECKBOX   
@@ -355,3 +362,22 @@ class SqliteDataSet(DataSet):
         return table
         
         
+class SingleFileDataSet(DataSet):
+    """ DataSet implementation for single files such as Images or Volumes. 
+    """
+    
+    def __init__(self, filename):
+        self._filename = filename
+        self._tableName = ""
+        DataSet.__init__(self, [self._tableName])
+        self._table = self._createSingleTable()
+        
+    def _createSingleTable(self):
+        table = Table(Column('filename', str, 
+                            renderType=COL_RENDER_VOLUME)) #FIXME: for single images we need to read the dimensions
+        table.addRow(1, filename=self._filename)
+        
+        return table
+        
+    def _loadTable(self, tableName):
+        return self._table

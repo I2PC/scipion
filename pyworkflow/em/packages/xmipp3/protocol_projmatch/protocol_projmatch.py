@@ -168,6 +168,9 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def executeCtfGroupsStep(self, **kwargs):
         runExecuteCtfGroupsStep(self, **kwargs)
     
+    def transformMaskStep(self, args, **kwargs):
+        runTransformMaskStep(self, args, **kwargs)
+    
     def angularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs):
         runAngularProjectLibraryStep(self, iterN, refN, args, stepParams, **kwargs)
         

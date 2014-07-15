@@ -68,7 +68,7 @@ def createFilenameTemplates(self):
     for k, v in self._params.iteritems():
         setattr(self, k, v)
                           
-    Iter = 'Iter_%(iter)03d'
+    Iter = 'iter_%(iter)03d'
     Ref3D = 'Ref3D_%(ref)03d'
     Ctf = 'CtfGroup_%(ctf)06d'
     IterDir = self._getExtraPath(Iter)
@@ -183,7 +183,7 @@ def initializeLists(self):
     self._perturbProjectionDirections = self.itersBoolValues('perturbProjectionDirections')
     #FIXME: this need to use later self.referenceIsCtfCorrected value or take it
     # from the input references objects
-    self.referenceIsCtfCorrected = String('False True')
+    self.referenceIsCtfCorrected = String('True')
     self._referenceIsCtfCorrected = self.itersBoolValues('referenceIsCtfCorrected') 
     
     self._scaleNumberOfSteps = self.itersFloatValues('scaleNumberOfSteps')

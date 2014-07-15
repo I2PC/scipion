@@ -804,26 +804,14 @@ class Protocol(Step):
         self.info(" Running steps ")
         self._runSteps(startIndex)
     
-    def _getEnviron(self):
-        """ This function should return an environ variable
-        that will be used when running new programs.
-        By default, the protocol will use the one defined
-        in the package that it belongs or None.
-        """
-        return getattr(self.getClassPackage(), '_environ', None)
-        
     def runJob(self, program, arguments, **kwargs):
         if self.stepsExecutionMode == STEPS_SERIAL:
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', self.numberOfMpi.get())
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', self.numberOfThreads.get())
         else:
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
-            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
-        if 'env' not in kwargs:
-            self._log.info("calling self._getEnviron...")
-            kwargs['env'] = self._getEnviron()
-                       
-        self._log.info("Using environ for runJob: ", str(kwargs['env']))
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)           
+            
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):

@@ -28,16 +28,27 @@
 This modules contains data classes related to Random Connical Tilt workflow.
 """
 
-from pyworkflow.em.data import EMObject, EMSet
-from pyworkflow.object import Float, Pointer, Integer, String # Some of this import are needed by the mapper
+#NOTE: Some of this importS are needed by the mapper,
+# not directly in the code
+from pyworkflow.em.data import (EMObject, EMSet, Micrograph, 
+                                Acquisition, Particle, Coordinate)
+from pyworkflow.object import Float, Pointer, Integer, String, Object 
 
 
 
-class MicrographsTiltPair(EMObject):
+class TiltPair(EMObject):
+    def __init__(self, untilted=None, tilted=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._untilted = untilted
+        self._tilted = tilted
+        
+        
+class MicrographsTiltPair(EMSet):
     """Represents a Micrographs Tilt Pair"""
+    ITEM_TYPE = TiltPair
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._tilted = None#SetOfMicrographs()
         self._untilted = None#SetOfMicrographs()
         
@@ -60,6 +71,10 @@ class MicrographsTiltPair(EMObject):
         
         return filePaths 
     
+    def _loadClassesDict(self):
+        return globals() 
+    
+    
 class CoordinatesTiltPair(EMObject):
     """Represents a Coordinates Tilt Pair"""
     
@@ -80,7 +95,7 @@ class CoordinatesTiltPair(EMObject):
         return self._angles
     
     def getMicsPair(self):
-        return self._micsPair
+        return self._micsPair.get()
     
     def setUntilted(self, untilted):
         self._untilted = untilted
@@ -92,7 +107,7 @@ class CoordinatesTiltPair(EMObject):
         self._angles = setAngles
         
     def setMicsPair(self, micsPair):
-        self._micsPair = micsPair
+        self._micsPair.set(micsPair)
         
     def getFiles(self):
         filePaths = set()
@@ -129,11 +144,13 @@ class SetOfAngles(EMSet):
     def _loadClassesDict(self):
         return globals()  
     
-class ParticlesTiltPair(EMObject):
+    
+class ParticlesTiltPair(EMSet):
     """Represents a Particles Tilt Pair"""
+    ITEM_TYPE = TiltPair
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
+        EMSet.__init__(self, **args)
         self._tilted = None#SetOfImages()
         self._untilted = None#SetOfImages()
         self._coordsPair = Pointer()
@@ -145,7 +162,7 @@ class ParticlesTiltPair(EMObject):
         return self._tilted
 
     def getCoordsPair(self):
-        return self._coordsPair
+        return self._coordsPair.get()
         
     def setUntilted(self, untilted):
         self._untilted = untilted
@@ -154,11 +171,14 @@ class ParticlesTiltPair(EMObject):
         self._tilted = tilted
 
     def setCoordsPair(self, coordsPair):
-        self._coordsPair = coordsPair
+        self._coordsPair.set(coordsPair)
                 
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getTilted().getFiles)
         filePaths.add(self.getUntilted().getFiles)
         
-        return filePaths
+        return filePaths    
+    
+    def _loadClassesDict(self):
+        return globals() 

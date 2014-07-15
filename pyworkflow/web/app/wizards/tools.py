@@ -123,6 +123,11 @@ def get_image_psd(request):
     # create a xmipp image empty
     imgXmipp = xmipp.Image()
 
+    #    ** DEBUG **
+#    print str(imagePath)
+#    print float(downsample) 
+#    print int(dim)
+
     # compute the PSD image
     xmipp.fastEstimateEnhancedPSD(imgXmipp, str(imagePath), 
                                   float(downsample), int(dim), 2)

@@ -84,5 +84,3 @@ from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_random_conical_tilt import XmippProtRCT
 # Wizards
 from wizard import *
-
-_environ = getEnviron()

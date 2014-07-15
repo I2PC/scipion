@@ -278,7 +278,7 @@ class YesNoDialog(MessageDialog):
 
 class EntryDialog(Dialog):
     """Dialog to ask some entry"""
-    def __init__(self, parent, title, entryLabel, entryWidth=20, defaultValue=None, headerLabel=None):
+    def __init__(self, parent, title, entryLabel, entryWidth=20, defaultValue='', headerLabel=None):
         self.entryLabel = entryLabel
         self.entryWidth = entryWidth
         self.headerLabel = headerLabel
@@ -395,7 +395,7 @@ def showWarning(title, msg, parent):
 def showError(title, msg, parent):
     MessageDialog(parent, title, msg, 'fa-times-circle_alert.png')
     
-def askString(title, label, parent, entryWidth=20, defaultValue=None, headerLabel=None):
+def askString(title, label, parent, entryWidth=20, defaultValue='', headerLabel=None):
     d = EntryDialog(parent, title, label, entryWidth, defaultValue, headerLabel)
     return d.value
 

@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,7 +32,8 @@ import os
 from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
 from pyworkflow.em.protocol import PdbFile
 import pyworkflow as pw
-from showj import runJavaIJapp, ZOOM, ORDER, VISIBLE, MODE, PATH, TABLE_NAME
+from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
+                   MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
 # PATH is used by app/em_viewer.py
 
 
@@ -94,33 +96,30 @@ class DataView(View):
     #===========================================================================
     
         parameters = {
-            'visible':'visible',
-            'allowSetVisible':'allowSetVisible',
-            'editable':'editable',
-            'allowSetEditable':'allowSetEditable',
-            'render': 'renderable',
-            'allowSetRenderable':'allowSetRenderable',
-            'renderFunc':'renderFunc',
-            'extraRenderFunc':'extraRenderFunc',
-            'mode': 'mode', # FOR MODE TABLE OR GALLERY
-            
-            # NEW PARAMETERS
-#            'order': 'order',
-#            'zoom': 'zoom',
+            'mode', # FOR MODE TABLE OR GALLERY
+            'visible',
+            'zoom',
+            'order',
+#            'allowSetVisible':'allowSetVisible',
+#            'editable':'editable',
+#            'allowSetEditable':'allowSetEditable',
+#            'render': 'renderable',
+#            'allowSetRenderable':'allowSetRenderable',
+#            'renderFunc':'renderFunc',
+#            'extraRenderFunc':'extraRenderFunc',
         }
         
         params = {}
         for key, value in self._viewParams.items():
             
             if key in parameters:
-                if key == 'mode':
-                    if value=='metadata':
-                        params[key]='table'
-                elif key == 'order' or key == 'zoom':
+                if key in {'order','zoom', 'mode'}:
+                    if key == 'mode' and value =='metadata':
+                        value = 'table'
                     params[key] = value
                 else:    
                     for val in value.split(' '):
-                        params[val] = '%s___%s' % (val, parameters[key])
+                        params[val] = '%s___%s' % (val, key)
                      
         return params
         
@@ -143,7 +142,8 @@ class ObjectView(DataView):
         self.other = other
         
     def getShowJParams(self):
-        params = DataView.getShowJParams(self) + ' --scipion %s %s \"%s\" %s %s'%(self.python, self.scripts,  self.projectid, self.inputid, self.other)#mandatory to provide scipion params
+        # mandatory to provide scipion params
+        params = DataView.getShowJParams(self) + ' --scipion %s %s \"%s\" %s %s'%(self.python, self.scripts,  self.projectid, self.inputid, self.other)
         return params
     
     def show(self):
@@ -153,8 +153,10 @@ class ObjectView(DataView):
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
-        defaultViewParams = {ORDER: 'enabled id _size _representative._filename',
-                             VISIBLE: 'enabled id _size _representative._filename',
+        labels =  'enabled id _size _representative._filename'
+        defaultViewParams = {ORDER:labels,
+                             VISIBLE: labels, RENDER:'_representative._filename',
+                             'sortby': '_size', 'label': '_size',
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
@@ -176,9 +178,8 @@ class CoordinatesObjectView(DataView):
         self.script = pw.join('apps', 'pw_create_coords_subset.py')
         self.outputdir = outputdir
         
-        
     def getShowJParams(self):
-        params = '--input %s --output %s --mode readonly'%(self._path, self.outputdir)
+        params = '--input %s --output %s --mode readonly --scipion'%(self._path, self.outputdir)
         return params
     
     def show(self):

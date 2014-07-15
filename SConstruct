@@ -202,7 +202,7 @@ def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    instDir = instDir or tar.split('-', 1)[0].split('_', 1)[0]
+    instDir = instDir or name
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the package even if it is not on by default.
@@ -214,11 +214,11 @@ def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, Dir('software/tmp/%s' % buildDir), tDownload)
+    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload)
     tDir = env.Command(
         Dir('software/em/%s' % instDir),
         Dir('software/tmp/%s' % buildDir),
-        Action('cp -ar software/tmp/%s software/em/%s' % (buildDir, instDir),
+        Action('ln -s software/em/%s software/em/%s' % (buildDir, instDir),
                'Putting contents of %s in software/em/%s' % (name, instDir)))
 
     # Add the dependencies.

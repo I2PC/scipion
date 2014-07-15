@@ -48,14 +48,13 @@ class StepExecutor():
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, env=None, cwd=None):
+           runInBackground=False, cwd=None):
         """ This function is a wrapper around runJob, 
         providing the host configuration. 
         """
         process.runJob(log, programName, params,
                        numberOfMpi, numberOfThreads, 
-                       runInBackground, self.hostConfig, 
-                       env=env, cwd=cwd)
+                       runInBackground, self.hostConfig, cwd=cwd)
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Simply iterate over the steps and run each one. """
@@ -211,15 +210,14 @@ class MPIStepExecutor(ThreadStepExecutor):
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, env=None, cwd=None):
+           runInBackground=False, cwd=None):
         from pyworkflow.utils.mpi import runJobMPI
         node = current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
         runJobMPI(log, programName, params, self.comm, node,
                   numberOfMpi, numberOfThreads, 
-                  runInBackground, hostConfig=self.hostConfig, 
-                  env=env, cwd=cwd)
+                  runInBackground, hostConfig=self.hostConfig, cwd=cwd)
         
     def finishThread(self, th):
         from pyworkflow.utils.mpi import TAG_RUN_JOB
