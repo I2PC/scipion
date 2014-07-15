@@ -32,71 +32,50 @@ This script will generate the pw.bashrc and pw.cshrc file to include
 
 import sys
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname, abspath
 import platform
 
 from urllib2 import urlopen
+from StringIO import StringIO
 import subprocess
 import tarfile
+
 
 # OS boolean vars
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
-SCIPION_HOME = os.environ['SCIPION_HOME']
-SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 
-                                    'software')
-SCIPION_INSTALL_PATH = join(SCIPION_SOFTWARE_PATH,
-                                    'install')
-SCIPION_INSTALL_LOG = join(SCIPION_SOFTWARE_PATH,
-                                   'log',
-                                   'scons.log')
-SCONS_VERSION = 'scons-2.3.1'
+SCIPION_HOME = os.environ.get('SCIPION_HOME', dirname(dirname(abspath(__file__))))
+SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 'software')
+SCIPION_INSTALL_PATH = join(SCIPION_SOFTWARE_PATH, 'install')
+SCIPION_INSTALL_LOG = join(SCIPION_SOFTWARE_PATH, 'log', 'scons.log')
+
+SCONS = 'scons-2.3.1'
+
 SCIPION_DIRS = ['SCIPION_DATA', 'SCIPION_LOGS', 'SCIPION_TESTS', 'SCIPION_USER_DATA', 'SCIPION_TMP']
 
 
-    
-def downloadScons():
-    """ Download the scons tgz file and extract it. """
-    SCONS_URL = "http://scipionwiki.cnb.csic.es/files/scipion/software/python/"
-    SCONS_VERSION = 'scons-2.3.1.tgz'
-    INSTALL_PATH = join(os.environ['SCIPION_HOME'], 'software', 'install')
-    print "Downloading scons from " + SCONS_URL + SCONS_VERSION
-    try:
-        data = urlopen("%s/%s" % (SCONS_URL, SCONS_VERSION)).read()
-        open(join(INSTALL_PATH, SCONS_VERSION), 'w').write(data)
-    except Exception as e:
-        print "\tError downloading %s (%s)" % (SCONS_VERSION, e)
-        print "destination: %s" % INSTALL_PATH
-        print "URL: %s/%s" % (SCONS_URL, SCONS_VERSION)
-        return -1
-    print "Unpacking scons"
-    sourceTar = tarfile.open(join(INSTALL_PATH, SCONS_VERSION), 'r')
-    sourceTar.extractall(INSTALL_PATH)
-    sourceTar.close()
-    os.remove(join(INSTALL_PATH, SCONS_VERSION))
-
 
 def build(args):
-    if not '--purge' in args:
-        if not exists(join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
-            # Download and untar Scons
-            downloadScons()
-            #Compile scons
-            setupArgs = [["install", "--prefix=%s" % SCIPION_SOFTWARE_PATH]]
-            if exists(SCIPION_INSTALL_LOG):
-                os.remove(SCIPION_INSTALL_LOG)
-            for sargs in setupArgs:
-                command = ['python', join(SCIPION_INSTALL_PATH, SCONS_VERSION, 'setup.py')] + sargs
-                print 'Executing %s on scons' % " ".join(sargs)
-                with open(SCIPION_INSTALL_LOG, 'a') as logFile:
-                    r = call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS_VERSION),
-                             stdout=logFile, stderr=logFile, env=os.environ)
-                if r != 0:
-                    return r
 
-    # Call scons and show the output on the screen and logfile.
+    # First make sure that we have SCons installed.
+    if not exists(join(SCIPION_INSTALL_PATH, SCONS)):
+        # Download and extract SCons.
+        url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
+        tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(SCIPION_INSTALL_PATH)
+
+        # Install it.
+        command = ['python', 'setup.py', 'install',
+                   '--prefix=%s' % SCIPION_SOFTWARE_PATH]
+        print 'Executing: %s' % ' '.join(command)
+        with open(SCIPION_INSTALL_LOG, 'w') as logFile:
+            r = subprocess.call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS),
+                                stdout=logFile, stderr=logFile, env=os.environ)
+        if r != 0:
+            return r
+
+    # Call SCons and show the output on the screen and logfile.
     proc = subprocess.Popen(['software/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with open(SCIPION_INSTALL_LOG, 'a') as logFile:

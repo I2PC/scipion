@@ -274,7 +274,7 @@ env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
 
 # Extra (simple) builders
-Download = Builder(action='wget $SOURCE -c -O $TARGET')
+Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
 Untar = Builder(action='tar -C software/tmp --recursive-unlink -xzf $SOURCE')
 
 
