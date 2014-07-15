@@ -90,7 +90,7 @@ matplotlib = addModule(
     tar='matplotlib-1.3.1.tgz',
     deps=[numpy])
 
-setuptools =addModule(
+setuptools = addModule(
     'setuptools',
     tar='setuptools-5.4.1.tgz')
 
