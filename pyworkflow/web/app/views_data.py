@@ -28,13 +28,10 @@ import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_base import * 
-from views_util import * 
-from views_protocol import updateParam 
+from views_tree import loadObjTree
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
-from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
 from django.http import HttpResponse, HttpRequest
-from django.contrib.gis.shortcuts import render_to_text
 
 
 def data_content(request):        
@@ -59,4 +56,12 @@ def data_content(request):
     return render_to_response('data_content/data_content.html', context)
 
 
+def tree_obj_view(request):
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName) 
+     
+    # load the protocol tree current active
+    root = loadObjTree(project)
+    
+    return render_to_response('data_content/tree_obj_view.html', {'sections': root.childs})
     

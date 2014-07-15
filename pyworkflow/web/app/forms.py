@@ -350,9 +350,9 @@ class ShowjForm(forms.Form):
                                                              required=False,
                                                              choices=tuple(zip(dataset.listTables(), dataset.listTables())))
             
-            labelsToRender = tableLayoutConfiguration.getRenderableColumns()
-            if labelsToRender:
-                labelChoices = tuple(zip(labelsToRender, labelsToRender))
+            namesToRender, labelsToRender = tableLayoutConfiguration.getRenderableColumns()
+            if namesToRender:
+                labelChoices = tuple(zip(namesToRender, labelsToRender))
                 self.fields[sj.LABEL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_LABEL_SELECTION,
                                                                 required=False,
                                                                 choices=labelChoices)

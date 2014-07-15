@@ -141,7 +141,7 @@
 		<div id="metadataSelectorContainer" class="sectionMenu">
 			<span class="textMenu">
 			{% if not form.labelsToRenderComboBox.is_hidden %}
-			{{ form.labelsToRenderComboBox.label_tag }}
+				{{ form.labelsToRenderComboBox.label_tag }}
 			{% endif %}
 			</span>
 			{{ form.labelsToRenderComboBox }}
@@ -150,7 +150,7 @@
 		<div id="volumeSelectorContainer" class="sectionMenu">
 			<span class="textMenu">
 			{% if not form.volumesToRenderComboBox.is_hidden %}
-			{{ form.volumesToRenderComboBox.label_tag }}
+				{{ form.volumesToRenderComboBox.label_tag }}
 			{% endif %}
 			</span>
 			{{ form.volumesToRenderComboBox }}
@@ -159,7 +159,7 @@
 		<div id="resliceSelectorContainer" class="sectionMenu">
 			<span class="textMenu">
 			{% if not form.resliceComboBox.is_hidden %}
-			{{ form.resliceComboBox.label_tag }}
+				{{ form.resliceComboBox.label_tag }}
 			{% endif %}
 			</span>
 			{{ form.resliceComboBox }}
@@ -170,11 +170,6 @@
 				<img src="/resources/showj/separator.png" class="menuIcon">
 			</div>
 		{% endif %}
-		
-<!-- 		OLD SAVE BUTTON -->
-<!-- 		<div id="saveContainer" class="sectionMenu"> -->
-<!-- 			<a id="saveButton" href="javascript:saveShowjTable('{{ csrf_token }}');" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-save"></i></a> -->
-<!-- 		</div> -->
 		
 		{% if not form.mirrorY.is_hidden or not form.applyTransformMatrix.is_hidden or not form.onlyShifts.is_hidden or not form.wrap.is_hidden %}
 			<div id="optionsContainer" class="sectionMenu">
@@ -192,9 +187,6 @@
 		{% for hidden in form.hidden_fields %}
 	    {{ hidden }}
 	    {% endfor %} 
-	    
-<!-- 		 <input type="hidden" id="path" name="path" value="{{path}}"> -->
-<!-- 		 <input type="hidden" id="tableName" name="tableName" value="{{table_name}}"> -->
 	    
 		 <!-- Hidden fields to storage temporally some list attributes. -->
 		 <input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">

@@ -135,6 +135,9 @@ def runInitAngularReferenceFileStep(self):
 # Functions in loop for xmipp_projection_matching
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
+    if maskRadius < 0:
+        maskRadius, _, _ = self.input3DReferences.get().getDim()
+        maskRadius = maskRadius / 2
     print "executeMask", self.maskRadius.get()
     maskedFileName = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
@@ -143,7 +146,6 @@ def insertMaskReferenceStep(self, iterN, refN, **kwargs):
         
         args = ' -i %(reconstructedFilteredVolume)s -o %(maskedFileName)s'
         if self.getEnumText('maskType') == 'circular':
-            maskRadius = self.maskRadius.get()
             args += ' --mask circular -%(maskRadius)s'
         else:
             maskFn = self.maskFile.get()
@@ -174,8 +176,10 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     # Project all references
     
     xDim, yDim, zDim = self.input3DReferences.get().getDim()
-    
     memoryUsed = (xDim * yDim * zDim * 8) / pow(2,20)
+    if memoryUsed == 0:
+        memoryUsed = 1 # If this value is 0, produce an division error in runAngularProjectLibraryStep
+    
     stepParams = {'method' : self.getEnumText('projectionMethod')}
     
     expImages = self._getExpImagesFileName(self.docFileInputAngles[iterN-1])
@@ -220,6 +224,7 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
         stepParams['constantToAdd'] = self._constantToAddToFiltration[iterN]
     
     stepParams['memoryUsed'] = memoryUsed
+        
     self._insertFunctionStep('angularProjectLibraryStep', iterN, refN, args % params, stepParams, **kwargs)
 
     if not self.doCTFCorrection:
@@ -568,6 +573,9 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     resolutionXmdCurrIter = self._getFileName('resolutionXmd', iter=iterN, ref=refN)
     # Prevent high-resolution correlation because of discrete mask from wbp
     outRadius = self._outerRadius[iterN]
+    if outRadius < 0:
+        outRadius, _, _ = self.input3DReferences.get().getDim()
+        outRadius = outRadius / 2
     innerRadius = outRadius - 2
     outputVolumes = [vol1, vol2]
     for vol in outputVolumes:
