@@ -174,8 +174,10 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
     # Project all references
     
     xDim, yDim, zDim = self.input3DReferences.get().getDim()
-    
     memoryUsed = (xDim * yDim * zDim * 8) / pow(2,20)
+    if memoryUsed == 0:
+        memoryUsed = 1 # If this value is 0, produce an division error in runAngularProjectLibraryStep
+    
     stepParams = {'method' : self.getEnumText('projectionMethod')}
     
     expImages = self._getExpImagesFileName(self.docFileInputAngles[iterN-1])
@@ -220,6 +222,7 @@ def insertAngularProjectLibraryStep(self, iterN, refN, **kwargs):
         stepParams['constantToAdd'] = self._constantToAddToFiltration[iterN]
     
     stepParams['memoryUsed'] = memoryUsed
+        
     self._insertFunctionStep('angularProjectLibraryStep', iterN, refN, args % params, stepParams, **kwargs)
 
     if not self.doCTFCorrection:
