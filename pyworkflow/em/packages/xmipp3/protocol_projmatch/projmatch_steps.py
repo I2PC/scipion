@@ -136,7 +136,8 @@ def runInitAngularReferenceFileStep(self):
 def insertMaskReferenceStep(self, iterN, refN, **kwargs):
     maskRadius = self.maskRadius.get()
     if maskRadius < 0:
-        maskRadius, _, _ = self.input3DReferences.get().getDim() / 2
+        maskRadius, _, _ = self.input3DReferences.get().getDim()
+        maskRadius = maskRadius / 2
     print "executeMask", self.maskRadius.get()
     maskedFileName = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     reconstructedFilteredVolume = self.reconstructedFilteredFileNamesIters[iterN-1][refN]
@@ -573,7 +574,8 @@ def insertComputeResolutionStep(self, iterN, refN, **kwargs):
     # Prevent high-resolution correlation because of discrete mask from wbp
     outRadius = self._outerRadius[iterN]
     if outRadius < 0:
-        outRadius, _, _ = self.input3DReferences.get().getDim() / 2
+        outRadius, _, _ = self.input3DReferences.get().getDim()
+        outRadius = outRadius / 2
     innerRadius = outRadius - 2
     outputVolumes = [vol1, vol2]
     for vol in outputVolumes:
