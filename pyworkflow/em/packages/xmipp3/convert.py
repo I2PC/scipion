@@ -326,7 +326,8 @@ def rowToClass(md, objId, classItem):
     if md.containsLabel(xmipp.MDL_IMAGE):
         index, filename = xmippToLocation(md.getValue(xmipp.MDL_IMAGE, objId))
         img = classItem.REP_TYPE()
-        img.copyObjId(classItem)
+        classItem.setObjId(objId)
+#         img.copyObjId(classItem)
         img.setLocation(index, filename)
         img.setSamplingRate(classItem.getSamplingRate())
         classItem.setRepresentative(img)
@@ -714,6 +715,7 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
+        classItem.setObjId(objId)
         classItem = rowToClass(classesMd, objId, classItem)
         # FIXME: the following is only valid for SetOfParticles
         SetOfParticles.copyInfo(classItem, classesSet.getImages())

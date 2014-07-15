@@ -973,7 +973,7 @@ class Class2D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
     
 class Class3D(SetOfParticles):
@@ -985,7 +985,7 @@ class Class3D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
 
 
 class ClassVol(SetOfVolumes):
@@ -1066,6 +1066,7 @@ class SetOfClasses(EMSet):
             if cls.isEnabled():
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
+                newCls.setObjId(cls.getObjId())
                 self.append(newCls)
                 for img in cls:
                     if img.isEnabled():                
