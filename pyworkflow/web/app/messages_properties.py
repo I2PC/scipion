@@ -27,7 +27,7 @@
 This module define the text used in the application.
 """
 
-from pyworkflow.utils.messages_properties import Message
+from pyworkflow.utils.properties import Message
 from pyworkflow.web.app.views_util import parseText
 
 class MessageWeb():
@@ -35,4 +35,3 @@ class MessageWeb():
     def __getattr__(self, name):
         text = getattr(Message, name)
         return parseText(text)
-            
