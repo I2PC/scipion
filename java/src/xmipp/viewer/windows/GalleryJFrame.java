@@ -1513,7 +1513,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Display
 			addItem(DISPLAY, "Display");
 
-			addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+			
                         addItem(DISPLAY_APPLYGEO, "Apply geometry", null, "control released G");
 			addItem(DISPLAY_WRAP, "Wrap", null, "control released W");
 			
@@ -1532,6 +1532,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
 			// Metadata operations
 			addItem(METADATA, "Metadata");
+                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
 			addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
