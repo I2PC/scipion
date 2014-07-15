@@ -191,7 +191,11 @@ def locationToXmipp(index, filename):
 
 
 def getImageLocation(image):
-    return locationToXmipp(*image.getLocation())
+    xmippFn = locationToXmipp(*image.getLocation())
+    if isinstance(image, Volume) and xmippFn.endswith('.mrc'):
+        xmippFn += ':mrc'
+        
+    return xmippFn
 
 
 def xmippToLocation(xmippFilename):
