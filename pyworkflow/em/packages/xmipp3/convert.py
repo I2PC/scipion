@@ -711,12 +711,13 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     #samplingRate = classesSet.getSamplingRate()
     hasCtf = classesSet.getImages().hasCTF()
-    print "readSetOfClasses.hasCtf = ", hasCtf
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
         classItem = rowToClass(classesMd, objId, classItem)
-        classItem.copyInfo(classesSet.getImages())
+        # FIXME: the following is only valid for SetOfParticles
+        SetOfParticles.copyInfo(classItem, classesSet.getImages())
+        #classItem.copyInfo(classesSet.getImages())
         classesSet.append(classItem)
         ref = classItem.getObjId()
         b = 'class%06d_images' % ref
@@ -724,7 +725,8 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         if b in blocks:
             #FIXME: we need to adapt the following line
             # when we face classes of volumes and not just particles
-            readSetOfParticles('%s@%s' % (b, filename), classItem, hasCtf=hasCtf, hasAlignment=True)
+            readSetOfParticles('%s@%s' % (b, filename), classItem, 
+                               hasCtf=hasCtf, hasAlignment=True)
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
         
