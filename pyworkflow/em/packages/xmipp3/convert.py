@@ -705,14 +705,14 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     blocks = xmipp.getBlocksInMetaDataFile(filename)
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
-    samplingRate = classesSet.getSamplingRate()
+    #samplingRate = classesSet.getSamplingRate()
     hasCtf = classesSet.getImages().hasCTF()
     print "readSetOfClasses.hasCtf = ", hasCtf
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
         classItem = rowToClass(classesMd, objId, classItem)
-        classItem.setSamplingRate(samplingRate)
+        classItem.copyInfo(classesSet.getImages())
         classesSet.append(classItem)
         ref = classItem.getObjId()
         b = 'class%06d_images' % ref
@@ -941,6 +941,7 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
     clsDict = {} # Dictionary to store the (classId, classSet) pairs
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
+    hasCtf = inputImages.hasCTF()
     
     for objId in md:
         ref = md.getValue(classLabel, objId)
@@ -956,7 +957,8 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
             clsSet.append(cls)
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
-        img = rowToParticle(md, objId, hasCtf=False)
+        img = rowToParticle(md, objId, 
+                            hasCtf=hasCtf, hasAlignment=True)
         classItem.append(img)
         
     for classItem in clsDict.values():
