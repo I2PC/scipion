@@ -132,8 +132,8 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     return tMake
 
 
-def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
-              deps=[], default=True):
+def addModule(env, name, tar=None, buildDir=None, targets=None,
+              url=None, flags=[], deps=[], default=True):
     """Add Python module "name" to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -151,6 +151,7 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/python/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    targets = targets or [name]
     flags += ['--prefix=%s' % abspath('software')]
 
     # Add the option --with-name, so the user can call SCons with this
@@ -165,7 +166,7 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
     tDir = env.Command(
-        Dir('software/lib/python2.7/site-packages/%s' % name),
+        ['software/lib/python2.7/site-packages/%s' % t for t in targets],
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                '%(root)s/bin/python setup.py install %(flags)s > '

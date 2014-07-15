@@ -88,15 +88,18 @@ numpy = addModule(
 matplotlib = addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
+    flags=['--old-and-unmanageable'],
     deps=[numpy])
 
 setuptools = addModule(
     'setuptools',
-    tar='setuptools-5.4.1.tgz')
+    tar='setuptools-5.4.1.tgz',
+    targets=['setuptools.pth'])
 
 addModule(
     'psutil',
-    tar='psutil-2.1.1.tgz')
+    tar='psutil-2.1.1.tgz',
+    flags=['--old-and-unmanageable'])
 
 addModule(
     'mpi4py',
@@ -124,6 +127,8 @@ addModule(
 addModule(
     'Pillow',
     tar='Pillow-2.5.1.tgz',
+    targets=['PIL'],
+    flags=['--old-and-unmanageable'],
     deps=[setuptools])
 
 
