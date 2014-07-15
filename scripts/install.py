@@ -40,7 +40,6 @@ from StringIO import StringIO
 import subprocess
 import tarfile
 
-
 # OS boolean vars
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
@@ -63,6 +62,7 @@ def build(args):
     if not exists(join(SCIPION_INSTALL_PATH, SCONS)):
         # Download and extract SCons.
         url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
+        print "Downloading, unpacking & installing scons from %s..." % url
         tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(SCIPION_INSTALL_PATH)
 
         # Install it.

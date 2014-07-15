@@ -231,6 +231,7 @@ def main():
             runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
+        # Please do not update vars here. Scons need to use the system python
         for path in DIRS.values():
             if not exists(path):
                 print "  creating %s folder" % (path)
