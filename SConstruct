@@ -167,8 +167,11 @@ def addModule(env, name, tar=None, buildDir=None, url=None, flags=[],
     tDir = env.Command(
         Dir('software/lib/python2.7/site-packages/%s' % name),
         tUntar,
-        Action('%s/bin/python setup.py install %s > %s/log/%s.log 2>&1' %
-               (abspath('software'), ' '.join(flags), abspath('software'), name),
+        Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
+               '%(root)s/bin/python setup.py install %(flags)s > '
+               '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
+                                                   'flags': ' '.join(flags),
+                                                   'name': name},
                'Compiling & installing %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
