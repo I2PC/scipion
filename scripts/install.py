@@ -36,7 +36,7 @@ from os.path import join, exists
 import platform
 
 from urllib2 import urlopen
-from subprocess import call
+import subprocess
 import tarfile
 
 # OS boolean vars
@@ -79,8 +79,6 @@ def downloadScons():
 
 
 def build(args):
-    print "Scipion Home in : ", SCIPION_HOME
-
     if not '--purge' in args:
         if not exists(join(SCIPION_INSTALL_PATH, SCONS_VERSION)):
             # Download and untar Scons
@@ -98,8 +96,18 @@ def build(args):
                 if r != 0:
                     return r
 
-    return call('software/bin/scons %s | tee -a %s' % (' '.join(args), SCIPION_INSTALL_LOG),
-                shell=True, env=os.environ)
+    # Call scons and show the output on the screen and logfile.
+    proc = subprocess.Popen(['software/bin/scons'] + args,
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    with open(SCIPION_INSTALL_LOG, 'a') as logFile:
+        while True:
+            ret = proc.poll()
+            if ret is not None:
+                return ret
+            line = proc.stdout.readline()
+            sys.stdout.write(line)
+            logFile.write(line)
+            logFile.flush()
 
 
 
