@@ -238,7 +238,7 @@ def main():
                 os.makedirs(path) 
         from scripts.install import build
         ret = build(args=sys.argv[2:])
-        if ret == 0:
+        if ret == 0 and '--help' not in sys.argv[2:]:
             runApp('config.py')
         # FIXME: I am not sure this is a good idea. To begin with,
         # right now it expects xmipp to be installed.
