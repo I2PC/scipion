@@ -559,6 +559,11 @@ class SetOfImages(EMSet):
         x, y, z = self._firstDim
         return x, y, z
     
+    def isOddX(self):
+        """ Return True if the first item x dimension is odd. """
+        x, _, _ = self.getDim()
+        return x % 2 == 1
+    
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
         return self.getFirstItem().getDim()
