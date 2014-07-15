@@ -110,7 +110,8 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload)
+    tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
+                   cdir='software/tmp')
     tConfig = env.AutoConfig(
         source=Dir('software/tmp/%s' % buildDir),
         AutoConfigTarget=autoConfigTarget,
@@ -164,8 +165,9 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload)
-    tDir = env.Command(
+    tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
+                   cdir='software/tmp')
+    tInstall = env.Command(
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
@@ -178,31 +180,33 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
     # Add the dependencies.
     for dep in deps:
-        Depends(tDir, dep)
+        Depends(tInstall, dep)
 
-    return tDir
+    return tInstall
 
 
-def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
-               deps=[], default=True):
+def addPackage(env, name, tar=None, buildDir=None, url=None,
+               extraActions=[], deps=[], default=True):
     """Add external (EM) package "name" to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file and copies its content from buildDir into the
-    installation directory instDir. It also tells SCons about the
+    installation directory <name>. It also tells SCons about the
     proper dependencies (deps).
+
+    extraActions is a list of (target, command) that should be
+    executed after the package is properly installed.
 
     If default=False, the package will not be built unless the option
     --with-<name> is used.
 
-    Returns the final target (software/em/<instDir>).
+    Returns the final target (software/em/<name>).
 
     """
     # Use reasonable defaults.
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    instDir = instDir or name
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the package even if it is not on by default.
@@ -214,18 +218,26 @@ def addPackage(env, name, tar=None, buildDir=None, instDir=None, url=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload)
-    tDir = env.Command(
-        Dir('software/em/%s' % instDir),
-        Dir('software/tmp/%s' % buildDir),
-        Action('ln -s software/em/%s software/em/%s' % (buildDir, instDir),
-               'Putting contents of %s in software/em/%s' % (name, instDir)))
+    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
+                   cdir='software/em')
+    tLink = env.Command(
+        'software/em/%s/bin' % name,  # TODO: find something better than "/bin"
+        Dir('software/em/%s' % buildDir),
+        Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+               'Putting contents of %s in software/em/%s' % (name, name),
+               chdir='software/em'))
+
+    lastTarget = tLink
+    for target, command in extraActions:
+        lastTarget = env.Command('software/em/%s/%s' % (name, target),
+                                 lastTarget,
+                                 Action(command, chdir='software/em/%s' % name))
 
     # Add the dependencies.
     for dep in deps:
-        Depends(tDir, dep)
+        Depends(tLink, dep)
 
-    return tDir
+    return lastTarget
 
 
 # TODO: check the code below to see if we can do a nice "purge".
@@ -279,7 +291,7 @@ env.AddMethod(addPackage, "AddPackage")
 
 # Extra (simple) builders
 Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C software/tmp --recursive-unlink -xzf $SOURCE')
+Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 
 # ########################

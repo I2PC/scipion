@@ -154,7 +154,9 @@ env.AddPackage('ctffind',
 
 env.AddPackage('eman',
                tar='eman2.1beta3.linux64.tgz',
+               extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
+# extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('frealign',
                tar='frealign_v9.07.tgz',
