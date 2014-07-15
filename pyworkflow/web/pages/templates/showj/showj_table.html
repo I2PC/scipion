@@ -79,6 +79,8 @@ $(document).ready(function() {
 	initializeGoToEvent()
 	initializeTableWidth()
 	
+// 	console.log(jsonTableLayoutConfiguration.colsOrder)
+	
 	/* Init the table */
 	oTable = $('#data_table').dataTable({
 			        "bPaginate": true,
@@ -96,10 +98,10 @@ $(document).ready(function() {
 			                '<option value="100">100</option>'+
 			                '<option value="-1">All</option>'+
 			                '</select> records'
-			        }, 
- 			        "oColReorder": {
-		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
-		    		},  
+			        },
+//  			    "oColReorder": {
+// 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
+// 		    		},  
 		    		
 		    		"bProcessing": true,
 /* 		            "bServerSide": true, */

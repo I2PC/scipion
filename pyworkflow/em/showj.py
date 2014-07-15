@@ -105,7 +105,7 @@ class ColumnsConfig():
     """
     def __init__(self, table, allowRender=True, defaultColumnsLayout={}):
         
-        self._columnsDict = OrderedDict() 
+        self._columnsDict = OrderedDict()
          
         for col in table.iterColumns():  
             colDefaultLayout = defaultColumnsLayout.get(col.getLabel(), {})
@@ -114,8 +114,17 @@ class ColumnsConfig():
         
     def getRenderableColumns(self):
         """ Return a list with the name of renderable columns. """
-        columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
-        return columns
+        
+        columnsName = []
+        columnsLabel = []
+        
+        for col in self._columnsDict.values():
+            if col.isRenderable():
+                columnsName.append(col.getName())
+                columnsLabel.append(col.getLabel())
+        
+#       columns = [col.getName() for col in self._columnsDict.values() if col.isRenderable()]
+        return columnsName, columnsLabel
     
     def hasEnableColumn(self):
         for columnLayout in self._columnsDict.values():

@@ -318,11 +318,11 @@ function enableDisableColumn(event, element) {
 	jsonTableLayoutConfiguration.columnsLayout[labelColumn].visible = !bVis
 
 	// Update the session variable
-	// var status = "disable";
-	// if (bvis_var){
-	// status = "enable";
-	// }
-	// updateSession("visible", status)
+//	 var status = "disable";
+//	 if (bvis_var){
+//		 status = "enable";
+//	 }
+//	 updateSession(labelColumn, "visible", status)
 
 	// This will avoid column sorting
 	event.stopPropagation()

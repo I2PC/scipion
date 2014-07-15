@@ -32,6 +32,20 @@ jQuery(function($) {
 
 <script type="text/javascript">
 
+function convertJSON(json){
+	for ( var i in json.columnsLayout) {
+		switch(json.columnsLayout[i].visible){
+			case "True":
+				json.columnsLayout[i].visible = true
+				break;
+			case "False":
+				json.columnsLayout[i].visible = false
+				break;
+		}
+	}
+	return json;
+}
+
 /*  Dimension of the last image sent by the server*/
 var currentImageDim=parseInt('{{defaultZoom}}')
 /*  If true images are regenerated in the server*/
@@ -41,10 +55,10 @@ var forceRecallServer=false
 /*  Last zoom set properly. In case the new value is too big or small it is set back to the previousZoom*/
 var previousZoom='{{defaultZoom}}'
 /* Initialize Table Layout Configuration from json variable */
-var jsonTableLayoutConfiguration = {{tableLayoutConfiguration|safe}}
+var jsonTableLayoutConfiguration = convertJSON({{tableLayoutConfiguration|safe}})
 
 // DEBUG
-console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
+// console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
 
 $(document).ready(function(){
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
@@ -168,8 +182,11 @@ function setImageSize(refreshElement){
 	<!-- Here is defined the visualization mode -->
 {% endblock %}	
 
-<!-- Hidden menu for multiple selection tool -->
-{% include "showj/showj_selection_menu.html" %}
+<!-- Not used in the volume visualization -->
+{% if not dataset.getNumberSlices > 1 %}
+	<!-- Hidden menu for multiple selection tool -->
+	{% include "showj/showj_selection_menu.html" %}
+{% endif %}
 
 {% endblock %}	
 

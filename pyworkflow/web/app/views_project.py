@@ -26,10 +26,11 @@
 
 import json
 import pyworkflow.gui.graph as gg
-from pyworkflow.em import *
 from views_base import * 
 from views_util import * 
 from views_protocol import updateParam 
+from views_tree import loadProtTree
+
 from pyworkflow.utils.utils import prettyDate
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
@@ -41,6 +42,7 @@ from pyworkflow.protocol.constants import STATUS_FAILED
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from pyworkflow.viewer import WEB_DJANGO
+
 
 #from pyworkflow.web.app.views_util import loadProject
 #from pyworkflow.utils.properties import Message
@@ -175,41 +177,7 @@ def project_graph(request):
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
          
         return HttpResponse(jsonStr, mimetype='application/javascript')
-
-class TreeItem():
-    def __init__(self, name, tag, icon, openItem, protClassName=None, protClass=None):
-        if protClass is None:
-            self.name = name
-        else:
-            self.name = protClass.getClassLabel()
-        self.tag = tag
-        self.icon = icon
-        self.openItem = openItem
-        self.protClass = protClassName
-        self.protRealClass = name
-        self.childs = []
-        
-def populateTree(tree, obj):    
-    for sub in obj:
-        text = sub.text.get()
-        value = sub.value.get(text)
-        tag = sub.tag.get('')
-        icon = sub.icon.get('')
-        openItem = sub.openItem.get()
-        item = TreeItem(text, tag, icon, openItem)
-        tree.childs.append(item)
-        # If have tag 'protocol_base', fill dynamically with protocol sub-classes
-        protClassName = value.split('.')[-1]  # Take last part
-        if sub.value.hasValue() and tag == 'protocol_base':
-            prot = emProtocolsDict.get(protClassName, None)
-            if prot is not None:
-                for k, v in emProtocolsDict.iteritems():
-                    if not v is prot and issubclass(v, prot):
-                        protItem = TreeItem(k, 'protocol_class', 'python_file.gif', None, protClassName, v)
-                        item.childs.append(protItem)
-        else:
-            item.protClass = protClassName
-            populateTree(item, sub)
+       
 
 def update_prot_tree(request):
     projectName = request.session['projectName']
@@ -223,11 +191,6 @@ def update_prot_tree(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-def loadProtTree(project):
-    protCfg = project.getSettings().getCurrentProtocolMenu()
-    root = TreeItem('root', 'root', '', '')
-    populateTree(root, protCfg)
-    return root    
 
 def update_graph_view(request):
     status = request.GET.get('status', None)

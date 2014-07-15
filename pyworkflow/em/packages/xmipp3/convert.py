@@ -707,6 +707,7 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     samplingRate = classesSet.getSamplingRate()
     hasCtf = classesSet.getImages().hasCTF()
+    print "readSetOfClasses.hasCtf = ", hasCtf
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
