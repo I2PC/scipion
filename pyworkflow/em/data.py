@@ -541,7 +541,7 @@ class SetOfImages(EMSet):
         # TODO creaty empty file to improve efficiency
         ih = ImageHandler()
         for i, img in enumerate(self):
-            ih.convert(img.getLocation(), (i+1, fnStack))
+            ih.convert(img, (i+1, fnStack))
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask

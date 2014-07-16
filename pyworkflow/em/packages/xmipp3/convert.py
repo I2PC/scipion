@@ -190,10 +190,21 @@ def locationToXmipp(index, filename):
     return filename
 
 
+def fixVolumeFileName(image):
+    """ This method will add :mrc to .mrc volumes
+    because for mrc format is not possible to distinguish 
+    between 3D volumes and 2D stacks. 
+    """
+    fn = image.getFileName()
+    if isinstance(image, Volume):
+        if fn.endswith('.mrc'):
+            fn += ':mrc'
+        
+    return fn   
+    
 def getImageLocation(image):
-    xmippFn = locationToXmipp(*image.getLocation())
-    if isinstance(image, Volume) and xmippFn.endswith('.mrc'):
-        xmippFn += ':mrc'
+    xmippFn = locationToXmipp(image.getIndex(),
+                              fixVolumeFileName(image))
         
     return xmippFn
 
