@@ -159,39 +159,52 @@ function callPaintGraph() {
 			processNodes(json)
 		}
 	});
-	
 	jsPlumb.draggable($(".window"));
 }
-
 
 
 function callPaintObjGraph(){
 	/*
 	 * This function paint the object graph in the template data_content.html
 	 */ 
+	var nodeSource = $("div#graphActiv");
 	
 	// Get the objects information for be painted
-	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
-		url : '/object_graph/',
+		url : '/elements_graph/',
 		dataType : "json",
 		async: false,
 		success : function(json) {
-			// Draw the boxes
-//			var nodeSource = $("div#graphActiv");
+			// Paint the nodes
+			var aux = [];
+			$.each(json, function(i, item) {
+				var id = "graph_" + item.id
+				var label = item.label
 
-			// Paint the first node
-//			paintBox(nodeSource, "graph_PROJECT", "PROJECT");
-			// Paint the other nodes
+				// Draw box
+				paintObjBox(nodeSource, id, label);
+				
+				if(item.id!= 'PROJECT'){
+					// Get the size
+					var width = $("div#" + id + ".window").width();
+					var height = $("div#" + id + ".window").height();
+					aux.push(item.id + "-" + width + "-" + height);
+				}
+			});
 			
-			
-			
-
-//			processNodes(json)
+			// Move and connect the graph nodes
+			$.ajax({
+				type : "GET",
+				url : '/object_graph/?list=' + aux,
+				dataType : "json",
+				async: false,
+				success : function(json) {
+					processNodes(json)
+				}
+			});
 		}
 	});
-	
 	jsPlumb.draggable($(".window"));
 }
 
@@ -203,7 +216,10 @@ function processNodes(json){
 	for ( var i = 0; i < json.length; i++) {
 		var top = json[i].y*0.8;
 		var left = json[i].x;
-		addStatusBox("graph_" + json[i].id,	json[i].status);
+		
+		if(json[i].status != 'None')
+			addStatusBox("graph_" + json[i].id,	json[i].status);
+		
 		$("div#graph_" + json[i].id + ".window").attr(
 				"style",
 				"top:" + top + "px;left:" + left
@@ -225,7 +241,6 @@ function processNodes(json){
 	}
 }
 
-
 function paintBox(nodeSource, id, msg) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
@@ -241,19 +256,37 @@ function paintBox(nodeSource, id, msg) {
 		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
 		var projName = $("div#graphActiv").attr("data-project");
 		var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
-//		var onclick = "launchToolbarTreePatata(event)";
-//		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
-//		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
 		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';
 	}
-	
 	nodeSource.append(aux);
 }
+
+function paintObjBox(nodeSource, id, msg) {
+	/*
+	 * Function to paint a box like a node inside the object graph.
+	 * The node source is passed by arguments.
+	 */
+
+	if (id != "graph_PROJECT") {
+		var objId = id.replace("graph_", "");
+		var href = "javascript:launchViewer(" + objId +")";
+		var projName = $("div#graphActiv").attr("data-project");
+//		var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
+		var onclick = "#";
+		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
+				+ id + '"><a href="' + href + '"><strong>' + msg + '</strong></a></div>';
+	} else {
+		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
+				+ '</strong></div>';
+	}
+	nodeSource.append(aux);
+}
+
 
 function addStatusBox(id, status) {
 	/*

@@ -88,7 +88,11 @@
 
 {% block contentNorth %}
 <div id="runsInfo">
-	{% include "data_content/data_graph.html" %}
+	<!-- Data Graph ---------------------->
+	<div id="runGraph">
+		<div id="graphActiv" data-time="first" data-project="{{projectName}}">
+		</div>
+	</div>
 </div>
 {% endblock %}
 
