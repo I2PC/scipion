@@ -9,34 +9,28 @@
 #    AutoConfigSource -- File that configure depends on.
 #                        Default: Makefile.in
 
-import os
+from os.path import join, dirname
 import subprocess
 
 from SCons.Script import *
 
+
 def parms(target, source, env):
     """Assemble various AutoConfig parameters."""
-    workdir = os.path.dirname(str(source[0]))
-    params = None
-    if 'AutoConfigParams' in env:
-        params = env['AutoConfigParams']
-        if not isinstance(params, list):
-            print 'AutoConfigParams must be a sequence'
-            Exit(1)
-    targetfile = 'config.h'
-    if 'AutoConfigTarget' in env:
-        targetfile = env['AutoConfigTarget']
-    sourcefile = 'Makefile.in'
-    if 'AutoConfigSource' in env:
-        sourcefile = env['AutoConfigSource']
-    stdout = None
-    if 'AutoConfigStdOut' in env:
-        stdout = env['AutoConfigStdOut']
+    workdir = dirname(str(source[0]))
+    params = env.get('AutoConfigParams')
+    if not isinstance(params, list):
+        print 'AutoConfigParams must be a sequence'
+        Exit(1)
+    targetfile = env.get('AutoConfigTarget', 'config.h')
+    sourcefile = env.get('AutoConfigSource', 'Makefile.in')
+    stdout = env.get('AutoConfigStdOut')
     return (workdir, params, targetfile, sourcefile, stdout)
+
 
 def message(target, source, env):
     """Return a pretty AutoConfig message."""
-    (dirname,
+    (dirx,
      params,
      targetfile,
      sourcefile,
@@ -44,14 +38,15 @@ def message(target, source, env):
     if 'AUTOCONFIGCOMSTR' in env:
         return env.subst(env['AUTOCONFIGCOMSTR'],
                          target = target, source = source, raw = 1) + " > %s " % stdout
-    msg = 'cd ' + dirname + ' && ./configure'
+    msg = 'cd ' + dirx + ' && ./configure'
     if params is not None:
         msg += ' ' + ' '.join(params)
     return msg
 
+
 def emitter(target, source, env):
     """Remap the source & target to path/$AutoConfigSource and path/$AutoConfigTarget."""
-    (dirname,
+    (dirx,
      params,
      targetfile,
      sourcefile,
@@ -68,12 +63,13 @@ def emitter(target, source, env):
     # Since this emitter expects the incoming source[0] value to be a directory
     # name, we can use it here for the rewritten target[0].
 
-    return ([ os.path.join(str(source[0]), targetfile) ],
-            [ os.path.join(str(source[0]), sourcefile) ])
+    return ([ join(str(source[0]), targetfile) ],
+            [ join(str(source[0]), sourcefile) ])
+
 
 def builder(target, source, env):
     """Run ./configure in a directory."""
-    ( dirname,
+    ( dirx,
       params,
       targetfile,
       sourcefile,
@@ -87,7 +83,7 @@ def builder(target, source, env):
     if params is not None:
         cmd = [ cmd ] + params
     return subprocess.call( cmd,
-                            cwd = dirname,
+                            cwd = dirx,
                             stdout = real_stdout,
                             stderr = real_stdout)
 
@@ -96,6 +92,7 @@ def generate(env, **kwargs):
         action = env.Action(builder, message),
         emitter = emitter,
         single_source = True)
+
 
 def exists(env):
     return True

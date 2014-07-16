@@ -21,11 +21,11 @@ from SCons.Script import *
 def parms(target, source, env):
     """Assemble various Make parameters."""
 
-    if 'MakePath' in env:
-        make_path = env.subst(str(env['MakePath']))
-    else:
+    if 'MakePath' not in env:
         print "Make builder requires MakePath variable"
         Exit(1)
+
+    make_path = env.subst(str(env['MakePath']))
 
     make_cmd = 'make'
     if 'MakeCmd' in env:
@@ -58,9 +58,7 @@ def parms(target, source, env):
     if 'MakeTargets' in env:
         make_targets = env.subst(env['MakeTargets'])
 
-    stdout = None
-    if 'MakeStdOut' in env:
-        stdout = env['MakeStdOut']
+    stdout = env.get('MakeStdOut')
 
     return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, stdout)
 
@@ -84,7 +82,7 @@ def message(target, source, env):
 
     if 'MAKECOMSTR' in myenv:
         return myenv.subst(myenv['MAKECOMSTR'],
-                            target = target, source = source, raw = 1) + " > %s " % stdout
+                           target=target, source=source, raw=1) + " > %s " % stdout
 
     msg = 'cd ' + make_path + ' &&'
     if make_env != None:
@@ -98,6 +96,7 @@ def message(target, source, env):
     if make_targets != None:
         msg += ' ' + make_targets
     return msg
+
 
 def builder(target, source, env):
     """Run make in a directory."""
@@ -129,26 +128,21 @@ def builder(target, source, env):
         fullcmd += make_targets.split()
 
     # Capture the make command's output, unless we're verbose
-    real_stdout = subprocess.PIPE
-    if 'MAKECOMSTR' not in env:
-        real_stdout = None
-    else:
-        real_stdout = open(stdout, 'w+')
+    real_stdout = open(stdout, 'w+') if 'MAKECOMSTR' in env else None
 
     # Make!
-    make = subprocess.Popen(fullcmd,
-                            cwd = make_path,
-                            stdout = real_stdout,
-                            stderr = real_stdout,
-                            env = make_env)
+    make = subprocess.Popen(fullcmd, cwd=make_path,
+                            stdout=real_stdout, stderr=real_stdout,
+                            env=make_env)
 
     # Some subprocesses don't terminate unless we communicate with them
     output = make.communicate()[0]
     return make.returncode
 
+
 def generate(env, **kwargs):
-    env['BUILDERS']['Make'] = env.Builder(
-        action = env.Action(builder, message))
+    env['BUILDERS']['Make'] = env.Builder(action=env.Action(builder, message))
+
 
 def exists(env):
     if env.WhereIs(env.subst('$MAKE')) != None:
