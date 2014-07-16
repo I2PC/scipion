@@ -34,7 +34,7 @@ This module contains protocols related to Set operations such us:
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses2D #we need to import this to used dynamically 
 
 
 
