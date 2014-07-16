@@ -1424,7 +1424,7 @@ public class GalleryData {
         if (getFileName() == null) {
             return "";
         }
-        return XmippStringUtils.getFileExtension(getFileName());
+        return XmippStringUtils.getFileExtension(filename);
     }
 
     public void saveAll(String path, boolean overwrite) throws Exception {

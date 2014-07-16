@@ -122,8 +122,10 @@ public class XmippUtil {
                 output.write(buf, 0, bytesRead);
             }
         } finally {
-            input.close();
-            output.close();
+            if(input != null)
+                input.close();
+            if(output != null)
+                output.close();
         }
 }
        
