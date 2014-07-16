@@ -98,8 +98,13 @@ class TestXmippCropResizeParticles(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.acquisition = cls.protImport.outputParticles.getAcquisition()
+        
+    def validateAcquisition(self, particles):
+        acquisition = particles.getAcquisition()
+        self.assertAlmostEqual(acquisition.getVoltage(), self.acquisition.getVoltage())
     
-    def test_crpResizePart(self):
+    def test_cropResizePart(self):
         print "Run crop/resize particles"
         protCropResize = self.newProtocol(XmippProtCropResizeParticles, 
                                          doResize=True, resizeOption=1, resizeDim=128, 
@@ -108,8 +113,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
         self.launchProtocol(protCropResize)
         
         self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
+        self.validateAcquisition(protCropResize.outputParticles)
     
-    def test_crpResizePart2(self):
+    def test_cropResizePart2(self):
         print "Run crop/resize particles v2"
         protCropResize = self.newProtocol(XmippProtCropResizeParticles,  
                                          doResize=True, resizeOption=3, factor=0.5, 
@@ -118,7 +124,7 @@ class TestXmippCropResizeParticles(TestXmippBase):
         self.launchProtocol(protCropResize)
         
         self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop v2 the particles")
-
+        self.validateAcquisition(protCropResize.outputParticles)
 
 
 class TestXmippML2D(TestXmippBase):
@@ -153,7 +159,7 @@ class TestXmippCL2D(TestXmippBase):
         protCL2D = self.newProtocol(XmippProtCL2D, 
                                    numberOfReferences=2, numberOfInitialReferences=1, 
                                    numberOfIterations=4, numberOfMpi=2)
-        protCL2D.inputImages.set(self.protImport.outputParticles)
+        protCL2D.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protCL2D)      
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
 

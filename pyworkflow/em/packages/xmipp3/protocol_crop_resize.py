@@ -38,9 +38,13 @@ RESIZE_DIMENSIONS = 1
 RESIZE_FACTOR = 2
 RESIZE_PYRAMID = 3
 
+
+
 class XmippProtResize():
     """ This class implement the common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
     """
+    _inputLabel = None # This should be 'particles' or 'volumes'
+    
     def __init__(self, **args):
         self._programWindow = "xmipp_transform_window"
         self._programResize = "xmipp_image_resize"
@@ -49,7 +53,7 @@ class XmippProtResize():
     def _defineProcessParams(self, form):
         # Resize operation
         form.addParam('doResize', BooleanParam, default=False,
-                      label='Resize particles?',
+                      label='Resize %s?' % self._inputLabel,
                       help='If you set to *Yes*, you should provide a resize option.')
         form.addParam('resizeOption', EnumParam,
                       choices=['Sampling Rate', 'Dimensions', 'Factor', 'Pyramid'],
@@ -115,11 +119,13 @@ class XmippProtResize():
     #--------------------------- STEPS functions ---------------------------------------------------
     def resizeStep(self, inputFn):
         samplingRate = self._getSetSampling()
+        
         if self.resizeOption == RESIZE_SAMPLINGRATE:
             newSamplingRate = self.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
             self.samplingRate = newSamplingRate
             args = self._args + " --factor %(factor)f"
+        
         elif self.resizeOption == RESIZE_DIMENSIONS:
             size = self.resizeDim.get()
             dim = self._getSetSize()
@@ -134,6 +140,7 @@ class XmippProtResize():
             factor = self.resizeFactor.get()                                               
             self.samplingRate = samplingRate / factor
             args = self._args + " --factor %(factor)f"
+        
         else:
             level = self.resizeLevel.get()
             factor = pow(2, level)
@@ -144,6 +151,7 @@ class XmippProtResize():
     
     def windowStep(self, inputFn):
         dim = self._getSetSize()
+        
         if self.getEnumText('windowOperation') == "crop":
             cropSize = self.cropSize.get() * 2
             windowSize = dim - cropSize
@@ -184,7 +192,8 @@ class XmippProtResize():
 
 class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippProcessParticles):
     """ Crop or resize a set of particles """
-    _label = 'crop or resize particles'
+    _label = 'crop/resize particles'
+    _inputLabel = 'particles'
     
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
@@ -252,7 +261,8 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
 
 class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippProcessVolumes):
     """ Crop or resize a set of volumes """
-    _label = 'resize crop volumes'
+    _label = 'crop/resize volumes'
+    _inputLabel = 'volumes'
     
     def __init__(self, **args):
         ProtPreprocessVolumes.__init__(self, **args)
@@ -266,7 +276,7 @@ class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippPr
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
         volSet = self.inputVolumes.get()
-        if self.singleVolume:
+        if self._isSingleInput():
             vol = Volume()
             vol.copyInfo(volSet)
             if self.doResize:

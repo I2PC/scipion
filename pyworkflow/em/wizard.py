@@ -296,24 +296,21 @@ class FilterWizard(EmWizard):
                 args['highFreq'] = value[1]
                 args['showDecay'] = False
             else:
-                print "Not Mode"
+                raise Exception("Unknown mode '%s'" % self.mode)
                 
             d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
-                lowFreq = d.getLowFreq() 
-                highFreq = d.getHighFreq()
-                decayFreq = d.getFreqDecay() 
+                def setFormValue(flag, value, index):
+                    if args.get(flag, True):
+                        if units == UNIT_ANGSTROM:
+                            value = round(1/value * d.itemDim, 2) # Round 2 digits after the decimal point
+                        form.setVar(label[index], value)
                 
-                if units == UNIT_ANGSTROM:
-                    itemDim = d.itemDim
-                    lowFreq = 1/lowFreq * itemDim
-                    highFreq = 1/highFreq * itemDim
-                    decayFreq = 1/decayFreq * itemDim
-                    
-                form.setVar(label[0], lowFreq)
-                form.setVar(label[1], highFreq)
-                form.setVar(label[2], decayFreq)
+                setFormValue('showLowFreq', d.getLowFreq(), 0)
+                setFormValue('showHighFreq', d.getHighFreq(), 1)
+                setFormValue('showDecay', d.getFreqDecay(), 2)
+                
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
             
@@ -588,10 +585,7 @@ class BandPassFilterDialog(DownsampleDialog):
             self.samplingRate = self.firstItem.getSamplingRate()
             self.itemDim,_,_ = self.firstItem.getDim()
             self.sliFrom = 2.*self.samplingRate
-#            print "Sampling rate !!", self.samplingRate
-#            print "from !!", self.sliFrom
             self.sliTo = 2.*self.itemDim*self.samplingRate
-#            print " to !!", self.sliTo
             
         self.step = self.sliTo/1000
         
@@ -603,7 +597,13 @@ class BandPassFilterDialog(DownsampleDialog):
             self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
                                    
     def addFreqSlider(self, label, value, col):
-        slider = LabelSlider(self.freqFrame, label, from_=self.sliFrom, to=self.sliTo, step=self.step , value=value, callback=lambda a, b, c:self.updateFilteredImage())
+        fromValue = self.sliFrom
+        toValue = self.sliTo
+        if self.unit == UNIT_ANGSTROM:
+            fromValue = self.sliTo
+            toValue = self.sliFrom
+        slider = LabelSlider(self.freqFrame, label, from_=fromValue, to=toValue, 
+                             step=self.step , value=value, callback=lambda a, b, c:self.updateFilteredImage())
         slider.grid(row=0, column=col, padx=5, pady=5)
         return slider
 
@@ -615,17 +615,12 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        
-#        print "LOW", self.getLowFreq()
-#        print "HIGH", self.getHighFreq()
-#        print "DECAY", self.getFreqDecay()
-        
-        xmipp.bandPassFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
+        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
             if self.unit == UNIT_ANGSTROM:
-#                print "Slider value:",self.lfSlider.get()
                 return 1/self.lfSlider.get()*self.itemDim
             else:    
                 return self.lfSlider.get()
@@ -647,6 +642,7 @@ class BandPassFilterDialog(DownsampleDialog):
                 return self.freqDecaySlider.get()
         return 0.    
     
+    
 class GaussianFilterDialog(BandPassFilterDialog):
     
     def _createControls(self, frame):
@@ -666,7 +662,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.gaussianFilter(self.rightImage, "%03d@%s" % (self.lastObj.getIndex(), self.lastObj.getFileName()), self.getFreqSigma(), self.dim)
+        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj), self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):
@@ -675,6 +672,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
         self.dim = 256
         self.samplingRate = 1
         self.unit = getattr(self, 'unit', UNIT_PIXEL)
+        
         if self.unit != UNIT_PIXEL:
             self.samplingRate = self.firstItem.getSamplingRate()
             
@@ -689,6 +687,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
+        
         if self.maskRadius == -1:
             self.iniRadius = self.dim_par/2 
         else:
@@ -701,7 +700,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        self.radiusSlider = LabelSlider(parent, 'Outer radius ('+ self.unit +')', from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=self.samplingRate, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius (%s)' % self.unit, from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=self.samplingRate, callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):

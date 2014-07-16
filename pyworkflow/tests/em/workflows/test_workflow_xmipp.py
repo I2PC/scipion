@@ -253,7 +253,7 @@ class TestXmippWorkflow(TestWorkflow):
         print "Run CL2D"
         protCL2D = self.newProtocol(XmippProtCL2D, numberOfReferences=2, numberOfInitialReferences=1, 
                                  numberOfIterations=4, numberOfMpi=2)
-        protCL2D.inputImages.set(protExtract.outputParticles)
+        protCL2D.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protCL2D)        
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
         self.validateFiles('protCL2D', protCL2D) 

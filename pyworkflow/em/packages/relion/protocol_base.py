@@ -78,6 +78,7 @@ class ProtRelionBase(EMProtocol):
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         self.outputClasses = 'classes_ref3D.xmd'
         self.outputVols = 'volumes.xmd'
+        self.haveDataPhaseFlipped = self.inputParticles.get().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -211,13 +212,14 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')        
-        form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
-                      label='Have data been phase-flipped?',
-                      help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
-                           'Note that CTF-phase flipping is NOT a necessary pre-processing step for MAP-refinement in RELION, ' 
-                           'as this can be done inside the internal CTF-correction. However, if the phases do have been flipped, ' 
-                           'one should tell the program about it using this option.'
-                           '*TODO*: remove this property if we keep track of phase flipped')   
+        #NOTE: this is read from the input particles object
+#         form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
+#                       label='Have data been phase-flipped?',
+#                       help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
+#                            'Note that CTF-phase flipping is NOT a necessary pre-processing step for MAP-refinement in RELION, ' 
+#                            'as this can be done inside the internal CTF-correction. However, if the phases do have been flipped, ' 
+#                            'one should tell the program about it using this option.'
+#                            '*TODO*: remove this property if we keep track of phase flipped')   
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
@@ -493,6 +495,9 @@ class ProtRelionBase(EMProtocol):
         if self.doContinue:
             errors += self._validateContinue()
         else:
+            if self.inputParticles.get().isOddX():
+                errors.append("Relion only works with even values for the image dimensions!")
+                
             errors += self._validateNormal()
         return errors
     

@@ -28,16 +28,16 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 
-import numpy as np
 import json
+
+from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
+from pyworkflow.object import *
+from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
 
 from constants import *
 from convert import ImageHandler
-from pyworkflow.object import *
-from pyworkflow.mapper.sqlite import SqliteMapper, SqliteFlatMapper
-from pyworkflow.utils.path import cleanPath, dirname, join, replaceExt, exists
+import numpy as np
 import xmipp
-
 
 
 class EMObject(OrderedObject):
@@ -498,6 +498,8 @@ class SetOfImages(EMSet):
         # will be set for each image added to the set
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
+        # Copy the acquistion from the set to images
+        image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
@@ -539,7 +541,7 @@ class SetOfImages(EMSet):
         # TODO creaty empty file to improve efficiency
         ih = ImageHandler()
         for i, img in enumerate(self):
-            ih.convert(img.getLocation(), (i+1, fnStack))
+            ih.convert(img, (i+1, fnStack))
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
@@ -558,6 +560,11 @@ class SetOfImages(EMSet):
             return None
         x, y, z = self._firstDim
         return x, y, z
+    
+    def isOddX(self):
+        """ Return True if the first item x dimension is odd. """
+        x, _, _ = self.getDim()
+        return x % 2 == 1
     
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
@@ -966,7 +973,7 @@ class Class2D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
     
 class Class3D(SetOfParticles):
@@ -978,7 +985,7 @@ class Class3D(SetOfParticles):
         """ Copy basic information (id and other properties) but not _mapperPath or _size
         from other set of micrographs to current one.
         """
-        self.copy(other, ignoreAttrs=['_mapperPath', '_size'])
+        self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
 
 
 class ClassVol(SetOfVolumes):
@@ -1059,6 +1066,7 @@ class SetOfClasses(EMSet):
             if cls.isEnabled():
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
+                newCls.setObjId(cls.getObjId())
                 self.append(newCls)
                 for img in cls:
                     if img.isEnabled():                
