@@ -41,11 +41,12 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be indepent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import locationToXmipp
+        from packages.xmipp3 import locationToXmipp, fixVolumeFileName
         
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
         self._locationToStr = locationToXmipp
+        self._fixVolumeFileName = fixVolumeFileName
         
     def convert(self, inputLoc, outputLoc):
         """ Convert from one image to another.
@@ -55,8 +56,14 @@ class ImageHandler(object):
         """
         if isinstance(inputLoc, str):
             inputLoc = (NO_INDEX, inputLoc)
+        elif hasattr(inputLoc, 'getLocation'): #this include Image and subclasses
+            # In this case inputLoc should be a subclass of Image
+            inputLoc = (inputLoc.getIndex(), 
+                        self._fixVolumeFileName(inputLoc))
+            
         if isinstance(outputLoc, str):
             outputLoc = (NO_INDEX, outputLoc)
+            
         # Read from input
         inputStr = self._locationToStr(*inputLoc)
         self._img.read(inputStr)

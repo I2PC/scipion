@@ -190,10 +190,21 @@ def locationToXmipp(index, filename):
     return filename
 
 
+def fixVolumeFileName(image):
+    """ This method will add :mrc to .mrc volumes
+    because for mrc format is not possible to distinguish 
+    between 3D volumes and 2D stacks. 
+    """
+    fn = image.getFileName()
+    if isinstance(image, Volume):
+        if fn.endswith('.mrc'):
+            fn += ':mrc'
+        
+    return fn   
+    
 def getImageLocation(image):
-    xmippFn = locationToXmipp(*image.getLocation())
-    if isinstance(image, Volume) and xmippFn.endswith('.mrc'):
-        xmippFn += ':mrc'
+    xmippFn = locationToXmipp(image.getIndex(),
+                              fixVolumeFileName(image))
         
     return xmippFn
 
@@ -712,13 +723,14 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     #samplingRate = classesSet.getSamplingRate()
     hasCtf = classesSet.getImages().hasCTF()
-    print "readSetOfClasses.hasCtf = ", hasCtf
     
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
         classItem.setObjId(objId)
         classItem = rowToClass(classesMd, objId, classItem)
-        classItem.copyInfo(classesSet.getImages())
+        # FIXME: the following is only valid for SetOfParticles
+        SetOfParticles.copyInfo(classItem, classesSet.getImages())
+        #classItem.copyInfo(classesSet.getImages())
         classesSet.append(classItem)
         ref = classItem.getObjId()
         b = 'class%06d_images' % ref
@@ -726,7 +738,8 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
         if b in blocks:
             #FIXME: we need to adapt the following line
             # when we face classes of volumes and not just particles
-            readSetOfParticles('%s@%s' % (b, filename), classItem, hasCtf=hasCtf, hasAlignment=True)
+            readSetOfParticles('%s@%s' % (b, filename), classItem, 
+                               hasCtf=hasCtf, hasAlignment=True)
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
         

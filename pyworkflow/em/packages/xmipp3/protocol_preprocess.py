@@ -385,7 +385,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
     
     def segmentStep(self, outModel, segmentationType, segmentationMass):
         
-        if self.singleVolume:
+        if self._isSingleInput():
             self._segmentVolume(outModel, segmentationType, segmentationMass)
         else:
             numberOfParticles = self.inputVolumes.get().getSize()

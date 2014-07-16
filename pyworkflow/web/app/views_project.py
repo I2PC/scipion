@@ -25,31 +25,20 @@
 # **************************************************************************
 
 import json
-import pyworkflow.gui.graph as gg
-from views_base import * 
-from views_util import * 
-from views_protocol import updateParam 
+from views_base import base_grid, base_flex
+from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
 from views_tree import loadProtTree
 
-from pyworkflow.utils.utils import prettyDate
 from pyworkflow.manager import Manager
-from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
-from pyworkflow.gui.tree import TreeProvider, ProjectRunsTreeProvider
-from django.http import HttpResponse, HttpRequest
-from django.contrib.gis.shortcuts import render_to_text
 
-from pyworkflow.protocol.constants import STATUS_FAILED
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
-from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-from pyworkflow.viewer import WEB_DJANGO
+from django.http import HttpResponse
+from django.shortcuts import render_to_response
 
-
-#from pyworkflow.web.app.views_util import loadProject
-#from pyworkflow.utils.properties import Message
 
 def projects(request):
-    manager = Manager()
+    from pyworkflow.utils.utils import prettyDate
     
+    manager = Manager()
     projects = manager.listProjects()
     for p in projects:
         p.pTime = prettyDate(p.mTime)
@@ -77,7 +66,6 @@ def create_project(request):
     return HttpResponse(mimetype='application/javascript')
 
 def delete_project(request):
-    
     manager = Manager()
     
     if request.is_ajax():
@@ -86,34 +74,11 @@ def delete_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-class WebNode(object):
-    def __init__(self, text, x=0, y=0):
-        self.text = text
-        self.moveTo(x, y)
-        self.width, self.height = 0, 0
-        
-    def getDimensions(self):
-        return (self.width, self.height)
-    
-    def moveTo(self, x, y):
-        self.x = x
-        self.y = y
-
-def createNode(canvas, node, y):
-    try:
-        item = WebNode(node.getName(), y=y)
-        item.width = node.w
-        item.height = node.h
-    except Exception:
-        print "Error with node: ", node.getName()
-        raise
-    return item
-    
-def createEdge(srcItem, dstItem):
-    pass
-    
 
 def getNodeStateColor(node):
+    from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
+    from pyworkflow.protocol.constants import STATUS_FAILED
+    
     color = '#ADD8E6'  # Lightblue
     status = ''
     if node.run:
@@ -122,62 +87,6 @@ def getNodeStateColor(node):
         
     return status, color
 
-def project_graph(request):
-    if request.is_ajax():
-        boxList = request.GET.get('list')
-        # Project Id(or Name) should be stored in SESSION
-        projectName = request.session['projectName']
-        # projectName = request.GET.get('projectName')
-        project = loadProject(projectName)  
-        provider = ProjectRunsTreeProvider(project)
-        
-        g = project.getRunsGraph()
-        root = g.getRoot()
-        root.w = 100
-        root.h = 40
-        root.item = WebNode('project', x=0, y=0)
-        
-        for box in boxList.split(','):
-            id, w, h = box.split('-')
-            node = g.getNode(id)
-            if node is None:
-                print "Get NONE node: i=%s" % id
-            else:
-#            print node.getName()
-                node.id = id
-                node.w = float(w)
-                node.h = float(h)
-            
-        lt = gg.LevelTree(g)
-        lt.paint(createNode, createEdge)
-        nodeList = []
-        
-#        nodeList = [{'id': node.getName(), 'x': node.item.x, 'y': node.item.y} 
-#                    for node in g.getNodes()]
-        for node in g.getNodes():
-            try:
-                hx = node.w / 2
-                hy = node.h / 2
-                childs = [c.getName() for c in node.getChilds()]
-                status, color = getNodeStateColor(node)
-                
-                info = ""
-                if str(node.id) != "PROJECT":
-                    protocol = project.getProtocol(int(node.id))
-                    info = provider.getObjectInfo(protocol)["values"][0]
-                
-                nodeList.append({'id': node.getName(), 'x': node.item.x - hx, 'y': node.item.y - hy,
-                                 'color': color, 'status': info,
-                                 'childs': childs})
-            except Exception:
-                print "Error with node: ", node.getName()
-                raise
-        
-#        print nodeList
-        jsonStr = json.dumps(nodeList, ensure_ascii=False)   
-         
-        return HttpResponse(jsonStr, mimetype='application/javascript')
-       
 
 def update_prot_tree(request):
     projectName = request.session['projectName']
@@ -232,6 +141,8 @@ def tree_prot_view(request):
     return render_to_response('project_content/tree_prot_view.html', {'sections': root.childs})
     
 def run_table_graph(request):
+    from pyworkflow.gui.tree import ProjectRunsTreeProvider
+    
     try:
         projectName = request.session['projectName']
         project = loadProject(projectName)
@@ -239,7 +150,7 @@ def run_table_graph(request):
         provider = ProjectRunsTreeProvider(project)
         
         runs = request.session['runs']
-        runsNew = formatProvider(provider)
+        runsNew = formatProvider(provider, "runs")
         
         refresh = False
         listNewElm = []
@@ -284,22 +195,28 @@ def run_table_graph(request):
         return HttpResponse("stop")
 
 
-def formatProvider(provider):
-    runs = []
+def formatProvider(provider, mode):
+    objs = []
     for obj in provider.getObjects():
         objInfo = provider.getObjectInfo(obj)
         
         id = objInfo["key"]
         name = objInfo["text"]
         info = objInfo["values"]
-        status = info[0]
-        time = info[1]
         
-        runs.append((id, [id, name, status, time]))
+        if mode == "runs":
+            status = info[0]
+            time = info[1]
+            objs.append((id, [id, name, status, time]))
         
-    return runs
+        elif mode == "objects":
+            objs.append((id, [id, name, info]))
+        
+    return objs
 
 def project_content(request):        
+    from pyworkflow.gui.tree import ProjectRunsTreeProvider
+    
     projectName = request.GET.get('projectName', None)
     
     if projectName is None:
@@ -313,7 +230,7 @@ def project_content(request):
     settings = project.getSettings()
     
     provider = ProjectRunsTreeProvider(project)
-    runs = formatProvider(provider)
+    runs = formatProvider(provider, "runs")
     request.session['runs'] = runs
 
     # Get the selected runs stored in BD    
@@ -361,6 +278,7 @@ def project_content(request):
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
+    from pyworkflow.em.data import EMObject  
 
     if request.is_ajax():
         projectName = request.session['projectName']

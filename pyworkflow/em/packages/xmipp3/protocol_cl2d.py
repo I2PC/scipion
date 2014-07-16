@@ -48,6 +48,11 @@ CMP_CORRENTROPY = 1
 CL_CLASSICAL = 0
 CL_ROBUST = 1
 
+# Classes keys
+CLASSES = ''
+CLASSES_CORE = '_core'
+CLASSES_STABLE_CORE = '_stable_core'
+
         
 class XmippProtCL2D(ProtClassify2D):
     """ Classifies a set of images using a clustering algorithm 
@@ -64,10 +69,9 @@ class XmippProtCL2D(ProtClassify2D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfImages class')        
+                      help='Select the input images to be classified.')        
         form.addParam('numberOfReferences', IntParam, default=64,
                       label='Number of references:',
                       help='Number of references (or classes) to be generated.')
@@ -116,7 +120,8 @@ class XmippProtCL2D(ProtClassify2D):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        #FIXME: this should be done in an step, not in _insert*
+        imgsFn = createXmippInputImages(self, self.inputParticles.get())
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': imgsFn, 
@@ -137,19 +142,20 @@ class XmippProtCL2D(ProtClassify2D):
         if not self.extraParams.hasValue() or not '--ref0' in self.extraParams.get():
             args += ' --nref0 %(nref0)d'
     
-        self._insertClassifySteps("xmipp_classify_CL2D", args)
+        self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
         
         # Analyze cores and stable cores
         if self.numberOfReferences > self.numberOfInitialReferences:
             program = "xmipp_classify_CL2D_core_analysis"
             args = "--dir %(extraDir)s --root level "
             # core analysis
-            self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset='_core')
+            self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
+            
             if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()): # Number of levels should be > 2
                 # stable core analysis
-                self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset='_stable_core')
+                self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
             
-    def _insertClassifySteps(self, program, args, subset=''):
+    def _insertClassifySteps(self, program, args, subset=CLASSES):
         """ Defines four steps for the subset:
         1. Run the main program.
         2. Evaluate classes
@@ -200,12 +206,12 @@ class XmippProtCL2D(ProtClassify2D):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
-        inputImages = self.inputImages.get()
-        classes2DSet = self._createSetOfClasses2D(inputImages, subset)
+        inputParticles = self.inputParticles.get()
+        classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
         readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
-        self._defineSourceRelation(inputImages, classes2DSet)
+        self._defineSourceRelation(inputParticles, classes2DSet)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -218,24 +224,30 @@ class XmippProtCL2D(ProtClassify2D):
     def _citations(self):
         return ['Sorzano2010a']
     
+    def _summaryLevelFiles(self, summary, levelFiles, subset):
+        if levelFiles:
+            levels = [self._getLevelFromFile(fn) for fn in levelFiles]
+            summary.append('Computed classes%s, levels: %s' % (subset, levels))
+    
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classes not ready yet.")
+        summary.append("Input particles: *%d*, Number of classes: *%d* \n" % (self.inputParticles.get().getSize(), 
+                                                                              self.numberOfReferences.get()))
+        
+        levelFiles = self._getLevelMdFiles()
+        if levelFiles:
+            self._summaryLevelFiles(summary, levelFiles, CLASSES)
+            self._summaryLevelFiles(summary, self._getLevelMdFiles(CLASSES_CORE), CLASSES_CORE)
+            self._summaryLevelFiles(summary, self._getLevelMdFiles(CLASSES_STABLE_CORE), CLASSES_STABLE_CORE)
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getName())
-            summary.append("Number of references: %d" % self.numberOfReferences.get())
-            summary.append("Output classes: %s" % self.outputClasses.getName())
-            if self.hasAttribute('outputClasses_core'):
-                summary.append("Output classes core: %s" % self.outputClasses_core.getName())
-            if self.hasAttribute('outputClasses_stable_core'):
-                summary.append("Output classes stable core: %s" % self.outputClasses_stable_core.getName())
+            summary.append("Output classes not ready yet.")
+
         return summary
     
     def _methods(self):
         methods = []
         if hasattr(self, 'outputClasses'):
-            methods.append("The SetOfParticles with *%d* particles" % self.inputImages.get().getSize())
+            methods.append("The SetOfParticles with *%d* particles" % self.inputParticles.get().getSize())
             methods.append("has been classified in *%d* classes." % self.numberOfReferences.get())
             methods.append("The method used to compare was *%s*" % self.getEnumText('comparisonMethod'))
             methods.append("and to clustering was *%s*" % self.getEnumText('clusteringMethod'))
@@ -246,7 +258,14 @@ class XmippProtCL2D(ProtClassify2D):
         """ Grab the metadata class files for each level. """
         levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
         levelMdFiles.sort()
-        return levelMdFiles        
+        return levelMdFiles
+    
+    def _getLevelFromFile(self, filename):
+        """ Return the level number from the filename. """
+        folder = dirname(filename) 
+        # Folder should ends in level_?? where ?? is level number
+        # so we split by '_' and take the last part as int
+        return int(folder.split('_')[-1])
     
     
     

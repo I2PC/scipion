@@ -159,7 +159,7 @@ class TestXmippCL2D(TestXmippBase):
         protCL2D = self.newProtocol(XmippProtCL2D, 
                                    numberOfReferences=2, numberOfInitialReferences=1, 
                                    numberOfIterations=4, numberOfMpi=2)
-        protCL2D.inputImages.set(self.protImport.outputParticles)
+        protCL2D.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protCL2D)      
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
 

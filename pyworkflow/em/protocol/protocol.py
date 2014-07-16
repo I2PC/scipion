@@ -54,6 +54,10 @@ class EMProtocol(Protocol):
         setFn = self._getPath(template % suffix)
         cleanPath(setFn)
         setObj = SetClass(filename=setFn)
+        #FIXME: check why the following clear is needed if we have done
+        # cleanPath before, maybe a db connection been reused?
+        setObj.clear()
+        
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):

@@ -69,7 +69,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         print "Run CL2D"
         protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
                                  numberOfIterations=2, numberOfMpi=16)
-        protCL2D.inputImages.set(protExtract.outputParticles)
+        protCL2D.inputParticles.set(protExtract.outputParticles)
         protCL2D.setObjLabel('CL2D')
         self.launchProtocol(protCL2D)   
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
