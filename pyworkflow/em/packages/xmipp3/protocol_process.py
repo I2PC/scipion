@@ -31,7 +31,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import *  
 import xmipp
 import xmipp3
-from convert import createXmippInputImages, readSetOfParticles
+from convert import createXmippInputImages, readSetOfParticles, getImageLocation
 
 from pyworkflow.em.constants import *
 from constants import *
@@ -102,41 +102,41 @@ class XmippProcessVolumes(XmippProcess):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):
         """ convert if necessary"""
-        volSet = self.inputVolumes.get()
+        volInput = self.inputVolumes.get()
         
-        # Check volSet is a volume or a stack
-        if isinstance(volSet, Volume):
-            self.iniModel  = volSet.getFileName()
-            self.singleVolume = True
-            ImageHandler().convert(self.iniModel, (1, self.outputStk))
+        # Check volInput is a volume or a stack
+        if isinstance(volInput, Volume):
+            ImageHandler().convert(volInput, (1, self.outputStk))
         else:
-            volSet.writeStack(self.outputStk)
-            self.singleVolume = False
+            volInput.writeStack(self.outputStk)
     
     def createOutputStep(self):
-        volSet = self.inputVolumes.get()
-        if self.singleVolume:
+        volInput = self.inputVolumes.get()
+        
+        if self._isSingleInput():
             vol = Volume()
-            vol.copyInfo(volSet)
-            vol.setFileName(self.outputStk)
+            vol.copyInfo(volInput)
+            vol.setLocation(1, self.outputStk)
             self._defineOutputs(outputVol=vol)
         else:
             volumes = self._createSetOfVolumes()
-            volumes.copyInfo(volSet)
-            inVolSet = self.inputVolumes.get()
-            for i, vol in enumerate(inVolSet):
+            volumes.copyInfo(volInput)
+            
+            for i, vol in enumerate(volInput):
                 j = i + 1 
                 vol.setLocation(j, self.outputStk)
                 volumes.append(vol)
             self._defineOutputs(outputVol=volumes)
 
-        self._defineTransformRelation(volSet, self.outputVol)
+        self._defineTransformRelation(volInput, self.outputVol)
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _isSingleInput(self):
+        return isinstance(self.inputVolumes.get(), Volume)
+        
     def _defineFilenames(self):
         """ Prepare the files to process """
-        volSet = self.inputVolumes.get()
-        if isinstance(volSet, Volume):
+        if self._isSingleInput():
             self.outputStk = self._getPath("output_volume.vol")
         else:
             self.outputStk = self._getPath("output_volumes.stk")
