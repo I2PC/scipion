@@ -219,16 +219,19 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
               dest=name, 
               type='string',
               action='store',
-              nargs=1,
+              nargs='?',
               default=None,
+              const='None',
               help='Activate package %s & set its installation directory' % name)
     
     PACKAGE_HOME = GetOption(name)
     
+    print PACKAGE_HOME
+    
     if not default and PACKAGE_HOME is None:
         return ''
     
-    if PACKAGE_HOME is None:
+    if PACKAGE_HOME is 'None':
         PACKAGE_HOME = 'software/em/%s' % name
 
     # Create and concatenate the builders.
