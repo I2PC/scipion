@@ -48,36 +48,39 @@ import tarfile
 
 
 SCIPION_HOME = os.environ.get('SCIPION_HOME', dirname(dirname(abspath(__file__))))
-SCIPION_SOFTWARE_PATH = join(SCIPION_HOME, 'software')
-SCIPION_INSTALL_PATH = join(SCIPION_SOFTWARE_PATH, 'install')
-SCIPION_INSTALL_LOG = join(SCIPION_SOFTWARE_PATH, 'log', 'scons.log')
+SOFTWARE = join(SCIPION_HOME, 'software')
+INSTALL = join(SOFTWARE, 'install')
+LOGFILE = join(SOFTWARE, 'log', 'scons.log')
 
 SCONS = 'scons-2.3.1'
 
 
 def build(args):
+    """ Download SCons if needed and run it (with args) """
+
+    # Go to SCIPION_HOME if we are not there.
+    os.chdir(SCIPION_HOME)
 
     # First make sure that we have SCons installed.
-    if not exists(join(SCIPION_INSTALL_PATH, SCONS)):
+    if not exists(join(INSTALL, SCONS)):
         # Download and extract SCons.
         url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
         print "Downloading, unpacking & installing scons from %s..." % url
-        tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(SCIPION_INSTALL_PATH)
+        tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)
 
         # Install it.
-        command = ['python', 'setup.py', 'install',
-                   '--prefix=%s' % SCIPION_SOFTWARE_PATH]
+        command = ['python', 'setup.py', 'install', '--prefix=%s' % SOFTWARE]
         print 'Executing: %s' % ' '.join(command)
-        with open(SCIPION_INSTALL_LOG, 'w') as logFile:
-            r = subprocess.call(command, cwd=join(SCIPION_INSTALL_PATH, SCONS),
-                                stdout=logFile, stderr=logFile, env=os.environ)
+        with open(LOGFILE, 'w') as logFile:
+            r = subprocess.call(command, cwd=join(INSTALL, SCONS),
+                                stdout=logFile, stderr=logFile)
         if r != 0:
             return r
 
     # Call SCons and show the output on the screen and logfile.
     proc = subprocess.Popen(['software/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    with open(SCIPION_INSTALL_LOG, 'a') as logFile:
+    with open(LOGFILE, 'a') as logFile:
         while True:
             ret = proc.poll()
             if ret is not None:
