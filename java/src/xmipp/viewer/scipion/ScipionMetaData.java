@@ -37,6 +37,7 @@ public class ScipionMetaData extends MetaData {
     private static int labelscount = 0;
     private ColumnInfo idci, labelci, commentci, enabledci;
     private String prefix = "";
+    private String[] blocks;
 
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
         this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
@@ -48,7 +49,7 @@ public class ScipionMetaData extends MetaData {
         this.selfalias = selfalias;
         this.columns = columns;
         this.emobjects = emobjects;
-
+        blocks = new String[]{getBlock()};
     }
 
     public ScipionMetaData(String dbfile) {
@@ -59,15 +60,25 @@ public class ScipionMetaData extends MetaData {
         if (self.equals("Class2D") || self.equals("Class3D")) {
             String prefix;
             haschilds = true;
-
-            int i = 0;
+            List<String> childblocks = new ArrayList<String>();
             for (EMObject emo : emobjects) {
                 prefix = String.format("Class%03d_", emo.getId());
                 emo.childmd = new ScipionMetaData(dbfile, prefix);
                 emo.childmd.setParent(this);
-                i++;
+                childblocks.add(emo.childmd.getBlock());
+            }
+        
+         
+            blocks = new String[childblocks.size() + 1];
+            blocks[0] = getBlock();
+            for (int i = 0; i < childblocks.size(); i++) {
+                blocks[i + 1] = childblocks.get(i);
+
             }
         }
+        else
+            blocks = new String[]{getBlock()};
+
     }
 
     public ScipionMetaData(String dbfile, String prefix) {
@@ -76,6 +87,7 @@ public class ScipionMetaData extends MetaData {
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         this.prefix = prefix;
+        blocks = new String[]{getBlock()};
         loadData();
 
     }
@@ -284,20 +296,6 @@ public class ScipionMetaData extends MetaData {
     }
 
     public String[] getBlocks() {
-        if (!haschilds) {
-            return new String[]{getBlock()};
-        }
-        List<String> childblocks = new ArrayList<String>();
-        for (EMObject emo : emobjects) {
-            if (emo.childmd != null) {
-                childblocks.add(emo.childmd.getBlock());
-            }
-        }
-        String[] blocks = new String[childblocks.size() + 1];
-        blocks[0] = getBlock();
-        for (int i = 0; i < childblocks.size(); i++) {
-            blocks[i + 1] = childblocks.get(i);
-        }
         return blocks;
 
     }
