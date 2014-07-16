@@ -28,7 +28,9 @@ import json
 import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_base import * 
-from views_tree import loadObjTree
+from views_project import formatProvider
+#from views_tree import loadObjTree
+from pyworkflow.gui.tree import ObjectTreeProvider, DbTreeProvider
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
 from django.http import HttpResponse, HttpRequest
@@ -39,6 +41,10 @@ def data_content(request):
     
     manager = Manager()
     request.session['projectPath'] = manager.getProjectPath(projectName)
+    project = loadProject(projectName)
+    
+    # load the object tree 
+#    root = loadObjTree(project)
    
     
     context = {'projectName': projectName,
@@ -48,6 +54,7 @@ def data_content(request):
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
+#               'sections': root.childs,
                'view':'data'
                }
     
@@ -56,12 +63,13 @@ def data_content(request):
     return render_to_response('data_content/data_content.html', context)
 
 
-def tree_obj_view(request):
-    projectName = request.session['projectName'] 
-    project = loadProject(projectName) 
-     
-    # load the protocol tree current active
-    root = loadObjTree(project)
+#def tree_obj_view(request):
+#    projectName = request.session['projectName'] 
+#    project = loadProject(projectName) 
+#     
+#    # load the protocol tree current active
+#    root = loadObjTree(project)
+#    
+#    return render_to_response('data_content/tree_obj_view.html', {'sections': root.childs})
     
-    return render_to_response('data_content/tree_obj_view.html', {'sections': root.childs})
-    
+

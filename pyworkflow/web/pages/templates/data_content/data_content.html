@@ -29,6 +29,7 @@
 <script type="text/javascript">
 	$(function() {
 		$("#tabs").tabs();
+		callPaintObjGraph();
 	});
 	
 	jQuery(function($) {
@@ -49,12 +50,7 @@
 		
 		$('.layout-inner > .north').resizable({handles: 's'});
 		$('.layout-outer > .west').resizable({handles: 'e',	stop: layout});
-		
 	});
-	
-	$(document).ready(function() {
-//     	refreshRuns(1);
-	});	
 	
 </script>
 
@@ -116,17 +112,17 @@
 				<ul>
 					<li>
 						<strong>{{msg.LABEL_INPUT}}</strong>
-						<ul id='protocol_input'></ul>
+						<ul id='obj_info'></ul>
 					</li>
 					<br />
 					<li>
 						<strong>{{msg.LABEL_OUTPUT}}</strong>
-						<ul id='protocol_output'></ul>
+						<ul id='obj_created'></ul>
 					</li>
 					<br />
 					<li>
 						<strong>{{msg.LABEL_SUMMARY}}</strong>
-						<ul id='protocol_summary'></ul>
+						<ul id='obj_label'></ul>
 					</li>
 				</ul>
 			</div>

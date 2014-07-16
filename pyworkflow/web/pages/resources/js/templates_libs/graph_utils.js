@@ -163,6 +163,39 @@ function callPaintGraph() {
 	jsPlumb.draggable($(".window"));
 }
 
+
+
+function callPaintObjGraph(){
+	/*
+	 * This function paint the object graph in the template data_content.html
+	 */ 
+	
+	// Get the objects information for be painted
+	// Move and connect the graph nodes
+	$.ajax({
+		type : "GET",
+		url : '/object_graph/',
+		dataType : "json",
+		async: false,
+		success : function(json) {
+			// Draw the boxes
+//			var nodeSource = $("div#graphActiv");
+
+			// Paint the first node
+//			paintBox(nodeSource, "graph_PROJECT", "PROJECT");
+			// Paint the other nodes
+			
+			
+			
+
+//			processNodes(json)
+		}
+	});
+	
+	jsPlumb.draggable($(".window"));
+}
+
+
 function processNodes(json){
 	// Iterate over the nodes and position in the screen
 	// coordinates should come in the json response

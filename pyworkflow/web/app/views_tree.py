@@ -24,11 +24,15 @@
 # *
 # **************************************************************************
 
+#===============================================================================
+# PROTOCOL TREE
+#===============================================================================
+
 def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
     root = TreeItem('root', 'root', '', '')
     populateProtTree(root, protCfg)
-    return root    
+    return root
 
 class TreeItem():
     def __init__(self, name, tag, icon, openItem, protClassName=None, protClass=None):
@@ -69,12 +73,16 @@ def populateProtTree(tree, obj):
             populateProtTree(item, sub)
 
 
-def loadObjTree(project):
-    from pyworkflow.em import emObjectsDict
-     
-    root = TreeItem('root', 'root', '', '')
-    
-    return root                
+#===============================================================================
+# OBJECT TREE
+#===============================================================================
+
+#def loadObjTree(project):
+#    from pyworkflow.em import emObjectsDict
+#    
+#    root = TreeItem('root', 'root', '', '')
+#    
+#    return root                
 
 
     
