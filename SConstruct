@@ -194,6 +194,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     installation directory <name>. It also tells SCons about the
     proper dependencies (deps).
 
+    homeVar is the environment variable name pointing to the directory
+    where the package is installed (just in case it previously exists).
+    Installer will try to create a symlink to that folder 
+
     extraActions is a list of (target, command) that should be
     executed after the package is properly installed.
 
@@ -210,24 +214,41 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the package even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate package %s' % name)
-        if  not GetOption(name):
-            return ''
+
+    AddOption('--with-%s' % name, 
+              dest=name, 
+              type='string',
+              action='store',
+              nargs=1,
+              default=None,
+              help='Activate package %s & set its installation directory' % name)
+    
+    PACKAGE_HOME = GetOption(name)
+    
+    if not default and PACKAGE_HOME is None:
+        return ''
+    
+    if PACKAGE_HOME is None:
+        PACKAGE_HOME = 'software/em/%s' % name
 
     # Create and concatenate the builders.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
+    downloadPackage = not os.path.exists(PACKAGE_HOME)
+    lastTarget=''
+    if downloadPackage:
+        tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+        tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
                    cdir='software/em')
-    tLink = env.Command(
-        'software/em/%s/bin' % name,  # TODO: find something better than "/bin"
-        Dir('software/em/%s' % buildDir),
-        Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-               'Putting contents of %s in software/em/%s' % (name, name),
-               chdir='software/em'))
+        lastTarget = tUntar
 
-    lastTarget = tLink
+    else:
+        tLink = env.Command(
+            'software/em/%s/bin' % name,  # TODO: find something better than "/bin"
+            Dir('software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, PACKAGE_HOME, name),
+                   'Linking package %s in to software/em/%s' % (name, name),
+                   chdir='software/em'))
+
+        lastTarget = tLink
     for target, command in extraActions:
         lastTarget = env.Command('software/em/%s/%s' % (name, target),
                                  lastTarget,
@@ -235,7 +256,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Add the dependencies.
     for dep in deps:
-        Depends(tLink, dep)
+        Depends(lastTarget, dep)
 
     return lastTarget
 

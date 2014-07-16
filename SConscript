@@ -143,7 +143,7 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='Xmipp-3.1-src.tgz',
-               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tgz',
+               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
                default=False)
 # TODO: fix the url of this package!
 
