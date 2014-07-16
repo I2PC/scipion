@@ -81,6 +81,12 @@ class Message():
     LABEL_SUMMARY = 'Summary'
     LABEL_INPUT = 'Input'
     LABEL_OUTPUT = 'Output'
+    
+    LABEL_OBJSUMMARY = 'Object Summary'
+    LABEL_OBJINFO = 'Info'
+    LABEL_OBJCREATED = 'Created'
+    LABEL_OBJLABEL = 'Label'
+    
     LABEL_METHODS = 'Methods'
     LABEL_LOGS = 'Output Logs'
     LABEL_LOGS_OUTPUT = 'Output Log'
