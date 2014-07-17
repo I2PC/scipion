@@ -221,9 +221,14 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
                     "the package's directory." % name))
 
     # See if we have used the --with-<package> option and exit if appropriate.
-    packageHome = GetOption(name)
+    if GetOption('withPackages'):
+        defaultPackageHome = 'unset'
+    else:
+        defaultPackageHome = None
+        
+    packageHome = GetOption(name) or defaultPackageHome
 
-    if not (default or packageHome or GetOption('withPackages')):
+    if not (default or packageHome):
         return ''
 
     # If we do have a local installation, link to it and exit.
