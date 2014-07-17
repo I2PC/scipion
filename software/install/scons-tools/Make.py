@@ -18,6 +18,7 @@ import subprocess
 
 from SCons.Script import *
 
+
 def parms(target, source, env):
     """Assemble various Make parameters."""
 
@@ -61,6 +62,7 @@ def parms(target, source, env):
     stdout = env.get('MakeStdOut')
 
     return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, stdout)
+
 
 def message(target, source, env):
     """Return a pretty Make message"""
