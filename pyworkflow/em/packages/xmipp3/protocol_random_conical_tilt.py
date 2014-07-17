@@ -299,11 +299,15 @@ class XmippProtRCT(ProtInitialVolume):
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Summary not implemented yet.")
+            if isinstance(self.inputParticles.get(), SetOfParticles):
+                summary.append("Input particles: %d" % self.inputParticles.get().getSize())
+            else:
+                summary.append("Input classes: %d" % self.inputParticles.get().getSize())
+            summary.append("Output volumes: %d" % self.outputVolumes.getSize())
+            if self.doFilter.get():
+                summary.append("Output filtered volumes: %d" % self.outputFilteredVolumes.getSize())
         return summary
         
     def _methods(self):
         return self._summary()  # summary is quite explicit and serve as methods
             
-    #--------------------------- UTILS functions --------------------------------------------           
-
