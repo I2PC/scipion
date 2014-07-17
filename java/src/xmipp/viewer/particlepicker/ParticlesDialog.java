@@ -65,7 +65,7 @@ public class ParticlesDialog extends Dialog
 			return;
 		}
 
-		if (changesize)
+		if (changesize) // first time or keep size
 		{
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
@@ -76,9 +76,9 @@ public class ParticlesDialog extends Dialog
 			height = height + (scroll ? 0 : 20);
 			
 		}
-		else
+		else//size changed by user
 		{
-			Dimension d = sp.getSize();
+			Dimension d = sp.getPreferredSize();
                         width = (int) d.getWidth();
                         height = (int)d.getHeight();
 			columns = width / side;
@@ -102,7 +102,7 @@ public class ParticlesDialog extends Dialog
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
                 // particlespn.revalidate();
-                sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
+                sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
 		pack();
 	}
         
@@ -128,6 +128,7 @@ public class ParticlesDialog extends Dialog
 				loadParticles(false);
 			}
 		});
+                
 	}
 
 	public void close()
