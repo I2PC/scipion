@@ -76,6 +76,10 @@ env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 
+AddOption('--with-packages', dest='withPackages', action='store_true',
+                  help='Activate all EM packages')
+
+
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], default=True):
@@ -219,7 +223,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # See if we have used the --with-<package> option and exit if appropriate.
     packageHome = GetOption(name)
 
-    if not default and not packageHome:
+    if not (default or packageHome or GetOption('withPackages')):
         return ''
 
     # If we do have a local installation, link to it and exit.
