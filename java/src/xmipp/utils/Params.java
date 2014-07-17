@@ -7,6 +7,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import xmipp.jni.ImageGeneric;
+import xmipp.viewer.scipion.ScipionParams;
 
 
 /**
@@ -53,6 +54,7 @@ public class Params {
     
     
     
+    
     public String directory;
     public String files[];
     public int port;
@@ -60,7 +62,6 @@ public class Params {
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
     public String displayLabel;
@@ -83,8 +84,8 @@ public class Params {
     protected CommandLine cmdLine;
     public String[] visibleLabels;
     public String[] orderLabels;
-    public String sortby;
-
+    public String[] sortby;
+    protected static boolean iscipion;
     
     
     
@@ -120,7 +121,11 @@ public class Params {
         opt = new Option(ORDER_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
-        options.addOption(SORTBY_LABEL, true, "");
+        
+        opt = new Option(SORTBY_LABEL, "");
+        opt.setArgs(2);
+        options.addOption(opt);
+        
         options.addOption(DISPLAY_LABEL, true, "");
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
@@ -184,6 +189,7 @@ public class Params {
             if(cmdLine.hasOption(RENDER_IMAGES))
             {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+                
             }
             if(cmdLine.hasOption(VISIBLE_LABELS))
             {
@@ -195,7 +201,9 @@ public class Params {
             }
             if(cmdLine.hasOption(SORTBY_LABEL))
             {
-            	sortby = cmdLine.getOptionValue(SORTBY_LABEL);
+                
+            	sortby = cmdLine.getOptionValues(SORTBY_LABEL);
+                
             }
             if(cmdLine.hasOption(DISPLAY_LABEL))
             	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
@@ -282,5 +290,10 @@ public class Params {
     public String getDisplayLabel()
     {
         return displayLabel;
+    }
+    
+    public static boolean isScipion()
+    {
+        return iscipion;
     }
 }

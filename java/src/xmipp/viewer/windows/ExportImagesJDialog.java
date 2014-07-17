@@ -167,7 +167,7 @@ public class ExportImagesJDialog extends JDialog{
 
                 try {
 
-                    String output = XmippUtil.executeCommand(command);
+                    String output = XmippUtil.executeCommand(command, true);
                     XmippWindowUtil.releaseGUI(ExportImagesJDialog.this.frame.getRootPane());
 
                     if(output != null && !output.isEmpty())

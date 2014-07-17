@@ -51,24 +51,11 @@ public class ScipionGalleryData extends GalleryData {
 
     }
 
+    
     @Override
-    public void loadLabels() {
-        ScipionMetaData smd = (ScipionMetaData) md;
-
-        labels = smd.getColumnsInfo();
-        ciFirstRender = null;
-        orderLabels();
-        for (ColumnInfo ci : labels) {
-            ci.visible = isVisibleLabel(ci);
-            ci.render = isRenderLabel(ci);
-            if (ci.render && ciFirstRender == null) {
-                ciFirstRender = ci;
-            }
-        }
-        if (ciFirstRender == null) {
-            zoom = 100;
-        }
-        setDisplayLabel(displayLabel);
+    public ColumnInfo initColumnInfo(int label)
+    {
+        return ((ScipionMetaData)md).getColumnInfo(label);
     }
 
     public String getValueFromLabel(int index, int label) {

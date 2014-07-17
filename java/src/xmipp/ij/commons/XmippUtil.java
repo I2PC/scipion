@@ -77,15 +77,16 @@ public class XmippUtil {
         
 
 
-    public static String executeCommand(String[] command) throws Exception {
+    public static String executeCommand(String[] command, boolean wait) throws Exception {
 
-        System.out.println(Arrays.toString(command));
+        //System.out.println(Arrays.toString(command));
         StringBuffer output = new StringBuffer();
 
         Process p;
 
         p = Runtime.getRuntime().exec(command);
-        p.waitFor();
+        if(wait)
+            p.waitFor();
         BufferedReader reader
                 = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
@@ -121,8 +122,10 @@ public class XmippUtil {
                 output.write(buf, 0, bytesRead);
             }
         } finally {
-            input.close();
-            output.close();
+            if(input != null)
+                input.close();
+            if(output != null)
+                output.close();
         }
 }
        

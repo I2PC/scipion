@@ -1,10 +1,7 @@
 package xmipp.viewer;
 
 import java.util.LinkedList;
-
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
 import ij.IJ;
 import xmipp.jni.Filename;
 import xmipp.utils.DEBUG;
@@ -26,7 +23,6 @@ public class Viewer
 		{
 			public void run()
 			{
-				
 				Params parameters = new Params(myargs);
 				try
 				{

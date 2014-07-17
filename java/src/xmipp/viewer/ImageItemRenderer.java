@@ -14,9 +14,7 @@ import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import xmipp.utils.ColorIcon;
 import xmipp.utils.CompoundIcon;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.ClassInfo;

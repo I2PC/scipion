@@ -22,12 +22,12 @@ public class ScipionParams extends Params {
     public String projectid;
     public String inputid;
     public String other;
-    
 
     
     
     public ScipionParams(String args[]) {
         super(args);
+        iscipion = true;
     }
 
     public void defineArgs() {
@@ -50,5 +50,10 @@ public class ScipionParams extends Params {
             inputid = cmdargs[3];
             other = (cmdargs.length == 5)? cmdargs[4]: "";
         }
+    }
+    
+    public static boolean isScipion()
+    {
+        return iscipion;
     }
 }

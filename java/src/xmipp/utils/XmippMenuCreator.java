@@ -192,7 +192,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE_EXIT = "File.Exit_mi";
 	public final String DISPLAY = "Display";
 
-	public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
+	
 	public final String DISPLAY_SHOWLABELS = "Display.ShowLabel";
 	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 	
@@ -211,6 +211,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 			"Display.Reslice.XPos_rb"};
 
 	public final String METADATA = "Metadata";
+        public final String DISPLAY_NORMALIZE = "Metadata.Normalize_cb";
 	public final String MD_CLASSES = "Metadata.Classes_mi";
 	public final String MD_EDIT_COLS = "Metadata.EditCols_mi";
 	public final String MD_ADD_OBJECT = "Metadata.AddObject_mi";
