@@ -621,7 +621,13 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     hasCoords = md.containsLabel(MDL_XCOOR)
     hasGeo = hasGeoLabels(md)
     hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
-    hasCtf = md.containsLabel(MDL_CTF_MODEL)
+    hasCtf = md.containsLabel(MDL_CTF_MODEL) or\ 
+            (md.containsLabel(MDL_CTF_CS) and\
+             md.containsLabel(MDL_CTF_Q0) and\
+             md.containsLabel(MDL_CTF_DEFOCUS_U) and\
+             md.containsLabel(MDL_CTF_DEFOCUS_V) and\
+             md.containsLabel(MDL_CTF_DEFOCUS_VOLTAGE) and\
+            ) 
     micsDict = {}
 
     acquisionInfo = findAcquisitionInfo(md.getValue(MDL_IMAGE, md.firstObject()))
