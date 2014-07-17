@@ -90,6 +90,9 @@ matplotlib = addModule(
     tar='matplotlib-1.3.1.tgz',
     flags=['--old-and-unmanageable'],
     deps=[numpy])
+# The option '--old-and-unmanageable' avoids creating a single Python
+# egg, and so we have a "matplotlib" directory that can be used as a
+# target (because it is not passed as argument, it has the default value).
 
 setuptools = addModule(
     'setuptools',
@@ -140,7 +143,8 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='Xmipp-3.1-src.tgz',
-               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tgz',
+               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
+               buildDir='xmipp',
                default=False)
 # TODO: fix the url of this package!
 

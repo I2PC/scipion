@@ -79,7 +79,7 @@ env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], default=True):
-    """Add library "name" to the construction process.
+    """Add library <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file, configures the library with the given flags, compiles it
@@ -135,7 +135,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
 
 def addModule(env, name, tar=None, buildDir=None, targets=None,
               url=None, flags=[], deps=[], default=True):
-    """Add Python module "name" to the construction process.
+    """Add Python module <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file, configures the module with the given flags, compiles it
@@ -187,7 +187,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
 def addPackage(env, name, tar=None, buildDir=None, url=None,
                extraActions=[], deps=[], default=True):
-    """Add external (EM) package "name" to the construction process.
+    """Add external (EM) package <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file and copies its content from buildDir into the
@@ -210,22 +210,43 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the package even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate package %s' % name)
-        if  not GetOption(name):
-            return ''
+    AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
+              nargs='?', const='unset',
+              help=("Get package %s. With no argument, download and "
+                    "install it. To use an existing installation, pass "
+                    "the package's directory." % name))
 
-    # Create and concatenate the builders.
+    # See if we have used the --with-<package> option and exit if appropriate.
+    packageHome = GetOption(name)
+
+    if not default and not packageHome:
+        return ''
+
+    # If we do have a local installation, link to it and exit.
+    if packageHome != 'unset':  # default value when calling only --with-package
+        # Just link to it and do nothing more.
+        return env.Command(
+            'software/em/%s' % name,
+            Dir(packageHome),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
+
+    # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
                    cdir='software/em')
-    tLink = env.Command(
-        'software/em/%s/bin' % name,  # TODO: find something better than "/bin"
-        Dir('software/em/%s' % buildDir),
-        Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-               'Putting contents of %s in software/em/%s' % (name, name),
-               chdir='software/em'))
+    if buildDir != name:
+        # Yep, some packages untar to the same directory as the package
+        # name (hello Xmipp), and that is not so great. No link to it.
+        tLink = env.Command(
+            'software/em/%s/bin' % name,  # TODO: find smtg better than "/bin"
+            Dir('software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
+    else:
+        tLink = tUntar  # just so the targets are properly connected later on
 
     lastTarget = tLink
     for target, command in extraActions:
@@ -233,7 +254,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
                                  lastTarget,
                                  Action(command, chdir='software/em/%s' % name))
 
-    # Add the dependencies.
+    # Add the dependencies. Do it to the "link target" (tLink), so any
+    # extra actions (like setup scripts) have everything in place.
     for dep in deps:
         Depends(tLink, dep)
 
@@ -247,7 +269,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 #     Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
 #     """
 #     # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
-#     UNINSTALL = {'TOCLEAN': [join('software','lib'), 
+#     UNINSTALL = {'TOCLEAN': [join('software','lib'),
 #                              join('software', 'lib64'),
 #                              join('software', 'bin'),
 #                              join('software', 'man'),
