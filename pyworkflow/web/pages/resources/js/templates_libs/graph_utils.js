@@ -126,7 +126,7 @@ function callPaintGraph() {
 	var aux = [];
 
 	// Paint the first node
-	paintBox(nodeSource, "graph_PROJECT", "PROJECT");
+	paintBox(nodeSource, "graph_PROJECT", "PROJECT", "runs");
 	var width = $("div#" + "graph_PROJECT" + ".window").width();
 	var height = $("div#" + "graph_PROJECT" + ".window").height();
 	aux.push("PROJECT" + "-" + width + "-" + height);
@@ -141,7 +141,7 @@ function callPaintGraph() {
 			name = jQuery(this).attr('data-name');
 		}
 
-		paintBox(nodeSource, idNew, name);
+		paintBox(nodeSource, idNew, name, "runs");
 		var width = $("div#" + idNew + ".window").width();
 		var height = $("div#" + idNew + ".window").height();
 
@@ -156,77 +156,60 @@ function callPaintGraph() {
 		dataType : "json",
 		async: false,
 		success : function(json) {
-			processNodes(json)
+			processNodes(json, "runs")
 		}
 	});
-	
 	jsPlumb.draggable($(".window"));
 }
-
 
 
 function callPaintObjGraph(){
 	/*
 	 * This function paint the object graph in the template data_content.html
 	 */ 
+	var nodeSource = $("div#graphActiv");
 	
 	// Get the objects information for be painted
-	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
-		url : '/object_graph/',
+		url : '/elements_graph/',
 		dataType : "json",
 		async: false,
 		success : function(json) {
-			// Draw the boxes
-//			var nodeSource = $("div#graphActiv");
+			// Paint the nodes
+			var aux = [];
+			$.each(json, function(i, item) {
+				var id = "graph_" + item.id
+				var label = item.label
 
-			// Paint the first node
-//			paintBox(nodeSource, "graph_PROJECT", "PROJECT");
-			// Paint the other nodes
+				// Draw box
+				paintBox(nodeSource, id, label, "objects");
+				
+				if(item.id!= 'PROJECT'){
+					// Get the size
+					var width = $("div#" + id + ".window").width();
+					var height = $("div#" + id + ".window").height();
+					aux.push(item.id + "-" + width + "-" + height);
+				}
+			});
 			
-			
-			
-
-//			processNodes(json)
+			// Move and connect the graph nodes
+			$.ajax({
+				type : "GET",
+				url : '/object_graph/?list=' + aux,
+				dataType : "json",
+				async: false,
+				success : function(json) {
+					processNodes(json, "objects")
+				}
+			});
 		}
 	});
-	
 	jsPlumb.draggable($(".window"));
 }
 
 
-function processNodes(json){
-	// Iterate over the nodes and position in the screen
-	// coordinates should come in the json response
-	
-	for ( var i = 0; i < json.length; i++) {
-		var top = json[i].y*0.8;
-		var left = json[i].x;
-		addStatusBox("graph_" + json[i].id,	json[i].status);
-		$("div#graph_" + json[i].id + ".window").attr(
-				"style",
-				"top:" + top + "px;left:" + left
-						+ "px;background-color:"
-						+ json[i].color + ";");
-	}
-	
-	// After all nodes are positioned, then create the edges
-	// between them
-
-	for ( var i = 0; i < json.length; i++) {
-		for ( var j = 0; j < json[i].childs.length; j++) {
-			var source = $("div#graph_" + json[i].id
-					+ ".window");
-			var target = $("div#graph_" + json[i].childs[j]
-					+ ".window");
-			connectNodes(source, target);
-		}
-	}
-}
-
-
-function paintBox(nodeSource, id, msg) {
+function paintBox(nodeSource, id, msg, mode) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
 	 * The node source is passed by arguments.
@@ -238,29 +221,82 @@ function paintBox(nodeSource, id, msg) {
 
 	if (id != "graph_PROJECT") {
 		var objId = id.replace("graph_", "");
-		var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
+		
+		if(mode == "runs"){
+			var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
+			var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
+		}
+		else if(mode == "objects"){
+			var href = "javascript:launchViewer(" + objId +")";
+			var onclick = "#";
+		}
+		
 		var projName = $("div#graphActiv").attr("data-project");
-		var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
-//		var onclick = "launchToolbarTreePatata(event)";
-//		var aux = '<div class="window" style="" onclick="' + onclick + '" id="'
 		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
-//		var aux = '<div class="window" style="" id="' + id + '"><strong>' + msg
 		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
 				+ '</strong><br /></div>';
 	}
-	
 	nodeSource.append(aux);
+}
+
+
+function processNodes(json, mode){
+	// Iterate over the nodes and position in the screen
+	// coordinates should come in the json response
+	
+	positionNodes(json, mode)
+	
+	// After all nodes are positioned, then create the edges
+	// between them
+	
+	putEdges(json)
+}
+
+function positionNodes(json, mode){
+	for ( var i = 0; i < json.length; i++) {
+		var top = json[i].y*0.8;
+		var left = json[i].x;
+		
+		if(mode=="objects"){
+			var style = "top:" + top * 1.1
+						+ "px;left:" + left*1.2
+						+ "px;background-color:"+ json[i].color + ";"
+						+ "padding:8px;"
+		}
+		if(mode=="runs"){
+			
+			addStatusBox("graph_" + json[i].id,	json[i].status);
+			
+			var style = "top:" + top
+				+ "px;left:" + left
+				+ "px;background-color:"+ json[i].color + ";"
+		}
+					
+		$("div#graph_" + json[i].id + ".window").attr(
+				"style", style);
+	}
 }
 
 function addStatusBox(id, status) {
 	/*
 	 * Function add a new status in a node from the protocol graph.
 	 */
-	
 	$("div#" + id + ".window").find("#nodeStatus").html(status);
+}
+
+function putEdges(json){
+	for ( var i = 0; i < json.length; i++) {
+		for ( var j = 0; j < json[i].childs.length; j++) {
+			var source = $("div#graph_" + json[i].id
+					+ ".window");
+			var target = $("div#graph_" + json[i].childs[j]
+					+ ".window");
+			connectNodes(source, target);
+		}
+	}
 }
 
 function connectNodes(elm1, elm2) {

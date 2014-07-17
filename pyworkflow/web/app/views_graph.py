@@ -56,20 +56,13 @@ def createNode(canvas, node, y):
         raise
     return item
 
-
-def createNodeObj(canvas, node, y):
-    try:
-        item = WebNode(node.getName(), y=y)
-        item.width = 0
-        item.height = 0
-    except Exception:
-        print "Error with node: ", node.getName()
-        raise
-    return item
     
 def createEdge(srcItem, dstItem):
     pass
 
+#===============================================================================
+# PROTOCOL GRAPH
+#===============================================================================
 
 def project_graph(request):
     if request.is_ajax():
@@ -115,7 +108,6 @@ def project_graph(request):
                     info = provider.getObjectInfo(protocol)["values"][0]
                 
                 nodeList.append({'id': node.getName(),
-                                 'label': node.getLabel(),  
                                  'x': node.item.x - hx, 
                                  'y': node.item.y - hy,
                                  'color': color, 
@@ -128,13 +120,31 @@ def project_graph(request):
 #        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
         return HttpResponse(jsonStr, mimetype='application/javascript')
+
+
+#===============================================================================
+# OBJECT GRAPH
+#===============================================================================
+    
+def elements_graph(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        g = project.getSourceGraph()
+        
+        elmList = []
+        for node in g.getNodes():
+            elmList.append({'id': node.getName(),'label': node.getLabel()})
+    
+        jsonStr = json.dumps(elmList, ensure_ascii=False)   
+        return HttpResponse(jsonStr, mimetype='application/javascript')
     
     
 def object_graph(request):
     if request.is_ajax():
+        boxList = request.GET.get('list')
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        
         g = project.getSourceGraph()
         
         root = g.getRoot()
@@ -142,28 +152,39 @@ def object_graph(request):
         root.h = 40
         root.item = WebNode('project', x=0, y=0)
         
-        lt = gg.LevelTree(g)
-        lt.paint(createNodeObj, createEdge)
-        nodeList = []
+        # Assign the width and height
+        for box in boxList.split(','):
+            id, w, h = box.split('-')
+            node = g.getNode(id)
+            if node is None:
+                print "Get NONE node: i=%s" % id
+            else:
+                node.id = id
+                node.w = float(w)
+                node.h = float(h)
         
+        lt = gg.LevelTree(g)
+        lt.paint(createNode, createEdge)
+        
+        nodeList = []
         for node in g.getNodes():
             try:
+                hx = node.w / 2
+                hy = node.h / 2
                 childs = [c.getName() for c in node.getChilds()]
-                
-                nodeList.append({'id': node.getLabel(),
-                                 'label': node.getLabel(), 
-                                 'x': node.item.x, 
-                                 'y': node.item.y,
-                                 'color': '#ADD8E6', # Lightblue
+            
+                nodeList.append({'id': node.getName(),
+                                 'x': node.item.x - hx, 
+                                 'y': node.item.y - hy,
                                  'status': None,
+                                 'color': '#ADD8E6', # Lightblue
                                  'childs': childs})
+                
             except Exception:
-                print "Error with node: ", node.getLabel()
-                raise
+                    print "Error with node: ", node.getName()
+                    raise
         
-#        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
         return HttpResponse(jsonStr, mimetype='application/javascript')
-    
-    
+        
     

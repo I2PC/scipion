@@ -35,7 +35,8 @@ urlpatterns = patterns('',
     
     #GRAPH (RUN & DATA)
     url(r'^project_graph/$', 'app.views_graph.project_graph'),
-    url(r'^object_graph/', 'app.views_graph.object_graph'),
+    url(r'^object_graph/$', 'app.views_graph.object_graph'),
+    url(r'^elements_graph/', 'app.views_graph.elements_graph'),
     
     #DATA (CONTENT)
     url(r'^data_content/$', 'app.views_data.data_content'),
@@ -71,7 +72,7 @@ urlpatterns = patterns('',
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
-    url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
+    url(r'^viewer_element/$', 'app.em_viewer.viewer_element'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
     url(r'^file_downloader/$', 'app.views_util.file_downloader'),
     

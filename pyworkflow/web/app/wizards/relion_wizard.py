@@ -71,7 +71,7 @@ class RelionPartMaskRadiusWeb(RelionPartMaskRadiusWizard):
 
 
 
-class RelionVolMaskRadiusWeb(RelionVolMaskRadiusWizard):
+class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):
