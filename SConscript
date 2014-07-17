@@ -146,7 +146,6 @@ env.AddPackage('xmipp',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
                buildDir='xmipp',
                default=False)
-# TODO: fix the url of this package!
 
 env.AddPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
