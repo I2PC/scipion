@@ -213,8 +213,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
 
-    # Add the option --with-name, so the user can call SCons with this
-    # to activate the package even if it is not on by default.
+    # Add the option --with-<name>, so the user can call SCons with this
+    # to get the package even if it is not on by default.
     AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
               nargs='?', const='unset',
               help=("Get package %s. With no argument, download and "
