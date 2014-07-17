@@ -195,11 +195,9 @@ $(document).ready(function() {
 				});
 			
 			/* Launch the viewers with the options chosen */
-			var action = "/"+ mode +"/";
-
 			var serialize_form = fixInput($("#protocolForm").serialize());
 
-			$.post(action, serialize_form, function(json) {
+			$.post("/viewer_element/", serialize_form, function(json) {
 				$('.messi').remove();
 				$('.messi-modal').remove();				
 				popUpJSON(json);

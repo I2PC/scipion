@@ -17,11 +17,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     
-    #HOST
-    url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
-    url(r'^update_host', 'app.views_host.updateHost'),
-    url(r'^delete host/$', 'app.views_host.deleteHost'),
-    url(r'^host_form/$', 'app.views_host.hostForm'),
+    # If no path given, load the projects view
+    url(r'^$', 'app.views_project.projects'),
     
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
@@ -32,10 +29,14 @@ urlpatterns = patterns('',
     url(r'^run_table_graph/$', 'app.views_project.run_table_graph'),
     url(r'^protocol_info/$', 'app.views_project.protocol_info'),
     url(r'^protocol_status/$', 'app.views_project.protocol_status'),
-    url(r'^project_graph/$', 'app.views_project.project_graph'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
     url(r'^save_selection/$', 'app.views_project.save_selection'),
+    
+    #GRAPH (RUN & DATA)
+    url(r'^project_graph/$', 'app.views_graph.project_graph'),
+    url(r'^object_graph/$', 'app.views_graph.object_graph'),
+    url(r'^elements_graph/', 'app.views_graph.elements_graph'),
     
     #DATA (CONTENT)
     url(r'^data_content/$', 'app.views_data.data_content'),
@@ -71,19 +72,15 @@ urlpatterns = patterns('',
     
     #VIEWERS
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
-    url(r'^viewerElement/$', 'app.em_viewer.viewerElement'),
+    url(r'^viewer_element/$', 'app.em_viewer.viewer_element'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
     url(r'^file_downloader/$', 'app.views_util.file_downloader'),
     
     #SHOWJ
     url(r'^showj/$', 'app.views_showj.showj'), #Load web
     url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
-    url(r'^save_showj_table/', 'app.views_showj.save_showj_table'), # Save table to session variable dynamically
     url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
-
-    
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
-    
     url(r'^showj_menu/$', 'app.views_showj.showj_menu'), #Load showj web menu
     url(r'^showj_gallery/$', 'app.views_showj.showj_gallery'), #Load showj web gallery
     url(r'^showj_table/$', 'app.views_showj.showj_table'), #Load showj web table
@@ -93,6 +90,10 @@ urlpatterns = patterns('',
     #TESTING
     url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 
-    # If no path given, load the projects view
-    url(r'^$', 'app.views_project.projects'),
+    #HOST
+    url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
+    url(r'^update_host', 'app.views_host.updateHost'),
+    url(r'^delete host/$', 'app.views_host.deleteHost'),
+    url(r'^host_form/$', 'app.views_host.hostForm'),
+
 )

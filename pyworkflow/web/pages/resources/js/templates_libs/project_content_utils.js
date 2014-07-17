@@ -40,7 +40,7 @@
  * function launchToolbarList(id, elm)
  * 	->	Toolbar used in the project content template for the run list view.
  * 
- * function launchToolbarTree(id, elm)
+ * function launchToolbarTree(id, elm, multi)
  * 	->	Toolbar used in the project content template for graph view.
  * 
  * function launchToolbarProject(id, elm, type)

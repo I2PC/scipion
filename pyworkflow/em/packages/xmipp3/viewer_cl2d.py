@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import readSetOfClasses
 """
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
@@ -61,8 +62,6 @@ class XmippCL2DViewer(ProtocolViewer):
         form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
                       label="What to show", default=CLASS_CORES,
                       display=EnumParam.DISPLAY_LIST)
-        form.addParam('doShowClassHierarchy', BooleanParam, default=True, 
-                      label="Visualize class hierarchy.")      
         form.addParam('doShowLastLevel', EnumParam, default=LEVEL_LAST, 
                       choices=LEVEL_CHOICES,
                       display=EnumParam.DISPLAY_LIST,
@@ -70,6 +69,9 @@ class XmippCL2DViewer(ProtocolViewer):
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
               help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
+        form.addParam('doShowClassHierarchy', BooleanParam, default=False,
+                       
+                      label="Visualize class hierarchy.")      
     
     def _getVisualizeDict(self):
         return {'doShowClassHierarchy': self._viewClassHierarchy,
@@ -92,18 +94,37 @@ class XmippCL2DViewer(ProtocolViewer):
         if os.path.exists(fnHierarchy):
             return [self.textView([fnHierarchy])] 
             
+    def _getInputParticles(self):
+        return self.protocol.inputParticles.get()
+    
+    def _getClassesSqlite(self, blockName, fn):
+        """ Read the classes from Xmipp metadata and write as sqlite file. """
+        fnSqlite = fn + '.sqlite'
+        
+        if not os.path.exists(fnSqlite):
+            classesSet = SetOfClasses2D(filename=fnSqlite)
+            classesSet.setImages(self._getInputParticles())
+            readSetOfClasses(classesSet, fn, blockName)
+            classesSet.write()
+        return fnSqlite
+    
+    def _viewClasses(self, blockName, fn):
+        fnSqlite = self._getClassesSqlite(blockName, fn)
+        return ClassesView(self._project.getName(), self.protocol.strId(), fnSqlite, 
+                           other=self._getInputParticles().strId())
+    
     def _viewLevelFiles(self, e=None):
         fnSubset = self._getSubset()
         views = []
         errors = []
-        obj = getattr(self.protocol, "outputClasses" + fnSubset)
+        #obj = getattr(self.protocol, "outputClasses" + fnSubset)
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
         
         if levelFiles:
             levelFiles.sort()
             
             if self.doShowLastLevel == LEVEL_LAST:
-                views.append(DataView("classes@"+levelFiles[-1]))
+                views.append(self._viewClasses("classes", levelFiles[-1]))
             else:
                 if self.showSeveralLevels.empty():
                     errors.append('Please select the levels that you want to visualize.')
@@ -118,15 +139,12 @@ class XmippCL2DViewer(ProtocolViewer):
                     for level in listOfLevels:
                         fn = self.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
                         if os.path.exists(fn):
-                            files.append("classes_sorted@%s" % fn)
+                            files.append(("classes_sorted", fn))
                         else:
                             errors.append('Level %s does not exist.' % level)
                     
-                    inputImagesId = self.protocol.inputImages.get().strId()
-                    for fn in files:                        
-                        views.append(ObjectView(fn, "Particles", 
-                                                self._project.getName(), 
-                                                self.protocol.strId(), inputImagesId))
+                    for block, fn in files:                        
+                        views.append(self._viewClasses(block, fn))
         
         self.errorList(errors, views)
             

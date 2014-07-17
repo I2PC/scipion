@@ -116,7 +116,7 @@ def viewToUrl(request, view):
     
     return url
 
-def viewerElement(request):
+def viewer_element(request):
     project, protocolViewer = loadProtocolProject(request)
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)
