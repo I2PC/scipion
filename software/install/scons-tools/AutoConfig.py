@@ -3,11 +3,13 @@
 # Parameters:
 #    AutoConfigParams -- Sequence of parameter strings to include on the
 #                        configure command line.
-#                        Default: [ ]
+#                        Default: []
 #    AutoConfigTarget -- File that configure will create.
-#                        Default: config.h
+#                        Default: "config.h"
 #    AutoConfigSource -- File that configure depends on.
-#                        Default: Makefile.in
+#                        Default: "Makefile.in"
+#    AutoConfigStdOut -- File where the output will be written to.
+#                        Default: None
 
 from os.path import join, dirname
 import subprocess
@@ -25,19 +27,19 @@ def parms(target, source, env):
         Exit(1)
     targetfile = env.get('AutoConfigTarget', 'config.h')
     sourcefile = env.get('AutoConfigSource', 'Makefile.in')
-    stdout = env.get('AutoConfigStdOut')
-    return (workdir, params, targetfile, sourcefile, stdout)
+    out = env.get('AutoConfigStdOut')
+    return (workdir, params, targetfile, sourcefile, out)
 
 
 def message(target, source, env):
     """Return a pretty AutoConfig message."""
 
-    dirx, params, targetfile, sourcefile, stdout = parms(target, source, env)
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
 
     if 'AUTOCONFIGCOMSTR' in env:
         msg = env.subst(env['AUTOCONFIGCOMSTR'],
                         target=target, source=source, raw=1)
-        return '%s > %s' % (msg, stdout)
+        return '%s > %s' % (msg, out)
 
     return 'cd %s && ./configure %s' % (dirx, ' '.join(params))
 
@@ -45,7 +47,7 @@ def message(target, source, env):
 def emitter(target, source, env):
     """Remap the source & target to path/$AutoConfigSource and path/$AutoConfigTarget."""
 
-    dirx, params, targetfile, sourcefile, stdout = parms(target, source, env)
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
 
     # NOTE: Using source[0] instead of target[0] for the target's path!
     # If there's only one . in the source[0] value, then Scons strips off the
@@ -65,12 +67,15 @@ def emitter(target, source, env):
 def builder(target, source, env):
     """Run ./configure in a directory."""
 
-    dirx, params, targetfile, sourcefile, stdout = parms(target, source, env)
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
 
-    real_stdout = open(stdout, 'w+') if 'AUTOCONFIGCOMSTR' in env else None
+    if 'AUTOCONFIGCOMSTR' in env and out is not None:
+        fout = open(out, 'w+')
+    else:
+        fout = None
 
     return subprocess.call(['./configure'] + params, cwd=dirx,
-                           stdout=real_stdout, stderr=real_stdout)
+                           stdout=fout, stderr=fout)
 
 
 def generate(env, **kwargs):

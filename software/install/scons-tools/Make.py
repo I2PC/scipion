@@ -130,7 +130,10 @@ def builder(target, source, env):
         fullcmd += make_targets.split()
 
     # Capture the make command's output, unless we're verbose
-    real_stdout = open(stdout, 'w+') if 'MAKECOMSTR' in env else None
+    if 'MAKECOMSTR' in env and stdout is not None:
+        real_stdout = open(stdout, 'w+')
+    else:
+        real_stdout = None
 
     # Make!
     make = subprocess.Popen(fullcmd, cwd=make_path,
