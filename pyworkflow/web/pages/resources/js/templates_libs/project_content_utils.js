@@ -559,7 +559,7 @@ function updateObjTabs(id) {
 			var info = $("#obj_info");
 			// Edit Object
 			var edit_html = '<a href="javascript:editObject('+ id + ');"> '+
-			'<i class="fa fa-pencil" style="margin-left:0px;"> Edit</i></a>'
+			'<i class="fa fa-pencil" style="margin-left:0px;"> 	Edit</i></a>'
 			info.empty();
 			info.append('<li>' +json.info+"&nbsp;&nbsp;&nbsp;"+ edit_html +'</li>');
 
