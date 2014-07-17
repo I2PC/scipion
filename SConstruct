@@ -210,52 +210,54 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the package even if it is not on by default.
+    AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
+              nargs='?', const='unset',
+              help=("Get package %s. With no argument, download and "
+                    "install it. To use an existing installation, pass "
+                    "the package's directory." % name))
 
-    AddOption('--with-%s' % name, 
-              dest=name, 
-              type='string',
-              action='store',
-              nargs='?',
-              default=None,
-              const='None',
-              help='Activate package %s & set its installation directory' % name)
-    
-    PACKAGE_HOME = GetOption(name)
-    
-    print PACKAGE_HOME
-    
-    if not default and PACKAGE_HOME is None:
+    # See if we have used the --with-<package> option and exit if appropriate.
+    packageHome = GetOption(name)
+
+    if not default and not packageHome:
         return ''
-    
-    if PACKAGE_HOME is 'None':
-        PACKAGE_HOME = 'software/em/%s' % name
 
-    # Create and concatenate the builders.
-    downloadPackage = not os.path.exists(PACKAGE_HOME)
-    lastTarget=''
-    if downloadPackage:
-        tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-        tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
-                   cdir='software/em')
-        lastTarget = tUntar
-
-    else:
-        tLink = env.Command(
-            'software/em/%s/bin' % name,  # TODO: find something better than "/bin"
-            Dir('software/em/%s' % buildDir),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, PACKAGE_HOME, name),
-                   'Linking package %s in to software/em/%s' % (name, name),
+    # If we do have a local installation, link to it and exit.
+    if packageHome != 'unset':  # default value when calling only --with-package
+        # Just link to it and do nothing more.
+        return env.Command(
+            'software/em/%s' % name,
+            Dir(packageHome),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+                   'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
 
-        lastTarget = tLink
+    # Donload, untar, link to it and execute any extra actions.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
+                   cdir='software/em')
+    if buildDir != name:
+        # Yep, some packages untar to the same directory as the package
+        # name (hello Xmipp), and that is not so great. No link to it.
+        tLink = env.Command(
+            'software/em/%s/bin' % name,  # TODO: find smtg better than "/bin"
+            Dir('software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
+    else:
+        tLink = tUntar  # just so the targets are properly connected later on
+
+    lastTarget = tLink
     for target, command in extraActions:
         lastTarget = env.Command('software/em/%s/%s' % (name, target),
                                  lastTarget,
                                  Action(command, chdir='software/em/%s' % name))
 
-    # Add the dependencies.
+    # Add the dependencies. Do it to the "link target" (tLink), so any
+    # extra actions (like setup scripts) have everything in place.
     for dep in deps:
-        Depends(lastTarget, dep)
+        Depends(tLink, dep)
 
     return lastTarget
 
