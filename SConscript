@@ -64,8 +64,7 @@ python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
-    flags=['--enable-shared',
-           'CFLAGS=-I/usr/include/ncurses'],
+    flags=['--enable-shared'],
     deps=[sqlite, tk])
 
 
