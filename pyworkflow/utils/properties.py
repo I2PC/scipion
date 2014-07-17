@@ -81,6 +81,7 @@ class Message():
     LABEL_SUMMARY = 'Summary'
     LABEL_INPUT = 'Input'
     LABEL_OUTPUT = 'Output'
+    LABEL_COMMENT = 'Comment'
     
     LABEL_OBJSUMMARY = 'Object Summary'
     LABEL_OBJINFO = 'Info'
@@ -137,7 +138,7 @@ Define the number of processors to be used in the execution.
     TITLE_NAME_RUN = ' Protocol Run: '
     TITLE_RUN = 'Run'
     TITLE_LABEL = 'Label'
-    LABEL_COMMENT = 'Describe your run here...'
+    LABEL_OPT_COMMENT = 'Describe your run here...'
     TITLE_COMMENT = 'Comment'
     LABEL_RUN_MODE_RESUME = 'resume'
     LABEL_RUN_MODE_RESTART = 'restart'

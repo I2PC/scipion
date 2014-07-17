@@ -40,6 +40,7 @@ urlpatterns = patterns('',
     
     #DATA (CONTENT)
     url(r'^data_content/$', 'app.views_data.data_content'),
+    url(r'^object_info/$', 'app.views_data.object_info'),
     
     #UTILS
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically

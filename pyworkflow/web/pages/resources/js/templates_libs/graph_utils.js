@@ -116,7 +116,7 @@ var sourceEndpoint = {
 
 function callPaintGraph() {
 	/*
-	 * This function paint the protocol graph in the template project_content.html
+	 * This function paint the protocol graph in the templat/protocol_info/e project_content.html
 	 */ 
 	
 	// Draw the boxes
@@ -228,7 +228,7 @@ function paintBox(nodeSource, id, msg, mode) {
 		}
 		else if(mode == "objects"){
 			var href = "javascript:launchViewer(" + objId +")";
-			var onclick = "#";
+			var onclick = "launchToolbarObjTree('" + objId	+ "', $(this), isCtrlPress(event))";
 		}
 		
 		var projName = $("div#graphActiv").attr("data-project");

@@ -1,7 +1,6 @@
  /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
- * 			   Adrian Quintana (aquintana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -226,6 +225,28 @@ function launchToolbarTree(id, elm, multi) {
 	} else {
 		disableMultipleMarkGraph(id);
 		launchToolbarProject(id, elm, "graph");
+	}
+}
+
+function launchToolbarObjTree(id, elm, multi) {
+	/*
+	 * Toolbar used in the data content template for graph view
+	 */
+	
+	if (multi){
+		if (elm.attr("selected") == "selected"){
+			dismarkSingleNodeGraph(elm);
+			$("div#graphActiv").removeAttr("data-option");
+		} else {
+			markSingleNodeGraph(elm);
+			$("div#graphActiv").attr("data-option", elm.attr("id"));
+		}
+	} else {
+		disableMultipleMarkGraph(id);
+		updateTree(id, elm, $("div#toolbar"));
+		// Update the content for the tabs
+		updateObjTabs(id);
+		
 	}
 }
 
@@ -519,6 +540,41 @@ function updateTabs(id) {
 			
 			$("#tab-logs-scipion").empty();
 			$("#tab-logs-scipion").append(json.logs_scipion);
+		}
+	});
+}
+
+function updateObjTabs(id) {
+	/*
+	 * Fill the content of the summary tab for a protocol run selected 
+	 * (Data / Summary / Methods / Status)
+	 */
+	$.ajax({
+		type : "GET",
+		url : '/object_info/?objectId=' + id,
+		dataType : "json",
+		success : function(json) {
+			
+
+			var info = $("#obj_info");
+			// Edit Object
+			var edit_html = '<a href="javascript:editObject('+ id + ');"> '+
+			'<i class="fa fa-pencil" style="margin-left:0px;"> Edit</i></a>'
+			info.empty();
+			info.append('<li>' +json.info+"&nbsp;&nbsp;&nbsp;"+ edit_html +'</li>');
+
+			var created = $("#obj_created");
+			created.empty();
+			created.append(json.created);
+			
+			var label = $("#obj_label");
+			label.empty();
+			label.append(json.label);
+			
+			var comment = $("#obj_comment");
+			comment.empty();
+			comment.append(json.comment);
+			
 		}
 	});
 }
