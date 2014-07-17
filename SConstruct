@@ -259,7 +259,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         tLink = env.Command(
             'software/em/%s/bin' % name,  # TODO: find smtg better than "/bin"
             Dir('software/em/%s' % buildDir),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+            Action('ln -v -s %s %s' % (buildDir, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
     else:
