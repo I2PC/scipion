@@ -243,7 +243,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
         return env.Command(
-            'software/em/%s' % name,
+            'software/em/%s/bin' % name,
             Dir(packageHome),
             Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
@@ -251,7 +251,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    tUntar = Untar(env, Dir('software/em/%s' % buildDir), tDownload,
+    tUntar = Untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
                    cdir='software/em')
     if buildDir != name:
         # Yep, some packages untar to the same directory as the package

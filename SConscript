@@ -141,9 +141,12 @@ addModule(
 #  ************************************************************************
 
 env.AddPackage('xmipp',
-               tar='Xmipp-3.1-src.tgz',
+               tar='Xmipp-3.1-src.tar.gz',
                url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
                buildDir='xmipp',
+               extraActions=[('xmipp.bashrc',
+                             './install.sh --unattended=true --gui=false -j %s'
+                              % GetOption('num_jobs'))],
                default=False)
 
 env.AddPackage('bsoft',
