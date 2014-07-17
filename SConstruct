@@ -79,7 +79,7 @@ env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], default=True):
-    """Add library "name" to the construction process.
+    """Add library <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file, configures the library with the given flags, compiles it
@@ -135,7 +135,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
 
 def addModule(env, name, tar=None, buildDir=None, targets=None,
               url=None, flags=[], deps=[], default=True):
-    """Add Python module "name" to the construction process.
+    """Add Python module <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file, configures the module with the given flags, compiles it
@@ -187,16 +187,12 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
 def addPackage(env, name, tar=None, buildDir=None, url=None,
                extraActions=[], deps=[], default=True):
-    """Add external (EM) package "name" to the construction process.
+    """Add external (EM) package <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
     tar file and copies its content from buildDir into the
     installation directory <name>. It also tells SCons about the
     proper dependencies (deps).
-
-    homeVar is the environment variable name pointing to the directory
-    where the package is installed (just in case it previously exists).
-    Installer will try to create a symlink to that folder 
 
     extraActions is a list of (target, command) that should be
     executed after the package is properly installed.
@@ -271,7 +267,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 #     Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
 #     """
 #     # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
-#     UNINSTALL = {'TOCLEAN': [join('software','lib'), 
+#     UNINSTALL = {'TOCLEAN': [join('software','lib'),
 #                              join('software', 'lib64'),
 #                              join('software', 'bin'),
 #                              join('software', 'man'),
