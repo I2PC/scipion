@@ -73,3 +73,23 @@ def data_content(request):
 #    return render_to_response('data_content/tree_obj_view.html', {'sections': root.childs})
     
 
+def object_info(request):
+    from pyworkflow.web.app.views_util import parseText
+    from pyworkflow.em.data import EMObject
+
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        objId = request.GET.get('objectId', None)
+        project = loadProject(projectName)
+        obj = project.mapper.selectById(objId)
+        
+        ioDict = {'info': str(obj),
+                  'created': '2014-11-22',
+                  'label': obj.getName(),
+                  'comment': obj.getObjComment()
+                  }
+        
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
