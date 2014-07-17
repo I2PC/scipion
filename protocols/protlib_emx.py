@@ -626,7 +626,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
              md.containsLabel(MDL_CTF_Q0) and\
              md.containsLabel(MDL_CTF_DEFOCUSU) and\
              md.containsLabel(MDL_CTF_DEFOCUSV) and\
-             md.containsLabel(MDL_CTF_DEFOCUS_VOLTAGE)\
+             md.containsLabel(MDL_CTF_VOLTAGE)\
             )
     micsDict = {}
 
