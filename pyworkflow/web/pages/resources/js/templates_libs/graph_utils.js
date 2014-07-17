@@ -209,49 +209,6 @@ function callPaintObjGraph(){
 }
 
 
-function processNodes(json, mode){
-	// Iterate over the nodes and position in the screen
-	// coordinates should come in the json response
-	
-	for ( var i = 0; i < json.length; i++) {
-		var top = json[i].y*0.8;
-		var left = json[i].x;
-		
-		if(json[i].status != 'None'){
-			addStatusBox("graph_" + json[i].id,	json[i].status);
-		}
-		
-					
-		if(mode=="objects"){
-			var style = "top:" + top * 1.1
-						+ "px;left:" + left*1.2
-						+ "px;background-color:"+ json[i].color + ";"
-						+ "padding:8px;"
-		}
-		if(mode=="runs"){
-			var style = "top:" + top
-				+ "px;left:" + left
-				+ "px;background-color:"+ json[i].color + ";"
-		}
-					
-		$("div#graph_" + json[i].id + ".window").attr(
-				"style", style);
-	}
-	
-	// After all nodes are positioned, then create the edges
-	// between them
-
-	for ( var i = 0; i < json.length; i++) {
-		for ( var j = 0; j < json[i].childs.length; j++) {
-			var source = $("div#graph_" + json[i].id
-					+ ".window");
-			var target = $("div#graph_" + json[i].childs[j]
-					+ ".window");
-			connectNodes(source, target);
-		}
-	}
-}
-
 function paintBox(nodeSource, id, msg, mode) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
@@ -286,11 +243,60 @@ function paintBox(nodeSource, id, msg, mode) {
 }
 
 
+function processNodes(json, mode){
+	// Iterate over the nodes and position in the screen
+	// coordinates should come in the json response
+	
+	positionNodes(json, mode)
+	
+	// After all nodes are positioned, then create the edges
+	// between them
+	
+	putEdges(json)
+}
+
+function positionNodes(json, mode){
+	for ( var i = 0; i < json.length; i++) {
+		var top = json[i].y*0.8;
+		var left = json[i].x;
+		
+		if(mode=="objects"){
+			var style = "top:" + top * 1.1
+						+ "px;left:" + left*1.2
+						+ "px;background-color:"+ json[i].color + ";"
+						+ "padding:8px;"
+		}
+		if(mode=="runs"){
+			
+			addStatusBox("graph_" + json[i].id,	json[i].status);
+			
+			var style = "top:" + top
+				+ "px;left:" + left
+				+ "px;background-color:"+ json[i].color + ";"
+		}
+					
+		$("div#graph_" + json[i].id + ".window").attr(
+				"style", style);
+	}
+}
+
 function addStatusBox(id, status) {
 	/*
 	 * Function add a new status in a node from the protocol graph.
 	 */
 	$("div#" + id + ".window").find("#nodeStatus").html(status);
+}
+
+function putEdges(json){
+	for ( var i = 0; i < json.length; i++) {
+		for ( var j = 0; j < json[i].childs.length; j++) {
+			var source = $("div#graph_" + json[i].id
+					+ ".window");
+			var target = $("div#graph_" + json[i].childs[j]
+					+ ".window");
+			connectNodes(source, target);
+		}
+	}
 }
 
 function connectNodes(elm1, elm2) {

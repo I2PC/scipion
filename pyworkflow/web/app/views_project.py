@@ -323,6 +323,7 @@ def protocol_info(request):
                   }
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
