@@ -76,8 +76,8 @@ env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
 
-AddOption('--with-packages', dest='withPackages', action='store_true',
-                  help='Activate all EM packages')
+AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
+          help='Get all EM packages')
 
 
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
@@ -203,7 +203,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     executed after the package is properly installed.
 
     If default=False, the package will not be built unless the option
-    --with-<name> is used.
+    --with-<name> or --with-all-packages is used.
 
     Returns the final target (software/em/<name>).
 
@@ -220,13 +220,20 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
               help=("Get package %s. With no argument, download and "
                     "install it. To use an existing installation, pass "
                     "the package's directory." % name))
+    # So GetOption(name) will be...
+    #   None      if we did *not* pass --with-<name>
+    #   'unset'   if we passed --with-<name> (nargs=0)
+    #   PKG_HOME  if we passed --with-<name>=PKG_HOME (nargs=1)
 
     # See if we have used the --with-<package> option and exit if appropriate.
-    if GetOption('withPackages'):
+    if GetOption('withAllPackages'):
         defaultPackageHome = 'unset'
+        # we asked to install all packages, so it is at least as if we
+        # also did --with-<name>
     else:
         defaultPackageHome = None
-        
+        # by default it is as if we did not use --with-<name>
+
     packageHome = GetOption(name) or defaultPackageHome
 
     if not (default or packageHome):
