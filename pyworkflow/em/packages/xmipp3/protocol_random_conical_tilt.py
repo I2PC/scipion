@@ -103,15 +103,19 @@ class XmippProtRCT(ProtInitialVolume):
         self.inputSet.setStore(False)
         self.rctClassesFn = self._getExtraPath('rct_classes.xmd')
         
-        self._insertFunctionStep('createRctImagesStep')
+        firstStepId = self._insertFunctionStep('createRctImagesStep')
+        
+        reconSteps = []
                 
         if isinstance(self.inputSet, SetOfParticles):
-            self._reconstructImages(self.inputSet)
+            reconStep = self._reconstructImages(self.inputSet, firstStepId)
+            reconSteps.append(reconStep)
         else:
             for class2D in self.inputSet:
-                self._reconstructImages(class2D)
+                reconStep = self._reconstructImages(class2D, firstStepId)
+                reconSteps.append(reconStep)
                 
-        self._insertFunctionStep('createOutputStep')      
+        self._insertFunctionStep('createOutputStep', prerequisites=reconSteps)      
         
     def createRctImagesStep(self):
         """ Function to create the Xmipp metadata needed to run the Xmipp protocol """
@@ -171,7 +175,7 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.writeToMd(classMd, objId)
             classMd.write(blockMd, xmipp.MD_APPEND)
             
-    def _reconstructImages(self, particles):
+    def _reconstructImages(self, particles, deps):
         """ Function to insert the step needed to reconstruct a class (or setOfParticles) """
 
         classNo = particles.getObjId()
@@ -186,7 +190,9 @@ class XmippProtRCT(ProtInitialVolume):
         else:
             classImage = None
         
-        self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut)        
+        reconStep = self._insertFunctionStep('reconstructClass', classNameIn, classNameOut, classImage, classVolumeOut, prerequisites=[deps])
+        
+        return reconStep        
 
     def reconstructClass(self, classIn, classOut, classImage, classVolumeOut):
 
