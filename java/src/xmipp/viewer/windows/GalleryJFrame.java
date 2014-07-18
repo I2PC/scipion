@@ -1953,8 +1953,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			}
                         else if (cmd.equals(INVERT_SELECT))
 			{
-				for (int i = 0; i < data.selection.length; ++i)
-                                    data.selection[i] = !data.selection[i];
+				for (int i = 0; i < data.size(); ++i)
+                                    data.setSelected(i, !data.isSelected(i));
                                 gallery.fireTableDataChanged();
 			}
 			else if (cmd.equals(ENABLED))
