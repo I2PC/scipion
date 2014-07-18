@@ -245,7 +245,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         return env.Command(
             'software/em/%s/bin' % name,
             Dir(packageHome),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+            Action('ln -v -s %s %s' % (packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
 
