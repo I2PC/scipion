@@ -77,12 +77,10 @@ def populateProtTree(tree, obj):
 # OBJECT TREE
 #===============================================================================
 
-#def loadObjTree(project):
-#    from pyworkflow.em import emObjectsDict
-#    
-#    root = TreeItem('root', 'root', '', '')
-#    
-#    return root                
-
+def loadObjTree(project):
+    
+    root = TreeItem('root', 'root', '', '')
+    
+    return root                
 
     

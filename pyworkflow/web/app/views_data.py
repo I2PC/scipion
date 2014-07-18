@@ -29,7 +29,7 @@ import pyworkflow.gui.graph as gg
 from pyworkflow.em import *
 from views_base import * 
 from views_project import formatProvider
-#from views_tree import loadObjTree
+from views_tree import loadObjTree
 from pyworkflow.gui.tree import ObjectTreeProvider, DbTreeProvider
 from pyworkflow.manager import Manager
 from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
@@ -44,7 +44,7 @@ def data_content(request):
     project = loadProject(projectName)
     
     # load the object tree 
-#    root = loadObjTree(project)
+    root = loadObjTree(project)
    
     
     context = {'projectName': projectName,
@@ -63,13 +63,24 @@ def data_content(request):
     return render_to_response('data_content/data_content.html', context)
 
 
-#def tree_obj_view(request):
-#    projectName = request.session['projectName'] 
-#    project = loadProject(projectName) 
-#     
-#    # load the protocol tree current active
-#    root = loadObjTree(project)
-#    
-#    return render_to_response('data_content/tree_obj_view.html', {'sections': root.childs})
-    
+
+def object_info(request):
+    from pyworkflow.web.app.views_util import parseText
+    from pyworkflow.em.data import EMObject
+
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        objId = request.GET.get('objectId', None)
+        project = loadProject(projectName)
+        obj = project.mapper.selectById(objId)
+        
+        ioDict = {'info': str(obj),
+                  'created': '2014-11-22',
+                  'label': obj.getName(),
+                  'comment': obj.getObjComment()
+                  }
+        
+        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        
+    return HttpResponse(jsonStr, mimetype='application/javascript')
 

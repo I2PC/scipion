@@ -1,7 +1,6 @@
  /*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
- * 			   Adrian Quintana (aquintana@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -857,7 +856,6 @@ function deleteProtocolForm(id, mode) {
 	 msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
 	 
 	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
-	
 }
 
 
@@ -1029,4 +1027,86 @@ function checkStatusRow(id, status, time){
 	row.find(".time").html(time);
 		
 }
+
+//** DATA CONTENT ***********************************************************/
+	
+function launchToolbarObjTree(id, elm, multi) {
+	/*
+	 * Toolbar used in the data content template for graph view
+	 */
+	
+	if (multi){
+		if (elm.attr("selected") == "selected"){
+			dismarkSingleNodeGraph(elm);
+			$("div#graphActiv").removeAttr("data-option");
+			updateObjButtons(id, "multiple")
+		} else {
+			markSingleNodeGraph(elm);
+			$("div#graphActiv").attr("data-option", elm.attr("id"));
+		}
+		updateButtons(id, "multiple")
+	} else {
+		disableMultipleMarkGraph(id);
+		updateTree(id, elm, $("div#toolbar"));
+		// Update the content for the tabs
+		updateObjButtons(id, "single")
+		updateObjTabs(id);
+		
+	}
+}
+
+function updateObjTabs(id) {
+	/*
+	 * Fill the content of the summary tab for a object selected 
+	 */
+	$.ajax({
+		type : "GET",
+		url : '/object_info/?objectId=' + id,
+		dataType : "json",
+		success : function(json) {
+
+			var info = $("#obj_info");
+			// Edit Object
+			var edit_html = '<a href="javascript:editObject('+ id + ');"> '+
+			'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
+			info.empty();
+			info.append(json.info + "&nbsp;&nbsp;&nbsp;" + edit_html);
+
+			var created = $("#obj_created");
+			created.empty();
+			created.append(json.created);
+			
+			var label = $("#obj_label");
+			label.empty();
+			label.append(json.label);
+			
+			var comment = $("#obj_comment");
+			comment.empty();
+			comment.append(json.comment);
+		}
+	});
+}
+
+function updateObjButtons(id, mode){
+	/*
+	 * Function to update the buttons in the toolbar after choose a new protocol run.
+	 */	
+	 switch (mode){
+	 	case "single":
+			// Action Edit Button
+			$("a#editTool").attr('href', 'javascript:editObject('+ id + ');');
+			$("span#editTool").show();
+			
+			// Show toolbar
+			$("div#toolbar").show(); 
+			break;
+			
+	 	case "multiple":
+	 		// Hide toolbar
+	 		$("div#toolbar").hide(); 
+	 		break;
+	 }
+}
+	 
+	 
 
