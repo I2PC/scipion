@@ -232,10 +232,11 @@ def main():
     elif mode == MODE_INSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
+        os.environ['SCIPION_HOME'] = SCIPION_HOME  # but this one we do set it
         for path in DIRS.values():
             if not exists(path):
                 print "  Creating folder %s ..." % path
-                os.makedirs(path) 
+                os.makedirs(path)
         from scripts.install import build
         ret = build(args=sys.argv[2:])
         if ret == 0 and '--help' not in sys.argv[2:]:
