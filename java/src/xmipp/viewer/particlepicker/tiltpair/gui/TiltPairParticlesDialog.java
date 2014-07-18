@@ -34,7 +34,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 		if (particles.isEmpty())
 		{
 			particlespn.removeAll();
-			width = 200;
+			width = side * 4 + 10;
                         height = 800;
 			sp.setPreferredSize(new Dimension(width, height));
 			pack();
@@ -43,7 +43,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 
 		if (changesize)
 		{
-			columns = 1;//Math.min(200, particles.size() * side * 2) / (side * 2);
+			columns = 2;//Math.min(200, particles.size() * side * 2) / (side * 2);
 			rows = (int) Math.ceil(particles.size() / (float) columns);
 			width = side * columns * 2;
 			height = (side * Math.min(10, rows));
@@ -61,15 +61,16 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 			rows = (int) Math.ceil((particles.size() / (float) columns));
 		}
                 sp.setPreferredSize(new Dimension(width, height));
+                
 		particlespn.removeAll();
 		particles = frame.getAvailableParticles();
 		int index = 0;
 		ParticleCanvas c;
 		PickerParticle p;
 		UntiltedParticle up;
-		columns =  columns * 2;
+		
 		for (int i = 0; i < rows; i++)
-			for (int j = 0; j < columns; j+= 2, index ++)
+			for (int j = 0; j < columns * 2; j+= 2, index ++)
 			{
 				if (index == particles.size())
 					break;
@@ -80,10 +81,12 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 				
 				if (up.getTiltedParticle() != null)
 					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippWindowUtil.getConstraints(constraints, j + 1, i, 1));
+                                System.out.println(i);
 			}
 		
-		 // particlespn.revalidate();
-                 sp.setScrollPosition(sp.getScrollPosition().x, Integer.MAX_VALUE);
+                sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
+                sp.getHAdjustable().setValue(sp.getHAdjustable().getMaximum());
+                
 		 pack();
 		
 	}

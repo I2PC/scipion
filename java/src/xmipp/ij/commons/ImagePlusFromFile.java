@@ -8,7 +8,6 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import java.io.File;
-import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 /**
