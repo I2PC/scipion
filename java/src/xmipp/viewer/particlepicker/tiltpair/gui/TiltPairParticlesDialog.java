@@ -80,7 +80,6 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 				
 				if (up.getTiltedParticle() != null)
 					particlespn.add(up.getTiltedParticle().getParticleCanvas(frame), XmippWindowUtil.getConstraints(constraints, j + 1, i, 1));
-                                System.out.println(i);
 			}
 		
                 sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
