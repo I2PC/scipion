@@ -52,7 +52,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_rotational_spectra import XmippProtRotSpectra 
-from protocol_projmatch import XmippProtProjMatch
+from protocol_projmatch import XmippProtProjMatch, XmippProjMatchViewer
 from protocol_filter import XmippProtFilterParticles
 from protocol_filter import XmippProtFilterVolumes
 from protocol_mask import XmippProtMaskParticles

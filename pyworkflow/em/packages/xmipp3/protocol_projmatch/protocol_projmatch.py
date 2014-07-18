@@ -2,6 +2,7 @@
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -38,8 +39,8 @@ from projmatch_initialize import *
 from projmatch_form import _defineProjectionMatchingParams
 from projmatch_steps import *
 
-     
-        
+
+
 class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     """ 3D reconstruction and classification using multireference projection matching"""
 
