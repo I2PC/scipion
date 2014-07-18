@@ -1,6 +1,5 @@
 package xmipp.viewer.particlepicker.tiltpair.gui;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 		}
 		else
 		{
-			Dimension d = sp.getPreferredSize();
+			Dimension d = sp.getSize();
                         width = (int) d.getWidth();
                         height = (int)d.getHeight();
 			columns = (int) d.getWidth() / (side * 2);
@@ -85,6 +84,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 			}
 		
                 sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
+                sp.getHAdjustable().setValue(sp.getHAdjustable().getMaximum());
                 
 		 pack();
 		

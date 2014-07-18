@@ -1,5 +1,6 @@
 package xmipp.viewer.particlepicker;
 
+import java.awt.BorderLayout;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -69,16 +70,13 @@ public class ParticlesDialog extends Dialog
 		{
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
-			width = side * columns;
+			width = side * columns + 20;
 			height = (side * Math.min(10, rows));
-			boolean scroll = (height < rows * side);
-			width = width + (scroll ? 40 : 20);
-			height = height + (scroll ? 0 : 20);
 			
 		}
 		else//size changed by user
 		{
-			Dimension d = sp.getPreferredSize();
+			Dimension d = sp.getSize();
                         width = (int) d.getWidth();
                         height = (int)d.getHeight();
 			columns = width / side;
@@ -103,7 +101,9 @@ public class ParticlesDialog extends Dialog
 			}
                 // particlespn.revalidate();
                 sp.getVAdjustable().setValue(sp.getVAdjustable().getMaximum());
+                sp.getHAdjustable().setValue(sp.getHAdjustable().getMaximum());
 		pack();
+                
 	}
         
         
@@ -112,16 +112,18 @@ public class ParticlesDialog extends Dialog
 	{
 		
 		setTitle("Particles");
+                setLayout(new BorderLayout());
 		constraints = new GridBagConstraints();
-		sp = new ScrollPane();
+		sp = new ScrollPane(ScrollPane.SCROLLBARS_AS_NEEDED);
+                
 		particlespn = new Panel(new GridBagLayout());
 		sp.add(particlespn);
-		add(sp);
+		add(sp, BorderLayout.CENTER);
 		loadParticles(true);
 		XmippWindowUtil.setLocation(0.6f, 0, this);
 		setVisible(true);
 		setAlwaysOnTop(true);
-		this.addComponentListener(new java.awt.event.ComponentAdapter()
+		sp.addComponentListener(new java.awt.event.ComponentAdapter()
 		{
 			public void componentResized(ComponentEvent e)
 			{
