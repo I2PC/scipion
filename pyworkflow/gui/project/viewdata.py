@@ -48,9 +48,10 @@ import pyworkflow.gui as gui
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
 from pyworkflow.gui.text import TaggedText
-from pyworkflow.gui import Canvas
+from pyworkflow.gui import Canvas, RoundedTextBox
 from pyworkflow.gui.graph import LevelTree
 from config import *
+from pyworkflow.gui.form import getObjectLabel
 
 
 ACTION_EDIT = Message.LABEL_EDIT
@@ -240,15 +241,35 @@ class ProjectDataView(tk.Frame):
         v.add(infoFrame, weight=1)
         v.grid(row=1, column=0, sticky='news')
     
+    def _createNode(self, canvas, node, y):
+        """ Create Data node to be painted in the graph. """
+        node.selected = False
+        node.box = RoundedTextBox(canvas, node, y)
+        return node.box
+
+    def _createDataItem(self, canvas, node, y):
+        if node.object is None:
+            nodeText = "None"
+        else:
+            label = getObjectLabel(node.object, self.project.mapper)
+            nodeText = (label[:25]+'...') if len(label) > 25 else label
+                
+        textColor = 'black'
+        color = '#ADD8E6' #Lightblue
+        item = self._dataCanvas.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
+
+        return item
+    
     def _createDataGraph(self, parent):
         """ This will be the upper part of the right panel.
         It will contains the Data Graph with their relations. 
         """
         canvas = Canvas(parent, width=600, height=500)
         canvas.grid(row=0, column=0, sticky='nsew')
+        self._dataCanvas = canvas
         lt = LevelTree(self._dataGraph)
         lt.setCanvas(canvas)
-        lt.paint()
+        lt.paint(self._createDataItem)
         canvas.updateScrollRegion()
         canvas.onClickCallback = self._onClick
         canvas.onDoubleClickCallback = self._onDoubleClick
@@ -256,9 +277,9 @@ class ProjectDataView(tk.Frame):
         
     def _selectObject(self, obj):
         self._selected = obj
-        self._infoText.setText('*Info:* ' + str(obj))
+        self._infoText.setText('*Label:* ' + getObjectLabel(obj, self.project.mapper))
+        self._infoText.addText('*Info:* ' + str(obj))
         self._infoText.addText('*Created:* ' + '2014-11-22')
-        self._infoText.addText('\n*Label:* ' + obj.getNameId())
         if obj.getObjComment():
             self._infoText.addText('*Comments:* ' + obj.getObjComment())
         
@@ -280,3 +301,8 @@ class ProjectDataView(tk.Frame):
     def _editObject(self):
         """Open the Edit GUI Form given an instance"""
         EditObjectDialog(self, Message.TITLE_EDIT_OBJECT, self._selected, self.project.mapper)
+
+
+class DataTextBox(RoundedTextBox):
+    def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
+        RoundedTextBox.__init__(self, canvas, text, x, y, bgColor, textColor)
