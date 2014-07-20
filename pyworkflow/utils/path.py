@@ -30,6 +30,7 @@ inside the utils module
 
 import os
 import shutil
+import sys
 from os.path import (exists, join, splitext, isdir, isfile, expanduser,
                      expandvars, basename, dirname, split, relpath)
 from glob import glob
@@ -297,3 +298,25 @@ def iterBigFile(textfile, offset=0, size=None,
     # Add the remaining lines (from our last offset)
     for line in textfile:
         yield line
+
+
+def createUniqueFileName(fn):
+    '''
+    This function creates a file name that is similar to the original 
+    by adding a unique numeric suffix. check   NamedTemporaryFile
+    from tempfile for alternatives
+    '''
+    if not os.path.exists(fn):
+        return fn
+
+    path, name = os.path.split(fn)
+    name, ext = os.path.splitext(name)
+
+    make_fn = lambda i: os.path.join(path, '%s_tmp_%d_%s' % (name, i, ext))
+
+    for i in xrange(2, sys.maxint):
+        uni_fn = make_fn(i)
+        if not os.path.exists(uni_fn):
+            return uni_fn
+
+    return None

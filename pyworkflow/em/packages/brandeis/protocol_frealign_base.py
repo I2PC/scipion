@@ -343,7 +343,7 @@ class ProtFrealignBase(EMProtocol):
                            'Approximate average phase residual of all particles,\n'
                            ' used in calculating weights for contributions of different\n'
                            'particles to 3D map (see Grigorieff, 1998).')
-        form.addParam('angStepSize', FloatParam, default='100.0',
+        form.addParam('angStepSize', FloatParam, default='0.0',
                       condition="mode==3 or mode==4",
                       label='Angular step size for the angular search:',
                       help='Parameter *DANG* in FREALIGN\n\n'
@@ -676,7 +676,7 @@ class ProtFrealignBase(EMProtocol):
             summary.append("Output volumes not ready yet.")
         else:
             summary.append("Number of iterations: %d" % self.numberOfIterations.get())
-            summary.append("Angular step size: %f" % self.angStepSize.get())
+#             summary.append("Angular step size: %f" % self.angStepSize.get())
             summary.append("symmetry: %s" % self.symmetry.get())
             summary.append("Final volume: %s" % self.outputVolume.getFileName())
         
