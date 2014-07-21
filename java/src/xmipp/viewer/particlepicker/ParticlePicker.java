@@ -222,15 +222,7 @@ public abstract class ParticlePicker {
         if (path.endsWith(".box")) {
             return Format.Eman;
         }
-         //weird case, import all particles
-            String particlesfile = getExportFile(path);
-            if (particlesfile != null) {
-                if (Filename.exists(Filename.join(path, "families.xmd"))) {
-                    return Format.Xmipp30;
-                }
-                return Format.Xmipp301;
-
-            }
+         
         return Format.Unknown;
     }
 
