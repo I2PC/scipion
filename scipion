@@ -232,14 +232,20 @@ def main():
     elif mode == MODE_INSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
-        os.environ['SCIPION_HOME'] = SCIPION_HOME  # but this one we do set it
+
+        # But we do set SCIPION_HOME to avoid picking one from the environment.
+        os.environ['SCIPION_HOME'] = SCIPION_HOME
+
+        # Create folders if needed.
         for path in DIRS.values():
             if not exists(path):
                 print "  Creating folder %s ..." % path
                 os.makedirs(path)
+
+        args = sys.argv[2:]
         from scripts.install import build
-        ret = build(args=sys.argv[2:])
-        if ret == 0 and '--help' not in sys.argv[2:]:
+        ret = build(args=args)
+        if ret == 0 and '--help' not in args and '-h' not in args:
             runApp('config.py')
         # FIXME: I am not sure this is a good idea. To begin with,
         # right now it expects xmipp to be installed.
