@@ -101,8 +101,17 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     url = url or ('%s/external/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     targets = targets or ['lib/lib%s.so' % name]
-    flags += ['LD_LIBRARY_PATH=%s' % abspath('software/lib'),
-              '--prefix=%s' % abspath('software'),
+
+    # Add software/lib to the beginning of LD_LIBRARY_PATH.
+    for i in range(len(flags)):
+        if flags[i].startswith('LD_LIBRARY_PATH='):
+            flags[i] = 'LD_LIBRARY_PATH=%s:%s' % (abspath('software/lib'),
+                                                  flags[i].split('=', 1)[1])
+            break
+    else:  # we did not find any flag starting with 'LD_LIBRARY_PATH='
+        flags.insert(0, 'LD_LIBRARY_PATH=%s' % abspath('software/lib'))
+
+    flags += ['--prefix=%s' % abspath('software'),
               '--libdir=%s' % abspath('software/lib')]  # not lib64
 
     # Add the option --with-name, so the user can call SCons with this
