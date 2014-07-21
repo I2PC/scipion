@@ -84,7 +84,7 @@ class ParticleAdaptor():
         self._ih.convert(img.getLocation(), newLoc)
         img.setLocation(newLoc)
         # Re-write the row with the new location
-        self._particleToRow(img, imgRow)
+        self._particleToRow(img, imgRow, writeAlignment=False)
         self._rowCount += 1
     
 
@@ -123,7 +123,7 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
     pa = ParticleAdaptor(stackFile)
-    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow)
+    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()
     
