@@ -25,88 +25,20 @@
 # *
 # **************************************************************************
 """
-Main project window application
+Launch main project window 
 """
-import os, sys
-from os.path import join, exists, basename
 
-import Tkinter as tk
-import ttk
-import tkFont
+import sys
+import os
 
-from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.protocol.protocol import *
+from pyworkflow.gui.project import ProjectWindow
 
-import pyworkflow as pw
-from pyworkflow.object import *
-from pyworkflow.em import *
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.project import Project
-from pyworkflow.utils.properties import Message
-
-import pyworkflow.gui as gui
-from pyworkflow.gui import getImage
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
-from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo
-from pyworkflow.gui.text import TaggedText
-from pyworkflow.gui import Canvas
-from pyworkflow.gui.graph import LevelTree
-import pyworkflow.apps.config as config
-
-from config import *
-from pw_browser import BrowserWindow
-from pyworkflow.gui.plotter import Plotter
-Plotter.setInteractive(True)   
-   
-   
-class ProjectWindow(gui.WindowBase):
-    def __init__(self, path, master=None):
-        # Load global configuration
-        self.projName = Message.LABEL_PROJECT + basename(path)
-        self.projPath = path
-        self.loadProject()
-        self.icon = self.generalCfg.icon.get()
-        self.selectedProtocol = None
-        self.showGraph = False
-        
-        gui.WindowBase.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
-        
-        self.switchView(gui.VIEW_PROTOCOLS)
-    
-    def createHeaderFrame(self, parent):
-        """Create the header and add the view selection frame at the right."""
-        header = gui.WindowBase.createHeaderFrame(self, parent)
-        self.addViewList(header)
-        return header
-
-    def getSettings(self):
-        return self.settings
-    
-    def saveSettings(self):
-        self.settings.write()
-        
-    def _onClosing(self):
-        try:
-            self.saveSettings()
-        except Exception, ex:
-            print Message.NO_SAVE_SETTINGS + str(ex) 
-        gui.Window._onClosing(self)
-
-     
-    def loadProject(self):
-        self.project = Project(self.projPath)
-        self.project.load()
-        self.settings = self.project.getSettings()
-        self.generalCfg = self.settings.getConfig()
-        self.menuCfg = self.settings.getCurrentMenu()
-        self.protCfg = self.settings.getCurrentProtocolMenu()
 
 
 if __name__ == '__main__':
+    
     from pyworkflow.manager import Manager
+    
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
