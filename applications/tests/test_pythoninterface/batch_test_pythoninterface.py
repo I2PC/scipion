@@ -447,7 +447,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(list, [1.0, 2.0, 3.0])
         ref = mD.getValue(MDL_REF3D, 2L)
         self.assertEqual(ref, 2)
-        
+       
     def test_Metadata_importObjects(self):
         '''import metadata subset'''
         mdPath = testFile("test.xmd")
@@ -1060,8 +1060,8 @@ _rlnDefocusU #2
         #create set and save 1000 block with 100 lines each
         #numberMetadatas=1000+1
         #numberLines=100+1
-        numberMetadatas=1000+1
-        numberLines=100+1
+        numberMetadatas=10+1
+        numberLines=10+1
         md = MetaData()
         fnStar   = self.getTmpName('.xmd')
         fnSqlite = self.getTmpName('.sqlite')
