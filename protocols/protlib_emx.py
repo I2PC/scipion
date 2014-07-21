@@ -611,7 +611,14 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     """
     print "INSIDE: xmippParticlesToEmx"
 
-    md = MetaData(imagesMd)
+    md    = MetaData(imagesMd)
+    hasCS = md.containsLabel(MDL_CTF_CS)
+    hasQ0 = md.containsLabel(MDL_CTF_Q0)
+    hasDefocusU  = md.containsLabel(MDL_CTF_DEFOCUSU)
+    hasDefocusV = md.containsLabel(MDL_CTF_DEFOCUSV)
+    hasVoltage  = md.containsLabel(MDL_CTF_VOLTAGE)
+    hasDefocusUAngle  = md.containsLabel(MDL_CTF_DEFOCUS_ANGLE)
+
     md.removeDisabled()
     
     imgFn = 'particles.mrc'
@@ -621,13 +628,8 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     hasCoords = md.containsLabel(MDL_XCOOR)
     hasGeo = hasGeoLabels(md)
     hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
-    hasCtf = md.containsLabel(MDL_CTF_MODEL) or\
-            (md.containsLabel(MDL_CTF_CS) and\
-             md.containsLabel(MDL_CTF_Q0) and\
-             md.containsLabel(MDL_CTF_DEFOCUSU) and\
-             md.containsLabel(MDL_CTF_DEFOCUSV) and\
-             md.containsLabel(MDL_CTF_VOLTAGE)\
-            )
+    hasCtfMic = md.containsLabel(MDL_CTF_MODEL)
+    hasCtfPart = hasCS and hasQ0 and hasDefocusU and hasVoltage # note that defocuV and angle are optional
     micsDict = {}
 
     acquisionInfo = findAcquisitionInfo(md.getValue(MDL_IMAGE, md.firstObject()))
@@ -647,26 +649,37 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
         img.write('%d@%s' % (index, mrcFn))
         particle = EmxParticle(imgFn, index)
         # Create the micrograph object if exists
-        if hasMicrograph or hasCtf:
+        if hasMicrograph or hasCtfMic or hasCtfPart:
             fn = md.getValue(MDL_MICROGRAPH, objId)
             if fn is None:
-                fn = md.getValue(MDL_CTF_MODEL, objId)
-
+                if hasCtfMic:
+                    fn = md.getValue(MDL_CTF_MODEL, objId)
+                else:
+                    fn='%s%06d' % (mrcFn,index)
             if fn in micsDict:
                 micrograph = micsDict[fn]
             else:
                 idx, path = FileName(fn).decompose()
                 idx = idx or None
                 micrograph = EmxMicrograph(path, idx)
+                if hasCS:
+                    micrograph.set('cs', md.getValue(MDL_CTF_CS,objId))
+                if hasQ0:
+                    micrograph.set('amplitudeContrast', md.getValue(MDL_CTF_Q0,objId))
+                if hasVoltage:
+                    micrograph.set('acceleratingVoltage', md.getValue(MDL_CTF_VOLTAGE,objId))
+
                 emxData.addObject(micrograph)
                 micsDict[fn] = micrograph 
             
             particle.setMicrograph(micrograph)
             
-            if hasCtf:
+            if hasCtfMic or hasCtfPart:
                 xmippCtfToEmx(md, objId, micrograph)
-                particle.set('defocusU', micrograph.get('defocusU'))
-                particle.set('defocusV', micrograph.get('defocusV'))
+                defocusU = micrograph.get('defocusU')
+                particle.set('defocusU', defocusU)
+                particle.set('defocusV', md.getValue(MDL_CTF_DEFOCUSV,objId) or defocusU)
+                particle.set('defocusUAngle', md.getValue(MDL_CTF_DEFOCUS_ANGLE,objId)or 0.)
 
         # Check if there are coordinates
         if hasCoords:
