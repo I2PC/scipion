@@ -684,7 +684,7 @@ _rlnDefocusU #2
             md2.setValue(MDL_IMAGE, img, id)
             md2.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md2.setValue(MDL_ANGLE_PSI, 1., id)
-        mdout.join (md, md2, MDL_UNDEFINED, MDL_UNDEFINED, NATURAL)
+        mdout.joinNatural(md, md2)
 
         md.clear()
         for i in range(1, 3):
@@ -694,7 +694,6 @@ _rlnDefocusU #2
             md.setValue(MDL_CTF_MODEL, 'CTFs/10.ctfparam', id)
             md.setValue(MDL_COUNT, (i * 10L), id)
             md.setValue(MDL_ANGLE_PSI, 1., id)
-
         self.assertEqual(mdout, md)
                  
     def test_Metadata_intersect(self):
