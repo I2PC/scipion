@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.path import removeExt
 """
 This module implement some wizards
 """
@@ -33,6 +32,7 @@ import os
 import Tkinter as tk
 import ttk
 
+from pyworkflow.utils.path import cleanPath, removeExt
 from pyworkflow.em.constants import UNIT_PIXEL
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesMaskRadiiWizard,
@@ -207,6 +207,7 @@ class SpiderFilterDialog(DownsampleDialog):
         # Copy image to filter to Tmp project folder
         outputName = os.path.join("Tmp", "filtered_particle")
         outputPath = outputName + ".spi"
+        cleanPath(outputPath)
 
         outputLoc = (1, outputPath)
         ih = ImageHandler()
