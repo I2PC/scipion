@@ -516,12 +516,16 @@ def hasGeoLabels(md):
     return False
 
 
-def xmippCtfToEmx(md, objId, micrograph):
-    """ Read a CTF file ctfparam from Xmipp 
-    and set the attributes in micrograph.
+def xmippCtfToEmx(md, objId, particle=None, micrograph=None):
+    """ Read a CTF file ctfparam of MD from Xmipp 
+    and set the attributes in micrograph and/or particle
     """
-    ctfModel = md.getValue(MDL_CTF_MODEL, objId)
-    xmippCtfModelToEmx(ctfModel, micrograph)
+    if  not particle:
+        ctfModel = md.getValue(MDL_CTF_MODEL, objId)
+        xmippCtfModelToEmx(ctfModel, micrograph)
+    elif particle:
+        xmippCtfMetadataToEmx(md, objId, particle)
+
     
 def xmippCtfModelToEmx(ctfModel, micrograph):
     mdCTF = RowMetaData(ctfModel)
@@ -544,7 +548,13 @@ def xmippCtfModelToEmx(ctfModel, micrograph):
 
     #micrograph.set('pixelSpacing__Y', ctf.pixelSpacing__X)
 
-    
+
+def xmippCtfMetadataToEmx(md, objId, particle):
+	defocusU = md.getValue(MDL_CTF_DEFOCUSU,objId)
+	particle.set('defocusU', defocusU)
+	particle.set('defocusV', md.getValue(MDL_CTF_DEFOCUSV,objId) or defocusU)
+	particle.set('defocusUAngle', md.getValue(MDL_CTF_DEFOCUS_ANGLE,objId)or 0.)
+
 def _writeEmxData(emxData, filename):
     emxData.write(filename)
     
@@ -552,7 +562,6 @@ def xmippMicrographsToEmx(micMd, emxData, emxDir):
     """ Export micrographs from xmipp metadata to EMX.
     """
     #acquisionInfo = findAcquisitionInfo(self.SelFileNameInitial)
-    print "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"
     from protlib_particles import readPosCoordinates
     md = MetaData(micMd)
     acquisionInfo = findAcquisitionInfo(md.getValue(MDL_MICROGRAPH, md.firstObject()))
@@ -609,8 +618,6 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     imagesMd: the filename of the images metadata
     emxData: the emxData object to be populated.
     """
-    print "INSIDE: xmippParticlesToEmx"
-
     md    = MetaData(imagesMd)
     hasCS = md.containsLabel(MDL_CTF_CS)
     hasQ0 = md.containsLabel(MDL_CTF_Q0)
@@ -628,7 +635,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
     hasCoords = md.containsLabel(MDL_XCOOR)
     hasGeo = hasGeoLabels(md)
     hasMicrograph = md.containsLabel(MDL_MICROGRAPH)
-    hasCtfMic = md.containsLabel(MDL_CTF_MODEL)
+    hasCtfModel = md.containsLabel(MDL_CTF_MODEL)
     hasCtfPart = hasCS and hasQ0 and hasDefocusU and hasVoltage # note that defocuV and angle are optional
     micsDict = {}
 
@@ -640,6 +647,7 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
         pixelSpacing = 1.
 
     for objId in md:
+
         # Read image from filename
         fnIn = FileName(md.getValue(MDL_IMAGE, objId))
         img.read(fnIn)
@@ -649,10 +657,11 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
         img.write('%d@%s' % (index, mrcFn))
         particle = EmxParticle(imgFn, index)
         # Create the micrograph object if exists
-        if hasMicrograph or hasCtfMic or hasCtfPart:
+        micrograph=None
+        if hasMicrograph or hasCtfModel or hasCtfPart:
             fn = md.getValue(MDL_MICROGRAPH, objId)
             if fn is None:
-                if hasCtfMic:
+                if hasCtfModel:
                     fn = md.getValue(MDL_CTF_MODEL, objId)
                 else:
                     fn='%s%06d' % (mrcFn,index)
@@ -674,12 +683,11 @@ def xmippParticlesToEmx(imagesMd, emxData, emxDir, doAlign):
             
             particle.setMicrograph(micrograph)
             
-            if hasCtfMic or hasCtfPart:
-                xmippCtfToEmx(md, objId, micrograph)
-                defocusU = micrograph.get('defocusU')
-                particle.set('defocusU', defocusU)
-                particle.set('defocusV', md.getValue(MDL_CTF_DEFOCUSV,objId) or defocusU)
-                particle.set('defocusUAngle', md.getValue(MDL_CTF_DEFOCUS_ANGLE,objId)or 0.)
+            if hasCtfPart:
+                xmippCtfToEmx(md, objId, particle=particle, micrograph=micrograph)
+
+            if hasCtfModel:
+                xmippCtfToEmx(md, objId, micrograph=micrograph)
 
         # Check if there are coordinates
         if hasCoords:
