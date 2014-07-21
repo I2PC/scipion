@@ -222,18 +222,19 @@ function paintBox(nodeSource, id, msg, mode) {
 	if (id != "graph_PROJECT") {
 		var objId = id.replace("graph_", "");
 		
-		if(mode == "runs"){
-			var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
-			var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
-		}
-		else if(mode == "objects"){
-			var href = "javascript:launchViewer(" + objId +")";
-			var onclick = "launchToolbarObjTree('" + objId	+ "', $(this), isCtrlPress(event))";
+		switch(mode){
+			case "runs":
+				var href = "javascript:customPopup('/form/?protocolId=" + objId + "',620,591)";
+				var onclick = "launchToolbarTree('" + objId	+ "', $(this), isCtrlPress(event))";
+				break;
+			case "objects":
+				var href = "javascript:launchViewer(" + objId +")";
+				var onclick = "launchToolbarObjTree('" + objId	+ "', $(this), isCtrlPress(event))";
 		}
 		
 		var projName = $("div#graphActiv").attr("data-project");
 		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
-				+ id + '"><a href="' + href + '"><strong>' + msg
+				+ id + '" data-label="'+ msg +'"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
 	} else {
 		var aux = '<div class="window" style="display:none;" id="' + id + '"><strong>' + msg
@@ -260,21 +261,23 @@ function positionNodes(json, mode){
 		var top = json[i].y*0.8;
 		var left = json[i].x;
 		
-		if(mode=="objects"){
-			var style = "top:" + top * 1.1
+		switch(mode){
+			case "objects":
+				var style = "top:" + top * 1.1
 						+ "px;left:" + left*1.2
 						+ "px;background-color:"+ json[i].color + ";"
 						+ "padding:8px;"
+				break;
+				
+			case "runs":
+				addStatusBox("graph_" + json[i].id,	json[i].status);
+						
+				var style = "top:" + top
+					+ "px;left:" + left
+					+ "px;background-color:"+ json[i].color + ";"
+				break;
 		}
-		if(mode=="runs"){
-			
-			addStatusBox("graph_" + json[i].id,	json[i].status);
-			
-			var style = "top:" + top
-				+ "px;left:" + left
-				+ "px;background-color:"+ json[i].color + ";"
-		}
-					
+		
 		$("div#graph_" + json[i].id + ".window").attr(
 				"style", style);
 	}

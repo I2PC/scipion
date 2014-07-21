@@ -70,9 +70,10 @@ class ParticleAdaptor():
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, stackFile):
+    def __init__(self, imgSet, stackFile):
         self._rowCount = 1
         self._ih = ImageHandler()
+        self._imgSet = imgSet
         self._stackFile = stackFile
         
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -84,7 +85,13 @@ class ParticleAdaptor():
         self._ih.convert(img.getLocation(), newLoc)
         img.setLocation(newLoc)
         # Re-write the row with the new location
-        self._particleToRow(img, imgRow)
+        self._particleToRow(img, imgRow, writeAlignment=False)
+        coord = img.getCoordinate()
+        if coord is not None:
+            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
+            imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
+            imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
+            
         self._rowCount += 1
     
 
@@ -122,8 +129,8 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
-    pa = ParticleAdaptor(stackFile)
-    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow)
+    pa = ParticleAdaptor(imgSet, stackFile)
+    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()
     

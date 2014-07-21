@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,15 +23,5 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Launch the windows with all Projects.
-"""
-          
-from pyworkflow.gui.project import ProjectManagerWindow
 
-
-
-if __name__ == '__main__':
-    
-    ProjectManagerWindow().show()
-    
+from project import ProjectManagerWindow, ProjectWindow

@@ -25,15 +25,11 @@
 # **************************************************************************
 
 import json
-import pyworkflow.gui.graph as gg
-from pyworkflow.em import *
-from views_base import * 
-from views_project import formatProvider
+from views_base import getResourceCss, getResourceIcon, getResourceJs 
+from views_base import loadProject, base_flex, render_to_response 
 from views_tree import loadObjTree
-from pyworkflow.gui.tree import ObjectTreeProvider, DbTreeProvider
 from pyworkflow.manager import Manager
-from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse
 
 
 def data_content(request):        
@@ -45,7 +41,6 @@ def data_content(request):
     
     # load the object tree 
     root = loadObjTree(project)
-   
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -54,7 +49,7 @@ def data_content(request):
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
-#               'sections': root.childs,
+               'sections': root.childs,
                'view':'data'
                }
     
@@ -63,11 +58,7 @@ def data_content(request):
     return render_to_response('data_content/data_content.html', context)
 
 
-
 def object_info(request):
-    from pyworkflow.web.app.views_util import parseText
-    from pyworkflow.em.data import EMObject
-
     if request.is_ajax():
         projectName = request.session['projectName']
         objId = request.GET.get('objectId', None)
@@ -75,8 +66,7 @@ def object_info(request):
         obj = project.mapper.selectById(objId)
         
         ioDict = {'info': str(obj),
-                  'created': '2014-11-22',
-                  'label': obj.getName(),
+                  'created': obj.getObjCreation(),
                   'comment': obj.getObjComment()
                   }
         

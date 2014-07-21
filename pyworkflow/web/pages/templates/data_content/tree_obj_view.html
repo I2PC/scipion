@@ -8,8 +8,16 @@
 
 <ul id="browser" class="filetree">
 	{% for section in sections %}
-	
-	
+	<li>
+		<span class="section">{{section.name}}</span>
+		<ul>
+			{% for obj in section.childs %}
+			<li>
+				<span class=object>{{obj.name}} ({{obj.count}})</span>
+			</li>
+			{% endfor %}
+		</ul>
+	</li>
 	{% endfor %}
 </ul>
 	

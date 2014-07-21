@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -22,18 +20,22 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Launch the windows with all Projects.
-"""
-          
-from pyworkflow.gui.project import ProjectManagerWindow
 
 
+from pyworkflow.protocol import (STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING,
+                                 STATUS_FINISHED, STATUS_FAILED, STATUS_INTERACTIVE,
+                                 STATUS_ABORTED)
 
-if __name__ == '__main__':
-    
-    ProjectManagerWindow().show()
-    
+STATUS_COLORS = {
+               STATUS_SAVED: '#D9F1FA', 
+               STATUS_LAUNCHED: '#D9F1FA', 
+               STATUS_RUNNING: '#FCCE62', 
+               STATUS_FINISHED: '#D2F5CB', 
+               STATUS_FAILED: '#F5CCCB', 
+               STATUS_INTERACTIVE: '#F3F5CB',
+               STATUS_ABORTED: '#F5CCCB',
+               #STATUS_SAVED: '#124EB0',
+               } 
