@@ -81,7 +81,7 @@ class Message():
     LABEL_SUMMARY = 'Summary'
     LABEL_INPUT = 'Input'
     LABEL_OUTPUT = 'Output'
-    LABEL_COMMENT = 'Comment'
+    LABEL_COMMENT = 'Comments'
     
     LABEL_OBJSUMMARY = 'Object Summary'
     LABEL_OBJINFO = 'Info'

@@ -87,20 +87,40 @@ def loadObjTree(project):
         if id != 'PROJECT':
             obj = project.mapper.selectById(id)
             listObjs.append(obj)
-#            className = obj.__class__.__name__
             
     populateObjTree(root, listObjs)
     
     return root
 
 def populateObjTree(tree, listObjs):
+    list = {}
     
     for obj in listObjs:
-        item = TreeItem(text, tag, icon, openItem)
-
-        tree.childs.append(item)
+        baseClass = obj.__class__
+        base = baseClass.__bases__[0].__name__
+        className = baseClass.__name__
+        
+        if base not in list:
+            list.update({base:{className : 1}})
+        else:
+            if not className in list[base]:
+                list[base].update({className : 1})
+            else:   
+                list[base][className] = list[base][className]+1
     
-    pass
+    for base in list:
+        baseItem = ObjItem(base)
+        tree.childs.append(baseItem)
+        for obj in list[base]:
+            count =  list[base][obj]
+            item = ObjItem(obj, count)
+            baseItem.childs.append(item)
+            
 
+class ObjItem():
+    def __init__(self, name, count=None):
+        self.name = name
+        self.count = count
+        self.openItem = True
+        self.childs = []
 
-    
