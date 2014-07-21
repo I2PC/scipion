@@ -38,6 +38,14 @@ Import('env')
 #  *                                                                      *
 #  ************************************************************************
 
+# We might want to add freetype and make tcl depend on it. That would be:
+# freetype = env.AddLibrary(
+#     'freetype',
+#     tar='freetype-2.5.3.tgz',
+#     autoConfigTarget='config.mk')
+# But because freetype's compilation is a pain, it's better to use whatever
+# version is in the system.
+
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
@@ -84,14 +92,28 @@ numpy = addModule(
     'numpy',
     tar='numpy-1.8.1.tgz')
 
+six = addModule(
+    'six',
+    tar='six-1.7.3.tgz')
+
+dateutil = addModule(
+    'dateutil',
+    flags=['--old-and-unmanageable'],
+    tar='python-dateutil-1.5.tgz',
+    deps=[six])
+# The option '--old-and-unmanageable' avoids creating a single Python
+# egg, and so we have a "matplotlib" directory that can be used as a
+# target (because it is not passed as argument, it has the default value).
+
+pyparsing = addModule(
+    'pyparsing',
+    tar='pyparsing-2.0.2.tgz')
+
 matplotlib = addModule(
     'matplotlib',
     tar='matplotlib-1.3.1.tgz',
     flags=['--old-and-unmanageable'],
-    deps=[numpy])
-# The option '--old-and-unmanageable' avoids creating a single Python
-# egg, and so we have a "matplotlib" directory that can be used as a
-# target (because it is not passed as argument, it has the default value).
+    deps=[numpy, dateutil, pyparsing])
 
 setuptools = addModule(
     'setuptools',
