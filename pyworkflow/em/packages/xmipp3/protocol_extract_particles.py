@@ -165,7 +165,24 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
         """       
-        self._setInputMicrographs()
+        # Set sampling rate and inputMics according to downsample type
+        self.inputCoords = self.inputCoordinates.get() 
+        
+        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
+        
+        if self.downsampleType.get() == SAME_AS_PICKING:
+            # If 'same as picking' get samplingRate from input micrographs  
+            self.inputMics = self.inputCoords.getMicrographs()
+            self.samplingFinal = self.samplingInput
+        else:
+            self.inputMics = self.inputMicrographs.get()
+            self.samplingOriginal = self.inputMics.getSamplingRate()
+            if self.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                self.samplingFinal = self.samplingOriginal
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
                 
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
@@ -223,32 +240,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 fnCTF = None        
             # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
-                                              fnCTF, micrographToExtract, self.boxSize.get(), 
-                                              prerequisites=localDeps))
+                                              fnCTF, micrographToExtract, prerequisites=localDeps))
         # TODO: Delete temporary files
                         
         # Insert step to create output objects      
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
-    def _setInputMicrographs(self):
-        # Set sampling rate and inputMics according to downsample type
-        self.inputCoords = self.inputCoordinates.get() 
-        
-        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
-        
-        if self.downsampleType.get() == SAME_AS_PICKING:
-            # If 'same as picking' get samplingRate from input micrographs  
-            self.inputMics = self.inputCoords.getMicrographs()
-            self.samplingFinal = self.samplingInput
-        else:
-            self.inputMics = self.inputMicrographs.get()
-            self.samplingOriginal = self.inputMics.getSamplingRate()
-            if self.downsampleType.get() == ORIGINAL:
-                # If 'original' get sampling rate from original micrographs
-                self.samplingFinal = self.samplingOriginal
-            else:
-                # IF 'other' multiply the original sampling rate by the factor provided
-                self.samplingFinal = self.samplingOriginal*self.downFactor.get()
                 
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
@@ -267,7 +263,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         downFactor = self.samplingFinal
         self.runJob("xmipp_ctf_phase_flip", args % locals())
         
-    def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract, boxSize):
+    def extractParticlesStep(self, micId, micName, fnCTF, micrographToExtract):
         """ Extract particles from one micrograph """
         #If flip selected and exists CTF model use the flip output
 #        if self.doFlip and self.fnCTF:
@@ -279,6 +275,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         # If it has coordinates extract the particles      
         particlesMd = 'particles@%s' % fnPosFile
+        
+        boxSize = self.boxSize.get()
         
         #if fnPosFile is not None and xmipp.existsBlockInMetaDataFile(particlesMd):
         if exists(fnPosFile):

@@ -42,7 +42,10 @@ from itertools import izip
 import xmipp
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
                
-               
+# Normalization type constants
+ORIGINAL = 0
+SAME_AS_PICKING = 1
+OTHER = 2     
                
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
@@ -59,6 +62,18 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         form.addParam('inputCoordinatesTiltedPairs', PointerParam, label="Coordinates tilted pairs", 
                       pointerClass='CoordinatesTiltPair',
                       help='Select the CoordinatesTiltPairs ')
+        
+        form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
+                      default=0, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
+                      help='Select the downsampling type.')
+        
+        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
+                      label='Downsampling factor',
+                      help='This factor is always referred to the original sampling rate. '
+                      'You may use independent downsampling factors for extracting the '
+                      'particles, picking them and estimating the CTF. All downsampling '
+                      'factors are always referred to the original sampling rate, and '
+                      'the differences are correctly handled by Xmipp.')      
         
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
@@ -120,15 +135,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         form.addParallelSection(threads=4, mpi=1)
 
 
-    def _setInputMicrographs(self):
-        # Set sampling rate and inputMics according to downsample type
-        
-        self.samplingInput = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs().getSamplingRate()
-
+    def _insertAllSteps(self):
+        """for each micrograph insert the steps to preprocess it
+        """       
         self.uMics = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
         self.tMics = self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
-        
-        self.samplingFinal = self.samplingInput
 
         self.inputMics = self._createSetOfParticles('auxMics')
         self.inputMics.copyInfo(self.uMics)
@@ -140,15 +151,16 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             self.inputMics.append(micU)
             self.inputMics.append(micT)
 
-
-    def _insertAllSteps(self):
-        """for each micrograph insert the steps to preprocess it
-        """       
-        self._setInputMicrographs()
+        self.samplingInput = self.uMics.getSamplingRate()
         
-        # This is necessary cause this protocol uses steps from normal xmipp extract which has this param
-        self.downsampleType = Boolean(False)
-                
+
+        if self.downsampleType.get() == SAME_AS_PICKING:
+            # If 'same as picking' get sampling rate from input micrographs
+            self.samplingFinal = self.samplingInput
+        else:
+            # If 'other' multiply the input sampling rate by the factor provided
+            self.samplingFinal = self.samplingInput*self.downFactor.get()
+                        
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
            
@@ -161,7 +173,15 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
-                                            
+
+            # If downsample type is 'other' perform a downsample
+            if self.downsampleType == OTHER:
+                fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
+                downFactor = self.downFactor.get()
+                args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
+                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
+                micrographToExtract = fnDownsampled
+                                                            
             # If remove dust 
             if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
@@ -176,8 +196,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
       
             # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
-                                              None, micrographToExtract, self.boxSize.get(), 
-                                              prerequisites=localDeps))
+                                              None, micrographToExtract, prerequisites=localDeps))
         # TODO: Delete temporary files
                         
         # Insert step to create output objects      
@@ -229,6 +248,10 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
+        
+        if self.downsampleType == OTHER:
+            imgSetU.setSamplingRate(self.samplingFinal)
+            imgSetT.setSamplingRate(self.samplingFinal)
         
         imgSetU.setCoordinates(self.inputCoordinatesTiltedPairs.get().getUntilted())
         imgSetT.setCoordinates(self.inputCoordinatesTiltedPairs.get().getTilted())
@@ -288,9 +311,14 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
       
     #TODO: Refactor method below    
     def _summary(self):
-
+        downsampleTypeText = {
+                              SAME_AS_PICKING:'Same as picking',
+                              OTHER: 'Other downsampling factor'}
         summary = []
-
+        summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
+        if self.downsampleType == OTHER:
+            summary.append("Downsampling factor: %d" % self.downFactor.get())
+            
         summary.append("Particle box size: %d" % self.boxSize.get())
         
         if not hasattr(self, 'outputParticlesTiltPair'):
