@@ -65,12 +65,6 @@ env = Environment(ENV=os.environ,
                   tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
 
-# Use both md5 and timestamp to decide if a target must be rebuilt.
-env.Decider('MD5-timestamp')
-
-# Stop Make from trying to do a cross-building.
-env['CROSS_BUILD'] = False
-
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "

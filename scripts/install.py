@@ -52,7 +52,7 @@ SOFTWARE = join(SCIPION_HOME, 'software')
 INSTALL = join(SOFTWARE, 'install')
 LOGFILE = join(SOFTWARE, 'log', 'scons.log')
 
-SCONS = 'scons-2.3.1'
+SCONS = 'scons-2.3.2'
 
 
 def build(args):
