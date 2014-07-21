@@ -16,8 +16,8 @@ protected:
         double sampling_rate = 3.0;
         double angular_distance = 5.0;
         int  symmetry, sym_order;
-        double max_tilt_angle = 91;
-        double min_tilt_angle = -91;
+        double max_tilt_angle = 180;
+        double min_tilt_angle = 0;
         FileName fn_sym("i3h");
         FileName fnExperimentalImages(fn_root + "experimental_images.xmd");
 

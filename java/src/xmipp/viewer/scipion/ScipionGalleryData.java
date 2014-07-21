@@ -361,7 +361,8 @@ public class ScipionGalleryData extends GalleryData {
             shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
             shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
             psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
-            return new Geometry(shiftx, shifty, psiangle);
+            boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
+            return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
     

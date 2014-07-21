@@ -261,7 +261,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
         //first set sampling rate
         chunk_mysampling.setSampling(chunk_angular_distance);
         //create sampling points in the whole sphere
-        chunk_mysampling.computeSamplingPoints(false, 91., -91.);
+        chunk_mysampling.computeSamplingPoints(false, 0, 180);
         //precompute product between symmetry matrices
         //and experimental data
         chunk_mysampling.fillExpDataProjectionDirectionByLR(fn_exp);

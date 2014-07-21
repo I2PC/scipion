@@ -12,14 +12,20 @@
 # {section} Input
 #-----------------------------------------------------------------------------
 
-# {file}(classes*.xmd){validate}(PathExists) Set of classes:
+# {file}(classes*.xmd){validate}(PathExists) Set of remaining classes:
 """ 
-Provide a metadata or stack with classes
+Provide a metadata or stack with classes to construct the model
+"""
+RemainingClasses = ""
+
+# {file}(classes*.xmd) Set of complementary classes:
+""" 
+Images from this set will be used to complement the model
 """
 Classes = ""
 
 # Symmetry group
-""" See [http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry]
+""" See [http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry]
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
@@ -33,7 +39,12 @@ AngularSampling = 5
 #{expert} Number of RANSAC iterations
 """ Number of initial volumes to test by RANSAC
 """
-NRansac = 100
+NRansacInitial = 2000
+
+#{expert} Number of RANSAC iterations for core
+""" Number of initial volumes to determine core
+"""
+NRansacCore = 400
 
 #{expert} Number of random samples
 NumSamples = 8
@@ -42,12 +53,15 @@ NumSamples = 8
 """ correlation value threshold to determine if an experimental projection is an
 inlier or outlier
 """
-CorrThresh = 0.77
+CorrThresh = 0.8
+
+#{expert} Number of volumes to determine core
+NumVolumesInitial=50
 
 #{expert} Number of best volumes to refine
 """ Number of best volumes to refine 
 """
-NumVolumes =10
+NumVolumesFinal=10
 
 #{expert} Number of iterations to perform to refine the volumes
 """ Number of iterations to perform to refine the volumes 
@@ -61,35 +75,9 @@ NumIter = 10
 """
 InitialVolume = ''
 
-#{expert} Max frequency of the initial volume
-""" Max frequency of the initial volume in Angstroms
-"""
-MaxFreq = 5
-
-# Sampling Rate
-""" Sampling rate (A/px)
-"""
-Ts = '1'
-
-# Combine simulated annealing and RANSAC
-"""This option produces better results at a higher computational cost"""
-UseSA=False
-
-#{expert}{condition}(UseSA) Number of simulated annealing iterations
-""" During the simulated annealing iterations, all those particles positively contributing to the improvement of the volume are considered.
-In this way, the same image may participate several times from different projection directions (but different weights) depending
-on whether it improves the correlation with the volume or not"""
-NIterRandom = 10
-
-#{expert}{condition}(UseSA) Percentage of rejected particles
-"""At each iteration, the lowest correlated particles are removed from the 3D reconstruction, although they may participate in the
-next iteration""" 
-Rejection = 50
-
-#{expert} Use all images to refine
-""" When refining a RANSAC volume, use all images to refine it instead of only inliers
-"""
-UseAll=False
+#{expert}CorePercentile:
+""" Percentile of coocurrence to be in the core """
+CorePercentile=99
 
 # {eval} expandParallel(threads=0,hours=12)
 

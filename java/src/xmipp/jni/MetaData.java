@@ -26,7 +26,13 @@
 package xmipp.jni;
 
 import ij.IJ;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -613,6 +619,35 @@ public class MetaData {
             }
      }
      
+	
+	
+    public static boolean isPlainPos(String file)
+    {
+        try
+        {
+            InputStream in = new FileInputStream(file);
+            Reader reader = new InputStreamReader(in);
+         // buffer for efficiency
+            BufferedReader buffer = new BufferedReader(reader);
+            String line = buffer.readLine();//dismiss first line
+            if(line == null)
+                return true;//Empty file
+            int count = 0;//small statistics to detect if pos file
+            while ((line = buffer.readLine()) != null) {
+                for(char c: line.toCharArray())
+                    if(!(Character.isDigit(c) || Character.isSpaceChar(c)))
+                        return false;
+
+
+                if(count == 100)
+                        break;
+                count ++;
+            }
+        } catch (IOException ex) {
+            return false;
+        }
+        return true;
+    }
 
        
        

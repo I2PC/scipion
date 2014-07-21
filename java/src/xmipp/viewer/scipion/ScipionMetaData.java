@@ -255,6 +255,14 @@ public class ScipionMetaData extends MetaData {
             values.put(ci, value);
 
         }
+        
+        public Boolean getValueBoolean(String column) {
+            ColumnInfo ci = getColumnInfo(column);
+            Object value = getValue(ci);
+            if(value == null)
+                return null;
+            return (Integer)value == 1;
+        }
 
         public boolean isEnabled() {
             Integer value = (Integer) getValue(enabledci);

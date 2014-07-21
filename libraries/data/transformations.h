@@ -329,8 +329,12 @@ void applyGeometry(int SplineDegree,
         double cen_xp = (int)(XSIZE(V1) / 2);
         double minxp  = -cen_xp;
         double minyp  = -cen_yp;
+        double minxpp = minxp-XMIPP_EQUAL_ACCURACY;
+        double minypp = minyp-XMIPP_EQUAL_ACCURACY;
         double maxxp  = XSIZE(V1) - cen_xp - 1;
         double maxyp  = YSIZE(V1) - cen_yp - 1;
+        double maxxpp = maxxp+XMIPP_EQUAL_ACCURACY;
+        double maxypp = maxyp+XMIPP_EQUAL_ACCURACY;
         size_t Xdim   = XSIZE(V1);
         size_t Ydim   = YSIZE(V1);
 
@@ -380,8 +384,8 @@ void applyGeometry(int SplineDegree,
                 // If the point is outside the image, apply a periodic extension
                 // of the image, what exits by one side enters by the other
                 bool interp = true;
-                bool x_isOut = XMIPP_RANGE_OUTSIDE(xp, minxp, maxxp);
-                bool y_isOut = XMIPP_RANGE_OUTSIDE(yp, minyp, maxyp);
+                bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
+                bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
 
                 if (wrap)
                 {

@@ -68,6 +68,8 @@ public:
     int smin;
     /** Maximum scale. Coarsest level */
     int smax;
+    /** Check Mirrors */
+    int checkMirrors;
     /** Way to pick views.
         0 maximum correlation of the first group.
         1 average of the most populated group.

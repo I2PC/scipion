@@ -176,9 +176,9 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
      j0=XMIPP_MAX(j-N,STARTINGX(V)); \
          jF=XMIPP_MIN(j+N,FINISHINGX(V)); \
          double sum=0, sum2=0; \
-         for (int kk=k0; kk<=kF; kk++) \
-    for (int ii=i0; ii<=iF; ii++) \
-     for (int jj=j0; jj<=jF; jj++) \
+         for (int kk=k0; kk<=kF; ++kk) \
+    for (int ii=i0; ii<=iF; ++ii) \
+     for (int jj=j0; jj<=jF; ++jj) \
      { \
       double v=A3D_ELEM(V,kk,ii,jj); \
       sum+=v; \

@@ -8,6 +8,7 @@ import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +54,6 @@ public abstract class ParticlePicker {
 
     public static final int sizemax = 2000;
     protected String block;
-    Format[] formats = new Format[]{Format.Xmipp24, Format.Xmipp24a, Format.Xmipp24b, Format.Xmipp24c, Format.Xmipp30, Format.Xmipp301, Format.Eman};
 
     private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
@@ -206,36 +206,34 @@ public abstract class ParticlePicker {
         md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
         md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
     }
-
-    public Format detectFormat(String path) {
-
-        String particlesfile;
-
-        for (Format f : formats) {
-
-            for (Micrograph m : getMicrographs()) {
-                particlesfile = getImportMicrographName(path, m.getFile(), f);
-                if (particlesfile != null && Filename.exists(particlesfile)) {
-                    if (f != Format.Xmipp30 && f != Format.Xmipp301) {
-                        return f;
-                    }
-                    if (f == Format.Xmipp30 && Filename.exists(Filename.join(path, "families.xmd"))) {
-                        return f;
-                    }
-                    return Format.Xmipp301;
-                }
-            }
-        }
-        particlesfile = getExportFile(path);
-        if (particlesfile != null) {
-            if (Filename.exists(Filename.join(path, "families.xmd"))) {
+    
+    public Format detectFileFormat(String path) {
+        if(!new File(path).exists())
+            return Format.Unknown;
+        
+        if (path.endsWith(".pos"))
+        {
+            if(MetaData.isPlainPos(path) ) 
+                return Format.Xmipp24;
+            if (MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30))) {
                 return Format.Xmipp30;
             }
             return Format.Xmipp301;
-
         }
-
+        if (path.endsWith(".box")) {
+            return Format.Eman;
+        }
+         
         return Format.Unknown;
+    }
+
+    public Format detectFormat(String path) {
+        
+            File[] files = getCoordsFiles(path);
+            if(files.length == 0)
+                return Format.Unknown;
+            return detectFileFormat(files[0].getAbsolutePath());
+            
     }
 
     public String getExportFile(String path) {
@@ -255,7 +253,6 @@ public abstract class ParticlePicker {
         return null;
     }
 
-    public abstract String getImportMicrographName(String path, String filename, Format f);
 
     public String getPosFileFromXmipp24Project(String projectdir, String mname) {
         String suffix = ".raw.Common.pos";
@@ -449,23 +446,7 @@ public abstract class ParticlePicker {
         return false;
     }// function isFilterSelected
 
-    public Format detectFileFormat(String path) {
-        
-        System.out.println("detect file format");
-        if (path.endsWith(".raw.Common.pos")) {
-            return Format.Xmipp24;
-        }
-        if (path.endsWith(".pos")) {
-            if (MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30))) {
-                return Format.Xmipp30;
-            }
-            return Format.Xmipp301;
-        }
-        if (path.endsWith(".box")) {
-            return Format.Eman;
-        }
-        return Format.Unknown;
-    }
+    
 
     /**
      * Return the number of particles imported from a file
@@ -478,10 +459,6 @@ public abstract class ParticlePicker {
         String blockname;
         switch (f) {
             case Xmipp24:
-            case Xmipp24a:
-            case Xmipp24b:
-            case Xmipp24c:
-                
                 md.readPlain(path, "xcoor ycoor");
                 break;
             case Xmipp30:
@@ -616,6 +593,15 @@ public abstract class ParticlePicker {
                 }
     }
 
+    public static File[] getCoordsFiles(String folder)
+        {
+            return new File(folder).listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String lowercasename = name.toLowerCase();
+                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
+                    }
+                });
+        }
 
      public void setPython(String python)
      {

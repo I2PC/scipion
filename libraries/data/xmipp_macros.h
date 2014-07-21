@@ -125,6 +125,7 @@
 										  (x) < (max) + XMIPP_EQUAL_ACCURACY)
 #define XMIPP_RANGE_OUTSIDE(x,min,max)   ((x) < (min) - XMIPP_EQUAL_ACCURACY || \
 										  (x) >= (max) + XMIPP_EQUAL_ACCURACY)
+#define XMIPP_RANGE_OUTSIDE_FAST(x,min,max)   ((x) < (min) || (x) >= (max))
 //@}
 
 /// @name Numerical functions
