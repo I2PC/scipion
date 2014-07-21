@@ -205,36 +205,25 @@ public abstract class ParticlePicker {
         md.setValueInt(MDLabel.MDL_COLOR, getColor().getRGB(), id);
         md.setValueInt(MDLabel.MDL_PICKING_PARTICLE_SIZE, getSize(), id);
     }
-
-    public Format detectFormat(String path) {
-        try
+    
+    public Format detectFileFormat(String path) {
+        if(!new File(path).exists())
+            return Format.Unknown;
+        
+        if (path.endsWith(".pos"))
         {
-            String particlesfile;
-
-            
-            for(File file: getCoordsFiles(path))
-            {
-                if(file.getName().endsWith(".box"))
-                    return Format.Eman;
-                if(file.getName().endsWith(".pos"))
-                {
-                   if(MetaData.isPlainPos(file.getAbsolutePath()))
-                   {
-                       return Format.Xmipp24;
-                   }
-                   if (Filename.exists(Filename.join(path, "families.xmd"))) {
-                       return Format.Xmipp30;
-                   }
-
-                   else
-                       return Format.Xmipp301;
-                }
-                return Format.Unknown;
+            if(MetaData.isPlainPos(path) ) 
+                return Format.Xmipp24;
+            if (MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30))) {
+                return Format.Xmipp30;
             }
-                
-            
-            //weird case, import all particles
-            particlesfile = getExportFile(path);
+            return Format.Xmipp301;
+        }
+        if (path.endsWith(".box")) {
+            return Format.Eman;
+        }
+         //weird case, import all particles
+            String particlesfile = getExportFile(path);
             if (particlesfile != null) {
                 if (Filename.exists(Filename.join(path, "families.xmd"))) {
                     return Format.Xmipp30;
@@ -242,13 +231,16 @@ public abstract class ParticlePicker {
                 return Format.Xmipp301;
 
             }
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-
         return Format.Unknown;
+    }
+
+    public Format detectFormat(String path) {
+        
+            File[] files = getCoordsFiles(path);
+            if(files.length == 0)
+                return Format.Unknown;
+            return detectFileFormat(files[0].getAbsolutePath());
+            
     }
 
     public String getExportFile(String path) {
@@ -461,24 +453,7 @@ public abstract class ParticlePicker {
         return false;
     }// function isFilterSelected
 
-    public Format detectFileFormat(String path) {
-        if(!new File(path).exists())
-            return Format.Unknown;
-        
-        if (path.endsWith(".pos"))
-        {
-            if(MetaData.isPlainPos(path) ) 
-                return Format.Xmipp24;
-            if (MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30))) {
-                return Format.Xmipp30;
-            }
-            return Format.Xmipp301;
-        }
-        if (path.endsWith(".box")) {
-            return Format.Eman;
-        }
-        return Format.Unknown;
-    }
+    
 
     /**
      * Return the number of particles imported from a file
