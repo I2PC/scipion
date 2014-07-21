@@ -416,7 +416,9 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void selectRange(int first_index, int last_index, boolean value) {
 		for (int i = first_index; i <= last_index; ++i)
 			data.selection[i] = value;
-		fireTableDataChanged();
+                int from = getCoords(first_index)[0];
+                int to = getCoords(last_index)[0];
+		fireTableRowsUpdated(from, to);
 	}
 
 	/** Select a range of elements given the coordinates */

@@ -4,25 +4,21 @@ import ij.gui.ImageCanvas;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Label;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
-import xmipp.viewer.particlepicker.tiltpair.gui.UntiltedMicrographCanvas;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
 import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
-import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
 public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, MouseListener
 {
@@ -58,6 +54,16 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		super.paint(g);
 		g.setColor(Color.white);
 		g.drawRect(0, 0, side - 1, side - 1);
+                if(particle instanceof UntiltedParticle)
+                {
+                    String type = "U";
+                    g.drawString(type, 5, side - 2);
+                }
+                else if(particle instanceof TiltedParticle)
+                {
+                    String type = "T";
+                    g.drawString(type, 5, side - 2);
+                }
 	}
 
 	@Override

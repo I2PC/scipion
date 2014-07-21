@@ -1285,6 +1285,9 @@ public class GalleryData {
         return selection[index];
     }
 
+    public void setSelected(int index, boolean value) {
+        selection[index] = value;
+    }
     public int size() {
         return ids.length;
     }

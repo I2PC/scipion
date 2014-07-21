@@ -1898,6 +1898,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
+                        addItem(INVERT_SELECT, "Invert selection");
 			initItems();
 		}// function createItems
 
@@ -1949,6 +1950,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(SELECT_FROMHERE))
 			{
 				selectRange(gallery.getIndex(row, col), gallery.getSize() - 1);
+			}
+                        else if (cmd.equals(INVERT_SELECT))
+			{
+				for (int i = 0; i < data.size(); ++i)
+                                    data.setSelected(i, !data.isSelected(i));
+                                gallery.fireTableDataChanged();
 			}
 			else if (cmd.equals(ENABLED))
 			{
