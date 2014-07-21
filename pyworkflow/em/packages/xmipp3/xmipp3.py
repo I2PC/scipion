@@ -143,7 +143,7 @@ class XmippMdRow():
                 md.setValue(label, value, objId)
             except Exception, ex:
                 print >> sys.stderr, "XmippMdRow.writeToMd: Error writting value to metadata."
-                print >> sys.stderr, "                      label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
+                print >> sys.stderr, "                     label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
                 raise ex
             
     def readFromFile(self, fn):
