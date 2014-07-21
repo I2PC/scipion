@@ -8,6 +8,7 @@ import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,7 +54,6 @@ public abstract class ParticlePicker {
 
     public static final int sizemax = 2000;
     protected String block;
-    Format[] formats = new Format[]{Format.Xmipp24, Format.Xmipp24a, Format.Xmipp24b, Format.Xmipp24c, Format.Xmipp30, Format.Xmipp301, Format.Eman};
 
     private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
@@ -208,31 +208,45 @@ public abstract class ParticlePicker {
     }
 
     public Format detectFormat(String path) {
+        try
+        {
+            String particlesfile;
 
-        String particlesfile;
+            
+            for(File file: getCoordsFiles(path))
+            {
+                if(file.getName().endsWith(".box"))
+                    return Format.Eman;
+                if(file.getName().endsWith(".pos"))
+                {
+                   if(MetaData.isPlainPos(file.getAbsolutePath()))
+                   {
+                       return Format.Xmipp24;
+                   }
+                   if (Filename.exists(Filename.join(path, "families.xmd"))) {
+                       return Format.Xmipp30;
+                   }
 
-        for (Format f : formats) {
-
-            for (Micrograph m : getMicrographs()) {
-                particlesfile = getImportMicrographName(path, m.getFile(), f);
-                if (particlesfile != null && Filename.exists(particlesfile)) {
-                    if (f != Format.Xmipp30 && f != Format.Xmipp301) {
-                        return f;
-                    }
-                    if (f == Format.Xmipp30 && Filename.exists(Filename.join(path, "families.xmd"))) {
-                        return f;
-                    }
-                    return Format.Xmipp301;
+                   else
+                       return Format.Xmipp301;
                 }
+                return Format.Unknown;
+            }
+                
+            
+            //weird case, import all particles
+            particlesfile = getExportFile(path);
+            if (particlesfile != null) {
+                if (Filename.exists(Filename.join(path, "families.xmd"))) {
+                    return Format.Xmipp30;
+                }
+                return Format.Xmipp301;
+
             }
         }
-        particlesfile = getExportFile(path);
-        if (particlesfile != null) {
-            if (Filename.exists(Filename.join(path, "families.xmd"))) {
-                return Format.Xmipp30;
-            }
-            return Format.Xmipp301;
-
+        catch(Exception e)
+        {
+            e.printStackTrace();
         }
 
         return Format.Unknown;
@@ -255,7 +269,6 @@ public abstract class ParticlePicker {
         return null;
     }
 
-    public abstract String getImportMicrographName(String path, String filename, Format f);
 
     public String getPosFileFromXmipp24Project(String projectdir, String mname) {
         String suffix = ".raw.Common.pos";
@@ -450,12 +463,13 @@ public abstract class ParticlePicker {
     }// function isFilterSelected
 
     public Format detectFileFormat(String path) {
+        if(!new File(path).exists())
+            return Format.Unknown;
         
-        System.out.println("detect file format");
-        if (path.endsWith(".raw.Common.pos")) {
-            return Format.Xmipp24;
-        }
-        if (path.endsWith(".pos")) {
+        if (path.endsWith(".pos"))
+        {
+            if(MetaData.isPlainPos(path) ) 
+                return Format.Xmipp24;
             if (MetaData.containsBlock(path, getParticlesBlockName(Format.Xmipp30))) {
                 return Format.Xmipp30;
             }
@@ -478,10 +492,6 @@ public abstract class ParticlePicker {
         String blockname;
         switch (f) {
             case Xmipp24:
-            case Xmipp24a:
-            case Xmipp24b:
-            case Xmipp24c:
-                
                 md.readPlain(path, "xcoor ycoor");
                 break;
             case Xmipp30:
@@ -616,6 +626,15 @@ public abstract class ParticlePicker {
                 }
     }
 
+    public static File[] getCoordsFiles(String folder)
+        {
+            return new File(folder).listFiles(new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String lowercasename = name.toLowerCase();
+                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
+                    }
+                });
+        }
 
      public void setPython(String python)
      {

@@ -240,11 +240,7 @@ public class ExtractParticlePicker extends ParticlePicker
 		return true;
 	}
 
-	@Override
-	public String getImportMicrographName(String path, String filename, Format f)
-	{
-		return null;
-	}
+	
 
   
 
