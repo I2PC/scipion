@@ -312,20 +312,36 @@ def coordinateToRow(coord, coordRow):
 
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a row of a metadata. """
+    # Check that all required labels are present in the row
+    row = rowFromMd(md, objId)
+    
+    for label in COOR_DICT.values():
+        if not row.hasLabel(label):
+            return None
     coord = Coordinate()
-    rowToObject(md, objId, coord, COOR_DICT)
+    _rowToObject(row, coord, COOR_DICT)
+    # Setup the micId if is integer value
+    try:
+        coord.setMicId(int(row.getValue(xmipp.MDL_MICROGRAPH)))
+    except Exception:
+        pass
         
     return coord
 
 
 def rowToParticle(md, objId, hasCtf, hasAlignment=False):
     """ Create a Particle from a row of a metadata. """
-    return rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf, hasAlignment)
+    img = rowToImage(md, objId, xmipp.MDL_IMAGE, Particle, hasCtf, hasAlignment)
+    img.setCoordinate(rowToCoordinate(md, objId))
     
+    return img
     
 def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
     imageToRow(part, partRow, xmipp.MDL_IMAGE, **kwargs)
+    coord = part.getCoordinate()
+    if coord is not None:
+        coordinateToRow(coord, partRow)
 
 
 def rowToClass(md, objId, classItem):
