@@ -780,27 +780,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
-	// returns micrograph particles filepath, according to format
-	public String getImportMicrographName(String path, String filename, Format f)
-	{
-
-		String base = Filename.removeExtension(Filename.getBaseName(filename));
-		switch (f)
-		{
-		case Xmipp24:
-			return Filename.join(path, base, base + ".raw.Common.pos");
-		case Xmipp30:
-			return Filename.join(path, base + ".pos");
-		case Xmipp301:
-			return Filename.join(path, base + ".pos");
-		case Eman:
-			return Filename.join(path, base + ".box");
-
-		default:
-			return null;
-		}
-
-	}
+	
+        
+        
 
 	/** Return the number of particles imported */
 	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
@@ -809,7 +791,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
-			throw new IllegalArgumentException("Unable to detect format");
+			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
 		String result = "";
 
@@ -820,18 +802,12 @@ public class SupervisedParticlePicker extends ParticlePicker
 			return "";
 		}
 		importSize(path, f, scale);
-               
-
-                File[] files = new File(path).listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercasename = name.toLowerCase();
-                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
-                    }
-                });
+                File[] files = getCoordsFiles(path);
         
                 boolean imported;
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
+                    resetMicrograph(m);
                     imported = false;
                     for(File fit: files)
                         if(!imported && fit.getName().contains(m.getName()))
@@ -869,7 +845,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	public String importParticlesFromMd(SupervisedParticlePickerMicrograph m, MetaData md)
 	{
 
-		resetMicrograph(m);
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
