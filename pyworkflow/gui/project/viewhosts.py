@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.hosts import HostConfig
 """
 Main project window application
 """
@@ -39,6 +38,7 @@ from pyworkflow.gui.tree import TreeProvider, BoundTree
 from pyworkflow.protocol.protocol import *
 
 import pyworkflow as pw
+from pyworkflow.hosts import HostConfig
 from pyworkflow.object import *
 from pyworkflow.em import *
 from pyworkflow.protocol import *
@@ -57,7 +57,8 @@ from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
 
 from config import *
-from pw_browser import BrowserWindow
+#TODO: MOVE BROWSER TO A LIBRARY
+from pyworkflow.apps.pw_browser import BrowserWindow
 
 ACTION_NEW = Message.LABEL_NEW
 ACTION_EDIT = Message.LABEL_EDIT

@@ -54,9 +54,11 @@ from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.widgets import ComboBox
+#TODO: MOVE BROWSER TO A LIBRARY
+from pyworkflow.apps.pw_browser import BrowserWindow
 
 from config import *
-from pw_browser import BrowserWindow
+from constants import STATUS_COLORS
 
 ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
@@ -88,16 +90,7 @@ ActionIcons = {
     ACTION_RESULTS: Icon.ACTION_RESULTS,
                }
 
-STATUS_COLORS = {
-               STATUS_SAVED: '#D9F1FA', 
-               STATUS_LAUNCHED: '#D9F1FA', 
-               STATUS_RUNNING: '#FCCE62', 
-               STATUS_FINISHED: '#D2F5CB', 
-               STATUS_FAILED: '#F5CCCB', 
-               STATUS_INTERACTIVE: '#F3F5CB',
-               STATUS_ABORTED: '#F5CCCB',
-               #STATUS_SAVED: '#124EB0',
-               }
+
 
 def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
     text = obj.text.get()

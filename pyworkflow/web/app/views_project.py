@@ -76,7 +76,7 @@ def delete_project(request):
 
 
 def getNodeStateColor(node):
-    from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
+    from pyworkflow.gui.project.viewprotocols import STATUS_COLORS
     from pyworkflow.protocol.constants import STATUS_FAILED
     
     color = '#ADD8E6'  # Lightblue
