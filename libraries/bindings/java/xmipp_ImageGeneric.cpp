@@ -1034,7 +1034,14 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
 	       rotation2DMatrix(anglepsi, transformM, true);
            dMij(transformM, 0, 2) = shiftx;
 	       dMij(transformM, 1, 2) = shifty;
-	       // Ver geo2TransformationMatrix en transformations.cpp
+	       // See geo2TransformationMatrix in transformations.cpp
+
+	       if (flip)
+		   {
+			   dMij(transformM, 0, 0) *= -1.;
+			   dMij(transformM, 0, 1) *= -1.;
+
+		   }
 
 		   applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
            *I=Iaux;
