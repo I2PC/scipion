@@ -257,7 +257,7 @@ class ProjectDataView(tk.Frame):
     def _selectObject(self, obj):
         self._selected = obj
         self._infoText.setText('*Info:* ' + str(obj))
-        self._infoText.addText('*Created:* ' + '2014-11-22')
+        self._infoText.addText('*Created:* ' + obj.getObjCreation())
         self._infoText.addText('\n*Label:* ' + obj.getNameId())
         if obj.getObjComment():
             self._infoText.addText('*Comments:* ' + obj.getObjComment())

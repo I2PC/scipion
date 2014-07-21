@@ -54,7 +54,7 @@ def data_content(request):
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
-#               'sections': root.childs,
+               'sections': root.childs,
                'view':'data'
                }
     
@@ -63,11 +63,7 @@ def data_content(request):
     return render_to_response('data_content/data_content.html', context)
 
 
-
 def object_info(request):
-    from pyworkflow.web.app.views_util import parseText
-    from pyworkflow.em.data import EMObject
-
     if request.is_ajax():
         projectName = request.session['projectName']
         objId = request.GET.get('objectId', None)
@@ -75,7 +71,7 @@ def object_info(request):
         obj = project.mapper.selectById(objId)
         
         ioDict = {'info': str(obj),
-                  'created': '2014-11-22',
+                  'created': obj.getObjCreation(),
                   'label': obj.getName(),
                   'comment': obj.getObjComment()
                   }

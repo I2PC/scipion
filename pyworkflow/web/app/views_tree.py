@@ -78,9 +78,29 @@ def populateProtTree(tree, obj):
 #===============================================================================
 
 def loadObjTree(project):
-    
     root = TreeItem('root', 'root', '', '')
+    g = project.getSourceGraph()
     
-    return root                
+    listObjs = []
+    for node in g.getNodes():
+        id = node.getName()
+        if id != 'PROJECT':
+            obj = project.mapper.selectById(id)
+            listObjs.append(obj)
+#            className = obj.__class__.__name__
+            
+    populateObjTree(root, listObjs)
+    
+    return root
+
+def populateObjTree(tree, listObjs):
+    
+    for obj in listObjs:
+        item = TreeItem(text, tag, icon, openItem)
+
+        tree.childs.append(item)
+    
+    pass
+
 
     
