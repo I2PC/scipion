@@ -665,8 +665,8 @@ _rlnDefocusU #2
         md2.setValue(MDL_ANGLE_TILT, 12., id)
         self.assertEqual(mdAux, md2)
 
-
-    def test_Metadata_join(self):
+    #tests for join1 and join2 pending
+    def test_Metadata_joinNatural(self):
          #create metadta
         md = MetaData() 
         md2 = MetaData()
