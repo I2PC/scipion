@@ -149,52 +149,43 @@ public class ScipionMetaData extends MetaData {
             Object value = null;
 
             EMObject emo;
-            int id, index;
-            String label, comment;
-            boolean enabled;
+            int index;
             ColumnInfo indexci;
             query = String.format("SELECT * FROM %sObjects;", prefix);
             rs = stmt.executeQuery(query);
             while (rs.next()) {
-                id = rs.getInt("id");
-                label = rs.getString("label");
-                comment = rs.getString("comment");
-                enabled = rs.getInt("enabled") == 1;
-                emo = new EMObject(id, label, comment, enabled, this);
+                emo = new EMObject(this);
                 for (ColumnInfo column : columns) {
-                    if (!column.isEnable()) {
-                        name = column.labelName;
-                        alias = column.comment;
-                        switch (column.type) {
+                    name = column.labelName;
+                    alias = column.comment;
+                    switch (column.type) {
 
-                            case MetaData.LABEL_INT:
-                                value = rs.getInt(alias);
-                                break;
-                            case MetaData.LABEL_DOUBLE:
-                                value = rs.getFloat(alias);
-                                break;
-                            case MetaData.LABEL_STRING:
-                                value = rs.getString(alias);
-                                if (name.endsWith("_filename")) {
-                                    indexci = getColumnInfo(name.replace("_filename", "_index"));
-                                    if (column.render && indexci != null) {
-                                        index = rs.getInt(indexci.comment);
-                                        if (index > 0) {
-                                            value = index + "@" + value;
-                                        }
+                        case MetaData.LABEL_INT:
+                            value = rs.getInt(alias);
+                            break;
+                        case MetaData.LABEL_DOUBLE:
+                            value = rs.getFloat(alias);
+                            break;
+                        case MetaData.LABEL_STRING:
+                            value = rs.getString(alias);
+                            if (name.endsWith("_filename")) {
+                                indexci = getColumnInfo(name.replace("_filename", "_index"));
+                                if (column.render && indexci != null) {
+                                    index = rs.getInt(indexci.comment);
+                                    if (index > 0) {
+                                        value = index + "@" + value;
                                     }
                                 }
-                                break;
-                            default:
+                            }
+                            break;
+                        default:
 
-                                value = rs.getString(alias);
+                            value = rs.getString(alias);
 
-                        }
-                        //System.out.printf("%s: %s render: %s type: %s \n", column.labelName, value, column.render, MetaData.getLabelTypeString(column.type));
-                        emo.setValue(column, value);
                     }
+                    //System.out.printf("%s: %s render: %s type: %s \n", column.labelName, value, column.render, MetaData.getLabelTypeString(column.type));
+                    emo.setValue(column, value);
                 }
-                emo.setValue(enabledci, 1);
                 emobjects.add(emo);
             }
             rs.close();
@@ -214,12 +205,8 @@ public class ScipionMetaData extends MetaData {
         ScipionMetaData childmd;
         ScipionMetaData md;
 
-        public EMObject(long id, String label, String comment, boolean enabled, ScipionMetaData md) {
+        public EMObject(ScipionMetaData md) {
             values = new HashMap<ColumnInfo, Object>();
-            setValue(idci, id);
-            setValue(labelci, label);
-            setValue(commentci, comment);
-            setEnabled(enabled);
             this.md = md;
             changed = false;
         }
@@ -249,11 +236,12 @@ public class ScipionMetaData extends MetaData {
         }
 
         public void setValue(ColumnInfo ci, Object value) {
+            
             if (values.containsKey(ci)) {
                 changed = true;
             }
             values.put(ci, value);
-
+            
         }
         
         public Boolean getValueBoolean(String column) {
