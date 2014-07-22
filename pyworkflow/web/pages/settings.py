@@ -122,7 +122,9 @@ SESSION_ENGINE = (
     'django.contrib.sessions.backends.cache'
 )
    
-ROOT_URLCONF = 'pages.urls'
+#ROOT_URLCONF = 'pages.urls'
+ROOT_URLCONF = os.path.join(pw.HOME, 'web', 'pages', 'urls'),
+
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'pages.wsgi.application'
