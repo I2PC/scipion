@@ -36,7 +36,7 @@ public class ScipionMetaData extends MetaData {
     private boolean haschilds;
     private static int labelscount = 0;
     private ColumnInfo idci, labelci, commentci, enabledci;
-    private String prefix = "";
+    private String preffix = "";
     private String[] blocks;
 
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
@@ -44,7 +44,7 @@ public class ScipionMetaData extends MetaData {
     }
 
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
-        this.prefix = prefix;
+        this.preffix = prefix;
         this.self = self;
         this.selfalias = selfalias;
         this.columns = columns;
@@ -86,7 +86,7 @@ public class ScipionMetaData extends MetaData {
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        this.prefix = prefix;
+        this.preffix = prefix;
         blocks = new String[]{getBlock()};
         loadData();
 
@@ -126,7 +126,7 @@ public class ScipionMetaData extends MetaData {
             stmt = c.createStatement();
             ResultSet rs;
 
-            String query = String.format("SELECT * FROM %sClasses;", prefix);
+            String query = String.format("SELECT * FROM %sClasses;", preffix);
             rs = stmt.executeQuery(query);
 
             while (rs.next()) {
@@ -151,7 +151,7 @@ public class ScipionMetaData extends MetaData {
             EMObject emo;
             int index;
             ColumnInfo indexci;
-            query = String.format("SELECT * FROM %sObjects;", prefix);
+            query = String.format("SELECT * FROM %sObjects;", preffix);
             rs = stmt.executeQuery(query);
             while (rs.next()) {
                 emo = new EMObject(this);
@@ -297,10 +297,10 @@ public class ScipionMetaData extends MetaData {
     }
 
     public String getBlock() {
-        if (prefix == null) {
+        if (preffix == null) {
             return self + "s";
         }
-        return prefix + self + "s";
+        return preffix + self + "s";
     }
 
    
@@ -593,9 +593,9 @@ public class ScipionMetaData extends MetaData {
                 + "                      label_property      TEXT UNIQUE,\n"
                 + "                      column_name TEXT UNIQUE,\n"
                 + "                      class_name TEXT DEFAULT NULL\n"
-                + "                      )", prefix);
+                + "                      )", preffix);
 
-        sql += String.format(";INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
+        sql += String.format(";INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
         String line = ", (%s, \'%s\', \'%s\', \'%s\')";
         ColumnInfo ci;
         String createcols = "", cols = "id, label, comment", type;
@@ -610,11 +610,11 @@ public class ScipionMetaData extends MetaData {
                 + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "                      label      TEXT DEFAULT NULL,\n"
                 + "                      comment TEXT DEFAULT NULL"
-                + "                      %2$s)", prefix, createcols);
+                + "                      %2$s)", preffix, createcols);
         if (size() == 0) {
             return sql;
         }
-        sql += String.format(";INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
+        sql += String.format(";INSERT INTO %sObjects(%s) VALUES ", preffix, cols);
         Object value;
         for (EMObject emo : emobjects) {
             sql += String.format("(%s, '', ''", emo.getId());
@@ -661,10 +661,10 @@ public class ScipionMetaData extends MetaData {
                     + "                      label_property      TEXT UNIQUE,\n"
                     + "                      column_name TEXT UNIQUE,\n"
                     + "                      class_name TEXT DEFAULT NULL\n"
-                    + "                      )", prefix);
+                    + "                      )", preffix);
             stmt.executeUpdate(sql);
 
-            sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", prefix, selfalias, self);
+            sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
             String line = ", (%s, \'%s\', \'%s\', \'%s\')";
             ColumnInfo ci;
             String createcols = "", cols = "", type;
@@ -679,13 +679,13 @@ public class ScipionMetaData extends MetaData {
             createcols = createcols.substring(0, createcols.length() - 1);
             cols = cols.substring(0, cols.length() - 1);
             sql = String.format("DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
-                    + "                      %2$s)", prefix, createcols);
+                    + "                      %2$s)", preffix, createcols);
 
             stmt.executeUpdate(sql);
             if (size() == 0) {
                 return;
             }
-            sql = String.format("INSERT INTO %sObjects(%s) VALUES ", prefix, cols);
+            sql = String.format("INSERT INTO %sObjects(%s) VALUES ", preffix, cols);
             Object value;
             for (EMObject emo : emobjects) {
                 sql += "(";
@@ -743,7 +743,7 @@ public class ScipionMetaData extends MetaData {
     }
 
     public String getPrefix() {
-        return prefix;
+        return preffix;
     }
 
     public void print() {
@@ -775,7 +775,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public void overwrite(String src, String path) {
+    public void overwrite(String src, String path) throws SQLException {
         try {
             XmippUtil.copyFile(src, path);
             if (parent != null) {
@@ -796,32 +796,44 @@ public class ScipionMetaData extends MetaData {
 
     }
 
-    public void overwriteBlock(String path) {//overwrites enabled column in existing sqlite objects table
+    public void overwriteBlock(String path) throws SQLException {//overwrites enabled column in existing sqlite objects table
         Connection c = null;
-        Statement stmt = null;
+        PreparedStatement stmt = null;
         try {
 
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             c.setAutoCommit(false);
-            stmt = c.createStatement();
-            String sql = "";
-            String updatesql = "UPDATE %sObjects SET %s=%s WHERE id=%s;";
-            sql = "";
+            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=? WHERE id=?;", preffix, enabledci.labelName));
 
             for (EMObject emo : emobjects) {
                 if (emo.changed) {
-                    //sql+= String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled())? 1: 0, emo.id);
-                    sql = String.format(updatesql, prefix, enabledci.labelName, (emo.isEnabled()) ? 1 : 0, emo.getId());
-                    stmt.executeUpdate(sql);
+                    stmt.setInt(1, emo.isEnabled() ? 1 : 0);
+                    stmt.setInt(2, emo.getId().intValue());
+                    stmt.executeUpdate();
+                    
                 }
             }
             c.commit();
-            stmt.close();
-            c.close();
-        } catch (Exception e) {
+            
+        } 
+        catch (Exception e) {
             e.printStackTrace();
+            if (c != null) 
+                try {
+                    System.err.print("Transaction is being rolled back");
+                    c.rollback();
+                } 
+                catch(SQLException excep) {
+                    excep.printStackTrace();
+                }
 
+        }
+        finally {
+            if (stmt != null)
+                stmt.close();
+            
+            c.close();
         }
     }
 

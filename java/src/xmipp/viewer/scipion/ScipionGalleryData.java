@@ -7,6 +7,7 @@ package xmipp.viewer.scipion;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -282,7 +283,7 @@ public class ScipionGalleryData extends GalleryData {
 
     
 
-    public void overwrite(String path) {
+    public void overwrite(String path) throws SQLException {
         ((ScipionMetaData) md).overwrite(filename, path);
     }
 
