@@ -16,7 +16,7 @@
 import os
 import subprocess
 
-from SCons.Script import *
+from SCons.Script import Exit, GetOption
 
 
 def parms(target, source, env):

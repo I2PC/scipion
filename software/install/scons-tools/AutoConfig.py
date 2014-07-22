@@ -14,7 +14,7 @@
 from os.path import join, dirname
 import subprocess
 
-from SCons.Script import *
+from SCons.Script import Exit
 
 
 def parms(target, source, env):
