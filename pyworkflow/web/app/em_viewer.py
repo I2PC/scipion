@@ -94,12 +94,10 @@ def viewToUrl(request, view):
     elif isinstance(view, DataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
         showjParams = view.getShowJWebParams()
+        
         if showjParams:
             for key in showjParams:
-                if key in {'order', 'zoom', 'mode'}:
-                    url += '&%s=%s' % (key, showjParams[key])
-                else:
-                    url += '&%s=True' % showjParams[key]
+                url += '&%s=%s' % (key, showjParams[key])
         
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())

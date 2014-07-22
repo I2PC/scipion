@@ -401,21 +401,23 @@ def getExtraParameters(extraParams, table):
         for k in table.iterColumns():
             defaultColumnsLayoutProperties[k.getLabel()] = {}
             _mapCol[k.getLabel()] = k.getName()
-        
+    
+    
         for key, value in extraParams.iteritems():
-            if key == sj.ORDER:
-                pass
-            
-            else:
-                try:
-                    label, attribute = key.rsplit('___')
-                    if attribute == sj.VISIBLE:
-                        enc_visible = True
-                except Exception, ex:
-                    raise Exception('Showj Web visualizer: Incorrect extra parameter')
+            if key in {sj.RENDER, sj.VISIBLE}:
                 
-                if label in _mapCol and table.hasColumn(_mapCol[label]):
-                    defaultColumnsLayoutProperties[label].update({attribute:value})
+                if key == sj.VISIBLE:
+                    val = {key:'True'}
+                    if enc_visible == False:
+                        enc_visible = True
+                        
+                elif key == sj.RENDER:
+                    val = {'renderable':'enable'}
+                    
+                params = value.split()
+                for label in params:
+                    if label in _mapCol and table.hasColumn(_mapCol[label]):
+                        defaultColumnsLayoutProperties[label].update(val)
                     
         if enc_visible:
             for x in defaultColumnsLayoutProperties:

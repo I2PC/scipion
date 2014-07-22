@@ -280,7 +280,7 @@ def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
     
-    print "ENTER IN PROTOCOL INFO METHOD"
+#    print "ENTER IN PROTOCOL INFO METHOD"
 
     if request.is_ajax():
         projectName = request.session['projectName']
@@ -324,7 +324,7 @@ def protocol_info(request):
                   'logs_scipion': parseText(fScpnString)
                   }
         
-        print "ioDict: ", ioDict
+#        print "ioDict: ", ioDict
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
