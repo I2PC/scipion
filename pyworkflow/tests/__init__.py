@@ -101,3 +101,6 @@ DataSet(name='rct',  folder='rct',
                'tilted': 'micrographs/F_rct_t*.tif',
                'classes': 'classes/classes2D_stable_core.sqlite'})
 
+DataSet(name='emx',  folder='emx', 
+        files={'coodinatesTest1': 'coordinates/Test1/coordinates.emx',
+              })
