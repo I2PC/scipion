@@ -51,7 +51,23 @@ tcl = env.AddLibrary(
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
     targets=['lib/libtcl8.6.so'],
-    flags=['--enable-threads'])
+    flags=['--enable-threads'],
+    clean=['software/tmp/tcl8.6.1',
+           'software/bin/tclsh8.6',
+           Glob('software/lib/*tcl*'),
+           Glob('software/lib/tdbc*'),
+           'software/lib/thread2.7.0',
+           'software/lib/pkgconfig/tcl.pc',
+           Glob('software/include/*tcl*'),
+           Glob('software/include/*tdbc*'),
+           'software/man/man1/tclsh.1',
+           Glob('software/man/man3/Tcl*'),
+           'software/man/man3/TCL_MEM_DEBUG.3',
+           'software/man/man3/Tdbc_Init.3',
+           Glob('software/man/mann/*tcl*'),
+           Glob('software/man/mann/Tcl*'),
+           Glob('software/man/mann/*tdbc*'),
+           Glob('software/share/man/mann/tdbc*')])
 
 tk = env.AddLibrary(
     'tk',
@@ -59,21 +75,49 @@ tk = env.AddLibrary(
     buildDir='tk8.6.1/unix',
     targets=['lib/libtk8.6.so'],
     flags=['--enable-threads'],
-    deps=[tcl])
+    deps=[tcl],
+    clean=['software/tmp/tk8.6.1',
+           'software/bin/wish8.6',
+           Glob('software/lib/*tk*'),
+           'software/lib/pkgconfig/tk.pc',
+           Glob('software/include/*tk*'),
+           'software/man/man1/wish.1',
+           Glob('software/man/man3/Tk*'),
+           Glob('software/man/man3/*tk*'),
+           Glob('software/man/mann/*tk*'),
+           ])
 
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
     targets=['lib/libsqlite3.so'],
     flags=['CPPFLAGS=-w',
-           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
+           'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'],
+    clean=['software/bin/sqlite3',
+           Glob('software/lib/*sqlite*'),
+           'software/lib/pkgconfig/sqlite3.pc',
+           Glob('software/include/*sqlite*'),
+           'software/share/man/man1/sqlite3.1',
+           'software/share/man/mann/sqlite3.n'])
 
+print "glob man3 -"
+for glob in Glob('software/man/man3/Tcl*'):
+    print glob
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared'],
-    deps=[sqlite, tk])
+    deps=[sqlite, tk],
+    clean=[Glob('software/bin/*py*'),
+           'software/bin/2to3',
+           Glob('software/bin/easy_install*'),
+           'software/bin/idle',
+           Glob('software/lib/*python*'),
+           Glob('software/lib/pkgconfig/*py*'),
+           'software/include/python2.7',
+           Glob('software/share/man/man1/python*')
+           ])
 
 
 #  ************************************************************************

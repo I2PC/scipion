@@ -66,7 +66,7 @@ def build(args):
     os.chdir(SCIPION_HOME)
 
     # First make sure that we have SCons installed.
-    if not exists(join(INSTALL, SCONS)):
+    if not exists(join(INSTALL, SCONS)) or not exists(join(SOFTWARE, 'bin/scons')):
         # Download and extract SCons.
         url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
         sys.stdout.write(

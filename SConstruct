@@ -76,7 +76,7 @@ AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
 
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
-               deps=[], default=True):
+               deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -120,6 +120,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
                    cdir='software/tmp')
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
     tConfig = env.AutoConfig(
         source=Dir('software/tmp/%s' % buildDir),
         AutoConfigTarget=autoConfigTarget,
@@ -134,6 +135,10 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         MakeTargets='install',
         MakeStdOut='software/log/%s_make.log' % name)
 
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(tMake, cFile)
+
     # Add the dependencies.
     for dep in deps:
         Depends(tConfig, dep)
@@ -142,7 +147,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
 
 
 def addModule(env, name, tar=None, buildDir=None, targets=None,
-              url=None, flags=[], deps=[], default=True):
+              url=None, flags=[], deps=[], clean=[], default=True):
     """Add Python module <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -175,6 +180,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
                    cdir='software/tmp')
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
     tInstall = env.Command(
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
         tUntar,
@@ -186,6 +192,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
                'Compiling & installing %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
 
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+
     # Add the dependencies.
     for dep in deps:
         Depends(tInstall, dep)
@@ -194,7 +204,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
 
 def addPackage(env, name, tar=None, buildDir=None, url=None,
-               extraActions=[], deps=[], default=True):
+               extraActions=[], deps=[], clean=[], default=True):
     """Add external (EM) package <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -256,6 +266,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     tUntar = Untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
                    cdir='software/em')
+    Clean(tUntar, 'software/em/%s' % buildDir)
     if buildDir != name:
         # Yep, some packages untar to the same directory as the package
         # name (hello Xmipp), and that is not so great. No link to it.
@@ -274,6 +285,9 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
                                  lastTarget,
                                  Action(command, chdir='software/em/%s' % name))
 
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(lastTarget, cFile)
     # Add the dependencies. Do it to the "link target" (tLink), so any
     # extra actions (like setup scripts) have everything in place.
     for dep in deps:
