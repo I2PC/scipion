@@ -27,8 +27,9 @@
 This sub-package contains wrapper around EMAN initialmodel program
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
+from pyworkflow.em import *
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils import *
 from pyworkflow.em.packages.eman2.data import *
 import os
 from data import *
@@ -45,7 +46,7 @@ class EmanProtInitModel(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
+                      pointerClass='SetOfClasses2D, SetOfParticles',# pointerCondition='hasRepresentatives',
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')
         form.addParam('numberOfIterations', IntParam, default=8,
@@ -70,11 +71,12 @@ class EmanProtInitModel(ProtInitialVolume):
     def _insertAllSteps(self):        
         eman2.loadEnvironment()
         self._prepareDefinition()
-        self._insertInitialModelStep()      
+        self._insertFunctionStep('createStackImgsStep')
+        self._insertInitialModelStep()
         self._insertFunctionStep('createOutputStep')
 
     def _insertInitialModelStep(self):
-        args = '--input=%(imgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
+        args = '--input=%(relImgsFn)s iter=%(numberOfIterations)d --tries=%(numberOfModels)d --sym=%(symmetry)s'
         if self.shrink > 1:
             args += ' --shrink=%(shrink)d'
         if self.numberOfThreads > 1:
@@ -83,10 +85,24 @@ class EmanProtInitModel(ProtInitialVolume):
 
     #--------------------------- STEPS functions --------------------------------------------
     
+    def createStackImgsStep(self):
+        
+        imgsFn = self._params['imgsFn']
+        if isinstance(self.inputClasses.get(), SetOfClasses):
+            imgSet = self._createSetOfParticles("_averages")
+            for i, cls in enumerate(self.inputClasses.get()):
+                img = cls.getRepresentative()
+                img.setSamplingRate(cls.getSamplingRate())
+                img.setObjId(i+1)
+                imgSet.append(img)
+        else:
+            imgSet = self.inputClasses.get()
+        imgSet.writeStack(imgsFn)
+    
     def createInitialModelStep(self, args):
         """ Run the EMAN program to create the initial model. """
         program = eman2.getEmanProgram('e2initialmodel.py')
-        self.runJob(program, args, cwd=self.getWorkingDir())        
+        self.runJob(program, args, cwd=self._getExtraPath())        
                      
     def createOutputStep(self):
         classes2DSet = self.inputClasses.get()
@@ -117,20 +133,14 @@ class EmanProtInitModel(ProtInitialVolume):
     #--------------------------- UTILS functions --------------------------------------------
        
     def _prepareDefinition(self):
-        # ToDo: create an Eman conversor and change this lines.
-        image = self.getXmippStackFilename()
-        imgsFn = os.path.abspath(image)
+        imgsFn = self._getPath('representatives.stk')
         
-        #self._insertFunctionStep('genxmippstack')
         self._params = {'imgsFn': imgsFn,
+                        'relImgsFn' : os.path.relpath(imgsFn, self._getExtraPath()),
                         'numberOfIterations': self.numberOfIterations.get(),
                         'numberOfModels': self.numberOfModels.get(),
                         'shrink': self.shrink.get(),
                         'symmetry': self.symmetry.get(),
                         'threads':self.numberOfThreads.get()
                        }
-        
-    def getXmippStackFilename(self):
-        for cls in self.inputClasses.get():
-            img = cls.getRepresentative()
-            return img.getFileName()
+    
