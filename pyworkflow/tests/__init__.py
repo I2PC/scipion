@@ -62,6 +62,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_1_iter_002.mrc',
                'aligned_particles': 'gold/aligned_particles.sqlite',
+               'images10': 'gold/images10.xmd',
                })
 
 
@@ -100,3 +101,6 @@ DataSet(name='rct',  folder='rct',
                'tilted': 'micrographs/F_rct_t*.tif',
                'classes': 'classes/classes2D_stable_core.sqlite'})
 
+DataSet(name='emx',  folder='emx', 
+        files={'coodinatesTest1': 'coordinates/Test1/coordinates.emx',
+              })

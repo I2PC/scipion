@@ -99,6 +99,10 @@ def populateObjTree(tree, listObjs):
         baseClass = obj.__class__
         base = baseClass.__bases__[0].__name__
         className = baseClass.__name__
+#        for b in baseClass.__bases__:
+#            if b.__name__== 'EMObject':
+#                base = b.__name__
+#        print "className", className, "bases:", baseClass.__bases__
         
         if base not in list:
             list.update({base:{className : 1}})

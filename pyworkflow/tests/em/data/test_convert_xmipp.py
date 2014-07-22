@@ -1,9 +1,30 @@
-'''
-Created on 5th Feb, 2014
-
-@author: Roberto Marabini
-         J.M. de la Rosa Trevin
-'''
+#!/usr/bin/env python
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Roberto Marabini       (roberto@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
 
 import os
 import unittest
@@ -24,6 +45,32 @@ class TestXmippConversions(BaseTest):
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.particles = cls.dataset.getFile( 'particles1')
 
+        
+    def test_metadataToParticles(self):
+        """ This test will read a set of particles from a given metadata.
+        The resulting set should contains the x and y coordinates from
+        the particle picking. 
+        """
+        fn = self.dataset.getFile('images10')
+        partSet = SetOfParticles(filename=self.getOutputPath('particles_coord.sqlite'))
+        readSetOfParticles(fn, partSet, hasCtf=True)
+        
+        self.assertEquals(partSet.getSize(), 10)
+        self.assertTrue(partSet.hasCTF())
+        
+        for img in partSet:
+            self.assertTrue(img.getCoordinate() is not None)    
+            print img.getCoordinate().getX(), img.getCoordinate().getY()       
+            self.assertTrue(img.hasCTF())
+            
+        mdIn = xmipp.MetaData(fn)
+        print mdIn
+        
+        mdOut = xmipp.MetaData()
+        setOfParticlesToMd(partSet, mdOut)
+        print mdOut
+        
+        
         
     def test_micrographsToMd(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
