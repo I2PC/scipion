@@ -518,6 +518,9 @@ function updateTabs(id) {
 			
 			$("#tab-logs-scipion").empty();
 			$("#tab-logs-scipion").append(json.logs_scipion);
+		}, 
+		error: function(){
+			console.log("ERROR IN PROTOCOL_INFO REQUEST")
 		}
 	});
 }

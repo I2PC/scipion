@@ -291,4 +291,64 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
         md = xmipp.MetaData(self._getFileName('resolutionXmdMax', iter=iterN, ref=refN))
         return md.getValue(xmipp.MDL_RESOLUTION_FREQREAL, md.firstObject())
     
+    def _calculateDeviations(self):
+        """ Calculate both angles and shifts devitations for all iterations
+        """
+    
+        SL = xmipp.SymList()
+        mdIter = xmipp.MetaData()
+        for it in self.allIters():
+            mdIter.clear()
+            SL.readSymmetryFile(self._symmetry[it])
+            md1 = xmipp.MetaData(self.docFileInputAngles[it])
+            md2 = xmipp.MetaData(self.docFileInputAngles[it-1])
+            #ignore disabled,
+            md1.removeDisabled()
+            md2.removeDisabled()
+            
+            #first metadata file may not have shiftx and shifty
+            if not md2.containsLabel(xmipp.MDL_SHIFT_X):
+                md2.addLabel(xmipp.MDL_SHIFT_X)
+                md2.addLabel(xmipp.MDL_SHIFT_Y)
+                md2.fillConstant(xmipp.MDL_SHIFT_X,0.)
+                md2.fillConstant(xmipp.MDL_SHIFT_Y,0.)
+            oldLabels=[xmipp.MDL_ANGLE_ROT,
+                      xmipp.MDL_ANGLE_TILT,
+                      xmipp.MDL_ANGLE_PSI,
+                      xmipp.MDL_SHIFT_X,
+                      xmipp.MDL_SHIFT_Y]
+            newLabels=[xmipp.MDL_ANGLE_ROT2,
+                      xmipp.MDL_ANGLE_TILT2,
+                      xmipp.MDL_ANGLE_PSI2,
+                      xmipp.MDL_SHIFT_X2,
+                      xmipp.MDL_SHIFT_Y2]
+            md2.renameColumn(oldLabels,newLabels)
+            md2.addLabel(xmipp.MDL_SHIFT_X_DIFF)
+            md2.addLabel(xmipp.MDL_SHIFT_Y_DIFF)
+            md2.addLabel(xmipp.MDL_SHIFT_DIFF)
+            mdIter.join1(md1, md2, xmipp.MDL_IMAGE, xmipp.INNER_JOIN)
+            SL.computeDistance(mdIter,False,False,False)
+            xmipp.activateMathExtensions()
+            #operate in sqlite
+            shiftXLabel     = xmipp.label2Str(xmipp.MDL_SHIFT_X)
+            shiftX2Label    = xmipp.label2Str(xmipp.MDL_SHIFT_X2)
+            shiftXDiff      = xmipp.label2Str(xmipp.MDL_SHIFT_X_DIFF)
+            shiftYLabel     = xmipp.label2Str(xmipp.MDL_SHIFT_Y)
+            shiftY2Label    = xmipp.label2Str(xmipp.MDL_SHIFT_Y2)
+            shiftYDiff      = xmipp.label2Str(xmipp.MDL_SHIFT_Y_DIFF)
+            shiftDiff       = xmipp.label2Str(xmipp.MDL_SHIFT_DIFF)
+            #timeStr = str(dtBegin)
+            operateString   =       shiftXDiff+"="+shiftXLabel+"-"+shiftX2Label
+            operateString  += "," + shiftYDiff+"="+shiftYLabel+"-"+shiftY2Label
+            mdIter.operate(operateString)
+            operateString  =  shiftDiff+"=sqrt("\
+                                  +shiftXDiff+"*"+shiftXDiff+"+"\
+                                  +shiftYDiff+"*"+shiftYDiff+");"
+            mdIter.operate(operateString)
+            iterFile = self._mdDevitationsFn(it)
+            mdIter.write(iterFile)
+    
+    def _mdDevitationsFn(self, it):
+        mdFn = self._getPath('deviations.xmd')
+        return "iter_%03d@" % it + mdFn
     
