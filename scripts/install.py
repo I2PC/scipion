@@ -41,8 +41,12 @@ import sys
 import os
 from os.path import join, exists, dirname, abspath
 
-from urllib2 import urlopen
-from StringIO import StringIO
+try:
+    from urllib2 import urlopen
+    from StringIO import StringIO
+except ImportError:
+    from urllib.request import urlopen  # Python 3
+    from io import StringIO
 import subprocess
 import tarfile
 
@@ -65,12 +69,13 @@ def build(args):
     if not exists(join(INSTALL, SCONS)):
         # Download and extract SCons.
         url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/python/%s.tgz' % SCONS
-        print "Downloading, unpacking & installing scons from %s..." % url
+        sys.stdout.write(
+           'Downloading, unpacking & installing scons from %s ...\n' % url)
         tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)
 
         # Install it.
         command = ['python', 'setup.py', 'install', '--prefix=%s' % SOFTWARE]
-        print 'Executing: %s' % ' '.join(command)
+        sys.stdout.write('Executing: %s\n' % ' '.join(command))
         with open(LOGFILE, 'w') as logFile:
             r = subprocess.call(command, cwd=join(INSTALL, SCONS),
                                 stdout=logFile, stderr=logFile)
@@ -85,7 +90,7 @@ def build(args):
             ret = proc.poll()
             if ret is not None:
                 return ret
-            line = proc.stdout.readline()
+            line = proc.stdout.readline().decode('ascii')
             sys.stdout.write(line)
             logFile.write(line)
             logFile.flush()

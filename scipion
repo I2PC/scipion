@@ -125,7 +125,7 @@ def runCmd(cmd):
     os.environ.update(VARS)
     os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], cmd)
-    print ">>>>>", cmd
+    sys.stdout.write(">>>>> %s\n" % cmd)
     result = os.system(cmd)
     if not -256 < result < 256:
         result = 1  # because if not, 256 is confused with 0 !
@@ -161,11 +161,11 @@ def main():
     # Create SCIPION_HOME folder if it does not exist
     if mode != MODE_INSTALL:
         error = ''
-        for d, path in DIRS.iteritems():
+        for d, path in DIRS.items():
             if not exists(path):
                 error += "Missing %s folder: '%s'\n" % (d, path)
         if error:
-            print error + 'RUN:  scipion install'
+            sys.stdout.write('%s RUN:  scipion install\n' % error)
             sys.exit(1)
 
     if mode == MODE_MANAGER:
@@ -189,7 +189,7 @@ def main():
             #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
             #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
             #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-            print VARS["LD_LIBRARY_PATH"]
+            sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
             sys.exit(0)
 
         elif option in ['django', 'collectstatic']:
@@ -200,7 +200,7 @@ def main():
                 args = 'collectstatic'
             runCmd('%s %s' % (manage, args))
         else:
-            print "\nERROR: invalid option '%s' for mode %s." % (option, MODE_WEBSERVER)
+            sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
 
     elif mode == MODE_TESTS:
         if n > 2:
@@ -239,7 +239,7 @@ def main():
         # Create folders if needed.
         for path in DIRS.values():
             if not exists(path):
-                print "  Creating folder %s ..." % path
+                sys.stdout.write("  Creating folder %s ...\n" % path)
                 os.makedirs(path)
 
         args = sys.argv[2:]
@@ -261,7 +261,7 @@ def main():
         runApp('gitstats/gitstats', args='%s %s' % (SCIPION_HOME, statsDir))
 
     elif mode == MODE_VERSION:
-        print __version__
+        sys.stdout.write('%s\n' % __version__)
         sys.exit(0)
 
     elif mode == 'runprotocol':
@@ -279,13 +279,13 @@ def main():
         
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.iteritems():
-            print 'export %s="%s"' % (k, v)
+        for k, v in VARS.items():
+            sys.stdout.write('export %s="%s"\n' % (k, v))
 
         sys.exit(0)
 
     elif mode == MODE_HELP:
-        print """
+        sys.stdout.write("""
 USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
@@ -334,23 +334,20 @@ USAGE:
         printenv               Print the environmental variables used by the application 
 
         download               Download external packages (EMAN, SPIDER, Relion, etc)
-"""
+""")
         sys.exit(0)
 
     # If we reach this point, bad arguments were passed
-    print "Unknown mode: %s" % sys.argv[1]
-    print ("Valid modes are: "
-           "browser help install manager project stats tests testdata viewer webserver printenv download")
-    print 'Run "%s help" for a full description.' % sys.argv[0]
+    sys.stdout.write("""Unknown mode: %s
+Valid modes are:
+  browser help install manager project stats tests testdata viewer webserver printenv download
+Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception, e:
-        sys.exit(str(e))
+    main()
         
 elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
