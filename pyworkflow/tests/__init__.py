@@ -62,6 +62,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_1_iter_002.mrc',
                'aligned_particles': 'gold/aligned_particles.sqlite',
+               'images10': 'gold/images10.xmd',
                })
 
 

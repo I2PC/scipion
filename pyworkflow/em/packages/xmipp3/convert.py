@@ -120,19 +120,29 @@ ANGLES_DICT = OrderedDict([
        ])
 
 
-def objectToRow(obj, row, attrDict):
+def objectToRow(obj, row, attrDict, extraLabels={}):
     """ This function will convert an EMObject into a XmippMdRow.
     Params:
         obj: the EMObject instance (input)
         row: the XmippMdRow instance (output)
         attrDict: dictionary with the map between obj attributes(keys) and 
-            row MDLabels in Xmipp (values).
+            row MDLabels in Xmipp (values).        
+        extraLabels: a list with extra labels that could be included
+            as _xmipp_labelName
     """
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
             row.setValue(label, valueType(getattr(obj, attr).get()))
 
+    attrLabels = attrDict.values()
+    
+    for label in extraLabels:
+        attrName = '_xmipp_%s' % xmipp.label2Str(label)
+        if label not in attrLabels and hasattr(obj, attrName):
+            value = obj.getAttributeValue(attrName) 
+            row.setValue(label, value)
+            
 
 def _rowToObject(row, obj, attrDict, extraLabels={}):
     """ This function will convert from a XmippMdRow to an EMObject.
@@ -170,7 +180,6 @@ def rowToObject(md, objId, obj, attrDict, extraLabels={}):
     """ Same as rowToObject, but creating the row from md and objId. """
     _rowToObject(rowFromMd(md, objId), obj, attrDict, extraLabels)
     
-    
 def _rowToObjectFunc(obj):
     """ From a given object, return the function rowTo{OBJECT_CLASS_NAME}. """
     return globals()['rowTo' + obj.getClassName()]
@@ -185,7 +194,7 @@ def locationToXmipp(index, filename):
     """
     #TODO: Maybe we need to add more logic dependent of the format
     if index != NO_INDEX:
-        return "%d@%s" % (index, filename)
+        return "%06d@%s" % (index, filename)
     
     return filename
 
@@ -262,7 +271,10 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     
     if kwargs.get('writeAlignment', True) and img.hasAlignment():
         alignmentToRow(img.getAlignment(), imgRow)
-        
+    
+    # Write all extra labels to the row    
+    objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
+    
         
 def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
     """ Create a Particle from a row of a metadata. """
@@ -270,6 +282,7 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
     # Decompose Xmipp filename
     index, filename = xmippToLocation(md.getValue(imgLabel, objId))
     img.setLocation(index, filename)
+    
     if hasCtf:
         ctfModel = rowToCtfModel(md, objId)
         img.setCTF(ctfModel)
@@ -279,7 +292,7 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
     
     setObjId(img, rowFromMd(md, objId))
     # Read some extra labels
-    rowToObject(md, objId, img, {}, IMAGE_EXTRA_LABELS)
+    rowToObject(md, objId, img, {}, extraLabels=IMAGE_EXTRA_LABELS)
     
     return img
     
@@ -304,10 +317,13 @@ def rowToVolume(md, objId, hasCtf, hasAlignment=False):
     return rowToImage(md, objId, xmipp.MDL_IMAGE, Volume, False, hasAlignment=False)
 
 
-def coordinateToRow(coord, coordRow):
+def coordinateToRow(coord, coordRow, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
-    setRowId(coordRow, coord)
+    if copyId:
+        setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT)
+    if coord.getMicId():
+        coordRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
 
 
 def rowToCoordinate(md, objId):
@@ -341,7 +357,7 @@ def particleToRow(part, partRow, **kwargs):
     imageToRow(part, partRow, xmipp.MDL_IMAGE, **kwargs)
     coord = part.getCoordinate()
     if coord is not None:
-        coordinateToRow(coord, partRow)
+        coordinateToRow(coord, partRow, copyId=False)
 
 
 def rowToClass(md, objId, classItem):
@@ -398,6 +414,8 @@ def acquisitionToRow(acquisition, ctfRow):
 
 def rowToAcquisition(md, objId):
     """ Create an acquisition from a row of a metadata. """
+    if any(not md.containsLabel(l) for l in ACQUISITION_DICT.values()):
+        return None
     acquisition = Acquisition()
     rowToObject(md, objId, acquisition, ACQUISITION_DICT) 
     return acquisition
@@ -548,6 +566,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, hasCtf, hasAlignment=False):
         hasCtf: is True if the ctf information exists.
         hasAlignment: True if want to read alignment parameters
     """    
+    imgSet.setHasCTF(hasCtf)
     imgMd = xmipp.MetaData(filename)
     imgMd.removeDisabled()
     # Read the sampling rate from the acquisition info file if exists
