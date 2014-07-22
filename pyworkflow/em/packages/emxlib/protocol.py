@@ -30,6 +30,8 @@ import emxlib
 
 from pyworkflow.em.protocol import *
 from pyworkflow.protocol.params import *
+from pyworkflow.em.data import Acquisition
+
 
 
 class ProtEmxImport(ProtImport):
@@ -54,6 +56,13 @@ class ProtEmxImport(ProtImport):
         form.addParam('inputEMX', FileParam, 
                       label="Input EMX file",
                       help='Provide the path to a valid EMX file.')
+        form.addParam('doCopyFiles', BooleanParam, default=False,
+                      label="Copy files?",
+                      help='Copy files into project folder. '
+                           'VERY useful if you plan to move '
+                           'your project to another computer '
+                           'and the data is not inside the working directory')
+        
         
         form.addParam('provideAcquisition', BooleanParam, default=False,
                       label='Provide acquision info?',
@@ -73,7 +82,7 @@ class ProtEmxImport(ProtImport):
                       help=Message.TEXT_AMPLITUDE)
         group.addParam('samplingRate', FloatParam, allowsNull=True,  
                    label=Message.LABEL_SAMP_RATE)
-        group.addParam('magnification', FloatParam, default=60000,  
+        group.addParam('magnification', FloatParam, default=10000,  
                    label=Message.LABEL_MAGNI_RATE)
         
     def _loadEmxInfo(self):
@@ -101,11 +110,11 @@ class ProtEmxImport(ProtImport):
                     self.binaryFile = binaryFile
                     self.classElement = classElement
                     
-                    for k, v in self.PARAM_DICT.iteritems():
-                        # Read from the EMX files the values not set in the Form
-                        if not getattr(self, k).hasValue():
-                            if self.object.get(v) is not None:
-                                self.setAttributeValue(k, self.object.get(v))
+                for k, v in self.PARAM_DICT.iteritems():
+                    # Read from the EMX files the values not set in the Form
+                    if not getattr(self, k).hasValue():
+                        if obj.get(v) is not None:
+                            self.setAttributeValue(k, obj.get(v))
 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -125,7 +134,7 @@ class ProtEmxImport(ProtImport):
         
         from convert import importData
         importData(self, emxFile, self._getPath(), 
-                   acquisition, self.samplingRate.get())
+                   acquisition, self.samplingRate.get(),self.doCopyFiles.get())
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
