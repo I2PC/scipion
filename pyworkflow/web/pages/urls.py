@@ -21,7 +21,7 @@ urlpatterns = patterns('',
     url(r'^$', 'app.views_project.projects'),
     
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
-    url(r'^projects/', 'app.views_project.projects'),
+    url(r'^projectsss/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
