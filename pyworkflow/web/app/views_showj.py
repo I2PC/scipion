@@ -395,13 +395,15 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
 def getExtraParameters(extraParams, table):
     defaultColumnsLayoutProperties = {}
     _mapCol = {}
+    _mapRender = {}
     enc_visible = False
+    enc_render = False
     
     if extraParams != None and extraParams != {}:
         for k in table.iterColumns():
             defaultColumnsLayoutProperties[k.getLabel()] = {}
             _mapCol[k.getLabel()] = k.getName()
-    
+            _mapRender[k.getLabel()] = k.getRenderType()
     
         for key, value in extraParams.iteritems():
             if key in {sj.RENDER, sj.VISIBLE}:
@@ -413,17 +415,24 @@ def getExtraParameters(extraParams, table):
                         
                 elif key == sj.RENDER:
                     val = {'renderable':'enable'}
+                    if enc_render == False:
+                        enc_render = True
                     
                 params = value.split()
                 for label in params:
                     if label in _mapCol and table.hasColumn(_mapCol[label]):
                         defaultColumnsLayoutProperties[label].update(val)
                     
-        if enc_visible:
+        if enc_visible or enc_render:
             for x in defaultColumnsLayoutProperties:
-                if not 'visible' in defaultColumnsLayoutProperties[x]:
-                    defaultColumnsLayoutProperties[x].update({'visible':'False'})
-        
+                if enc_visible:
+                    if not 'visible' in defaultColumnsLayoutProperties[x]:
+                        defaultColumnsLayoutProperties[x].update({'visible':'False'})
+                if enc_render:
+                    # COL_RENDER_IMAGE = 3
+                    if _mapRender[x] == 3 and not 'renderable' in defaultColumnsLayoutProperties[x]:
+                        defaultColumnsLayoutProperties[x].update({'renderable':'disable'})
+    
     return defaultColumnsLayoutProperties
 
 
