@@ -35,6 +35,7 @@ from os.path import exists
 
 import xmipp
 from pyworkflow.object import String
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER, ORIGINAL
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam, 
                                         BooleanParam, RelationParam, Positive)
@@ -44,13 +45,6 @@ from pyworkflow.utils.path import removeBaseExt, replaceBaseExt
 
 from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
 from xmipp3 import XmippProtocol
-
-
-
-# Normalization type constants
-ORIGINAL = 0
-SAME_AS_PICKING = 1
-OTHER = 2
 
 # Rejection method constants
 REJECT_NONE = 0
@@ -75,10 +69,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       pointerClass='SetOfCoordinates',
                       help='Select the SetOfCoordinates ')
         
-        form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
+        form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other', 'original'], 
                       default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
-        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
+        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==1',
                       label='Downsampling factor',
                       help='This factor is always referred to the original sampling rate. '
                       'You may use independent downsampling factors for extracting the '
@@ -87,7 +81,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'the differences are correctly handled by Xmipp.')        
 
         form.addParam('inputMicrographs', PointerParam, label="Micrographs", 
-                      condition='downsampleType != 1',
+                      condition='downsampleType != 0',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
         

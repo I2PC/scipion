@@ -2,6 +2,7 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3.constants import OTHER 
 from pyworkflow.em.packages.brandeis import *
 from pyworkflow.em.packages.eman2 import *
 from test_workflow import TestWorkflow
@@ -54,7 +55,7 @@ class HighThroughputTest(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
         
         print "Run extract particles with <Other> option"
-        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=2, doInvert=True,
+        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True,
                                                 downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)

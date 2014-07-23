@@ -233,9 +233,6 @@ class TestXmippAutomaticPicking(TestXmippBase):
 
 class TestXmippExtractParticles(TestXmippBase):
     """This class check if the protocol to extract particles in Xmipp works properly."""
-    SAME_AS_PICKING = 1
-    ORIGINAL = 0
-    OTHER = 2
     
     @classmethod
     def setUpClass(cls):
@@ -252,7 +249,7 @@ class TestXmippExtractParticles(TestXmippBase):
     
     def testExtractSameAsPicking(self):
         print "Run extract particles with downsampling factor equal to the one at picking"
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.SAME_AS_PICKING, doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING, doFlip=False)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.setObjLabel("extract-same as picking")
@@ -261,7 +258,7 @@ class TestXmippExtractParticles(TestXmippBase):
     
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
-        protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=self.ORIGINAL, doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=550, downsampleType=ORIGINAL, doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-original")
@@ -270,7 +267,7 @@ class TestXmippExtractParticles(TestXmippBase):
     
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=self.OTHER, downFactor=3,doFlip=False)
+        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=OTHER, downFactor=3,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
@@ -279,7 +276,7 @@ class TestXmippExtractParticles(TestXmippBase):
     
     def testExtractCTF(self):
         print "Run extract particles with CTF"#        
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=self.ORIGINAL,doFlip=True)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=ORIGINAL,doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)

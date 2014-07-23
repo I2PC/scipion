@@ -31,7 +31,8 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 """
 
 
-from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, REJECT_NONE, REJECT_MAXZSCORE, REJECT_PERCENTAGE 
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, REJECT_NONE, REJECT_MAXZSCORE, REJECT_PERCENTAGE
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
 from pyworkflow.em import CoordinatesTiltPair, PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
 from pyworkflow.protocol.params import Positive
 from convert import writeSetOfCoordinates, readSetOfParticles
@@ -42,11 +43,7 @@ from itertools import izip
 import xmipp
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
                
-# Normalization type constants
-ORIGINAL = 0
-SAME_AS_PICKING = 1
-OTHER = 2     
-               
+                            
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
     _label = 'extract particles pairs'
@@ -63,11 +60,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       pointerClass='CoordinatesTiltPair',
                       help='Select the CoordinatesTiltPairs ')
         
-        form.addParam('downsampleType', EnumParam, choices=['original', 'same as picking', 'other'], 
+        form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other', 'original'], 
                       default=0, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
         
-        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==2',
+        form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==1',
                       label='Downsampling factor',
                       help='This factor is always referred to the original sampling rate. '
                       'You may use independent downsampling factors for extracting the '

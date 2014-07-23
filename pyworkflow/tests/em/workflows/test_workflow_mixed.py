@@ -2,6 +2,7 @@ from pyworkflow.tests import DataSet, setupTestProject
 from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
                                            XmippProtExtractParticles,
                                            XmippProtCropResizeParticles, XmippProtML2D)
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
 from pyworkflow.em.packages.brandeis import ProtCTFFind, ProtFrealign
 from pyworkflow.em.packages.eman2 import EmanProtBoxing, EmanProtInitModel
 from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
@@ -58,7 +59,7 @@ class TestMixedBPV(TestWorkflow):
         
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=2, doFlip=False, downFactor=5, runMode=1, doInvert=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=5, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
@@ -252,7 +253,7 @@ class TestMixedBPV2(TestWorkflow):
 #         self.protDict['protPP'] = protPP
         
         print "<Run extract particles with Same as picking>"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, downsampleType=1, doFlip=True, doInvert=True, runMode=1)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, downsampleType=SAME_AS_PICKING, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.launchProtocol(protExtract)
