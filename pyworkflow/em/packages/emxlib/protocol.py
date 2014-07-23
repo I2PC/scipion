@@ -89,7 +89,7 @@ class ProtEmxImport(ProtImport):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
         """
-        self.emxFn = self.inputEMX.get()
+        self.emxFn = self._getRelPathExecutionDir(self.inputEMX.get())
         emxData = emxlib.EmxData()
         
         emxDir = dirname(self.emxFn)
