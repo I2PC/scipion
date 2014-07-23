@@ -102,8 +102,12 @@ DataSet(name='rct',  folder='rct',
                'classes': 'classes/classes2D_stable_core.sqlite'})
 
 DataSet(name='emx',  folder='emx', 
-        files={'coodinatesTest1': 'coordinates/Test1/coordinates.emx'
-              ,'defocusParticle': 'defocusParticle/particles.emx'
+        files={
+               'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',              
+               'coordinatesT1': 'coordinates/Test1/coordinates.emx',
+               'defocusParticleT2': 'defocusParticle/particles.emx',
+               'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',              
+               'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',              
               })
                
                
