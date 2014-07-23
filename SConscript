@@ -56,18 +56,22 @@ tcl = env.AddLibrary(
            'software/bin/tclsh8.6',
            Glob('software/lib/*tcl*'),
            Glob('software/lib/tdbc*'),
+           'software/lib/sqlite3.8.0',
            'software/lib/thread2.7.0',
            'software/lib/pkgconfig/tcl.pc',
            Glob('software/include/*tcl*'),
            Glob('software/include/*tdbc*'),
+           Glob('software/include/fake*.h'),
+           Glob('software/include/*Stubs.h'),
            'software/man/man1/tclsh.1',
            Glob('software/man/man3/Tcl*'),
            'software/man/man3/TCL_MEM_DEBUG.3',
            'software/man/man3/Tdbc_Init.3',
-           Glob('software/man/mann/*tcl*'),
-           Glob('software/man/mann/Tcl*'),
-           Glob('software/man/mann/*tdbc*'),
-           Glob('software/share/man/mann/tdbc*')])
+           Glob('software/man/man3/attempt*3'),
+           Glob('software/man/man3/ck*.3'),
+           Glob('software/man/mann/*.n'),
+           Glob('software/share/man/mann/tdbc*'),
+           'software/share/man/mann/sqlite3.n'])
 
 tk = env.AddLibrary(
     'tk',
@@ -97,8 +101,7 @@ sqlite = env.AddLibrary(
            Glob('software/lib/*sqlite*'),
            'software/lib/pkgconfig/sqlite3.pc',
            Glob('software/include/*sqlite*'),
-           'software/share/man/man1/sqlite3.1',
-           'software/share/man/mann/sqlite3.n'])
+           'software/share/man/man1/sqlite3.1'])
 
 python = env.AddLibrary(
     'python',
@@ -113,8 +116,11 @@ python = env.AddLibrary(
            Glob('software/lib/*python*'),
            Glob('software/lib/pkgconfig/*py*'),
            'software/include/python2.7',
-           Glob('software/share/man/man1/python*')
-           ])
+           Glob('software/share/man/man1/python*'),
+           # There are some folders that need to be cleaned
+           'software/lib/pkgconfig',
+           Glob('software/man/man*'),
+           'software/share/man'])
 
 
 #  ************************************************************************
