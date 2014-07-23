@@ -738,6 +738,8 @@ public class ScipionMetaData extends MetaData {
         if (type.equals("Float")) {
             return MetaData.LABEL_DOUBLE;
         }
+        if(type.equals("Boolean"))
+            return MetaData.LABEL_INT;
 
         return MetaData.LABEL_STRING;
     }

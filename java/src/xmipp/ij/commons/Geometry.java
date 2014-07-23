@@ -12,8 +12,8 @@ package xmipp.ij.commons;
  */
  public class Geometry
         {
-            public double shiftx, shifty, psiangle;
-            boolean flip;
+            public Double shiftx, shifty, psiangle;
+            Boolean flip;
             
             public Geometry(double shiftx, double shifty, double psiangle, boolean flip)
             {

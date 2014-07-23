@@ -358,11 +358,11 @@ public class ScipionGalleryData extends GalleryData {
             if(!containsGeometryInfo())
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-            double shiftx, shifty, psiangle;
+            Double shiftx, shifty, psiangle;
             shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
             shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
             psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
-            boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
+            Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
             return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
