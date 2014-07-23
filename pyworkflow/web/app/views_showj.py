@@ -414,7 +414,7 @@ def getExtraParameters(extraParams, table):
                         enc_visible = True
                         
                 elif key == sj.RENDER:
-                    val = {'renderable':'enable'}
+                    val = {'renderable':'True'}
                     if enc_render == False:
                         enc_render = True
                     
@@ -427,11 +427,11 @@ def getExtraParameters(extraParams, table):
             for x in defaultColumnsLayoutProperties:
                 if enc_visible:
                     if not 'visible' in defaultColumnsLayoutProperties[x]:
-                        defaultColumnsLayoutProperties[x].update({'visible':'False'})
+                        defaultColumnsLayoutProperties[x].update({sj.VISIBLE:'False'})
                 if enc_render:
                     # COL_RENDER_IMAGE = 3
                     if _mapRender[x] == 3 and not 'renderable' in defaultColumnsLayoutProperties[x]:
-                        defaultColumnsLayoutProperties[x].update({'renderable':'disable'})
+                        defaultColumnsLayoutProperties[x].update({'renderable':'False'})
     
     return defaultColumnsLayoutProperties
 
