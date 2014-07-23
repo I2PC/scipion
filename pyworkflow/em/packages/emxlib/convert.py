@@ -60,7 +60,8 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     emxData.write(fnXml)
     
     
-def importData(protocol, emxFile, outputDir, acquisition, samplingRate=None):
+def importData(protocol, emxFile, outputDir, acquisition, 
+               samplingRate=None, doCopyFiles=True):
     """ Import objects into Scipion from a given EMX file. 
     Returns:
         a dictionary with key and values as outputs sets
@@ -69,8 +70,10 @@ def importData(protocol, emxFile, outputDir, acquisition, samplingRate=None):
     emxData = emxlib.EmxData()
     emxData.read(emxFile)
     
-    _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate)
-    _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate)
+    _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
+                        samplingRate, doCopyFiles)
+    _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
+                      samplingRate, doCopyFiles)
 
 
 #---------------- Export related functions -------------------------------
@@ -168,12 +171,12 @@ def _micrographsToEmx(emxData, micSet, emxDir, ctfSet=None, writeData=True):
     ih = ImageHandler()
 
     for mic in micSet:
-        loc = mic.getLocation()
-        fnMicBase = replaceBaseExt(loc[1], 'mrc')
         if writeData:
+            loc = mic.getLocation()
+            fnMicBase = replaceBaseExt(loc[1], 'mrc')
             newLoc = join(emxDir, fnMicBase)
             ih.convert(loc, newLoc)
-        mic.setLocation(NO_INDEX, fnMicBase)
+            mic.setLocation(NO_INDEX, fnMicBase)
         if ctfSet:
             mic.setCTF(ctfSet[mic.getObjId()])
         emxMic = _micrographToEmx(mic)
@@ -290,7 +293,8 @@ def _coordinateFromEmx(emxObj, coordinate):
     coordinate.setMicId(emxMic._micId)
     
     
-def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate):
+def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, 
+                        acquisition, samplingRate, doCopyFiles=True):
     """ Create the output SetOfMicrographs given an EMXData object.
     If there is information of the CTF, also the SetOfCTF will
     be registered as output of the protocol.
@@ -320,14 +324,13 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samp
             _micrographFromEmx(emxMic, mic)
             _, fn = mic.getLocation()
             micFn = join(micDir, fn)
-            micBase = basename(micFn)
-            newFn = join(outputDir, micBase)
-            if exists(micFn):
+            if doCopyFiles and exists(micFn):
+                micBase = basename(micFn)
+                newFn = join(outputDir, micBase)
                 copyFile(micFn, newFn)
+                mic.setLocation(newFn)                
             else:
-                pass #TODO: what to if not file found
-                #raise Exception("Missing micrograph '%s' while importing from EMX" % micFn)
-            mic.setLocation(newFn)                
+                mic.setLocation(micFn)
             micSet.append(mic)
             emxMic._micId = mic.getObjId()
             mic.cleanObjId()
@@ -344,7 +347,13 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samp
             protocol._defineCtfRelation(micSet, ctfSet)
 
   
-def _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, samplingRate):
+def _particlesFromEmx(protocol
+                      , emxData
+                      , emxFile
+                      , outputDir
+                      , acquisition
+                      , samplingRate
+                      , doCopyFiles=True):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
     """    
@@ -387,10 +396,14 @@ def _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, sampli
                 _particleFromEmx(emxParticle, part)
                 i, fn = part.getLocation()
                 partFn = join(partDir, fn)
-                partBase = basename(partFn)
-                newLoc = (i, join(outputDir, partBase))
-                ih.convert((i, partFn), newLoc)
+                if doCopyFiles:
+                    partBase = basename(partFn)
+                    newLoc = (i, join(outputDir, partBase))
+                    ih.convert((i, partFn), newLoc)
+                else:
+                    newLoc = (i, partFn)
                 part.setLocation(newLoc)
+                
                 if alignmentSet is not None:
                     transform = Transform()
                     _transformFromEmx(emxParticle, part, transform)  

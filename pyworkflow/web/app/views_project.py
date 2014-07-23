@@ -76,7 +76,7 @@ def delete_project(request):
 
 
 def getNodeStateColor(node):
-    from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
+    from pyworkflow.gui.project.viewprotocols import STATUS_COLORS
     from pyworkflow.protocol.constants import STATUS_FAILED
     
     color = '#ADD8E6'  # Lightblue
@@ -279,6 +279,8 @@ def project_content(request):
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
+    
+#    print "ENTER IN PROTOCOL INFO METHOD"
 
     if request.is_ajax():
         projectName = request.session['projectName']
@@ -321,6 +323,8 @@ def protocol_info(request):
                   'logs_error': parseText(fErrString),
                   'logs_scipion': parseText(fScpnString)
                   }
+        
+#        print "ioDict: ", ioDict
         
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         

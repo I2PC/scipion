@@ -32,6 +32,7 @@ visualization program.
 import os
 from os.path import exists
 
+from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.viewer import CommandView, Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView
 from pyworkflow.gui.form import FormWindow
@@ -169,6 +170,12 @@ Examples:
         group.addParam('usePsi', BooleanParam, default=False,
                       label='Use Psi to compute angular distances?',
                       help='Use Psi')
+        group.addParam('angleSort', BooleanParam, default=False,
+                      label='Sort assigned angles?',
+                      help='Sort by angles the experimental images.')
+        group.addParam('shiftSort', BooleanParam, default=False,
+                      label='Sort shift?',
+                      help='Sort by shift the experimental images.')
         group = form.addGroup('Angular distribution and resolution plots')
         group.addParam('showAngDist', EnumParam, choices=['2D plot', 'chimera'], 
                       display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
@@ -195,10 +202,7 @@ Examples:
                 'showProjectionMatchingLibraryAndImages' : self._showProjMatchLibAndImages,
                 'showDiscardedImages' : self._showDiscardedImages,
                 'showExperimentalImages' : self._showExperimentalImages,
-#                 'showLL': self._showLL,
-#                 'showPMax': self._showPMax,
-#                 'showChanges': self._showChanges,
-#                 'displayVol': self._showVolumes,
+                'plotHistogramAngularMovement' : self._plotHistogramAngularMovement,
                 'showAngDist': self._showAngularDistribution,
                 'showResolutionPlots': self._showFSC
                 }
@@ -334,18 +338,25 @@ Examples:
         return self._showVolumes(volumes, paramName)
     
     def _showBfactorVols(self, paramName=None):
-#         volsBfactor = []
-#         volumes = self._volFileNames('reconstructedFileNamesIters')
-#         for vol in volumes:
-#             volBfactor = vol + '.bfactor'
-#             volsBfactor.append(volBfactor)
-#             args = '-i %(vol)s --sampling %(samplingRate)s --maxres %(maxRes)s -o %(volBfactor)s'
-#             maxRes = self.maxRes.get()
-#             samplingRate = self.protocol.resolSam
-#             args = args % locals()
-#             self.protocol.runJob("xmipp_volume_correct_bfactor", args)
-#         return self._showVolumes(volsBfactor, paramName)
-        pass
+        volsBfactor = []
+        volumes = self._volFileNames('reconstructedFileNamesIters')
+        for vol in volumes:
+            volBfactor = vol + '.bfactor'
+            volsBfactor.append(volBfactor)
+            args = '-i %(vol)s --sampling %(samplingRate)s --maxres %(maxRes)s -o %(volBfactor)s ' + self.correctBfactorExtraCommand.get()
+            maxRes = self.maxRes.get()
+            samplingRate = self.protocol.resolSam
+            args = args % locals()
+            
+            hostConfig = self.protocol.getHostConfig()
+            # Create the steps executor
+            executor = StepExecutor(hostConfig)
+            self.protocol.setStepsExecutor(executor)
+            # Finally run the protocol
+            
+            self.protocol.runJob("xmipp_volume_correct_bfactor", args, numberOfMpi=1)
+        return self._showVolumes(volsBfactor, paramName)
+#         pass
     
 #===============================================================================
 # Show Library, Classes and Images
@@ -524,7 +535,68 @@ Examples:
 # Convergence
 #===============================================================================
 
-
+    def _plotHistogramAngularMovement(self, paramName=None):
+        from numpy import arange
+        from matplotlib.ticker import FormatStrFormatter
+        
+        plots = []
+        colors = ['g', 'b', 'r', 'y', 'c', 'm', 'k']
+        lenColors=len(colors)
+        
+        numberOfBins = self.numberOfBins.get()
+        md = xmipp.MetaData()
+        for it in self._iterations:
+            md.read(self.protocol._mdDevitationsFn(it))
+            if not self.usePsi: 
+                md.fillConstant(xmipp.MDL_ANGLE_PSI,0.)
+            
+            nrefs = len(self._refsList)
+            gridsize = self._getGridSize(nrefs)
+            xplotterShift = XmippPlotter(*gridsize, mainTitle='Iteration_%d\n' % it, windowTitle="ShiftDistribution")
+            xplotter = XmippPlotter(*gridsize, mainTitle='Iteration_%d' % it, windowTitle="AngularDistribution")
+            
+            for ref3d in self._refsList:
+                mDoutRef3D = xmipp.MetaData()
+                mDoutRef3D.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF3D, ref3d))
+                _frequency = "Frequency (%d)" % mDoutRef3D.size()
+                
+                xplotterShift.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_SHIFT_DIFF),ref3d), "pixels", _frequency) 
+                xplotter.createSubPlot("%s_ref3D_%d"%(xmipp.label2Str(xmipp.MDL_ANGLE_DIFF),ref3d), "degrees", _frequency) 
+                #mDoutRef3D.write("afterimportObject@mdIter.sqlite",MD_APPEND)
+                xplotter.plotMd(mDoutRef3D, 
+                                xmipp.MDL_ANGLE_DIFF, 
+                                xmipp.MDL_ANGLE_DIFF, 
+                                color=colors[ref3d%lenColors], 
+                                #nbins=50
+                                nbins=int(numberOfBins)
+                                )#if nbins is present do an histogram
+                xplotterShift.plotMd(mDoutRef3D, 
+                                xmipp.MDL_SHIFT_DIFF, 
+                                xmipp.MDL_SHIFT_DIFF, 
+                                color=colors[ref3d%lenColors], 
+                                nbins=int(numberOfBins)
+                                )#if nbins is present do an histogram
+                 
+                if self.angleSort:
+                    mDoutRef3D.sort(xmipp.MDL_ANGLE_DIFF)
+                    fn = xmipp.FileName()
+                    baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
+                    fn = self.protocol._getRefBlockFileName("angle_iter", it, "ref3D", ref3d, baseFileName)
+                    mDoutRef3D.write(fn, xmipp.MD_APPEND)
+                    print "File with sorted angles saved in:", fn
+                     
+                if self.shiftSort:
+                    mDoutRef3D.sort(xmipp.MDL_SHIFT_DIFF)
+                    fn = xmipp.FileName()
+                    baseFileName   = self.protocol._getTmpPath("angle_sort.xmd")
+                    fn = self.protocol._getRefBlockFileName("shift_iter", it, "ref3D", ref3d, baseFileName)
+                    mDoutRef3D.write(fn, xmipp.MD_APPEND)
+                    print "File with sorted shifts saved in:", fn
+                
+                plots.append(xplotterShift)
+                plots.append(xplotter)
+        return plots
+    
 #===============================================================================
 # Angular distribution and resolution plots
 #===============================================================================
@@ -535,18 +607,12 @@ Examples:
         #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
         outerRadius = 30
         radius = float(outerRadius) * 1.1
-        # Common variables to use
-        sphere = self.spheresScale.get()
-        prefixes = self._getPrefixes()
 
-        data_angularDist = self.protocol._getIterAngularDist(it)
         for ref3d in self._refsList:
-            for prefix in prefixes:
-                volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                args = "--input '%s' --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (volFn, prefix, ref3d, data_angularDist, radius)
-                if sphere > 0:
-                    args += ' %f ' % sphere
-                arguments.append(args)
+            file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
+            file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
+            args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
+            arguments.append(args)
                    
         return CommandView('xmipp_chimera_client %s &' % args)
     
@@ -554,14 +620,11 @@ Examples:
         # Common variables to use
         nrefs = len(self._refsList)
         gridsize = self._getGridSize(nrefs)
-        
-        data_angularDist = self.protocol._getFileName()
         xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
-            for prefix in prefixes:
-                md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                plot_title = '%sclass %d' % (prefix, ref3d)
-                xplotter.plotMdAngularDistribution(plot_title, md)
+            md = xmipp.MetaData(self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d))
+            plot_title = 'Ref3D_%d' % ref3d
+            xplotter.plotMdAngularDistribution(plot_title, md)
         
         return xplotter
     
@@ -575,15 +638,15 @@ Examples:
         a.plot(resolution_inv, frc)
         a.xaxis.set_major_formatter(self._plotFormatter)
         a.set_ylim([-0.1, 1.1])
-            
+    
     def _showAngularDistribution(self, paramName=None):
         views = []
         
-        if self.displayAngDist == ANGDIST_CHIMERA:
+        if self.showAngDist == ANGDIST_CHIMERA:
             for it in self._iterations:
                 views.append(self._createAngDistChimera(it))
                         
-        elif self.displayAngDist == ANGDIST_2DPLOT:
+        elif self.showAngDist == ANGDIST_2DPLOT:
             for it in self._iterations:
                 views.append(self._createAngDist2D(it))
                 

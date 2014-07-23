@@ -538,6 +538,14 @@ class Protocol(Step):
         """ Return a relative path from the workingDir. """
         return os.path.relpath(self._getPath(*path), self.workingDir.get())
     
+    def _getRelPathExecutionDir(self, *path):
+        """ Return a relative path from the projdir. """
+        #TODO  must be a bettis
+        return os.path.relpath(
+                  self._getPath(*path),
+                  os.path.dirname(os.path.dirname(self.workingDir.get()))
+                              )   
+    
     def _getBasePath(self, path):
         """ Take the basename of the path and get the path
         relative to working dir of the protocol. 

@@ -518,6 +518,9 @@ function updateTabs(id) {
 			
 			$("#tab-logs-scipion").empty();
 			$("#tab-logs-scipion").append(json.logs_scipion);
+		}, 
+		error: function(){
+			console.log("ERROR IN PROTOCOL_INFO REQUEST")
 		}
 	});
 }
@@ -1077,8 +1080,9 @@ function updateObjTabs(id) {
 			created.append(json.created);
 			
 			var label = $("#obj_label");
+			var value_label = $("#graph_"+id).attr("data-label")
 			label.empty();
-			label.append(json.label);
+			label.append(value_label);
 			
 			var comment = $("#obj_comment");
 			comment.empty();

@@ -25,15 +25,11 @@
 # **************************************************************************
 
 import json
-import pyworkflow.gui.graph as gg
-from pyworkflow.em import *
-from views_base import * 
-from views_project import formatProvider
+from views_base import getResourceCss, getResourceIcon, getResourceJs 
+from views_base import loadProject, base_flex, render_to_response 
 from views_tree import loadObjTree
-from pyworkflow.gui.tree import ObjectTreeProvider, DbTreeProvider
 from pyworkflow.manager import Manager
-from pyworkflow.apps.pw_project_viewprotocols import STATUS_COLORS
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse
 
 
 def data_content(request):        
@@ -45,7 +41,6 @@ def data_content(request):
     
     # load the object tree 
     root = loadObjTree(project)
-   
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -72,7 +67,6 @@ def object_info(request):
         
         ioDict = {'info': str(obj),
                   'created': obj.getObjCreation(),
-                  'label': obj.getName(),
                   'comment': obj.getObjComment()
                   }
         

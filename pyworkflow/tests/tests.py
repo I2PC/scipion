@@ -6,6 +6,7 @@ import os
 import time
 import unittest
 from os.path import join, relpath
+from itertools import izip
 
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
@@ -102,6 +103,17 @@ class BaseTest(unittest.TestCase):
                 return c
         return cls.proj.newProtocol(protocolClass, **kwargs)
 
+    @classmethod
+    def compareSets(cls, test, set1, set2):
+        """ Iterate the elements of boths sets and check
+        that all elements have equal attributes. """
+        for item1, item2 in izip(set1, set2):
+            areEqual = item1.equalAttributes(item2)
+            if not areEqual:
+                print "item 1 and item2 are different: "
+                item1.printAll()
+                item2.printAll()
+            test.assertTrue(areEqual)
  
 def setupTestOutput(cls):
     """ Create the output folder for a give Test class. """
