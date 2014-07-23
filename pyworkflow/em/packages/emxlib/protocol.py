@@ -133,6 +133,7 @@ class ProtEmxImport(ProtImport):
         acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
         
         from convert import importData
+        emxFile=self._getRelPathExecutionDir(emxFile)
         importData(self, emxFile, self._getPath(), 
                    acquisition, self.samplingRate.get(),self.doCopyFiles.get())
     

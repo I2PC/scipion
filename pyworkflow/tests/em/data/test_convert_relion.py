@@ -32,8 +32,9 @@ class TestConversions(BaseTest):
                ]
         acquisition = Acquisition(magnification=60000, voltage=300,
                                   sphericalAberration=2., amplitudeContrast=0.07)
-        mdXmipp = xmipp.MetaData()
         imgSet.setAcquisition(acquisition)
+        coord = Coordinate()
+        coord.setMicId(1)
 
         for i in range(n):
             p = Particle()
@@ -41,17 +42,20 @@ class TestConversions(BaseTest):
             ctf = ctfs[i%2]
             p.setCTF(ctf)
             p.setAcquisition(acquisition)
+            p._xmipp_zScore = Float(i)
+            coord.setX(i*10)
+            coord.setY(i*10)
+            p.setCoordinate(coord)
             imgSet.append(p)
             
         fnStar = self.getOutputPath('particles.star')
         fnStk = self.getOutputPath('particles.stk')
         
+        print ">>> Writing to file: %s" % fnStar
         relion.writeSetOfParticles(imgSet, fnStar, fnStk)
         
-
-       
-if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippSetOfMicrographs.testCopy')
-#    unittest.TextTestRunner(verbosity=2).run(suite)
-    
-    unittest.main()
+        relion.addRelionLabels()
+        md = xmipp.MetaData(fnStar)
+        self.assertTrue(md.containsLabel(xmipp.MDL_XCOOR))
+        self.assertTrue(md.containsLabel(xmipp.MDL_YCOOR))
+        self.assertFalse(md.containsLabel(xmipp.MDL_ZSCORE))

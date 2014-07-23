@@ -92,6 +92,9 @@ class ParticleAdaptor():
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
             imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
             
+        for label, _ in imgRow:
+            if not label in XMIPP_RELION_LABELS:
+                imgRow.removeLabel(label)
         self._rowCount += 1
     
 
