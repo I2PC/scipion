@@ -32,18 +32,17 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 
 
-
 class TestEmxBase(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('emx')
     
-    def test_coodinatesTest1(self):
+    def aaatest_coodinatesTest1(self):
         """ Import an EMX file with just one micrograph 
         and a few coordinates.
         """
-        emxFn = self.dataset.getFile('coodinatesTest1')
+        emxFn = self.dataset.getFile('coordinatesT1')
         protEmxImport = self.newProtocol(ProtEmxImport, 
                                          inputEMX=emxFn,
                                          amplitudeContrast=0.1,
@@ -52,22 +51,41 @@ class TestEmxBase(BaseTest):
         self.launchProtocol(protEmxImport)
 
         # Reference coordinates
-        x = [539, 509, 711, 634, 403, 347, 728]
-        y = [414, 192, 158, 349, 157, 437, 389]
+        coords = SetOfCoordinates(filename=self.dataset.getFile('coordinatesGoldT1'))
+        BaseTest.compareSets(self, protEmxImport.outputCoordinates, coords)
         
-        for i, coord in enumerate(protEmxImport.outputCoordinates):
-            self.assertEqual((coord.getX(), coord.getY()),
-                             (x[i], y[i]))
+    def test_particleDefocus(self):
+        """ Import an EMX file with a stack of particles
+        that has defocus
+        """
+        #SCIPION_TESTS=/home/roberto/Scipion/pyworkflow-code/data/tests
+        #SCIPION_USER_DATA=/home/roberto/ScipionUserData
+
+        print "self.folder", self.dataset.folder
+        #os.chdir(os.environ['SCIPION_TESTS'])
+        print "os.environ['SCIPION_HOME']", os.environ['SCIPION_HOME']
+        emxFn = self.dataset.getFile('defocusParticleT2')
+        print "emxFn1",emxFn
+        protEmxImport = self.newProtocol(ProtEmxImport, 
+                                         inputEMX=emxFn
+                                         )
+        self.launchProtocol(protEmxImport)
+        micFn =self.dataset.getFile('micrographsGoldT2')
+        mics  = SetOfMicrographs(filename = micFn)
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        micsTmp1  = protEmxImport._createSetOfMicrographs('kk1')
+        micsTmp2  = protEmxImport._createSetOfMicrographs('kk2')
+        for mic in mics:
+            fn = os.path.basename(mic.getFileName())
+            mic.setFileName(String(fn))
+            micsTmp1.append(mic)
+        for mic in protEmxImport.outputMicrographs:
+            fn = os.path.basename(mic.getFileName())
+            mic.setFileName(fn)
+            micsTmp2.append(mic)
+
+        BaseTest.compareSets(self, micsTmp2, micsTmp1)
+
+
+
+
