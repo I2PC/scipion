@@ -33,7 +33,8 @@ void ProgReconstructSignificant::defineParams()
     addUsageLine("Generate 3D reconstructions from projections using random orientations");
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
-    addParamsLine("  --initvolumes <md_file>      : Set of initial volumes");
+    addParamsLine("  [--initvolumes <md_file=\"\">] : Set of initial volumes. If none is given, a single volume");
+    addParamsLine("                               : is reconstructed with random angles assigned to the images");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
     addParamsLine("  [--iter <N=10>]              : Number of iterations");
@@ -553,6 +554,27 @@ void ProgReconstructSignificant::produceSideinfo()
 	}
 
 	// Copy all input values as iteration 0 volumes
+	if (fnInit=="")
+	{
+		fnInit=fnDir+"/volume_random.vol";
+		MetaData mdRandom;
+		mdRandom=mdIn;
+		FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+		{
+			mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
+			mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
+			mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
+			mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+			mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+		}
+		FileName fnAngles=fnDir+"/angles_random.xmd";
+		mdRandom.write(fnAngles);
+		String args=formatString("-i %s -o %s --sym %s --thr %d -v 0",fnAngles.c_str(),fnInit.c_str(),fnSym.c_str(),Nthr);
+		String cmd=(String)"xmipp_reconstruct_fourier "+args;
+		if (system(cmd.c_str())==-1)
+			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+	}
+
 	mdInit.read(fnInit);
 	FileName fnVol, fnAngles;
 	Image<double> V, galleryDummy;
