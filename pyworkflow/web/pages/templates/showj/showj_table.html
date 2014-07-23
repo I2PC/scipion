@@ -155,16 +155,12 @@ function generateDataForTable(){
 	var dataForTable = new Array();
 	{% for row in tableDataset.getRows %}
 		dataRowForTable = new Array()
-		/* var row_id */
 		{% for cell in row %}
 			dataRowForTable.push("{{cell}}")
 			{% if forloop.first	%}
 				row_id = "{{cell}}"
 			{% endif %}
-
 		{% endfor %}
-		/* dataRowForTable.push("DT_RowId\": \""+row_id+"\"") */
-		/* dataRowForTable.push("DT_RowId: "+row_id) */
 		dataForTable.push(dataRowForTable)
 	{% endfor %}
 	return dataForTable;
