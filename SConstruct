@@ -49,7 +49,8 @@ Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
 Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
-env = Environment(tools=['Make', 'AutoConfig'],
+env = Environment(ENV=os.environ,
+                  tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
 
 # Message from autoconf and make, so we don't see all its verbosity.
