@@ -27,9 +27,8 @@
 # *
 # **************************************************************************
 
-#
-# Main skeleton which will guide all the installation process.
-#
+# Builders and pseudobuilders used be SConscript to install things.
+
 
 import os
 from os.path import join, abspath
@@ -37,42 +36,41 @@ import platform
 import SCons.Script
 
 
-#############
-# VARIABLES #
-#############
-
 # OS boolean vars
 MACOSX = (platform.system() == 'Darwin')
 WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
-MANDATORY_PYVERSION = '2.7.8'  # Python version required by Scipion
-PYVERSION = platform.python_version()
-
-# TODO: use those vars to actually build a virtualenv instead of
-# compiling python if appropriate.
-
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
-
-#######################
-# AUXILIARY FUNCTIONS #
-#######################
+# Define our builders.
+Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
+Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
-env = Environment(ENV=os.environ,
-                  tools=['Make', 'AutoConfig'],
+env = Environment(tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
 
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
+# Add the path to dynamic libraries so the linker can find them.
+if LINUX:
+    env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
+elif MACOSX:
+    print "OS not tested yet"
+    env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH'))
+elif WINDOWS:
+    print "OS not tested yet"
 
-AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
-          help='Get all EM packages')
 
+#  ************************************************************************
+#  *                                                                      *
+#  *                           Pseudobuilders                             *
+#  *                                                                      *
+#  ************************************************************************
 
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
@@ -96,7 +94,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     targets = targets or ['lib/lib%s.so' % name]
 
-    # Add software/lib to the beginning of LD_LIBRARY_PATH.
+    # Add "software/lib" to the beginning of LD_LIBRARY_PATH.
     for i in range(len(flags)):
         if flags[i].startswith('LD_LIBRARY_PATH='):
             flags[i] = 'LD_LIBRARY_PATH=%s:%s' % (abspath('software/lib'),
@@ -296,6 +294,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     return lastTarget
 
 
+# Add methods so SConscript can call them.
+env.AddMethod(addLibrary, "AddLibrary")
+env.AddMethod(addModule, "AddModule")
+env.AddMethod(addPackage, "AddPackage")
+
+
+
 # TODO: check the code below to see if we can do a nice "purge".
 
 # def _removeInstallation(env):
@@ -329,27 +334,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 #         shutil.rmtree(dir)
 #     return True
 
-
-# Add the path to dynamic libraries so the linker can find them.
-if LINUX:
-    env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
-elif MACOSX:
-    print "OS not tested yet"
-    env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH'))
-elif WINDOWS:
-    print "OS not tested yet"
-
-
-# Add methods so SConscript can call them.
-env.AddMethod(addLibrary, "AddLibrary")
-env.AddMethod(addModule, "AddModule")
-env.AddMethod(addPackage, "AddPackage")
-
-# Extra (simple) builders
-Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
-
-
 # ########################
 # # Command-line options #
 # ########################
@@ -367,11 +351,10 @@ Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 #           action='store_true',
 #           help='After doing the installation, create and package a binary for distribution')
 
-Export('env')
+AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
+          help='Get all EM packages')
 
-# # Purge option
-# if GetOption('purge'):
-#     print "Purge option implies clean. Activating clean..."
-#     SetOption('clean', True)
+
+Export('env')
 
 env.SConscript('SConscript')
