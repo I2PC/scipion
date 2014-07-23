@@ -42,6 +42,14 @@ function convertJSON(json){
 				json.columnsLayout[i].visible = false
 				break;
 		}
+		switch(json.columnsLayout[i].renderable){
+			case "True":
+				json.columnsLayout[i].renderable = true
+				break;
+			case "False":
+				json.columnsLayout[i].renderable = false
+				break;
+		}
 	}
 	return json;
 }
@@ -58,7 +66,7 @@ var previousZoom='{{defaultZoom}}'
 var jsonTableLayoutConfiguration = convertJSON({{tableLayoutConfiguration|safe}})
 
 // DEBUG
-// console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
+console.log("jsonTableLayoutConfiguration", jsonTableLayoutConfiguration)
 
 $(document).ready(function(){
 	{% if form.mode.value != 'column' and dataset.getNumberSlices > 0 %}
@@ -121,8 +129,17 @@ function setImageSize(refreshElement){
 	/* CHECK ZOOM VALUE IS A NUMBER BETWEEN MAX AND MIN */
 	tableImages_height=tableImages_width*ratio
 	
-	if (isNaN(tableImages_width) || tableImages_width>{{form.imageMaxWidth.value}} || tableImages_width<{{form.imageMinWidth.value}} || tableImages_height>{{form.imageMaxHeight.value}} || tableImages_height<{{form.imageMinHeight.value}}){
-		alert('{{msg.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
+	
+	tableImages_width = parseInt(tableImages_width)
+	tableImages_height = parseInt(tableImages_height)
+	
+	if (isNaN(tableImages_width) 
+			|| tableImages_width > {{form.imageMaxWidth.value}} 
+			|| tableImages_width < {{form.imageMinWidth.value}} 
+			|| isNaN(tableImages_height) 
+			|| tableImages_height > {{form.imageMaxHeight.value}} 
+			|| tableImages_height < {{form.imageMinHeight.value}}){
+		console.log('{{msg.ERROR_DIMENSIONS}}' + tableImages_width + 'px x ' + tableImages_height +'px.')
 		zoom_element.val(previousZoom)
 		setImageSize(true)
 		return;

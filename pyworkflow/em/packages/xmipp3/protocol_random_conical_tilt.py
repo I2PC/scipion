@@ -132,16 +132,18 @@ class XmippProtRCT(ProtInitialVolume):
         
         classMd = xmipp.MetaData()
         
+        uImages = self.inputParticlesTiltPair.get().getUntilted()
+        tImages = self.inputParticlesTiltPair.get().getTilted()
+        sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
+
+        uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
+        tMics = tImages.getCoordinates().getMicrographs()
+        
+        scaleFactor = uImages.getSamplingRate()/particles.getSamplingRate()
+        
         for img in particles:
             imgId = img.getObjId()
- 
-            uImages = self.inputParticlesTiltPair.get().getUntilted()
-            tImages = self.inputParticlesTiltPair.get().getTilted()
-            sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
-
-            uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
-            tMics = tImages.getCoordinates().getMicrographs()
-                        
+                       
             uImg = uImages[imgId]
             tImg = tImages[imgId]
             objId = classMd.addObject()
@@ -160,8 +162,8 @@ class XmippProtRCT(ProtInitialVolume):
 
             pairRow.setValue(xmipp.MDL_FLIP, False)
             alignment = img.getAlignment()
-            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
-            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
+            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)
+            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get()*scaleFactor)
             pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
             
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
