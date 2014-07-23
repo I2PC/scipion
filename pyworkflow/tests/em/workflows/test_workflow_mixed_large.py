@@ -2,6 +2,7 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING 
 from pyworkflow.em.packages.brandeis import *
 from pyworkflow.em.packages.eman2 import *
 from pyworkflow.em.packages.relion import *
@@ -58,7 +59,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
         
         print "Run extract particles with <Same as picking> option"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=1, doRemoveDust=False,
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
@@ -90,7 +91,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp faked picking")
         
         print "Run extract particles with <Same as picking> option"
-        protExtract2 = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=1, doRemoveDust=False, doInvert=True,
+        protExtract2 = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False, doInvert=True,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract2.inputCoordinates.set(protPP2.outputCoordinates)
         protExtract2.ctfRelations.set(protCTF2.outputCTF)
@@ -157,7 +158,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
         
         print "Run extract particles with <Same as picking> option"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=1, doRemoveDust=False,
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)

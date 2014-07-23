@@ -86,3 +86,8 @@ FILL_AVG = 2
 # Reconstruction methods
 RECONSTRUCT_FOURIER = 0
 RECONSTRUCT_WSLART = 1
+
+# Normalization type constants
+SAME_AS_PICKING = 0
+OTHER = 1
+ORIGINAL = 2
