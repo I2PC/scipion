@@ -116,7 +116,7 @@ dateutil = addModule(
 
 pyparsing = addModule(
     'pyparsing',
-    target=['pyparsing.py'],
+    targets=['pyparsing.py'],
     tar='pyparsing-2.0.2.tgz')
 
 matplotlib = addModule(
