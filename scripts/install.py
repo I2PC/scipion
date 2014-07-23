@@ -45,7 +45,8 @@ try:
     from urllib2 import urlopen
     from StringIO import StringIO
 except ImportError:
-    from urllib.request import urlopen  # Python 3
+    # This will make it work with Python 3, once SCons also supports it!
+    from urllib.request import urlopen
     from io import StringIO
 import subprocess
 import tarfile
