@@ -38,7 +38,7 @@ __version__ = 'v.0.1.5 Phosphorus'
 # This script tries to run ok with any python version, but it won't
 # work with python 2.4 or below.
 if sys.version_info < (2, 5):
-    sys.stdout.write('Warning: running with old Python.')
+    sys.stdout.write('Warning: running with old Python.\n')
     if len(sys.argv) > 1 and sys.argv[1] == 'install':
         sys.exit('Please run this script with Python 2.5 or above.')
     # Because SCons doesn't seem to work with an earlier version!
