@@ -573,6 +573,15 @@ void ProgReconstructSignificant::produceSideinfo()
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+		args=formatString("-i %s --sym i1 -v 0",fnInit.c_str());
+		cmd=(String)"xmipp_transform_symmetrize "+args;
+		if (system(cmd.c_str())==-1)
+			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+		args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
+		if (system(cmd.c_str())==-1)
+			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}
 
 	mdInit.read(fnInit);
