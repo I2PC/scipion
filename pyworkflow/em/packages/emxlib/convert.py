@@ -424,7 +424,3 @@ def _particlesFromEmx(protocol
         if micSet is not None:
             protocol._defineSourceRelation(micSet, partSet)
             
-#         micSet.setStore(True)
-#         print "="*100
-#         for key, attr in protocol.getAttributesToStore():
-#             print key
