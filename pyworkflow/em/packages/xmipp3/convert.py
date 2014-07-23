@@ -289,6 +289,8 @@ def rowToImage(md, objId, imgLabel, imgClass, hasCtf, hasAlignment=False):
         
     if hasAlignment:
         img.setAlignment(rowToAlignment(md, objId))
+        
+    img.setAcquisition(rowToAcquisition(md, objId))
     
     setObjId(img, rowFromMd(md, objId))
     # Read some extra labels
@@ -415,9 +417,11 @@ def acquisitionToRow(acquisition, ctfRow):
 def rowToAcquisition(md, objId):
     """ Create an acquisition from a row of a metadata. """
     if any(not md.containsLabel(l) for l in ACQUISITION_DICT.values()):
-        return None
-    acquisition = Acquisition()
-    rowToObject(md, objId, acquisition, ACQUISITION_DICT) 
+        acquisition = None
+    else:                
+        acquisition = Acquisition()
+        rowToObject(md, objId, acquisition, ACQUISITION_DICT) 
+    
     return acquisition
     
     
