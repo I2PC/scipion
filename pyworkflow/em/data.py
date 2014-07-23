@@ -743,11 +743,11 @@ class SetOfDefocusGroup(EMSet):
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._micrographPointer = Pointer(objDoStore=False)
-        self._x = Integer()
-        self._y = Integer()
+        self._x = Integer(kwargs.get('x', None))
+        self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
         
     def getX(self):
