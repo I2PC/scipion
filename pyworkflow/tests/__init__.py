@@ -40,6 +40,7 @@ except ImportError:
     
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
         files={'micsGoldSqlite': 'gold/micrographs_gold.sqlite',
+               'micsGoldSqlite2': 'gold/micrographs2_gold.sqlite',
                'micsGoldXmd': 'gold/micrographs_gold.xmd',
                'ctfGold': 'gold/xmipp_ctf.ctfparam',
                'micsSqlite': 'micrographs/micrographs.sqlite',
