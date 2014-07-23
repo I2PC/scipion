@@ -122,6 +122,10 @@ class XmippMdRow():
     def hasLabel(self, label):
         return label in self._labelDict
     
+    def removeLabel(self, label):
+        if self.hasLabel(label):
+            del self._labelDict[label]
+    
     def setValue(self, label, value):
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""

@@ -2,6 +2,7 @@
 import unittest, sys
 from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtUserSubSet
 from pyworkflow.em.packages.xmipp3 import XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs, XmippProtCL2D, XmippProtRCT
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
 from pyworkflow.em import SetOfParticles
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
@@ -170,7 +171,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         #Extract particles    
         print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticlesPairs(boxSize=120, downsampleType=1)
+        protExtract = XmippProtExtractParticlesPairs(boxSize=60, downsampleType=OTHER, downFactor=2)
         protExtract.inputCoordinatesTiltedPairs.set(protPicking.outputCoordinatesTiltPair)
 
         self.proj.launchProtocol(protExtract, wait=True)

@@ -100,27 +100,17 @@ class DataView(View):
             'visible',
             'zoom',
             'order',
-#            'allowSetVisible':'allowSetVisible',
-#            'editable':'editable',
-#            'allowSetEditable':'allowSetEditable',
-#            'render': 'renderable',
-#            'allowSetRenderable':'allowSetRenderable',
-#            'renderFunc':'renderFunc',
-#            'extraRenderFunc':'extraRenderFunc',
+            'render',
         }
         
         params = {}
+        
         for key, value in self._viewParams.items():
-            
             if key in parameters:
-                if key in {'order','zoom', 'mode'}:
-                    if key == 'mode' and value =='metadata':
-                        value = 'table'
-                    params[key] = value
-                else:    
-                    for val in value.split(' '):
-                        params[val] = '%s___%s' % (val, key)
-                     
+                if key == 'mode' and value =='metadata':
+                    value = 'table'
+                params[key] = value
+        
         return params
         
     def getPath(self):

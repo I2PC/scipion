@@ -133,7 +133,22 @@ class TestObject(BaseTest):
         # Check that the Item 7 of the set is properly
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
+    
+    def test_equalAttributes(self):
+        """ Check that equal attributes function behaves well
+        to compare floats with a given precision.
+        """
+        c1 = Complex(imag=0., real=1.)
+        c2 = Complex(imag=0., real=1.0001)
         
+        # Since Float precision is 0.001, now c1 and c2
+        # should have equal attributes
+        self.assertTrue(c1.equalAttributes(c2))
+        # Now if we set a more restrictive precision
+        # c1 and c2 are not longer equals
+        Float.setPrecision(0.0000001)
+        self.assertFalse(c1.equalAttributes(c2))
+
     
 class TestUtils(BaseTest):
     
