@@ -89,7 +89,7 @@ class ProtEmxImport(ProtImport):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
         """
-        self.emxFn = self._getRelPathExecutionDir(self.inputEMX.get())
+        self.emxFn = self.inputEMX.get()
         emxData = emxlib.EmxData()
         
         emxDir = dirname(self.emxFn)
@@ -133,6 +133,7 @@ class ProtEmxImport(ProtImport):
         acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
         
         from convert import importData
+        emxFile=self._getRelPathExecutionDir(emxFile)
         importData(self, emxFile, self._getPath(), 
                    acquisition, self.samplingRate.get(),self.doCopyFiles.get())
     
