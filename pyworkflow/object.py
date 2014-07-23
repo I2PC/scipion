@@ -553,10 +553,22 @@ class String(Scalar):
         
 class Float(Scalar):
     """Float object"""
+    EQUAL_PRECISION = 0.001
+    
+    @classmethod
+    def setPrecision(cls, newPrecision):
+        """ Set the precision to compare float values.
+        Mainly used for testing purposes.
+        """
+        cls.EQUAL_PRECISION = newPrecision
+        
     def _convertValue(self, value):
         return float(value)
     
-    
+    def equalAttributes(self, other):
+        """Compare that all attributes are equal"""
+        return abs(self._objValue - other._objValue) < self.EQUAL_PRECISION
+        
 class Boolean(Scalar):
     """Boolean object"""
     
