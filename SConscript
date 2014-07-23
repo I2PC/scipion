@@ -100,9 +100,6 @@ sqlite = env.AddLibrary(
            'software/share/man/man1/sqlite3.1',
            'software/share/man/mann/sqlite3.n'])
 
-print "glob man3 -"
-for glob in Glob('software/man/man3/Tcl*'):
-    print glob
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
