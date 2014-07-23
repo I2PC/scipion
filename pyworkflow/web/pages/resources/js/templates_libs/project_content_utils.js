@@ -1068,22 +1068,27 @@ function updateObjTabs(id) {
 		dataType : "json",
 		success : function(json) {
 
-			var info = $("#obj_info");
 			// Edit Object
 			var edit_html = '<a href="javascript:editObject('+ id + ');"> '+
 			'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
+			
+			// Label
+			var label = $("#obj_label");
+			label.empty();
+			var value_label = $("#graph_"+id).attr("data-label")
+			label.append(value_label + "&nbsp;&nbsp;&nbsp;" + edit_html);
+			
+			// Info
+			var info = $("#obj_info");
 			info.empty();
-			info.append(json.info + "&nbsp;&nbsp;&nbsp;" + edit_html);
-
+			info.append(json.info);
+			
+			// Created
 			var created = $("#obj_created");
 			created.empty();
 			created.append(json.created);
 			
-			var label = $("#obj_label");
-			var value_label = $("#graph_"+id).attr("data-label")
-			label.empty();
-			label.append(value_label);
-			
+			//Comment
 			var comment = $("#obj_comment");
 			comment.empty();
 			comment.append(json.comment);

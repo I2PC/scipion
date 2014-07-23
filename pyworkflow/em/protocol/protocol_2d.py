@@ -27,6 +27,7 @@
 In this module are protocol base classes related to 2D processing
 
 """
+from pyworkflow.em.data import Class2D
 from pyworkflow.em.protocol import *
 
 
@@ -68,3 +69,46 @@ class ProtClassify2D(Prot2D):
 
 class ProtAnalysis2D(Prot2D):
     pass
+
+
+#------------ Some testing protocols ------------------
+
+class ProtEvenClassify2D(ProtClassify2D):
+    """ This is a simple classification protocol for testing purposes.
+    It will iterate over the images and assign each one to a different
+    class. 
+    """
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        
+        form.addParam('inputParticles', PointerParam, important=True,
+                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
+        form.addParam('numberOfClasses', IntParam, default=8,
+                      label="Number of classes", 
+                      help="Select into how many classes do you want to classify your images.")
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+        
+    def createOutputStep(self):
+        """ This single step will do the fullish classification
+        and create the output classes.
+        """
+        classes = self._createSetOfClasses2D()
+        n = self.numberOfClasses.get()
+        
+        for classNumber in range(1, n+1):
+            classes.append(Class2D())
+        
+        for img in self.inputParticles.get():
+            classNumber = (img.getObjId() % n) + 1
+            classes[classNumber].append(img)
+            
+        for cls in classes:
+            classes.update(cls)
+            
+        classes.write()
+            
+        self._defineOutputs(outputClasses=classes)
+            
+            

@@ -38,7 +38,7 @@ class TestEmxBase(BaseTest):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('emx')
     
-    def aaatest_coodinatesTest1(self):
+    def test_coodinatesTest1(self):
         """ Import an EMX file with just one micrograph 
         and a few coordinates.
         """
