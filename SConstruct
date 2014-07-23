@@ -72,6 +72,31 @@ elif WINDOWS:
 #  *                                                                      *
 #  ************************************************************************
 
+# We have 3 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+#
+# They are:
+#   addLibrary - install a library
+#   addModule  - install a Python module
+#   addPackage - install an EM package
+#
+# Their structure is similar:
+#   * Define reasonable defaults
+#   * Set --with-<name> option as appropriate
+#   * Concatenate builders
+#
+# For the last step we concatenate the builders this way:
+#   target1 = Builder1(env, target1, source1)
+#   SideEffect('dummy', target1)
+#   target2 = Builder2(env, target2, source2=target1)
+#   SideEffect('dummy', target2)
+#   ...
+#
+# So each target becomes the source of the next builder, and the
+# dependency is solved. Also, we use SideEffect('dummy', ...) to
+# ensure it works in a parallel build (see
+# http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
+# to do one step while the previous one is still running in the background.
+
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
@@ -116,8 +141,10 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
     tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
                    cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/tmp/%s' % buildDir)
     tConfig = env.AutoConfig(
         source=Dir('software/tmp/%s' % buildDir),
@@ -125,6 +152,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         AutoConfigSource='configure',
         AutoConfigParams=flags,
         AutoConfigStdOut='software/log/%s_config.log' % name)
+    SideEffect('dummy', tConfig)  # so it works fine in parallel builds
     tMake = env.Make(
         source=tConfig,
         target=['software/%s' % t for t in targets],
@@ -132,6 +160,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         MakeEnv=os.environ,
         MakeTargets='install',
         MakeStdOut='software/log/%s_make.log' % name)
+    SideEffect('dummy', tMake)  # so it works fine in parallel builds
 
     # Clean the special generated files
     for cFile in clean:
@@ -176,8 +205,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
     tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
                    cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/tmp/%s' % buildDir)
     tInstall = env.Command(
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
@@ -189,6 +220,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
                                                    'name': name},
                'Compiling & installing %s > software/log/%s.log' % (name, name),
                chdir='software/tmp/%s' % buildDir))
+    SideEffect('dummy', tInstall)  # so it works fine in parallel builds
 
     # Clean the special generated files
     for cFile in clean:
@@ -262,8 +294,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
     tUntar = Untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
                    cdir='software/em')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/em/%s' % buildDir)
     if buildDir != name:
         # Yep, some packages untar to the same directory as the package
@@ -276,12 +310,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
                    chdir='software/em'))
     else:
         tLink = tUntar  # just so the targets are properly connected later on
-
+    SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
     for target, command in extraActions:
         lastTarget = env.Command('software/em/%s/%s' % (name, target),
                                  lastTarget,
                                  Action(command, chdir='software/em/%s' % name))
+        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
 
     # Clean the special generated files
     for cFile in clean:
