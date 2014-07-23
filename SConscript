@@ -135,25 +135,33 @@ def addModule(*args, **kwargs):
     return env.AddModule(*args, **kwargs)
 
 
+setuptools = addModule(
+    'setuptools',
+    tar='setuptools-5.4.1.tgz',
+    targets=['setuptools.pth'])
+
 numpy = addModule(
     'numpy',
     tar='numpy-1.8.1.tgz')
 
 six = addModule(
     'six',
-    tar='six-1.7.3.tgz')
+    tar='six-1.7.3.tgz',
+    targets=['six.py'],
+    flags=['--old-and-unmanageable'])
 
 dateutil = addModule(
     'dateutil',
-    flags=['--old-and-unmanageable'],
     tar='python-dateutil-1.5.tgz',
-    deps=[six])
+    flags=['--old-and-unmanageable'],
+    deps=[setuptools, six])
 # The option '--old-and-unmanageable' avoids creating a single Python
 # egg, and so we have a "matplotlib" directory that can be used as a
 # target (because it is not passed as argument, it has the default value).
 
 pyparsing = addModule(
     'pyparsing',
+    target=['pyparsing.py'],
     tar='pyparsing-2.0.2.tgz')
 
 matplotlib = addModule(
@@ -161,11 +169,6 @@ matplotlib = addModule(
     tar='matplotlib-1.3.1.tgz',
     flags=['--old-and-unmanageable'],
     deps=[numpy, dateutil, pyparsing])
-
-setuptools = addModule(
-    'setuptools',
-    tar='setuptools-5.4.1.tgz',
-    targets=['setuptools.pth'])
 
 addModule(
     'psutil',
