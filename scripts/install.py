@@ -98,7 +98,7 @@ def build(args):
             ret = proc.poll()
             if ret is not None:
                 return ret
-            line = proc.stdout.readline().decode('ascii')
+            line = proc.stdout.readline()
             sys.stdout.write(line)
             logFile.write(line)
             logFile.flush()
