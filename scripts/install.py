@@ -59,6 +59,15 @@ LOGFILE = join(SOFTWARE, 'log', 'scons.log')
 
 SCONS = 'scons-2.3.2'
 
+if sys.version_info < (2, 5):
+    sys.exit('Please run this script with Python 2.5 or above.')
+    # Because SCons doesn't seem to work with an earlier version!
+    # Also, the tarfile module works badly, we have no "with" statement, etc
+
+if sys.version_info[:2] >= (3, 0):
+    sys.exit('Running with Python 3, but Python 2 needed for the installation.')
+# Once SCons works with Python 3, we can update and take this out.
+
 
 def build(args):
     """ Download SCons if needed and run it (with args) """
