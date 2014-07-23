@@ -35,6 +35,15 @@ from os.path import join, isabs, exists
 __version__ = 'v.0.1.5 Phosphorus'
 
 
+# This script tries to run ok with any python version, but it won't
+# work with python 2.4 or below.
+if sys.version_info < (2, 5):
+    sys.stdout.write('Warning: running with old Python.')
+    if len(sys.argv) > 1 and sys.argv[1] == 'install':
+        sys.exit('Please run this script with Python 2.5 or above.')
+    # Because SCons doesn't seem to work with an earlier version!
+    # Also, the tarfile module works badly, we have no "with" statement, etc
+
 
 def __findScipionHome():
     """ Find Scipion home from the __file__ location. 
