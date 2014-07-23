@@ -3,59 +3,51 @@
 # Parameters:
 #    AutoConfigParams -- Sequence of parameter strings to include on the
 #                        configure command line.
-#                        Default: [ ]
+#                        Default: []
 #    AutoConfigTarget -- File that configure will create.
-#                        Default: config.h
+#                        Default: "config.h"
 #    AutoConfigSource -- File that configure depends on.
-#                        Default: Makefile.in
+#                        Default: "Makefile.in"
+#    AutoConfigStdOut -- File where the output will be written to.
+#                        Default: None
 
-import os
+from os.path import join, dirname
 import subprocess
 
-from SCons.Script import *
+from SCons.Script import Exit
+
 
 def parms(target, source, env):
     """Assemble various AutoConfig parameters."""
-    workdir = os.path.dirname(str(source[0]))
-    params = None
-    if 'AutoConfigParams' in env:
-        params = env['AutoConfigParams']
-        if not isinstance(params, list):
-            print 'AutoConfigParams must be a sequence'
-            Exit(1)
-    targetfile = 'config.h'
-    if 'AutoConfigTarget' in env:
-        targetfile = env['AutoConfigTarget']
-    sourcefile = 'Makefile.in'
-    if 'AutoConfigSource' in env:
-        sourcefile = env['AutoConfigSource']
-    stdout = None
-    if 'AutoConfigStdOut' in env:
-        stdout = env['AutoConfigStdOut']
-    return (workdir, params, targetfile, sourcefile, stdout)
+
+    workdir = dirname(str(source[0]))
+    params = env.get('AutoConfigParams', [])
+    if not isinstance(params, list):
+        print 'AutoConfigParams must be a sequence'
+        Exit(1)
+    targetfile = env.get('AutoConfigTarget', 'config.h')
+    sourcefile = env.get('AutoConfigSource', 'Makefile.in')
+    out = env.get('AutoConfigStdOut')
+    return (workdir, params, targetfile, sourcefile, out)
+
 
 def message(target, source, env):
     """Return a pretty AutoConfig message."""
-    (dirname,
-     params,
-     targetfile,
-     sourcefile,
-     stdout) = parms(target, source, env)
+
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
+
     if 'AUTOCONFIGCOMSTR' in env:
-        return env.subst(env['AUTOCONFIGCOMSTR'],
-                         target = target, source = source, raw = 1) + " > %s " % stdout
-    msg = 'cd ' + dirname + ' && ./configure'
-    if params is not None:
-        msg += ' ' + ' '.join(params)
-    return msg
+        msg = env.subst(env['AUTOCONFIGCOMSTR'],
+                        target=target, source=source, raw=1)
+        return '%s > %s' % (msg, out)
+
+    return 'cd %s && ./configure %s' % (dirx, ' '.join(params))
+
 
 def emitter(target, source, env):
     """Remap the source & target to path/$AutoConfigSource and path/$AutoConfigTarget."""
-    (dirname,
-     params,
-     targetfile,
-     sourcefile,
-     stdout) = parms(target, source, env)
+
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
 
     # NOTE: Using source[0] instead of target[0] for the target's path!
     # If there's only one . in the source[0] value, then Scons strips off the
@@ -68,34 +60,29 @@ def emitter(target, source, env):
     # Since this emitter expects the incoming source[0] value to be a directory
     # name, we can use it here for the rewritten target[0].
 
-    return ([ os.path.join(str(source[0]), targetfile) ],
-            [ os.path.join(str(source[0]), sourcefile) ])
+    return ([ join(str(source[0]), targetfile) ],
+            [ join(str(source[0]), sourcefile) ])
+
 
 def builder(target, source, env):
     """Run ./configure in a directory."""
-    ( dirname,
-      params,
-      targetfile,
-      sourcefile,
-      stdout) = parms(target, source, env)
-    real_stdout = subprocess.PIPE
-    if 'AUTOCONFIGCOMSTR' not in env:
-        real_stdout = None
+
+    dirx, params, targetfile, sourcefile, out = parms(target, source, env)
+
+    if 'AUTOCONFIGCOMSTR' in env and out is not None:
+        fout = open(out, 'w+')
     else:
-        real_stdout = open(stdout, 'w+')
-    cmd = './configure'
-    if params is not None:
-        cmd = [ cmd ] + params
-    return subprocess.call( cmd,
-                            cwd = dirname,
-                            stdout = real_stdout,
-                            stderr = real_stdout)
+        fout = None
+
+    return subprocess.call(['./configure'] + params, cwd=dirx,
+                           stdout=fout, stderr=fout)
+
 
 def generate(env, **kwargs):
     env['BUILDERS']['AutoConfig'] = env.Builder(
-        action = env.Action(builder, message),
-        emitter = emitter,
-        single_source = True)
+        action=env.Action(builder, message),
+        emitter=emitter, single_source=True)
+
 
 def exists(env):
     return True

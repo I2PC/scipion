@@ -90,11 +90,32 @@ class TestSetOfMicrographs(BaseTest):
         os.chdir(cwd)
         
     def testRead(self):
-        """ Read micrographs from a SetOfMicrographs """
-        micSet = SetOfMicrographs(filename=self.dbGold)
-        self.assertEqual(3, micSet.getSize())
-        self.checkSet(micSet)
+        """ Read micrographs from a an sqlite file.
+        It should contains Acquisition info. """
+        micFn = self.dataset.getFile('micsGoldSqlite2')
+        print ">>> Reading gold micrographs from: ", micFn
+        
+        micSet = SetOfMicrographs(filename=micFn)
+        self.assertEqual(2, micSet.getSize())
+        acquisition=Acquisition()
+        acquisition.setMagnification(10000.)
+        acquisition.setVoltage(200.)
+        acquisition.setSphericalAberration(2.26)
+        acquisition.setAmplitudeContrast(0.1)
+        
+        mic2=Micrograph()
+        mic2.setSamplingRate(2.8)
+        mic2.setAcquisition(acquisition)
 
+        fileNames=['/home/roberto/Scipion/Test/Test2/down2_12585',
+                   '/home/roberto/Scipion/Test/Test2/down2_12610']
+        counter=0
+        for mic in micSet:
+            mic2.setFileName(fileNames[counter])
+            mic.printAll(acquisition)
+            mic2.printAll(acquisition)
+            self.assertTrue(mic.equalAttributes( mic2))
+            counter += 1
 
 class TestSetOfParticles(BaseTest):
     """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""

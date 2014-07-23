@@ -16,16 +16,17 @@
 import os
 import subprocess
 
-from SCons.Script import *
+from SCons.Script import Exit, GetOption
+
 
 def parms(target, source, env):
     """Assemble various Make parameters."""
 
-    if 'MakePath' in env:
-        make_path = env.subst(str(env['MakePath']))
-    else:
+    if 'MakePath' not in env:
         print "Make builder requires MakePath variable"
         Exit(1)
+
+    make_path = env.subst(str(env['MakePath']))
 
     make_cmd = 'make'
     if 'MakeCmd' in env:
@@ -34,7 +35,7 @@ def parms(target, source, env):
         make_cmd = env.subst(env['MAKE'])
 
     make_env = None
-    if env['CROSS_BUILD']:
+    if env.get('CROSS_BUILD'):
         make_env = env['CROSS_ENV']
     if 'MakeEnv' in env:
         if make_env == None:
@@ -58,11 +59,10 @@ def parms(target, source, env):
     if 'MakeTargets' in env:
         make_targets = env.subst(env['MakeTargets'])
 
-    stdout = None
-    if 'MakeStdOut' in env:
-        stdout = env['MakeStdOut']
+    out = env.get('MakeStdOut')
 
-    return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, stdout)
+    return (make_path, make_env, make_targets, make_cmd, make_jobs, make_opts, out)
+
 
 def message(target, source, env):
     """Return a pretty Make message"""
@@ -73,7 +73,7 @@ def message(target, source, env):
      make_cmd,
      make_jobs,
      make_opts,
-     stdout) = parms(target, source, env)
+     out) = parms(target, source, env)
 
     myenv = env.Clone()
     # Want to use MakeTargets in the MAKECOMSTR, but make it pretty first.
@@ -84,7 +84,7 @@ def message(target, source, env):
 
     if 'MAKECOMSTR' in myenv:
         return myenv.subst(myenv['MAKECOMSTR'],
-                            target = target, source = source, raw = 1) + " > %s " % stdout
+                           target=target, source=source, raw=1) + " > %s " % out
 
     msg = 'cd ' + make_path + ' &&'
     if make_env != None:
@@ -99,6 +99,7 @@ def message(target, source, env):
         msg += ' ' + make_targets
     return msg
 
+
 def builder(target, source, env):
     """Run make in a directory."""
 
@@ -108,7 +109,7 @@ def builder(target, source, env):
      make_cmd,
      make_jobs,
      make_opts,
-     stdout) = parms(target, source, env)
+     out) = parms(target, source, env)
 
     # Make sure there's a directory to run make in
     if len(make_path) == 0:
@@ -129,26 +130,24 @@ def builder(target, source, env):
         fullcmd += make_targets.split()
 
     # Capture the make command's output, unless we're verbose
-    real_stdout = subprocess.PIPE
-    if 'MAKECOMSTR' not in env:
-        real_stdout = None
+    if 'MAKECOMSTR' in env and out is not None:
+        fout = open(out, 'w+')
     else:
-        real_stdout = open(stdout, 'w+')
+        fout = None
 
     # Make!
-    make = subprocess.Popen(fullcmd,
-                            cwd = make_path,
-                            stdout = real_stdout,
-                            stderr = real_stdout,
-                            env = make_env)
+    make = subprocess.Popen(fullcmd, cwd=make_path,
+                            stdout=fout, stderr=fout,
+                            env=make_env)
 
     # Some subprocesses don't terminate unless we communicate with them
     output = make.communicate()[0]
     return make.returncode
 
+
 def generate(env, **kwargs):
-    env['BUILDERS']['Make'] = env.Builder(
-        action = env.Action(builder, message))
+    env['BUILDERS']['Make'] = env.Builder(action=env.Action(builder, message))
+
 
 def exists(env):
     if env.WhereIs(env.subst('$MAKE')) != None:

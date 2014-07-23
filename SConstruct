@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+
 # **************************************************************************
 # *
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
+# *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -25,589 +27,37 @@
 # *
 # **************************************************************************
 
-#
-# Brief summary: This file is intended to be the main skeleton which will guide all the installation process using a SCons python-based system.
-#
+# Builders and pseudobuilders used be SConscript to install things.
+
 
 import os
-import sys
+from os.path import join, abspath
 import platform
 import SCons.Script
-import shutil
 
-
-#############
-# VARIABLES #
-#############
 
 # OS boolean vars
-MACOSX = platform.system() == 'Darwin'
-WINDOWS = platform.system() == 'Windows'
-LINUX = platform.system() == 'Linux'
-MANDATORY_PYVERSION = '2.7.7' #python version that is obligatory for executing Scipion
-PYVERSION = platform.python_version() #python version present in the machine
+MACOSX = (platform.system() == 'Darwin')
+WINDOWS = (platform.system() == 'Windows')
+LINUX = (platform.system() == 'Linux')
 
-# Big scipion structure dictionary and associated vars
-# indexes
-# folders             | libs | packages           | index
-SOFTWARE_FOLDER =      DEF =   PKG_DEF =             0 
-                    # is built by default?               
-CONFIG_FOLDER =        INCS =  PKG_INSTALL_FOLDER =  1
-                    # includes                           
-INSTALL_FOLDER =       LIBS =  PKG_LIB_FOLDER =      2
-                    # libraries to create                
-BIN_FOLDER =           SRC =   PKG_BIN_FOLDER =      3 
-                    # source pattern                     
-PACKAGES_FOLDER =      DIR =   PKG_URL =             4 
-                    # folder name in temporal directory  
-LIB_FOLDER =           TAR =   PKG_TAR =             5
-                    # tarfile name in temporal directory
-MAN_FOLDER =           DEPS =                        6 
-                    # explicit dependencies              
-TMP_FOLDER =           URL =                         7
-                    # URL to download from               
-INCLUDE_FOLDER =       FLAGS =                       8
-                    # Other flags for the compiler
-LOG_FOLDER =                                         9 # 
+# URL where we have most of our tgz files for libraries, modules and packages.
+URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
+# Define our builders.
+Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
+Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
-# indexes for LIBS
-
-SCIPION = {
-    'FOLDERS': {SOFTWARE_FOLDER: 'software',
-                CONFIG_FOLDER: os.path.join('software', 'cfg'),
-                INSTALL_FOLDER: os.path.join('software', 'install'),
-                BIN_FOLDER: os.path.join('software', 'bin'),
-                PACKAGES_FOLDER: os.path.join('software', 'em'),
-                LIB_FOLDER: os.path.join('software', 'lib'),
-                MAN_FOLDER: os.path.join('software', 'man'),
-                TMP_FOLDER: os.path.join('software', 'tmp'),
-                INCLUDE_FOLDER: os.path.join('software', 'include'),
-                LOG_FOLDER: os.path.join('software', 'log')},
-    'LIBS': {},
-    'EMPACKAGES': {}}
-
-######################
-# AUXILIAR FUNCTIONS #
-###################### 
-def _addLibrary(env, name, dir=None, dft=True, src=None, incs=None, libs=None, tar=None, deps=None, url=None, flags=[]):
-    """
-    This method is for adding a library to the main dict
-    """
-    from os.path import splitext
-    if dir is None: 
-        dir = splitext(tar)[0] if tar is not None else name
-    tar = '%s.tgz' % dir if tar is None else tar
-    src = dir if src is None else src
-    url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/external/%s' % tar if url is None else url
-    incs = [] if incs is None else incs
-    libs = ["lib%s.so" % name] if libs is None else libs
-    deps = [] if deps is None else deps
-    # First we add the library to the main dictionary
-    SCIPION['LIBS'][name] = {DEF: dft,
-                     SRC: src,
-                     INCS: incs,
-                     LIBS: libs,
-                     DIR: dir,
-                     TAR: tar,
-                     DEPS: deps,
-                     URL: url,
-                     FLAGS: flags}
-    # Then we add the option, so the user can call scons with this the library as option
-    AddOption('--%s' % name,
-              dest='%s' % name,
-              action='store_true',
-              help='Library %s option' % name)
-
-def _delLibrary(env, name):
-    """
-    This method is for removing a library from the main dict
-    """
-    del SCIPION['LIBS'][name]
-
-def _addPackage(env, name, dft=True, dir=None, tar=None, url=None, lib=None, bin=None):
-    """
-    This method is for adding a package to the main dict
-    """
-    from os.path import splitext
-    if dir is None:
-        dir = splitext(tar)[0] if tar is not None else name
-    tar = '%s.tgz' % dir if tar is None else tar
-    url = 'http://scipionwiki.cnb.csic.es/files/scipion/software/em/%s' % tar if url is None else url
-    
-    SCIPION['EMPACKAGES'][name] = {PKG_DEF: dft,
-                                 PKG_TAR: tar,
-                                 PKG_URL: url,
-                                 PKG_INSTALL_FOLDER: dir,
-                                 PKG_LIB_FOLDER: lib,
-                                 PKG_BIN_FOLDER: bin}
-    AddOption('--%s' % name,
-              dest='%s' % name,
-              action='store_true',
-              help='EM Package %s option')
-
-def _delPackage(env, name):
-    """
-    This method is for removing a package from the main dict
-    """
-    del SCIPION['EMPACKAGES'][name]
-
-def _download(env, name, type='Library', verbose=False):
-    """
-    This method is for downloading either a package or a library.
-    """
-    import urllib2, urlparse
-    targetDict = {}
-    library = (type == 'Library')
-    em = type == 'EMPackage' 
-    if library:
-        targetDict = SCIPION['LIBS'].get(name)
-        DEFAULT = DEF
-        TARFILE = TAR
-        URLADD = URL
-    elif em:
-        targetDict = SCIPION['EMPACKAGES'].get(name)
-        DEFAULT = PKG_DEF
-        TARFILE = PKG_TAR
-        URLADD = PKG_URL
-    else:
-        print "Error: type %s not allowed for downloading" % type
-        return []
-        
-    # Check whether the library must be downloaded
-    if not GetOption('%s' % name):
-        if not targetDict[DEFAULT]:
-            return []
-    tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], targetDict[TARFILE])
-    tarFile = File(tar)
-    md5 = "%s.md5" % tar
-    md5File = File(tar)
-    folder = SCIPION['FOLDERS'][TMP_FOLDER]
-    folderDir = Dir(folder)
-    url = targetDict[URLADD]
-    urlMd5 = "%s.md5" % url
-    go = True
-    message = message2 = ''
-    
-    md5check = GetOption('update')
-    if GetOption('update') is None:
-        md5check = False
-        go = False
-    
-    if not os.path.exists(md5):
-        md5check = True
-    
-    if md5check:
-        print "Downloading md5 file for %s %s..." % (name, type)
-        go, message = _downloadFile(urlMd5, md5)
-        print "Checking md5 checksum..."
-        if _checkMd5(tar, md5) == 1:
-            go = False
-    
-    if go:
-        while go:
-            print "Downloading %s in folder %s" % (url, folder)
-            down, message2 = _downloadFile(url, tar)
-            if not down:
-                print "\t ...%s %s not downloaded. Server says: \n %s" % (type, name, message2)
-            if _checkMd5(tar, md5) == 0:
-                if not _askContinue("Downloaded %s file doesn't match md5 its md5 checksum. Download it again?" % tar):
-                    go = False
-            else:
-                go = False
-        return tar
-    elif verbose:
-        if _askContinue("\t ...%s %s was not downloaded. Proceed anyway?" % (name, type)):
-            return True
-        else:
-            raise SCons.Errors.StopError("User defined stop")
-    else:
-        print "\t ...%s %s not downloaded" % (name, type)
-        return tarFile
-
-def _downloadEMPackage(env, name, verbose=False):
-    """
-    This method is for downloading an EM package and place it in the em directory, so it can be compiled and installed
-    """
-    return _download(env, name, type='EMPackage', verbose=verbose)
-
-def _downloadLibrary(env, name, verbose=False):
-    """
-    This method is for downloading a library and placing it in tmp dir
-    It will download first the .md5
-    """
-    return _download(env, name, type='Library', verbose=verbose)
-
-def _untarLibrary(env, name, tar=None, folder=None):
-    """
-    This method is for untar the downloaded library in the tmp directory
-    """
-    import tarfile
-    # Add builders to deal with source code, donwloads, etc 
-    libraryDict = SCIPION['LIBS'].get(name)
-    # Check whether the library must be untar
-    if not GetOption('%s' % name):
-        if not libraryDict[DEF]:
-            return []
-    if tar is None:
-        tar = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], libraryDict[TAR])
-    if folder is None:
-        folder = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER],libraryDict[DIR])
-    sourceTar = tarfile.open(tar,'r')
-    tarContents = sourceTar.getmembers()
-    tarFileContents = filter(lambda tarEntry: tarEntry.isfile(), tarContents)
-    tarFileContentsNames = map(__tarInfoToNode, tarFileContents)
-    for indx, item in enumerate(tarFileContentsNames): 
-        tarFileContentsNames[indx] = os.path.join(SCIPION['FOLDERS'][TMP_FOLDER], item)
-    sourceTar.close()
-    env["UNPACK"]["EXTRACTDIR"] = SCIPION['FOLDERS'][TMP_FOLDER] 
-    unpacked = env.Unpack(target=folder, 
-                          source=tar, 
-                          UNPACKLIST=tarFileContentsNames)
-    #for dep in tarFileContentsNames:
-    #    "%s depends on %s and %s" % (dep, folder, tar)
-        #Depends(dep, folder)
-        #Depends(dep, tar)
-    #result = env.Unpack(target=tarFileContentsNames, 
-    #                    source=tar, 
-    #                    UNPACKLIST=tarFileContentsNames)
-    return unpacked
-
-def __tarInfoToNode(tarInfoObject):
-    return tarInfoObject.name
-
-def _compileLibrary(env, name, incs=None, libs=None, deps=None, flags=None, source=None, target=None, autoTarget=None, autoSource=None, makePath=None, makeTargets="all install", configStdOutLog=None, makeStdOutLog=None):
-    """
-    Function that implements pseudo-builder for executing AutoConfig and Make builders
-    Args:
-     * name -> name of the library as used for the key of the LIBS dictionary in SCIPION main dictionary
-     * incs -> includes for compiling process. Must be a list of paths
-     * libs -> list of libraries that will be built when compilation of this library is finished. Will be used as the target of the compilation process
-     * deps -> list of dependencies. 2 ways may be used. You can give the main key of another library in the SCIPION main dictionary or you can use the path of the future library file
-     * flags -> any other flag (in its complete way) that may be passed to the configure process, can be written as a list of flags
-     * source -> 
-     * target ->
-     * autoTarget ->
-     * autoSource ->
-     * makePath ->
-     * makeTargets ->
-     * stdoutLog ->
-     * stderrLog ->
-      
-    """
-    from shutil import copyfile, rmtree
-    
-    # PREPARING ENVIRONMENT
-    env['CROSS_BUILD'] = False
-    libraryDict = SCIPION['LIBS'].get(name)
-    # Check whether the library must be compiled
-    if not GetOption('%s' % name):
-        if not libraryDict[DEF]:
-            return []
-    tmp = SCIPION['FOLDERS'][TMP_FOLDER]
-    incs = libraryDict[INCS] if incs is None else incs
-    libs = libraryDict[LIBS] if libs is None else libs
-    deps = libraryDict[DEPS] if deps is None else deps
-    flags = libraryDict[FLAGS] if flags is None else flags
-    autoSource = 'Makefile.in' if autoSource is None else autoSource
-    autoTarget = 'Makefile' if autoTarget is None else autoTarget
-    folder = os.path.join(tmp,
-                          libraryDict[DIR])
-    tar = os.path.join(tmp,
-                       libraryDict[TAR])
-    if source is None:
-        source = Glob(os.path.join(tmp, 
-                                   libraryDict[SRC]),
-                      '*.c')
-    target = 'lib%s.so' % name if target is None else target
-    target = os.path.join(tmp,
-                          libraryDict[DIR],
-                          target)
-    if makePath is None:
-        makePath = Dir(os.path.join(tmp, 
-                                    libraryDict[DIR]))
-    else:
-        makePath = Dir(os.path.join(tmp, 
-                                    libraryDict[DIR], 
-                                    makePath))
-    incflags = []
-    if not len(incs) == 0:
-        incflagString = "CPPFLAGS=\'"
-        for inc in incs:
-            if os.path.exists(inc):
-                incflagString += '-I%s ' % inc
-        incflagString += "\'"
-        incflags = [incflagString]
-    flags += incflags
-    
-    # Output redirection to log file
-    configStdOutLog = os.path.join(SCIPION['FOLDERS'][LOG_FOLDER], '%s_configure.log' % name) if configStdOutLog is None else configStdOutLog
-    makeStdOutLog = os.path.join(SCIPION['FOLDERS'][LOG_FOLDER], '%s_make.log' % name) if makeStdOutLog is None else makeStdOutLog
-    if os.path.exists(configStdOutLog):
-        if os.path.exists("%s.old" % configStdOutLog):
-            os.remove("%s.old" % configStdOutLog)
-        copyfile(configStdOutLog, "%s.old" % configStdOutLog)
-    if os.path.exists(makeStdOutLog):
-        if os.path.exists("%s.old" % makeStdOutLog):
-            os.remove("%s.old" % makeStdOutLog)
-        copyfile(makeStdOutLog, "%s.old" % makeStdOutLog)
-    env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES "
-    env['MAKECOMSTR'] = "Compiling $TARGET from $SOURCES " 
-
-    # DEPENDENCIES
-    for dep in deps:
-        # if we provided the key for the main dictionary
-        if dep in SCIPION['LIBS']:
-            librs = SCIPION['LIBS'][dep][LIBS]
-            if len(librs) > 0:
-                for dp in librs:
-                    Depends(File(autoSource),
-                            Dir(os.path.join(tmp,
-                                             SCIPION['LIBS'][dep][DIR])))
-                    Depends(File(target),
-                            File(os.path.join(tmp,
-                                              SCIPION['LIBS'][dep][DIR],
-                                              dp)))
-        # if we provided directly the path of a file
-        else:
-            Depends(File(target), File(dep))
-    Depends(File(autoSource), Dir(folder))
-    Depends(File(target), File(os.path.join(tmp,
-                                        libraryDict[DIR],
-                                        autoTarget)))
-
-    # CONFIGURE
-    configure = env.AutoConfig(source=Dir(folder),
-                               target=target, 
-                               AutoConfigTarget=autoTarget, 
-                               AutoConfigSource=autoSource, 
-                               AutoConfigParams=flags,
-                               AutoConfigStdOut=configStdOutLog)
-
-    # MAKE
-    make = env.Make(source=os.path.join(tmp,
-                                        libraryDict[DIR],
-                                        autoTarget),
-                    target=File(target), 
-                    MakePath=makePath, 
-                    MakeEnv=os.environ, 
-                    MakeTargets=makeTargets,
-                    MakeStdOut=makeStdOutLog)
-
-    return make
-
-def _compileWithSetupPy(env, name, deps=None, actions=['build','install'], setupPyFile=None, real_stdout=None):
-    """
-    This method enter in a folder where a setup.py file is placed and executes setup.py build and setup.py install with the given prefix
-    Args:
-     * name ->
-     * source ->
-     * target ->
-     * actions ->
-     * setupPyFile ->
-    """
-    from shutil import copyfile
-    import subprocess
-    libraryDict = SCIPION['LIBS'].get(name)
-    # Check whether the module must be compiled 
-    if not GetOption('%s' % name):
-        if not libraryDict[DEF]:
-            return []
-    tmp = SCIPION['FOLDERS'][TMP_FOLDER]
-    bin = SCIPION['FOLDERS'][BIN_FOLDER]
-    log = SCIPION['FOLDERS'][LOG_FOLDER]
-
-    deps = [] if deps is None else deps
-    if setupPyFile is not None:
-        copyFile(setupPyFile, os.path.join(tmp, libraryDict[DIR], 'setup.py'))
-    setupPyFile = os.path.join(tmp, libraryDict[DIR], 'setup.py')
-    
-    setup = None
-    command = 'cd %s &> /dev/null && ' % os.path.join(tmp, libraryDict[DIR])
-    command += os.path.join(File(os.path.join(bin, 'python')).abspath)
-    command += ' '
-    command += 'setup.py'
-    for action in actions:
-        command += ' '
-        command += action
-    command += ' &> %s && cd - &> /dev/null' % (os.path.join(os.environ['SCIPION_HOME'], log, '%s.log' % name))
-    setup = env.Command(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
-                        File(os.path.join(tmp, libraryDict[DIR], 'setup.py')),
-                        Action(command, 'Compiling %s > %s' % (name, os.path.join(log, '%s.log' % name))))
-    
-    for dep in deps:
-        if dep in SCIPION['LIBS']:
-            librs = SCIPION['LIBS'][dep][LIBS]
-            if len(librs) > 0:
-                for dp in librs:
-                    Depends(Dir(os.path.join(tmp, libraryDict[DIR], 'build')), 
-                            File(os.path.join(tmp,
-                                              SCIPION['LIBS'][dep][DIR],
-                                              dp)))
-        else:
-            Depends(Dir(os.path.join(tmp, libraryDict[DIR], 'build')),
-                    File(dep))
-    
-    return setup
-
-def _scipionLogo(env):
-    print ""
-    print "QQQQQQQQQT!^'::\"\"?$QQQQQQ" + "  S   S   S"
-    print "QQQQQQQY`          ]4QQQQ"   + "  C   C   C"
-    print "QQQQQD'              \"$QQ"  + "  I   I   I"
-    print "QQQQP                 \"4Q"  + "  P   P   P"
-    print "QQQP        :.,        -$"   + "  I   I   I"
-    print "QQD       awQQQQwp      )"   + "  O   O   O"
-    print "QQ'     qmQQQWQQQQg,   jm"   + "  N   N   N"
-    print "Qf     QQQD^   -?$QQp jQQ"   + " ################################################"
-    print "Q`    qQQ!        4WQmQQQ"   + " # Integrating image processing packages for EM #"
-    print "F     QQ[          ~)WQQQ"   + " ################################################"
-    print "[    ]QP             4WQQ"   + ""
-    print "f    dQ(             -$QQ"   + " Installation SCons system"
-    print "'    QQ              qQQQ"
-    print ".   )QW            _jQQQQ"
-    print "-   =QQ           jmQQQQQ"
-    print "/   -QQ           QQQQQQQ"
-    print "f    4Qr    jQk   )WQQQQQ"
-    print "[    ]Qm    ]QW    \"QQQQQ"
-    print "h     $Qc   jQQ     ]$QQQ"
-    print "Q,  :aQQf qyQQQL    _yQQQ"
-    print "QL jmQQQgmQQQQQQmaaaQWQQQ"
-    print ""
-
-def _downloadFile(url, file):
-    """
-    Function that downloads the content of a URL into a file
-    Returns a boolean telling if the download succeed, and the htmllib.Message instance to the answer
-    """
-    import urllib
-    import htmllib
-    message=None
-    try:
-        response, message = urllib.urlretrieve(url, file)
-    except:
-        message = "Exception caught when downloading the URL %s. Are you connected to internet?"
-        return False, message
-    # If we get a html answer, then it is a server answer telling us that the file doesn't exist, but we return the message
-    if message.dict['content-type'] == 'text/html':
-        return False, message
-
-    return True, message
-
-def _installLibs(name, libs):
-    """
-    Function that copies the generated libs to the proper folder in the scipion architecture
-    """
-    print "Not implemented yet"
-    return True
-
-def _removeInstallation(env):
-    """
-    Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
-    """
-    # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
-    UNINSTALL = {'TOCLEAN': [os.path.join('software','lib'), 
-                             os.path.join('software', 'lib64'),
-                             os.path.join('software', 'bin'),
-                             os.path.join('software', 'man'),
-                             os.path.join('software', 'share'),
-                             os.path.join('software', 'tmp'),
-                             os.path.join('software', 'log')],
-                 'TOREMOVE': [os.path.join('software', 'install', 'scons-2.3.1')]}
-#    if not _askContinue("Proceeding with Scipion purge process. Everything is going to be removed from the machine. Are you sure?"):
-#        return False
-    for dir in UNINSTALL.get('TOCLEAN'):
-        print "Cleaning %s" % dir
-        list = os.listdir(dir)
-        for thing in list:
-            path = os.path.join(dir, thing)
-            if thing == '.gitignore':
-                continue
-            if os.path.isfile(path) or os.path.islink(path):
-                os.unlink(path)
-            else:
-                shutil.rmtree(path)
-    for dir in UNINSTALL.get('TOREMOVE'):
-        print "Deleting %s" % dir
-        shutil.rmtree(dir)
-    return True
-
-def _checkMd5(file, md5):
-    """
-    Function that checks if the md5sum from a given file match the md5sum from a md5 file
-    md5 file should contain it as the first element.
-    The function will return 1 if both sums match, 0 if they doesn't match and -1 if either md5 or file doesn't exist 
-    """
-    if not os.path.exists(file):
-        print "Checksum error. File %s doesn't exist" % file
-        return -1
-    if not os.path.exists(md5):
-        print "Checksum error. File %s doesn't exist" % md5
-        return -1
-    tarFileMd5 = _md5Sum(file)
-    md5File = open(md5, 'r+')
-    lines = md5File.readlines()
-    md5FileMd5 = lines[0].replace("\n","").split(" ")[0]
-    md5File.close()
-    
-    answer = 1 if tarFileMd5 == md5FileMd5 else 0
-
-    if not answer:
-        print "Checksum error. %s says %s, but %s says %s" % (file, tarFileMd5, md5, md5FileMd5)
-    else:
-        print "\t ...md5 OK"
-    return answer
-
-def _askContinue(msg="continue?"):
-    """
-    Function that ask the user in command line and returns the answer
-    """
-    answer = "-"
-    while answer != "y" and answer != "n" and answer != "":
-        answer = raw_input("%s (y/[n]): " % msg)
-        if answer == "n" or answer == "N":
-            return False
-        elif answer == "y" or answer == "Y":
-            return True
-    return None
-
-def _md5Sum(file):
-    """
-    Function that calculates the md5 sum of a given file
-    """
-    import hashlib
-    md5sum = 0
-    md5 = hashlib.md5()
-    with open(file,'r+') as fileToCheck:
-        for chunk in iter(lambda: fileToCheck.read(128*md5.block_size), b''):
-            md5.update(chunk)
-    md5sum = md5.hexdigest()
-    return md5sum
-
-
-#########################
-# ENVIRONMENT AND TOOLS #
-#########################
-
-# We create the environment the whole build will use
-env = None
+# Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
-                  tools=['Make',
-                         'Unpack',
-                         'AutoConfig',
-#                         'ConfigureJNI',
-#                         'install',
-#                         'cuda'
-                         ],
-                  toolpath=[os.path.join('software', 'install', 'scons-tools')])
-# To decide if a target must be rebuilt, both md5 and timestamp will be used together
-env.Decider('MD5-timestamp')
-# For certain files or folders which change could affect the compilation, here there could exist also a user-defined decider function. At this moment MD5-timestamp will be enough 
+                  tools=['Make', 'AutoConfig'],
+                  toolpath=[join('software', 'install', 'scons-tools')])
 
-# To avoid the scanning of new dependencies for every file each time you rebuild, we set an implicit cache. So once a file has been scanned (its #includes pointers) then it won't be scanned again unless the file is changed
-#SetOption('implicit_cache', 1)
+# Message from autoconf and make, so we don't see all its verbosity.
+env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
+env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
-#Depending on the system, we have to add to the environment, the path to where dynamic libraries are, so linker can find them 
+# Add the path to dynamic libraries so the linker can find them.
 if LINUX:
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
 elif MACOSX:
@@ -617,56 +67,330 @@ elif WINDOWS:
     print "OS not tested yet"
 
 
-# Add methods to manage main dict to the environment to put them available from SConscript
-env.AddMethod(_addLibrary, "AddLibrary")
-env.AddMethod(_delLibrary, "DelLibrary")
-env.AddMethod(_addPackage, "AddPackage")
-env.AddMethod(_delPackage, "DelPackage")
+#  ************************************************************************
+#  *                                                                      *
+#  *                           Pseudobuilders                             *
+#  *                                                                      *
+#  ************************************************************************
 
-# Add pseudo-builder methods in order to perfectly manage what we want, and not depend only on the builders methods
-env.AddMethod(_download, "Download")
-env.AddMethod(_downloadLibrary, "DownloadLibrary")
-env.AddMethod(_downloadEMPackage, "DownloadEMPackage")
-env.AddMethod(_untarLibrary, "UntarLibrary")
-env.AddMethod(_compileLibrary, "CompileLibrary")
-env.AddMethod(_compileWithSetupPy, "CompileWithSetupPy")
+# We have 3 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+#
+# They are:
+#   addLibrary - install a library
+#   addModule  - install a Python module
+#   addPackage - install an EM package
+#
+# Their structure is similar:
+#   * Define reasonable defaults
+#   * Set --with-<name> option as appropriate
+#   * Concatenate builders
+#
+# For the last step we concatenate the builders this way:
+#   target1 = Builder1(env, target1, source1)
+#   SideEffect('dummy', target1)
+#   target2 = Builder2(env, target2, source2=target1)
+#   SideEffect('dummy', target2)
+#   ...
+#
+# So each target becomes the source of the next builder, and the
+# dependency is solved. Also, we use SideEffect('dummy', ...) to
+# ensure it works in a parallel build (see
+# http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
+# to do one step while the previous one is still running in the background.
 
-# Add other auxiliar functions to environment
-env.AddMethod(_scipionLogo, "ScipionLogo")
+def addLibrary(env, name, tar=None, buildDir=None, targets=None,
+               url=None, flags=[], autoConfigTarget='Makefile',
+               deps=[], clean=[], default=True):
+    """Add library <name> to the construction process.
 
-# Add auxiliar function to completely clean the installation
-env.AddMethod(_removeInstallation, "RemoveInstallation")
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file, configures the library with the given flags, compiles it
+    (in the given buildDir) and installs it. It also tells SCons about
+    the proper dependencies (deps).
 
-# Add main dict to environment
-env.AppendUnique(SCIPION)
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
 
-########################
-# Command-line options #
-########################
+    Returns the final targets, the ones that Make will create.
 
-AddOption('--update',
-          dest='update',
-          action='store_true',
-          help='Check for packages or libraries updates')
-AddOption('--purge',
-          dest='purge',
-          action='store_true',
-          help='Completely clean the installation and its binaries')
-AddOption('--binary',
-          dest='binary',
-          action='store_true',
-          help='After doing the installation, create and package a binary for distribution')
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/external/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    targets = targets or ['lib/lib%s.so' % name]
 
-env['MANDATORY_PYVERSION'] = MANDATORY_PYVERSION
-env['PYVERSION'] = PYVERSION
-Export('env', 'SCIPION')
+    # Add "software/lib" to the beginning of LD_LIBRARY_PATH.
+    for i in range(len(flags)):
+        if flags[i].startswith('LD_LIBRARY_PATH='):
+            flags[i] = 'LD_LIBRARY_PATH=%s:%s' % (abspath('software/lib'),
+                                                  flags[i].split('=', 1)[1])
+            break
+    else:  # we did not find any flag starting with 'LD_LIBRARY_PATH='
+        flags.insert(0, 'LD_LIBRARY_PATH=%s' % abspath('software/lib'))
 
-# Purge option
-if GetOption('purge'):
-    print "Purge option implies clean. Activating clean..."
-    SetOption('clean', True)
+    flags += ['--prefix=%s' % abspath('software'),
+              '--libdir=%s' % abspath('software/lib')]  # not lib64
 
-# Only in case user didn't select help message, we run SConscript
-#if not GetOption('help') and not GetOption('clean'):
-if not GetOption('help'):
-    env.SConscript('SConscript')
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate the library even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate library %s' % name)
+        if  not GetOption(name):
+            return ''
+
+    # Create and concatenate the builders.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
+                   cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    tConfig = env.AutoConfig(
+        source=Dir('software/tmp/%s' % buildDir),
+        AutoConfigTarget=autoConfigTarget,
+        AutoConfigSource='configure',
+        AutoConfigParams=flags,
+        AutoConfigStdOut='software/log/%s_config.log' % name)
+    SideEffect('dummy', tConfig)  # so it works fine in parallel builds
+    tMake = env.Make(
+        source=tConfig,
+        target=['software/%s' % t for t in targets],
+        MakePath='software/tmp/%s' % buildDir,
+        MakeEnv=os.environ,
+        MakeTargets='install',
+        MakeStdOut='software/log/%s_make.log' % name)
+    SideEffect('dummy', tMake)  # so it works fine in parallel builds
+
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(tMake, cFile)
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tConfig, dep)
+
+    return tMake
+
+
+def addModule(env, name, tar=None, buildDir=None, targets=None,
+              url=None, flags=[], deps=[], clean=[], default=True):
+    """Add Python module <name> to the construction process.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file, configures the module with the given flags, compiles it
+    (in the given buildDir) and installs it. It also tells SCons about
+    the proper dependencies (deps).
+
+    If default=False, the module will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final target (software/lib/python2.7/site-packages/<name>).
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/python/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    targets = targets or [name]
+    flags += ['--prefix=%s' % abspath('software')]
+
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate the module even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate module %s' % name)
+        if  not GetOption(name):
+            return ''
+
+    # Create and concatenate the builders.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
+                   cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    tInstall = env.Command(
+        ['software/lib/python2.7/site-packages/%s' % t for t in targets],
+        tUntar,
+        Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
+               '%(root)s/bin/python setup.py install %(flags)s > '
+               '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
+                                                   'flags': ' '.join(flags),
+                                                   'name': name},
+               'Compiling & installing %s > software/log/%s.log' % (name, name),
+               chdir='software/tmp/%s' % buildDir))
+    SideEffect('dummy', tInstall)  # so it works fine in parallel builds
+
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tInstall, dep)
+
+    return tInstall
+
+
+def addPackage(env, name, tar=None, buildDir=None, url=None,
+               extraActions=[], deps=[], clean=[], default=True):
+    """Add external (EM) package <name> to the construction process.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file and copies its content from buildDir into the
+    installation directory <name>. It also tells SCons about the
+    proper dependencies (deps).
+
+    extraActions is a list of (target, command) that should be
+    executed after the package is properly installed.
+
+    If default=False, the package will not be built unless the option
+    --with-<name> or --with-all-packages is used.
+
+    Returns the final target (software/em/<name>).
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/em/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+
+    # Add the option --with-<name>, so the user can call SCons with this
+    # to get the package even if it is not on by default.
+    AddOption('--with-%s' % name, dest=name, metavar='%s_HOME' % name.upper(),
+              nargs='?', const='unset',
+              help=("Get package %s. With no argument, download and "
+                    "install it. To use an existing installation, pass "
+                    "the package's directory." % name))
+    # So GetOption(name) will be...
+    #   None      if we did *not* pass --with-<name>
+    #   'unset'   if we passed --with-<name> (nargs=0)
+    #   PKG_HOME  if we passed --with-<name>=PKG_HOME (nargs=1)
+
+    # See if we have used the --with-<package> option and exit if appropriate.
+    if GetOption('withAllPackages'):
+        defaultPackageHome = 'unset'
+        # we asked to install all packages, so it is at least as if we
+        # also did --with-<name>
+    else:
+        defaultPackageHome = None
+        # by default it is as if we did not use --with-<name>
+
+    packageHome = GetOption(name) or defaultPackageHome
+
+    if not (default or packageHome):
+        return ''
+
+    # If we do have a local installation, link to it and exit.
+    if packageHome != 'unset':  # default value when calling only --with-package
+        # Just link to it and do nothing more.
+        return env.Command(
+            'software/em/%s/bin' % name,
+            Dir(packageHome),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
+
+    # Donload, untar, link to it and execute any extra actions.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
+                   cdir='software/em')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/em/%s' % buildDir)
+    if buildDir != name:
+        # Yep, some packages untar to the same directory as the package
+        # name (hello Xmipp), and that is not so great. No link to it.
+        tLink = env.Command(
+            'software/em/%s/bin' % name,  # TODO: find smtg better than "/bin"
+            Dir('software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
+    else:
+        tLink = tUntar  # just so the targets are properly connected later on
+    SideEffect('dummy', tLink)  # so it works fine in parallel builds
+    lastTarget = tLink
+    for target, command in extraActions:
+        lastTarget = env.Command('software/em/%s/%s' % (name, target),
+                                 lastTarget,
+                                 Action(command, chdir='software/em/%s' % name))
+        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+
+    # Clean the special generated files
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+    # Add the dependencies. Do it to the "link target" (tLink), so any
+    # extra actions (like setup scripts) have everything in place.
+    for dep in deps:
+        Depends(tLink, dep)
+
+    return lastTarget
+
+
+# Add methods so SConscript can call them.
+env.AddMethod(addLibrary, "AddLibrary")
+env.AddMethod(addModule, "AddModule")
+env.AddMethod(addPackage, "AddPackage")
+
+
+
+# TODO: check the code below to see if we can do a nice "purge".
+
+# def _removeInstallation(env):
+#     """
+#     Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
+#     """
+#     # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
+#     UNINSTALL = {'TOCLEAN': [join('software','lib'),
+#                              join('software', 'lib64'),
+#                              join('software', 'bin'),
+#                              join('software', 'man'),
+#                              join('software', 'share'),
+#                              join('software', 'tmp'),
+#                              join('software', 'log')],
+#                  'TOREMOVE': [join('software', 'install', 'scons-2.3.1')]}
+# #    if _ask("Proceeding with Scipion purge process. Everything is going to be removed from the machine. Are you sure?") != 'y':
+# #        return False
+#     for dir in UNINSTALL.get('TOCLEAN'):
+#         print "Cleaning %s" % dir
+#         list = os.listdir(dir)
+#         for thing in list:
+#             path = join(dir, thing)
+#             if thing == '.gitignore':
+#                 continue
+#             if os.path.isfile(path) or os.path.islink(path):
+#                 os.unlink(path)
+#             else:
+#                 shutil.rmtree(path)
+#     for dir in UNINSTALL.get('TOREMOVE'):
+#         print "Deleting %s" % dir
+#         shutil.rmtree(dir)
+#     return True
+
+# ########################
+# # Command-line options #
+# ########################
+
+# AddOption('--update',
+#           dest='update',
+#           action='store_true',
+#           help='Check for packages or libraries updates')
+# AddOption('--purge',
+#           dest='purge',
+#           action='store_true',
+#           help='Completely clean the installation and its binaries')
+# AddOption('--binary',
+#           dest='binary',
+#           action='store_true',
+#           help='After doing the installation, create and package a binary for distribution')
+
+AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
+          help='Get all EM packages')
+
+
+Export('env')
+
+env.SConscript('SConscript')

@@ -28,6 +28,7 @@ Please,  do not  generate or  distribute
 a modified version of this file under its original name. 
 """
 import unittest, sys
+from itertools import izip
 from pyworkflow.em import *
 from pyworkflow.tests import *
 
@@ -72,19 +73,16 @@ class TestEmxBase(BaseTest):
         self.launchProtocol(protEmxImport)
         micFn =self.dataset.getFile('micrographsGoldT2')
         mics  = SetOfMicrographs(filename = micFn)
-        
-        micsTmp1  = protEmxImport._createSetOfMicrographs('kk1')
-        micsTmp2  = protEmxImport._createSetOfMicrographs('kk2')
-        for mic in mics:
-            fn = os.path.basename(mic.getFileName())
-            mic.setFileName(String(fn))
-            micsTmp1.append(mic)
-        for mic in protEmxImport.outputMicrographs:
-            fn = os.path.basename(mic.getFileName())
-            mic.setFileName(fn)
-            micsTmp2.append(mic)
+            
+        for mic1, mic2 in izip(mics, protEmxImport.outputMicrographs):
+            # Remove the absolute path in the micrographs to 
+            # really check that the attributes should be equal
+            mic1.setFileName(os.path.basename(mic1.getFileName()))
+            mic2.setFileName(os.path.basename(mic2.getFileName()))
+            mic1.printAll()
+            mic2.printAll()
+            self.assertTrue(mic1.equalAttributes(mic2))
 
-        BaseTest.compareSets(self, micsTmp2, micsTmp1)
 
 
 
