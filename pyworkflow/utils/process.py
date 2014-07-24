@@ -29,6 +29,7 @@ This module handles process execution
 """
 
 import sys
+import os.path
 import resource
 from subprocess import call
 
@@ -99,9 +100,8 @@ def loadHostConfig(host='localhost'):
     and how to submit jobs to the queue system if exists.
     """
     from pyworkflow.hosts import HostMapper
-    from pyworkflow.apps.config import getConfigPath
-    fn = getConfigPath()
-    mapper = HostMapper(fn)
+    from pyworkflow import HOME
+    mapper = HostMapper(os.path.join(HOME, '..', 'settings'))
     return mapper.selectByLabel(host)
 
 

@@ -29,11 +29,7 @@ import os.path
 
 HOME = os.path.abspath(os.path.dirname(__file__))
 
-def join(*paths):
-    """ join paths from HOME. """
-    return os.path.join(HOME, *paths)
-
-RESOURCES = [join('resources')]
+RESOURCES = [os.path.join(HOME, 'resources')]
 WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
 
 if "SCIPION_USER_DATA" not in os.environ:
@@ -50,5 +46,3 @@ SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 from utils.path import findResource
 
 _logo = 'scipion_logo.png'
-
-
