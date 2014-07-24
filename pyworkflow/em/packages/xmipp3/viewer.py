@@ -45,7 +45,7 @@ import xmipp
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
-#from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
+from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_helical_parameters import XmippProtHelicalParameters
