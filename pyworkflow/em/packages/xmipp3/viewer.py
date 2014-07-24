@@ -35,22 +35,6 @@ from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 
 from xmipp3 import getXmippPath
-from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
-from protocol_extract_particles import XmippProtExtractParticles
-from protocol_screen_particles import XmippProtScreenParticles
-from protocol_cl2d_align import XmippProtCL2DAlign
-from protocol_cl2d import XmippProtCL2D
-from protocol_kerdensom import XmippProtKerdensom
-from protocol_rotational_spectra import XmippProtRotSpectra
-from protocol_screen_classes import XmippProtScreenClasses
-from protocol_helical_parameters import XmippProtHelicalParameters
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
-from protocol_identify_outliers import XmippProtIdentifyOutliers
-from protocol_particle_pick import XmippProtParticlePicking
-from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
-from protocol_preprocess import XmippProtPreprocessVolumes
-from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
-from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
@@ -58,6 +42,23 @@ from pyworkflow.utils import makePath, runJob, copyTree
 import pyworkflow as pw
 import xmipp
 
+from protocol_cl2d_align import XmippProtCL2DAlign
+from protocol_cl2d import XmippProtCL2D
+from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
+#from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
+from protocol_extract_particles import XmippProtExtractParticles
+from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from protocol_helical_parameters import XmippProtHelicalParameters
+from protocol_identify_outliers import XmippProtIdentifyOutliers
+from protocol_kerdensom import XmippProtKerdensom
+from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
+from protocol_particle_pick import XmippProtParticlePicking
+from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
+from protocol_preprocess import XmippProtPreprocessVolumes
+from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_rotational_spectra import XmippProtRotSpectra
+from protocol_screen_classes import XmippProtScreenClasses
+from protocol_screen_particles import XmippProtScreenParticles
 
 
 class XmippViewer(Viewer):
@@ -65,13 +66,31 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [Image, SetOfImages, SetOfCoordinates, SetOfClasses2D, SetOfClasses3D,
-                SetOfMovies, MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair, 
-                ProtExtractParticles, XmippProtScreenParticles, XmippProtKerdensom, 
-                XmippProtRotSpectra, SetOfCTF, NormalModes, XmippProtScreenClasses,
-                XmippProtConvertToPseudoAtoms, XmippProtIdentifyOutliers,
-                XmippProtParticlePicking, XmippParticlePickingAutomatic, 
-                XmippProtParticlePickingPairs, XmippProtExtractParticlesPairs]
+    _targets = [  
+                  CoordinatesTiltPair 
+                , Image
+                , MicrographsTiltPair
+                , NormalModes
+                , ParticlesTiltPair
+                , ProtExtractParticles
+                , SetOfClasses2D
+                , SetOfClasses3D
+                , SetOfCoordinates
+                , SetOfCTF
+                , SetOfImages
+                , SetOfMovies
+                , XmippParticlePickingAutomatic
+                , XmippProtConvertToPseudoAtoms
+                #, XmippProtCTFDiscrepancy
+                , XmippProtExtractParticlesPairs
+                , XmippProtIdentifyOutliers
+                , XmippProtKerdensom
+                , XmippProtParticlePicking
+                , XmippProtParticlePickingPairs
+                , XmippProtRotSpectra
+                , XmippProtScreenClasses
+                , XmippProtScreenParticles
+                ]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)
