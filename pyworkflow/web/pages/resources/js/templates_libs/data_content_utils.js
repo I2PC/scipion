@@ -118,7 +118,7 @@ function callPaintObjTree(){
 		dataType: "html",
 		async: false,
 		success : function(data) {
-			$("ul#browser").html($.parseHTML(data))
+			$("ul#browser").html(data)
 		}
 	});
 	$("#browser").treeview()

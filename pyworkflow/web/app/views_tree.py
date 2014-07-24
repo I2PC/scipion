@@ -133,29 +133,29 @@ class ObjItem():
 def convertObjTree(tree):
     sections = tree.childs
     for section in sections:
-        html = getChildrens(section, 'section')
+        html = getChildrens(section)
     return html
         
         
-def getChildrens(tree, classId):
-    if len(tree.childs) > 0:
-        html = '<span class='+classId+'>'+tree.name +'</span>'
-    else:
-        html = '<span class='+classId+'><strong>'+tree.name +' ('+str(tree.count)+')</strong></span>'
-        
-    html += '<ul>'
+def getChildrens(tree):
+    hasChilds = False
     
+    html = '<span>'
     if len(tree.childs) > 0:
+        html += tree.name
+        hasChilds = True
+    else:
+        html = '<strong>'+tree.name +' ('+str(tree.count)+')</strong>'
+    html += '</span>'
+        
+    if hasChilds:
+        html += '<ul>'
         childrens = tree.childs
         for child in childrens:
             html += '<li>'
-            if len(child.childs) > 0:
-                html += getChildrens(child, '')
-            else:
-                html += getChildrens(child, '')
+            html += getChildrens(child)
             html += '</li>'
-    
-    html += '</ul>'
+        html += '</ul>'
     
     return html
 

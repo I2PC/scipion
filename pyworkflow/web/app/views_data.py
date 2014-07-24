@@ -75,6 +75,7 @@ def object_tree(request):
     from views_tree import getGraphClassesNode, TreeItem, populateObjTree
     from views_tree import convertObjTree
     
+    #Get Project
     projectName = request.session['projectName'] 
     project = loadProject(projectName) 
     
