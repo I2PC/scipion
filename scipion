@@ -212,17 +212,19 @@ def main():
             sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
 
     elif mode == MODE_TESTS:
-        if n > 2:
-            testValue = sys.argv[2]
+        if n <= 2:
+            sys.exit('Missing option. Run "%s help" for a full description.'
+                     % sys.argv[0])
+        testValue = sys.argv[2]
 
-            if not testValue.startswith('-'):
-                # Run a single test, the one mentioned in testValue
-                if testValue.startswith('tests.'):
-                    runCmd('-m unittest pyworkflow.%s' % testValue)
-                else:
-                    runCmd('-m unittest pyworkflow.tests.%s' % testValue)
+        if not testValue.startswith('-'):
+            # Run a single test, the one mentioned in testValue
+            if testValue.startswith('tests.'):
+                runCmd('-m unittest pyworkflow.%s' % testValue)
             else:
-                runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
+                runCmd('-m unittest pyworkflow.tests.%s' % testValue)
+        else:
+            runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_TESTS_DATA:
         runCmd('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
