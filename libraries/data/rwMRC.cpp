@@ -304,13 +304,12 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 /** MRC Writer
   * @ingroup MRC
 */
-int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String &bitDepth, bool adjust)
+int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String &bitDepth, CastWriteMode castMode)
 {
     MRChead*  header = (MRChead *) askMemory(sizeof(MRChead));
 
     // Cast T to datatype
     DataType wDType,myTypeID = myT();
-    CastWriteMode castMode;
 
     if (bitDepth == "")
     {
@@ -374,7 +373,6 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect MRC bits depth value.");
         }
-        castMode = (adjust)? CW_ADJUST : CW_CONVERT;
     }
 
     if (mmapOnWrite)
