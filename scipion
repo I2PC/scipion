@@ -30,7 +30,7 @@ This module is responsible for launching protocol executions.
 """
 import sys
 import os
-from os.path import join, isabs, exists
+from os.path import join, exists
 
 __version__ = 'v.0.1.5 Phosphorus'
 
@@ -45,20 +45,7 @@ if sys.version_info < (2, 5):
     # Also, the tarfile module works badly, we have no "with" statement, etc
 
 
-def __findScipionHome():
-    """ Find Scipion home from the __file__ location. 
-    It also takes into account the links.
-    """
-    absPath = os.path.abspath(__file__)
-    if os.path.islink(absPath):
-        r = os.readlink(absPath)
-        if not isabs(absPath):
-            absPath = join(os.path.dirname(absPath), r)
-        else:
-            absPath = r   
-    return os.path.dirname(absPath)
-
-SCIPION_HOME = __findScipionHome()
+SCIPION_HOME = os.path.dirname(os.path.realpath(__file__))
 
 
 import config
