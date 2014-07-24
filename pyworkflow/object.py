@@ -528,6 +528,17 @@ class Scalar(Object):
     def _copy(self, other, *args):
         self.set(other.get())
         
+    def swap(self, other):
+        """ Swap the contained value between
+        self and other objects.
+        """
+        tmp = self._objValue
+        self._objValue = other._objValue
+        other._objValue = tmp
+
+    def sum(self, value):
+        self._objValue += self._convertValue(value)
+        
     
 class Integer(Scalar):
     """Integer object"""
