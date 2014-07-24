@@ -591,7 +591,11 @@ class SetOfImages(EMSet):
     def __iter__(self):
         """ Redefine iteration to set the acquisition to images. """
         for img in self._iterItems():
-            img.setAcquisition(self.getAcquisition())
+            # Sometimes the images items in the set could
+            # have the acquisition info per data row and we
+            # dont want to override with the set acquistion for this case
+            if not img.hasAcquisition():
+                img.setAcquisition(self.getAcquisition())
             yield img
             
     def appendFromImages(self, imagesSet):
