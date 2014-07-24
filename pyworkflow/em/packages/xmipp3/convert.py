@@ -406,7 +406,7 @@ def rowToCtfModel(md, objId):
     """ Create a CTFModel from a row of a metadata. """
     ctfModel = CTFModel()
     rowToObject(md, objId, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
-    
+    ctfModel.standardize()
     return ctfModel
 
 

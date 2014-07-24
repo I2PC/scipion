@@ -528,6 +528,17 @@ class Scalar(Object):
     def _copy(self, other, *args):
         self.set(other.get())
         
+    def swap(self, other):
+        """ Swap the contained value between
+        self and other objects.
+        """
+        tmp = self._objValue
+        self._objValue = other._objValue
+        other._objValue = tmp
+
+    def sum(self, value):
+        self._objValue += self._convertValue(value)
+        
     
 class Integer(Scalar):
     """Integer object"""
@@ -567,7 +578,18 @@ class Float(Scalar):
     
     def equalAttributes(self, other):
         """Compare that all attributes are equal"""
-        return abs(self._objValue - other._objValue) < self.EQUAL_PRECISION
+        # If both float has some value distinct of None
+        # then we should compare the absolute value of difference 
+        # agains the EQUAL_PRECISION to say equal or not
+        if self.hasValue() and other.hasValue():
+            return abs(self._objValue - other._objValue) < self.EQUAL_PRECISION
+        # If one has None as value, then both should have None
+        # to have equal attributes
+        if not self.hasValue() and not other.hasValue():
+            return True
+        
+        return False
+        
         
 class Boolean(Scalar):
     """Boolean object"""

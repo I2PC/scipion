@@ -91,7 +91,7 @@ def build(args):
             return r
 
     # Call SCons and show the output on the screen and logfile.
-    proc = subprocess.Popen(['software/bin/scons'] + args,
+    proc = subprocess.Popen([sys.executable, 'software/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with open(LOGFILE, 'a') as logFile:
         while True:

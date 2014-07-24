@@ -125,20 +125,24 @@ for package in ['XMIPP_HOME', 'SPIDER_DIR', 'EMAN2DIR',
     VARS[package] = getConfigPath(package)
     
 
-# The following functions require that SCIPION_PYTHON 
-# is sucessfully compiled and installed
-def runApp(app, args=''):
-    runCmd('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
-
 def runCmd(cmd):
     os.environ.update(VARS)
     os.chdir(SCIPION_HOME)
-    cmd = '%s %s' % (VARS['SCIPION_PYTHON'], cmd)
     sys.stdout.write(">>>>> %s\n" % cmd)
     result = os.system(cmd)
     if not -256 < result < 256:
         result = 1  # because if not, 256 is confused with 0 !
     sys.exit(result)
+        
+# The following functions require that SCIPION_PYTHON 
+# is sucessfully compiled and installed
+
+def runScript(scriptCmd):
+    cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
+    runCmd(cmd)
+
+def runApp(app, args=''):
+    runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
 
 
 MODE_MANAGER = 'manager'
@@ -157,6 +161,7 @@ MODE_VERSION = 'version'
 MODE_STATS = 'stats'
 MODE_DOWNLOAD = 'download'
 MODE_ENV = 'printenv'
+MODE_RUN = 'run'
 
 
 
@@ -207,25 +212,27 @@ def main():
                 args = 'runserver 0.0.0.0:8000'
             else:
                 args = 'collectstatic'
-            runCmd('%s %s' % (manage, args))
+            runScript('%s %s' % (manage, args))
         else:
             sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
 
     elif mode == MODE_TESTS:
-        if n > 2:
-            testValue = sys.argv[2]
+        if n <= 2:
+            sys.exit('Missing option. Run "%s help" for a full description.'
+                     % sys.argv[0])
+        testValue = sys.argv[2]
 
-            if not testValue.startswith('-'):
-                # Run a single test, the one mentioned in testValue
-                if testValue.startswith('tests.'):
-                    runCmd('-m unittest pyworkflow.%s' % testValue)
-                else:
-                    runCmd('-m unittest pyworkflow.tests.%s' % testValue)
+        if not testValue.startswith('-'):
+            # Run a single test, the one mentioned in testValue
+            if testValue.startswith('tests.'):
+                runScript('-m unittest pyworkflow.%s' % testValue)
             else:
-                runCmd('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
+                runScript('-m unittest pyworkflow.tests.%s' % testValue)
+        else:
+            runScript('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
     elif mode == MODE_TESTS_DATA:
-        runCmd('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
+        runScript('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
@@ -292,6 +299,12 @@ def main():
             sys.stdout.write('export %s="%s"\n' % (k, v))
 
         sys.exit(0)
+        
+    elif mode == MODE_RUN:
+        # Run any command with the environment of scipion loaded
+        if n > 2:
+            cmd = " ".join(sys.argv[2:])
+            runCmd(cmd)
 
     elif mode == MODE_HELP:
         sys.stdout.write("""
@@ -343,6 +356,8 @@ USAGE:
         printenv               Print the environmental variables used by the application 
 
         download               Download external packages (EMAN, SPIDER, Relion, etc)
+        
+        run ARG1 [ARG2...ARGN] Run any command with arguments setting the scipion environment
 """)
         sys.exit(0)
 
