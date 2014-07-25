@@ -60,7 +60,11 @@ class XmippPlotter(EmPlotter):
                 xx.append(md.getValue(mdLabelX, objId))
             yy.append(md.getValue(mdLabelY, objId))
         
-        self.plotHist(xx, yy, color, **args)
+        nbins = args.pop('nbins', None)
+        if nbins is None:
+            self.plotData(xx, yy, color, **args)
+        else:
+            self.plotHist(yy, nbins, color, **args)
         
     def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
         """ plot metadataFile columns mdLabelX and mdLabelY
