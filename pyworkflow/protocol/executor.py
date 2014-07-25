@@ -84,6 +84,7 @@ class StepThread(Thread):
         self.condition = condition
         self.event = Event() # Wait for work or exit
         self.step = None
+        self.setDaemon(True)
         
     def isReady(self):
         return not self.event.is_set()
@@ -170,7 +171,13 @@ class ThreadStepExecutor(StepExecutor):
             if th.isReady(): # Waiting for work
                 if th.step is not None: # Step finished
                     self.stepFinishedCallback(th.step)
-                    self.stepsLeft -= 1
+                    if th.step.isFailed():
+                        self.stepsLeft = 0
+                        import sys
+                        sys.exit(1)
+                        #raise Exception("Step failed!!!")
+                    else:
+                        self.stepsLeft -= 1
                     th.step = None # clean the thread step
 
     def _isStepReady(self, step):
