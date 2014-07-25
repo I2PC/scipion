@@ -50,13 +50,18 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
 
     def _defineParams(self, form):
         form.addSection(label='Input')
+        # Read N ctfs estimations
+        form.addParam('inputCTFs', MultiPointerParam, label="setOfCTF1", 
+                      pointerClass='SetOfCTF',
+                      help='Select the first set of CTFs to compare')        
+        
         #read two CTFs sets...
-        form.addParam('inputCTF1', PointerParam, label="setOfCTF1", 
-                      pointerClass='SetOfCTF',
-                      help='Select the first set of CTFs to compare')
-        form.addParam('inputCTF2', PointerParam, label="setOfCTF2", 
-                      pointerClass='SetOfCTF',
-                      help='Select the second set of CTFs to compare')
+#        form.addParam('inputCTF1', PointerParam, label="setOfCTF1", 
+#                      pointerClass='SetOfCTF',
+#                      help='Select the first set of CTFs to compare')
+#        form.addParam('inputCTF2', PointerParam, label="setOfCTF2", 
+#                      pointerClass='SetOfCTF',
+#                      help='Select the second set of CTFs to compare')
 #        form.addParam('phaseMaxDifference', FloatParam, default=90., 
 #                      expertLevel=LEVEL_EXPERT,
 #                      label='phaseMaxDifference',
@@ -68,8 +73,10 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self.setOfCTF1 = self.inputCTF1.get()
-        self.setOfCTF2 = self.inputCTF2.get()
+        self.setOfCTF1 = self.inputCTFs[0].get()
+        self.setOfCTF2 = self.inputCTFs[1].get()
+#        self.setOfCTF1 = self.inputCTF1.get()
+#        self.setOfCTF2 = self.inputCTF2.get()
         
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each ctf pair insert the steps to process it
