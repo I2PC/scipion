@@ -40,7 +40,9 @@ class Plotter(View):
     def setInteractive(cls, value):
         cls.interactive = value
         
-    def __init__(self, x=1, y=1, mainTitle="", figsize=None, dpi=100, windowTitle=""):
+    def __init__(self, x=1, y=1, mainTitle="", 
+                 figsize=None, dpi=100, windowTitle="",
+                 fontsize=8):
         """ This Plotter class has some utilities to create a Matplotlib figure
         and add some plots to it.
         Params:
@@ -50,7 +52,7 @@ class Plotter(View):
             dpi: resolution, 100 by default.
             windowTitle: title for the whole windows.
         """
-        
+        self.fontsize = fontsize
         if self.plt is None:
             import matplotlib
 
@@ -79,17 +81,18 @@ class Plotter(View):
         self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
         self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
         self.gridx = x
-        self.gridy = y  
+        self.gridy = y
         self.figure = plt.figure(figsize=figsize, dpi=dpi)
         #self.mainTitle = mainTitle
         #self.windowTitle = windowTitle
         if (mainTitle):
-            self.figure.suptitle(mainTitle)
+            self.figure.suptitle(mainTitle, fontsize=fontsize + 4)
         if (windowTitle):
             self.figure.canvas.set_window_title(windowTitle) 
         self.plot_count = 0
-        self.plot_axis_fontsize = 10
-        self.plot_text_fontsize = 8
+        self.plot_title_fontsize = fontsize + 4
+        self.plot_axis_fontsize  = fontsize + 2
+        self.plot_text_fontsize  = fontsize
         self.plot_yformat = '%1.2e'
 
     def activate(self):
@@ -108,7 +111,8 @@ class Plotter(View):
             t.set_fontsize(self.plot_axis_fontsize)    # the legend text fontsize
         
     def createSubPlot(self, title, xlabel, ylabel, xpos=None, ypos=None, 
-                      yformat=False, projection='rectilinear'):
+                      yformat=False, projection='rectilinear'
+                      ):
         '''
         Create a subplot in the figure. 
         You should provide plot title, and x and y axis labels.
@@ -124,9 +128,9 @@ class Plotter(View):
             pos = xpos + (ypos - 1) * self.gridx
         a = self.figure.add_subplot(self.gridx, self.gridy, pos, projection=projection)
         #a.get_label().set_fontsize(12)
-        a.set_title(title)
-        a.set_xlabel(xlabel)
-        a.set_ylabel(ylabel)
+        a.set_title(title, fontsize=self.plot_title_fontsize)
+        a.set_xlabel(xlabel, fontsize=self.plot_axis_fontsize)
+        a.set_ylabel(ylabel, fontsize=self.plot_axis_fontsize)
             
         if yformat:
             import matplotlib.ticker as ticker
@@ -134,12 +138,12 @@ class Plotter(View):
             a.yaxis.set_major_formatter(formatter)
         a.xaxis.get_label().set_fontsize(self.plot_axis_fontsize)
         a.yaxis.get_label().set_fontsize(self.plot_axis_fontsize)
+
         labels = a.xaxis.get_ticklabels() + a.yaxis.get_ticklabels()
         for label in labels:
             label.set_fontsize(self.plot_text_fontsize) # Set fontsize
-            label.set_text('aa')
-                #print label.
-                #label.set_visible(False)
+            #label.set_text('aa')
+
         self.last_subplot = a
         self.plot = a.plot
         self.hist = a.hist
