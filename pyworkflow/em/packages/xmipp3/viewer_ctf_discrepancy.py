@@ -29,7 +29,8 @@ from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
 from pyworkflow.em.plotter import EmPlotter
 
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
-
+import collections
+import numpy as np
 
 
 class XmippCTFDiscrepancyViewer(Viewer):
@@ -41,40 +42,51 @@ class XmippCTFDiscrepancyViewer(Viewer):
     _targets = [XmippProtCTFDiscrepancy]
     
     def _visualize(self, obj):
+        print "WARNING still under development"
         views = []
         fn = obj.outputCTF.getFileName()
     #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
-        labels = 'id enabled _micObj._filename discrepancy _defocusU _defocusV _defocusAngle' 
+        labels = 'id enabled _micObj._filename method1 method2 resolution _defocusU _defocusV _defocusAngle' 
         views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
                                       viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         
         views.append(self._createPlots(obj))
+        views.append(self._createMatrix(obj))
         
         return views 
     
     def _createPlots(self, obj):
+        print "inside _createPlot"
         plotter = EmPlotter()
-        plotter.createSubPlot("Discrepancies histogram", 
+        plotter.createSubPlot("Resolution Discrepancies histogram", 
                       "Resolution", "# of Micrographs")
-        discrepancies = [ctf.discrepancy.get() for ctf in obj.outputCTF]
-        n = len(discrepancies)
-        print "n/20", n/20
-        plotter.plotHist(discrepancies, nbins=min(n, 1+n/20))
+        resolution = [ctf.resolution.get() for ctf in obj.outputCTF]
+        n = len(resolution)
+        plotter.plotHist(resolution, nbins=min(n, 1+n/20))
         return plotter
 
-    
-    def _viewEstructureFactor(self, e=None):
-        strFactFn = self.protocol._defineStructFactorName()
-        md = MetaData(strFactFn)
-        return [self._viewPlot("Structure Factor", FREQ_LABEL, 'Structure Factor', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_STRUCTURE_FACTOR),
-                self._viewPlot("Structure Factor", FREQ_LABEL, 'log(Structure Factor)', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_LOG_STRUCTURE_FACTOR),
-                DataView(strFactFn)]        
-    
-    def _viewSsnr(self, e=None):
-        pass
-    
-    def _viewVssnr(self, e=None):
-        pass
-    
+    def _createMatrix(self,obj):
+        inputCTFs=obj.inputCTFs
+        _matrix = np.zeros(shape=(len(inputCTFs), len(inputCTFs)))
+        _matrix[0][0]=1
+        _matrix[1][0]=2
+        _matrix[0][1]=3
+        _matrix[1][1]=4
+        
+        ticksLablesMajor=[]
+
+        self.methodNames = collections.OrderedDict()
+        for i, ctf in enumerate(inputCTFs):
+            protocol = obj.getMapper().getParent(ctf.get())
+            name = "(%d) %s " % (i+1, protocol.getClassLabel())
+            ticksLablesMajor.append(name)
+        plotter = EmPlotter(fontsize=14)
+        resolution=2
+        plotter.createSubPlot("# micrographs with resolution\n lower than %d"%(resolution), 
+                      "Resolution", "# of Micrographs")
+#        plotter.plotMatrix(_matrix,cmap='seismic_r'
+        plotter.plotMatrix(_matrix,cmap='Greens'
+                        , xticksLablesMajor=ticksLablesMajor
+                        , yticksLablesMajor=ticksLablesMajor)
+        return plotter
+
