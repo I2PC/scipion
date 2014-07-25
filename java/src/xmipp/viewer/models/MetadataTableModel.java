@@ -245,8 +245,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return true;
 			}
 		} catch (Exception e) {
+                        e.printStackTrace();
                         XmippDialog.showError(null, e.getMessage());
-			//e.printStackTrace();
+			
 		}
 		return false;
 	}// function handleDoubleClick

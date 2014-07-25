@@ -41,6 +41,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
         @Override
     	public ImagePlus loadImagePlus()
 	{
+            
                 imp = null;
 		try
 		{

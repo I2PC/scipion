@@ -61,7 +61,8 @@ public class ImagePlusLoader {
 
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
         int index2 = -1;
-        if (fileName != null) {
+        existsfile = fileName != null;
+        if (existsfile) {
             
             if (fileName.contains("@")) {
                 
@@ -79,7 +80,10 @@ public class ImagePlusLoader {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
             }
-            existsfile = new File(fileName).exists();
+            if(fileName.endsWith(":mrc"))
+                existsfile = new File(fileName.replace(":mrc", "")).exists();
+            else
+                existsfile = new File(fileName).exists();
         }
         if (existsfile) 
             impreader = new ImagePlusFromFile(fileName, imp, ig);

@@ -49,7 +49,7 @@ public abstract class ImagePlusReader {
 			if(ig != null)
                         {
                             
-                             if(index == -1)
+                             if(index == -1 )
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
@@ -61,6 +61,7 @@ public abstract class ImagePlusReader {
                              }
                              
                         }
+                        
                         checkResizeAndGeo();
 			if(normalize)
 			{
@@ -91,7 +92,7 @@ public abstract class ImagePlusReader {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        if(width != 0  && height != 0)
+        if(width != 0  && height != 0 && imp != null)
         {
             ImageProcessor processor = imp.getProcessor();
             processor.setInterpolate(true);
