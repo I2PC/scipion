@@ -35,6 +35,7 @@ from convert import *
 from xmipp3 import XmippMdRow
 from pyworkflow.protocol.constants import LEVEL_EXPERT, STEPS_PARALLEL
 import xmipp
+import collections
 
 
 class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
@@ -46,7 +47,7 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
         #uncomment if you do not inherit from ProtCTFMicrographs
         #self.methodsInfo = String()
         #self.stepsExecutionMode = STEPS_PARALLEL
-        self._freqDict = {}
+        self._freqResol = {}
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -70,31 +71,42 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
 #                           ' is smaller than this parameter in degrees')
         form.addParallelSection(threads=4, mpi=0)       
 #--------------------------- INSERT steps functions --------------------------------------------  
+    def _iterMethods(self):
+        for method1 in self.methodNames:
+            for method2 in self.methodNames:
+                if method1 < method2:
+                    for ctf in self.setOfCTF:
+                        yield method1, method2, ctf
+                                
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self.setOfCTF1 = self.inputCTFs[0].get()
-        self.setOfCTF2 = self.inputCTFs[1].get()
-#        self.setOfCTF1 = self.inputCTF1.get()
-#        self.setOfCTF2 = self.inputCTF2.get()
+        self.setOfCTF = self.inputCTFs[0].get()
+        #self.setOfCTF2 = self.inputCTFs[1].get()
+        self.methodNames = collections.OrderedDict()
+        for i, ctf in enumerate(self.inputCTFs):
+            protocol = self.getMapper().getParent(ctf.get())
+            self.methodNames[i] = "(%d) %s " % (i+1, protocol.getClassLabel())
+
         
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each ctf pair insert the steps to process it
         # check same size, same micrographs
-        for ctf in self.setOfCTF1:
-            # CTF estimation with Xmipp
-            stepId = self._insertFunctionStep('_computeCTFDiscrepancy' 
+        for method1, method2, ctf in self._iterMethods():
+            stepId = self._insertFunctionStep('_computeCTFDiscrepancyStep' 
                                               , ctf.getObjId()
+                                              , method1
+                                              , method2
                                               ,prerequisites=[]) # Make estimation steps indepent between them
             deps.append(stepId)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
     
-    def _computeCTFDiscrepancy(self, ctfId):
+    def _computeCTFDiscrepancyStep(self, ctfId, method1, method2):
         #TODO must me same micrographs
         #convert to md
         mdList = [xmipp.MetaData(), xmipp.MetaData()]
-        ctfList = [self.setOfCTF1[ctfId], self.setOfCTF2[ctfId]]
+        ctfList = [self.inputCTFs[method1].get()[ctfId], self.inputCTFs[method2].get()[ctfId]]
         ctfRow = XmippMdRow()
         
         for md, ctf in izip(mdList, ctfList):
@@ -103,22 +115,26 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
             micrographToRow(ctf.getMicrograph(), ctfRow)
             ctfRow.writeToMd(md, objId)
 
-        self._freqDict[ctfId] = xmipp.errorMaxFreqCTFs2D(*mdList)
+        print "mdList[0]",mdList[0]
+        print "mdList[1]",mdList[1]
+        self._freqResol[(method1, method2)] = xmipp.errorMaxFreqCTFs2D(*mdList)
         
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.setOfCTF1.getMicrographs())
-        
+        ctfSet.setMicrographs(self.setOfCTF.getMicrographs())
         ctf = CTFModel()
-        print self._freqDict
-        for ctf1, ctf2 in izip(self.setOfCTF1, self.setOfCTF2):
+        for method1, method2, ctf1 in self._iterMethods():
             ctfId = ctf1.getObjId()
-            ctf.setDefocusU( (ctf1.getDefocusU() + ctf2.getDefocusU())/2.0 )
-            ctf.setDefocusV( (ctf1.getDefocusV() + ctf2.getDefocusV())/2.0 )
-            ctf.setDefocusAngle( (ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2.0 )
+            ctf1 = self.inputCTFs[method1].get()[ctfId]
+            ctf2 = self.inputCTFs[method2].get()[ctfId]
+            ctf.setDefocusU( (ctf1.getDefocusU() + ctf2.getDefocusU())/2. )
+            ctf.setDefocusV( (ctf1.getDefocusV() + ctf2.getDefocusV())/2. )
+            ctf.setDefocusAngle( (ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2. )
             ctf.setMicrograph(ctf1.getMicrograph())
             ctf.setObjId(ctfId)
-            ctf.discrepancy = Float(self._freqDict[ctfId])
+            ctf.resolution = Float(self._freqResol[(method1, method2)])
+            ctf.method1 = String(self.methodNames[method1])
+            ctf.method2 = String(self.methodNames[method2])
             # save the values of defocus for each micrograph in a list
             ctfSet.append(ctf)
         
@@ -129,6 +145,9 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
     
     def _summary(self):
         message = []
+        for i, ctf in enumerate(self.inputCTFs):
+            protocol = self.getMapper().getParent(ctf.get())
+            message.append("Method %d %s" % (i+1, protocol.getClassLabel()))
         #TODO size de la cosa calculada
         ####message.append("Comparered <%d> micrograph" % (size,'micrographs'))
         return message    
