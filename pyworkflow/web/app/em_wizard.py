@@ -24,26 +24,20 @@
 # *
 # **************************************************************************
 
-import os
-from os.path import basename
-import xmipp
-
-from views_util import loadProtocolProject, getResourceCss, getResourceJs, getResourceIcon
-from views_protocol import updateProtocolParams
-from pyworkflow.em import * 
-
 # Imports for web wizards
 from pyworkflow.web.app.wizards.xmipp_wizard import *
 from pyworkflow.web.app.wizards.spider_wizard import *
 from pyworkflow.web.app.wizards.relion_wizard import *
 from pyworkflow.web.app.wizards.brandeis_wizard import *
 
-
 #===============================================================================
 # Wizard base function (to call the others)
 #===============================================================================
 
 def wizard(request):
+    from views_util import loadProtocolProject
+    from views_protocol import updateProtocolParams
+    
     # Get the post-dictionary
     requestDict = getattr(request, "POST")
 

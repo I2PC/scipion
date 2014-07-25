@@ -27,19 +27,15 @@
 # **************************************************************************
 
 import os
-import xmipp
 from django.http import HttpResponse
 from pyworkflow.web.pages import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from pyworkflow.web.app.views_util import *
-from forms import VolVisualizationForm, ShowjForm
+from pyworkflow.web.app.views_util import readDimensions, readImageVolume, getResourceJs, getResourceCss
+from forms import ShowjForm
 from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3.convert import *
-from pyworkflow.em.viewer import *
-from layout_configuration import *
-from views_base import *
-from pyworkflow.dataset import COL_RENDER_VOLUME
+from layout_configuration import ColumnPropertiesEncoder
+from views_base import base_showj
 import pyworkflow.em.showj as sj
 
 
@@ -352,10 +348,6 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
         context.update({"showj_alt_js": getResourceJs('showj_' + inputParams[sj.MODE] + '_utils')})
     
-    # FIX
-#    context.update({'path' : inputParams[sj.PATH],
-#                    'table_name' : inputParams[sj.TABLE_NAME]})
-    
     # IMPROVE TO KEEP THE ITEMS (SELECTED, ENABLED, CHANGES)
     context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS],
                     sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS],
@@ -519,7 +511,7 @@ def updateSessionTable(request):
     
     if type == "renderable":
         cols_config.configColumn(label, renderable=option)
-    elif type == "editable":    
+    elif type == "editable":
         cols_config.configColumn(label, editable=option)
 #    elif type == 'visible':
 #        cols_config.configColumn(label, visible=option)
