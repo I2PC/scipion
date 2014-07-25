@@ -277,7 +277,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             setLayout(new GridBagLayout());
 
             initToolBar();
-            centerparticlebt = new JCheckBox("Center Particle", true);
+            centerparticlebt = new JCheckBox("Center", true);
             tb.add(centerparticlebt);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
 
