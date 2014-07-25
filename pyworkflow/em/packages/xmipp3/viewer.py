@@ -81,7 +81,6 @@ class XmippViewer(Viewer):
                 , SetOfMovies
                 , XmippParticlePickingAutomatic
                 , XmippProtConvertToPseudoAtoms
-                #, XmippProtCTFDiscrepancy
                 , XmippProtExtractParticlesPairs
                 , XmippProtIdentifyOutliers
                 , XmippProtKerdensom
