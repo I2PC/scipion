@@ -29,6 +29,8 @@ This module implement the classes to create plots on xmipp.
 from pyworkflow.gui.plotter import Plotter
 from itertools import izip
 
+
+
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
     
@@ -47,19 +49,17 @@ class EmPlotter(Plotter):
             for r, t in izip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
       
-    def plotHist(self, xCol, yCol, color, **args):
-        """ plot columns xCol and yCol
-            if nbins is in args then and histogram over y data is made
-        """
-        nbins = args.pop('nbins', None)
-        marker = args.pop('marker', None)
-        linestyle = args.pop('linestyle', None)
-        if nbins is None:
-            if not marker is None:
-                args['marker'] = marker     
-            if not linestyle is None:
-                args['linestyle'] = linestyle
-            self.plot(xCol, yCol, color, **args) #no histogram
-        else:
-            self.hist(yCol,nbins, facecolor=color, **args)
+    def plotHist(self, yValues, nbins, color='blue', **kwargs):
+        """ Create an histogram. """
+        self.hist(yValues, nbins, facecolor=color, **kwargs)
     
+    def plotData(self, xValues, yValues, color='blue', **kwargs):
+        """ Shortcut function to plot some values.
+        Params:
+            xValues: list of values to show in x-axis
+            yValues: list of values to show as values in y-axis
+            color: color for the plot.
+            **kwargs: keyword arguments that accepts:
+                marker, linestyle
+        """
+        self.plot(xValues, yValues, color, **kwargs) 

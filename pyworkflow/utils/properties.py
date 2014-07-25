@@ -292,7 +292,7 @@ class Icon():
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
     # TODO: change action_steps icon - fa-codefork?
-    ACTION_STEPS = 'fa-sitemap.png'
+    ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
     ACTION_TREE = None
     ACTION_LIST = 'fa-bars.png'

@@ -37,3 +37,5 @@ from protocol_3d import *
 from protocol_sets import *
 from protocol_tiltpairs import *
 
+from parallel import ProtTestParallel
+

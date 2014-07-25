@@ -256,15 +256,19 @@ class BoundTree(Tree):
                     if image is None:
                         image = ''
                 values = objDict.get('values', ())
-                obj._treeId = self.insert(parentId, 'end', key,
-                            text=text, image=image, values=values)
-                self._objDict[obj._treeId] = obj
-                
-                if objDict.get('open', False):
-                    self.itemConfig(obj, open=True)
-                
-                if objDict.get('selected', False):
-                    self.selectChild(obj._treeId)
+                try:
+                    obj._treeId = self.insert(parentId, 'end', key,
+                                text=text, image=image, values=values)
+                    self._objDict[obj._treeId] = obj
+                    
+                    if objDict.get('open', False):
+                        self.itemConfig(obj, open=True)
+                    
+                    if objDict.get('selected', False):
+                        self.selectChild(obj._treeId)
+                except Exception as ex:
+                    print "error: ", ex
+                    print "error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj))
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """
