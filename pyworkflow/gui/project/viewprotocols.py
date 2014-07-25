@@ -920,7 +920,11 @@ class ProtocolsView(tk.Frame):
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
             firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
-            firstViewer.visualize(prot, windows=self.windows)
+            from pyworkflow.viewer import ProtocolViewer
+            if isinstance(firstViewer, ProtocolViewer):
+                firstViewer.visualize(prot, windows=self.windows)
+            else:
+                firstViewer.visualize(prot)
         else:
             for _, output in prot.iterOutputAttributes(EMObject):
                 viewers = findViewers(output.getClassName(), DESKTOP_TKINTER)
