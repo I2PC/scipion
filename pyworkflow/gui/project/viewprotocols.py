@@ -230,7 +230,7 @@ class StepsWindow(BrowserWindow):
         
         toolbar = tk.Frame(self.root)
         toolbar.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-        btn = tk.Label(toolbar, text="Tree", image=self.getImage(Icon.ACTION_STEPS), 
+        btn = tk.Label(toolbar, text="Tree", image=self.getImage(Icon.RUNS_TREE), 
                        compound=tk.LEFT, cursor='hand2')
         btn.bind('<Button-1>', self._showTree)
         btn.grid(row=0, column=0, sticky='nw')

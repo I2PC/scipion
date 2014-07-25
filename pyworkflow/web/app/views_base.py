@@ -24,16 +24,16 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em import *
-from views_util import * 
-
-from pyworkflow.web.app.properties import MessageWeb
+from views_util import getResourceCss, getResourceIcon, getResourceJs
 
 
 def base(request, context):
+    from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
     
-    # Messages properties class
+    # Properties class
     messages = MessageWeb()
+    colors = ColorWeb()
+    icons = IconWeb()
     
     context_base = {
                     #ICON
@@ -49,7 +49,9 @@ def base(request, context):
                     'messi_js': getResourceJs('messi'),
                     'utils': getResourceJs('utils'),
                     #OTHER
-                    'msg': messages
+                    'msg': messages,
+                    'color': colors,
+                    'icon': icons
                     }
     
     context.update(context_base)
