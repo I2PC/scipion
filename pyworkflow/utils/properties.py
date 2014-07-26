@@ -67,6 +67,7 @@ class Message():
     LABEL_STEPS = 'Steps'
     LABEL_BROWSE = 'Browse'
     LABEL_BROWSE_ACTION = 'Browse '
+    LABEL_DB = 'Db'
     LABEL_STOP = 'Stop'
     LABEL_STOP_ACTION = 'Stop execution'
     LABEL_ANALYZE = 'Analyze Results'
@@ -294,6 +295,7 @@ class Icon():
     # TODO: change action_steps icon - fa-codefork?
     ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
+    ACTION_DB = 'fa-database.png'
     ACTION_TREE = None
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'

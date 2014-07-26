@@ -46,7 +46,7 @@ class DataView(View):
         View.__init__(self)
         self._memory = '1g'
         self._loadPath(path)
-        self._env = kwargs.get('env', os.environ.copy())
+        self._env = kwargs.get('env', {})
         self._viewParams = viewParams
         if self._path.endswith('.star'):
             from pyworkflow.em.packages.relion import addRelionLabelsToEnviron

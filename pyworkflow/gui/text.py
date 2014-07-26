@@ -560,6 +560,18 @@ class TextFileViewer(tk.Frame):
             showTextFileViewer("File viewer", self.fileList, self.windows)
   
   
+def openTextFile(filename):
+    """ Open a text file with an external or default viewer. """
+    if envVarOn('SCIPION_EXTERNAL_VIEWER'):
+        _open_cmd(filename)
+    else:
+        showTextFileViewer("File viewer", [filename])    
+    
+    
+def openTextFileEditor(filename):
+    _open_cmd(filename)
+    
+    
 def showTextFileViewer(title, filelist, parent=None, main=False):
     w = gui.Window(title, parent, minsize=(900, 800))
     viewer = TextFileViewer(w.root, filelist)
