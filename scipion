@@ -136,9 +136,11 @@ def runApp(app, args=''):
 
 MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
+MODE_LAST = 'last' # shortcut to 'project last'
 MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
-MODE_TESTS = 'tests'
+MODE_TESTS = 'tests' # keep tests for compatibility
+MODE_TEST = 'test' # also allow 'test' singular option
 MODE_TESTS_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
@@ -174,6 +176,9 @@ def main():
     if mode == MODE_MANAGER:
         runApp('pw_manager.py')
 
+    elif mode == MODE_LAST:
+        runApp('pw_project.py', args='last')
+        
     elif mode == MODE_PROJECT:
         if n > 2:
             projectName = sys.argv[2]
@@ -205,7 +210,7 @@ def main():
         else:
             sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
 
-    elif mode == MODE_TESTS:
+    elif mode == MODE_TESTS or mode == MODE_TEST:
         if n <= 2:
             sys.exit('Missing option. Run "%s help" for a full description.'
                      % sys.argv[0])
@@ -311,15 +316,17 @@ USAGE:
         manager                Open the manager with list of all projects.
 
         project [PROJECT_NAME] Open the specified project, special name 'last' can be used.
+        last                   Same as 'project last'
 
         stats                  Write git statistics to data/stats folder.
 
-        tests [OPTION]         Run a test starting from pyworkflow.tests
+        test [OPTION]         Run a test starting from pyworkflow.tests
                                OPTION can be:
                                   <test name>: name of the test to run.
                                   --show: list the available tests.
                                   Further options are:
                                   --case=VALUE --paths=VALUE --pattern="test*py" --mode=[modules|classes|all]
+                               NOTE: 'tests' is also accepted, but not recommended
 
         testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder.
                                OPTION can be:
