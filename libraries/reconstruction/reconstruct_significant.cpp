@@ -47,6 +47,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
     addParamsLine("  [--maxTilt <t=90>]           : Maximum tilt angle");
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
+    addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
 }
 
@@ -67,6 +68,7 @@ void ProgReconstructSignificant::readParams()
     tilt0=getDoubleParam("--minTilt");
     tiltF=getDoubleParam("--maxTilt");
     useImed=checkParam("--useImed");
+    strict=checkParam("--strictDirection");
     angDistance=getDoubleParam("--angDistance");
 }
 
@@ -316,9 +318,10 @@ void ProgReconstructSignificant::run()
     	size_t Ndirs=mdGallery[0].size();
     	cc.initZeros(Nimgs,Nvols,Ndirs);
     	weight=cc;
+    	double oneAlpha=1-currentAlpha;
 
     	// Align the input images to the projections
-    	std::cout << "Current significance: " << 1-currentAlpha << std::endl;
+    	std::cout << "Current significance: " << oneAlpha << std::endl;
     	std::cerr << "Aligning images ...\n";
     	init_progress_bar(mdIn.size());
     	thMgr.run(progReconstructSignificantThreadAlign);
@@ -370,7 +373,10 @@ void ProgReconstructSignificant::run()
 				{
 					double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
 					double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
-					DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
+					if (cdfThis>=oneAlpha || !strict)
+						DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
+					else
+						DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)=0;
 				}
 			}
 		}
@@ -579,7 +585,7 @@ void ProgReconstructSignificant::produceSideinfo()
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-		args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
+		args=formatString("-i %s --sym i3 -v 0",fnInit.c_str());
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 	}

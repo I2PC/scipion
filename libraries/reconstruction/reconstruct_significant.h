@@ -73,6 +73,9 @@ public:
     /** Use imed */
     bool useImed;
 
+    /** Strict */
+    bool strict;
+
     /** Neighbourhood in angles */
     double angDistance;
 
