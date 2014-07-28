@@ -168,9 +168,7 @@ addModule(
 #  ************************************************************************
 
 env.AddPackage('xmipp',
-               tar='Xmipp-3.1-src.tar.gz',
-               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
-               buildDir='xmipp',
+               tar='xmipp_scipion.tgz',
                extraActions=[('xmipp.bashrc',
                              './install.sh --unattended=true --gui=false -j %s'
                               % GetOption('num_jobs'))],
