@@ -171,7 +171,7 @@ class HostsView(tk.Frame):
         if askYesNo(Message.TITLE_HOST_DELETE_FORM, 
                     Message.LABEL_HOST_DELETE_FORM + "(%s)" % host.getLabel(),
                     self.windows.root):
-            self.setting.delete(host, commit=True)
+            self.settings.delete(host, commit=True)
             self.refresh()
         
     def _hostActionClick(self, action):
