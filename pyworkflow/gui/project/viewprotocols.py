@@ -27,35 +27,29 @@
 """
 Main project window application
 """
+import pickle
+from collections import OrderedDict
 import Tkinter as tk
 import ttk
-import tkFont
+
 
 from pyworkflow.gui.tree import TreeProvider, BoundTree
 from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow
-from pyworkflow.protocol.protocol import *
+from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, List, String, Pointer
 
-import pyworkflow as pw
-from pyworkflow.object import *
-from pyworkflow.em import *
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.project import Project
+from pyworkflow.em import emProtocolsDict, findViewers, DESKTOP_TKINTER, EMObject
 from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
-from pyworkflow.gui import getImage
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
-from pyworkflow.gui.form import FormWindow, editObject
+from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
+from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
 from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.widgets import ComboBox
 
-from config import *
 from constants import STATUS_COLORS
 
 ACTION_EDIT = Message.LABEL_EDIT

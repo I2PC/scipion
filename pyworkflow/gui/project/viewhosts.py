@@ -27,38 +27,22 @@
 """
 Main project window application
 """
-import os, sys
-from os.path import join, exists, basename
 
 import Tkinter as tk
 import ttk
 import tkFont
 
 from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.protocol.protocol import *
 
-import pyworkflow as pw
 from pyworkflow.hosts import HostConfig
-from pyworkflow.object import *
-from pyworkflow.em import *
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.mapper import SqliteMapper, XmlMapper
-from pyworkflow.project import Project
+from pyworkflow.protocol.params import String
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
-from pyworkflow.gui import getImage
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider
-from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo, showInfo, showError
 from pyworkflow.gui.text import Text
-from pyworkflow.gui import Canvas
-from pyworkflow.gui.graph import LevelTree
 
-from config import *
 #TODO: MOVE BROWSER TO A LIBRARY
-from pyworkflow.apps.pw_browser import BrowserWindow
 
 ACTION_NEW = Message.LABEL_NEW
 ACTION_EDIT = Message.LABEL_EDIT
@@ -179,7 +163,8 @@ class HostsView(tk.Frame):
         if host or action == ACTION_NEW:
             if action == ACTION_DELETE:
                 self._deleteHost(host)
-            else:                
+            else:
+                newHost = None  # avoids warning for maybe unused variable
                 if action == ACTION_NEW:
                     newHost = HostConfig()
                 elif action == ACTION_COPY:
