@@ -138,14 +138,20 @@ def main():
 
     if args.download:
         # Download datasets.
-        for dataset in args.datasets:
-            if exists(join(os.environ['SCIPION_TESTS'], dataset)):
-                print 'Local copy of dataset %s detected.' % dataset
-                print 'Checking for updates...'
-                update(dataset, url=args.url, verbose=args.verbose)
-            else:
-                print 'Dataset %s not in local machine. Downloading...' % dataset
-                download(dataset, url=args.url, verbose=args.verbose)
+        try:
+            for dataset in args.datasets:
+                if exists(join(os.environ['SCIPION_TESTS'], dataset)):
+                    print 'Local copy of dataset %s detected.' % dataset
+                    print 'Checking for updates...'
+                    update(dataset, url=args.url, verbose=args.verbose)
+                else:
+                    print 'Dataset %s not in local machine. Downloading...' % dataset
+                    download(dataset, url=args.url, verbose=args.verbose)
+        except IOError as e:
+            print 'Warning: %s' % e
+            if e.errno == 13:  # permission denied
+                print 'Maybe you need to run as the user that did the global installation?'
+            sys.exit(1)
         sys.exit(0)
 
     if args.upload:
