@@ -489,6 +489,9 @@ class SetOfImages(EMSet):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
+    def hasAcquisition(self):
+        return self._acquisition.getMagnification() is not None
+        
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
         return self._hasCtf.get()  
@@ -527,7 +530,8 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         # Copy the acquistion from the set to images
-        image.setAcquisition(self.getAcquisition())
+        if self.hasAcquisition(): # only override acquisition if not None
+            image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():

@@ -36,7 +36,11 @@ from pyworkflow.em.packages.xmipp3.convert import *
 
 
 
-class TestXmippConversions(BaseTest):
+class TestBasic(BaseTest):
+    """ Test most basic conversions of the form:
+    rowToObject(row, ...)
+    objectToRow(obj, row, ...)
+    """
     
     @classmethod
     def setUpClass(cls):
@@ -44,8 +48,54 @@ class TestXmippConversions(BaseTest):
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.particles = cls.dataset.getFile( 'particles1')
-
         
+    def test_rowToCtfModel(self):
+        row = XmippMdRow()
+        row.setValue(xmipp.MDL_CTF_DEFOCUSU, 2520.)
+        row.setValue(xmipp.MDL_CTF_DEFOCUSV, 2510.)
+        row.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 45.)
+        
+        ctf = rowToCtfModel(row)
+        ctf.printAll()        
+        # Check that the ctf object was properly set
+        self.assertTrue(ctf.equalAttributes(CTFModel(defocusU=2520., 
+                                                     defocusV=2510., 
+                                                     defocusAngle=45.)))
+        # Check when the EMX standarization takes place
+        row.setValue(xmipp.MDL_CTF_DEFOCUSV, 2530.)
+        ctf = rowToCtfModel(row)
+        self.assertTrue(ctf.equalAttributes(CTFModel(defocusU=2530., 
+                                                     defocusV=2520., 
+                                                     defocusAngle=135.)))
+        
+        # When one of CTF labels is missing, None should be returned
+        row.removeLabel(xmipp.MDL_CTF_DEFOCUSV)
+        ctf = rowToCtfModel(row)       
+        self.assertIsNone(ctf)
+        
+    def test_rowToImage(self):
+        row = XmippMdRow()
+        index = 1
+        filename = 'images.stk'
+        row.setValue(xmipp.MDL_ITEM_ID, 1)
+        row.setValue(xmipp.MDL_IMAGE, '%d@%s' % (index, filename))
+        
+        img = rowToImage(row, xmipp.MDL_IMAGE, Particle)
+        
+        # Check correct index and filename
+        self.assertEquals(index, img.getIndex())
+        self.assertEquals(filename, img.getFileName())
+
+
+class TestSetConversions(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
+        cls.particles = cls.dataset.getFile( 'particles1')        
+    
     def test_metadataToParticles(self):
         """ This test will read a set of particles from a given metadata.
         The resulting set should contains the x and y coordinates from
@@ -53,14 +103,13 @@ class TestXmippConversions(BaseTest):
         """
         fn = self.dataset.getFile('images10')
         partSet = SetOfParticles(filename=self.getOutputPath('particles_coord.sqlite'))
-        readSetOfParticles(fn, partSet, hasCtf=True)
+        readSetOfParticles(fn, partSet)
         
         self.assertEquals(partSet.getSize(), 10)
         self.assertTrue(partSet.hasCTF())
         
         for img in partSet:
             self.assertTrue(img.getCoordinate() is not None)    
-            print img.getCoordinate().getX(), img.getCoordinate().getY()       
             self.assertTrue(img.hasCTF())
             
         mdIn = xmipp.MetaData(fn)
@@ -69,6 +118,10 @@ class TestXmippConversions(BaseTest):
         mdOut = xmipp.MetaData()
         setOfParticlesToMd(partSet, mdOut)
         print mdOut
+        
+        # Labels order is not the same
+        # TODO: Implement a better way to compare two metadatas
+        #self.assertEqual(mdIn, mdOut)
         
         
         
@@ -169,7 +222,8 @@ class TestXmippConversions(BaseTest):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
         mdCtf = xmipp.MetaData(self.dataset.getFile('ctfGold'))
         objId = mdCtf.firstObject()
-        ctf = rowToCtfModel(mdCtf, objId)        
+        rowCtf = rowFromMd(mdCtf, objId)
+        ctf = rowToCtfModel(rowCtf)        
         
         ALL_CTF_LABELS = [   
             xmipp.MDL_CTF_CA,

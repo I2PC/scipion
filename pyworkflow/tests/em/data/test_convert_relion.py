@@ -19,11 +19,14 @@ class TestConversions(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
-        cls.particles = cls.dataset.getFile( 'particles1')
+        cls.dataset = DataSet.getDataSet('relion_tutorial')  
+        cls.getFile = cls.dataset.getFile
         
-    def test_particlesToRelion(self):
-        """ Test the convertion of a SetOfParticles to Xmipp metadata. """
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+        
+        
+    def aaatest_particlesToStar(self):
+        """ Write a SetOfParticles to Relion star input file. """
         imgSet = SetOfParticles(filename=self.getOutputPath("particles.sqlite"))
         n = 10
         fn = self.particles
@@ -59,3 +62,26 @@ class TestConversions(BaseTest):
         self.assertTrue(md.containsLabel(xmipp.MDL_XCOOR))
         self.assertTrue(md.containsLabel(xmipp.MDL_YCOOR))
         self.assertFalse(md.containsLabel(xmipp.MDL_ZSCORE))
+        
+    def test_particlesFromStar(self):
+        """ Read a set of particles from an .star file.  """
+        fnStar = self.getFile('relion_it020_data')
+        
+        relion.addRelionLabels()
+        print ">>> Reading star file: ", fnStar
+        md = xmipp.MetaData(fnStar)
+        print "labels: ", [xmipp.label2Str(l) for l in md.getActiveLabels()]
+        print "size: ", md.size()
+        
+        
+    def test_particlesToStar(self):
+        fnSqlite = self.getFile('particles')
+        partSet = SetOfParticles(filename=fnSqlite)
+        
+        for i, img in enumerate(partSet):
+            img.printAll()
+            if i > 10: 
+                break
+        partSet.printAll()
+        #print md
+        

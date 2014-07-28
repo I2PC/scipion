@@ -33,7 +33,6 @@ from pyworkflow.utils import *
 import xmipp
 from geometrical_mask import XmippGeometricalMask3D, XmippGeometricalMask2D
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
-from convert import createXmippInputImages, readSetOfParticles
 
 from pyworkflow.em.constants import *
 from constants import *

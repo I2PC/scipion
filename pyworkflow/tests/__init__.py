@@ -83,7 +83,10 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
         files={'posAllDir': 'pickingXmipp',
                'boxingDir': 'pickingEman',
                'allMics': 'micrographs/*.mrc',
-               'volume': 'volumes/reference.mrc'})
+               'volume': 'volumes/reference.mrc',
+               'relion_it020_data': 'gold/relion_it020_data.star',
+               'input_particles': 'gold/input_particles.star',
+               'particles': 'gold/particles.sqlite'})
 
 
 DataSet(name='ribo_movies', folder='ribo_movies', 
