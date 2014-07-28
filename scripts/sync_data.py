@@ -109,13 +109,17 @@ def main():
     if args.check_all:
         datasets = [x.strip('./') for x in
                     urlopen('%s/MANIFEST' % args.url).read().splitlines()]
-        if args.verbose:
-            print 'Datasets: %s' % ' '.join(datasets)
+        print 'Checking datasets: %s' % ' '.join(datasets)
 
         all_uptodate = True
         for dataset in datasets:
             all_uptodate &= check(dataset, url=args.url, verbose=args.verbose)
-        sys.exit(0 if all_uptodate else 1)
+        if all_uptodate:
+            print 'All datasets are up-to-date.'
+            sys.exit(0)
+        else:
+            print 'Some datasets are not updated.'
+            sys.exit(1)
 
     if not args.datasets:
         sys.exit('At least --list, --check-all or datasets needed.\n'
@@ -207,7 +211,7 @@ def check(dataset, url, verbose=False):
 
 
 def download(dataset, destination=None, url=None, verbose=False):
-    """ Download all the data files mentioned in url/datasetName/MANIFEST """
+    """ Download all the data files mentioned in url/dataset/MANIFEST """
 
     destination = destination if destination else os.environ['SCIPION_TESTS']
 
