@@ -32,6 +32,7 @@ from constants import NO_INDEX
 import xmipp
 from constants import *
 
+# TODO: remove dependency from Xmipp
 
 
 class ImageHandler(object):
