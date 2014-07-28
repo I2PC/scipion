@@ -31,7 +31,7 @@ import os
 import re
 from os.path import abspath
 
-from pyworkflow.em import EMObject
+from pyworkflow.em import *
 from pyworkflow.apps.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
