@@ -240,7 +240,9 @@ class ProjectDataView(tk.Frame):
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
         v.grid(row=1, column=0, sticky='news')
-    
+
+    # TODO(josemi): check that the call to RoundedTextBox is correct
+    # It looks suspicious because RoundedTextBox() needs 5 arguments, not 3
     def _createNode(self, canvas, node, y):
         """ Create Data node to be painted in the graph. """
         node.selected = False
