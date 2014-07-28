@@ -450,9 +450,9 @@ elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
     os.environ.update(VARS)
     # !!!! reuse VARS for these sys.path too
-    sys.path.append(join(XMIPP_HOME, 'lib'))
-    sys.path.append(join(XMIPP_HOME, 'lib', 'python2.7', 'site-packages'))
-    sys.path.append(join(XMIPP_HOME, 'protocols'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'lib'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'lib', 'python2.7', 'site-packages'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'protocols'))
     # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
 
     pages_settings_path = join(SCIPION_HOME,'pyworkflow','web')
