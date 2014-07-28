@@ -31,6 +31,7 @@ This sub-package contains wrapper around Screen Classes Xmipp program
 
 from pyworkflow.em import *  
 from pyworkflow.em.protocol import *
+from pyworkflow.protocol.constants import LEVEL_EXPERT
 import xmipp
 from xmipp3 import ProjMatcher
 from convert import readSetOfClasses2D   
