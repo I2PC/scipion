@@ -203,7 +203,7 @@ if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
         writeDefaults()
     except Exception:  # we expect a ImportError due to no psutil
         if len(sys.argv) < 2 or sys.argv[1] != 'install':
-            sys.exit('%s\Did you already run "%s install" ?' %
+            sys.exit('%s\nDid you already run "%s install" ?' %
                      (sys.exc_info()[1], sys.argv[0]))
         else:
             pass  # go ahead, install it!
