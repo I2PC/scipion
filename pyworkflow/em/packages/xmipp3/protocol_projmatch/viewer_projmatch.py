@@ -605,7 +605,7 @@ Examples:
         arguments = []
         # FIXME
         #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
-        outerRadius = 30
+        outerRadius = self.protocol._outerRadius[it]
         radius = float(outerRadius) * 1.1
 
         for ref3d in self._refsList:
