@@ -1029,10 +1029,14 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
             cls.setRepresentative(rep)
             
             clsDict[ref] = cls
+            cls.copyInfo(inputImages)
+            cls.setAcquisition(inputImages.getAcquisition())
             clsSet.append(cls)
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
-        img = rowToParticle(md, objId)
+        imgRow = rowFromMd(md, objId)
+        img = rowToParticle(imgRow)
+        
         classItem.append(img)
         
     for classItem in clsDict.values():
