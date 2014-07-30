@@ -233,9 +233,10 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
     return args
     
-def runJavaIJapp(memory, appName, args, batchMode=True, env=None):
+def runJavaIJapp(memory, appName, args, batchMode=True, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron())
+    
     args = getJavaIJappArguments(memory, appName, args)
     runJob(None, "java", args, runInBackground=batchMode, env=env)
     
