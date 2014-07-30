@@ -52,23 +52,17 @@ public abstract class Micrograph {
 		this.file = file;
 		this.psd = psd;
 		this.ctf = ctf;
-		 if (!new File(file).exists()) 
+                String path = file;
+                if(Filename.hasPrefix(file))
+                    path = file.substring(file.lastIndexOf(Filename.SEPARATOR));
+		 if (!new File(path).exists()) 
                  {
                      file = Filename.findImagePath(name, Main.selfile, true);
-                     if(!new File(file).exists())
+                     if(!new File(path).exists())
                         throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+                    
                  }
-		// ImageGeneric ig;
-		// try {
-		// ig = new ImageGeneric(file);
-		//
-		// width = ig.getXDim();
-		// height = ig.getYDim();
-		// } catch (Exception e) {
-		//
-		// e.printStackTrace();
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
+		
 		this.name = name;
 		this.posfile = name + ext;
                 loadDimensions(); // ensure width and height get updated
