@@ -1674,8 +1674,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						// args = "spider:" + args;
 						// // FIXME: Check chimera is installed
 						// Process p = new ProcessBuilder("chimera", args).start();
-                                                String client = Filename.getXmippPath("bin/xmipp_chimera_client");
-                                                String[] run = new String[]{client, "-i ", args, "--mode projector"};
+                                                String run = "xmipp_chimera_client --input " + args + " --mode projector";
 						String result = XmippUtil.executeCommand(run, false);
                                                 if(result != null && !result.isEmpty())
                                                     XmippDialog.showInfo(GalleryJFrame.this, result);
