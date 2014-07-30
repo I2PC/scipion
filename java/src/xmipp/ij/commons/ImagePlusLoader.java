@@ -64,9 +64,9 @@ public class ImagePlusLoader {
         existsfile = fileName != null;
         if (existsfile) {
             
-            if (fileName.contains("@")) {
+            if (Filename.hasPrefix(fileName)) {
                 
-                int arrobaindex = fileName.lastIndexOf("@");
+                int arrobaindex = fileName.lastIndexOf(Filename.SEPARATOR);
                 String header = fileName.substring(0, arrobaindex);
 
                 int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
