@@ -80,10 +80,9 @@ public class ImagePlusLoader {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
             }
-            if(fileName.endsWith(":mrc"))
-                existsfile = new File(fileName.replace(":mrc", "")).exists();
-            else
-                existsfile = new File(fileName).exists();
+
+            String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
+            existsfile = path != null;
         }
         if (existsfile) 
             impreader = new ImagePlusFromFile(fileName, imp, ig);
