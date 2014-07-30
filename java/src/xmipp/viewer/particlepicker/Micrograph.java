@@ -54,11 +54,12 @@ public abstract class Micrograph {
 		this.ctf = ctf;
                 String path = file;
                 if(Filename.hasPrefix(file))
-                    path = file.substring(file.lastIndexOf(Filename.SEPARATOR));
+                    path = Filename.removePrefix(file);
+               
 		 if (!new File(path).exists()) 
                  {
                      file = Filename.findImagePath(name, Main.selfile, true);
-                     if(!new File(path).exists())
+                     if(file == null)
                         throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
                     
                  }
