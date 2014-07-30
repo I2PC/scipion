@@ -111,8 +111,8 @@ try:
     assert config.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
 
     def getPaths(section):
-        return {key: join(SCIPION_HOME, os.path.expanduser(path))
-                for key, path in config.items(section)}
+        return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
+                     for key, path in config.items(section)])  # works in 2.4
     DIRS_GLOBAL = getPaths('DIRS_GLOBAL')
     DIRS_LOCAL = getPaths('DIRS_LOCAL')
     PACKAGES = getPaths('PACKAGES')
