@@ -642,7 +642,8 @@ def readAnglesFromMicrographs(micFile, anglesSet):
     
     for objId in micMd:
         angles = Angles()
-        rowToObject(micMd, objId, angles, ANGLES_DICT)
+        row = rowFromMd(micMd, objId)
+        rowToObject(row, angles, ANGLES_DICT)
         angles.setObjId(micMd.getValue(xmipp.MDL_ITEM_ID, objId)) 
         anglesSet.append(angles)
     
