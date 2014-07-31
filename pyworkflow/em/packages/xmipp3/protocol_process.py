@@ -75,7 +75,7 @@ class XmippProcessParticles(XmippProcess):
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.outputMd, imgSet, imgSet.hasCTF())
+        readSetOfParticles(self.outputMd, imgSet)
         self._processOutput(imgSet)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), imgSet)

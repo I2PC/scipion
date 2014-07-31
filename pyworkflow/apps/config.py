@@ -31,10 +31,10 @@ mainly for project GUI
 import os
 from os.path import join, exists
 import time
-from pyworkflow.utils.path import getHomePath, makeFilePath
+from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
-from pyworkflow.object import *
-from pyworkflow.hosts import *
+from pyworkflow.object import Boolean, Integer, String, List, OrderedObject, CsvList
+from pyworkflow.hosts import QueueConfig, QueueSystemConfig, HostConfig
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 PATH = os.path.dirname(__file__)

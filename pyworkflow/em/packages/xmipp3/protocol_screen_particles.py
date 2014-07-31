@@ -90,7 +90,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.outputMd.get(), imgSet, imgSet.hasCTF())
+        readSetOfParticles(self.outputMd.get(), imgSet)
 
         self._defineOutputs(outputParticles=imgSet)
 

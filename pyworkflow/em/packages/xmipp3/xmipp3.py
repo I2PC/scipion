@@ -113,13 +113,19 @@ class XmippProtocol():
 
 class XmippMdRow():
     """ Support Xmipp class to store label and value pairs 
-    corresponding to a Metadata row. It can be used as base
-    for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
+    corresponding to a Metadata row. 
     """
     def __init__(self):
         self._labelDict = OrderedDict() # Dictionary containing labels and values
+        self._objId = None # Set this id when reading from a metadata
+        
+    def getObjId(self):
+        return self._objId
     
     def hasLabel(self, label):
+        return self.containsLabel(label)
+    
+    def containsLabel(self, label):
         return label in self._labelDict
     
     def removeLabel(self, label):
@@ -137,6 +143,8 @@ class XmippMdRow():
     def readFromMd(self, md, objId):
         """ Get all row values from a given id of a metadata. """
         self._labelDict.clear()
+        self._objId = objId
+        
         for label in md.getActiveLabels():
             self._labelDict[label] = md.getValue(label, objId)
             

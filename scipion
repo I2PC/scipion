@@ -26,50 +26,115 @@
 # *
 # **************************************************************************
 """
-This module is responsible for launching protocol executions.
+Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists
+from os.path import join, exists, dirname
+import time
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser  # Python 3
+
 
 __version__ = 'v.0.1.5 Phosphorus'
 
 
-# This script tries to run ok with any python version, but it won't
-# work with python 2.4 or below.
+# This script tries to run ok with any python version. So we cannot
+# use some of the cool syntax of modern Python (no "with" statement,
+# no inline "if ... else ...", etc.), and we better avoid things like
+# "print" (we use sys.stdout.write()) and be careful with exceptions.
+
 if sys.version_info < (2, 5):
     sys.stdout.write('Warning: running with old Python.\n')
+    # But we'll try anyway. Unless...
+
     if len(sys.argv) > 1 and sys.argv[1] == 'install':
         sys.exit('Please run this script with Python 2.5 or above.')
-    # Because SCons doesn't seem to work with an earlier version!
-    # Also, the tarfile module works badly, we have no "with" statement, etc
+        # That's too much, because SCons doesn't work with an earlier version!
+        # Also, the tarfile module works badly, etc. Not worth it.
 
 
-SCIPION_HOME = os.path.dirname(os.path.realpath(__file__))
+SCIPION_HOME = dirname(os.path.realpath(__file__))
 
 
-import config
+#
+# If we don't have a local user installation, create it.
+#
 
-def getConfigPath(varName):
-    """ Return the value of varName from config.py, which is a path.
-    If relative, prepend SCIPION_HOME.
-    """
-    pathValue = getattr(config, varName)
-    if not os.path.isabs(pathValue):
-        pathValue = join(SCIPION_HOME, pathValue)
-    return pathValue
+CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+
+def createConf():
+    if not exists(dirname(CONF_FILE)):
+        os.makedirs(dirname(CONF_FILE))
+    if exists(CONF_FILE):
+        backup = '%s.%d' % (CONF_FILE, int(time.time()))
+        sys.stdout.write('File %s already exists. Creating backup %s.\n' %
+                         (CONF_FILE, backup))
+        os.rename(CONF_FILE, backup)
+    open(CONF_FILE, 'w').write("""
+# All relative paths will have $SCIPION_HOME as their root.
+
+[DIRS_LOCAL]
+SCIPION_USER_DATA = ~/ScipionUserData
+SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
+SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
+
+[DIRS_GLOBAL]
+SCIPION_TESTS = data/tests
+SCIPION_SOFTWARE = software
+
+[PACKAGES]
+EM_ROOT = software/em
+XMIPP_HOME = %(EM_ROOT)s/xmipp
+SPIDER_DIR = %(EM_ROOT)s/spider/spider
+EMAN2DIR = %(EM_ROOT)s/eman
+FREALIGN_HOME = %(EM_ROOT)s/frealign
+CTFFIND_HOME = %(EM_ROOT)s/ctffind
+RELION_HOME = %(EM_ROOT)s/relion
+BSOFT_HOME = %(EM_ROOT)s/bsoft
+""")
 
 
-def getUserDataPath():
-    # If SCIPION_USER_DATA is None or empty in config
-    # set a location by default in the user home
-    if not getattr(config, 'SCIPION_USER_DATA', None):
-        return join(os.environ['HOME'], 'ScipionUserData')
-    return getConfigPath('SCIPION_USER_DATA')
+#
+# Initialize variables from config file.
+#
 
+try:
+    if not exists(CONF_FILE):
+        sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
+        createConf()
 
-SCIPION_SOFTWARE = join(SCIPION_HOME, 'software')
-XMIPP_LIB = join(getConfigPath('XMIPP_HOME'), 'lib')
+    config = ConfigParser()
+    config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    assert config.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
+
+    def getPaths(section):
+        return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
+                     for key, path in config.items(section)])  # works in 2.4
+    DIRS_GLOBAL = getPaths('DIRS_GLOBAL')
+    DIRS_LOCAL = getPaths('DIRS_LOCAL')
+    PACKAGES = getPaths('PACKAGES')
+
+    for d in DIRS_LOCAL.values():
+        if not exists(d):
+            sys.stdout.write('Creating directory %s ...\n' % d)
+            os.makedirs(d)
+
+    SCIPION_SOFTWARE = DIRS_GLOBAL['SCIPION_SOFTWARE']
+    XMIPP_LIB = join(PACKAGES['XMIPP_HOME'], 'lib')
+except Exception:
+    # This way of catching exceptions works with Python 2 & 3
+    sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
+    try:
+        sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
+        createConf()  # try to create a working configuration file
+    except Exception:
+        pass  # but don't be upset if we can't :)
+    sys.stdout.write('Please check the configuration file %s and try again.\n' %
+                     CONF_FILE)
+    sys.exit(1)
 
 PATH = os.pathsep.join(
     [join(SCIPION_SOFTWARE, 'bin'),
@@ -87,32 +152,26 @@ PYTHONPATH = os.pathsep.join(
      os.environ.get('PYTHONPATH', '')]
 )
 
+# VARS will contain all the relevant environment variables, including
+# directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'PATH': PATH,
     'PYTHONPATH': PYTHONPATH,
-    'PYTHONHOME': SCIPION_SOFTWARE,
     'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
 }
 
-DIRS = {
-    'SCIPION_DATA': join(SCIPION_HOME, 'data'),
-    'SCIPION_LOGS': join(SCIPION_HOME, 'data', 'logs'),
-    'SCIPION_TESTS': join(SCIPION_HOME, 'data', 'tests'),
-    'SCIPION_SOFTWARE': SCIPION_SOFTWARE,
-    'SCIPION_USER_DATA': getUserDataPath(),
-    'SCIPION_TMP': join(getUserDataPath(), 'tmp')
-}
+VARS.update(DIRS_GLOBAL)
+VARS.update(DIRS_LOCAL)
+VARS.update(PACKAGES)
 
-VARS.update(DIRS)
 
-for package in ['XMIPP_HOME', 'SPIDER_DIR', 'EMAN2DIR',
-                'CTFFIND_HOME', 'FREALIGN_HOME',
-                'RELION_HOME', 'BSOFT_HOME']:
-    VARS[package] = getConfigPath(package)
-
+#
+# Auxiliary functions to run commands in our environment, one of our
+# scripts, or one of our "apps"
+#
 
 def runCmd(cmd):
     os.environ.update(VARS)
@@ -123,8 +182,7 @@ def runCmd(cmd):
         result = 1  # because if not, 256 is confused with 0 !
     sys.exit(result)
 
-# The following functions require that SCIPION_PYTHON
-# is sucessfully compiled and installed
+# The following functions require a working SCIPION_PYTHON
 
 def runScript(scriptCmd):
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
@@ -134,12 +192,35 @@ def runApp(app, args=''):
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
 
 
+#
+# If this is the first time that the user runs scipion...
+#
+if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
+    os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
+    os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
+    try:
+        from pyworkflow.apps.config import writeDefaults
+        writeDefaults()
+    except Exception:  # we expect a ImportError due to no psutil
+        if len(sys.argv) < 2 or sys.argv[1] != 'install':
+            sys.exit('%s\nDid you already run "%s install" ?' %
+                     (sys.exc_info()[1], sys.argv[0]))
+        else:
+            pass  # go ahead, install it!
+
+
+#
+# Modes (first argument given to scipion).
+#
+
 MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
+MODE_LAST = 'last' # shortcut to 'project last'
 MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
-MODE_TESTS = 'tests'
-MODE_TESTS_DATA = 'testdata'
+MODE_TESTS = 'tests' # keep tests for compatibility
+MODE_TEST = 'test' # also allow 'test', in singular
+MODE_TEST_DATA = 'testdata'
 MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
@@ -153,27 +234,33 @@ MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 
 
-
 def main():
+    # See in which "mode" the script is called. By default, it's MODE_MANAGER.
     n = len(sys.argv)
     if n > 1:
         mode = sys.argv[1]
     else:
         mode = MODE_MANAGER
 
-    # Create SCIPION_HOME folder if it does not exist
+    # First see if we have a working installation.
     if mode != MODE_INSTALL:
-        error = ''
-        for d, path in DIRS.items():
+        ok = True
+        for d, path in DIRS_GLOBAL.items():
             if not exists(path):
-                error += "Missing %s folder: '%s'\n" % (d, path)
-        if error:
-            sys.stdout.write('%s RUN:  scipion install\n' % error)
-            sys.exit(1)
+                sys.stderr.write('Missing %s folder: %s\n' % (d, path))
+                ok = False
+        if not exists(join(VARS['SCIPION_SOFTWARE'], 'log', 'success.log')):
+            ok = False
+        if not ok:
+            sys.exit('There is a problem with the installation. Please run:\n'
+                     '  %s install' % sys.argv[0])
 
     if mode == MODE_MANAGER:
         runApp('pw_manager.py')
 
+    elif mode == MODE_LAST:
+        runApp('pw_project.py', args='last')
+        
     elif mode == MODE_PROJECT:
         if n > 2:
             projectName = sys.argv[2]
@@ -205,7 +292,7 @@ def main():
         else:
             sys.stdout.write("\nERROR: invalid option '%s' for mode %s.\n" % (option, MODE_WEBSERVER))
 
-    elif mode == MODE_TESTS:
+    elif mode == MODE_TESTS or mode == MODE_TEST:
         if n <= 2:
             sys.exit('Missing option. Run "%s help" for a full description.'
                      % sys.argv[0])
@@ -220,7 +307,7 @@ def main():
         else:
             runScript('scripts/run_tests.py %s' % ' '.join(sys.argv[2:]))
 
-    elif mode == MODE_TESTS_DATA:
+    elif mode == MODE_TEST_DATA:
         runScript('scripts/sync_data.py %s' % ' '.join(sys.argv[2:]))
 
     # TODO(josemiguel): review and see if we really need it.
@@ -242,7 +329,7 @@ def main():
         os.environ['SCIPION_HOME'] = SCIPION_HOME
 
         # Create folders if needed.
-        for path in DIRS.values():
+        for path in DIRS_GLOBAL.values():
             if not exists(path):
                 sys.stdout.write("  Creating folder %s ...\n" % path)
                 os.makedirs(path)
@@ -251,9 +338,11 @@ def main():
         from scripts.install import build
         ret = build(args=args)
         if ret == 0 and '--help' not in args and '-h' not in args:
+            open(join(VARS['SCIPION_SOFTWARE'], 'log',
+                      'success.log'), 'w').write('Yes :)')
             runApp('config.py')
-        # FIXME: I am not sure this is a good idea. To begin with,
-        # right now it expects xmipp to be installed.
+            # FIXME: I am not sure this is a good idea. To begin with,
+            # right now it expects xmipp to be installed.
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
@@ -300,60 +389,66 @@ def main():
 USAGE:
     scipion [MODE] [ARGUMENTS]
     where MODE can be:
-        browser                Browser a dir or an sqlite database. (TODO: merge with viewer)
+        browser                Browser a dir or an sqlite database.
 
         help                   Print this help message.
 
-        install                Create needed folders and settings to run Scipion.
+        install [OPTION]       Download and install all the necessary software to run Scipion.
+                               OPTION can be:
+                                 --with-all-packages: download also all external em packages
+                                 --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
+                                 --help: show all the available options
 
         config                 Write default configuration.
 
-        manager                Open the manager with list of all projects.
+        manager                Open the manager with a list of all projects.
 
-        project [PROJECT_NAME] Open the specified project, special name 'last' can be used.
+        project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
+        last                   Same as 'project last'
 
         stats                  Write git statistics to data/stats folder.
 
-        tests [OPTION]         Run a test starting from pyworkflow.tests
+        test [OPTION]          Run a test. They are located in pyworkflow/tests .
                                OPTION can be:
-                                  <test name>: name of the test to run.
-                                  --show: list the available tests.
-                                  Further options are:
-                                  --case=VALUE --paths=VALUE --pattern="test*py" --mode=[modules|classes|all]
+                                 <test name>: name of the test to run
+                                 --show: list the available tests
+                                 --help: show all the available options
+                               For example, to run the "test_object" test:
+                                 scipion test tests.model.test_object
 
-        testdata [OPTION]      Synchronize tests data from/to remote server to/from SCIPION_USER_DATA folder.
+        testdata [OPTION]      Synchronize tests data from/to the remote server to/from the SCIPION_TESTS folder.
                                OPTION can be:
-                                  --download: copy dataset from remote location to local
-                                  --upload: copy dataset from local to remote
-                                  --format: create a MANIFEST file with md5 checksums (expected in dataset folders)
-                                  dataset: name of dataset to download, upload or format
-                                  --list: list the datasets in the local computer and in the remote server
-                                  --query: Show modifications stored in last_m.txt and update modifications log file.
-                                           This can be used, for example, by buildbot to know when to launch tests.
+                                 --download: copy dataset from remote location to local
+                                 --upload: copy dataset from local to remote
+                                 --format: create a MANIFEST file with md5 checksums (expected in dataset folders)
+                                 <dataset>: name of dataset to download, upload or format
+                                 --list: list the datasets in the local computer and in the remote server
+                                 --help: show all the available options
                                For example, to download the dataset xmipp_tutorial:
-                                  scipion testsdata --download xmipp_tutorial
+                                 scipion testdata --download xmipp_tutorial
                                Or to upload it:
-                                  scipion testsdata --upload xmipp_tutorial
+                                 scipion testdata --upload xmipp_tutorial
 
-        viewer [FILE]          Open a file with Scipion showj program.
+        viewer [FILE]          Open a file with Scipion's showj program.
 
-        webserver [OPTION]     webserver management OPTION can be:
-                               django: open local django webserver (default)
-                               collectstatic: copy static files for django server
-                               apache_vars: show the LD_LIBRARY_PATH needed by apache server
+        webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
+                               OPTION can be:
+                                 django: open local django webserver (default)
+                                 collectstatic: copy static files for django server
+                                 apache_vars: show the LD_LIBRARY_PATH needed by apache server
 
-        printenv               Print the environmental variables used by the application
+        printenv               Print the environment variables used by the application.
 
-        download               Download external packages (EMAN, SPIDER, Relion, etc)
+        download               Download external packages (EMAN, SPIDER, Relion, etc).
 
-        run ARG1 [ARG2...ARGN] Run any command with arguments setting the scipion environment
+        run COMMAND [ARG ...]  Run command in the Scipion environment.
 """)
         sys.exit(0)
 
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv download
+  browser help install manager project stats tests testdata viewer webserver printenv download run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
@@ -366,9 +461,9 @@ elif __name__.startswith('_mod_wsgi'):
     os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
     os.environ.update(VARS)
     # !!!! reuse VARS for these sys.path too
-    sys.path.append(join(XMIPP_HOME, 'lib'))
-    sys.path.append(join(XMIPP_HOME, 'lib', 'python2.7', 'site-packages'))
-    sys.path.append(join(XMIPP_HOME, 'protocols'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'lib'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'lib', 'python2.7', 'site-packages'))
+    sys.path.append(join(VARS['XMIPP_HOME'], 'protocols'))
     # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
 
     pages_settings_path = join(SCIPION_HOME,'pyworkflow','web')

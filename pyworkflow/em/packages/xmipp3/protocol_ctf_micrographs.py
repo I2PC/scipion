@@ -32,7 +32,6 @@ This sub-package contains the XmippCtfMicrographs protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import makePath, moveFile, removeBaseExt
 from convert import *
-from xmipp3 import XmippMdRow
 
 
 class XmippCTFBase():
