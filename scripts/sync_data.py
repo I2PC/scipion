@@ -365,7 +365,7 @@ def upload(dataset, delete=False):
 
     # Upload the dataset files (with rsync)
     print 'Uploading files...'
-    call(['rsync', '-av', localFolder, '%s:%s' % (remoteLoc, remoteFolder)] +
+    call(['rsync', '-rlv', localFolder, '%s:%s' % (remoteLoc, remoteFolder)] +
          (['--delete'] if delete else []))
 
     # Regenerate remote MANIFEST (which contains a list of datasets)
