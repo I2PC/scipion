@@ -29,6 +29,7 @@ This module contains some MPI utilities
 
 import os
 from time import time, sleep
+from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
 
 
@@ -77,6 +78,8 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
                               runInBackground, hostConfig)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+    if env is not None:
+        send("env=%s" % dumps(env), mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
     return send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
@@ -90,7 +93,7 @@ def runJobMPISlave(mpiComm):
 
     # Listen for commands until we get 'None'
     cwd = None  # We run without changing directory by default
-    env = None
+    env = None  # And we don't change the environment either!
     
     while True:
         # Receive command in a non-blocking way
@@ -110,10 +113,13 @@ def runJobMPISlave(mpiComm):
             if command.startswith("cwd="):
                 cwd = command.split("=", 1)[-1]
                 result = 0
+            elif command.startswith("env="):
+                env = loads(command.split("=", 1)[-1])
+                result = 0
             else:
-                result = runCommand(command, cwd=cwd)
-                cwd = None  # unset directory and environment
-                env = None
+                result = runCommand(command, cwd=cwd, env=env)
+                cwd = None  # unset directory
+                env = None  # unset environment
         except Exception, e:
             result = str(e)
 
