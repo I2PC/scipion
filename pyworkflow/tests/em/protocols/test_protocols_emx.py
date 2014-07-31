@@ -62,11 +62,8 @@ class TestEmxBase(BaseTest):
         #SCIPION_TESTS=/home/roberto/Scipion/pyworkflow-code/data/tests
         #SCIPION_USER_DATA=/home/roberto/ScipionUserData
 
-        print "self.folder", self.dataset.folder
         #os.chdir(os.environ['SCIPION_TESTS'])
-        print "os.environ['SCIPION_HOME']", os.environ['SCIPION_HOME']
         emxFn = self.dataset.getFile('defocusParticleT2')
-        print "emxFn1",emxFn
         protEmxImport = self.newProtocol(ProtEmxImport, 
                                          inputEMX=emxFn
                                          )
@@ -79,11 +76,5 @@ class TestEmxBase(BaseTest):
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
-            mic1.printAll()
-            mic2.printAll()
             self.assertTrue(mic1.equalAttributes(mic2))
-
-
-
-
 
