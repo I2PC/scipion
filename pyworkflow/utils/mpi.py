@@ -27,10 +27,11 @@
 This module contains some MPI utilities
 """
 
-import os
 from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
+
+from pyworkflow.utils.utils import envVarOn
 
 
 TIMEOUT = 60  # seconds trying to send/receive data thru a socket
@@ -104,19 +105,25 @@ def runJobMPISlave(mpiComm):
                 break
             sleep(1)
 
-        print "Slave %d, received command: %s" % (rank, command)
+        print "Slave %d received command." % rank
         if command == 'None':
+            print "  Stopping..."
             break
 
         # Run the command and get the result (exit code or exception)
         try:
             if command.startswith("cwd="):
                 cwd = command.split("=", 1)[-1]
+                print "  Changing to dir %s ..." % cwd
                 result = 0
             elif command.startswith("env="):
                 env = loads(command.split("=", 1)[-1])
+                print "  Setting the environment..."
+                if envVarOn('SCIPION_DEBUG'):
+                    print env
                 result = 0
             else:
+                print "  %s" % command
                 result = runCommand(command, cwd=cwd, env=env)
                 cwd = None  # unset directory
                 env = None  # unset environment
