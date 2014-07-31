@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Laura del Cano (ldelcano@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
