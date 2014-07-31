@@ -281,7 +281,11 @@ void ProgConvImg::preProcess()
             imOut = new ImageGeneric(datatypeOut);
             k = 0; // Reset to zero to select the slices when working with volumes
             if (!fn_out.empty())
+            {
+                if (depth.empty())
+                    depth = "%"+datatype2Str(datatypeOut);
                 createEmptyFile(fn_out+depth, xdimOut, ydimOut, 1, zdimOut, true, WRITE_OVERWRITE, swap);
+            }
         }
     }
     else if (create_empty_stackfile)

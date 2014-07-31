@@ -38,6 +38,6 @@ int readINF(size_t img_select,bool isStack=false);
 /** INF Writer
   * @ingroup INF
 */
-int writeINF(size_t img_select, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false);
+int writeINF(size_t img_select, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode = CW_CAST);
 
 #endif /* RWINF_H_ */
