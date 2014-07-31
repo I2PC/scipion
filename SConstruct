@@ -215,8 +215,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
+               'PATH=%(root)s/bin:%(PATH)s '
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
+                                                   'PATH' : os.environ['PATH'],
                                                    'flags': ' '.join(flags),
                                                    'name': name},
                'Compiling & installing %s > software/log/%s.log' % (name, name),
