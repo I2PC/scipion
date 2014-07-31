@@ -24,7 +24,8 @@
 # *
 # **************************************************************************
 """
-This module contains some MPI utilities
+MPI utilities. runJobMPI and runJobMPISlave send and receive the commands
+to execute, in the given directory and with the given environment.
 """
 
 from time import time, sleep
@@ -108,7 +109,7 @@ def runJobMPISlave(mpiComm):
         print "Slave %d received command." % rank
         if command == 'None':
             print "  Stopping..."
-            break
+            return
 
         # Run the command and get the result (exit code or exception)
         try:
@@ -138,5 +139,3 @@ def runJobMPISlave(mpiComm):
             if time() - t0 > TIMEOUT:
                 print "Timeout, cannot send result to master."
                 break
-
-    print "finishing slave...", rank
