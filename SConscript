@@ -74,7 +74,7 @@ python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
-    flags=['--enable-shared'],
+    flags=['--enable-shared --enable-unicode=ucs4'],
     deps=[sqlite, tk])
 
 
