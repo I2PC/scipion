@@ -376,6 +376,10 @@ class BooleanParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Boolean, **args)
 
+class HiddenBooleanParam(BooleanParam):
+    def __init__(self, **args):
+        Param.__init__(self, paramClass=Boolean, **args)
+
         
 class PointerParam(Param):
     """ This type of Param will serve to select existing objects
