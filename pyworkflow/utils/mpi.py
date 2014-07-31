@@ -90,6 +90,8 @@ def runJobMPISlave(mpiComm):
 
     # Listen for commands until we get 'None'
     cwd = None  # We run without changing directory by default
+    env = None
+    
     while True:
         # Receive command in a non-blocking way
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
@@ -110,7 +112,8 @@ def runJobMPISlave(mpiComm):
                 result = 0
             else:
                 result = runCommand(command, cwd=cwd)
-                cwd = None  # unset directory
+                cwd = None  # unset directory and environment
+                env = None
         except Exception, e:
             result = str(e)
 

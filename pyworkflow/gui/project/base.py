@@ -143,6 +143,8 @@ class ProjectBaseWindow(Window):
         self.footer.rowconfigure(0, weight=1)
         self.footer.columnconfigure(0, weight=1)
         #header.columnconfigure(2, weight=1)
-        self.view = newView    
-
+        self.view = newView
+        
+    def getViewWidget(self):
+        return self.viewWidget
         
