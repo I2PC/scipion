@@ -54,7 +54,7 @@ marginal likelihood.
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        numberOfBlocks = self.numberOfMpi.get() - 1
+        numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         depsOcc = []
         
         self._createFilenameTemplates()
