@@ -70,7 +70,6 @@ class XmippCL2DViewer(ProtocolViewer):
               label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
               help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
         form.addParam('doShowClassHierarchy', BooleanParam, default=False,
-                       
                       label="Visualize class hierarchy.")      
     
     def _getVisualizeDict(self):
