@@ -24,49 +24,123 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
-from pyworkflow.em.plotter import EmPlotter
-
+from os import remove
+from os.path import exists, getctime
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
+from pyworkflow.em import data
+from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
+from pyworkflow.object import Float
+from pyworkflow.protocol.params import FloatParam, BooleanParam, IntParam, HiddenBooleanParam
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, \
+    ProtocolViewer
+from tempfile import TemporaryFile
 import collections
 import numpy as np
+import tempfile
 
 
-class XmippCTFDiscrepancyViewer(Viewer):
+#from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+
+#from data import SetOfCTF
+
+#class XmippCTFDiscrepancyViewer(Viewer):
+class XmippCTFDiscrepancyViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
     """
     _label = 'viewer CTF Discrepancy'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [XmippProtCTFDiscrepancy]
+    _memory = False
+    kk=True
     
-    def _visualize(self, obj):
-        print "WARNING still under development"
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        #group = form.addGroup('Overall results')
+        form.addParam('resolutionThreshold', FloatParam, default=0., 
+                      label='resolution threshold (A)',
+                      help='Select only CTF consistent at this resolution (in A).')
+        form.addParam('visualizeTable', HiddenBooleanParam, default=False,
+                      label="Visualize Table.")
+        form.addParam('visualizeMatrix', HiddenBooleanParam, default=False,
+                      label="Visualize Matrix.")
+        form.addParam('visualizeHistogram', IntParam, default=10,
+                      label="Visualize Histogram (Bin size)")
+
+
+
+    def _getVisualizeDict(self):
+        return {
+                 'visualizeTable': self._visualizeTable
+                ,'visualizeMatrix': self._visualizeMatrix
+                ,'visualizeHistogram': self._visualizeHistogram
+                }        
+
+    def _calculateAuxiliaryFile(self):
+        """create new ctf_set with ctf that satisfy the 
+        constraint and persist it
+        """
+        #metadata file with protocol output
+        self.sourceFile = self.protocol.outputCTF.getFileName()
+        #get temporary fileName for metadata file
+        self.targetFile = self.protocol._getTmpPath('viewersTmp.sqlite')
+        resolutionThreshold = self.resolutionThreshold.get()
+        print "TODO: this should be closer to the mapper. Here it does not make any sense. ROB"
+        #TODO check if this is necessary
+        if exists(self.targetFile):
+            remove(self.targetFile)
+        #metadata with selected CTFs
+        self.setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
+        #object read metadata file
+        ctfs  = data.SetOfCTF(filename = self.sourceFile)
+        #condition to be satisfized for CTFs
+        for ctf in ctfs:
+            #print "ctf", ctf.printAll()
+            if ctf.resolution.get()>resolutionThreshold:
+                self.setOfCTFsConst.append(ctf)
+        #new file with selected CTFs
+        self.setOfCTFsConst.write()
+        #check if empty
+        if self.setOfCTFsConst.getSize()<1:
+            print "WARNING: Empty set of CTFs."
+
+    def isComputed(self):
+        self.resolutionThresholdOLD = self.resolutionThreshold.get()
+        self.numberOfBinsOLD = self.visualizeHistogram.get()
+        
+    def _visualizeTable(self, e=None):
+        """ From here call all visualizations
+        """
+        if self.kk:
+            self._calculateAuxiliaryFile()
+            self.kk = False
         views = []
-        fn = obj.outputCTF.getFileName()
-    #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
+
+        #display metadata with selected variables
         labels = 'id enabled _micObj._filename method1 method2 resolution _defocusU _defocusV _defocusAngle' 
-        views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
-                                      viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
-        
-        views.append(self._createPlots(obj))
-        views.append(self._createMatrix(obj))
-        
+        views.append(ObjectView(self._project.getName(), 
+                                self.protocol.strId(), 
+                                self.targetFile,
+                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views 
-    
-    def _createPlots(self, obj):
-        print "inside _createPlot"
+
+    def _visualizeHistogram(self, e=None):
+        views = []
+        self._calculateAuxiliaryFile()
+        numberOfBins = self.visualizeHistogram.get()
+        numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
         plotter = EmPlotter()
         plotter.createSubPlot("Resolution Discrepancies histogram", 
                       "Resolution", "# of Micrographs")
-        resolution = [ctf.resolution.get() for ctf in obj.outputCTF]
-        n = len(resolution)
-        plotter.plotHist(resolution, nbins=min(n, 1+n/20))
-        return plotter
+        resolution = [ctf.resolution.get() for ctf in self.setOfCTFsConst]
+        plotter.plotHist(resolution, nbins=numberOfBins)
+        return views.append(plotter)
 
-    def _createMatrix(self,obj):
-        inputCTFs=obj.inputCTFs
+    def _visualizeMatrix(self,e=None):
+        views = []
+        self._calculateAuxiliaryFile()
+        inputCTFs=self.protocol.inputCTFs
         _matrix = np.zeros(shape=(len(inputCTFs), len(inputCTFs)))
         _matrix[0][0]=1
         _matrix[1][0]=2
@@ -77,7 +151,7 @@ class XmippCTFDiscrepancyViewer(Viewer):
 
         self.methodNames = collections.OrderedDict()
         for i, ctf in enumerate(inputCTFs):
-            protocol = obj.getMapper().getParent(ctf.get())
+            protocol = self.protocol.getMapper().getParent(ctf.get())
             name = "(%d) %s " % (i+1, protocol.getClassLabel())
             ticksLablesMajor.append(name)
         plotter = EmPlotter(fontsize=14)
@@ -88,5 +162,5 @@ class XmippCTFDiscrepancyViewer(Viewer):
         plotter.plotMatrix(_matrix,cmap='Greens'
                         , xticksLablesMajor=ticksLablesMajor
                         , yticksLablesMajor=ticksLablesMajor)
-        return plotter
+        return views.append(plotter)
 
