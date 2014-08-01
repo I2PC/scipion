@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<EMX version="1.0">
+  <!--
+  ##########################################################################
+  #               EMX Exchange file 
+  #               Produced using the emx library 
+  #               (http://i2pc.cnb.csic.es/emx/LoadTools.htm?type=Library)
+  # 
+  #  Information on this file format is available at 
+  #  http://i2pc.cnb.csic.es/emx
+  ##########################################################################
+  #  One of the best ways you can help us to improve this software
+  #  is to let us know about any problems you find with it.
+  #  Please report bugs to: emx@cnb.csic.es
+  ##########################################################################
+  -->
+  <micrograph fileName="a00644.mrc" index="1">
+    <amplitudeContrast>0.07</amplitudeContrast>
+    <cs unit="mm">2.0</cs>
+    <acceleratingVoltage unit="kV">300.0</acceleratingVoltage>
+    <pixelSpacing>
+      <X unit="A/px">2.46</X>
+      <Y unit="A/px">2.46</Y>
+    </pixelSpacing>
+    <defocusU unit="nm">2675.37</defocusU>
+    <defocusV unit="nm">2574.49</defocusV>
+    <defocusUAngle unit="deg">82.1852</defocusUAngle>
+  </micrograph>
+  <micrograph fileName="a00725.mrc" index="1">
+    <amplitudeContrast>0.07</amplitudeContrast>
+    <cs unit="mm">2.0</cs>
+    <acceleratingVoltage unit="kV">300.0</acceleratingVoltage>
+    <pixelSpacing>
+      <X unit="A/px">2.46</X>
+      <Y unit="A/px">2.46</Y>
+    </pixelSpacing>
+    <defocusU unit="nm">3396.04</defocusU>
+    <defocusV unit="nm">3328.46</defocusV>
+    <defocusUAngle unit="deg">19.1768</defocusUAngle>
+  </micrograph>
+  <micrograph fileName="a00780.mrc" index="1">
+    <amplitudeContrast>0.07</amplitudeContrast>
+    <cs unit="mm">2.0</cs>
+    <acceleratingVoltage unit="kV">300.0</acceleratingVoltage>
+    <pixelSpacing>
+      <X unit="A/px">2.46</X>
+      <Y unit="A/px">2.46</Y>
+    </pixelSpacing>
+    <defocusU unit="nm">1357.89</defocusU>
+    <defocusV unit="nm">1312.34</defocusV>
+    <defocusUAngle unit="deg">33.2377</defocusUAngle>
+  </micrograph>
+</EMX>
