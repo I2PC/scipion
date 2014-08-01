@@ -410,11 +410,7 @@ void applyGeometry(int SplineDegree,
 
                 if (interp)
                 {
-                    if (SplineDegree==0)
-                    {
-                        dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
-                    }
-                    else if (SplineDegree==1)
+                    if (SplineDegree==1)
                     {
                         // Linear interpolation
 
@@ -470,10 +466,13 @@ void applyGeometry(int SplineDegree,
 
                         dAij(V2, i, j) = (T) tmp;
                     }
+                    else if (SplineDegree==0)
+					{
+						dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+					}
                     else
                     {
                         // B-spline interpolation
-
                         dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
                                              xp, yp, SplineDegree);
                     }
@@ -600,13 +599,8 @@ void applyGeometry(int SplineDegree,
 
                     if (interp)
                     {
-                        if (SplineDegree==0)
+                        if (SplineDegree == 1)
                         {
-                            dAkij(V2, k, i, j)=(T)A3D_ELEM(V1,(int)trunc(zp),(int)trunc(yp),(int)trunc(xp));
-                        }
-                        else if (SplineDegree == 1)
-                        {
-
                             // Linear interpolation
 
                             // Calculate the integer position in input volume, be
@@ -712,6 +706,10 @@ void applyGeometry(int SplineDegree,
 
                             dAkij(V2 , k, i, j) = (T)tmp;
                         }
+                        else if (SplineDegree==0)
+						{
+							dAkij(V2, k, i, j)=(T)A3D_ELEM(V1,(int)trunc(zp),(int)trunc(yp),(int)trunc(xp));
+						}
                         else
                         {
                             // B-spline interpolation
