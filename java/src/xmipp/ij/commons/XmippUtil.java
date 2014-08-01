@@ -77,45 +77,7 @@ public class XmippUtil {
         
 
 
-    public static String executeCommand(String[] command, boolean wait) throws Exception {
-
-        //System.out.println(Arrays.toString(command));
-        Process p = Runtime.getRuntime().exec(command);
-        if(wait)
-            p.waitFor();
-        return readProcessOutput(p);
-        
-    }
     
-    public static String executeCommand(String command, boolean wait) throws Exception {
-
-        //System.out.println(Arrays.toString(command));
-        Process p = Runtime.getRuntime().exec(command);
-        if(wait)
-            p.waitFor();
-        return readProcessOutput(p);
-        
-    }
-    
-    public static String readProcessOutput(Process p) throws IOException
-    {
-        StringBuffer output = new StringBuffer();
-        BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-       
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        return output.toString();
-        
-    }
 
 
     public static void copyFile(String source, String dest) throws IOException

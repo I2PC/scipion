@@ -20,12 +20,10 @@ import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.windows.ExportImagesJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 
 /**
@@ -194,7 +192,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                                     try {
 
-                                        String output = XmippUtil.executeCommand(command, true);
+                                        String output = XmippWindowUtil.executeCommand(command, true);
                                     } catch (Exception ex) {
                                         throw new IllegalArgumentException(ex.getMessage());
                                     }
@@ -296,7 +294,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 try {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
-                    String output = XmippUtil.executeCommand(command, true);
+                    String output = XmippWindowUtil.executeCommand(command, true);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
                     if (output != null && !output.isEmpty()) 
                         System.out.println(output);

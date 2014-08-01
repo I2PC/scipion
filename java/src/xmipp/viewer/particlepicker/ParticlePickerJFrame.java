@@ -865,7 +865,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
                     try {
                         String[] cmd = getParticlePicker().getScipionSaveCommand();
-                        String output = XmippUtil.executeCommand(cmd, true);
+                        String output = XmippWindowUtil.executeCommand(cmd, true);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);
                         if(output != null && !output.isEmpty())

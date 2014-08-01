@@ -31,7 +31,9 @@ import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionListener;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -202,6 +204,67 @@ public class XmippWindowUtil
 		progressPanel.setVisible(false);
 	}
 
-	
+        public static void executeGUICommand(final String[] command, final JFrame frame, String msg)
+        {
+
+
+            XmippWindowUtil.blockGUI(frame, msg);
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+
+                        String output = executeCommand(command, true);
+                        XmippWindowUtil.releaseGUI(frame.getRootPane());
+
+                        if(output != null && !output.isEmpty())
+                        {
+                            System.out.println(output);
+
+                        }
+
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        }
+        
+        public static String executeCommand(String[] command, boolean wait) throws Exception {
+
+        //System.out.println(Arrays.toString(command));
+        Process p = Runtime.getRuntime().exec(command);
+        if(wait)
+        {
+            p.waitFor();
+            return readProcessOutput(p);
+        }
+        return null;
+    }
+    
+    
+    
+    public static String readProcessOutput(Process p) throws IOException
+    {
+        StringBuffer output = new StringBuffer();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+       
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+        
+    }
 
 }
