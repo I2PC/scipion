@@ -39,31 +39,32 @@ except ImportError:
 
     
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
-        files={'micsGoldSqlite': 'gold/micrographs_gold.sqlite',
-               'micsGoldSqlite2': 'gold/micrographs2_gold.sqlite',
-               'micsGoldXmd': 'gold/micrographs_gold.xmd',
-               'ctfGold': 'gold/xmipp_ctf.ctfparam',
-               'micsSqlite': 'micrographs/micrographs.sqlite',
-               'coordsGoldSqlite': 'gold/coordinates_gold.sqlite', 
-               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
-               'posAllDir': 'pickingXmipp/pickedAll',
+        files={
+               'aligned_particles': 'gold/aligned_particles.sqlite',
+               'allMics': 'micrographs/*.mrc',
                'boxingDir': 'pickingEman',
                'boxingFile': 'pickingEman/info/BPV_1386_info.json',
-               'allMics': 'micrographs/*.mrc',
-               'rctMicsU': 'rct/micrographs/*U.mrc',
-               'rctMicsT': 'rct/micrographs/*T.mrc',
-               'rctCoords': 'rct/pickingXmipp',
+               'coordsGoldSqlite': 'gold/coordinates_gold.sqlite',
+               'ctfGold': 'gold/xmipp_ctf.ctfparam',
+               'images10': 'gold/images10.xmd',
                'mic1': 'micrographs/BPV_1386.mrc',
                'mic2': 'micrographs/BPV_1387.mrc',
                'mic3': 'micrographs/BPV_1388.mrc',
+               'micsGoldSqlite': 'gold/micrographs_gold.sqlite',
+               'micsGoldSqlite2': 'gold/micrographs2_gold.sqlite',
+               'micsGoldXmd': 'gold/micrographs_gold.xmd',
+               'micsSqlite': 'micrographs/micrographs.sqlite',
                'particles': 'particles/*.hdf',
                'particles1': 'particles/BPV_1386_ptcls.hdf',
-               'volumes': 'volumes/*.mrc',
+               'posAllDir': 'pickingXmipp/pickedAll',
+               'posSupervisedDir': 'pickingXmipp/pickedSupervised',
+               'rctCoords': 'rct/pickingXmipp',
+               'rctMicsT': 'rct/micrographs/*T.mrc',
+               'rctMicsU': 'rct/micrographs/*U.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_1_iter_002.mrc',
-               'aligned_particles': 'gold/aligned_particles.sqlite',
-               'images10': 'gold/images10.xmd',
+               'volumes': 'volumes/*.mrc',
                })
 
 
@@ -73,45 +74,56 @@ DataSet(name='mda', folder='hemoglobin_mda',
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
-        files={'volumes': 'volumes/*.spi',
-               'vol1': 'volumes/subvols_6E6.001.mrc.spi',
-               'vol2': 'volumes/subvols_6E6.002.mrc.spi',
-               'vol3': 'volumes/subvols_6E6.003.mrc.spi'})
+        files={
+                'vol1': 'volumes/subvols_6E6.001.mrc.spi'
+               ,'vol2': 'volumes/subvols_6E6.002.mrc.spi'
+               ,'vol3': 'volumes/subvols_6E6.003.mrc.spi'
+               ,'volumes': 'volumes/*.spi'
+        })
 
 
 DataSet(name='relion_tutorial', folder='relion_tutorial', 
-        files={'posAllDir': 'pickingXmipp',
-               'boxingDir': 'pickingEman',
-               'allMics': 'micrographs/*.mrc',
-               'volume': 'volumes/reference.mrc',
-               'relion_it020_data': 'gold/relion_it020_data.star',
-               'input_particles': 'gold/input_particles.star',
-               'particles': 'gold/particles.sqlite'})
+        files={
+                'allMics': 'micrographs/*.mrc'
+               ,'boxingDir': 'pickingEman'
+               ,'input_particles': 'gold/input_particles.star'
+               ,'particles': 'gold/particles.sqlite'
+               ,'posAllDir': 'pickingXmipp'
+               ,'relion_it020_data': 'gold/relion_it020_data.star'
+               ,'volume': 'volumes/reference.mrc'
+        })
 
 
 DataSet(name='ribo_movies', folder='ribo_movies', 
-        files={'posAllDir': 'pickingXmipp',
-               'movies': 'movies/1??_*.mrcs'})
+        files={
+                'movies': 'movies/1??_*.mrcs'
+               ,'posAllDir': 'pickingXmipp'
+        })
 
 
-DataSet(name='model',  folder='model', 
-        files={'modelGoldSqlite': 'gold/model_gold.sqlite', 
-               'modelGoldXml': 'gold/model_gold.xml',
-               'classesSelection': 'gold/classes_selection.sqlite'})
+DataSet(name='model',  folder='model',
+        files={
+                'classesSelection': 'gold/classes_selection.sqlite'
+               ,'modelGoldSqlite': 'gold/model_gold.sqlite'
+               ,'modelGoldXml': 'gold/model_gold.xml'
+        })
 
 DataSet(name='rct',  folder='rct', 
-        files={'positions': 'positions',
-               'untilted': 'micrographs/F_rct_u*.tif',
-               'tilted': 'micrographs/F_rct_t*.tif',
-               'classes': 'classes/classes2D_stable_core.sqlite'})
+        files={
+                 'classes': 'classes/classes2D_stable_core.sqlite'
+               , 'positions': 'positions'
+               , 'tilted': 'micrographs/F_rct_t*.tif'
+               , 'untilted': 'micrographs/F_rct_u*.tif'
+        })
 
 DataSet(name='emx',  folder='emx', 
         files={
-               'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',              
-               'coordinatesT1': 'coordinates/Test1/coordinates.emx',
-               'defocusParticleT2': 'defocusParticle/particles.emx',
-               'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',              
-               'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',              
+                'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite'
+               ,'coordinatesT1': 'coordinates/Test1/coordinates.emx'
+               ,'defocusParticleT2': 'defocusParticle/particles.emx'
+               ,'emxMicrographCtf1':'MicrographsCTF/PcV/ctfindCTFEstimation.emx'
+               ,'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite'
+               ,'particlesGoldT2': 'defocusParticle/particles_gold.sqlite'
               })
                
                
