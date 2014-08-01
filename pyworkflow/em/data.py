@@ -91,7 +91,14 @@ class Acquisition(EMObject):
     
     def setAmplitudeContrast(self, value):
         self._amplitudeContrast.set(value)        
-       
+
+    def __str__(self):
+        return "\n    mag=%f\n    volt= %f\n    Cs=%f\n    Q0=%f\n\n"%(self._magnification.get(),
+                                                                     self._voltage.get(),
+                                                                     self._sphericalAberration.get(),
+                                                                     self._amplitudeContrast.get())
+
+
     
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
