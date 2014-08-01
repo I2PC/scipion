@@ -114,7 +114,7 @@ class EmanProtInitModel(ProtInitialVolume):
             volumes.setSamplingRate(self.inputClasses.get().getSamplingRate())
         
         for k in range(1, self.numberOfModels.get() + 1):
-            volFn = self._getPath('initial_models/model_00_%02d.hdf' % k)
+            volFn = self._getExtraPath('initial_models/model_00_%02d.hdf' % k)
             vol = Volume()
             vol.setFileName(volFn)
             volumes.append(vol)
