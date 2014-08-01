@@ -46,9 +46,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-
 import xmipp.ij.commons.Tool;
-import xmipp.utils.XmippApplication;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;

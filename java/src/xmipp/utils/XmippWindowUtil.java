@@ -24,7 +24,6 @@
  ***************************************************************************/
 package xmipp.utils;
 
-import xmipp.viewer.particlepicker.ParticlePickerParams;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -40,9 +39,20 @@ import javax.swing.JRootPane;
 
 public class XmippWindowUtil
 {
+        private static boolean isScipion;
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
+        
+        public static void setIsScipion(boolean value)
+        {
+            isScipion = value;
+        }
+        
+        public static boolean isScipion()
+        {
+            return isScipion;
+        }
 
 	/**
 	 * This function will be used to place the location of a windows relative to
@@ -110,7 +120,7 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!XmippApplication.isScipion())
+                if(!isScipion())
                     btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;

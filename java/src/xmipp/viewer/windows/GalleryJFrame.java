@@ -84,7 +84,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
-import xmipp.utils.XmippApplication;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippUtil;

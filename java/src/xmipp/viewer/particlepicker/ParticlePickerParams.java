@@ -14,7 +14,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import xmipp.utils.XmippApplication;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -86,7 +86,7 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            XmippApplication.setIsScipion(true);
+            XmippWindowUtil.setIsScipion(true);
             
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)

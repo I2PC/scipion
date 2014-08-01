@@ -4,7 +4,6 @@
  */
 package xmipp.ij.commons;
 
-import xmipp.utils.XmippApplication;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.StackConverter;

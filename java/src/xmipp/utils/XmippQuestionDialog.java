@@ -27,7 +27,6 @@ package xmipp.utils;
 
 import java.awt.Dialog;
 import java.awt.event.ActionEvent;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 
