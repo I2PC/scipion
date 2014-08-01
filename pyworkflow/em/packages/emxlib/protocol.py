@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Roberto Marabini
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,7 +32,7 @@ import emxlib
 from pyworkflow.em.protocol import *
 from pyworkflow.protocol.params import *
 from pyworkflow.em.data import Acquisition
-
+from pyworkflow.em.data import EMXObject
 
 
 class ProtEmxImport(ProtImport):
@@ -43,7 +44,7 @@ class ProtEmxImport(ProtImport):
     """
     _label = 'emx import'
     
-    # Mapping betwween form parameters and EMX tags
+    # Mapping between form parameters and EMX tags
     PARAM_DICT = {'voltage': 'acceleratingVoltage',
                   'sphericalAberration': 'cs',
                   'amplitudeContrast': 'amplitudeContrast',
@@ -84,7 +85,7 @@ class ProtEmxImport(ProtImport):
                    label=Message.LABEL_SAMP_RATE)
         group.addParam('magnification', FloatParam, default=10000,  
                    label=Message.LABEL_MAGNI_RATE)
-        
+
     def _loadEmxInfo(self):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
@@ -97,7 +98,6 @@ class ProtEmxImport(ProtImport):
         self.binaryFile = None
         self.object = None
         self.objDict = {}
-        
         for classElement in emxlib.CLASSLIST:
             obj = emxData.readFirstObject(classElement, self.emxFn)
             if obj is not None:
@@ -118,6 +118,7 @@ class ProtEmxImport(ProtImport):
 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
+        print "_insertAllSteps_insertAllSteps"
         self._insertFunctionStep('importDataStep', self.inputEMX.get())       
 
     #--------------------------- STEPS functions --------------------------------------------       
@@ -131,7 +132,6 @@ class ProtEmxImport(ProtImport):
         acquisition.setVoltage(self.voltage.get())
         acquisition.setSphericalAberration(self.sphericalAberration.get())
         acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
-        
         from convert import importData
         emxFile=self._getRelPathExecutionDir(emxFile)
         importData(self, emxFile, self._getPath(), 
@@ -146,7 +146,6 @@ class ProtEmxImport(ProtImport):
                 errors.append("Input EMX file *%s* doesn't exists" % self.emxFn)
         else:
             self._loadEmxInfo()   
-            
             if self.object is None:
                 errors.append('Cannot find any object in EMX file *%s*' % self.emxFn)
             else:
@@ -169,7 +168,8 @@ class ProtEmxImport(ProtImport):
     
     def _methods(self):
         return self._summary()  # summary is quite explicit and serve as methods
-    
+
+
     
 class ProtEmxExport(EMProtocol):
     """
@@ -184,10 +184,10 @@ class ProtEmxExport(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputSet', PointerParam, 
-                      pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles', 
+                      pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles',
                       label="Set to export",
                       help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
-        form.addParam('ctfEstimation', RelationParam, 
+        form.addParam('ctfEstimation', RelationParam,
                       allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 
                       help='You can select a CTF estimation associated with these\n'
@@ -219,7 +219,7 @@ class ProtEmxExport(EMProtocol):
         exportData(emxDir, self.inputSet.get(), ctfSet=self.ctfEstimation.get(), 
                    xmlFile=xmlFile, binaryFile=binaryFile)
         
-        self._defineOutputs(emxOutput=EMXObject(join(emxDir, xmlFile), 
+        self._defineOutputs(emxOutput=EMXObject(join(emxDir, xmlFile),
                                                 join(emxDir, binaryFile)))
     
     #--------------------------- INFO functions -------------------------------------------- 
