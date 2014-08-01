@@ -52,10 +52,11 @@ def getEnviron():
     """ Create the needed environment for Xmipp programs. """
     environ = dict(os.environ)
     environ.update({
-            'PATH': os.pathsep.join([join(os.environ['XMIPP_HOME'], 'bin'),
-                                     os.environ['PATH']]),
-            'LD_LIBRARY_PATH': os.pathsep.join([join(os.environ['XMIPP_HOME'], 'lib'),
-                                                os.environ['LD_LIBRARY_PATH']])
+            'PATH': os.pathsep.join([os.environ['PATH'], 
+                                     join(os.environ['XMIPP_HOME'], 'bin')]),
+            'LD_LIBRARY_PATH': os.pathsep.join([os.environ['LD_LIBRARY_PATH'], 
+                                                join(os.environ['XMIPP_HOME'], 'lib')
+                                                ])
             })
     return environ
     

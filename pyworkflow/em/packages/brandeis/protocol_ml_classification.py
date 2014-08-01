@@ -54,9 +54,10 @@ marginal likelihood.
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        numberOfBlocks = self.numberOfMpi.get() - 1
+        numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         depsOcc = []
         
+        self._createFilenameTemplates()
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
@@ -130,7 +131,7 @@ marginal likelihood.
         
         self._createIterWorkingDir(iter) # create the working directory for the current iteration.
         prevIter = iter - 1
-        self._createFilenameTemplates(iter)
+#         self._createFilenameTemplates(iter)
         
         cpusRef = self._cpusPerClass(numberOfBlocks, self.numberOfRef)
             
@@ -152,7 +153,7 @@ marginal likelihood.
                 copyFile(volFn, iterVol)  #Copy the initial volume in the current directory.
             else:
                 self._splitParFile(iter, ref, cpusRef[ref-1])
-                prevIterVol = self._getFileName('prev_vol_class', iter=prevIter, ref=ref) # volumes of the previous iteration
+                prevIterVol = self._getFileName('iter_vol_class', iter=prevIter, ref=ref) # volumes of the previous iteration
                 copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
                 copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
@@ -166,7 +167,7 @@ marginal likelihood.
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
-        param['inputParFn'] = self._getBaseName('input_par_block_class', iter=prevIter, ref=ref, block=block)
+        param['inputParFn'] = self._getBaseName('input_par_block_class',prevIter=prevIter, iter=iter, ref=ref, block=block)
         param['initParticle'] = iniPart
         param['finalParticle'] = lastPart
         
@@ -244,7 +245,7 @@ marginal likelihood.
     
     def createOutputStep(self, lastIter):
         from convert import readSetOfClasses3D
-        self._createFilenameTemplates(lastIter)
+#         self._createFilenameTemplates(lastIter)
         numberOfClasses = self.numberOfRef
         imgSet = self.inputParticles.get()
         volumes = self._createSetOfVolumes()
@@ -296,6 +297,7 @@ marginal likelihood.
         paramDics['FSC3DR2'] = self._getFileName('vol2_block_class', block=block, iter=iter, ref=ref)
         paramDics['VolPhResidual'] = self._getFileName('phase_block_class', block=block, iter=iter, ref=ref)
         paramDics['VolpointSpread'] = self._getFileName('spread_block_class', block=block, iter=iter, ref=ref)
+        paramDics['logFile'] = self._getFileName('logFileRefine', block=block, iter=iter, ref=ref)
         return paramDics
     
     def _setParams3DR(self, iter, ref):
@@ -312,6 +314,7 @@ marginal likelihood.
         paramDics['FSC3DR2'] = self._getFileName('vol2_class', iter=iter, ref=ref)
         paramDics['VolPhResidual'] = self._getFileName('phase_class', iter=iter, ref=ref)
         paramDics['VolpointSpread'] = self._getFileName('spread_class', iter=iter, ref=ref)
+        paramDics['logFile'] = self._getFileName('logFileRecons', iter=iter, ref=ref)
         return paramDics
     
     def _cpusPerClass(self, numberOfCpus, numberOfClasses):
@@ -354,11 +357,11 @@ marginal likelihood.
         """ This method split the parameter files that has been previosuly merged """
         
         prevIter = iter -1
-        file1 = self._getFileName('input_par_class', iter=prevIter, ref=ref)
+        file1 = self._getFileName('output_par_class', iter=prevIter, ref=ref)
         if numberOfBlocks != 1:
             for block in range(1, numberOfBlocks + 1):
                 f1 = open(file1)
-                file2 = self._getFileName('output_par_block_class', block= block, iter=prevIter, ref=ref)
+                file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iter, ref=ref, block=block)
                 f2 = open(file2, 'w+')
                 initpart, finalPart = self._particlesInBlock(block, numberOfBlocks)
                 
@@ -377,7 +380,7 @@ marginal likelihood.
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('output_par_block_class', block=1, iter=prevIter, ref=ref)
+            file2 = self._getFileName('input_par_block_class',prevIter=prevIter, iter=iter, ref=ref, block=block)
             copyFile(file1, file2)
     
     def _rsampleCommand(self):

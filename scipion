@@ -312,14 +312,12 @@ def main():
 
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
-        if n > 2:
-            browserArgs = " ".join(sys.argv[2:])
-            runApp('pw_browser.py', args=browserArgs)
+        browserArgs = " ".join(sys.argv[2:])
+        runApp('pw_browser.py', args=browserArgs)
 
     elif mode == MODE_VIEWER:
-        if n > 2:
-            viewerArgs = ' '.join(sys.argv[2:])
-            runApp('pw_viewer.py', args=viewerArgs)
+        viewerArgs = ' '.join(sys.argv[2:])
+        runApp('pw_viewer.py', args=viewerArgs)
 
     elif mode == MODE_INSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
@@ -385,63 +383,62 @@ def main():
             runCmd(cmd)
 
     elif mode == MODE_HELP:
-        sys.stdout.write("""
-USAGE:
-    scipion [MODE] [ARGUMENTS]
-    where MODE can be:
-        browser                Browser a dir or an sqlite database.
+        sys.stdout.write("""\
+Usage: scipion [MODE] [ARGUMENTS]
 
-        help                   Print this help message.
+MODE can be:
+    browser                Browse a dir or an sqlite database.
 
-        install [OPTION]       Download and install all the necessary software to run Scipion.
-                               OPTION can be:
-                                 --with-all-packages: download also all external em packages
-                                 --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
-                                 --help: show all the available options
+    help                   Print this help message.
 
-        config                 Write default configuration.
+    install [OPTION]       Download and install all the necessary software to run Scipion.
+                           OPTION can be:
+                             --with-all-packages: download also all external em packages
+                             --with-xmipp=$XMIPP_HOME: use existing installation of xmipp
+                             --help: show all the available options
 
-        manager                Open the manager with a list of all projects.
+    config                 Write default configuration.
 
-        project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
-        last                   Same as 'project last'
+    manager                Open the manager with a list of all projects.
 
-        stats                  Write git statistics to data/stats folder.
+    project [PROJECT_NAME] Open the specified project. The name 'last' opens the last project.
+    last                   Same as 'project last'
 
-        test [OPTION]          Run a test. They are located in pyworkflow/tests .
-                               OPTION can be:
-                                 <test name>: name of the test to run
-                                 --show: list the available tests
-                                 --help: show all the available options
-                               For example, to run the "test_object" test:
-                                 scipion test tests.model.test_object
+    stats                  Write git statistics to data/stats folder.
 
-        testdata [OPTION]      Synchronize tests data from/to the remote server to/from the SCIPION_TESTS folder.
-                               OPTION can be:
-                                 --download: copy dataset from remote location to local
-                                 --upload: copy dataset from local to remote
-                                 --format: create a MANIFEST file with md5 checksums (expected in dataset folders)
-                                 <dataset>: name of dataset to download, upload or format
-                                 --list: list the datasets in the local computer and in the remote server
-                                 --help: show all the available options
-                               For example, to download the dataset xmipp_tutorial:
-                                 scipion testdata --download xmipp_tutorial
-                               Or to upload it:
-                                 scipion testdata --upload xmipp_tutorial
+    test [OPTION]          Run a test. They are located in pyworkflow/tests .
+                           OPTION can be:
+                             <test name>: name of the test to run
+                             --show: list the available tests
+                             --help: show all the available options
+                           For example, to run the "test_object" test:
+                             scipion test tests.model.test_object
 
-        viewer [FILE]          Open a file with Scipion's showj program.
+    testdata [OPTION]      Get/put tests data from/to the server to/from the SCIPION_TESTS folder.
+                           OPTION can be:
+                             --download: copy dataset from remote location to local
+                             --upload: copy dataset from local to remote
+                             <dataset>: name of dataset to download, upload or format
+                             --list: list the datasets in the local computer and in the server
+                             --help: show all the available options
+                           For example, to download the dataset xmipp_tutorial:
+                             scipion testdata --download xmipp_tutorial
+                           Or to upload it:
+                             scipion testdata --upload xmipp_tutorial
 
-        webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
-                               OPTION can be:
-                                 django: open local django webserver (default)
-                                 collectstatic: copy static files for django server
-                                 apache_vars: show the LD_LIBRARY_PATH needed by apache server
+    viewer [FILE]          Open a file with Scipion's showj program.
 
-        printenv               Print the environment variables used by the application.
+    webserver [OPTION]     Launch webserver. Scipion can be then controlled from a web browser.
+                           OPTION can be:
+                             django: open local django webserver (default)
+                             collectstatic: copy static files for django server
+                             apache_vars: show the LD_LIBRARY_PATH needed by apache server
 
-        download               Download external packages (EMAN, SPIDER, Relion, etc).
+    printenv               Print the environment variables used by the application.
 
-        run COMMAND [ARG ...]  Run command in the Scipion environment.
+    download               Download external packages (EMAN, SPIDER, Relion, etc).
+
+    run COMMAND [ARG ...]  Run command in the Scipion environment.
 """)
         sys.exit(0)
 

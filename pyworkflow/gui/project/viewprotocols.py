@@ -33,8 +33,6 @@ import Tkinter as tk
 import ttk
 
 
-from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, List, String, Pointer
 
 from pyworkflow.em import emProtocolsDict, findViewers, DESKTOP_TKINTER, EMObject
@@ -42,13 +40,14 @@ from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
+from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow, TreeProvider, BoundTree
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
 from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.widgets import ComboBox
+from pyworkflow.gui.widgets import ComboBox, HotButton, IconButton
 
 from constants import STATUS_COLORS
 
@@ -246,6 +245,52 @@ class StepsWindow(BrowserWindow):
         w.show()
     
 
+class SearchProtocolWindow(gui.Window):
+    def __init__(self, parentWindow, **kwargs):
+        gui.Window.__init__(self, title="Search Protocol", masterWindow=parentWindow)
+        content = tk.Frame(self.root, bg='white')
+        self._createContent(content)
+        content.grid(row=0, column=0, sticky='news')
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        
+    def _createContent(self, content):
+        self._createSearchBox(content)
+        self._createResultsBox(content)
+        
+    def _createSearchBox(self, content):
+        """ Create the Frame with Search widgets """
+        frame = tk.Frame(content, bg='white')
+                
+        label = tk.Label(frame, text="Search", bg='white')
+        label.grid(row=0, column=0, sticky='nw')
+        self._searchVar = tk.StringVar()
+        entry = tk.Entry(frame, bg='white', textvariable=self._searchVar)
+        entry.bind('<Return>', self._onSearchClick)
+        entry.grid(row=0, column=1, sticky='nw')
+        btn = IconButton(frame, "Search", imagePath=Icon.ACTION_SEARCH,
+                         command=self._onSearchClick)
+        btn.grid(row=0, column=2, sticky='nw')
+        
+        frame.grid(row=0, column=0, sticky='new', padx=5, pady=(10, 5))
+
+    def _createResultsBox(self, content):
+        frame = tk.Frame(content, bg=Color.LIGHT_GREY_COLOR, padx=5, pady=5)
+        gui.configureWeigths(frame)
+        self._resultsTree = self.master.getViewWidget()._createProtocolsTree(frame)
+        self._resultsTree.grid(row=0, column=0, sticky='news')
+        frame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        
+    def _onSearchClick(self, e=None):
+        self._resultsTree.clear()
+        keyword = self._searchVar.get()
+
+        for key, prot in emProtocolsDict.iteritems():
+            label = prot.getClassLabel()
+            if keyword in label:
+                self._resultsTree.insert('', 'end', key, text=label, tags=('protocol'))
+        
+
 class RunIOTreeProvider(TreeProvider):
     """Create the tree elements from a Protocol Run input/output childs"""
     def __init__(self, parent, protocol, mapper):
@@ -370,6 +415,7 @@ class ProtocolsView(tk.Frame):
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
+        self.root.bind("<Control-f>", self._findProtocol)
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
@@ -397,7 +443,7 @@ class ProtocolsView(tk.Frame):
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
         protFrame.rowconfigure(1, weight=1)
-        self.protTree = self.createProtocolsTree(protFrame, bgColor)
+        self._createProtocolsPanel(protFrame, bgColor)
         self.updateProtocolsTree(self.protCfg)
         # Create the right Pane that will be composed by:
         # a Action Buttons TOOLBAR in the top
@@ -547,6 +593,11 @@ class ProtocolsView(tk.Frame):
         self.__autoRefreshCounter = min(2*secs, 1800)
         self.__autoRefresh = self.runsTree.after(secs*1000, self._automaticRefreshRuns)
                 
+    def _findProtocol(self, e=None):
+        """ Find a desired protocol by typing some keyword. """
+        window = SearchProtocolWindow(self.windows)
+        window.show()         
+        
     def createActionToolbar(self):
         """ Prepare the buttons that will be available for protocol actions. """
        
@@ -591,7 +642,17 @@ class ProtocolsView(tk.Frame):
             action, cond = actionTuple
             displayAction(action, i, cond)          
         
-    def createProtocolsTree(self, parent, bgColor):
+    def _createProtocolsTree(self, parent):
+        self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
+        tree = Tree(parent, show='tree', style='W.Treeview')
+        tree.column('#0', minwidth=300)
+        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
+        tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
+        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
+        tree.tag_configure('section', font=self.windows.fontBold)
+        return tree
+        
+    def _createProtocolsPanel(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
         comboFrame = tk.Frame(parent, bg=bgColor)
         tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
@@ -602,17 +663,11 @@ class ProtocolsView(tk.Frame):
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
         
-        self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
-        tree = Tree(parent, show='tree', style='W.Treeview')
-        tree.column('#0', minwidth=300)
-        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
-        tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
-        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
-        tree.tag_configure('section', font=self.windows.fontBold)
+        tree = self._createProtocolsTree(parent)
         tree.grid(row=1, column=0, sticky='news')
         # Program automatic refresh
         tree.after(3000, self._automaticRefreshRuns)
-        return tree
+        self.protTree = tree
 
     def _onSelectProtocols(self, combo):
         """ This function will be called when a protocol menu

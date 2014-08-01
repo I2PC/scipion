@@ -24,12 +24,15 @@
 # *
 # **************************************************************************
 """
-This module contains some MPI utilities
+MPI utilities. runJobMPI and runJobMPISlave send and receive the commands
+to execute, in the given directory and with the given environment.
 """
 
-import os
 from time import time, sleep
+from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
+
+from pyworkflow.utils.utils import envVarOn
 
 
 TIMEOUT = 60  # seconds trying to send/receive data thru a socket
@@ -77,6 +80,8 @@ def runJobMPI(log, programname, params, mpiComm, mpiDest,
                               runInBackground, hostConfig)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+    if env is not None:
+        send("env=%s" % dumps(env), mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
     return send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
@@ -90,6 +95,8 @@ def runJobMPISlave(mpiComm):
 
     # Listen for commands until we get 'None'
     cwd = None  # We run without changing directory by default
+    env = None  # And we don't change the environment either!
+    
     while True:
         # Receive command in a non-blocking way
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
@@ -99,18 +106,28 @@ def runJobMPISlave(mpiComm):
                 break
             sleep(1)
 
-        print "Slave %d, received command: %s" % (rank, command)
+        print "Slave %d received command." % rank
         if command == 'None':
-            break
+            print "  Stopping..."
+            return
 
         # Run the command and get the result (exit code or exception)
         try:
             if command.startswith("cwd="):
                 cwd = command.split("=", 1)[-1]
+                print "  Changing to dir %s ..." % cwd
+                result = 0
+            elif command.startswith("env="):
+                env = loads(command.split("=", 1)[-1])
+                print "  Setting the environment..."
+                if envVarOn('SCIPION_DEBUG'):
+                    print env
                 result = 0
             else:
-                result = runCommand(command, cwd=cwd)
+                print "  %s" % command
+                result = runCommand(command, cwd=cwd, env=env)
                 cwd = None  # unset directory
+                env = None  # unset environment
         except Exception, e:
             result = str(e)
 
@@ -122,5 +139,3 @@ def runJobMPISlave(mpiComm):
             if time() - t0 > TIMEOUT:
                 print "Timeout, cannot send result to master."
                 break
-
-    print "finishing slave...", rank
