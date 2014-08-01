@@ -52,9 +52,6 @@ public:
     /** Total number of iterations */
     int Niter;
 
-    /** Number of threads */
-    int Nthr;
-
     /** Keep intermediate volumes */
     bool keepIntermediateVolumes;
 
@@ -80,13 +77,19 @@ public:
     double angDistance;
 
 public: // Internal members
+    size_t rank, Nprocessors;
+
+    // Metadata with input images and input volumes
     MetaData mdIn, mdInit;
+
+    // Size of the images
+    size_t Xdim;
 
     // Partial reconstruction metadatas
     std::vector<MetaData> mdReconstructionPartial;
 
     // Projection matching metadata
-    std::vector<MetaData> mdProjectionMatching;
+    std::vector<MetaData> mdReconstructionProjectionMatching;
 
     // Set of all correlations
     MultidimArray<double> cc;
@@ -98,10 +101,10 @@ public: // Internal members
     std::vector< std::vector<GalleryImage> > mdGallery;
 
     // Set of input images
-    std::vector<FileName> mdInp;
+    // COSS std::vector<FileName> mdInp;
 
     // Images
-    Image<double> inputImages;
+    // COSS Image<double> inputImages;
     std::vector< Image<double> > gallery;
 
 	// Current iteration
@@ -110,6 +113,9 @@ public: // Internal members
 	// Current alpha
 	double currentAlpha;
 public:
+	/// Empty constructor
+	ProgReconstructSignificant();
+
     /// Read arguments from command line
     void readParams();
 
@@ -130,6 +136,15 @@ public:
 
     /// Generate projections from the current volume
     void generateProjections();
+
+    /// Align images to gallery projections
+    void alignImagesToGallery();
+
+    /// Gather alignment
+    void gatherAlignment() {}
+
+    /// Synchronize with other processors
+    void synchronize() {}
 };
 //@}
 #endif
