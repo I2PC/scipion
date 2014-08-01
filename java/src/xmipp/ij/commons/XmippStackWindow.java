@@ -1,5 +1,6 @@
 package xmipp.ij.commons;
 
+import xmipp.utils.XmippApplication;
 import ij.WindowManager;
 import ij.gui.StackWindow;
 

@@ -11,7 +11,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.utils.ParticlePickerParams;
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltPairPicker;
 import xmipp.viewer.particlepicker.training.model.Mode;

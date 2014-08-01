@@ -1,6 +1,6 @@
-package xmipp.ij.commons;
+package xmipp.utils;
 
-import ij.WindowManager;
+import xmipp.ij.commons.XmippUtil;
 
 
 public class XmippApplication
@@ -8,6 +8,7 @@ public class XmippApplication
 	
 	private static short instances = 0;
         private static short ijwindows = 0;
+        private static boolean isScipion;
 	
 	public static short getInstances()
 	{
@@ -38,5 +39,15 @@ public class XmippApplication
 			System.exit(0);
 		
 	}
+        
+        public static void setIsScipion(boolean value)
+        {
+            isScipion = value;
+        }
+        
+        public static boolean isScipion()
+        {
+            return isScipion;
+        }
 
 }

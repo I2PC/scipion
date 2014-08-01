@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package xmipp.utils;
+package xmipp.viewer.particlepicker;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,6 +14,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import xmipp.utils.XmippApplication;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -33,7 +34,6 @@ public class ParticlePickerParams {
     public final static String INCOREOPT = "incore";
     private CommandLine cmdLine;
     
-    private static boolean isscipion;
     
     public String python;
     public String script;
@@ -86,7 +86,7 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            isscipion = true;
+            XmippApplication.setIsScipion(true);
             
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
@@ -100,9 +100,6 @@ public class ParticlePickerParams {
 
     }
     
-    public static boolean isScipion()
-    {
-        return isscipion;
-    }
+    
     
 }

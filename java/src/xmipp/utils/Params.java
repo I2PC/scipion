@@ -1,13 +1,11 @@
 package xmipp.utils;
 
-import java.util.Arrays;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import xmipp.jni.ImageGeneric;
-import xmipp.viewer.scipion.ScipionParams;
 
 
 /**
@@ -85,7 +83,6 @@ public class Params {
     public String[] visibleLabels;
     public String[] orderLabels;
     public String[] sortby;
-    protected static boolean iscipion;
     
     
     
@@ -292,8 +289,5 @@ public class Params {
         return displayLabel;
     }
     
-    public static boolean isScipion()
-    {
-        return iscipion;
-    }
+   
 }

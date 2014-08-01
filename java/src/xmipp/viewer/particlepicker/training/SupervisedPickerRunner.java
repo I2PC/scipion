@@ -8,10 +8,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import xmipp.utils.XmippApplication;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.utils.ParticlePickerParams;
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -38,7 +39,7 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
-            if(ParticlePickerParams.isScipion())
+            if(XmippApplication.isScipion())
             {
                 ppicker.setPython(params.python);
                 ppicker.setScipionScript(params.script);

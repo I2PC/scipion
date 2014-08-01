@@ -24,6 +24,7 @@
  ***************************************************************************/
 package xmipp.utils;
 
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -109,7 +110,7 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!Params.isScipion() && !ParticlePickerParams.isScipion())
+                if(!XmippApplication.isScipion())
                     btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;

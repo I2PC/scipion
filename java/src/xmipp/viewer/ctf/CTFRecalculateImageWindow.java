@@ -30,7 +30,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import xmipp.ij.commons.XmippApplication;
+import xmipp.utils.XmippApplication;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.GalleryData;
 

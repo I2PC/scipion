@@ -7,6 +7,7 @@ package xmipp.viewer.scipion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import xmipp.utils.XmippApplication;
 import xmipp.utils.Params;
 
 
@@ -27,7 +28,7 @@ public class ScipionParams extends Params {
     
     public ScipionParams(String args[]) {
         super(args);
-        iscipion = true;
+        XmippApplication.setIsScipion(true);
     }
 
     public void defineArgs() {
@@ -52,8 +53,5 @@ public class ScipionParams extends Params {
         }
     }
     
-    public static boolean isScipion()
-    {
-        return iscipion;
-    }
+   
 }
