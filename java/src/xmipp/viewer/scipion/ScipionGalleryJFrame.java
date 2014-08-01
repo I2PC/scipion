@@ -112,7 +112,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
         });
         buttonspn.add(closebt);
-       
+        
         if (type != null) {
             cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
@@ -122,12 +122,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     
                     if(data.hasClasses())
                     {
-                        for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEnabledObjects())
-                            if(emo.childmd != null)
-                                size += emo.childmd.getEnabledObjects().size();
+                        for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEMObjects())
+                            if(emo.isEnabled() && emo.childmd != null)
+                                size += emo.childmd.getEnabledCount();
                     }
                     else
-                        size = data.getEnabledIds().size();
+                        size = ((ScipionGalleryData)data).getEnabledCount();
                     if (confirmCreate(type, size)) 
                     {
                         String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
@@ -141,7 +141,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        int size = data.getEnabledIds().size();
+                        int size = ((ScipionGalleryData)data).getEnabledCount();
                        
                         if (confirmCreate("Classes", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
@@ -157,8 +157,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        MetaData md = data.getMd(data.getEnabledIds());
-                        int size = md.size();
+                        int size = ((ScipionGalleryData)data).getEnabledCount();
                         
                         if (confirmCreate("Representatives", size)) {
                             String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
@@ -226,7 +225,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public boolean confirmCreate(String output, int size)
     {
         String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
-        if( data.getEnabledIds().size() == data.size())
+        if( ((ScipionGalleryData)data).getEnabledCount() == data.size())
             msg += "<br><font color=red>Note:</font> There are no disabled items to dismiss";
         dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
@@ -241,8 +240,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
     
     public JButton getScipionButton(String text, ActionListener listener) {
-        Image imp = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
-						+ "fa-plus-circle.png"));
+        Image imp = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
         Icon icon = new ImageIcon(imp);
         return getScipionButton(text, listener, icon);
     }

@@ -38,6 +38,7 @@ public class ScipionMetaData extends MetaData {
     private ColumnInfo idci, labelci, commentci, enabledci;
     private String preffix = "";
     private String[] blocks;
+    private int enableds;
 
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
         this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
@@ -240,6 +241,8 @@ public class ScipionMetaData extends MetaData {
             if (values.containsKey(ci)) {
                 changed = true;
             }
+            else if (ci.equals(enabledci))
+                    enableds += ((Integer)value == 1)? 1: -1;
             values.put(ci, value);
             
         }
@@ -259,6 +262,7 @@ public class ScipionMetaData extends MetaData {
 
         public void setEnabled(boolean isenabled) {
             int value = isenabled ? 1 : 0;
+            enableds += isenabled? 1 : -1;
             setValue(enabledci, value);
         }
 
@@ -371,15 +375,7 @@ public class ScipionMetaData extends MetaData {
         return new ScipionMetaData(prefix, self, selfalias, columns);
     }
 
-    public List<EMObject> getEnabledObjects() {
-        List<EMObject> emos = new ArrayList<EMObject>();
-        for (EMObject emo : emobjects) {
-            if (emo.isEnabled()) {
-                emos.add(emo);
-            }
-        }
-        return emos;
-    }
+    
 
     public long[] findObjects() {
         long[] ids = new long[emobjects.size()];
@@ -908,5 +904,9 @@ public class ScipionMetaData extends MetaData {
         return false;
     }
     
+    public int getEnabledCount()
+    {
+        return enableds;
+    }
    
 }

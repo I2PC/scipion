@@ -63,21 +63,9 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData) md).getValueFromLabel(index, label);
     }
 
-    /**
-     * Save selected items as a metadata
-     */
-    public void saveSelection(String path, boolean overwrite) throws Exception {
-        getSelectionMd().write(path);
+    
 
-    }
-
-    public void saveClassSelection(String path) {
-        try {
-            saveSelection(path, true);//Scipion metadata saves recursively
-        } catch (Exception ex) {
-            Logger.getLogger(ScipionGalleryData.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+    
 
     public boolean isColumnFormat() {
         return true;
@@ -88,14 +76,7 @@ public class ScipionGalleryData extends GalleryData {
      */
     @Override
     public ScipionMetaData getSelectionMd() {
-        ScipionMetaData selectionMd = null;
-        try {
-            selectionMd = ((ScipionMetaData) md).getMd(getSelObjects());
-            return selectionMd;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return selectionMd;
+        return null;//metadata operations are not used in scipion
     }
 
     /**
@@ -241,19 +222,11 @@ public class ScipionGalleryData extends GalleryData {
         return false;//fixme?? cannot open picker from sqlite
     }
 
-    public List<ScipionMetaData.EMObject> getSelObjects() {
-        List<ScipionMetaData.EMObject> emos = new ArrayList<ScipionMetaData.EMObject>();
-        for (int i = 0; i < selection.length; i++) {
-            if (selection[i] && md.getEnabled(ids[i])) {
-                emos.add(((ScipionMetaData) md).getEMObjects().get(i));
-            }
-        }
-        return emos;
+    public List<ScipionMetaData.EMObject> getEMObjects() {
+        return ((ScipionMetaData)md).getEMObjects();
     }
 
-    public List<ScipionMetaData.EMObject> getEnabledObjects() {
-        return ((ScipionMetaData) md).getEnabledObjects();
-    }
+    
 
     /**
      * This is only needed for metadata table galleries
@@ -365,6 +338,10 @@ public class ScipionGalleryData extends GalleryData {
             Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
             return new Geometry(shiftx, shifty, psiangle, flip);
         }
+
+    public int getEnabledCount() {
+        return ((ScipionMetaData)md).getEnabledCount();
+    }
         
     
 }

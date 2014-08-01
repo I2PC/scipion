@@ -1529,15 +1529,7 @@ public class GalleryData {
         return normalize;
     }
 
-    public List<Long> getEnabledIds() {
-        List<Long> result = new ArrayList<Long>();
-        for (int i = 0; i < ids.length; i++) {
-            if (isEnabled(i)) {
-                result.add(ids[i]);
-            }
-        }
-        return result;
-    }
+   
 
     public MetaData getMd(List<Long> ids) {
         MetaData selmd = null;
