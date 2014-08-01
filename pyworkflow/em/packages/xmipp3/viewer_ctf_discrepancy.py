@@ -25,24 +25,16 @@
 # **************************************************************************
 
 from os import remove
-from os.path import exists, getctime
+from os.path import exists
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from pyworkflow.em import data
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
-from pyworkflow.object import Float
-from pyworkflow.protocol.params import FloatParam, BooleanParam, IntParam, HiddenBooleanParam
+from pyworkflow.protocol.params import FloatParam, IntParam, HiddenBooleanParam
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, \
     ProtocolViewer
-from tempfile import TemporaryFile
 import collections
 import numpy as np
-import tempfile
-
-
-#from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-
-#from data import SetOfCTF
 
 #class XmippCTFDiscrepancyViewer(Viewer):
 class XmippCTFDiscrepancyViewer(ProtocolViewer):
@@ -53,8 +45,10 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [XmippProtCTFDiscrepancy]
     _memory = False
-    kk=True
-    
+    resolutionThresholdOLD = -1
+    #temporary metadata file with ctf that has some resolution greathan than X
+    tmpMetadataFile='viewersTmp.sqlite'
+
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         #group = form.addGroup('Overall results')
@@ -78,43 +72,45 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
                 }        
 
     def _calculateAuxiliaryFile(self):
-        """create new ctf_set with ctf that satisfy the 
+        """create new ctf_set with ctf that satisfies the
         constraint and persist it
         """
         #metadata file with protocol output
         self.sourceFile = self.protocol.outputCTF.getFileName()
         #get temporary fileName for metadata file
-        self.targetFile = self.protocol._getTmpPath('viewersTmp.sqlite')
+        self.targetFile = self.protocol._getTmpPath(self.tmpMetadataFile)
         resolutionThreshold = self.resolutionThreshold.get()
         print "TODO: this should be closer to the mapper. Here it does not make any sense. ROB"
         #TODO check if this is necessary
         if exists(self.targetFile):
             remove(self.targetFile)
         #metadata with selected CTFs
-        self.setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
+        _setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
         #object read metadata file
         ctfs  = data.SetOfCTF(filename = self.sourceFile)
         #condition to be satisfized for CTFs
         for ctf in ctfs:
             #print "ctf", ctf.printAll()
             if ctf.resolution.get()>resolutionThreshold:
-                self.setOfCTFsConst.append(ctf)
+                _setOfCTFsConst.append(ctf)
         #new file with selected CTFs
-        self.setOfCTFsConst.write()
+        _setOfCTFsConst.write()
         #check if empty
-        if self.setOfCTFsConst.getSize()<1:
+        if _setOfCTFsConst.getSize()<1:
             print "WARNING: Empty set of CTFs."
+        #close the mapper, if not the object cannot be reused (Although it should be able)
+        _setOfCTFsConst.close()
 
     def isComputed(self):
-        self.resolutionThresholdOLD = self.resolutionThreshold.get()
-        self.numberOfBinsOLD = self.visualizeHistogram.get()
-        
+        _resolutionThreshold = self.resolutionThreshold.get()
+        if self.resolutionThresholdOLD != _resolutionThreshold:
+            self._calculateAuxiliaryFile()
+            self.resolutionThresholdOLD = _resolutionThreshold
+
     def _visualizeTable(self, e=None):
         """ From here call all visualizations
         """
-        if self.kk:
-            self._calculateAuxiliaryFile()
-            self.kk = False
+        self.isComputed()
         views = []
 
         #display metadata with selected variables
@@ -127,7 +123,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
     def _visualizeHistogram(self, e=None):
         views = []
-        self._calculateAuxiliaryFile()
+        self.isComputed()
         numberOfBins = self.visualizeHistogram.get()
         numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
         plotter = EmPlotter()
@@ -139,7 +135,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
     def _visualizeMatrix(self,e=None):
         views = []
-        self._calculateAuxiliaryFile()
+        self.isComputed()
         inputCTFs=self.protocol.inputCTFs
         _matrix = np.zeros(shape=(len(inputCTFs), len(inputCTFs)))
         _matrix[0][0]=1
