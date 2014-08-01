@@ -493,6 +493,36 @@ def getStringListFromValues(valuesStr, length=None):
     return [String(value=v).get() for v in getListFromValues(valuesStr, length)]
 
 
+class Environ(dict):
+    """ Some utilities to handle environment settings. """
+    REPLACE = 0
+    BEGIN = 1
+    END = 2
+    
+    def set(self, varName, varValue, position=REPLACE):
+        """ Modify the value for some variable.
+        Params:
+            varName: for example LD_LIBRARY_PATH
+            varValue: the value to add or replace.
+            position: controls how the value will be changed.
+                If REPLACE, it will overrithe the value of
+                the var.
+                BEGIN or END will preserve the current value
+                and add (at begin or end) the new value.
+        """
+        if position == self.REPLACE:
+            self[varName] = varValue
+        elif position == self.BEGIN:
+            self[varName] = varValue + os.pathsep + self[varName]
+        elif position == self.END:
+            self[varName] = self[varName] + os.pathsep + varValue
+            
+    def update(self, valuesDict, position=REPLACE):
+        """ Use set for each key, value pair in valuesDict. """
+        for k, v in valuesDict.iteritems():
+            self.set(k, v, position)
+            
+            
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
     If valueFirst is true, the new value will be at the beginning.

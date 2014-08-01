@@ -35,6 +35,8 @@ import xmipp
 from collections import OrderedDict
 from constants import *
 import pyworkflow.dataset as ds
+
+from pyworkflow.utils import Environ
 from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
@@ -48,16 +50,14 @@ LABEL_TYPES = {
                xmipp.LABEL_BOOL: bool              
                }
 
-def getEnviron():
+def getEnviron(xmippFirst=True):
     """ Create the needed environment for Xmipp programs. """
-    environ = dict(os.environ)
+    environ = Environ(os.environ)
+    pos = Environ.BEGIN if xmippFirst else Environ.END
     environ.update({
-            'PATH': os.pathsep.join([os.environ['PATH'], 
-                                     join(os.environ['XMIPP_HOME'], 'bin')]),
-            'LD_LIBRARY_PATH': os.pathsep.join([os.environ['LD_LIBRARY_PATH'], 
-                                                join(os.environ['XMIPP_HOME'], 'lib')
-                                                ])
-            })
+            'PATH': join(os.environ['XMIPP_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib')
+            }, position=pos)
     return environ
     
 def getLabelPythonType(label):
