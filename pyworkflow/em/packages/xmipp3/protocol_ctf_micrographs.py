@@ -82,8 +82,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         # Update _params dictionary with mic and micDir
         self._params['micFn'] = micFn
         self._params['micDir'] = self._getFileName('prefix', micDir=micDir)
-        # CTF estimation with Xmipp                
-        self.runJob(self._program, self._args % self._params)    
+        # CTF estimation with Xmipp  
+        try:              
+            self.runJob(self._program, self._args % self._params)
+        except Exception:
+            self._log.info("FAILED ESTIMATION FOR: " + micFn)    
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
