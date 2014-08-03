@@ -43,7 +43,10 @@ TAG_RUN_JOB = 1000
 def send(command, comm, dest, tag):
     """ Send command in a non-blocking way and return the exit code. """
 
-    print "Sending command to %d: %s" % (dest, command)
+    if command.startswith('env='):
+        print "Sending environment to %d" % dest
+    else:
+        print "Sending command to %d: %s" % (dest, command)
 
     # Send command with isend()
     req_send = comm.isend(command, dest=dest, tag=tag)
