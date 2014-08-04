@@ -96,13 +96,21 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
-            ctfModel = readCTFModel(ctfparam, mic)
-            ctfSet.append(self._setPsdFiles(ctfModel, micDir))
-            
-            # save the values of defocus for each micrograph in a list
-            defocusList.append(ctfModel.getDefocusU())
-            defocusList.append(ctfModel.getDefocusV())
-        
+            if os.path.exists(ctfparam):
+                ctfModel = readCTFModel(ctfparam, mic)
+                ctfSet.append(self._setPsdFiles(ctfModel, micDir))
+                
+                # save the values of defocus for each micrograph in a list
+                defocusList.append(ctfModel.getDefocusU())
+                defocusList.append(ctfModel.getDefocusV())
+            else:
+                # Create an empty CTF Model when estimation failed
+                # and not ctfparam was produced
+                ctfModel = CTFModel()
+                ctfModel.setObjId(mic.getObjId())
+                ctfModel.setMicrograph(mic)
+                ctfSet.append(ctfModel)
+                
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
         self._defocusMaxMin(defocusList)
