@@ -298,7 +298,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 // Main routine ------------------------------------------------------------
 void ProgReconstructSignificant::run()
 {
-    show();
+	if (rank==0)
+		show();
     produceSideinfo();
 
     currentAlpha=alpha0;
@@ -329,6 +330,7 @@ void ProgReconstructSignificant::run()
 
     	// Align the input images to the projections
     	alignImagesToGallery();
+    	synchronize();
     	gatherAlignment();
 
     	// Reweight according to each direction
@@ -394,7 +396,6 @@ void ProgReconstructSignificant::run()
 			// Write the corresponding angular metadata
 			for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 			{
-				std::cout << "Aqui 1" << std::endl;
 				MetaData &mdReconstruction=mdReconstructionPartial[nVolume];
 				// Readjust weights with direction weights
 				FOR_ALL_OBJECTS_IN_METADATA(mdReconstruction)
@@ -408,7 +409,6 @@ void ProgReconstructSignificant::run()
 				}
 
 				// Remove zero-weight images
-				std::cout << "Aqui 2" << std::endl;
 				mdAux.clear();
 				mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
 
@@ -421,7 +421,6 @@ void ProgReconstructSignificant::run()
 					emptyVolumes=true;
 				}
 
-				std::cout << "Aqui 3" << std::endl;
 				MetaData &mdPM=mdReconstructionProjectionMatching[nVolume];
 				if (mdPM.size()>0)
 				{
@@ -432,31 +431,26 @@ void ProgReconstructSignificant::run()
 					String fnAux=formatString("%s/aux_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					// Take only the image name from angles.xmd
 					String cmd=(String)"xmipp_metadata_utilities -i "+fnAngles+" --operate keep_column image -o "+fnAux;
-					std::cout << "Aqui 3.1" << std::endl;
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					// Remove duplicated images
 					cmd=(String)"xmipp_metadata_utilities -i "+fnAux+" --operate remove_duplicates image";
-					std::cout << "Aqui 3.2" << std::endl;
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					// Intersect with images.xmd
 					String fnImagesSignificant=formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					cmd=(String)"xmipp_metadata_utilities -i "+fnImages+" --set intersection "+fnAux+" image image -o "+fnImagesSignificant;
-					std::cout << "Aqui 3.3" << std::endl;
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					deleteFile(fnAux);
 				}
 				else
 					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
-				std::cout << "Aqui 4" << std::endl;
 				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
 				deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
 			}
 
-			std::cout << "Aqui 5" << std::endl;
 			if (verbose>=2)
 			{
 				save()=cc;
@@ -464,7 +458,6 @@ void ProgReconstructSignificant::run()
 				save()=weight;
 				save.write(formatString("%s/weight_iter%02d.vol",fnDir.c_str(),iter));
 			}
-			std::cout << "Aqui 6" << std::endl;
     	}
     	synchronize();
 
@@ -480,7 +473,8 @@ void ProgReconstructSignificant::run()
 
 void ProgReconstructSignificant::reconstructCurrent()
 {
-	std::cerr << "Reconstructing volumes ..." << std::endl;
+	if (rank==0)
+		std::cerr << "Reconstructing volumes ..." << std::endl;
 	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 	{
 		if ((nVolume+1)%Nprocessors!=rank)
@@ -530,6 +524,8 @@ void ProgReconstructSignificant::generateProjections()
 	for (int n=0; n<Nvol; n++)
 	{
 		mdGallery.push_back(galleryNames);
+		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
+		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
 		MetaData mdAux(fnGalleryMetaData);
 		galleryNames.clear();
 		FOR_ALL_OBJECTS_IN_METADATA(mdAux)
@@ -561,39 +557,43 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// If there is not any input volume, create a random one
-	if (fnInit=="" && rank==0)
+	if (fnInit=="")
 	{
 		fnInit=fnDir+"/volume_random.vol";
-		MetaData mdRandom;
-		mdRandom=mdIn;
-		FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+		if (rank==0)
 		{
-			mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
-			mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
-			mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
-			mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
-			mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+			MetaData mdRandom;
+			mdRandom=mdIn;
+			FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+			{
+				mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
+				mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
+				mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
+				mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+				mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+			}
+			FileName fnAngles=fnDir+"/angles_random.xmd";
+			mdRandom.write(fnAngles);
+			String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnInit.c_str(),fnSym.c_str());
+			String cmd=(String)"xmipp_reconstruct_fourier "+args;
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+			// Symmetrize with many different possibilities to have a spherical volume
+			args=formatString("-i %s --sym i1 -v 0",fnInit.c_str());
+			cmd=(String)"xmipp_transform_symmetrize "+args;
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+			args=formatString("-i %s --sym i3 -v 0",fnInit.c_str());
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+			args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 		}
-		FileName fnAngles=fnDir+"/angles_random.xmd";
-		mdRandom.write(fnAngles);
-		String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnInit.c_str(),fnSym.c_str());
-		String cmd=(String)"xmipp_reconstruct_fourier "+args;
-		if (system(cmd.c_str())==-1)
-			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-		// Symmetrize with many different possibilities to have a spherical volume
-		args=formatString("-i %s --sym i1 -v 0",fnInit.c_str());
-		cmd=(String)"xmipp_transform_symmetrize "+args;
-		if (system(cmd.c_str())==-1)
-			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-		args=formatString("-i %s --sym i3 -v 0",fnInit.c_str());
-		if (system(cmd.c_str())==-1)
-			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-		args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
-		if (system(cmd.c_str())==-1)
-			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+		synchronize();
 	}
 
 	// Copy all input values as iteration 0 volumes

@@ -27,8 +27,6 @@
 #define __RECONSTRUCT_SIGNIFICANT_H
 
 #include <data/xmipp_program.h>
-#include <data/xmipp_threads.h>
-#include "reconstruct_fourier.h"
 #include "angular_project_library.h"
 #include "volume_initial_simulated_annealing.h"
 
@@ -117,7 +115,7 @@ public:
 	ProgReconstructSignificant();
 
     /// Read arguments from command line
-    void readParams();
+    virtual void readParams();
 
     /// Read arguments from command line
     void defineParams();
@@ -141,10 +139,10 @@ public:
     void alignImagesToGallery();
 
     /// Gather alignment
-    void gatherAlignment() {}
+    virtual void gatherAlignment() {}
 
     /// Synchronize with other processors
-    void synchronize() {}
+    virtual void synchronize() {}
 };
 //@}
 #endif
