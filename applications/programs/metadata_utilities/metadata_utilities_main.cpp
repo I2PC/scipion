@@ -259,7 +259,6 @@ protected:
         {
             MDL::str2LabelVector(getParam("--operate", 1), labels);
             mdIn.keepLabels(labels);
-            std::cout << labels.size() << std::endl;
             //for (int i = 0; i < labels.size(); ++i)
             //    mdIn.addLabel(labels[i]);//removeLabel(labels[i]);
         }
