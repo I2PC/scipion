@@ -58,7 +58,6 @@ estimate CTF on a set of micrographs using xmipp3 """
         ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
         ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
         ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
-        return ctfModel
     
     def _citations(self):
         return ['Vargas2013']
@@ -96,20 +95,16 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
-            if os.path.exists(ctfparam):
-                ctfModel = readCTFModel(ctfparam, mic)
-                ctfSet.append(self._setPsdFiles(ctfModel, micDir))
+            if not os.path.exists(ctfparam):
+                ctfparam = 'xmipp_default_ctf.ctfparam'
                 
-                # save the values of defocus for each micrograph in a list
-                defocusList.append(ctfModel.getDefocusU())
-                defocusList.append(ctfModel.getDefocusV())
-            else:
-                # Create an empty CTF Model when estimation failed
-                # and not ctfparam was produced
-                ctfModel = CTFModel()
-                ctfModel.setObjId(mic.getObjId())
-                ctfModel.setMicrograph(mic)
-                ctfSet.append(ctfModel)
+            ctfModel = readCTFModel(ctfparam, mic)
+            self._setPsdFiles(ctfModel, micDir)
+            ctfSet.append(ctfModel)
+            
+            # save the values of defocus for each micrograph in a list
+            defocusList.append(ctfModel.getDefocusU())
+            defocusList.append(ctfModel.getDefocusV())
                 
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
