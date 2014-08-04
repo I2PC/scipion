@@ -97,6 +97,10 @@ public class EllipseCTF {
     public double getSamplingRate() {
         return Ts;
     }
+    
+    public double getDownsamplingFactor() {
+    	return downsampleFactor;
+    }
 
     public double getVoltage() {
         return kV;
