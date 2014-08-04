@@ -52,7 +52,6 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
-import xmipp.viewer.scipion.ScipionParams;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -111,6 +110,7 @@ public class GalleryData {
     protected String[] visibleLabels;
     protected String[] orderLabels;
     protected String[] sortby;
+    protected int selfrom = -1, selto = -1;
     
 
     public enum Mode {
@@ -503,6 +503,7 @@ public class GalleryData {
         for (int i = 0; i < selection.length; ++i) {
             selection[i] = false;
         }
+        selfrom = selto = -1;
 
     }
 
@@ -885,7 +886,7 @@ public class GalleryData {
         int count = 0;
 
         if (!isVolumeMode()) {
-            for (int i = 0; i < ids.length; ++i) {
+            for (int i = selfrom; i <= selto; ++i) {
                 if (selection[i]) {
                     ++count;
                 }
@@ -902,7 +903,7 @@ public class GalleryData {
         if (!isVolumeMode()) {
             long[] selectedIds = new long[getSelectionCount()];
             int count = 0;
-            for (int i = 0; i < ids.length; ++i) {
+            for (int i = selfrom; i <= selto; ++i) {
                 if (selection[i]) {
                     selectedIds[count++] = ids[i];
                 }
@@ -987,7 +988,7 @@ public class GalleryData {
     public MetaData getClassesImages() {
         MetaData mdImages = new MetaData();
         MetaData md;
-        for (int i = 0; i < ids.length; ++i) {
+        for (int i = selfrom; i <= selto; ++i) {
             if (selection[i]) {
                 md = getClassImages(i);
                 if (md != null) {
@@ -1112,7 +1113,7 @@ public class GalleryData {
      * Delete from metadata selected items
      */
     public void removeSelection() throws Exception {
-        for (int i = 0; i < ids.length; ++i) {
+        for (int i = selfrom; i <= selto; ++i) {
             if (selection[i]) {
                 md.removeObject(ids[i]);
                 hasMdChanges = true;
@@ -1222,7 +1223,7 @@ public class GalleryData {
             saveSelection("classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-            for (int i = 0; i < ids.length; ++i) {
+            for (int i = selfrom; i <= selto; ++i) {
                 if (selection[i]) {
                     long id = ids[i];
                     int ref = md.getValueInt(MDLabel.MDL_REF, id);
@@ -1285,8 +1286,34 @@ public class GalleryData {
         return selection[index];
     }
 
-    public void setSelected(int index, boolean value) {
-        selection[index] = value;
+    public void setSelected(int index, boolean isselected) {
+        if(isselected && (selfrom > index || selfrom == -1))
+            selfrom = index;
+        if(isselected && selto < index)
+            selto = index;
+        
+        if(!isselected && selfrom == index && selto != selfrom)
+        {
+            selfrom = -1;
+            for(int i = index; i <= selto; i ++)
+                if(selection[i])
+                {
+                    selfrom = i;
+                    break;
+                }
+        }       
+        
+        if(!isselected && selto == index && selfrom != selto)
+        {
+            selto = -1;
+            for(int i = index; i >= selfrom; i --)
+                if(selection[i])
+                {
+                    selto = i;
+                    break;
+                }
+        }      
+        selection[index] = isselected;
     }
     public int size() {
         return ids.length;
@@ -1556,7 +1583,7 @@ public class GalleryData {
     }
 
     public boolean hasSelection() {
-        for (int i = 0; i < selection.length; i++) {
+        for (int i = selfrom; i <= selto; i++) {
             if (selection[i]) {
                 return true;
             }
@@ -1683,6 +1710,16 @@ public class GalleryData {
             psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
             boolean flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
             return new Geometry(shiftx, shifty, psiangle, flip);
+        }
+        
+        public int getSelFrom()
+        {
+            return selfrom;
+        }
+        
+        public int getSelTo()
+        {
+            return selto;
         }
         
         

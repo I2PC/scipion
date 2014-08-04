@@ -83,23 +83,7 @@ public class ScipionGalleryData extends GalleryData {
      * Get all the images assigned to all selected classes
      */
     public MetaData getClassesImages() {
-        ScipionMetaData mdImages = null;
-        MetaData md;
-        for (int i = 0; i < ids.length; ++i) {
-            if (selection[i] && isEnabled(i)) {
-                md = getClassImages(i);
-
-                if (md != null) {
-                    if (mdImages == null) {
-                        mdImages = ((ScipionMetaData) md).getStructure("");
-                    }
-                    mdImages.unionAll(md);
-                    md.destroy();
-                }
-            }
-        }
-
-        return mdImages;
+        return null;
     }
 
     
@@ -343,5 +327,50 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData)md).getEnabledCount();
     }
         
+        /**
+     * Set enabled state
+     */
+    public void setEnabled(int index, boolean value) {
+        try {
+            if (!isVolumeMode()) { // slices in a volume are always enabled
+                getEMObjects().get(index).setEnabled(value);
+                hasMdChanges = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
+    /**
+     * Check if an item is enabled or not
+     */
+    public boolean isEnabled(int index) {
+        try {
+            if (isVolumeMode()) {
+                return true;
+            }
+            return getEMObjects().get(index).isEnabled();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+    
+    public String getValueFromCol(int index, ColumnInfo ci) {
+        try {
+            return getEMObjects().get(index).getValueString(ci);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+     public void setValueToCol(int index, ColumnInfo ci, String value) {
+        try {
+            getEMObjects().get(index).setValue(ci, value);
+            setMdChanges(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

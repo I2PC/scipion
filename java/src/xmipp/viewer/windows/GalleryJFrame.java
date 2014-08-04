@@ -590,15 +590,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					break;
 
                                 case KeyEvent.VK_SPACE:
-                                        int from = -1, to = -1;
-                                        for (int i = 0; i < data.size(); ++i)
-                                        if (data.isSelected(i))
-                                        {
-                                            if(from == -1)
-                                                from = i;
-                                            data.setEnabled(i, !data.isEnabled(i));
-                                            to = i;
-                                        }
+                                        int from = data.getSelFrom(), to = data.getSelTo();
+                                        for (int i = from; i <= to; ++i)
+                                            if (data.isSelected(i))
+                                                data.setEnabled(i, !data.isEnabled(i));
                                         if(from != -1)
                                             gallery.fireTableRowsUpdated(from, to);
 				}

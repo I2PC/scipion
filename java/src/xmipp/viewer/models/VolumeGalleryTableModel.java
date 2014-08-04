@@ -47,6 +47,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		super(data);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
+                data.clearSelection();
 		data.selection = new boolean[n];
 		calculateMinAndMax();
 	}

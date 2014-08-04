@@ -19,8 +19,6 @@ import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MetaData;
 import xmipp.jni.EllipseCTF;
-import xmipp.jni.MDLabel;
-import xmipp.jni.MDRow;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -39,6 +37,7 @@ public class ScipionMetaData extends MetaData {
     private String preffix = "";
     private String[] blocks;
     private int enableds;
+    
 
     public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
         this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
@@ -288,6 +287,14 @@ public class ScipionMetaData extends MetaData {
 
         public void setComment(String comment) {
             setValue(commentci, comment);
+        }
+
+        String getValueString(ColumnInfo ci) {
+            Object value = values.get(ci);
+            if (value != null) {
+                return ((String) value).toString();//in sqlite double is float
+            }
+            return "";
         }
     }
 
