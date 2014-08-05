@@ -248,7 +248,7 @@ class TestXmippExtractParticles(TestXmippBase):
         cls.protCTF = XmippProtCTFMicrographs(minDefocus=1.8, maxDefocus=2.8, numberOfThreads=3)         
         cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)        
         cls.proj.launchProtocol(cls.protCTF, wait=True)
-        
+         
         cls.protPP = cls.runFakedPicking(cls.protDown.outputMicrographs, cls.allCrdsDir)
     
     def testExtractSameAsPicking(self):
@@ -268,15 +268,22 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        
     
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
         protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=OTHER, downFactor=3,doFlip=False)
+        # Get all the micrographs ids to validate that all particles
+        # has the micId properly set
+        micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
+        
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        for particle in protExtract.outputParticles:
+            self.assertTrue(particle.getCoordinate().getMicId() in micsId)
     
     def testExtractCTF(self):
         print "Run extract particles with CTF"#        
@@ -287,26 +294,4 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.setObjLabel("extract-ctf")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
-        
-        protEmx1 = ProtEmxExport()
-        protEmx1.setObjLabel("emx export coordinates")
-        protEmx1.inputSet.set(self.protPP.outputCoordinates)
-        self.proj.launchProtocol(protEmx1, wait=True)
-        
-        protEmx2 = ProtEmxExport()
-        protEmx2.setObjLabel("emx export particles")
-        protEmx2.inputSet.set(protExtract.outputParticles)
-        self.proj.launchProtocol(protEmx2, wait=True)
 
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        className = sys.argv[1]
-        cls = globals().get(className, None)
-        if cls:
-            suite = unittest.TestLoader().loadTestsFromTestCase(cls)
-            unittest.TextTestRunner(verbosity=2).run(suite)
-        else:
-            print "Test: '%s' not found." % className
-    else:
-        unittest.main()

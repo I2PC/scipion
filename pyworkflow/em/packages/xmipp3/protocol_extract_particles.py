@@ -40,6 +40,7 @@ from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam, 
                                         BooleanParam, RelationParam, Positive)
 from pyworkflow.em.protocol import  ProtExtractParticles
+from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.utils.path import removeBaseExt, replaceBaseExt
 
@@ -351,10 +352,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         
-        readSetOfParticles(fnImages, imgSet)
+        # Create a temporary set to read from the metadata file
+        # and later create the good one with the coordinates 
+        # properly set. We need this because the .update is not
+        # working in the mapper when new attributes are added.
+        auxSet = SetOfParticles(filename=':memory:')
+        readSetOfParticles(fnImages, auxSet)
         imgSet.setHasCTF(self.ctfRelations.hasValue())
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
-        for img in imgSet:
+        for img in auxSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             ctfModel = img.getCTF()
@@ -362,7 +368,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 ctfModel.setObjId(coord.getMicId())
                 ##img.setCTF(ctfModel)####JM
             img.setCoordinate(coord)
-            imgSet.update(img)
+            imgSet.append(img)
             
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
