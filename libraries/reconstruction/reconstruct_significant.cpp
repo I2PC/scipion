@@ -621,4 +621,5 @@ void ProgReconstructSignificant::produceSideinfo()
 	}
 
 	iter=0;
+	synchronize();
 }
