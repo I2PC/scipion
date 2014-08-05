@@ -287,13 +287,14 @@ class Object(object):
         if prefix:
             prefix += '.'
         for k, v in self.getAttributesToStore():
-            kPrefix = prefix + k
-            if includeClass:
-                objDict[kPrefix] = (v.getClassName(), v.getObjValue())
-            else:
-                objDict[kPrefix] = v.getObjValue()
-            if not isinstance(v, Scalar):
-                v.__getObjDict(kPrefix, objDict, includeClass)
+            if not v.isPointer():
+                kPrefix = prefix + k
+                if includeClass:
+                    objDict[kPrefix] = (v.getClassName(), v.getObjValue())
+                else:
+                    objDict[kPrefix] = v.getObjValue()
+                if not isinstance(v, Scalar):
+                    v.__getObjDict(kPrefix, objDict, includeClass)
             
     def getObjDict(self, includeClass=False):
         """ Return all attributes and values in a dictionary.
