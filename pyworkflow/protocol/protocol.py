@@ -1285,8 +1285,12 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # Handle special case to execute in parallel
             from pyworkflow.utils import runJob
             prog = join(os.environ['SCIPION_HOME'], 'scipion') #os.environ['SCIPION_PYTHON']
+            # TODO: comment why we leave  os.environ['SCIPION_PYTHON']  commented out
+            # So we also understand what's going on :)  Same thing for #params below
+
             #params = pw.join('apps', 'pw_protocol_mpirun.py')
-            params = 'run pyworkflow/apps/pw_protocol_mpirun.py %s %s %s' % (projectPath, protDbPath, protId)
+
+            params = ['run', 'pyworkflow/apps/pw_protocol_mpirun.py', projectPath, protDbPath, protId]
             
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)

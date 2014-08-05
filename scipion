@@ -377,10 +377,9 @@ def main():
         sys.exit(0)
 
     elif mode == MODE_RUN:
-        # Run any command with the environment of scipion loaded
-        if n > 2:
-            cmd = " ".join(sys.argv[2:])
-            runCmd(cmd)
+        # Run any command with the environment of scipion loaded.
+        cmd = ' '.join('"%s"' % p for p in sys.argv[2:])
+        runCmd(cmd)
 
     elif mode == MODE_HELP:
         sys.stdout.write("""\
