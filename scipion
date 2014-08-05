@@ -229,7 +229,6 @@ MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
 MODE_STATS = 'stats'
-MODE_DOWNLOAD = 'download'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
 
@@ -362,13 +361,6 @@ def main():
             args = ' '.join(params)
             runApp('pw_protocol_run.py', args)
 
-    elif mode == MODE_DOWNLOAD:
-        if n > 2:
-            args = sys.argv[2]
-        else:
-            args = ''
-        runApp('pw_download_packages.py', args)
-
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
         for k, v in VARS.items():
@@ -435,8 +427,6 @@ MODE can be:
 
     printenv               Print the environment variables used by the application.
 
-    download               Download external packages (EMAN, SPIDER, Relion, etc).
-
     run COMMAND [ARG ...]  Run command in the Scipion environment.
 """)
         sys.exit(0)
@@ -444,7 +434,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv download run
+  browser help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
