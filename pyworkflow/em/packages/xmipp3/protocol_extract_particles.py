@@ -356,9 +356,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # and later create the good one with the coordinates 
         # properly set. We need this because the .update is not
         # working in the mapper when new attributes are added.
-        auxSet = SetOfParticles(filename=':memory:')
-        readSetOfParticles(fnImages, auxSet)
         imgSet.setHasCTF(self.ctfRelations.hasValue())
+        auxSet = SetOfParticles(filename=':memory:')
+        auxSet.copyInfo(imgSet)
+        readSetOfParticles(fnImages, auxSet)
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
         for img in auxSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
