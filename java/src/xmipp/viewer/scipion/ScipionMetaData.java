@@ -221,7 +221,7 @@ public class ScipionMetaData extends MetaData {
         return null;
     }
 
-    public String getValueFromLabel(int index, int label) {
+    public synchronized String getValueFromLabel(int index, int label) {
         if (index >= size()) {
             return null;
         }
@@ -356,7 +356,7 @@ public class ScipionMetaData extends MetaData {
         return true;
     }
 
-    public Object getValueObject(int label, long id) {
+    public synchronized Object getValueObject(int label, long id) {
         EMObject emo = getEMObject(id);
         ColumnInfo c = getColumnInfo(label);
         if (c != null) {
@@ -818,49 +818,7 @@ public class ScipionMetaData extends MetaData {
     }
     
     
-        
-    
-    
-    
-    public class EMObject {
-
-        int index;
-        Map<ColumnInfo, Object> values;
-        boolean changed;
-        ScipionMetaData childmd;
-        ScipionMetaData md;
-        
-
-        public EMObject(int index, ScipionMetaData md) {
-            this.index = index;
-            values = new HashMap<ColumnInfo, Object>();
-            this.md = md;
-            changed = false;
-        }
-
-        Object getValue(String column) {
-            ColumnInfo ci = getColumnInfo(column);
-            return getValue(ci);
-        }
-
-        Object getValue(ColumnInfo c) {
-            if(isEmpty())
-                try {
-                    loadNeighborhoodValues();
-            } catch (SQLException ex) {
-                Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            Object result = values.get(c);
-
-            return result;
-        }
-        //synchronized so that you load your data and neighbors if you are really empty (no loadNeighborhoodValues running)
-        synchronized boolean isEmpty()
-        {
-            return values.size() == 4;
-        }
-        
-        synchronized void loadNeighborhoodValues() throws SQLException
+    synchronized void loadNeighborhoodValues(int index) throws SQLException
         {
             Connection c = null;
             PreparedStatement stmt = null;
@@ -873,7 +831,7 @@ public class ScipionMetaData extends MetaData {
                 c = DriverManager.getConnection("jdbc:sqlite:" + filename);
                 stmt = c.prepareStatement(String.format("SELECT * FROM %sObjects where Id=?;", preffix));
                 EMObject emo;
-                int neighborhood = 10, fnIndex;
+                int neighborhood = 50, fnIndex;
                 for(int i = index; i <= index + neighborhood && i < size(); i ++)
                 {
                     
@@ -884,7 +842,7 @@ public class ScipionMetaData extends MetaData {
                         stmt.setInt(1, emo.getId().intValue());
                         rs = stmt.executeQuery();
                         for (ColumnInfo column : columns) {
-                            if(!values.containsKey(column))
+                            if(!emo.values.containsKey(column))
                             {
                                 name = column.labelName;
                                 alias = column.comment;
@@ -928,7 +886,49 @@ public class ScipionMetaData extends MetaData {
                 c.close();
             }
         }
+   
+    
+    
+    
+    public class EMObject {
+
+        int index;
+        Map<ColumnInfo, Object> values;
+        boolean changed;
+        ScipionMetaData childmd;
+        ScipionMetaData md;
         
+
+        public EMObject(int index, ScipionMetaData md) {
+            this.index = index;
+            values = new HashMap<ColumnInfo, Object>();
+            this.md = md;
+            changed = false;
+        }
+
+        Object getValue(String column) {
+            ColumnInfo ci = getColumnInfo(column);
+            return getValue(ci);
+        }
+
+        Object getValue(ColumnInfo c) {
+            if(isEmpty())
+                try {
+                    loadNeighborhoodValues(index);
+            } catch (SQLException ex) {
+                Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Object result = values.get(c);
+
+            return result;
+        }
+        
+        boolean isEmpty()
+        {
+            return values.size() == 4;
+        }
+        
+                
         
 
         
