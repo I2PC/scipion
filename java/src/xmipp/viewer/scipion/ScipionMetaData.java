@@ -818,7 +818,7 @@ public class ScipionMetaData extends MetaData {
     }
     
     
-    synchronized void loadNeighborhoodValues(int index) throws SQLException
+    synchronized void loadNeighborhoodValues(int index, ColumnInfo column) throws SQLException
         {
             Connection c = null;
             PreparedStatement stmt = null;
@@ -826,52 +826,51 @@ public class ScipionMetaData extends MetaData {
             try {
                 String name, alias;
                 Object value;
-                ColumnInfo indexci;
                 Class.forName("org.sqlite.JDBC");
                 c = DriverManager.getConnection("jdbc:sqlite:" + filename);
-                stmt = c.prepareStatement(String.format("SELECT * FROM %sObjects where Id=?;", preffix));
+                String columns = column.comment;
+                ColumnInfo indexci = null;
+                if(column.render && column.labelName.endsWith("_filename"))
+                {
+                    indexci = getColumnInfo(column.labelName.replace("_filename", "_index"));
+                    columns += ", " + indexci.comment;
+                }
+                stmt = c.prepareStatement(String.format("SELECT %s FROM %sObjects where Id=?;", columns, preffix));
                 EMObject emo;
                 int neighborhood = 50, fnIndex;
                 for(int i = index; i <= index + neighborhood && i < size(); i ++)
                 {
                     
                     emo = emobjects.get(i);
-                    //no call to loadNeighborhood values changing i emo object and index emo is empty
-                    if(emo.isEmpty())
+                    if(!emo.values.containsKey(column))
                     {
+                        StopWatch.getInstance().printElapsedTime("reading " + columns + " from " + emo.getId());
                         stmt.setInt(1, emo.getId().intValue());
                         rs = stmt.executeQuery();
-                        for (ColumnInfo column : columns) {
-                            if(!emo.values.containsKey(column))
-                            {
-                                name = column.labelName;
-                                alias = column.comment;
-                                switch (column.type) {
+                        name = column.labelName;
+                        alias = column.comment;
+                        switch (column.type) {
 
-                                    case MetaData.LABEL_INT:
-                                        value = rs.getInt(alias);
-                                        break;
-                                    case MetaData.LABEL_DOUBLE:
-                                        value = rs.getFloat(alias);
-                                        break;
-                                    case MetaData.LABEL_STRING:
-                                        value = rs.getString(alias);
-                                        if (column.render && name.endsWith("_filename")) {
-                                            indexci = getColumnInfo(name.replace("_filename", "_index"));
-                                            if (indexci != null) {
-                                                fnIndex = rs.getInt(indexci.comment);
-                                                if (fnIndex > 0) 
-                                                    value = fnIndex + "@" + value;
-                                            }
-                                        }
-                                        break;
-                                    default:
-
-                                        value = rs.getString(alias);
+                            case MetaData.LABEL_INT:
+                                value = rs.getInt(alias);
+                                break;
+                            case MetaData.LABEL_DOUBLE:
+                                value = rs.getFloat(alias);
+                                break;
+                            case MetaData.LABEL_STRING:
+                                value = rs.getString(alias);
+                                if (indexci != null) {
+                                        fnIndex = rs.getInt(indexci.comment);
+                                        if (fnIndex > 0) 
+                                            value = fnIndex + "@" + value;
+                                    
                                 }
-                                emo.values.put(column, value);
-                            }
+                                break;
+                            default:
+
+                                value = rs.getString(alias);
                         }
+                        emo.values.put(column, value);
                     }
                 }
             } catch (Exception ex) {
@@ -912,9 +911,9 @@ public class ScipionMetaData extends MetaData {
         }
 
         Object getValue(ColumnInfo c) {
-            if(isEmpty())
+            if(!values.containsKey(c))
                 try {
-                    loadNeighborhoodValues(index);
+                    loadNeighborhoodValues(index, c);
             } catch (SQLException ex) {
                 Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -923,12 +922,6 @@ public class ScipionMetaData extends MetaData {
             return result;
         }
         
-        boolean isEmpty()
-        {
-            return values.size() == 4;
-        }
-        
-                
         
 
         
