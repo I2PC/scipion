@@ -277,7 +277,7 @@ Examples:
 # ShowPMax
 #===============================================================================
         
-    def _showPMax(self):
+    def _showPMax(self, paramName=None):
         labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         addRelionLabels(extended=True)  
         
@@ -440,7 +440,7 @@ Examples:
         gridsize = self._getGridSize(n)
         
         data_angularDist = self.protocol._getIterAngularDist(it)
-        xplotter = XmippPlotter(*gridsize, mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
                 md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
@@ -471,7 +471,7 @@ Examples:
         gridsize = self._getGridSize(n)
         addRelionLabels()
         xmipp.activateMathExtensions()
-        xplotter = XmippPlotter(*gridsize)
+        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1])
         
         for prefix in prefixes:
             for ref3d in self._refsList:
@@ -514,7 +514,7 @@ Examples:
         xmipp.activateMathExtensions()
         addRelionLabels()
         
-        xplotter = XmippPlotter(*gridsize, windowTitle='Resolution FSC')
+        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
 
         for prefix in prefixes:
             for ref3d in self._refsList:
