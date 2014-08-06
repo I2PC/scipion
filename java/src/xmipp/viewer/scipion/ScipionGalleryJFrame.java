@@ -151,14 +151,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     }
                 });
-                representativesbt = getScipionButton("Create Representatives", new ActionListener() {
+                final boolean isClass2D = ((ScipionGalleryData)data).getSelf().equals("Class2D");
+                String repText = isClass2D ? "Create Averages": "Create Volumes";
+                representativesbt = getScipionButton(repText, new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         int size = ((ScipionGalleryData)data).getEnabledCount();
                         
                         if (confirmCreate("Representatives", size)) {
-                            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
+                            String output = isClass2D? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
                             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
                             createSubset(command, "Creating set ...");
                             
