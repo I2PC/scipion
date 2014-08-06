@@ -27,14 +27,15 @@ Please,  do not  generate or  distribute
 a modified version of this file under its original name. 
 """
 
-import unittest
+from itertools import izip
+from pyworkflow.em.data import SetOfCTF
 from pyworkflow.em.packages.emxlib import ProtEmxImport
 from pyworkflow.em.packages.xmipp3 import XmippProtCTFDiscrepancy
-import pyworkflow.em as em
-import pyworkflow.tests as tests
-import os
-import itertools
+from pyworkflow.object import PointerList
 from test_workflow import TestWorkflow
+import pyworkflow.tests as tests
+import unittest
+import os
 
 class TestXmippCTFDiscrepancyBase(TestWorkflow):
     @classmethod
@@ -60,34 +61,29 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         self.launchProtocol(protEmxImport1)
         self.launchProtocol(protEmxImport2)
         self.launchProtocol(protEmxImport3)
-
-        import pdb
-        pdb.set_trace()
-        _list=[protEmxImport1.outputCTF,protEmxImport2.outputCTF,protEmxImport3.outputCTF]
-        protCtfDiscrepancy = self.newProtocol(XmippProtCTFDiscrepancy, inputCTFs=_list)
+        pl = PointerList()
+        pl.append(protEmxImport1.outputCTF)
+        pl.append(protEmxImport2.outputCTF)
+        pl.append(protEmxImport3.outputCTF)
+        protCtfDiscrepancy = self.newProtocol(XmippProtCTFDiscrepancy)
+        protCtfDiscrepancy.inputCTFs.set(pl)
         self.launchProtocol(protCtfDiscrepancy)
 
-
-        f = open('/tmp/kk.txt', 'w')
-        f.write("protCtfDiscrepancy.inputCTFs=%s\n"% type(protCtfDiscrepancy.inputCTFs))
-        f.write("protEmxImport1.outputCTF=%s\n"% type(protEmxImport1.outputCTF))
-        protCtfDiscrepancy.inputCTFs.append(protEmxImport1.outputCTF)
-        protCtfDiscrepancy.inputCTFs.append(protEmxImport2.outputCTF)
-        protCtfDiscrepancy.inputCTFs.append(protEmxImport3.outputCTF)
-        f.write("protCtfDiscrepancy.inputCTFs=%s\n"% protCtfDiscrepancy.inputCTFs)
-        f.write("type protCtfDiscrepancy.inputCTFs=%s\n"% type(protCtfDiscrepancy.inputCTFs))
-        self.launchProtocol(protCtfDiscrepancy)
-        f.close()
-
-
-    # for mic1, mic2 in itertools.izip(mics, em.protEmxImport.outputMicrographs):
-    #     # Remove the absolute path in the micrographs to
-    #     # really check that the attributes should be equal
-    #     mic1.setFileName(os.path.basename(mic1.getFileName()))
-    #     mic2.setFileName(os.path.basename(mic2.getFileName()))
-    #     self.assertTrue(mic1.equalAttributes(mic2))
-
-
+        ctfsGold = SetOfCTF(filename = self.dataset.getFile('ctfsGold'))
+        ctfComputed = protCtfDiscrepancy.outputCTF
+        for ctf1, ctf2 in izip(ctfComputed, ctfsGold):
+            ctf1.getMicrograph().setFileName(os.path.basename(ctf1.getMicrograph().getFileName()))
+            ctf2.getMicrograph().setFileName(os.path.basename(ctf2.getMicrograph().getFileName()))
+            self.assertTrue(ctf1.equalAttributes(ctf2))
 
 if __name__ == "__main__":
-    unittest.main()
+    if len(sys.argv) > 1:
+        className = sys.argv[1]
+        cls = globals().get(className, None)
+        if cls:
+            suite = unittest.TestLoader().loadTestsFromTestCase(cls)
+            unittest.TextTestRunner(verbosity=2).run(suite)
+        else:
+            print "Test: '%s' not found." % className
+    else:
+        unittest.main()
