@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
-import xmipp.jni.MetaData;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
 import xmipp.viewer.models.ColumnInfo;
 
@@ -659,26 +661,38 @@ public class ScipionMetaData extends MetaData {
     }
 
     public void sort(int sortLabel, boolean ascending) {
+        StopWatch.getInstance().printElapsedTime("sorting");
         ColumnInfo ci = getColumnInfo(sortLabel);
-        Comparable valuei, valuej;
-        EMObject emo, emo2;
-        boolean bigger, exchange;
-        for (int i = 0; i < emobjects.size() - 1; i++) {
-            valuei = (Comparable) emobjects.get(i).getValue(ci);
-            for (int j = i + 1; j < emobjects.size(); j++) {
-                valuej = (Comparable) emobjects.get(j).getValue(ci);
-                bigger = valuei.compareTo(valuej) > 0;
-                exchange = ascending ? bigger : !bigger;
-                if (exchange) {
-                    emo = emobjects.get(i);
-                    emo2 = emobjects.get(j);
-                    emobjects.set(i, emo2);
-                    emobjects.set(j, emo);
-                    valuei = valuej;
-                    emo.setIndex(j);
-                }
-            }
+        try {
+            loadNeighborhoodValues(0, ci, size());
+        } catch (SQLException ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
         }
+        Comparator<EMObject> comparator = new EMObjectComparator(ci);
+        if(!ascending)
+            comparator = Collections.reverseOrder(comparator);
+        Collections.sort(emobjects, comparator);
+        for (int i = 0; i < emobjects.size() - 1; i++) 
+            emobjects.get(i).setIndex(i);
+
+        StopWatch.getInstance().printElapsedTime("sort done");
+    }
+    
+    class EMObjectComparator implements Comparator<EMObject> {
+        private final ColumnInfo ci;
+        
+        public EMObjectComparator(ColumnInfo ci)
+        {
+            this.ci = ci;
+        }
+
+        @Override
+        public int compare(EMObject o1, EMObject o2) {
+            Comparable value1 = (Comparable)o1.getValue(ci);
+            Comparable value2 = (Comparable)o2.getValue(ci);
+            return value1.compareTo(value2);
+          }
+
     }
 
     public void overwrite(String src, String path) throws SQLException {
@@ -817,8 +831,13 @@ public class ScipionMetaData extends MetaData {
         return enableds;
     }
     
-    
     synchronized void loadNeighborhoodValues(int index, ColumnInfo column) throws SQLException
+    {
+        int neighborhood = 50;
+        loadNeighborhoodValues(index, column, neighborhood);
+    }
+    
+    synchronized void loadNeighborhoodValues(int index, ColumnInfo column, int neighborhood) throws SQLException
         {
             Connection c = null;
             PreparedStatement stmt = null;
@@ -837,7 +856,7 @@ public class ScipionMetaData extends MetaData {
                 }
                 stmt = c.prepareStatement(String.format("SELECT %s FROM %sObjects where Id=?;", columns, preffix));
                 EMObject emo;
-                int neighborhood = 50, fnIndex;
+                int fnIndex;
                 for(int i = index; i <= index + neighborhood && i < size(); i ++)
                 {
                     
