@@ -110,7 +110,21 @@ class CTFModel(EMObject):
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj  = None
-        
+
+    def __str__(self):
+        str = """
+        defocusU = %f
+        defocusV = %f
+        defocusAngle = %f
+        psdFile = %s
+        """%(self._defocusU.get()
+            ,self._defocusV.get()
+            ,self._defocusAngle.get()
+            ,self._psdFile.get())
+        if self._micObj:
+            str + " %s" % self._micObj
+        return str
+
     def getDefocusU(self):
         return self._defocusU.get()
         
