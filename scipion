@@ -151,6 +151,7 @@ MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
+MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
@@ -238,7 +239,7 @@ def main():
             viewerArgs = ' '.join(sys.argv[2:])
             runApp('pw_viewer.py', args=viewerArgs)
 
-    elif mode == MODE_INSTALL:
+    elif mode == MODE_INSTALL or mode == MODE_UNINSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
 
@@ -252,6 +253,9 @@ def main():
                 os.makedirs(path)
 
         args = sys.argv[2:]
+        # Uninstall is equals to install -c
+        if mode == MODE_UNINSTALL:
+            args = ['-c']
         from scripts.install import build
         ret = build(args=args)
         if ret == 0 and '--help' not in args and '-h' not in args:
