@@ -404,6 +404,7 @@ class Particle(Image):
         # This may be redundant, but make the Particle
         # object more indenpent for tracking coordinates
         self._coordinate = None
+        self._micId = None
         
     def hasCoordinate(self):
         return self._coordinate is not None
@@ -413,6 +414,17 @@ class Particle(Image):
         
     def getCoordinate(self):
         return self._coordinate
+    
+    def getMicId(self):
+        """ Return the micrograph id if the coordinate is not None.
+        or have set the _micId property.
+        """
+        if self._micId is not None:
+            return self._micId.get()
+        if self.hasCoordinate():
+            return self.getCoordinate().getMicId()
+        
+        return None
 
 
 class Mask(Particle):

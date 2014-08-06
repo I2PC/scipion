@@ -124,6 +124,13 @@ def addRelionLabelsToEnviron(env):
     env['XMIPP_EXTRA_ALIASES'] = varStr
     
     
+def readSetOfParticles(filename, partSet, **kwargs):
+    import pyworkflow.em.packages.xmipp3 as xmipp3
+    addRelionLabels(replace=True)
+    xmipp3.readSetOfParticles(filename, partSet, **kwargs)
+    restoreXmippLabels()
+
+    
 def writeSetOfParticles(imgSet, starFile, stackFile):
     """ This function will write a SetOfImages as Relion metadata.
     Params:

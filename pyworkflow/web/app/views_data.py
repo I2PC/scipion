@@ -25,10 +25,11 @@
 # **************************************************************************
 
 import json
-from views_base import getResourceCss, getResourceIcon, getResourceJs 
-from views_base import loadProject, base_flex, render_to_response 
+from views_base import getResourceCss, getResourceIcon, getResourceJs, base_flex
+from views_util import loadProject
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
 
 
 def data_content(request):        

@@ -243,7 +243,10 @@ def xmippToLocation(xmippFilename):
 
 
 def setObjId(obj, mdRow, label=xmipp.MDL_ITEM_ID):
-    obj.setObjId(mdRow.getValue(label))
+    if mdRow.containsLabel(label):
+        obj.setObjId(mdRow.getValue(label))
+    else:
+        obj.setObjId(None)
     
     
 def setRowId(mdRow, obj, label=xmipp.MDL_ITEM_ID):
