@@ -133,6 +133,7 @@ DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
                 'emxMicrographCtf1':'ctfindCTFEstimation.emx'
                ,'emxMicrographCtf2':'xmipp3CTFEstimation.emx'
                ,'emxMicrographCtf3':'xmipp3CTFEstimation2.emx'
+               ,'ctfsGold':'ctfs.sqlite'
               })
 
                
