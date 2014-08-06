@@ -399,15 +399,18 @@ class ProtRelionBase(EMProtocol):
         continueRun = self.continueRun.get()
         continueRun._initialize()
         
-        if self.IS_CLASSIFY:
-            self.copyAttributes(continueRun, 'regularisationParamT')
-        self._setBasicArgs(args)
-        
         if self.continueIter.get() == 'last':
             continueIter = continueRun._lastIter()
         else:
             continueIter = int(self.continueIter.get())
-            
+        
+        itersToRun = continueIter + self.numberOfIterations.get()
+        self.numberOfIterations.set(itersToRun)
+        
+        if self.IS_CLASSIFY:
+            self.copyAttributes(continueRun, 'regularisationParamT')
+        self._setBasicArgs(args)
+        
         args['--continue'] = continueRun._getFileName('optimiser', iter=continueIter)
     
     def _setBasicArgs(self, args):
