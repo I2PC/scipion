@@ -67,6 +67,9 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
+        #import pdb
+        #pdb.set_trace()
+
         self.setOfCTF = self.inputCTFs[0].get()
         #self.setOfCTF2 = self.inputCTFs[1].get()
         self.methodNames = collections.OrderedDict()
