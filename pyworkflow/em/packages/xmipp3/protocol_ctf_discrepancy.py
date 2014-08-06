@@ -38,7 +38,11 @@ import collections
 
 
 class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
-    """Protocol to estimate CTF on a set of micrographs using xmipp3"""
+    """Protocol to estimate the agreement between different estimation of the CTF
+    for the same set of micrographs. The algorithm assumes that two CTF are consistent
+    if the phase (wave aberration function) of the two CTFs are closer than 90 degrees.
+    The reported resolution is the resolution at which the two CTF phases differ in 90 degrees.
+    """
     _label = 'ctf discrepancy'
     
     def __init__(self, **args):
