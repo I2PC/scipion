@@ -335,6 +335,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
         mic.cleanObjId()
         if ctfSet is not None:
             ctf = mic.getCTF().clone()
+            ctf.setMicrograph(mic)
             #TODO I do not think next line is needed
             #ctf.setMicFile(newFn)
             ctfSet.append(ctf)
