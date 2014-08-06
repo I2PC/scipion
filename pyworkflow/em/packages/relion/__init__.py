@@ -36,6 +36,7 @@ from convert import *
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
+from protocol_import import ProtRelionImport
 
 # Wizards
 from wizard import *

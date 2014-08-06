@@ -36,7 +36,7 @@ import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
-from pyworkflow.utils import environAdd, moveFile, cleanPattern
+from pyworkflow.utils import environAdd, moveFile, cleanPath
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
@@ -357,8 +357,8 @@ class ProtRelionBase(EMProtocol):
     def _insertAllSteps(self): 
         self._initialize()
         self._insertFunctionStep('convertInputStep')
-        self._insertRelionStep()
-        self._insertFunctionStep('createOutputStep')
+        #self._insertRelionStep()
+        #self._insertFunctionStep('createOutputStep')
     
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
@@ -462,6 +462,7 @@ class ProtRelionBase(EMProtocol):
         imgFn = self._getFileName('input_mrcs')
         Xdim = imgSet.getDimensions()[0]
         
+        self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
         createRelionInputParticles(imgSet, imgStar, imgFn)
         
         if self.doNormalize:
@@ -482,7 +483,7 @@ class ProtRelionBase(EMProtocol):
             outStar = 'particles.star'
             
             moveFile(outFn, imgFn)
-            cleanPattern(outStar)
+            cleanPath(outStar)
             self._leaveDir()
     
     def runRelionStep(self, params):
