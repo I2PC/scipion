@@ -75,6 +75,13 @@ def runCommand(command, env=None, cwd=None):
 def buildRunCommand(log, programname, params,
                     numberOfMpi, numberOfThreads, runInBackground,
                     hostConfig=None):
+    """ Return a string with the command line to run """
+
+    # Convert our list of params to a string, with each element escaped
+    # with "" in case there are spaces.
+    if not isinstance(params, basestring):
+        params = ' '.join('"%s"' % p for p in params)
+
     if numberOfMpi <= 1:
         command = programname + ' ' + params
     else:

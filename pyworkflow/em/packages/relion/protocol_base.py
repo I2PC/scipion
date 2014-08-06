@@ -472,7 +472,10 @@ class ProtRelionBase(EMProtocol):
             params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
             self.runJob(self._getProgram('relion_preprocess'), params % locals())
             
-            outFn = 'particles.mrcs'
+            outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
+            if not outputMrcs:
+                raise Exception("Not particles produced by 'relion_preprocess'")
+            outFn = outputMrcs[0]
             outStar = 'particles.star'
             
             moveFile(outFn, imgFn)

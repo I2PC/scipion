@@ -304,7 +304,7 @@ class FilterWizard(EmWizard):
                 def setFormValue(flag, value, index):
                     if args.get(flag, True):
                         if units == UNIT_ANGSTROM:
-                            value = round(1/value * d.itemDim, 2) # Round 2 digits after the decimal point
+                            value = round(provider.getObjects()[0].getSamplingRate()/value, 2) # Round 2 digits after the decimal point
                         form.setVar(label[index], value)
                 
                 setFormValue('showLowFreq', d.getLowFreq(), 0)
@@ -621,16 +621,16 @@ class BandPassFilterDialog(DownsampleDialog):
     def getLowFreq(self):
         if self.showLowFreq:
             if self.unit == UNIT_ANGSTROM:
-                return 1/self.lfSlider.get()*self.itemDim
-            else:    
+                return self.samplingRate/self.lfSlider.get()
+            else:
                 return self.lfSlider.get()
         return 0.
         
     def getHighFreq(self):
         if self.showHighFreq:
             if self.unit == UNIT_ANGSTROM:
-                return 1/self.hfSlider.get()*self.itemDim
-            else:    
+                return self.samplingRate/self.hfSlider.get()
+            else:
                 return self.hfSlider.get()
         return 1.0
         
