@@ -19,6 +19,7 @@ public class EstimateFromCTFTask extends CommandTask {
             iTaskCompletionListener commandsListener, int row, String sortFn) {
         super(XMIPP_CTF_ESTIMATE_FROM_PSD
                 + " --sampling_rate " + ellipseCTF.getSamplingRate()
+                + " --downSamplingPerformed " + ellipseCTF.getDownsamplingFactor()
                 + " --kV " + ellipseCTF.getVoltage()
                 + " --Cs " + ellipseCTF.getSphericalAberration()
                 + " --defocusU " + ellipseCTF.getDefocusU()

@@ -80,7 +80,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
                                 templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
-                                    
 			}
                         templates.getRadialAvg(radialtemplates);
 
@@ -203,7 +202,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
-                
 		updateTemplatesStack(num);
                 saveConfig();
 	}
@@ -256,8 +254,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			templates.getRadialAvg(radialtemplates);
 			this.templateindex = templateindex;
                         saveTemplates();
-                        
-                        StopWatch.getInstance().printElapsedTime("templates updated");
 		}
 		catch (Exception e)
 		{
@@ -279,8 +275,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 				applyAlignment(particle, igp, align);
 			}
 			templates.getRadialAvg(radialtemplates);
-			
-
 		}
 		catch (Exception e)
 		{
@@ -350,7 +344,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			throw new IllegalArgumentException(e);
 		}
-
 	}
 
 	@Override
@@ -1304,6 +1297,8 @@ public class SupervisedParticlePicker extends ParticlePicker
      
     public void updateTemplatesStack(int num)
     {
+        if(mode != Mode.Manual)
+            return;
         initTemplates(num);//to avoid any error with templates while updating
         new UpdateTemplatesTask().execute();
     }
@@ -1393,9 +1388,6 @@ public class SupervisedParticlePicker extends ParticlePicker
             }
 
 
-            
-            
-            
 
     }
 

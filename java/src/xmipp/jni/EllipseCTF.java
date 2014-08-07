@@ -13,7 +13,7 @@ import ij.process.EllipseFitter;
  */
 public class EllipseCTF {
 
-    private double Q0, Cs, Ts, kV, lambda, lowFreq, highFreq;
+    private double Q0, Cs, Ts, kV, lambda, lowFreq, highFreq, downsampleFactor;
     int D;
     double mddefU, mddefV;
     private double defocusU, defocusV;
@@ -33,12 +33,13 @@ public class EllipseCTF {
     
     
     
-    public EllipseCTF(long id, double Q0, double Cs, double Ts, double kV, double mddefU, double mddefV, double defocusAngle, int D)
+    public EllipseCTF(long id, double Q0, double Cs, double downsampleFactor, double Ts, double kV, double mddefU, double mddefV, double defocusAngle, int D)
     {
         this.id = id;
         this.D = D;
         this.Q0 = Q0;
         this.Cs = Cs;
+        this.downsampleFactor = downsampleFactor;
         this.Ts = Ts;
         this.kV = kV;
         this.lambda = EllipseCTF.lambda(kV);
@@ -141,7 +142,7 @@ public class EllipseCTF {
         long id = md.addObject();
         md.setValueDouble(MDLabel.MDL_CTF_Q0, Q0, id);
         md.setValueDouble(MDLabel.MDL_CTF_CS, Cs, id);
-        md.setValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, 1, id);
+        md.setValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, downsampleFactor, id);
         md.setValueDouble(MDLabel.MDL_SAMPLINGRATE, Ts,id);
         md.setValueDouble(MDLabel.MDL_CTF_VOLTAGE, kV, id);
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSU, mddefU, id);
@@ -150,5 +151,11 @@ public class EllipseCTF {
         md.print();
         return md;       
     }
+    
+    public double getDownsamplingFactor() {
+        return downsampleFactor;
+    }
+
+    
     
 }

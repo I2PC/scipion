@@ -782,7 +782,7 @@ public class ScipionMetaData extends MetaData {
             defAngle = emo.getValueDouble("_defocusAngle");
                 //read params from sqlite
 
-            return new EllipseCTF(id, Q0, Cs, Ts, kV, defU, defV, defAngle, D);
+            return new EllipseCTF(id, Q0, Cs, 1, Ts, kV, defU, defV, defAngle, D);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             throw new IllegalArgumentException(ex);

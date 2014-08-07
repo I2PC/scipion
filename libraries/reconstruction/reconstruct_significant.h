@@ -27,8 +27,6 @@
 #define __RECONSTRUCT_SIGNIFICANT_H
 
 #include <data/xmipp_program.h>
-#include <data/xmipp_threads.h>
-#include "reconstruct_fourier.h"
 #include "angular_project_library.h"
 #include "volume_initial_simulated_annealing.h"
 
@@ -52,9 +50,6 @@ public:
     /** Total number of iterations */
     int Niter;
 
-    /** Number of threads */
-    int Nthr;
-
     /** Keep intermediate volumes */
     bool keepIntermediateVolumes;
 
@@ -73,17 +68,26 @@ public:
     /** Use imed */
     bool useImed;
 
+    /** Strict */
+    bool strict;
+
     /** Neighbourhood in angles */
     double angDistance;
 
 public: // Internal members
+    size_t rank, Nprocessors;
+
+    // Metadata with input images and input volumes
     MetaData mdIn, mdInit;
+
+    // Size of the images
+    size_t Xdim;
 
     // Partial reconstruction metadatas
     std::vector<MetaData> mdReconstructionPartial;
 
     // Projection matching metadata
-    std::vector<MetaData> mdProjectionMatching;
+    std::vector<MetaData> mdReconstructionProjectionMatching;
 
     // Set of all correlations
     MultidimArray<double> cc;
@@ -95,10 +99,10 @@ public: // Internal members
     std::vector< std::vector<GalleryImage> > mdGallery;
 
     // Set of input images
-    std::vector<FileName> mdInp;
+    // COSS std::vector<FileName> mdInp;
 
     // Images
-    Image<double> inputImages;
+    // COSS Image<double> inputImages;
     std::vector< Image<double> > gallery;
 
 	// Current iteration
@@ -107,8 +111,11 @@ public: // Internal members
 	// Current alpha
 	double currentAlpha;
 public:
+	/// Empty constructor
+	ProgReconstructSignificant();
+
     /// Read arguments from command line
-    void readParams();
+    virtual void readParams();
 
     /// Read arguments from command line
     void defineParams();
@@ -127,6 +134,15 @@ public:
 
     /// Generate projections from the current volume
     void generateProjections();
+
+    /// Align images to gallery projections
+    void alignImagesToGallery();
+
+    /// Gather alignment
+    virtual void gatherAlignment() {}
+
+    /// Synchronize with other processors
+    virtual void synchronize() {}
 };
 //@}
 #endif
