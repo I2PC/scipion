@@ -654,6 +654,7 @@ class ProtocolsView(tk.Frame):
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
+        tree.tag_bind('protocol', '<Return>', self._protocolItemClick)
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         tree.tag_configure('section', font=self.windows.fontBold)
         return tree
