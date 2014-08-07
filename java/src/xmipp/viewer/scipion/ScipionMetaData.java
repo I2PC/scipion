@@ -833,7 +833,7 @@ public class ScipionMetaData extends MetaData {
     
     synchronized void loadNeighborhoodValues(int index, ColumnInfo column) throws SQLException
     {
-        int neighborhood = 50;
+        int neighborhood = 25;
         loadNeighborhoodValues(index, column, neighborhood);
     }
     
