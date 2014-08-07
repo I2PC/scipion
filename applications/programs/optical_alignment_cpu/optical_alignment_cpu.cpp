@@ -27,7 +27,7 @@ class ProgOpticalAligment: public XmippProgram
             String fAverageName;
 	    int winSize;
 	    int gpuDevice;
-            bool doAverage; 
+            bool doAverage=false; 
 
 
 	void defineParams()
