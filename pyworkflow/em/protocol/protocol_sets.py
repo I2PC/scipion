@@ -49,6 +49,7 @@ class ProtUserSubSet(ProtSets):
     from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
     file that will be read to create the new subset.
     """
+    _label = 'create subset'
      
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)

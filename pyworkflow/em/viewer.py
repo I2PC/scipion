@@ -63,7 +63,7 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):        
-        runJavaIJapp(self._memory, 'xmipp.viewer.Viewer', self.getShowJParams(), True, env=self._env)
+        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), True, env=self._env)
     
     def getShowJParams(self):
         params = '-i ' + self._path
