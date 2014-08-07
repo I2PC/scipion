@@ -3,14 +3,12 @@ package xmipp.viewer.particlepicker.training.model;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
-import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -81,7 +79,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			}
-            templates.getRadialAvg(radialtemplates);
+                        templates.getRadialAvg(radialtemplates);
 
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
@@ -91,7 +89,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -233,9 +231,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-        
-        	public synchronized void resetParticleImages()// to update templates with
-													// the right particles
+        // to update templates with the right particles
+        public synchronized void resetParticleImages()
 	{
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
@@ -1335,16 +1332,7 @@ public class SupervisedParticlePicker extends ParticlePicker
     
     public void updateTemplatesStack()
     {
-        if(uttask != null)
-        {
-            uttask.cancel(true);
-            new File(templatesfile).delete();
-            uttask = null;
-        }
-
-        uttask = new UpdateTemplatesTask();
-        
-        uttask.execute();
+        new UpdateTemplatesTask().execute();
     }
     
     public void setTemplatesDialog(TemplatesJDialog d)
@@ -1359,7 +1347,14 @@ public class SupervisedParticlePicker extends ParticlePicker
             {
                     try
                     {
-                            updateTemplates(getTemplatesNumber());
+                        if(uttask != null)
+                        {
+                            uttask.cancel(true);
+                            new File(templatesfile).delete();
+                            
+                        }
+                        uttask = this;
+                        updateTemplates(getTemplatesNumber());
                     }
                     catch (Exception e)
                     {

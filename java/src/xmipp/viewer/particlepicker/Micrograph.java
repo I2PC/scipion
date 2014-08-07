@@ -12,6 +12,7 @@ import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.Main;
 
@@ -157,7 +158,9 @@ public abstract class Micrograph {
 			height = imp.getHeight();
 		} else {
 			try {
-				ImageGeneric img = new ImageGeneric(file); // this read the header
+                                
+				ImageGeneric img = new ImageGeneric(file); // this reads the header
+                                
 				width = img.getXDim();
 				height = img.getYDim();
 				img.destroy();
