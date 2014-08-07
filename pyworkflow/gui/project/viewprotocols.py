@@ -394,9 +394,16 @@ class RunIOTreeProvider(TreeProvider):
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
         return info     
-    
-   
+
+
 class ProtocolsView(tk.Frame):
+
+    """ What you see when the "Protocols" tab is selected.
+
+    In the main project window there are three tabs: "Protocols | Data | Hosts".
+    This extended tk.Frame is what will appear when Protocols is on.
+    """
+
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
