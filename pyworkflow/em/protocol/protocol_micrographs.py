@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -31,8 +32,8 @@ import os
 from os.path import join, basename, exists, dirname, relpath
 
 from pyworkflow.object import String
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
-from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam, BooleanParam
 from pyworkflow.utils.path import copyTree, copyFile, removeBaseExt, makePath, moveFile
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
@@ -351,13 +352,30 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         
         form.addParam('inputMovies', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
+        form.addParam('doGPU', BooleanParam, default=False,
+                      label="Use GPU (vs CPU)", help="Set to true if you want the GPU implementation")
+        form.addParam('GPUCore', IntParam, default=0,
+                      label="Choose GPU core",
+                      condition="doGPU",
+                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about")
+        form.addParam('winSize', IntParam, default=150,
+                      label="Window size", expertLevel=LEVEL_EXPERT,
+                      help="Window size (shifts are assumed to be constant within this window).")
+        line = form.addLine('Drop Frames (NOT IMPLEMENTED):',
+                      help='Drop first and last frames. set to 0 in orser to keep all\n\n'
+                           'NOT IMPLEMENTED YET.')
+        line.addParam('firstFrames', IntParam, default='0',
+                      label='First')
+        line.addParam('lastFrames',  IntParam, default='0',
+                      label='Last')
         form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         movSet = self.inputMovies.get()
-        self._micList = []
         for mov in movSet:
+            #TODO What milks is this?
+            mov.load()
             movFn = mov.getFirstItem().getFileName()
             self._insertFunctionStep('processMoviesStep', movFn)
         self._insertFunctionStep('createOutputStep')
@@ -365,20 +383,20 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self, movFn):
         movName = removeBaseExt(movFn)
-        
         self._createMovWorkingDir(movName)
-        movDir = self._movWorkingDir(movName)
-        
-        self._enterDir(movDir)
         self._defineProgram()
-        movRelFn = relpath(movFn, movDir)
-        args = "%s" % movRelFn
+
+        micFn = self._getExtraPath( movName+ "_aligned.spi")
+        args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
+        if False:
+            args += ' --dropFirst %d --dropLast %d' % (self.firstFrames.get(),self.lastFrames.get())
+        if self.doGPU:
+            args += ' --gpu %d' % self.GPUCore.get()
         self.runJob(self._program, args)
-        self._leaveDir()
-        
-        micJob = join(movDir, "justtest.mrc")
-        micFn = self._getExtraPath(movName + ".mrc")
-        moveFile(micJob, micFn)
+
+        # micJob = join(movDir, "justtest.mrc")
+        # micFn = self._getExtraPath(movName + ".mrc")
+        # moveFile(micJob, micFn)
         self._micList.append(micFn)
     
     def createOutputStep(self):
@@ -412,6 +430,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
     _label = 'movies optical alignment'
     
     def _defineProgram(self):
-        XMP_OPT_ALIGN = 'xmipp_optical_alignment'
-        self._program = join(os.environ['OPT_ALIGN_HOME'], XMP_OPT_ALIGN)
-        
+        if self.doGPU:
+            self._program = 'xmipp_optical_alignment_gpu'
+        else:
+            self._program = 'xmipp_optical_alignment_cpu'
