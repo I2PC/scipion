@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
-    def __init__(self, **args):
-        Plotter.__init__(self, **args)
+    def __init__(self, x=1, y=1, mainTitle="", **args):
+        Plotter.__init__(self, x, y, mainTitle, **args)
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
