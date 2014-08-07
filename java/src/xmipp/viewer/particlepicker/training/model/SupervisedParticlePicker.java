@@ -79,6 +79,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				templates.read(templatesfile, false);
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
+                                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
+                                    
 			}
                         templates.getRadialAvg(radialtemplates);
 
@@ -222,7 +224,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			// one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-			// System.out.printf("setTemplate " + templateindex + "\n");
 			templateindex++;
 
 		}
@@ -253,8 +254,9 @@ public class SupervisedParticlePicker extends ParticlePicker
                         radialtemplates = new ImageGeneric(ImageGeneric.Float);
 			radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			templates.getRadialAvg(radialtemplates);
-			saveTemplates();
-                        this.templateindex = templateindex;
+			this.templateindex = templateindex;
+                        saveTemplates();
+                        
                         StopWatch.getInstance().printElapsedTime("templates updated");
 		}
 		catch (Exception e)
@@ -277,7 +279,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				applyAlignment(particle, igp, align);
 			}
 			templates.getRadialAvg(radialtemplates);
-			saveTemplates();
+			
 
 		}
 		catch (Exception e)
@@ -341,7 +343,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			templates.write(getTemplatesFile());
+                    if(templateindex == getTemplatesNumber())    
+                        templates.write(getTemplatesFile());
 		}
 		catch (Exception e)
 		{
@@ -437,6 +440,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			}
 			md.destroy();
 			saveAutomaticParticles(tm);
+                        saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -1317,11 +1321,7 @@ public class SupervisedParticlePicker extends ParticlePicker
                     try
                     {
                         if(uttask != null)
-                        {
                             uttask.cancel(true);
-                            new File(templatesfile).delete();
-                            
-                        }
                         uttask = this;
                         try
 		{
