@@ -385,7 +385,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movName = removeBaseExt(movFn)
         self._createMovWorkingDir(movName)
         self._defineProgram()
-
+        self._micList = []
         micFn = self._getExtraPath( movName+ "_aligned.spi")
         args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
         if False:
