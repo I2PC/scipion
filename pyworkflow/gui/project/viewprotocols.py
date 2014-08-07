@@ -526,7 +526,6 @@ class ProtocolsView(tk.Frame):
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
-        #TODO: join 3 logs in just one tab
         ologframe = tk.Frame(tab)
         gui.configureWeigths(ologframe)
         self.outputViewer = TextFileViewer(ologframe, allowOpen=True)
