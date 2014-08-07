@@ -34,7 +34,7 @@ import datetime as dt
 import pickle
 import time
 from collections import OrderedDict
-
+from pyworkflow.em.data import EMObject
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
@@ -428,6 +428,13 @@ class Protocol(Step):
         for key, attr in self.getAttributes():
             if isinstance(attr, outputClass):
                 yield key, attr
+    
+    def getOutputsSize(self):
+        count = 0
+    
+        for key, output in self.iterOutputAttributes(EMObject):
+            count += 1
+        return count;
             
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """

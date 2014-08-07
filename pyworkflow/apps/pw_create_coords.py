@@ -39,10 +39,7 @@ if __name__ == '__main__':
     protid = sys.argv[2]
     prot = getProtocolFromDb(dbpath, protid)
     extradir = prot._getExtraPath()
-    count = 0
-    
-    for key, output in prot.iterOutputAttributes(EMObject):
-        count += 1
+    count = prot.getOutputsSize()
     
     suffix = str(count + 1) if count > 0 else ''
     if prot.getClassName() == "XmippProtParticlePicking":

@@ -247,7 +247,8 @@ class XmippViewer(Viewer):
             self._views.append(CommandView(obj._getPath('chimera.cmd')))
             
         elif issubclass(cls, XmippProtParticlePicking):
-            self._visualize(obj.getCoords())
+            if obj.getOutputsSize() >= 1:
+                self._visualize(obj.getCoords())
             
         elif issubclass(cls, XmippParticlePickingAutomatic):
         	micSet = obj.getInputMicrographs()
