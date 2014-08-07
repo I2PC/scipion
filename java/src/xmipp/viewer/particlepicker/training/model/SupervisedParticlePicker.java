@@ -1278,6 +1278,8 @@ public class SupervisedParticlePicker extends ParticlePicker
      
     public void updateTemplatesStack(int num)
     {
+        if(mode != Mode.Manual)
+            return;
         initTemplates(num);//to avoid any error with templates while updating
         new UpdateTemplatesTask().execute();
     }
