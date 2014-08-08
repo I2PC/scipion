@@ -26,12 +26,14 @@
 """
 Visualization of the results of the Frealign protocol.
 """
+from os.path import exists
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
+from pyworkflow.em.plotter import EmPlotter
+
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
-from protocol_ctffind3 import ProtCTFFind
-from pyworkflow.em.plotter import EmPlotter
+from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
 
 
 LAST_ITER = 0
@@ -189,3 +191,82 @@ Examples:
                     return ['Invalid iterations range.']
         return [] # No errors resulted
 
+
+class ProtCTFFindViewer(Viewer):
+    """ Visualization of Frealign."""    
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'viewer CtfFind'
+    _targets = [ProtCTFFind, ProtRecalculateCTFFind]
+    
+    
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
+        self._views = []
+        
+    def visualize(self, obj, **args):
+        self._visualize(obj, **args)
+        
+        for v in self._views:
+            v.show()
+            
+    def _visualize(self, obj, **args):
+        cls = type(obj)
+        
+        def _getMicrographDir(mic):
+            """ Return an unique dir name for results of the micrograph. """
+            return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
+        
+        def iterMicrographs(mics):
+            """ Iterate over micrographs and yield
+            micrograph name and a directory to process.
+            """
+            for mic in mics:
+                micFn = mic.getFileName()
+                micDir = _getMicrographDir(mic) 
+                yield (micFn, micDir, mic)
+        
+        def visualizeObjs(obj, setOfMics):
+                
+                if exists(obj._getPath("ctfs_temporary.sqlite")):
+                    os.remove(obj._getPath("ctfs_temporary.sqlite"))
+                
+                ctfSet = self.protocol._createSetOfCTF("_temporary")
+                for fn, micDir, mic in iterMicrographs(setOfMics):
+                    out = self.protocol._getCtfOutPath(micDir)
+                    psdFile = self.protocol._getPsdPath(micDir)
+                    
+                    if exists(out) and exists(psdFile):
+                        result = self.protocol._parseOutput(out)
+                        defocusU, defocusV, defocusAngle = result
+                        # save the values of defocus for each micrograph in a list
+                        ctfModel = self.protocol._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+                        ctfModel.setMicrograph(mic)
+                        ctfSet.append(ctfModel)
+                
+                if ctfSet.getSize() < 1:
+                    raise Exception("Has not been completed the CTT estimation of any micrograph")
+                else:
+                    ctfSet.write()
+                    ctfSet.close()
+                    self._visualize(ctfSet)
+        
+        if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
+            mics = obj.inputMicrographs.get()
+            visualizeObjs(obj, mics)
+
+        if issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
+            
+            mics = obj.inputCtf.get().getMicrographs()
+            visualizeObjs(obj, mics)
+        
+        elif obj.hasAttribute("outputCTF"):
+            self._visualize(obj.outputCTF)
+            
+        else:
+            fn = obj.getFileName()
+            psdLabels = '_psdFile'
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _micObj._filename' % psdLabels 
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))
+            
+        return self._views

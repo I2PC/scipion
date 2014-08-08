@@ -59,6 +59,7 @@ from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
+from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
 
 
 class XmippViewer(Viewer):
@@ -89,6 +90,8 @@ class XmippViewer(Viewer):
                 , XmippProtRotSpectra
                 , XmippProtScreenClasses
                 , XmippProtScreenParticles
+                , XmippProtCTFMicrographs
+                , XmippProtRecalculateCTF
                 ]
     
     def __init__(self, **args):
@@ -103,6 +106,45 @@ class XmippViewer(Viewer):
             
     def _visualize(self, obj, **args):
         cls = type(obj)
+        
+        def _getMicrographDir(mic):
+            """ Return an unique dir name for results of the micrograph. """
+            return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
+    
+        def iterMicrographs(mics):
+            """ Iterate over micrographs and yield
+            micrograph name and a directory to process.
+            """
+            for mic in mics:
+                micFn = mic.getFileName()
+                micDir = _getMicrographDir(mic) 
+                yield (micFn, micDir, mic)
+    
+        def visualizeCTFObjs(obj, setOfMics):
+            
+            if exists(obj._getPath("ctfs_temporary.sqlite")):
+                os.remove(obj._getPath("ctfs_temporary.sqlite"))
+            self.protocol._createFilenameTemplates()
+            
+            ctfSet = self.protocol._createSetOfCTF("_temporary")
+            
+            for fn, micDir, mic in iterMicrographs(setOfMics):
+                ctfparam = self.protocol._getFileName('ctfparam', micDir=micDir)
+                
+                if exists(ctfparam) or exists('xmipp_default_ctf.ctfparam'):
+                    if not os.path.exists(ctfparam):
+                        ctfparam = 'xmipp_default_ctf.ctfparam'
+                    
+                    ctfModel = readCTFModel(ctfparam, mic)
+                    self.protocol._setPsdFiles(ctfModel, micDir)
+                    ctfSet.append(ctfModel)
+            
+            if ctfSet.getSize() < 1:
+                raise Exception("Has not been completed the CTT estimation of any micrograph")
+            else:
+                ctfSet.write()
+                ctfSet.close()
+                self._visualize(ctfSet)
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
@@ -188,12 +230,23 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
             self._views.append(Classes3DView(self._project.getName(), obj.strId(), fn))            
-              
+        
+        if issubclass(cls, XmippProtCTFMicrographs) and not obj.hasAttribute("outputCTF"):
+            mics = obj.inputMicrographs.get()
+            visualizeCTFObjs(obj, mics)
+
+        if issubclass(cls, XmippProtRecalculateCTF) and not obj.hasAttribute("outputCTF"):
+            mics = obj.inputCtf.get().getMicrographs()
+            visualizeCTFObjs(obj, mics)
+        
+        elif obj.hasAttribute("outputCTF"):
+            self._visualize(obj.outputCTF)
+        
         elif issubclass(cls, SetOfCTF):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
@@ -283,6 +336,6 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)
-            
+
         return self._views
         
