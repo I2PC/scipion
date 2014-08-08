@@ -394,9 +394,16 @@ class RunIOTreeProvider(TreeProvider):
             info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
                     'text': name, 'values': (str(obj),)}
         return info     
-    
-   
+
+
 class ProtocolsView(tk.Frame):
+
+    """ What you see when the "Protocols" tab is selected.
+
+    In the main project window there are three tabs: "Protocols | Data | Hosts".
+    This extended tk.Frame is what will appear when Protocols is on.
+    """
+
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
@@ -519,7 +526,6 @@ class ProtocolsView(tk.Frame):
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
-        #TODO: join 3 logs in just one tab
         ologframe = tk.Frame(tab)
         gui.configureWeigths(ologframe)
         self.outputViewer = TextFileViewer(ologframe, allowOpen=True)
@@ -648,6 +654,7 @@ class ProtocolsView(tk.Frame):
         tree.column('#0', minwidth=300)
         tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
         tree.tag_bind('protocol', '<Double-1>', self._protocolItemClick)
+        tree.tag_bind('protocol', '<Return>', self._protocolItemClick)
         tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         tree.tag_configure('section', font=self.windows.fontBold)
         return tree
