@@ -38,6 +38,10 @@ Import('env')
 #  *                                                                      *
 #  ************************************************************************
 
+# First, we check the compilers
+if not env.GetOption('clean'):
+    env.CompilerTests()
+
 # We might want to add freetype and make tcl depend on it. That would be:
 # freetype = env.AddLibrary(
 #     'freetype',
@@ -174,6 +178,13 @@ env.AddPackage('xmipp',
                extraActions=[('xmipp.bashrc',
                              './install.sh --unattended=true --gui=false -j %s'
                               % GetOption('num_jobs'))],
+               reqs={'mpi': 'cxx',
+                     'freetype': 'cxx',
+                     'X11': 'cxx',
+                     'png': 'cxx',
+                     'ncurses': 'cxx',
+                     'ssl': 'cxx',
+                     'readline': 'cxx'},
                default=False)
 
 env.AddPackage('bsoft',

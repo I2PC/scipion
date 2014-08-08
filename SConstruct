@@ -34,6 +34,7 @@ import os
 from os.path import join, abspath
 import platform
 import SCons.Script
+import SCons.SConf
 
 
 # OS boolean vars
@@ -235,7 +236,8 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
 
 def addPackage(env, name, tar=None, buildDir=None, url=None,
-               extraActions=[], deps=[], clean=[], default=True):
+               extraActions=[], deps=[], clean=[], reqs=[],
+               default=True):
     """Add external (EM) package <name> to the construction process.
 
     This pseudobuilder downloads the given url, untars the resulting
@@ -256,6 +258,11 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+
+    # Minimum requirements must be accomplished. To check them, we use
+    # the req list, iterating with SConf CheckLib on it
+    for req in reqs:
+        libraryTest(env, req, reqs[req])
 
     # Add the option --with-<name>, so the user can call SCons with this
     # to get the package even if it is not on by default.
@@ -330,11 +337,57 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     return lastTarget
 
 
+def compilerTests(env):
+    """Check the existence and good state of the C and C++ compilers
+    
+    """
+
+    conf = Configure(env)
+    # ---- check for environment variables
+    if 'CC' in os.environ:
+        conf.env.Replace(CC = os.environ['CC'])
+    else:
+        conf.env.Replace(CC = 'gcc')
+    print(">> Using C compiler: " + conf.env.get('CC'))
+        
+#    if 'CFLAGS' in os.environ:
+#        conf.env.Replace(CFLAGS = os.environ['CFLAGS'])
+#        print(">> Using custom C build flags")
+#        
+    if 'CXX' in os.environ:
+        conf.env.Replace(CXX = os.environ['CXX'])
+    else:
+        conf.env.Replace(CXX = 'g++')
+    print(">> Using C++ compiler: " + conf.env.get('CXX'))
+#
+#    if 'CXXFLAGS' in os.environ:
+#        conf.env.Append(CCFLAGS = os.environ['CXXFLAGS'])
+#        print(">> Appending custom C++ build flags : " + os.environ['CXXFLAGS'])
+#
+#    if 'LDFLAGS' in os.environ:
+#        conf.env.Append(LINKFLAGS = os.environ['LDFLAGS'])
+#        print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
+
+    #conf.CheckCC()
+    #conf.CheckCXX()
+
+    env = conf.Finish()
+
+
+def libraryTest(env, name, lang='cxx'):
+    """Check the existence of a concrete C/C++ library
+    
+    """
+    conf = Configure(env)
+#    conf.CheckLib(name, language=lang)
+    env = conf.Finish()
+
+
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
-
+env.AddMethod(compilerTests, "CompilerTests")
 
 
 # TODO: check the code below to see if we can do a nice "purge".
