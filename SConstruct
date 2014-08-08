@@ -51,8 +51,13 @@ Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
+                  BUILDERS=Environment()['BUILDERS'],
                   tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
+# TODO: BUILDERS var added from the tricky creation of a new environment.
+# If not, they lose default builders like "Program", which are needed later
+# (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
+# See how to change it into a cleaner way (not doing BUILDERS=Environment()['BUILDERS']!)
 
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
