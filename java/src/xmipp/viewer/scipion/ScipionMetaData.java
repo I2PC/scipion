@@ -849,10 +849,11 @@ public class ScipionMetaData extends MetaData {
                 c = DriverManager.getConnection("jdbc:sqlite:" + filename);
                 String columns = column.comment;
                 ColumnInfo indexci = null;
-                if(column.render && column.labelName.endsWith("_filename"))
+                if(column.labelName.endsWith("_filename"))
                 {
                     indexci = getColumnInfo(column.labelName.replace("_filename", "_index"));
-                    columns += ", " + indexci.comment;
+                    if(indexci != null)
+                        columns += ", " + indexci.comment;
                 }
                 stmt = c.prepareStatement(String.format("SELECT %s FROM %sObjects where Id=?;", columns, preffix));
                 EMObject emo;
