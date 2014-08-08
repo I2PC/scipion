@@ -342,57 +342,54 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     return lastTarget
 
 
-def compilerTests(env):
-    """Check the existence and good state of the C and C++ compilers
-    
-    """
+def compilerConfig(env):
+    """Check the good state of the C and C++ compilers and return the proper env."""
 
     conf = Configure(env)
     # ---- check for environment variables
     if 'CC' in os.environ:
-        conf.env.Replace(CC = os.environ['CC'])
+        conf.env.Replace(CC=os.environ['CC'])
     else:
-        conf.env.Replace(CC = 'gcc')
+        conf.env.Replace(CC='gcc')
     print(">> Using C compiler: " + conf.env.get('CC'))
-        
-#    if 'CFLAGS' in os.environ:
-#        conf.env.Replace(CFLAGS = os.environ['CFLAGS'])
-#        print(">> Using custom C build flags")
-#        
+
+    if 'CFLAGS' in os.environ:
+        conf.env.Replace(CFLAGS=os.environ['CFLAGS'])
+        print(">> Using custom C build flags")
+
     if 'CXX' in os.environ:
-        conf.env.Replace(CXX = os.environ['CXX'])
+        conf.env.Replace(CXX=os.environ['CXX'])
     else:
-        conf.env.Replace(CXX = 'g++')
+        conf.env.Replace(CXX='g++')
     print(">> Using C++ compiler: " + conf.env.get('CXX'))
-#
-#    if 'CXXFLAGS' in os.environ:
-#        conf.env.Append(CCFLAGS = os.environ['CXXFLAGS'])
-#        print(">> Appending custom C++ build flags : " + os.environ['CXXFLAGS'])
-#
-#    if 'LDFLAGS' in os.environ:
-#        conf.env.Append(LINKFLAGS = os.environ['LDFLAGS'])
-#        print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
 
-    #conf.CheckCC()
-    #conf.CheckCXX()
+    if 'CXXFLAGS' in os.environ:
+        conf.env.Append(CPPFLAGS=os.environ['CXXFLAGS'])
+        print(">> Appending custom C++ build flags : " + os.environ['CXXFLAGS'])
 
-    env = conf.Finish()
+    if 'LDFLAGS' in os.environ:
+        conf.env.Append(LINKFLAGS=os.environ['LDFLAGS'])
+        print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
+
+    conf.CheckCC()
+    conf.CheckCXX()
+    return conf.Finish()
 
 
 def libraryTest(env, name, lang='cxx'):
-    """Check the existence of a concrete C/C++ library
-    
-    """
+    """Check the existence of a concrete C/C++ library."""
     conf = Configure(env)
-#    conf.CheckLib(name, language=lang)
-    env = conf.Finish()
+    conf.CheckLib(name, language=lang)
+    conf.Finish()
+    # conf.Finish() returns the environment it used, and we may want to use it,
+    # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
 
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
-env.AddMethod(compilerTests, "CompilerTests")
+env.AddMethod(compilerConfig, "CompilerConfig")
 
 
 # TODO: check the code below to see if we can do a nice "purge".

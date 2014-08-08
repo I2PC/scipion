@@ -40,7 +40,7 @@ Import('env')
 
 # First, we check the compilers
 if not env.GetOption('clean'):
-    env.CompilerTests()
+    env = env.CompilerConfig()
 
 # We might want to add freetype and make tcl depend on it. That would be:
 # freetype = env.AddLibrary(
