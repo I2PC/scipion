@@ -262,7 +262,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		return false;
 	}
 
-	@Override
 	/** Whether to display the labels */
 	public void setRenderImages(boolean value) {
 		boolean changed = false;
@@ -274,7 +273,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		if (changed) {
 			data.renderImages = value;
 			calculateCellSize();
-			fireTableDataChanged();
+			fireTableStructureChanged();
 		}
 	}
 

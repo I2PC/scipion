@@ -526,9 +526,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		
 	}
 
-	/** Whether to display the labels */
-	public void setRenderImages(boolean value) {
-	}
+	
 
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
@@ -553,7 +551,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			format += "_wrap";
 		// String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
-		return String.format(format, index, thumb_width, thumb_height);
+                String key = String.format(format, index, thumb_width, thumb_height);
+		return key;
 	}
 
 	

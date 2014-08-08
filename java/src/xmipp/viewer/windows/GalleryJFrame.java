@@ -111,6 +111,7 @@ import xmipp.viewer.models.GalleryData;
 import xmipp.viewer.models.GalleryRowHeaderModel;
 import xmipp.viewer.models.ImageGalleryTableModel;
 import xmipp.viewer.models.MetadataGalleryTableModel;
+import xmipp.viewer.models.MetadataTableModel;
 import xmipp.viewer.particlepicker.extract.ExtractParticlePicker;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.scipion.ScipionGalleryData;
@@ -1607,7 +1608,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
-					gallery.setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+                                        if(gallery instanceof MetadataTableModel)
+                                            ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
 					makeVisible(gallery.getFirstSelectedIndex());
 				}
 				
