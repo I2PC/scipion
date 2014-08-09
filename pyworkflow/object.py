@@ -105,7 +105,8 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
-            if attr._objDoStore:
+            #TODO: CHECK why attr is none at this point
+            if attr and attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
