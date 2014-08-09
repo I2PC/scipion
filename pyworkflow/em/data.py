@@ -107,6 +107,7 @@ class CTFModel(EMObject):
         self._defocusU = Float(args.get('defocusU', None))
         self._defocusV = Float(args.get('defocusV', None))
         self._defocusAngle = Float(args.get('defocusAngle', None))
+        self._defocusRatio = Float()
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj  = None
@@ -143,6 +144,12 @@ class CTFModel(EMObject):
     def setDefocusAngle(self, value):
         self._defocusAngle.set(value)
         
+    def getDefocusRatio(self):
+        return self._defocusRatio.get()
+        
+    def setDefocusRatio(self, value):
+        self._defocusRatio.set(value)
+        
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV',
                             '_defocusAngle', '_psdFile', '_micFile')
@@ -177,7 +184,8 @@ class CTFModel(EMObject):
     def standardize(self):
         """ Modify defocusU, defocusV and defocusAngle to conform 
         the EMX standard: defocusU > defocusV, 0 <= defocusAngle < 180
-        and the defocusAnges is between x-axis and defocusU.
+        and the defocusAnges is between x-axis and defocusU. Also
+        determine the defocusRatio(defocusU/defocusV).
         For more details see:
         http://i2pc.cnb.csic.es/emx/LoadDictionaryFormat.htm?type=Convention#ctf
         """
@@ -188,6 +196,7 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(-180.)
         elif self._defocusAngle < 0.:
             self._defocusAngle.sum(180.)
+        self.setDefocusRatio(self.getDefocusU()/self.getDefocusV())
 
 
 class DefocusGroup(EMObject):

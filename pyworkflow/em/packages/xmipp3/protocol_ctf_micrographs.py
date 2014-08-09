@@ -193,6 +193,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         
         mic = ctfModel.getMicrograph()
         micDir = self._getMicrographDir(mic)
+        cleanPath(self._getFileName('ctfparam', micDir=micDir))
         
         params2 = {'psdFn': join(micDir, psdFile),
                    'defocusU': float(line[1]),
