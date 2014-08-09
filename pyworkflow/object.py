@@ -105,8 +105,7 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
-            #TODO: CHECK why attr is none at this point
-            if attr and attr._objDoStore:
+            if attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -606,7 +605,9 @@ class Boolean(Scalar):
         return bool(value) 
     
     def __nonzero__(self):
-        return self.get()
+        if not self.hasValue():
+            return False
+        return self.get() 
     
     def __bool__(self):
         return self.get()  
