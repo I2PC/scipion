@@ -410,7 +410,7 @@ class Object(object):
         """Print object dictionary. Main for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.getObjDict())        
+        pp.pprint(dict(self.getObjDict()))        
 
 
 class OrderedObject(Object):
