@@ -369,7 +369,11 @@ def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
-    
+    # Setup the micId if is integer value
+    try:
+        img.setMicId(int(partRow.getValue(xmipp.MDL_MICROGRAPH)))
+    except Exception:
+        pass    
     return img
     
     
@@ -996,7 +1000,7 @@ def alignmentToRow(alignment, mdRow):
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter):
+                            classLabel, classFnTemplate, iter, processRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1039,6 +1043,8 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
         imgRow = rowFromMd(md, objId)
+        if processRow:
+            processRow(imgRow)
         img = rowToParticle(imgRow)
         
         classItem.append(img)

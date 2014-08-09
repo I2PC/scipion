@@ -29,6 +29,8 @@ This module contains the protocol for 3d classification with relion.
 
 from pyworkflow.protocol.params import FileParam
 from pyworkflow.em.protocol import ProtImport
+from pyworkflow.em.data import SetOfParticles
+from pyworkflow.utils.properties import Message
 
 from protocol_base import *
 
@@ -61,6 +63,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
                       help='Select the input data STAR file from a Relion run.'
                            'Also the *optimiser.star and *sampling.star files '
                            'should be present.')  
+        form.addParam('samplingRate', FloatParam, 
+                      label=Message.LABEL_SAMP_RATE,
+                      help='Provide the sampling rate of your particles. (in Angstroms per pixel)')        
             
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
@@ -82,19 +87,41 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         self.info('Creating the set of particles...')
         from convert import readSetOfParticles
         # Create the set of particles
+        auxSet = SetOfParticles(filename=':memory:')
         partSet = self._createSetOfParticles()
-        readSetOfParticles(dataFile, partSet)
-        particle = partSet.getFirstItem() 
-        # Copy acquisition from first element
+        readSetOfParticles(dataFile, auxSet)
+        particle = auxSet.getFirstItem() 
+        
+        self.imagesPath = self._findImagesPath(dataFile, particle.getFileName())
+        if self.imagesPath:
+            print "images found from: ", self.imagesPath
+        else:
+            raise Exception("Images binary files were not found!!!")
+        
+        partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
+        
+        # Update the images path with the correct root
+        for particle in auxSet:
+            fn = particle.getFileName()
+            particle.setFileName(os.path.join(self.imagesPath, fn))
+            partSet.append(particle)
+        
+        # Copy acquisition from first element
         
         # Grap the sampling rate from the --angpix option
         optimiserFile = dataFile.replace('_data', '_optimiser')
         opts = self._parseCommand(optimiserFile)
-        partSet.setSamplingRate(float(opts['--angpix']))
         
         return partSet   
     
+    def _processRow(self, imgRow):
+        import xmipp
+        from convert import relionToLocation, locationToRelion
+        index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+        newLoc = locationToRelion(index, os.path.join(self.imagesPath, imgPath))
+        imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
+        
     def _createClasses(self, dataFile, partSet):     
         self.info('Creating the set of classes...')
         from convert import readSetOfClasses3D
@@ -102,7 +129,8 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         classesSqlite = self._getTmpPath('classes.sqlite')
         classTemplate = dataFile.replace('_data.star', '_class%(ref)03d.mrc:mrc')
         createClassesFromImages(partSet, dataFile, classesSqlite, 
-                                self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 0)      
+                                self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 
+                                0, processRow=self._processRow)      
         # FIXME: Check whether create classes 2D or 3D
         classes = self._createSetOfClasses3D(partSet)
         readSetOfClasses3D(classes, classesSqlite)
@@ -140,3 +168,15 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
                 break
         f.close()
         return opts
+    
+    def _findImagesPath(self, starFile, imgFile):
+        absPath = os.path.dirname(os.path.abspath(starFile))
+        
+        print "searching in ", absPath
+        while absPath:
+            if os.path.exists(os.path.join(absPath, imgFile)):
+                return absPath
+            absPath = os.path.dirname(absPath)
+            
+        return None
+        

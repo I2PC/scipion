@@ -159,7 +159,7 @@ def createRelionInputParticles(imgSet, starFile, stackFile):
 
 
 def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter):
+                            classLabel, classFnTemplate, iter, processRow=None):
     """ From an intermediate dataXXX.star file produced by relion, create
     the set of classes in which those images are classified.
     Params:
@@ -176,7 +176,7 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                                   classLabel, classFnTemplate, iter)
+                                   classLabel, classFnTemplate, iter, processRow)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):
