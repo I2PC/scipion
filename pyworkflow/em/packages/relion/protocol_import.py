@@ -27,12 +27,13 @@
 This module contains the protocol for 3d classification with relion.
 """
 
-from pyworkflow.protocol.params import FileParam
+import os
+
+from pyworkflow.protocol.params import FileParam, FloatParam
 from pyworkflow.em.protocol import ProtImport
-from pyworkflow.em.data import SetOfParticles
 from pyworkflow.utils.properties import Message
 
-from protocol_base import *
+from protocol_base import ProtRelionBase
 
 
 
@@ -40,20 +41,8 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
     """    
     Protocol to import existing Relion runs.
     """
-    _label = 'import relion'
+    _label = 'import'
     
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS]
-    
-    def __init__(self, **args):        
-        ProtRelionBase.__init__(self, **args)
-        
-    def _initialize(self):
-        """ This function is mean to be called after the 
-        working dir for the protocol have been set. (maybe after recovery from mapper)
-        """
-        ProtRelionBase._initialize(self)
-
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -77,6 +66,11 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
     def createOutputStep(self, dataFile):
         partSet = self._createParticles(dataFile)
         self._defineOutputs(outputParticles=partSet)
+        firstParticle = partSet.getFirstItem()
+        if firstParticle.getMicId() is None:
+            self.warning("Micrograph ID was not set for particles!!!")
+        if not firstParticle.hasAlignment():
+            self.warning("Alignment was not read from particles!!!")
         
         classes = self._createClasses(dataFile, partSet)
         self._defineOutputs(outputClasses=classes)
@@ -100,10 +94,11 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
     
     def _createClasses(self, dataFile, partSet):     
         self.info('Creating the set of classes...')
-        from convert import readSetOfClasses3D
+        from convert import readSetOfClasses3D, createClassesFromImages
         # Create the set of classes 2D or 3D  
         classesSqlite = self._getTmpPath('classes.sqlite')
-        classTemplate = dataFile.replace('_data.star', '_class%(ref)03d.mrc:mrc')
+        relDataFile = os.path.relpath(dataFile)
+        classTemplate = relDataFile.replace('_data.star', '_class%(ref)03d.mrc:mrc')
         self.info('  Using classes template: %s' % classTemplate)
         createClassesFromImages(partSet, dataFile, classesSqlite, 
                                 self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 
