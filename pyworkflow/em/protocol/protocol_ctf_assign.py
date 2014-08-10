@@ -59,11 +59,23 @@ class ProtCTFAssign(ProtCTFMicrographs):
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
         
+        defaultCTF = inputCTF.getFirstItem().clone()
+        defaultCTF.setDefocusAngle(-9999.)
+        defaultCTF.setDefocusU(-9999.)
+        defaultCTF.setDefocusV(-9999.)
+        
         for particle in inputParticles:
             micId = particle.getMicId()
             ctf = inputCTF[micId]
-            particle.setCTF(ctf)
-            outputParticles.append(particle)
+            if ctf is None:
+                ctf = defaultCTF.clone()
+                if particle.hasCTF():
+                    ctf.copy(particle.getCTF())
+                self.warning("Setting default CTF for particle with id=%d and location %s "
+                              % (particle.getObjId(), particle.getLocation()))
+            newParticle = particle.clone()
+            newParticle.setCTF(ctf)
+            outputParticles.append(newParticle)
         
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
