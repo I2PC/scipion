@@ -38,8 +38,6 @@ import numpy
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.em.constants import NO_INDEX
-from pyworkflow.object import String
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 
 
@@ -119,12 +117,15 @@ ANGLES_DICT = OrderedDict([
        ("_angleTilt", xmipp.MDL_ANGLE_TILT)
        ])
 
-ALIGNMENT_EXTRA_LABELS = [
-    xmipp.MDL_ANGLE_PSI,
-    xmipp.MDL_SHIFT_X,
-    xmipp.MDL_SHIFT_Y,
-    xmipp.MDL_FLIP,
-    ]
+ALIGNMENT_DICT = OrderedDict([ 
+       ("_xmipp_shiftX", xmipp.MDL_SHIFT_X),
+       ("_xmipp_shiftY", xmipp.MDL_SHIFT_Y),
+       ("_xmipp_shiftZ", xmipp.MDL_SHIFT_Z),
+       ("_xmipp_flip", xmipp.MDL_FLIP),
+       ("_xmipp_anglePsi", xmipp.MDL_ANGLE_PSI),
+       ("_xmipp_angleRot", xmipp.MDL_ANGLE_ROT),
+       ("_xmipp_angleTilt", xmipp.MDL_ANGLE_TILT),
+       ])
 
 
 def objectToRow(obj, row, attrDict, extraLabels={}):
@@ -172,9 +173,8 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
     
     for label in extraLabels:
         if label not in attrLabels and row.hasLabel(label):
-            value = row.getValue(label)
             labelStr = xmipp.label2Str(label)
-            setattr(obj, '_xmipp_%s' % labelStr, ObjectWrap(value))
+            setattr(obj, '_xmipp_%s' % labelStr, row.getValueAsObject(label))
     
     
 def rowFromMd(md, objId):
@@ -183,17 +183,21 @@ def rowFromMd(md, objId):
     return row
 
 
-def containsLabels(row, labels):
+def _containsAll(row, labels):
     """ Check if the labels (values) in labelsDict
     are present in the row.
     """
     values = labels.values() if isinstance(labels, dict) else labels
     return all(row.containsLabel(l) for l in values)
-    
-#     
-# def rowToObject(md, objId, obj, attrDict, extraLabels={}):
-#     """ Same as rowToObject, but creating the row from md and objId. """
-#     _rowToObject(rowFromMd(md, objId), obj, attrDict, extraLabels)
+
+
+def _containsAny(row, labels):
+    """ Check if the labels (values) in labelsDict
+    are present in the row.
+    """
+    values = labels.values() if isinstance(labels, dict) else labels
+    return any(row.containsLabel(l) for l in values)
+
     
 def _rowToObjectFunc(obj):
     """ From a given object, return the function rowTo{OBJECT_CLASS_NAME}. """
@@ -355,7 +359,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
 def rowToCoordinate(coordRow):
     """ Create a Coordinate from a row of a metadata. """
     # Check that all required labels are present in the row
-    if containsLabels(coordRow, COOR_DICT):
+    if _containsAll(coordRow, COOR_DICT):
         coord = Coordinate()
         rowToObject(coordRow, coord, COOR_DICT)
             
@@ -432,7 +436,7 @@ def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
 
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
-    if containsLabels(ctfRow, CTF_DICT):
+    if _containsAll(ctfRow, CTF_DICT):
         ctfModel = CTFModel()
         rowToObject(ctfRow, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
         ctfModel.standardize()
@@ -449,7 +453,7 @@ def acquisitionToRow(acquisition, ctfRow):
 
 def rowToAcquisition(acquisitionRow):
     """ Create an acquisition from a row of a metadata. """
-    if containsLabels(acquisitionRow, ACQUISITION_DICT):
+    if _containsAll(acquisitionRow, ACQUISITION_DICT):
         acquisition = Acquisition()
         rowToObject(acquisitionRow, acquisition, ACQUISITION_DICT) 
     else:                
@@ -968,40 +972,45 @@ def matrixFromGeometry(shifts, angles):
     return M
 
 
+def _setAlignmentParam(alignmentRow, label, alignment, paramName):
+    """ Check if the row contains a label and set as an alignment parameter. """
+    
 def rowToAlignment(alignmentRow):
     """ Fill the alignment matrix reading
     the geometry values from Xmipp metadata row. """
-    if containsLabels(alignmentRow, ALIGNMENT_EXTRA_LABELS):
+    if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Alignment()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
-        angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI)
-        shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X)
-        shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y)
+        angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+        shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
+        shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         
         M = matrixFromGeometry(shifts, angles)
         alignment.setMatrix(M)
-        #FIXME: remove this after the conversions from Transform matrix
-        # is completed tested
-        rowToObject(alignmentRow, alignment, 
-                    {}, ALIGNMENT_EXTRA_LABELS)
+        
+        #FIXME: now are also storing the alignment parameters since
+        # the conversions to the Transform matrix have not been extensively tested.
+        # After this, we should only keep the matrix 
+        for paramName, label in ALIGNMENT_DICT.iteritems():
+            if alignmentRow.hasLabel(label):
+                setattr(alignment, paramName, alignmentRow.getValueAsObject(label))    
     else:
         alignment = None
     
     return alignment
 
 
-def alignmentToRow(alignment, mdRow):
+def alignmentToRow(alignment, alignmentRow):
     #FIXME: we should use the transformation matrix
     #shifts, angles = geometryFromMatrix(alignment.getMatrix())
     #mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
     #mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     #mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-    mdRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
-    mdRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get())
-    mdRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get())
-    mdRow.setValue(xmipp.MDL_FLIP, bool(alignment.getAttributeValue('_xmipp_flip', False)))     
+    for paramName, label in ALIGNMENT_DICT.iteritems():
+        if alignment.hasAttribute(paramName):
+            alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
