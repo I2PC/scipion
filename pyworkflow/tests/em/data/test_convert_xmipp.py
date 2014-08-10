@@ -49,6 +49,11 @@ class TestBasic(BaseTest):
         cls.dbGold = cls.dataset.getFile( 'micsGoldSqlite')
         cls.particles = cls.dataset.getFile( 'particles1')
         
+    def getCTF(self, u, v, angle):
+        ctf = CTFModel(defocusU=u, defocusV=v, defocusAngle=angle)
+        ctf.standardize()
+        return ctf
+    
     def test_rowToCtfModel(self):
         row = XmippMdRow()
         row.setValue(xmipp.MDL_CTF_DEFOCUSU, 2520.)
@@ -58,15 +63,11 @@ class TestBasic(BaseTest):
         ctf = rowToCtfModel(row)
         ctf.printAll()        
         # Check that the ctf object was properly set
-        self.assertTrue(ctf.equalAttributes(CTFModel(defocusU=2520., 
-                                                     defocusV=2510., 
-                                                     defocusAngle=45.)))
+        self.assertTrue(ctf.equalAttributes(self.getCTF(2520., 2510., 45.)))
         # Check when the EMX standarization takes place
         row.setValue(xmipp.MDL_CTF_DEFOCUSV, 2530.)
         ctf = rowToCtfModel(row)
-        self.assertTrue(ctf.equalAttributes(CTFModel(defocusU=2530., 
-                                                     defocusV=2520., 
-                                                     defocusAngle=135.)))
+        self.assertTrue(ctf.equalAttributes(self.getCTF(2530., 2520., 135.)))
         
         # When one of CTF labels is missing, None should be returned
         row.removeLabel(xmipp.MDL_CTF_DEFOCUSV)
@@ -113,11 +114,11 @@ class TestSetConversions(BaseTest):
             self.assertTrue(img.hasCTF())
             
         mdIn = xmipp.MetaData(fn)
-        print mdIn
+        #print mdIn
         
         mdOut = xmipp.MetaData()
         setOfParticlesToMd(partSet, mdOut)
-        print mdOut
+        #print mdOut
         
         # Labels order is not the same
         # TODO: Implement a better way to compare two metadatas
@@ -167,7 +168,9 @@ class TestSetConversions(BaseTest):
         
     def test_alignedParticlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
-        imgSet = SetOfParticles(filename=self.dataset.getFile('aligned_particles')) 
+        fn = self.dataset.getFile('aligned_particles')
+        print "Converting sqlite: %s" % fn
+        imgSet = SetOfParticles(filename=fn) 
         
         md = xmipp.MetaData()
         setOfParticlesToMd(imgSet, md)
