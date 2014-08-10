@@ -459,7 +459,7 @@ class ProtocolsView(tk.Frame):
         # Sectected run info (at Bottom)
         rightFrame = tk.Frame(p, bg='white')
         rightFrame.columnconfigure(0, weight=1)
-        #rightFrame.rowconfigure(1, weight=1)
+        rightFrame.rowconfigure(1, weight=1)
         #rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
         
         # Create the Action Buttons TOOLBAR
