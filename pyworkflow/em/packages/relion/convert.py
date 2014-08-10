@@ -31,7 +31,9 @@ This module contains converter functions that will serve to:
 """
 
 import os
+from os.path import join
 from pyworkflow.object import String
+from pyworkflow.utils import Environ
 from pyworkflow.utils.path import createLink
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Class2D, SetOfClasses2D, SetOfClasses3D
@@ -40,6 +42,16 @@ from constants import *
 # the xmipp3 tools implemented for Scipion here
 import xmipp
 
+
+def getEnviron():
+    """ Setup the environment variables needed to launch Relion. """
+    environ = Environ(os.environ)
+    environ.update({
+            'PATH': join(os.environ['RELION_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            }, position=Environ.BEGIN)
+    return environ
 
 
 def locationToRelion(index, filename):
@@ -85,7 +97,7 @@ class ParticleAdaptor():
         self._ih.convert(img.getLocation(), newLoc)
         img.setLocation(newLoc)
         # Re-write the row with the new location
-        self._particleToRow(img, imgRow, writeAlignment=False)
+        self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
         coord = img.getCoordinate()
         if coord is not None:
             imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
