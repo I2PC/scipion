@@ -406,11 +406,11 @@ class Object(object):
         for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
-    def printObjDict(self):
+    def printObjDict(self, includeClasses=False):
         """Print object dictionary. Main for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(dict(self.getObjDict()))        
+        pp.pprint(dict(self.getObjDict(includeClasses)))        
 
 
 class OrderedObject(Object):
