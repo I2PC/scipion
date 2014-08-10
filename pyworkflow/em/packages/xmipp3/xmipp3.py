@@ -31,10 +31,12 @@ This sub-package will contains Xmipp3.1 specific protocols
 import os
 import sys
 from os.path import join
-import xmipp
 from collections import OrderedDict
 from constants import *
+
+import xmipp
 import pyworkflow.dataset as ds
+from pyworkflow.object import ObjectWrap
 
 from pyworkflow.utils import Environ
 from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE
@@ -138,8 +140,13 @@ class XmippMdRow():
         MetaData Label and the desired value"""
         self._labelDict[label] = value
             
-    def getValue(self, label):
-        return self._labelDict[label]
+    def getValue(self, label, default=None):
+        """ Return the value of the row for a given label. """
+        return self._labelDict.get(label, default)
+    
+    def getValueAsObject(self, label, default=None):
+        """ Same as getValue, but making an Object wrapping. """
+        return ObjectWrap(self.getValue(label, default))
     
     def readFromMd(self, md, objId):
         """ Get all row values from a given id of a metadata. """
