@@ -180,8 +180,8 @@ class ProtRelionBase(EMProtocol):
         form.addParam('symmetryGroup', StringParam, default='c1',
                       condition='not doContinue and not is2D',
                       label="Symmetry group", 
-                      help='See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry '
-                           'for a description of the symmetry groups format')  
+                      help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
+                           'for a description of the symmetry format accepted by Relion')  
         form.addParam('paddingFactor', FloatParam, default=3,
                       condition='isClassify', expertLevel=LEVEL_EXPERT,
                       label='Padding factor',
@@ -357,8 +357,8 @@ class ProtRelionBase(EMProtocol):
     def _insertAllSteps(self): 
         self._initialize()
         self._insertFunctionStep('convertInputStep')
-        #self._insertRelionStep()
-        #self._insertFunctionStep('createOutputStep')
+        self._insertRelionStep()
+        self._insertFunctionStep('createOutputStep')
     
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
