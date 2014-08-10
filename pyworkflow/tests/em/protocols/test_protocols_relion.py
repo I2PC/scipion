@@ -120,14 +120,31 @@ class TestRelionImport(BaseTest):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
  
-    def testProtRelionClassify3D(self):
-        print "Run ProtRelionClassify3D"
-        starFile = self.ds.getFile('import1_data_star')
+    def runImport(self, starFile, samplingRate):
         relionImport = self.newProtocol(ProtRelionImport, 
-                                         inputStar=starFile, samplingRate=2.53) 
+                                         inputStar=starFile, samplingRate=samplingRate) 
         self.launchProtocol(relionImport)
         
         self.assertIsNotNone(getattr(relionImport, 'outputClasses', None), 
-                             "There was a problem with Relion 3D:\n" + relionImport.getErrorMessage()) 
+                             "There was a problem with Relion 3D:\n" + relionImport.getErrorMessage())
+        
+        return relionImport 
+        
+    def test1(self):
+        """ Firt try to import from an star file with not micrograph id
+        and not binaries files.
+        """
+        self.runImport(starFile=self.ds.getFile('import1_data_star'), samplingRate=2.53)
+        
+    def test2(self):
+        """ Firt try to import from an star file with not micrograph id
+        and not binaries files.
+        """
+        relionImport = self.runImport(starFile=self.ds.getFile('import2_data_star'), samplingRate=2.53)     
+        
+        # Test now a reconstruction after the imported particles   
+        relionReconstruct = self.newProtocol(ProtRelionReconstruct)
+        relionReconstruct.inputParticles.set(relionImport.outputParticles)
+        self.launchProtocol(relionReconstruct)
 
        
