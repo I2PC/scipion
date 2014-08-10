@@ -312,7 +312,7 @@ public class ScipionGalleryData extends GalleryData {
     
     public Geometry getGeometry(long id)
         {
-            if(!containsGeometryInfo())
+    		if (!containsGeometryInfo() || true) //FIXME: Now not reading any geometry!!!
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
             Double shiftx, shifty, psiangle;
@@ -327,7 +327,7 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData)md).getEnabledCount();
     }
         
-        /**
+     /**
      * Set enabled state
      */
     public void setEnabled(int index, boolean value) {
