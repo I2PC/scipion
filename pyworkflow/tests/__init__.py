@@ -91,6 +91,7 @@ DataSet(name='relion_tutorial', folder='relion_tutorial',
                ,'posAllDir': 'pickingXmipp'
                ,'relion_it020_data': 'gold/relion_it020_data.star'
                ,'volume': 'volumes/reference.mrc'
+               ,'import1_data_star': 'import/case1/classify3d_small_it038_data.star'
         })
 
 

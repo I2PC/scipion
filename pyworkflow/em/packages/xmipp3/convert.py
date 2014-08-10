@@ -280,7 +280,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgRow.setValue(imgLabel, fn)
-       
+    
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
         
@@ -298,6 +298,11 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     """ Create an Image from a row of a metadata. """
     img = imgClass()
+    
+    preprocessRow = kwargs.get('preprocessRow', None)
+    if preprocessRow:
+        preprocessRow(imgRow)
+    
     # Decompose Xmipp filename
     index, filename = xmippToLocation(imgRow.getValue(imgLabel))
     img.setLocation(index, filename)
@@ -1000,7 +1005,7 @@ def alignmentToRow(alignment, mdRow):
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, processRow=None):
+                            classLabel, classFnTemplate, iter, preprocessRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1043,8 +1048,8 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
         imgRow = rowFromMd(md, objId)
-        if processRow:
-            processRow(imgRow)
+        if preprocessRow:
+            preprocessRow(imgRow)
         img = rowToParticle(imgRow)
         
         classItem.append(img)

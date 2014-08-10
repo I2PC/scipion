@@ -65,7 +65,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
                            'should be present.')  
         form.addParam('samplingRate', FloatParam, 
                       label=Message.LABEL_SAMP_RATE,
-                      help='Provide the sampling rate of your particles. (in Angstroms per pixel)')        
+                      help='Provide the sampling rate of your particles. (in Angstroms per pixel)')
+        
+        #TODO: Add an option to allow the user to decide if copy binary files or not        
             
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
@@ -73,8 +75,6 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self, dataFile):
-        
-        # TODO: Register set of Micrographs
         partSet = self._createParticles(dataFile)
         self._defineOutputs(outputParticles=partSet)
         
@@ -87,50 +87,27 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         self.info('Creating the set of particles...')
         from convert import readSetOfParticles
         # Create the set of particles
-        auxSet = SetOfParticles(filename=':memory:')
         partSet = self._createSetOfParticles()
-        readSetOfParticles(dataFile, auxSet)
-        particle = auxSet.getFirstItem() 
+        self._findImagesPath(dataFile)
+        readSetOfParticles(dataFile, partSet, preprocessRow=self._preprocessRow)
+        particle = partSet.getFirstItem() 
         
-        self.imagesPath = self._findImagesPath(dataFile, particle.getFileName())
-        if self.imagesPath:
-            print "images found from: ", self.imagesPath
-        else:
-            raise Exception("Images binary files were not found!!!")
-        
+        # Copy acquisition from first element
         partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
         
-        # Update the images path with the correct root
-        for particle in auxSet:
-            fn = particle.getFileName()
-            particle.setFileName(os.path.join(self.imagesPath, fn))
-            partSet.append(particle)
-        
-        # Copy acquisition from first element
-        
-        # Grap the sampling rate from the --angpix option
-        optimiserFile = dataFile.replace('_data', '_optimiser')
-        opts = self._parseCommand(optimiserFile)
-        
         return partSet   
     
-    def _processRow(self, imgRow):
-        import xmipp
-        from convert import relionToLocation, locationToRelion
-        index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
-        newLoc = locationToRelion(index, os.path.join(self.imagesPath, imgPath))
-        imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
-        
     def _createClasses(self, dataFile, partSet):     
         self.info('Creating the set of classes...')
         from convert import readSetOfClasses3D
         # Create the set of classes 2D or 3D  
         classesSqlite = self._getTmpPath('classes.sqlite')
         classTemplate = dataFile.replace('_data.star', '_class%(ref)03d.mrc:mrc')
+        self.info('  Using classes template: %s' % classTemplate)
         createClassesFromImages(partSet, dataFile, classesSqlite, 
                                 self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 
-                                0, processRow=self._processRow)      
+                                0, preprocessRow=self._preprocessRow)      
         # FIXME: Check whether create classes 2D or 3D
         classes = self._createSetOfClasses3D(partSet)
         readSetOfClasses3D(classes, classesSqlite)
@@ -169,14 +146,18 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         f.close()
         return opts
     
-    def _findImagesPath(self, starFile, imgFile):
-        absPath = os.path.dirname(os.path.abspath(starFile))
+    def _findImagesPath(self, starFile):
+        from convert import findImagesPath
+        self._imagesPath = findImagesPath(starFile)
         
-        print "searching in ", absPath
-        while absPath:
-            if os.path.exists(os.path.join(absPath, imgFile)):
-                return absPath
-            absPath = os.path.dirname(absPath)
-            
-        return None
+        if self._imagesPath:
+            self.info('Images path found in: %s' % self._imagesPath)
+        else:
+            self.warning('Images binaries not found!!!')
         
+    def _preprocessRow(self, imgRow):
+        from convert import setupCTF, prependToFileName
+        if self._imagesPath is not None:
+            prependToFileName(imgRow, self._imagesPath)
+        
+        setupCTF(imgRow, self.samplingRate.get())

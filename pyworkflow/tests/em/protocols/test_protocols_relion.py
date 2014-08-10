@@ -113,3 +113,21 @@ class TestRelionClassify3D(TestRelionBase):
                              "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
 
 
+class TestRelionImport(BaseTest):
+    
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+ 
+    def testProtRelionClassify3D(self):
+        print "Run ProtRelionClassify3D"
+        starFile = self.ds.getFile('import1_data_star')
+        relionImport = self.newProtocol(ProtRelionImport, 
+                                         inputStar=starFile, samplingRate=2.53) 
+        self.launchProtocol(relionImport)
+        
+        self.assertIsNotNone(getattr(relionImport, 'outputClasses', None), 
+                             "There was a problem with Relion 3D:\n" + relionImport.getErrorMessage()) 
+
+       

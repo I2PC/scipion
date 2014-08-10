@@ -36,7 +36,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
 from pyworkflow.em.protocol import ProtInitialVolume
 
 from convert import writeSetOfClasses2D, readSetOfVolumes
-from utils import emptyMd
+from utils import isMdEmpty
 
 
 
@@ -349,7 +349,7 @@ class XmippProtRansac(ProtInitialVolume):
             self._log.info("Best volume %d = %s" % (indx, fnBestAngles))
             if not self.useAll:
                 self.runJob("xmipp_metadata_utilities","-i %s -o %s --query select \"maxCC>%f \" --mode append" %(fnBestAnglesOut,fnBestAnglesOut,threshold))
-                if not emptyMd(fnBestAnglesOut):
+                if not isMdEmpty(fnBestAnglesOut):
                     indx += 1
             else:
                 indx += 1
