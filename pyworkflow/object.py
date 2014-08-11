@@ -540,6 +540,9 @@ class Scalar(Object):
     def sum(self, value):
         self._objValue += self._convertValue(value)
         
+    def multiply(self, value):
+        self._objValue *= value
+        
     
 class Integer(Scalar):
     """Integer object"""
