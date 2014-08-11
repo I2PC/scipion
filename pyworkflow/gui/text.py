@@ -63,7 +63,7 @@ elif os.name == 'posix':  # linux systems and so on
             if subprocess.call([x_open, path]) == 0:
                 return  # yay! that's the way to do it!
         # If we couldn't open it in a standard way, try web and editors
-        if path.startswith('http://'):
+        if path.startswith('http://') or path.startswith('https://'):
             try:
                 webbrowser.open_new_tab(path)
                 return
@@ -563,13 +563,16 @@ class TextFileViewer(tk.Frame):
 def openTextFile(filename):
     """ Open a text file with an external or default viewer. """
     if envVarOn('SCIPION_EXTERNAL_VIEWER'):
-        _open_cmd(filename)
+        openTextFileEditor(filename)
     else:
         showTextFileViewer("File viewer", [filename])    
     
     
 def openTextFileEditor(filename):
-    _open_cmd(filename)
+    try:
+        _open_cmd(filename)
+    except:
+        showTextFileViewer("File viewer", [filename]) 
     
     
 def showTextFileViewer(title, filelist, parent=None, main=False):
