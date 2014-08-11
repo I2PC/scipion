@@ -74,6 +74,9 @@ public:
     /** Neighbourhood in angles */
     double angDistance;
 
+    /** Number of volumes to reconstruct */
+    int Nvolumes;
+
 public: // Internal members
     size_t rank, Nprocessors;
 

@@ -39,6 +39,7 @@ void ProgReconstructSignificant::defineParams()
     addUsageLine("Generate 3D reconstructions from projections using random orientations");
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
+    addParamsLine("  [--numberOfVolumes <N=1>]    : Number of volumes to reconstruct");
     addParamsLine("  [--initvolumes <md_file=\"\">] : Set of initial volumes. If none is given, a single volume");
     addParamsLine("                               : is reconstructed with random angles assigned to the images");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
@@ -74,6 +75,7 @@ void ProgReconstructSignificant::readParams()
     useImed=checkParam("--useImed");
     strict=checkParam("--strictDirection");
     angDistance=getDoubleParam("--angDistance");
+    Nvolumes=getIntParam("--numberOfVolumes");
 }
 
 // Show ====================================================================
@@ -97,6 +99,8 @@ void ProgReconstructSignificant::show()
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
             std::cout << "Initial volume              : "  << fnInit << std::endl;
+        else
+        	std::cout << "Number of volumes           : "  << Nvolumes << std::endl;
     }
 }
 
@@ -135,6 +139,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 		std::cerr << "Aligning images ...\n";
 		init_progress_bar(mdIn.size());
 	}
+
+	MultidimArray<double> ccVol(Nvols);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		if ((nImg+1)%Nprocessors==rank)
@@ -225,10 +231,16 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			double zl=z-2.96*sqrt(1.0/MULTIDIM_SIZE(mCurrentImage));
 			double ccl=tanh(zl);
 
-	    	// Get the best images
+			// Compute the cumulative distributions
 			imgcc.cumlativeDensityFunction(cdfcc);
 			imgimed.cumlativeDensityFunction(cdfimed);
-			for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+
+			// Check if force 1 volume
+			size_t firstVolume=0;
+			size_t lastVolume=Nvols-1;
+
+	    	// Get the best images
+			for (size_t nVolume=firstVolume; nVolume<=lastVolume; ++nVolume)
 			{
 				MetaData &mdPartial=mdReconstructionPartial[nVolume];
 				for (size_t nDir=0; nDir<Ndirs; ++nDir)
@@ -559,40 +571,49 @@ void ProgReconstructSignificant::produceSideinfo()
 	// If there is not any input volume, create a random one
 	if (fnInit=="")
 	{
-		fnInit=fnDir+"/volume_random.vol";
-		if (rank==0)
+		MetaData mdAux;
+		for (int n=0; n<Nvolumes; ++n)
 		{
-			MetaData mdRandom;
-			mdRandom=mdIn;
-			FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+			fnInit=fnDir+"/volume_random.xmd";
+			if (rank==0)
 			{
-				mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
-				mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
-				mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
-				mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
-				mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+				MetaData mdRandom;
+				mdRandom=mdIn;
+				FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+				{
+					mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
+					mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
+					mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
+					mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+					mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+				}
+				FileName fnAngles=fnDir+formatString("/angles_random_%02d.xmd",n);
+				FileName fnVolume=fnDir+formatString("/volume_random_%02d.vol",n);
+				mdRandom.write(fnAngles);
+				String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
+				String cmd=(String)"xmipp_reconstruct_fourier "+args;
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				// Symmetrize with many different possibilities to have a spherical volume
+				args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+				cmd=(String)"xmipp_transform_symmetrize "+args;
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+				deleteFile(fnAngles);
+				mdAux.setValue(MDL_IMAGE,fnVolume,mdAux.addObject());
 			}
-			FileName fnAngles=fnDir+"/angles_random.xmd";
-			mdRandom.write(fnAngles);
-			String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnInit.c_str(),fnSym.c_str());
-			String cmd=(String)"xmipp_reconstruct_fourier "+args;
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			// Symmetrize with many different possibilities to have a spherical volume
-			args=formatString("-i %s --sym i1 -v 0",fnInit.c_str());
-			cmd=(String)"xmipp_transform_symmetrize "+args;
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			args=formatString("-i %s --sym i3 -v 0",fnInit.c_str());
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 		}
+		if (rank==0)
+			mdAux.write(fnInit);
 		synchronize();
 	}
 
