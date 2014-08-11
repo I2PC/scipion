@@ -511,6 +511,12 @@ class EMXObject(EMObject):
 class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()
+    
+    def copyInfo(self, other):
+        """ Define a dummy copyInfo function to be used
+        for some generic operations on sets.
+        """
+        pass
   
   
 class SetOfImages(EMSet):

@@ -369,15 +369,15 @@ class ProtIntersectSet(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputFullSet', PointerParam, label="Full images set", important=True, 
-                      pointerClass='SetOfImages', 
+        form.addParam('inputFullSet', PointerParam, label="Full set of items", important=True, 
+                      pointerClass='EMSet', 
                       help='Even if the intersection can be applied to two subsets,\n'
                            'the most common use-case is to retrieve a subset of  \n'
                            'elements from an original full set.\n' 
                            '*Note*: the images of the result set will be the same \n'
                            'ones of this input set.'
                            )
-        form.addParam('inputSubSet', PointerParam, label="Subset of images", important=True, 
+        form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
                       pointerClass='SetOfImages', 
                       help='The elements that are in this (normally smaller) set and \n'
                            'in the full set will be included in the result set'
@@ -403,7 +403,8 @@ class ProtIntersectSet(ProtSets):
             #TODO: this can be improved if you perform an
             # intersection directly in sqlite
             origImg = inputFullSet[img.getObjId()]
-            outputSet.append(origImg)
+            if origImg is not None:
+                outputSet.append(origImg)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
@@ -413,9 +414,9 @@ class ProtIntersectSet(ProtSets):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
-            errors.append("Both the full set and the subset should be of the same")
-            errors.append("type of elements (micrographs, particles, volumes).")
+#         if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
+#             errors.append("Both the full set and the subset should be of the same")
+#             errors.append("type of elements (micrographs, particles, volumes).")
         return errors   
 
     
