@@ -63,10 +63,10 @@ class ProtAlignmentAssign(ProtAlign2D):
         outputParticles.copyInfo(inputParticles)
         
         scale = inputAlignment.getSamplingRate()/inputParticles.getSamplingRate()
+        n = inputParticles.getSize()
+        block = min(n/10, 1000)       
         
-       
-        
-        for particle in inputParticles:
+        for i, particle in enumerate(inputParticles):
             alignedParticle = inputAlignment[particle.getObjId()]
             if alignedParticle is not None:
                 newParticle = particle.clone()
@@ -75,6 +75,9 @@ class ProtAlignmentAssign(ProtAlign2D):
                 alignment._xmipp_shiftY.multiply(scale)
                 newParticle.setAlignment(alignment)
                 outputParticles.append(newParticle)
+            ii = i+1
+            if ii % block == 0:
+                self.info('Done %d out of %d' % (i+1, n))
         
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
