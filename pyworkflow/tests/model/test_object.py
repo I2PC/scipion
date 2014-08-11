@@ -28,7 +28,6 @@ class TestObject(BaseTest):
     def test_Object(self):
         value = 2
         i = Integer(value)
-        # make sure the shuffled sequence does not lose any elements
         self.assertEqual(value, i.get())
         # compare objects
         i2 = Integer(value)
@@ -36,8 +35,10 @@ class TestObject(BaseTest):
         
         value = 2.
         f = Float(value)
-        # make sure the shuffled sequence does not lose any elements
-        self.assertEqual(value, f.get())
+        self.assertAlmostEqual(value, f.get())
+        
+        f.multiply(5)
+        self.assertAlmostEqual(value*5, f.get())
         
         a = Integer()
         self.assertEqual(a.hasValue(), False)
