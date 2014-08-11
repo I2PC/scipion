@@ -75,8 +75,8 @@ def main():
     g.add_argument('--download', action='store_true', help="Download dataset.")
     g.add_argument(
         '--upload', action='store_true',
-        help=("Upload local dataset to the scipion server. The dataset name must"
-              "be the name of its folder relative to the SCIPION_TESTS folder."))
+        help=("Upload local dataset to the server. The dataset name must be"
+              "the name of its folder relative to the SCIPION_TESTS folder."))
     g.add_argument(
         '--list', action='store_true',
         help=('List local datasets (from $SCIPION_TESTS) and remote ones '
@@ -129,9 +129,9 @@ def main():
 
     if args.format:
         for dataset in args.datasets:
-            print 'Formatting %s' % dataset
+            print 'Formatting %s (creating MANIFEST file)' % dataset
             if not exists(join(os.environ['SCIPION_TESTS'], dataset)):
-                sys.exit('ERROR: %s folder does not exist in datasets folder %s.' %
+                sys.exit('ERROR: %s does not exist in datasets folder %s.' %
                          (dataset, os.environ['SCIPION_TESTS']))
             createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
         sys.exit(0)
