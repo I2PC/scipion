@@ -29,7 +29,7 @@ This module contains the protocol for 3d classification with relion.
 
 import os
 
-from pyworkflow.protocol.params import FileParam, FloatParam
+from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
 
@@ -56,6 +56,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
                       label=Message.LABEL_SAMP_RATE,
                       help='Provide the sampling rate of your particles. (in Angstroms per pixel)')
         
+        form.addParam('importClasses', BooleanParam, default=True,
+                      label='Import also classes?')
+        
         #TODO: Add an option to allow the user to decide if copy binary files or not        
             
     #--------------------------- INSERT steps functions --------------------------------------------  
@@ -72,9 +75,10 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         if not firstParticle.hasAlignment():
             self.warning("Alignment was not read from particles!!!")
         
-        classes = self._createClasses(dataFile, partSet)
-        self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(partSet, classes)
+        if self.importClasses:
+            classes = self._createClasses(dataFile, partSet)
+            self._defineOutputs(outputClasses=classes)
+            self._defineSourceRelation(partSet, classes)
         # TODO: Register input volume and also clases if necesary
         
     def _createParticles(self, dataFile):
