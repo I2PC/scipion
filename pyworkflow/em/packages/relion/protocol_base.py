@@ -129,9 +129,9 @@ class ProtRelionBase(EMProtocol):
                       condition='not doContinue',
                       label="Input particles",  
                       help='Select the input images from the project.')   
-        form.addParam('doNormalize', BooleanParam, default=True,
+        form.addParam('doNormalize', BooleanParam, default=False,
                       condition='not doContinue',
-                      label='Normalize',
+                      label='Normalize (TODO: REMOVE)',
                       help='If set to True, particles will be normalized in the way RELION prefers it.')
         form.addParam('backRadius', IntParam, default=0,
                       condition='doNormalize and not doContinue',
@@ -463,7 +463,8 @@ class ProtRelionBase(EMProtocol):
         Xdim = imgSet.getDimensions()[0]
         
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
-        createRelionInputParticles(imgSet, imgStar, imgFn)
+        from convert import writeSetOfParticles
+        writeSetOfParticles(imgSet, imgStar, imgFn)
         
         if self.doNormalize:
             # Enter here to generate the star file or to normalize the images

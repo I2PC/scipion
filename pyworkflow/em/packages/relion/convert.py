@@ -93,9 +93,10 @@ class ParticleAdaptor():
         
     def setupRow(self, img, imgRow):
         """ Convert image and modify the row. """
-        newLoc = (self._rowCount, self._stackFile)
-        self._ih.convert(img.getLocation(), newLoc)
-        img.setLocation(newLoc)
+        #newLoc = (self._rowCount, self._stackFile)
+        #TODO: Check whether the input image format is valid for Relion
+        #self._ih.convert(img.getLocation(), newLoc)
+        #img.setLocation(newLoc)
         # Re-write the row with the new location
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
         coord = img.getCoordinate()
