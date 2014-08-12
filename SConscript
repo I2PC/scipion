@@ -196,6 +196,8 @@ env.AddPackage('frealign',
 
 env.AddPackage('relion',
                tar='relion-1.2.tgz',
+               extraActions=[('relion_build.log', './INSTALL.sh -j %s'
+                              % GetOption('num_jobs'))],
                default=False)
 
 env.AddPackage('spider',
