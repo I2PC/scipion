@@ -332,7 +332,7 @@ class OutputText(Text):
         if self.colors and fmt is not None:
             if fmt.startswith('link:'):
                 fname = fmt.split(':', 1)[-1]
-                self.insert(tk.END, txt, self.hm.add(lambda: _open_cmd(fname)))
+                self.insert(tk.END, txt, self.hm.add(lambda: openTextFileEditor(fname)))
             else:
                 self.insert(tk.END, txt, fmt)
         else:
@@ -555,7 +555,7 @@ class TextFileViewer(tk.Frame):
         if envVarOn('SCIPION_EXTERNAL_VIEWER'):
             if not self.taList:
                 return
-            _open_cmd(self.taList[max(self.getIndex(), 0)].filename)
+            openTextFileEditor(self.taList[max(self.getIndex(), 0)].filename)
         else:
             showTextFileViewer("File viewer", self.fileList, self.windows)
   
