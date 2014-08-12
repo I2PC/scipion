@@ -73,12 +73,13 @@ elif WINDOWS:
 #  *                                                                      *
 #  ************************************************************************
 
-# We have 3 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+# We have 4 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
 #
 # They are:
-#   addLibrary - install a library
-#   addModule  - install a Python module
-#   addPackage - install an EM package
+#   addLibrary    - install a library
+#   addModule     - install a Python module
+#   addPackage    - install an EM package
+#   manualInstall - install by manually running commands
 #
 # Their structure is similar:
 #   * Define reasonable defaults
