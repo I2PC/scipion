@@ -186,7 +186,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         try {
                             String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
                             ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
-                            final String[] command = new String[]{python, ctfscript, projectid, inputid, recalculatefile};
+                            ((ScipionGalleryData)data).overwrite(sqlitefile);
+                            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile, recalculatefile};
                             new Thread(new Runnable() {
 
                                 @Override
