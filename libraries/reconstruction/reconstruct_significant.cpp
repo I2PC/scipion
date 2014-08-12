@@ -261,6 +261,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 							shiftX*=-1;
 
 						double thisWeight=cdfccthis*(cc/bestCorr);
+						// COSS: To promote sparsity in the volume assignment: sum_i(cc_i^p)/sum_i(cc_i)*cc_i^p/cc_i
 						if (useImed)
 							thisWeight*=(1-cdfimedthis)*(bestImed/imed);
 						DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)=thisWeight;
