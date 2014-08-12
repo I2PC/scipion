@@ -240,6 +240,8 @@ class ProtRecalculateCTF(ProtMicrographs):
                 mic = ctf.getMicrograph()
                 self.setOfCtf.append(ctf)
                 self.outputMics.append(mic)
+        self.setOfCtf.write()
+        self.setOfCtf.close()
            
     def copyInputValues(self):
         """ Copy a parameter file that contain the info of the
