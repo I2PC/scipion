@@ -207,6 +207,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
                   help='Activate module %s' % name)
         if  not GetOption(name):
             return ''
+    # TODO: use Default() instead of returning
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -319,6 +320,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
+
     for target, command in extraActions:
         lastTarget = env.Command('software/em/%s/%s' % (name, target),
                                  lastTarget,
@@ -367,7 +369,7 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
     # Donload, untar, and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, Dir('software/tmp/%s/dummy' % buildDir), tDownload,
+    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
                    cdir='software/tmp')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/tmp/%s' % buildDir)
