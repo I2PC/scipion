@@ -210,6 +210,11 @@ env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
                default=False)
 
+env.ManualInstall('boost_headers_only',
+                  tar='boost_1_56_0.tgz',
+                  extraActions=[
+                      ('%s/software/include/boost' % env['SCIPION_HOME'],
+                       'cp -rf boost %s/software/include' % env['SCIPION_HOME'])])
 
 # TODO: check if we have to use the "purge" option below:
 
