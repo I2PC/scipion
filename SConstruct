@@ -341,6 +341,26 @@ env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
 
 
+#  ************************************************************************
+#  *                                                                      *
+#  *                            Extra options                             *
+#  *                                                                      *
+#  ************************************************************************
+
+
+opts = Variables(None, ARGUMENTS)
+
+opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
+opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
+opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
+opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
+opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
+opts.Add('MPI_LIB', 'MPI library', 'mpi')
+opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
+
+opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
+
+opts.Update(env)
 
 # TODO: check the code below to see if we can do a nice "purge".
 
