@@ -50,7 +50,8 @@ fftw = env.AddLibrary(
     'fftw',
     tar='fftw-3.3.4.tgz',
     targets=['lib/libfftw3.so'],
-    flags=['--enable-threads', '--enable-shared'])
+    flags=['--enable-threads', '--enable-shared'],
+    default=False)
 
 tcl = env.AddLibrary(
     'tcl',
@@ -88,7 +89,8 @@ boost_headers_only = env.ManualInstall(
     tar='boost_1_56_0.tgz',
     extraActions=[
         ('%s/software/include/boost' % env['SCIPION_HOME'],
-         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])])
+         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+    default=False)
 
 
 #  ************************************************************************
