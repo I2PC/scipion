@@ -184,6 +184,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         try {
+                            if(!data.hasRecalulateCTF())
+                            {
+                                XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
+                                return;
+                                        
+                            }
                             String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
                             ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                             ((ScipionGalleryData)data).overwrite(sqlitefile);

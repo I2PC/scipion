@@ -112,6 +112,10 @@ public class GalleryData {
     protected String[] orderLabels;
     protected String[] sortby;
     protected int selfrom = -1, selto = -1;
+
+    public boolean hasRecalulateCTF() {
+        return ctfs != null && !ctfs.isEmpty();
+    }
     
 
     public enum Mode {

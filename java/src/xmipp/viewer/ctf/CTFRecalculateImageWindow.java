@@ -31,6 +31,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.ij.commons.XmippApplication;
+import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.GalleryData;
 
@@ -184,7 +185,11 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
     }
 
     private void recalculateCTF() {
-        
+        if(getLowFreq() == 0)
+        {
+            XmippDialog.showError(null, "Low freq must be above cero");
+            return;
+        }
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
         ellipseCTF.setFreqRange(getLowFreq(), getHighFreq());
         ellipseCTF.setEllipseFitter(ellipseFitter);
