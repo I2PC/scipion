@@ -392,8 +392,8 @@ def particleToRow(part, partRow, **kwargs):
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
-    if part.hasMicId():
-        partRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
+    if part.getMicId() is not None:
+        partRow.setValue(xmipp.MDL_MICROGRAPH, str(part.getMicId()))
 
 def rowToClass(classRow, classItem):
     """ Method base to create a class2D, class3D or classVol from
