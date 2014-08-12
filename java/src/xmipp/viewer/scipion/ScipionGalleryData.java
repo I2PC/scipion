@@ -312,11 +312,9 @@ public class ScipionGalleryData extends GalleryData {
                 ctfs = new HashMap<Long, EllipseCTF>();
             }
 
-            ctfs.put(ids[row], ellipseCTF);
-             ((ScipionMetaData) md).getEMObjects().get(row).setComment("(recalculate ctf)");
             ScipionMetaData.EMObject emo;
             for(int i = selfrom; i <= selto; i ++)
-                if(selection[i] && isEnabled(i) && !ctfs.containsKey(ids[i]))
+                if(selection[i] && isEnabled(i))
                 {
                     emo = ((ScipionMetaData) md).getEMObjects().get(i);
                     emo.setComment("(recalculate ctf)");
@@ -347,11 +345,13 @@ public class ScipionGalleryData extends GalleryData {
      /**
      * Set enabled state
      */
-    public void setEnabled(int index, boolean value) {
+    public void setEnabled(int index, boolean isenabled) {
         try {
             if (!isVolumeMode()) { // slices in a volume are always enabled
-                getEMObjects().get(index).setEnabled(value);
+                getEMObjects().get(index).setEnabled(isenabled);
                 hasMdChanges = true;
+                if(!isenabled && isRecalculateCTF(index))
+                    removeCTF(index);
             }
         } catch (Exception e) {
             e.printStackTrace();
