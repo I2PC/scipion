@@ -141,8 +141,6 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
-        if  not GetOption(name):
-            return ''
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -175,6 +173,9 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     for dep in deps:
         Depends(tConfig, dep)
 
+    if default or GetOption(name):
+        Default(tMake)
+
     return tMake
 
 
@@ -205,9 +206,6 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate module %s' % name)
-        if  not GetOption(name):
-            return ''
-    # TODO: use Default() instead of returning
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -237,6 +235,9 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     # Add the dependencies.
     for dep in deps:
         Depends(tInstall, dep)
+
+    if default or GetOption(name):
+        Default(tInstall)
 
     return tInstall
 
@@ -287,9 +288,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     packageHome = GetOption(name) or defaultPackageHome
 
-    if not (default or packageHome):
-        return ''
-
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
@@ -334,6 +332,9 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # extra actions (like setup scripts) have everything in place.
     for dep in deps:
         Depends(tLink, dep)
+
+    if default or packageHome:
+        Default(lastTarget)
 
     return lastTarget
 
