@@ -123,6 +123,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
         valueOld = os.environ.get(var, '')
+        i = 0  # so if flags is empty, we put it at the beginning too
         for i in range(len(flags)):
             if flags[i].startswith('%s=' % var):
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
@@ -335,10 +336,69 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     return lastTarget
 
 
+def manualInstall(env, name, tar=None, buildDir=None, url=None,
+                  extraActions=[], deps=[], clean=[], default=True):
+    """Just download and run extraActions.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file and runs extraActions on it. It also tells SCons about
+    the proper dependencies (deps).
+
+    extraActions is a list of (target, command) that should be
+    executed after the package is properly installed.
+
+    If default=False, the package will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final target in extraActions.
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/external/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate it even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate %s' % name)
+
+    # Donload, untar, and execute any extra actions.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, Dir('software/tmp/%s/dummy' % buildDir), tDownload,
+                   cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    lastTarget = tUntar
+
+    for target, command in extraActions:
+        lastTarget = env.Command(
+            target,
+            lastTarget,
+            Action(command, chdir='software/tmp/%s' % buildDir))
+        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+
+    # Clean the special generated files.
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tUntar, dep)
+
+    if default or GetOption(name):
+        Default(lastTarget)
+
+    return lastTarget
+
+
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
+env.AddMethod(manualInstall, "ManualInstall")
 
 
 #  ************************************************************************

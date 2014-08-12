@@ -46,6 +46,12 @@ Import('env')
 # But because freetype's compilation is a pain, it's better to use whatever
 # version is in the system.
 
+fftw = env.AddLibrary(
+    'fftw',
+    tar='fftw-3.3.4.tgz',
+    targets=['lib/libfftw3.so'],
+    flags=['--enable-threads', '--enable-shared'])
+
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
@@ -196,12 +202,19 @@ env.AddPackage('frealign',
 
 env.AddPackage('relion',
                tar='relion-1.2.tgz',
+               extraActions=[('relion_build.log', './INSTALL.sh -j %s'
+                              % GetOption('num_jobs'))],
                default=False)
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
                default=False)
 
+env.ManualInstall('boost_headers_only',
+                  tar='boost_1_56_0.tgz',
+                  extraActions=[
+                      ('%s/software/include/boost' % env['SCIPION_HOME'],
+                       'cp -rf boost %s/software/include' % env['SCIPION_HOME'])])
 
 # TODO: check if we have to use the "purge" option below:
 
