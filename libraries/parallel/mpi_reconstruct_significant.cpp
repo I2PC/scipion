@@ -58,8 +58,10 @@ void MpiProgReconstructSignificant::gatherAlignment()
 		FileName fnPartial=formatString("%s/partial_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
 		FileName fnProjectionMatching=formatString("%s/projmatch_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
 
-		mdReconstructionPartial[n].write(fnPartial);
-		mdReconstructionProjectionMatching[n].write(fnProjectionMatching);
+		if (mdReconstructionPartial[n].size()>0)
+			mdReconstructionPartial[n].write(fnPartial);
+		if (mdReconstructionProjectionMatching[n].size()>0)
+			mdReconstructionProjectionMatching[n].write(fnProjectionMatching);
 	}
 	synchronize();
 
@@ -74,12 +76,18 @@ void MpiProgReconstructSignificant::gatherAlignment()
 				FileName fnPartial=formatString("%s/partial_node%03d_%03d.xmd",fnDir.c_str(),(int)otherRank,(int)n);
 				FileName fnProjectionMatching=formatString("%s/projmatch_node%03d_%03d.xmd",fnDir.c_str(),(int)otherRank,(int)n);
 
-				MDAux.read(fnPartial);
-				mdReconstructionPartial[n].unionAll(MDAux);
-				MDAux.read(fnProjectionMatching);
-				mdReconstructionProjectionMatching[n].unionAll(MDAux);
-				deleteFile(fnPartial);
-				deleteFile(fnProjectionMatching);
+				if (fnPartial.exists())
+				{
+					MDAux.read(fnPartial);
+					mdReconstructionPartial[n].unionAll(MDAux);
+					deleteFile(fnPartial);
+				}
+				if (fnProjectionMatching.exists())
+				{
+					MDAux.read(fnProjectionMatching);
+					mdReconstructionProjectionMatching[n].unionAll(MDAux);
+					deleteFile(fnProjectionMatching);
+				}
 			}
 		}
 	}
