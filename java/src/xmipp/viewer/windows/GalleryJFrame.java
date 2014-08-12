@@ -1989,12 +1989,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			{
                                 boolean isrecalculate = getItemSelected(CTF_RECALCULATE);
                                 int index = gallery.getIndex(row, col);
-                                
-                                if(isrecalculate)
-                                    data.showCTF(false, index, ctfTasks);
+                                if(isrecalculate && !data.isEnabled(index))
+                                    XmippDialog.showInfo(GalleryJFrame.this, "You must enable micrograph to recalculate its CTF");
                                 else
-                                    data.removeCTF(row);
-                                
+                                {
+                                    if(isrecalculate)
+                                        data.showCTF(false, index, ctfTasks);
+                                    else
+                                        data.removeCTF(row);
+                                }
                                 
 			}
 			else if (cmd.equals(SET_CLASS))
