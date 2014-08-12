@@ -34,7 +34,7 @@ from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
 from pyworkflow.em.packages.brandeis import ProtRecalculateCTFFind
 
 @timeit
-def runRecalcCftProtocol(projectId, inputObjId, pathFile):
+def runRecalcCftProtocol(projectId, inputObjId, sqliteFile, pathFile):
     """ Load the project and launch the protocol to
     create the subset.
     """
@@ -70,5 +70,6 @@ if __name__ == '__main__':
     
     runRecalcCftProtocol(projectId=sys.argv[1],
                         inputObjId=sys.argv[2],
-                        pathFile=sys.argv[3])
+                        sqliteFile = sys.argv[3],
+                        pathFile=sys.argv[4])
 
