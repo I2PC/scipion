@@ -33,11 +33,11 @@ from os.path import join, basename, exists, dirname, relpath
 
 from pyworkflow.object import String
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
-from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam, BooleanParam
+from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, TextParam, BooleanParam, FileParam
 from pyworkflow.utils.path import copyTree, copyFile, removeBaseExt, makePath, moveFile
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import Micrograph
+from pyworkflow.em.data import Micrograph, SetOfImages, SetOfCTF
 
 
 
@@ -200,6 +200,7 @@ class ProtRecalculateCTF(ProtMicrographs):
         form.addParam('inputCtf', PointerParam, important=True,
               label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
         form.addParam('inputValues', TextParam)
+        form.addHidden('sqliteFile', FileParam)
         
         form.addParallelSection(threads=1, mpi=1)
     
@@ -207,10 +208,11 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf re-estimation on a set of CTFs.
         """
+        self._insertFunctionStep('createSubsetOfCTF')
         inputValsId = self._insertFunctionStep('copyInputValues')
-        self._defineValues()
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each psd insert the steps to process it
+        self.values = self._splitFile(self.inputValues.get())
         for line in self.values:
             # CTF Re-estimation with Xmipp
             copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[inputValsId])
@@ -220,6 +222,25 @@ class ProtRecalculateCTF(ProtMicrographs):
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def createSubsetOfCTF(self):
+        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
+        
+        self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
+        
+        self.outputMics = self._createSetOfMicrographs()
+        self.setOfMics = self.inputCtf.get().getMicrographs()
+        self.setOfCtf = self._createSetOfCTF("_subset")
+        
+        SetOfImages.copyInfo(self.outputMics, self.setOfMics)
+        
+        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        
+        for ctf in modifiedSet:
+            if ctf.isEnabled():
+                mic = ctf.getMicrograph()
+                self.setOfCtf.append(ctf)
+                self.outputMics.append(mic)
+           
     def copyInputValues(self):
         """ Copy a parameter file that contain the info of the
         micrographs to recalculate its CTF to a current directory"""
@@ -272,14 +293,11 @@ class ProtRecalculateCTF(ProtMicrographs):
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _defineValues(self):
+    def _defineValues(self, line):
         """ This function get the acquisition info of the micrographs"""
-        self.setOfCtf = self.inputCtf.get()
-        self.values = self._splitFile(self.inputValues.get())
         
-        line = self.values[0]
         objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get().__getitem__(objId)
+        ctfModel = self.setOfCtf.__getitem__(objId)
         mic = ctfModel.getMicrograph()
         
         acquisition = mic.getAcquisition()
@@ -305,7 +323,7 @@ class ProtRecalculateCTF(ProtMicrographs):
     
     def _getPrevMicDir(self, mic):
         
-        objFn = self.setOfCtf.getFileName()
+        objFn = self.inputCtf.get().getFileName()
         directory = dirname(objFn)
         return join(directory, "extra", removeBaseExt(mic.getFileName()))
     
@@ -337,7 +355,16 @@ class ProtRecalculateCTF(ProtMicrographs):
         numberOfCTF = len(values)/2
         msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
         self.summaryInfo.set(msg)
+    
+    def _loadDbNamePrefix(self):
+        """ Setup filename and prefix for db connection. """
+        self._dbName = self.sqliteFile.get()
+        self._dbPrefix = ""
+        print "DBNAME: ", self._dbName
+        print "DBPREFIX: ", self._dbPrefix
 
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1] 
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
