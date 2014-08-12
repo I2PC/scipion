@@ -100,7 +100,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
                 ctfparam = 'xmipp_default_ctf.ctfparam'
                 
             ctfModel = readCTFModel(ctfparam, mic)
-            self._setPsdFiles(ctfModel, micDir)
+            ctfModel = self._setPsdFiles(ctfModel, micDir)
             ctfSet.append(ctfModel)
             
             # save the values of defocus for each micrograph in a list
