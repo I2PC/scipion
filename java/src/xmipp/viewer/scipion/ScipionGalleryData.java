@@ -9,8 +9,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
@@ -270,12 +272,15 @@ public class ScipionGalleryData extends GalleryData {
             FileWriter fstream = new FileWriter(path);
             BufferedWriter out = new BufferedWriter(fstream);
 
-            String line = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n";
-
-            for (EllipseCTF ctf : ctfs) 
-                for(Long id: ctf.getIds())
-                    out.write(String.format(Locale.ENGLISH, line, id, ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
-            
+            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n", line;
+            EllipseCTF ctf;
+            for (Map.Entry<Long,EllipseCTF> entry : ctfs.entrySet()) 
+            {
+                
+                ctf = entry.getValue();
+                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq());
+                out.write(line);
+            }
 
             out.close();
 
@@ -287,9 +292,9 @@ public class ScipionGalleryData extends GalleryData {
     
     @Override
     public void removeCTF(int row) {
-        super.removeCTF(row);
-        ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
+        ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(row);
         emo.setComment("");
+        super.removeCTF(row);
         window.fireTableRowsUpdated(row, row);
     }
 
@@ -301,18 +306,24 @@ public class ScipionGalleryData extends GalleryData {
     
     
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) {
-         if (ctfs == null) {
-            ctfs = new ArrayList<EllipseCTF>();
-        }
-        ctfs.add(ellipseCTF);
-        for(int i = selfrom; i <= selto; i ++)
-            if(selection[i])
-            {
-                ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(i);
-                emo.setComment("(recalculate ctf)");
-                ellipseCTF.addId(ids[i]);
+        if(isEnabled(row))
+        {
+            if (ctfs == null) {
+                ctfs = new HashMap<Long, EllipseCTF>();
             }
-        window.fireTableRowsUpdated(selfrom, selto);
+
+            ctfs.put(ids[row], ellipseCTF);
+             ((ScipionMetaData) md).getEMObjects().get(row).setComment("(recalculate ctf)");
+            ScipionMetaData.EMObject emo;
+            for(int i = selfrom; i <= selto; i ++)
+                if(selection[i] && isEnabled(i) && !ctfs.containsKey(ids[i]))
+                {
+                    emo = ((ScipionMetaData) md).getEMObjects().get(i);
+                    emo.setComment("(recalculate ctf)");
+                    ctfs.put(ids[i], ellipseCTF);
+                }
+            window.fireTableRowsUpdated(selfrom, selto);
+        }
     }
     
     

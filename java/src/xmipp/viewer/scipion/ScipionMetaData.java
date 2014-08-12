@@ -974,7 +974,7 @@ public class ScipionMetaData extends MetaData {
         }
 
         public boolean isEnabled() {
-            if(values.get(enabledci) == null)
+            if(!values.containsKey(enabledci))
                 return true;
             Integer value = (Integer) values.get(enabledci);
             return value == 1;
@@ -1024,6 +1024,8 @@ public class ScipionMetaData extends MetaData {
         void setIndex(int index) {
             this.index = index;
         }
+        
+        
     }
 
     

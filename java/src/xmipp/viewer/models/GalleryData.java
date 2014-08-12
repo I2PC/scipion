@@ -30,15 +30,16 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.Geometry;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
-import xmipp.ij.commons.Geometry;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
@@ -103,7 +104,7 @@ public class GalleryData {
     // Flags to check if md or classes has changed
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
-    protected List<EllipseCTF> ctfs;
+    protected HashMap<Long, EllipseCTF> ctfs;
     protected String displayLabel;
     protected String[] renderLabels;
     protected String renderLabel;
@@ -1642,30 +1643,27 @@ public class GalleryData {
     public void removeCTF(int row) {
         if(ctfs == null)
             return;
-        ctfs.remove(row);
+        ctfs.remove(ids[row]);
         
         
     }
 
     public boolean isRecalculateCTF(int row) {
         if (ctfs == null) {
-            ctfs = new ArrayList<EllipseCTF>();
+            ctfs = new HashMap<Long, EllipseCTF>();
         }
         long id = ids[row];
-        for (EllipseCTF ctf : ctfs) {
-            if (ctf.getId() == id) {
-                return true;
-            }
-        }
+        if(ctfs.containsKey(id))
+            return true;
         return false;
     }
     
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
     {
          if (ctfs == null) {
-            ctfs = new ArrayList<EllipseCTF>();
+            ctfs = new HashMap<Long, EllipseCTF>();
         }
-        ctfs.add(ellipseCTF);
+        ctfs.put(ids[row], ellipseCTF);
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
                 ellipseCTF, 90 - ellipseCTF.getEllipseFitter().angle, 
                 md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);

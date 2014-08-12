@@ -22,7 +22,6 @@ public class EllipseCTF {
     private long id;
     private EllipseFitter ellipseFitter;
     private double defocusAngle;
-    private List<Long> ids;
 
     public void setEllipseFitter(EllipseFitter ellipseFitter) {
         this.ellipseFitter = ellipseFitter;
@@ -156,25 +155,6 @@ public class EllipseCTF {
         return downsampleFactor;
     }
 
-    public void addId(long id)
-    {
-        if(ids == null)
-        {
-            ids = new ArrayList<Long>();
-            ids.add(this.id);
-        }
-        ids.add(id);
-    }
     
-    public List<Long> getIds()
-    {
-        if(ids == null)
-        {
-            ids = new ArrayList<Long>();
-            ids.add(this.id);
-        }
-        
-        return ids;
-    }
     
 }
