@@ -207,13 +207,13 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf re-estimation on a set of CTFs.
         """
-        self._insertFunctionStep('copyInputValues')
+        inputValsId = self._insertFunctionStep('copyInputValues')
         self._defineValues()
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each psd insert the steps to process it
         for line in self.values:
             # CTF Re-estimation with Xmipp
-            copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[])
+            copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[inputValsId])
             stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
             deps.append(stepId)
         # Insert step to create output objects       
@@ -243,7 +243,7 @@ class ProtRecalculateCTF(ProtMicrographs):
             raise Exception("No created dir: %s " % micDir)
         copyTree(prevDir, micDir)
     
-    def _estimateCTF(self, micFn, micDir):
+    def _estimateCTF(self, line):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:

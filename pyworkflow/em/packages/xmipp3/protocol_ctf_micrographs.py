@@ -58,6 +58,7 @@ estimate CTF on a set of micrographs using xmipp3 """
         ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
         ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
         ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
+        return ctfModel
     
     def _citations(self):
         return ['Vargas2013']
@@ -148,6 +149,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         self.runJob(self._program, self._args % self._params)    
     
     def createOutputStep(self):
+        self._createFilenameTemplates()
         ctfSet = self._createSetOfCTF()
         ctfSet.setMicrographs(self.setOfCtf.getMicrographs())
         defocusList = []
@@ -159,9 +161,10 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
                 
                 if objId == ctfModel.getObjId():
                     mic = ctfModel.getMicrograph()
-                    mic.setObjId(ctfModel.getObjId())
+#                     mic.setObjId(ctfModel.getObjId())
                     micDir = self._getMicrographDir(mic)
                     ctfparam = self._getFileName('ctfparam', micDir=micDir)
+#                     ctfModel2 = CTFModel()
                     ctfModel2 = readCTFModel(ctfparam, mic)
                     ctfModel2 = self._setPsdFiles(ctfModel2, micDir)
                     ctfModel.copy(ctfModel2)
