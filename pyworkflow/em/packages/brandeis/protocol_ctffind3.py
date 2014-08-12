@@ -200,12 +200,16 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
             ctfSet.append(ctfModel)
         
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineSourceRelation(self.setOfCtf, ctfSet)
+        self._defineOutputs(outputMicrographs=self.outputMics)
+        self._defineTransformRelation(self.setOfMics, self.outputMics)
+        self._defineSourceRelation(self.inputCtf.get(), ctfSet)
         self._defocusMaxMin(defocusList)
         self._ctfCounter(defocusList)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self, line):
+        
+        self._defineValues(line)
         # get the size and the image of psd
         objId = self._getObjId(line)
         ctfModel = self.setOfCtf.__getitem__(objId)
