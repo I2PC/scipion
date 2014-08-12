@@ -461,6 +461,17 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			fireTableCellUpdated(row, col);
 		}
 	}
+        
+        /** Set the selection state of an element give row and col */
+	public void touchItem(int row, int col, boolean isselected) {
+		int i = getIndex(row, col);
+		if (isValidIndex(i)) {
+			data.setSelected(i, isselected);
+			adjustWidth = false;
+			fireTableCellUpdated(row, col);
+		}
+	}
+	
 	
 	/**
 	 * Goto and select specified item, if there is a selection it will be

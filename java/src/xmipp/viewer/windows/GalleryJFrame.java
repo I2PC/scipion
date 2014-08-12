@@ -475,8 +475,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		setAutoAdjustColumns(adjust);
 	}
 
-        public void fireTableRowUpdated(int row) {
-            gallery.fireTableRowsUpdated(row, row);
+        public void fireTableRowsUpdated(int from, int to) {
+            gallery.fireTableRowsUpdated(from, to);
         }
 
 	/** Some tweaks over traditional JTable */
@@ -534,7 +534,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		table.addMouseListener(new java.awt.event.MouseAdapter()
 		{
-			public void mouseClicked(java.awt.event.MouseEvent evt)
+			public void mouseReleased(java.awt.event.MouseEvent evt)
 			{
 				tableMouseClicked(evt);
 			}
@@ -1393,78 +1393,60 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		int row = table.rowAtPoint(p);
 		int col = table.columnAtPoint(p);
 
-		if (evt.getButton() == MouseEvent.BUTTON1)
-		{ // Left click.
-			if (evt.getClickCount() > 1)
-			{
-				try
-				{
-					gallery.handleDoubleClick(row, col);
-				}
-				catch (Exception e)
-				{
-					XmippDialog.showError(this, e.getMessage());
-				}
-			}
-			else
-			{
-				// Ctrl adds items to selection, otherwise previous ones are
-				// removed.
-				boolean move = true;
-				if (!evt.isControlDown() && !evt.isShiftDown())
-				{
-                                        gallery.clearSelection();
+                if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() > 1)
+                {
+                        try
+                        {
+                                gallery.handleDoubleClick(row, col);
+                        }
+                        catch (Exception e)
+                        {
+                                XmippDialog.showError(this, e.getMessage());
+                        }
+                }
+                else
+                {
+                        isUpdating = true;
+                        int index = gallery.getIndex(row, col);
+                        if (gallery.isValidIndex(index))
+                                jsGoToImage.setValue(index + 1);
+                        isUpdating = false;
+                        // Ctrl adds items to selection, otherwise previous ones are removed.
+                        if (!evt.isControlDown() && !evt.isShiftDown())
+                        {
+                                gallery.clearSelection();
+                                if(evt.getButton() == MouseEvent.BUTTON1)
+                                    gallery.touchItem(row, col, true);
+                                else
+                                    gallery.touchItem(row, col, true);
+
+                        }
+                        else
+                        {
+                                if (evt.isShiftDown())
+                                        gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col, true);
+                                else if (evt.isControlDown())
                                         gallery.touchItem(row, col);
-					
-				}
-				else
-				{
-					if (evt.isShiftDown())
-					{
-						gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col, true);
-					}
-					else if (evt.isControlDown())
-					{
-						gallery.touchItem(row, col);
-					}
-				}
-				if (move)
-				{
-					isUpdating = true;
-					int index = gallery.getIndex(row, col);
-					if (gallery.isValidIndex(index))
-						jsGoToImage.setValue(index + 1);
-					isUpdating = false;
-				}
-				if (!evt.isShiftDown())
-				{
-					previousSelectedRow = row;
-					previousSelectedCol = col;
-				}
-			}
+                        }
 
-		}
-		else if (evt.getButton() == MouseEvent.BUTTON3)
-		{ // Right click.
+                        if (!evt.isShiftDown())
+                        {
+                                previousSelectedRow = row;
+                                previousSelectedCol = col;
+                        }
 
-			final MouseEvent me = evt;
-			if (gallery.handleRightClick(row, col, jpopUpMenuTable))
-			{
-				if (gallery.getSelectionCount() < 2)
-				{
-					gallery.clearSelection();
-					gallery.touchItem(row, col);
-				}
-				SwingUtilities.invokeLater(new Runnable()
-				{
-					public void run()
-					{
-                                                
-						jpopUpMenuTable.show(me.getComponent(), p);
-					}
-				});
-			}
-		}
+                    final MouseEvent me = evt;
+                    if (evt.getButton() == MouseEvent.BUTTON3 && gallery.handleRightClick(row, col, jpopUpMenuTable))
+                    {
+                            SwingUtilities.invokeLater(new Runnable()
+                            {
+                                    public void run()
+                                    {
+                                        jpopUpMenuTable.show(me.getComponent(), p);
+                                    }
+                            });
+                    }
+                }
 		table.invalidate();
 		table.repaint();
 		refreshExtractFrame();
@@ -1909,8 +1891,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
                         setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			// Update menu items status depending on item.
-			row = table.rowAtPoint(location);
-			col = table.columnAtPoint(location);
 			getPopupMenu().show(cmpnt, location.x, location.y);
 
 		}// function show

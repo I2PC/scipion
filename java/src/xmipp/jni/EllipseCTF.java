@@ -5,6 +5,8 @@
 package xmipp.jni;
 
 import ij.process.EllipseFitter;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -20,6 +22,7 @@ public class EllipseCTF {
     private long id;
     private EllipseFitter ellipseFitter;
     private double defocusAngle;
+    private List<Long> ids;
 
     public void setEllipseFitter(EllipseFitter ellipseFitter) {
         this.ellipseFitter = ellipseFitter;
@@ -29,9 +32,6 @@ public class EllipseCTF {
     public EllipseFitter getEllipseFitter() {
         return ellipseFitter;
     }
-   
-    
-    
     
     public EllipseCTF(long id, double Q0, double Cs, double downsampleFactor, double Ts, double kV, double mddefU, double mddefV, double defocusAngle, int D)
     {
@@ -156,6 +156,25 @@ public class EllipseCTF {
         return downsampleFactor;
     }
 
+    public void addId(long id)
+    {
+        if(ids == null)
+        {
+            ids = new ArrayList<Long>();
+            ids.add(this.id);
+        }
+        ids.add(id);
+    }
     
+    public List<Long> getIds()
+    {
+        if(ids == null)
+        {
+            ids = new ArrayList<Long>();
+            ids.add(this.id);
+        }
+        
+        return ids;
+    }
     
 }

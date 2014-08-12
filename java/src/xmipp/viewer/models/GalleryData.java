@@ -499,7 +499,7 @@ public class GalleryData {
     
     
 
-    void clearSelection() {
+    public void clearSelection() {
         for (int i = 0; i < selection.length; ++i) {
             selection[i] = false;
         }
@@ -885,7 +885,7 @@ public class GalleryData {
     public int getSelectionCount() {
         int count = 0;
 
-        if (!isVolumeMode()) {
+        if (!isVolumeMode() && hasSelection()) {
             for (int i = selfrom; i <= selto; ++i) {
                 if (selection[i]) {
                     ++count;
@@ -900,7 +900,7 @@ public class GalleryData {
      */
     public MetaData getSelectionMd() {
         MetaData selectionMd = null;
-        if (!isVolumeMode()) {
+        if (!isVolumeMode() && hasSelection()) {
             long[] selectedIds = new long[getSelectionCount()];
             int count = 0;
             for (int i = selfrom; i <= selto; ++i) {
@@ -988,15 +988,16 @@ public class GalleryData {
     public MetaData getClassesImages() {
         MetaData mdImages = new MetaData();
         MetaData md;
-        for (int i = selfrom; i <= selto; ++i) {
-            if (selection[i]) {
-                md = getClassImages(i);
-                if (md != null) {
-                    mdImages.unionAll(md);
-                    md.destroy();
+        if(hasSelection())
+            for (int i = selfrom; i <= selto; ++i) {
+                if (selection[i]) {
+                    md = getClassImages(i);
+                    if (md != null) {
+                        mdImages.unionAll(md);
+                        md.destroy();
+                    }
                 }
             }
-        }
         return mdImages;
     }
 
@@ -1113,12 +1114,13 @@ public class GalleryData {
      * Delete from metadata selected items
      */
     public void removeSelection() throws Exception {
-        for (int i = selfrom; i <= selto; ++i) {
-            if (selection[i]) {
-                md.removeObject(ids[i]);
-                hasMdChanges = true;
+        if(hasSelection())
+            for (int i = selfrom; i <= selto; ++i) {
+                if (selection[i]) {
+                    md.removeObject(ids[i]);
+                    hasMdChanges = true;
+                }
             }
-        }
     }
 
     /**
@@ -1223,18 +1225,19 @@ public class GalleryData {
             saveSelection("classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    long id = ids[i];
-                    int ref = md.getValueInt(MDLabel.MDL_REF, id);
-                    String blockName = Filename.getClassBlockName(ref);
-                    if (containsBlock(blockName)) {
-                        imagesmd = new MetaData(blockName + Filename.SEPARATOR + filename);
-                        imagesmd.writeBlock(blockName + Filename.SEPARATOR + path);
-                        imagesmd.destroy();
+            if(hasSelection())
+                for (int i = selfrom; i <= selto; ++i) {
+                    if (selection[i]) {
+                        long id = ids[i];
+                        int ref = md.getValueInt(MDLabel.MDL_REF, id);
+                        String blockName = Filename.getClassBlockName(ref);
+                        if (containsBlock(blockName)) {
+                            imagesmd = new MetaData(blockName + Filename.SEPARATOR + filename);
+                            imagesmd.writeBlock(blockName + Filename.SEPARATOR + path);
+                            imagesmd.destroy();
+                        }
                     }
                 }
-            }
 
         } catch (Exception ex) {
             Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1583,12 +1586,9 @@ public class GalleryData {
     }
 
     public boolean hasSelection() {
-        for (int i = selfrom; i <= selto; i++) {
-            if (selection[i]) {
-                return true;
-            }
-        }
-        return false;
+        if(selfrom == -1)
+            return false;
+        return true;
     }
 
     public MetaData getMd() {

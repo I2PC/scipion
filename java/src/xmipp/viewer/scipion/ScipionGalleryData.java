@@ -272,9 +272,10 @@ public class ScipionGalleryData extends GalleryData {
 
             String line = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n";
 
-            for (EllipseCTF ctf : ctfs) {
-                out.write(String.format(Locale.ENGLISH, line, ctf.getId(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
-            }
+            for (EllipseCTF ctf : ctfs) 
+                for(Long id: ctf.getIds())
+                    out.write(String.format(Locale.ENGLISH, line, id, ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq()));
+            
 
             out.close();
 
@@ -289,7 +290,7 @@ public class ScipionGalleryData extends GalleryData {
         super.removeCTF(row);
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
         emo.setComment("");
-        window.fireTableRowUpdated(row);
+        window.fireTableRowsUpdated(row, row);
     }
 
     
@@ -304,9 +305,14 @@ public class ScipionGalleryData extends GalleryData {
             ctfs = new ArrayList<EllipseCTF>();
         }
         ctfs.add(ellipseCTF);
-        ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObject(ids[row]);
-        emo.setComment("(recalculate ctf)");
-        window.fireTableRowUpdated(row);
+        for(int i = selfrom; i <= selto; i ++)
+            if(selection[i])
+            {
+                ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(i);
+                emo.setComment("(recalculate ctf)");
+                ellipseCTF.addId(ids[i]);
+            }
+        window.fireTableRowsUpdated(selfrom, selto);
     }
     
     
