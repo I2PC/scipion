@@ -123,6 +123,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
         valueOld = os.environ.get(var, '')
+        i = 0  # so if flags is empty, we put it at the beginning too
         for i in range(len(flags)):
             if flags[i].startswith('%s=' % var):
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
