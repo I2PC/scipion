@@ -218,7 +218,7 @@ class ProtRecalculateCTF(ProtMicrographs):
             copyId = self._insertFunctionStep('copyFiles', line, prerequisites=[inputValsId])
             stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
             deps.append(stepId)
-        # Insert step to create output objects       
+        # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
     
     #--------------------------- STEPS functions ---------------------------------------------------
@@ -227,21 +227,14 @@ class ProtRecalculateCTF(ProtMicrographs):
         
         self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
         
-        self.outputMics = self._createSetOfMicrographs()
-        self.setOfMics = self.inputCtf.get().getMicrographs()
         self.setOfCtf = self._createSetOfCTF("_subset")
-        
-        SetOfImages.copyInfo(self.outputMics, self.setOfMics)
-        
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
         
         for ctf in modifiedSet:
             if ctf.isEnabled():
                 mic = ctf.getMicrograph()
                 self.setOfCtf.append(ctf)
-                self.outputMics.append(mic)
-        self.setOfCtf.write()
-        self.setOfCtf.close()
+#         self.setOfCtf.write()
            
     def copyInputValues(self):
         """ Copy a parameter file that contain the info of the
@@ -278,7 +271,7 @@ class ProtRecalculateCTF(ProtMicrographs):
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputCTF'):
+        if not (hasattr(self, 'outputCTF') and hasattr(self, 'outputMicrographs')):
             summary.append(Message.TEXT_NO_CTF_READY)
         else:
             summary.append(self.summaryInfo.get())
@@ -287,7 +280,7 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _methods(self):
         methods = []
         
-        if not hasattr(self, 'outputCTF'):
+        if not (hasattr(self, 'outputCTF') and hasattr(self, 'outputMicrographs')):
             methods.append(Message.TEXT_NO_CTF_READY)
         else:
             methods.append(self.methodsInfo.get())
@@ -362,9 +355,6 @@ class ProtRecalculateCTF(ProtMicrographs):
         """ Setup filename and prefix for db connection. """
         self._dbName = self.sqliteFile.get()
         self._dbPrefix = ""
-        print "DBNAME: ", self._dbName
-        print "DBPREFIX: ", self._dbPrefix
-
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1] 
 
