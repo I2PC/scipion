@@ -356,6 +356,11 @@ public class ScipionGalleryData extends GalleryData {
         }
     }
     
+    public boolean hasMdChanges()
+    {
+        return ((ScipionMetaData)md).isChanged();
+    }
+    
     /**
      * Check if an item is enabled or not
      */

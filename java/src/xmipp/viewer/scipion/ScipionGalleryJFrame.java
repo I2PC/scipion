@@ -23,6 +23,7 @@ import javax.swing.JButton;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -304,7 +305,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
   
     public boolean proceedWithChanges()
     {
-        return true;//without asking for changes
+        boolean proceed = true;
+        if (data.hasMdChanges())
+        {       String question = String.format("Input file has been modified. Are you sure you want to discard changes?", sqlitefile);
+                proceed = XmippDialog.showYesNoQuestion(ScipionGalleryJFrame.this, question);
+        }
+                        
+        return proceed;
     }
     
    protected void createSubset(final String[] command, String msg) 

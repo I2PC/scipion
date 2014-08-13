@@ -906,7 +906,13 @@ public class ScipionMetaData extends MetaData {
             }
         }
    
-    
+    public boolean isChanged()
+    {
+        for(EMObject emo: emobjects)
+            if(emo.changed)
+                return true;
+        return false;
+    }
     
     
     public class EMObject {
