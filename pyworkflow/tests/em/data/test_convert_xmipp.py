@@ -171,6 +171,10 @@ class TestSetConversions(BaseTest):
         fn = self.dataset.getFile('aligned_particles')
         print "Converting sqlite: %s" % fn
         imgSet = SetOfParticles(filename=fn) 
+        imgSet.setAcquisition(Acquisition(magnification=60000,
+                                          voltage=300,
+                                          sphericalAberration=0.1,
+                                          amplitudeContrast=0.1))
         
         md = xmipp.MetaData()
         setOfParticlesToMd(imgSet, md)
