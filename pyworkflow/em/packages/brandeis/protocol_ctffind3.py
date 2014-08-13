@@ -168,17 +168,18 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         self.runJob(self._program, self._args % self._params)
     
     def createOutputStep(self):
-        ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.setOfCtf.getMicrographs())
+        setOfMics = self.inputCtf.get().getMicrographs()
+        outputMics = self._createSetOfMicrographs("_subset")
+        outputMics.copyInfo(setOfMics)
+        ctfSet = self._createSetOfCTF("_recalculated")
         defocusList = []
-        
         for ctfModel in self.setOfCtf:
-            
+            mic = ctfModel.getMicrograph()
+            outputMics.append(mic)
             for line in self.values:
                 objId = self._getObjId(line)
                 
                 if objId == ctfModel.getObjId():
-                    mic = ctfModel.getMicrograph()
                     mic.setObjId(ctfModel.getObjId())
                     micDir = self._getMicrographDir(mic)
                     
@@ -196,12 +197,15 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
                     defocusList.append(ctfModel2.getDefocusU())
                     defocusList.append(ctfModel2.getDefocusV())
                     break
-            
             ctfSet.append(ctfModel)
         
+        self.setOfCtf.close()
+        ctfSet.setMicrographs(outputMics)
+        
+        self._defineOutputs(outputMicrographs=outputMics)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineOutputs(outputMicrographs=self.outputMics)
-        self._defineTransformRelation(self.setOfMics, self.outputMics)
+        
+        self._defineTransformRelation(setOfMics, outputMics)
         self._defineSourceRelation(self.inputCtf.get(), ctfSet)
         self._defocusMaxMin(defocusList)
         self._ctfCounter(defocusList)
