@@ -98,7 +98,7 @@ class ProtUserSubSet(ProtSets):
         else:
             raise Exception("Unrecognized output type: '%s'" % outputClassName)  
               
-    def _createSubSetFromCTF(self, inputCTFs):
+    def _createMicsSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
@@ -113,6 +113,22 @@ class ProtUserSubSet(ProtSets):
                 
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(setOfMics, outputMics)
+        
+    def _createSubSetOfCTF(self, inputCtf):
+        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
+        
+        
+        setOfCtf = self._createSetOfCTF("_subset")
+        
+        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        
+        for ctf in modifiedSet:
+            if ctf.isEnabled():
+                mic = ctf.getMicrograph()
+                setOfCtf.append(ctf)
+                
+         # Register outputs
+        self._defineOutput(self.outputClassName.get(), setOfCtf)
         
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
@@ -177,13 +193,14 @@ class ProtUserSubSet(ProtSets):
             self._createSubSetFromClasses(inputObj)
            
         elif isinstance(inputObj, SetOfCTF):
-            self._createSubSetFromCTF(inputObj) 
+            outputClassName = self.outputClassName.get()
+            if outputClassName.startswith('SetOfMicrographs'):
+                self._createMicsSubSetFromCTF(inputObj) 
+            else:
+                self._createSubSetOfCTF(inputObj)
             
         elif isinstance(inputObj, EMProtocol):
-            from pyworkflow.mapper.sqlite import SqliteFlatDb
-            db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-            setClassName = db.getProperty('self') # get the set class name
-            setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+            setObj = self.getSetObject()
             otherObj = self.otherObject.get()
             
             if isinstance(setObj, SetOfClasses):
@@ -196,13 +213,18 @@ class ProtUserSubSet(ProtSets):
                 
             # Clean the pointer to other, to avoid dependency in the graph
             self.otherObject.set(None)
-                
+    
+    def getSetObject(self):            
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
+        setClassName = db.getProperty('self') # get the set class name
+        setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+        return setObj    
             
-            
-    def defineOutputSet(self, outputset):
-        outputs = {'output' + self.getOutputType(): outputset}
-        self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.getInput(), outputset)
+#     def defineOutputSet(self, outputset):
+#         outputs = {'output' + self.getOutputType(): outputset}
+#         self._defineOutputs(**outputs)
+#         self._defineSourceRelation(self.getInput(), outputset)
     
     def _summary(self):
         summary = []
