@@ -293,7 +293,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
         return env.Command(
-            'software/em/%s/bin' % name,
+            Dir('software/em/%s/bin' % name),
             Dir(packageHome),
             Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
