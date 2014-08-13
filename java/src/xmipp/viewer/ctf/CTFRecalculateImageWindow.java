@@ -195,7 +195,7 @@ public class CTFRecalculateImageWindow extends ImageWindow implements ActionList
         ellipseCTF.setEllipseFitter(ellipseFitter);
         // Add "estimate..." to tasks.
         data.recalculateCTF(row, ellipseCTF, sortFn);
-        dispose();
+        exit();
     }
 
 	@Override
