@@ -73,12 +73,13 @@ elif WINDOWS:
 #  *                                                                      *
 #  ************************************************************************
 
-# We have 3 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+# We have 4 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
 #
 # They are:
-#   addLibrary - install a library
-#   addModule  - install a Python module
-#   addPackage - install an EM package
+#   addLibrary    - install a library
+#   addModule     - install a Python module
+#   addPackage    - install an EM package
+#   manualInstall - install by manually running commands
 #
 # Their structure is similar:
 #   * Define reasonable defaults
@@ -141,8 +142,6 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
-        if  not GetOption(name):
-            return ''
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -175,6 +174,9 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     for dep in deps:
         Depends(tConfig, dep)
 
+    if default or GetOption(name):
+        Default(tMake)
+
     return tMake
 
 
@@ -205,8 +207,6 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate module %s' % name)
-        if  not GetOption(name):
-            return ''
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -236,6 +236,9 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     # Add the dependencies.
     for dep in deps:
         Depends(tInstall, dep)
+
+    if default or GetOption(name):
+        Default(tInstall)
 
     return tInstall
 
@@ -286,9 +289,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     packageHome = GetOption(name) or defaultPackageHome
 
-    if not (default or packageHome):
-        return ''
-
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
@@ -319,6 +319,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
+
     for target, command in extraActions:
         lastTarget = env.Command('software/em/%s/%s' % (name, target),
                                  lastTarget,
@@ -332,6 +333,9 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # extra actions (like setup scripts) have everything in place.
     for dep in deps:
         Depends(tLink, dep)
+
+    if default or packageHome:
+        Default(lastTarget)
 
     return lastTarget
 
@@ -367,7 +371,7 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
     # Donload, untar, and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, Dir('software/tmp/%s/dummy' % buildDir), tDownload,
+    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
                    cdir='software/tmp')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/tmp/%s' % buildDir)

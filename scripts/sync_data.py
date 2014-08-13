@@ -190,13 +190,19 @@ def listDatasets(url):
         print 'Error reading %s (%s)' % (url, e)
 
 
-def check(dataset, url, verbose=False):
+def check(dataset, url, verbose=False, updateMANIFEST=False):
     """ See if our local copy of dataset is the same as the remote one.
     Return True if it is (if all the checksums are equal), False if not.
     """
     def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
 
     vlog('Checking dataset %s ... ' % dataset)
+
+    if updateMANIFEST:
+        createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+    else:
+        vlog('(not updating local MANIFEST) ')
+
     try:
         md5sRemote = dict(x.split() for x in
                           urlopen('%s/%s/MANIFEST' %
@@ -210,6 +216,14 @@ def check(dataset, url, verbose=False):
             return True
         else:
             vlog('\thas differences\n')
+            flocal = set(md5sLocal.keys())
+            fremote = set(md5sRemote.keys())
+            def show(txt, lst):
+                if lst: vlog('  %s: %s\n' % (txt, ' '.join(lst)))
+            show('Local files missing in the server', flocal - fremote)
+            show('Remote files missing locally', fremote - flocal)
+            show('Files with differences', [f for f in fremote & flocal
+                                            if md5sLocal[f] != md5sRemote[f]])
             return False
     except Exception as e:
         vlog('\terror: %s\n' % e)

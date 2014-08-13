@@ -50,7 +50,8 @@ fftw = env.AddLibrary(
     'fftw',
     tar='fftw-3.3.4.tgz',
     targets=['lib/libfftw3.so'],
-    flags=['--enable-threads', '--enable-shared'])
+    flags=['--enable-threads', '--enable-shared'],
+    default=False)
 
 tcl = env.AddLibrary(
     'tcl',
@@ -82,6 +83,14 @@ python = env.AddLibrary(
     targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared'],
     deps=[sqlite, tk])
+
+boost_headers_only = env.ManualInstall(
+    'boost_headers_only',
+    tar='boost_1_56_0.tgz',
+    extraActions=[
+        ('%s/software/include/boost' % env['SCIPION_HOME'],
+         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+    default=False)
 
 
 #  ************************************************************************
@@ -209,12 +218,6 @@ env.AddPackage('relion',
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
                default=False)
-
-env.ManualInstall('boost_headers_only',
-                  tar='boost_1_56_0.tgz',
-                  extraActions=[
-                      ('%s/software/include/boost' % env['SCIPION_HOME'],
-                       'cp -rf boost %s/software/include' % env['SCIPION_HOME'])])
 
 # TODO: check if we have to use the "purge" option below:
 

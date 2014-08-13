@@ -194,7 +194,9 @@ class ProtRelionBase(EMProtocol):
                            'The approximate amount of memory (in Gb) required to store K maps of (size x size x size) voxels and a' 
                            'padding factor (pad) may be calculated as: K*2*8*(size*pad)^3/1024/1024/1024\n' 
                            '<Note>: also consider the use of threads if memory is an issue.')
-        form.addParam('extraParams', StringParam, default='',
+        
+        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
+        form.addParam('extraParams', StringParam, default=extraDefault,
                       expertLevel=LEVEL_EXPERT,
                       label='Additional parameters',
                       help='')
