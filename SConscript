@@ -209,6 +209,13 @@ env.AddPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
+env.AddPackage('pytom',
+               tar='pytom_develop0.962.tgz',
+               extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
+                             'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
+                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
+               default=False)
+
 env.AddPackage('relion',
                tar='relion-1.2.tgz',
                extraActions=[('relion_build.log', './INSTALL.sh -j %s'
