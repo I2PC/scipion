@@ -47,8 +47,8 @@ public class ScipionMetaData extends MetaData {
         this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
     }
 
-    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
-        this.preffix = prefix;
+    public ScipionMetaData(String preffix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
+        this.preffix = preffix;
         this.self = self;
         this.selfalias = selfalias;
         this.columns = columns;
@@ -648,7 +648,7 @@ public class ScipionMetaData extends MetaData {
         return MetaData.LABEL_STRING;
     }
 
-    public String getPrefix() {
+    public String getPreffix() {
         return preffix;
     }
 

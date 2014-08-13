@@ -128,7 +128,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         size = ((ScipionGalleryData)data).getEnabledCount();
                     if (confirmCreate(type, size)) 
                     {
-                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPrefix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
+                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
                         createSubset(command, "Creating set ...");
                     }
                 }
@@ -214,6 +214,20 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         }
                     }
                 }, icon);
+                
+                JButton ctfsubsetbt = getScipionButton("Create Micrographs", new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        int size = ((ScipionGalleryData)data).getEnabledCount();
+                        if (confirmCreate("Micrographs", size)) 
+                        {
+                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", "SetOfMicrographs", dlg.getFieldValue(runNameKey), other};
+                            createSubset(command, "Creating set ...");
+                        }
+                    }
+                });
+                buttonspn.add(ctfsubsetbt);
                 buttonspn.add(recalculatectfbt);
             }
             pack();

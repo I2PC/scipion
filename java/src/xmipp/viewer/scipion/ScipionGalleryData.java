@@ -251,9 +251,7 @@ public class ScipionGalleryData extends GalleryData {
             return "Particle";
         }
         String self = ((ScipionMetaData) md).getSelf();
-        if (self.equals("CTFModel")) {
-            return "Micrograph";
-        }
+        
         return self;
     }
 
@@ -262,8 +260,8 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData) md).getSelf();
     }
 
-    public String getPrefix() {
-        return ((ScipionMetaData) md).getPrefix();
+    public String getPreffix() {
+        return ((ScipionMetaData) md).getPreffix();
     }
 
     public void exportCTFRecalculate(String path) {
