@@ -202,7 +202,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                                     try {
 
-                                        String output = XmippWindowUtil.executeCommand(command, true);
+                                        String output = XmippWindowUtil.executeCommand(command, false);
                                     } catch (Exception ex) {
                                         throw new IllegalArgumentException(ex.getMessage());
                                     }
@@ -328,6 +328,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
                     if (output != null && !output.isEmpty()) 
                         System.out.println(output);
+                    close(false);
 //                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
 //                        
 //                    }
