@@ -1108,7 +1108,10 @@ class Protocol(Step):
         
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        baseSummary = self._summary() or []        
+        try:
+            baseSummary = self._summary() or []
+        except Exception as ex:
+            baseSummary = [str(ex)]        
             
         comments = self.getObjComment()
         if comments:
