@@ -218,8 +218,10 @@ env.AddPackage('pytom',
 
 env.AddPackage('relion',
                tar='relion-1.2.tgz',
-               extraActions=[('relion_build.log', './INSTALL.sh -j %s'
-                              % GetOption('num_jobs'))],
+               extraActions=[
+                   ('lib', 'ln -fs lib64 lib'),
+                   ('relion_build.log', './INSTALL.sh -j %s'
+                    % GetOption('num_jobs'))],
                default=False)
 
 env.AddPackage('spider',
