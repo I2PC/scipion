@@ -209,7 +209,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                                 }
                             }).start();
-                        close();                          
+                        close(false);                          
                         } catch (Exception ex) {
                             Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }

@@ -283,13 +283,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/** Close the application, check if changes first */
 	public void close()
 	{
-		if (proceedWithChanges())
-		{
-			setVisible(false);
-			dispose();
-			XmippApplication.removeInstance(false);
+		close(true);
+	}// function close
+        
+        /** Close the application, check if changes first */
+	public void close(boolean ask)
+	{
+            boolean isclose = true;
+            if(ask)
+                isclose = proceedWithChanges();
+            if (isclose)
+            {
+                    setVisible(false);
+                    dispose();
+                    XmippApplication.removeInstance(false);
 
-		}
+            }
 	}// function close
 
 	/** Check if there are changes to proceed */
