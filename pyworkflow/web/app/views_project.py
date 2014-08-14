@@ -283,50 +283,52 @@ def protocol_info(request):
 #    print "ENTER IN PROTOCOL INFO METHOD"
 
     if request.is_ajax():
+        jsonStr = ''
         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
 
         project = loadProject(projectName)
-        protocol = project.getProtocol(int(protId))
         
-        # PROTOCOL IO
-        input_obj = [{'name':name, 
-                      'nameId': attr.getNameId(), 
-                      'id': attr.getObjId(), 
-                      'info': str(attr)} 
-                     for name, attr in protocol.iterInputAttributes()]
-        
-        output_obj = [{'name':name, 
-                       'nameId': attr.getNameId(), 
-                       'id': attr.getObjId(), 
-                       'info': str(attr)} 
-                      for name, attr in protocol.iterOutputAttributes(EMObject)]
-
-        # PROTOCOL SUMMARY
-        summary = parseText(protocol.summary())
-        
-        # PROTOCOL METHODS
-        methods = parseText(protocol.methods())
-
-        # STATUS
-        status = protocol.status.get()
-        
-        # LOGS (ERROR & OUTPUT)
-        fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
-
-        ioDict = {'inputs': input_obj,
-                  'outputs': output_obj,
-                  'summary': summary,
-                  'methods': methods, 
-                  'status': status,
-                  'logs_out': parseText(fOutString),
-                  'logs_error': parseText(fErrString),
-                  'logs_scipion': parseText(fScpnString)
-                  }
-        
-#        print "ioDict: ", ioDict
-        
-        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        if len(protId) > 0: 
+            protocol = project.getProtocol(int(protId))
+            
+            # PROTOCOL IO
+            input_obj = [{'name':name, 
+                          'nameId': attr.getNameId(), 
+                          'id': attr.getObjId(), 
+                          'info': str(attr)} 
+                         for name, attr in protocol.iterInputAttributes()]
+            
+            output_obj = [{'name':name, 
+                           'nameId': attr.getNameId(), 
+                           'id': attr.getObjId(), 
+                           'info': str(attr)} 
+                          for name, attr in protocol.iterOutputAttributes(EMObject)]
+    
+            # PROTOCOL SUMMARY
+            summary = parseText(protocol.summary())
+            
+            # PROTOCOL METHODS
+            methods = parseText(protocol.methods())
+    
+            # STATUS
+            status = protocol.status.get()
+            
+            # LOGS (ERROR & OUTPUT)
+            fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
+    
+            ioDict = {'inputs': input_obj,
+                      'outputs': output_obj,
+                      'summary': summary,
+                      'methods': methods, 
+                      'status': status,
+                      'logs_out': parseText(fOutString),
+                      'logs_error': parseText(fErrString),
+                      'logs_scipion': parseText(fScpnString)
+                      }
+            
+    #        print "ioDict: ", ioDict
+            jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
