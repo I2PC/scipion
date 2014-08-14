@@ -225,19 +225,23 @@ function initializeColumnHeader() {
 	var cols = oTable.fnSettings().aoColumns;
 	
 	for(var x = 0, xLen = cols.length; x < xLen; x++) {
+		
 		var cellIndex = oTable.fnColumnIndexToVisible(x)
+		
 		if (cellIndex != null) {
-			var elm = $('th:eq(' + cellIndex + ')', headerRow).find("div");
-			var textLabel = cols[x].sTitle
+			
+			// var elm = $('th:eq(' + cellIndex + ')', headerRow).find("div");
+			var elm = $('th:eq(' + cellIndex + ')', headerRow);
+			
 			// To render is neccesary the Name, not the Label
+			// var textLabel = cols[x].sTitle
 			var textName = cols[x].sSubTitle
-			
-			var properties = jsonTableLayoutConfiguration.columnsLayout[cols[x].sSubTitle]
+			elm.attr("id", textName + "___column_header")
 
-			elm.append(getHeaderWithIcon(textName,properties)) 
-			
-			$('th:eq(' + cellIndex + ')', headerRow).attr("id",
-					cols[x].sSubTitle + "___column_header")
+			var properties = jsonTableLayoutConfiguration.columnsLayout[textName]
+			var headerIcon = getHeaderWithIcon(textName, properties)
+			elm.append(headerIcon)
+		
 		}
 	}
 }

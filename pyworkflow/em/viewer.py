@@ -100,7 +100,7 @@ class DataView(View):
             'visible',
             'zoom',
             'order',
-            'render',
+#            'render',
         }
         
         params = {}
