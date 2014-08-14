@@ -29,7 +29,7 @@ This sub-package contains the XmippPreprocessMicrographs protocol
 """
 
 from os.path import basename
-from pyworkflow.utils.path import getExt
+from pyworkflow.utils import getExt, replaceExt
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
@@ -227,9 +227,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         the input Micrograph object.
         """
         fn = mic.getFileName()
+        
         extFn = getExt(fn)
-        if extFn == "dm3" or extFn == "tif" or extFn == "tiff" or extFn == "ser":
-            replaceBaseExt(fn, "mrc")
+        if extFn == ".dm3" or extFn == ".tif" or extFn == ".tiff" or extFn == ".ser":
+            fn = replaceExt(fn, ".mrc")
         
         fnOut = self._getExtraPath(basename(fn))
         
