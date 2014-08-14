@@ -628,6 +628,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
+                usezoombt.setSelected(true);
 		tb.add(usezoombt);
 		initSizePane();
 		tb.add(sizepn);

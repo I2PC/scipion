@@ -47,7 +47,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			this.iw = new ImageWindow(getImage(), this);
 		// iw.maximize();
 		iw.setTitle(getMicrograph().getName());
-		iw.pack();
+		
 	}
 	
         

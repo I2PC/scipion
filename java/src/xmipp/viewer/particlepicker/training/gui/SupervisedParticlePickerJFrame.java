@@ -69,8 +69,6 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private JPanel thresholdpn;
     private JFormattedTextField thresholdtf;
 
-    private JMenuItem advancedoptionsmi;
-    AdvancedOptionsJDialog optionsdialog;
     private JCheckBox centerparticlebt;
     private JMenuItem exportmi;
     private JCheckBox autopickchb;
@@ -79,6 +77,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private Rectangle rectangle;
     private JMenuItem templatesmi;
     TemplatesJDialog templatesdialog;
+    private JLabel checkpercentlb;
+    private JFormattedTextField autopickpercenttf;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -385,12 +385,48 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             }
         });
         sppickerpn.add(autopickchb);
+        initThresholdPane();
+        sppickerpn.add(thresholdpn);
+        checkpercentlb = new JLabel("Explore (%):");
+        sppickerpn.add(checkpercentlb);
+        autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        autopickpercenttf.setColumns(3);
+        autopickpercenttf.setValue(ppicker.getAutopickpercent());
+        autopickpercenttf.setEnabled(ppicker.getMode() == Mode.Supervised || ppicker.getMode() == Mode.Manual);
+        autopickpercenttf.addActionListener(new ActionListener()
+        {
+
+                @Override
+                public void actionPerformed(ActionEvent arg0)
+                {
+
+                        setAutopickPercent();
+
+                }
+        });
+
+        sppickerpn.add(autopickpercenttf);
+
         if (ppicker.getMode() == Mode.Supervised) {
             sppickerpn.add(steppn);
         }
-        initThresholdPane();
-        sppickerpn.add(thresholdpn);
+        
 
+    }
+
+    protected void setAutopickPercent()
+    {
+            if (autopickpercenttf.getValue() == null || ((Number)autopickpercenttf.getValue()).intValue() <= 0)
+            {
+                    XmippDialog.showInfo(this, XmippMessage.getEmptyFieldMsg("Check (%)"));
+                    autopickpercenttf.setValue(getMicrograph().getAutopickpercent());
+                    return;
+            }
+
+            int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
+            getMicrograph().setAutopickpercent(autopickpercent);
+            ppicker.setAutopickpercent(autopickpercent);
+            ppicker.saveConfig();
     }
 
     protected void enableSupervised(boolean selected) {
@@ -401,9 +437,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
         importmi.setEnabled(!selected);
-        if (optionsdialog != null && optionsdialog.isVisible()) {
-            optionsdialog.enableOptions();
-        }
+        
         pack();
 
     }
@@ -472,18 +506,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         windowmn.add(pmi);
         windowmn.add(ijmi);
 
-        advancedoptionsmi = new JMenuItem("Advanced Options");
-        windowmn.add(advancedoptionsmi);
-
-        // Setting menu item listeners
-        advancedoptionsmi.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadAdvancedOptions();
-
-            }
-        });
+       
         templatesmi = new JMenuItem("Templates");
         templatesmi.addActionListener(new ActionListener() {
 
@@ -496,18 +519,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     }
 
-    public void loadAdvancedOptions() {
-        try {
-            if (optionsdialog == null) {
-                optionsdialog = new AdvancedOptionsJDialog(SupervisedParticlePickerJFrame.this);
-            } else {
-                optionsdialog.setVisible(true);
-                optionsdialog.enableOptions();
-            }
-        } catch (Exception e) {
-            XmippDialog.showError(this, e.getMessage());
-        }
-    }
+   
 
     private void initThresholdPane() {
         thresholdpn = new JPanel();
