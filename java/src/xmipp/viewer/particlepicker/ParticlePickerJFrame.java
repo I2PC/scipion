@@ -107,6 +107,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	protected JToolBar tb;
         
+        
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{

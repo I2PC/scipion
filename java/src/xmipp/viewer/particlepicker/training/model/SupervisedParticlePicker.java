@@ -95,17 +95,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
-	// public SingleParticlePicker(String selfile, String outputdir,
-	// String reviewfile) {
-	// this(selfile, outputdir, Mode.Review);
-	// if (!new File(reviewfile).exists())
-	// throw new IllegalArgumentException(
-	// XmippMessage.getNoSuchFieldValueMsg("review file",
-	// reviewfile));
-	// this.reviewfile = reviewfile;
-	// importAllParticles(reviewfile);
-	// }
-
+	
 	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
 	{
 		this(selfile, outputdir, Mode.Manual);

@@ -43,9 +43,10 @@ public abstract class ParticlePicker {
     protected String command;
     protected String configfile;
     public String python, script, protid, projectid;//scipion params
+    protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
+                   "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
 
-    String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
-        "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
+    
     static String xmippsmoothfilter = "Xmipp Smooth Filter";
     public static final String particlesAutoBlock = "particles_auto";
 
@@ -271,13 +272,7 @@ public abstract class ParticlePicker {
         Executer.addCommandListener(new CommandListener() {
             public String commandExecuting(String command) {
 
-                if (IJ.getInstance() != null && !Arrays.asList(commonfilters).contains(command) && !isRegisteredFilter(command)) {
-                    String msg = String.format("Would you like to add filter: %s to preprocess micrographs?", command);
-                    int result = JOptionPane.showConfirmDialog(null, msg);
-                    if (result != JOptionPane.YES_OPTION) {
-                        return command;
-                    }
-                }
+                
                 ParticlePicker.this.command = command;
                 return command;
 
@@ -319,7 +314,7 @@ public abstract class ParticlePicker {
                 options = Recorder.getCommandOptions();
             }
 
-            if (!isFilterSelected(command)) {
+            if (!isFilterSelected(command) && Arrays.asList(availableFilters).contains(command)) {
                 addFilter(command, options);
             } else if (!(options == null || options.equals(""))) {
                 for (IJCommand f : filters) {
