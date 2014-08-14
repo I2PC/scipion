@@ -37,14 +37,17 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected ImageWindow iw;
 	
 	public void display()
-	{   
-                //previous window loaded and different from this one
-		if(iw != null && getImage().getWindow() == null)
-                    iw.close();
-                iw = new ImageWindow(getImage(), this);
-                iw.setTitle(getMicrograph().getName());
-		iw.maximize();
-		
+	{
+		if (iw != null && iw.isVisible())
+		{
+			iw.setImage(getImage());
+			iw.updateImage(getImage());
+		}
+		else
+			this.iw = new ImageWindow(getImage(), this);
+		// iw.maximize();
+		iw.setTitle(getMicrograph().getName());
+		iw.pack();
 	}
 	
         
