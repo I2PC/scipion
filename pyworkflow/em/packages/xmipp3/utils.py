@@ -47,7 +47,9 @@ def getMdFirstRow(filename):
 
 def getMdSize(filename):
     """ Return the metadata size without parsing entirely. """
-    return getMdFirstRow(filename).getParsedLines()
+    md = xmipp.MetaData()
+    md.read(filename, 1)
+    return md.getParsedLines()
 
 
 def isMdEmpty(filename):
