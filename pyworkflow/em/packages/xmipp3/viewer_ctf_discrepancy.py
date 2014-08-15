@@ -38,8 +38,9 @@ import numpy as np
 
 #class XmippCTFDiscrepancyViewer(Viewer):
 class XmippCTFDiscrepancyViewer(ProtocolViewer):
-    """ Wrapper to visualize different type of data objects
-    with the Xmipp program xmipp_showj
+    """ This protocol computes the maximum resolution up to which two
+     CTF estimations would be ``equivalent'', defining ``equivalent'' as having
+      a wave aberration function shift smaller than 90 degrees
     """
     _label = 'viewer CTF Discrepancy'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
@@ -56,11 +57,16 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
                       label='resolution threshold (A)',
                       help='Select only CTF consistent at this resolution (in A).')
         form.addParam('visualizeTable', HiddenBooleanParam, default=False,
-                      label="Visualize Table.")
+                      label="Visualize Table.",
+                      help="List with resolution at which the CTF estimated by a pair of methods"
+                           " is no longer equivalent."  )
         form.addParam('visualizeMatrix', HiddenBooleanParam, default=False,
-                      label="Visualize Matrix.")
+                      label="Visualize Matrix.",
+                      help="Number of micrographs that have a CTF estimation"
+                           " -given by two methods- that are equivalent at resolution=threshold")
         form.addParam('visualizeHistogram', IntParam, default=10,
-                      label="Visualize Histogram (Bin size)")
+                      label="Visualize Histogram (Bin size)",
+                      help="Histogram of the resolution at which two methods are equivalent")
 
 
 
@@ -80,6 +86,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         except AttributeError:
             pass
         else:
+            #TODO close the mapper, if not the object cannot be reused (Although it should be able)
             self.setOfCTFsConst.close()
 
         #metadata file with protocol output
@@ -97,7 +104,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         ctfs  = data.SetOfCTF(filename = self.sourceFile)
         #condition to be satisfized for CTFs
         for ctf in ctfs:
-            #print "ctf", ctf.printAll()
+            print "ctf", ctf.printAll()
             if ctf.resolution.get()<resolutionThreshold:
                 self.setOfCTFsConst.append(ctf)
         #new file with selected CTFs
@@ -105,7 +112,8 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         #check if empty
         if self.setOfCTFsConst.getSize()<1:
             print "WARNING: Empty set of CTFs."
-        #TODO close the mapper, if not the object cannot be reused (Although it should be able)
+        #TODO aggregation function to compute the minimum resolution by micrograph
+        #TODO aggregation function to compute the average resolution by micrograph
         #self._setOfCTFsConst.close()
 
     def isComputed(self):
@@ -135,7 +143,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
         plotter = EmPlotter()
         plotter.createSubPlot("Resolution Discrepancies histogram", 
-                      "Resolution", "# of Micrographs")
+                      "Resolution (A)", "# of Micrographs")
         resolution = [ctf.resolution.get() for ctf in self.setOfCTFsConst]
         plotter.plotHist(resolution, nbins=numberOfBins)
         return views.append(plotter)
@@ -166,7 +174,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
         plotter = EmPlotter(fontsize=14)
         resolution=self.resolutionThreshold.get()
-        plotter.createSubPlot("# micrographs with resolution\n lower than %d"%(resolution), 
+        plotter.createSubPlot("# micrographs with resolution (A)\n lower than %d"%(resolution),
                       "Method #", "Method")
 #        plotter.plotMatrix(_matrix,cmap='seismic_r'
         plotter.plotMatrix(_matrix,cmap='Greens'
