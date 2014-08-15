@@ -77,13 +77,24 @@ class TestRelionClassify2D(TestRelionBase):
 #         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
             
     def testRelion2D(self):
+        #First run a normalize particles (now relion2D does not normalize)
+        print "Run Xmipp Preprocess particles - normalize Ramp"
+        protNorm = self.newProtocol(XmippProtPreprocessParticles,
+                                  doNormalize=True, normType=2,
+                                  numberOfMpi=4, numberOfThreads=1)
+        protNorm.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protNorm)    
+
+        self.assertIsNotNone(getattr(protNorm, 'outputParticles', None), 
+                             "There was a problem with Xmipp Normalize particles:\n" + protNorm.getErrorMessage()) 
+                   
         print "Run relion2D"
         prot2D = self.newProtocol(ProtRelionClassify2D,
                                   doCTF=False, maskRadiusA=170,
                                   numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
-        prot2D.inputParticles.set(self.protImport.outputParticles)
+        prot2D.inputParticles.set(protNorm.outputParticles)
         self.launchProtocol(prot2D)        
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
