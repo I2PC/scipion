@@ -79,14 +79,17 @@ $(document).ready(function() {
 	initializeGoToEvent()
 	initializeTableWidth()
 	
+	
+	
 // 	console.log(jsonTableLayoutConfiguration.colsOrder)
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable({
-			        "bPaginate": true,
+			        "bPaginate": false, // Pagination
+			        "bSort": true, // Sorting columns
+
 			        "bLengthChange": true,
 			        "bFilter": true,
-			        "bSort": false, //Option to sort the columns
 			        "bInfo": true,
 			        "bAutoWidth": true,
 			        "sDom": 'Rl<"#displayTableContainer">frtip', 
@@ -144,10 +147,11 @@ $(document).ready(function() {
 	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>{{msg.LABEL_DISPLAY_TABLE_CONFIG}}</a>")
 	
 	{% if dataset.getTable.hasEnabledColumn %}
-	initializeMultipleSelectionTool()
+		initializeMultipleSelectionTool()
 	{% endif %}
 	setElementsEditable(null)
 	initializeColumnHeader()
+	initializeTableImageLoad()
 } );
 
 /* Generate data for datatable from table dataset model */

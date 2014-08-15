@@ -28,7 +28,7 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 
-from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename
+from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath
 from pyworkflow.em import *
 from brandeis import *
 # from pyworkflow.utils.which import which
@@ -49,7 +49,10 @@ estimate CTF on a set of micrographs using ctffind """
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getPsdPath(self, micDir):
         return join(micDir, 'ctffind_psd.mrc')
-
+    
+    def _getCtfOutPath(self, micDir):
+        return join(micDir, 'ctffind.out')
+    
     def _parseOutput(self, filename):
         """ Try to find the output estimation parameters
         from filename. It search for a line containing: Final Values.
@@ -89,7 +92,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         # Update _params dictionary
         self._params['micFn'] = micFn
         self._params['micDir'] = micDir
-        self._params['ctffindOut'] = join(micDir, 'ctffind.out')
+        self._params['ctffindOut'] = self._getCtfOutPath(micDir)
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
         self.runJob(self._program, self._args % self._params)
     
@@ -99,12 +102,12 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         defocusList = []
         
         for fn, micDir, mic in self._iterMicrographs():
-            out = join(micDir, 'ctffind.out')
-            psdfile = join(micDir, 'ctffind_psd.mrc')
+            out = self._getCtfOutPath(micDir)
+            psdFile = self._getPsdPath(micDir)
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
             # save the values of defocus for each micrograph in a list
-            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, psdfile)
+            ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
             ctfModel.setMicrograph(mic)
             
             defocusList.append(ctfModel.getDefocusU())
@@ -150,35 +153,42 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
         
+        out = self._getCtfOutPath(micDir)
+        psdFile = self._getPsdPath(micDir)
+        
+        cleanPath(out)
+        cleanPath(psdFile)
+        
         # Update _params dictionary
         self._prepareCommand(line)
         self._params['micFn'] = micFn
         self._params['micDir'] = micDir
-        self._params['ctffindOut'] = join(micDir, 'ctffind.out')
-        self._params['ctffindPSD'] = self._getPsdPath(micDir)
+        self._params['ctffindOut'] = out
+        self._params['ctffindPSD'] = psdFile
         self.runJob(self._program, self._args % self._params)
     
     def createOutputStep(self):
-        ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.setOfCtf.getMicrographs())
+        setOfMics = self.inputCtf.get().getMicrographs()
+        outputMics = self._createSetOfMicrographs("_subset")
+        outputMics.copyInfo(setOfMics)
+        ctfSet = self._createSetOfCTF("_recalculated")
         defocusList = []
-        
         for ctfModel in self.setOfCtf:
-            
+            mic = ctfModel.getMicrograph()
+            outputMics.append(mic)
             for line in self.values:
                 objId = self._getObjId(line)
                 
                 if objId == ctfModel.getObjId():
-                    mic = ctfModel.getMicrograph()
                     mic.setObjId(ctfModel.getObjId())
                     micDir = self._getMicrographDir(mic)
                     
-                    out = join(micDir, 'ctffind.out')
-                    psdfile = join(micDir, 'ctffind_psd.mrc')
+                    out = self._getCtfOutPath(micDir)
+                    psdFile = self._getPsdPath(micDir)
                     result = self._parseOutput(out)
                     defocusU, defocusV, defocusAngle = result
                     # save the values of defocus for each micrograph in a list
-                    ctfModel2 = self._getCTFModel(defocusU, defocusV, defocusAngle, psdfile)
+                    ctfModel2 = self._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
                     ctfModel2.setObjId(mic.getObjId())
                     ctfModel2.setMicrograph(mic)
                     ctfModel.copy(ctfModel2)
@@ -186,18 +196,24 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
                     # save the values of defocus for each micrograph in a list
                     defocusList.append(ctfModel2.getDefocusU())
                     defocusList.append(ctfModel2.getDefocusV())
-                    ctfNotUp = False
                     break
-            
             ctfSet.append(ctfModel)
         
+        self.setOfCtf.close()
+        ctfSet.setMicrographs(outputMics)
+        
+        self._defineOutputs(outputMicrographs=outputMics)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineSourceRelation(self.setOfCtf, ctfSet)
+        
+        self._defineTransformRelation(setOfMics, outputMics)
+        self._defineSourceRelation(self.inputCtf.get(), ctfSet)
         self._defocusMaxMin(defocusList)
         self._ctfCounter(defocusList)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self, line):
+        
+        self._defineValues(line)
         # get the size and the image of psd
         objId = self._getObjId(line)
         ctfModel = self.setOfCtf.__getitem__(objId)

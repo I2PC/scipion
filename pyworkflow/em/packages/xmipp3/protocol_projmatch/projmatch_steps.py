@@ -39,7 +39,7 @@ from pyworkflow.em.data import Volume, SetOfClasses3D
 from pyworkflow.utils import getMemoryAvailable, replaceExt, removeExt, cleanPath, makePath, copyFile
 
 from pyworkflow.em.packages.xmipp3.convert import createClassesFromImages
-from pyworkflow.em.packages.xmipp3.utils import emptyMd
+from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 
 ctfBlockName = 'ctfGroup'
 refBlockName = 'refGroup'
@@ -435,7 +435,7 @@ def insertAngularClassAverageStep(self, iterN, refN, **kwargs):
     projLibraryDoc = self._getFileName('projectLibraryDoc', iter=iterN, ref=refN)
     outClasses = self._getFileName('outClasses', iter=iterN, ref=refN)
     # FIXME: Why is necessary ask if docFileInputAngles is empty. check if is a validation step
-#     if xmipp.emptyMd(docFileInputAngles):
+#     if xmipp.isMdEmpty(docFileInputAngles):
 #         print "Empty metadata file: %s" % docFileInputAngles
 #         return
     
@@ -533,7 +533,7 @@ def runReconstructionStep(self, iterN, refN, program, method, args, suffix, mpi,
     volFn = self._getFileName(reconsVol, iter=iterN, ref=refN)
     maskFn = self._getFileName('maskedFileNamesIters', iter=iterN, ref=refN)
     
-    if emptyMd(mdFn):
+    if isMdEmpty(mdFn):
         img = xmipp.Image()
         img.read(maskFn)
         #(x,y,z,n) = img.getDimensions()

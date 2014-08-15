@@ -148,22 +148,24 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         self.runJob(self._program, self._args % self._params)    
     
     def createOutputStep(self):
-        ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(self.setOfCtf.getMicrographs())
+        self._createFilenameTemplates()
+        setOfMics = self.inputCtf.get().getMicrographs()
+        outputMics = self._createSetOfMicrographs("_subset")
+        outputMics.copyInfo(setOfMics)
+        ctfSet = self._createSetOfCTF("_recalculated")
         defocusList = []
-        
         for ctfModel in self.setOfCtf:
-            
+            mic = ctfModel.getMicrograph()
+            outputMics.append(mic)
             for line in self.values:
                 objId = self._getObjId(line)
                 
                 if objId == ctfModel.getObjId():
-                    mic = ctfModel.getMicrograph()
                     mic.setObjId(ctfModel.getObjId())
                     micDir = self._getMicrographDir(mic)
                     ctfparam = self._getFileName('ctfparam', micDir=micDir)
                     ctfModel2 = readCTFModel(ctfparam, mic)
-                    ctfModel2 = self._setPsdFiles(ctfModel2, micDir)
+                    self._setPsdFiles(ctfModel2, micDir)
                     ctfModel.copy(ctfModel2)
                     
                     # save the values of defocus for each micrograph in a list
@@ -171,14 +173,22 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
                     defocusList.append(ctfModel2.getDefocusV())
                     break
             ctfSet.append(ctfModel)
+            
+        self.setOfCtf.close()
+        ctfSet.setMicrographs(outputMics)
         
+        self._defineOutputs(outputMicrographs=outputMics)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineSourceRelation(self.setOfCtf, ctfSet)
+        
+        self._defineTransformRelation(setOfMics, outputMics)
+        self._defineSourceRelation(self.inputCtf.get(), ctfSet)
         self._defocusMaxMin(defocusList)
         self._ctfCounter(defocusList)
-    
+        
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self, line):
+        
+        self._defineValues(line)
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_psd'       
         self._args = "--psd %(psdFn)s "
@@ -193,6 +203,7 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         
         mic = ctfModel.getMicrograph()
         micDir = self._getMicrographDir(mic)
+        cleanPath(self._getFileName('ctfparam', micDir=micDir))
         
         params2 = {'psdFn': join(micDir, psdFile),
                    'defocusU': float(line[1]),

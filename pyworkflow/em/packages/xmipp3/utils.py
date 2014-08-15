@@ -29,24 +29,29 @@ This module contains utils functions to operate over xmipp metadata files.
 """
 
 import xmipp
+from xmipp3 import XmippMdRow
 
 
-def mdFirstRow(filename):
+def getMdFirstRow(filename):
     """ Create a MetaData but only read the first row.
     This method should be used for validations of labels
     or metadata size, but the full metadata is not needed.
     """
     md = xmipp.MetaData()
     md.read(filename, 1)
+    row = XmippMdRow()
+    row.readFromMd(md, md.firstObject())
     
-    return md
+    return row
 
 
 def getMdSize(filename):
     """ Return the metadata size without parsing entirely. """
-    return mdFirstRow(filename).getParsedLines()
+    md = xmipp.MetaData()
+    md.read(filename, 1)
+    return md.getParsedLines()
 
 
-def emptyMd(filename):
+def isMdEmpty(filename):
     """ Use getMdSize to check if metadata is empty. """
     return getMdSize(filename) == 0

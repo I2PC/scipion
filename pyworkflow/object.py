@@ -105,7 +105,7 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
-            if attr._objDoStore:
+            if attr is not None and attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -406,11 +406,11 @@ class Object(object):
         for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
-    def printObjDict(self):
+    def printObjDict(self, includeClasses=False):
         """Print object dictionary. Main for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.getObjDict())        
+        pp.pprint(dict(self.getObjDict(includeClasses)))        
 
 
 class OrderedObject(Object):
@@ -540,6 +540,9 @@ class Scalar(Object):
     def sum(self, value):
         self._objValue += self._convertValue(value)
         
+    def multiply(self, value):
+        self._objValue *= value
+        
     
 class Integer(Scalar):
     """Integer object"""
@@ -605,7 +608,9 @@ class Boolean(Scalar):
         return bool(value) 
     
     def __nonzero__(self):
-        return self.get()
+        if not self.hasValue():
+            return False
+        return self.get() 
     
     def __bool__(self):
         return self.get()  

@@ -31,7 +31,9 @@ This module contains converter functions that will serve to:
 """
 
 import os
+from os.path import join
 from pyworkflow.object import String
+from pyworkflow.utils import Environ
 from pyworkflow.utils.path import createLink
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Class2D, SetOfClasses2D, SetOfClasses3D
@@ -40,6 +42,16 @@ from constants import *
 # the xmipp3 tools implemented for Scipion here
 import xmipp
 
+
+def getEnviron():
+    """ Setup the environment variables needed to launch Relion. """
+    environ = Environ(os.environ)
+    environ.update({
+            'PATH': join(os.environ['RELION_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            }, position=Environ.BEGIN)
+    return environ
 
 
 def locationToRelion(index, filename):
@@ -81,11 +93,12 @@ class ParticleAdaptor():
         
     def setupRow(self, img, imgRow):
         """ Convert image and modify the row. """
-        newLoc = (self._rowCount, self._stackFile)
-        self._ih.convert(img.getLocation(), newLoc)
-        img.setLocation(newLoc)
+        #newLoc = (self._rowCount, self._stackFile)
+        #TODO: Check whether the input image format is valid for Relion
+        #self._ih.convert(img.getLocation(), newLoc)
+        #img.setLocation(newLoc)
         # Re-write the row with the new location
-        self._particleToRow(img, imgRow, writeAlignment=False)
+        self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
         coord = img.getCoordinate()
         if coord is not None:
             imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
@@ -159,7 +172,7 @@ def createRelionInputParticles(imgSet, starFile, stackFile):
 
 
 def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter):
+                            classLabel, classFnTemplate, iter, preprocessRow=None):
     """ From an intermediate dataXXX.star file produced by relion, create
     the set of classes in which those images are classified.
     Params:
@@ -176,7 +189,7 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                                   classLabel, classFnTemplate, iter)
+                                   classLabel, classFnTemplate, iter, preprocessRow)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):
@@ -204,3 +217,50 @@ def sortImagesByLL(imgStar, imgSortedStar):
     md.write('images_sorted@' + imgSortedStar)   
     restoreXmippLabels()
     
+    
+def getMdFirstRow(starfile):
+    addRelionLabels(replace=True, extended=True)
+    from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
+    row = getMdFirstRow(starfile)
+    restoreXmippLabels()
+    return row
+
+def findImagesPath(starFile):
+    """ Find the path of the images relative to some star file. """
+    absPath = os.path.dirname(os.path.abspath(starFile))
+    row = getMdFirstRow(starFile)
+    _, imgFile = relionToLocation(row.getValue(xmipp.MDL_IMAGE))
+    
+    while absPath is not None and absPath != '/':
+        if os.path.exists(os.path.join(absPath, imgFile)):
+            return os.path.relpath(absPath)
+        absPath = os.path.dirname(absPath)
+        
+    return None
+
+
+def prependToFileName(imgRow, prefixPath):
+    """ Prepend some root name to imageRow filename. """
+    index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+    newLoc = locationToRelion(index, os.path.join(prefixPath, imgPath))
+    imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
+    
+    
+def setupCTF(imgRow, sampling):
+    """ Do some validations and set some values
+    for Relion import.
+    """
+    imgRow.setValue(xmipp.MDL_SAMPLINGRATE, sampling)
+    #TODO: check if we want to move this behaviour to setup CTFModel by default
+    hasDefocusU = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUSU)
+    hasDefocusV = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUSV)
+    hasDefocusAngle = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUS_ANGLE)
+    
+    if hasDefocusU or hasDefocusV:
+        if not hasDefocusU:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUSU, imgRow.getValue(xmipp.MDL_CTF_DEFOCUSV))
+        if not hasDefocusV:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUSV, imgRow.getValue(xmipp.MDL_CTF_DEFOCUSU))
+        if not hasDefocusAngle:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 0.)
+            

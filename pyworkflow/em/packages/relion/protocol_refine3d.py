@@ -68,8 +68,11 @@ leads to objective and high-quality results.
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
         args['--auto_refine'] = ''
         args['--split_random_halves'] = ''
-        if args['--sym'].startswith('C'):
-            args['--low_resol_join_halves'] = "40";
+        #TODO: check why only for C*???
+        # I have added by default for refine3d 
+        # as extra parameters
+        #if args['--sym'].startswith('C'):
+        #    args['--low_resol_join_halves'] = "40";
         
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):

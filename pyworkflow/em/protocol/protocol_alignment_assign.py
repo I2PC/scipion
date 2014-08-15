@@ -26,23 +26,26 @@
 
 
 from pyworkflow.protocol.params import PointerParam
-from pyworkflow.em.protocol import ProtCTFMicrographs
+from protocol_2d import ProtAlign2D
 
 
-class ProtCTFAssign(ProtCTFMicrographs):
-    """ This protocol assign a CTF estimation to a particular
-    set of particles producing a new set. """
-    _label = 'ctf assign'
+class ProtAlignmentAssign(ProtAlign2D):
+    """ Assign a the alignment calculated for a set of particles to another set.
+    This protocol will take into account the differences of pixel size (A/pix)
+    between the two sets and multiply by the right factor the shifts.
+    The particles with the alignment can also be a subset of the other images
+    """
+    _label = 'alignment assign'
     
     def _defineParams(self, form):
         form.addSection(label='Input')
 
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label='Input particles',
-                      help='Select the particles that you want to update the CTF parameters.')        
-        form.addParam('inputCTF', PointerParam, pointerClass='SetOfCTF',
-                      label="Input CTF",
-                      help='Select the CTF that will be used to update particles.')        
+                      help='Select the particles that you want to update the new alignment.')        
+        form.addParam('inputAlignment', PointerParam, pointerClass='SetOfParticles',
+                      label="Input alignments",
+                      help='Select the particles with alignment to be apply to the other particles.')        
 
         form.addParallelSection(threads=0, mpi=0) 
               
@@ -55,32 +58,30 @@ class ProtCTFAssign(ProtCTFMicrographs):
 
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()
-        inputCTF = self.inputCTF.get() 
+        inputAlignment = self.inputAlignment.get() 
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
         
-        defaultCTF = inputCTF.getFirstItem().clone()
-        defaultCTF.setDefocusAngle(-9999.)
-        defaultCTF.setDefocusU(-9999.)
-        defaultCTF.setDefocusV(-9999.)
+        scale = inputAlignment.getSamplingRate()/inputParticles.getSamplingRate()
+        n = inputParticles.getSize()
+        block = min(n/10, 1000)       
         
-        for particle in inputParticles:
-            micId = particle.getMicId()
-            ctf = inputCTF[micId]
-            if ctf is None:
-#                 ctf = defaultCTF.clone()
-#                 if particle.hasCTF():
-#                     ctf.copy(particle.getCTF())
-                    self.warning("Discarding particle with id=%d and location %s, CTF not found "
-                              % (particle.getObjId(), particle.getLocation()))
-            else:
+        for i, particle in enumerate(inputParticles):
+            alignedParticle = inputAlignment[particle.getObjId()]
+            if alignedParticle is not None:
                 newParticle = particle.clone()
-                newParticle.setCTF(ctf)
+                alignment = alignedParticle.getAlignment()
+                alignment._xmipp_shiftX.multiply(scale)
+                alignment._xmipp_shiftY.multiply(scale)
+                newParticle.setAlignment(alignment)
                 outputParticles.append(newParticle)
+            ii = i+1
+            if ii % block == 0:
+                self.info('Done %d out of %d' % (i+1, n))
         
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
-        self._defineSourceRelation(inputCTF, outputParticles)
+        self._defineSourceRelation(inputAlignment, outputParticles)
         
     def _summary(self):
         summary = []

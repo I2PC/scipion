@@ -63,7 +63,7 @@ elif os.name == 'posix':  # linux systems and so on
             if subprocess.call([x_open, path]) == 0:
                 return  # yay! that's the way to do it!
         # If we couldn't open it in a standard way, try web and editors
-        if path.startswith('http://'):
+        if path.startswith('http://') or path.startswith('https://'):
             try:
                 webbrowser.open_new_tab(path)
                 return
@@ -332,7 +332,7 @@ class OutputText(Text):
         if self.colors and fmt is not None:
             if fmt.startswith('link:'):
                 fname = fmt.split(':', 1)[-1]
-                self.insert(tk.END, txt, self.hm.add(lambda: _open_cmd(fname)))
+                self.insert(tk.END, txt, self.hm.add(lambda: openTextFileEditor(fname)))
             else:
                 self.insert(tk.END, txt, fmt)
         else:
@@ -555,7 +555,7 @@ class TextFileViewer(tk.Frame):
         if envVarOn('SCIPION_EXTERNAL_VIEWER'):
             if not self.taList:
                 return
-            _open_cmd(self.taList[max(self.getIndex(), 0)].filename)
+            openTextFileEditor(self.taList[max(self.getIndex(), 0)].filename)
         else:
             showTextFileViewer("File viewer", self.fileList, self.windows)
   
@@ -563,13 +563,16 @@ class TextFileViewer(tk.Frame):
 def openTextFile(filename):
     """ Open a text file with an external or default viewer. """
     if envVarOn('SCIPION_EXTERNAL_VIEWER'):
-        _open_cmd(filename)
+        openTextFileEditor(filename)
     else:
         showTextFileViewer("File viewer", [filename])    
     
     
 def openTextFileEditor(filename):
-    _open_cmd(filename)
+    try:
+        _open_cmd(filename)
+    except:
+        showTextFileViewer("File viewer", [filename]) 
     
     
 def showTextFileViewer(title, filelist, parent=None, main=False):

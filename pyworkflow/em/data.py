@@ -107,6 +107,7 @@ class CTFModel(EMObject):
         self._defocusU = Float(args.get('defocusU', None))
         self._defocusV = Float(args.get('defocusV', None))
         self._defocusAngle = Float(args.get('defocusAngle', None))
+        self._defocusRatio = Float()
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj  = None
@@ -143,6 +144,12 @@ class CTFModel(EMObject):
     def setDefocusAngle(self, value):
         self._defocusAngle.set(value)
         
+    def getDefocusRatio(self):
+        return self._defocusRatio.get()
+        
+    def setDefocusRatio(self, value):
+        self._defocusRatio.set(value)
+        
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV',
                             '_defocusAngle', '_psdFile', '_micFile')
@@ -177,7 +184,8 @@ class CTFModel(EMObject):
     def standardize(self):
         """ Modify defocusU, defocusV and defocusAngle to conform 
         the EMX standard: defocusU > defocusV, 0 <= defocusAngle < 180
-        and the defocusAnges is between x-axis and defocusU.
+        and the defocusAnges is between x-axis and defocusU. Also
+        determine the defocusRatio(defocusU/defocusV).
         For more details see:
         http://i2pc.cnb.csic.es/emx/LoadDictionaryFormat.htm?type=Convention#ctf
         """
@@ -188,6 +196,7 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(-180.)
         elif self._defocusAngle < 0.:
             self._defocusAngle.sum(180.)
+        self.setDefocusRatio(self.getDefocusU()/self.getDefocusV())
 
 
 class DefocusGroup(EMObject):
@@ -354,8 +363,10 @@ class Image(EMObject):
         self._ctfModel = newCTF
         
     def hasAcquisition(self):
-        return (self._acquisition is not None and 
-                self._acquisition.getMagnification() is not None)
+        return self._acquisition is not None
+        #FIXME: check this later, very very IMPORTANT!!!
+        #return (self._acquisition is not None and 
+        #        self._acquisition.getMagnification() is not None)
         
     def getAcquisition(self):
         return self._acquisition
@@ -404,7 +415,7 @@ class Particle(Image):
         # This may be redundant, but make the Particle
         # object more indenpent for tracking coordinates
         self._coordinate = None
-        self._micId = None
+        self._micId = Integer()
         
     def hasCoordinate(self):
         return self._coordinate is not None
@@ -419,12 +430,15 @@ class Particle(Image):
         """ Return the micrograph id if the coordinate is not None.
         or have set the _micId property.
         """
-        if self._micId is not None:
+        if self._micId.hasValue():
             return self._micId.get()
         if self.hasCoordinate():
             return self.getCoordinate().getMicId()
         
         return None
+    
+    def setMicId(self, micId):
+        self._micId.set(micId)
 
 
 class Mask(Particle):
@@ -499,6 +513,12 @@ class EMXObject(EMObject):
 class EMSet(Set, EMObject):
     def _loadClassesDict(self):
         return globals()
+    
+    def copyInfo(self, other):
+        """ Define a dummy copyInfo function to be used
+        for some generic operations on sets.
+        """
+        pass
   
   
 class SetOfImages(EMSet):

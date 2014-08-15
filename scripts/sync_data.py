@@ -75,8 +75,8 @@ def main():
     g.add_argument('--download', action='store_true', help="Download dataset.")
     g.add_argument(
         '--upload', action='store_true',
-        help=("Upload local dataset to the scipion server. The dataset name must"
-              "be the name of its folder relative to the SCIPION_TESTS folder."))
+        help=("Upload local dataset to the server. The dataset name must be"
+              "the name of its folder relative to the SCIPION_TESTS folder."))
     g.add_argument(
         '--list', action='store_true',
         help=('List local datasets (from $SCIPION_TESTS) and remote ones '
@@ -129,9 +129,9 @@ def main():
 
     if args.format:
         for dataset in args.datasets:
-            print 'Formatting %s' % dataset
+            print 'Formatting %s (creating MANIFEST file)' % dataset
             if not exists(join(os.environ['SCIPION_TESTS'], dataset)):
-                sys.exit('ERROR: %s folder does not exist in datasets folder %s.' %
+                sys.exit('ERROR: %s does not exist in datasets folder %s.' %
                          (dataset, os.environ['SCIPION_TESTS']))
             createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
         sys.exit(0)
@@ -190,13 +190,19 @@ def listDatasets(url):
         print 'Error reading %s (%s)' % (url, e)
 
 
-def check(dataset, url, verbose=False):
+def check(dataset, url, verbose=False, updateMANIFEST=False):
     """ See if our local copy of dataset is the same as the remote one.
     Return True if it is (if all the checksums are equal), False if not.
     """
     def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
 
     vlog('Checking dataset %s ... ' % dataset)
+
+    if updateMANIFEST:
+        createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+    else:
+        vlog('(not updating local MANIFEST) ')
+
     try:
         md5sRemote = dict(x.split() for x in
                           urlopen('%s/%s/MANIFEST' %
@@ -210,6 +216,14 @@ def check(dataset, url, verbose=False):
             return True
         else:
             vlog('\thas differences\n')
+            flocal = set(md5sLocal.keys())
+            fremote = set(md5sRemote.keys())
+            def show(txt, lst):
+                if lst: vlog('  %s: %s\n' % (txt, ' '.join(lst)))
+            show('Local files missing in the server', flocal - fremote)
+            show('Remote files missing locally', fremote - flocal)
+            show('Files with differences', [f for f in fremote & flocal
+                                            if md5sLocal[f] != md5sRemote[f]])
             return False
     except Exception as e:
         vlog('\terror: %s\n' % e)

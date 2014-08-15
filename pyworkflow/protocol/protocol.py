@@ -34,7 +34,6 @@ import datetime as dt
 import pickle
 import time
 from collections import OrderedDict
-from pyworkflow.em.data import EMObject
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
@@ -430,8 +429,8 @@ class Protocol(Step):
                 yield key, attr
     
     def getOutputsSize(self):
+        from pyworkflow.em.data import EMObject
         count = 0
-    
         for key, output in self.iterOutputAttributes(EMObject):
             count += 1
         return count;
@@ -1109,7 +1108,10 @@ class Protocol(Step):
         
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        baseSummary = self._summary() or []        
+        try:
+            baseSummary = self._summary() or []
+        except Exception as ex:
+            baseSummary = [str(ex)]        
             
         comments = self.getObjComment()
         if comments:

@@ -1307,21 +1307,25 @@ class FormWindow(Window):
         parent = groupWidget.content
         r = 0
         for paramName, param in groupParam.iterParams():
-            protVar = getattr(self.protocol, paramName, None)
-            
-            if protVar is None:
-                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
-            
-            if isinstance(param, PointerParam):
-                visualizeCallback = self._visualize # Add visualize icon for pointer params
+            if isinstance (param, Line):
+                widget = LineWidget(r, paramName, param, self, parent, None)
+                self._fillLine(param, widget)
             else:
-                visualizeCallback = self.visualizeDict.get(paramName, None)
-            
-            widget = ParamWidget(r, paramName, param, self, parent, 
-                                                     value=self.getWidgetValue(protVar, param),
-                                                     callback=self._checkChanges,
-                                                     visualizeCallback=visualizeCallback)
-            widget.show() # Show always, conditions will be checked later
+                protVar = getattr(self.protocol, paramName, None)
+                
+                if protVar is None:
+                    raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                
+                if isinstance(param, PointerParam):
+                    visualizeCallback = self._visualize # Add visualize icon for pointer params
+                else:
+                    visualizeCallback = self.visualizeDict.get(paramName, None)
+                
+                widget = ParamWidget(r, paramName, param, self, parent, 
+                                                         value=self.getWidgetValue(protVar, param),
+                                                         callback=self._checkChanges,
+                                                         visualizeCallback=visualizeCallback)
+                widget.show() # Show always, conditions will be checked later
             r += 1         
             self.widgetDict[paramName] = widget
  

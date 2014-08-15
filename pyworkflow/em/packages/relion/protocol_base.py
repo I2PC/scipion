@@ -78,7 +78,7 @@ class ProtRelionBase(EMProtocol):
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
         self.outputClasses = 'classes_ref3D.xmd'
         self.outputVols = 'volumes.xmd'
-        self.haveDataPhaseFlipped = self.inputParticles.get().isPhaseFlipped()
+        self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -129,9 +129,9 @@ class ProtRelionBase(EMProtocol):
                       condition='not doContinue',
                       label="Input particles",  
                       help='Select the input images from the project.')   
-        form.addParam('doNormalize', BooleanParam, default=True,
+        form.addParam('doNormalize', BooleanParam, default=False,
                       condition='not doContinue',
-                      label='Normalize',
+                      label='Normalize (TODO: REMOVE)',
                       help='If set to True, particles will be normalized in the way RELION prefers it.')
         form.addParam('backRadius', IntParam, default=0,
                       condition='doNormalize and not doContinue',
@@ -180,8 +180,8 @@ class ProtRelionBase(EMProtocol):
         form.addParam('symmetryGroup', StringParam, default='c1',
                       condition='not doContinue and not is2D',
                       label="Symmetry group", 
-                      help='See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry '
-                           'for a description of the symmetry groups format')  
+                      help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
+                           'for a description of the symmetry format accepted by Relion')  
         form.addParam('paddingFactor', FloatParam, default=3,
                       condition='isClassify', expertLevel=LEVEL_EXPERT,
                       label='Padding factor',
@@ -194,7 +194,9 @@ class ProtRelionBase(EMProtocol):
                            'The approximate amount of memory (in Gb) required to store K maps of (size x size x size) voxels and a' 
                            'padding factor (pad) may be calculated as: K*2*8*(size*pad)^3/1024/1024/1024\n' 
                            '<Note>: also consider the use of threads if memory is an issue.')
-        form.addParam('extraParams', StringParam, default='',
+        
+        extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
+        form.addParam('extraParams', StringParam, default=extraDefault,
                       expertLevel=LEVEL_EXPERT,
                       label='Additional parameters',
                       help='')
@@ -357,8 +359,8 @@ class ProtRelionBase(EMProtocol):
     def _insertAllSteps(self): 
         self._initialize()
         self._insertFunctionStep('convertInputStep')
-        #self._insertRelionStep()
-        #self._insertFunctionStep('createOutputStep')
+        self._insertRelionStep()
+        self._insertFunctionStep('createOutputStep')
     
     def _insertRelionStep(self):
         """ Prepare the command line arguments before calling Relion. """
@@ -378,7 +380,7 @@ class ProtRelionBase(EMProtocol):
     def _setNormalArgs(self, args):
         args.update({'--i': self._getFileName('input_star'),
                      '--particle_diameter': self.maskRadiusA.get() * 2.0,
-                     '--angpix': self.inputParticles.get().getSamplingRate(),
+                     '--angpix': self._getInputParticles().getSamplingRate(),
                     })
         self._setMaskArgs(args)
         self._setCTFArgs(args)
@@ -404,10 +406,9 @@ class ProtRelionBase(EMProtocol):
         else:
             continueIter = int(self.continueIter.get())
         
-        itersToRun = continueIter + self.numberOfIterations.get()
-        self.numberOfIterations.set(itersToRun)
-        
         if self.IS_CLASSIFY:
+            itersToRun = continueIter + self.numberOfIterations.get()
+            self.numberOfIterations.set(itersToRun)
             self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
         
@@ -457,13 +458,14 @@ class ProtRelionBase(EMProtocol):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
-        imgSet = self.inputParticles.get()
+        imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
         imgFn = self._getFileName('input_mrcs')
         Xdim = imgSet.getDimensions()[0]
         
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
-        createRelionInputParticles(imgSet, imgStar, imgFn)
+        from convert import writeSetOfParticles
+        writeSetOfParticles(imgSet, imgStar, imgFn)
         
         if self.doNormalize:
             # Enter here to generate the star file or to normalize the images
@@ -502,7 +504,7 @@ class ProtRelionBase(EMProtocol):
         if self.doContinue:
             errors += self._validateContinue()
         else:
-            if self.inputParticles.get().isOddX():
+            if self._getInputParticles().isOddX():
                 errors.append("Relion only works with even values for the image dimensions!")
                 
             errors += self._validateNormal()
@@ -548,6 +550,12 @@ class ProtRelionBase(EMProtocol):
             program += '_mpi'
         return program
     
+    def _getInputParticles(self):
+        if self.doContinue:
+            return self.continueRun.get().inputParticles.get()
+        else:
+            return self.inputParticles.get()
+    
     def _loadEnvironment(self):
         """ Setup the environment variables needed to launch Relion. """
         RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
@@ -582,7 +590,7 @@ class ProtRelionBase(EMProtocol):
         data_classes = self._getFileName('classes_scipion', iter=it)
         
         if not exists(data_classes):
-            createClassesFromImages(self.inputParticles.get(), data_star, data_classes, 
+            createClassesFromImages(self._getInputParticles(), data_star, data_classes, 
                                     self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
@@ -592,6 +600,8 @@ class ProtRelionBase(EMProtocol):
         
         if not exists(data_sorted):
             data = self._getFileName('data', iter=it)
+            # TODO: convert the sorted data directly to sqlite
+            # and just displayed sorted by LL
             from convert import sortImagesByLL
             sortImagesByLL(data, data_sorted)
         
