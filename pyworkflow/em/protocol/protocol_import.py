@@ -64,9 +64,11 @@ class ProtImportImages(ProtImport):
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
+        form.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
+    def importImagesStep(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -78,6 +80,7 @@ class ProtImportImages(ProtImport):
         acquisition.setVoltage(voltage)
         acquisition.setSphericalAberration(sphericalAberration)
         acquisition.setAmplitudeContrast(amplitudeContrast)
+        acquisition.setMagnification(magnification)
         
         # Call a function that should be implemented by each subclass
         self._setOtherPars(imgSet)
@@ -85,6 +88,7 @@ class ProtImportImages(ProtImport):
         outFiles = [imgSet.getFileName()]
         imgh = ImageHandler()
         img = imgSet.ITEM_TYPE()
+        img.setAcquisition(acquisition)
         n = 1
         size = len(filePaths)
         
@@ -182,17 +186,15 @@ class ProtImportMicrographs(ProtImportImages):
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
     
     def _insertAllSteps(self):
         self._createSet = self._createSetOfMicrographs
-        self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(),
+        self._insertFunctionStep('importImagesStep', self.pattern.get(), self.checkStack.get(), 
+                                 self.voltage.get(), self.sphericalAberration.get(), 
+                                 self.ampContrast.get(), self.magnification.get()) #, self.samplingRate.get(),
     
     def _validate(self):
         errors = ProtImportImages._validate(self)
@@ -234,9 +236,9 @@ class ProtImportParticles(ProtImportImages):
         
     def _insertAllSteps(self):
         self._createSet = self._createSetOfParticles
-        self._insertFunctionStep('importImages', self.pattern.get(),
+        self._insertFunctionStep('importImagesStep', self.pattern.get(),
                                 self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
-                                self.ampContrast.get())
+                                self.ampContrast.get(), self.magnification.get())
         
     def _setOtherPars(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())

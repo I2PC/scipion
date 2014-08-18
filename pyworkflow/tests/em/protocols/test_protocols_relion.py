@@ -74,16 +74,16 @@ class TestRelionClassify2D(TestRelionBase):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-#         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
+        cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
             
-    def testRelion2D(self):
+    def testRelion2D(self):                  
         print "Run relion2D"
         prot2D = self.newProtocol(ProtRelionClassify2D,
                                   doCTF=False, maskRadiusA=170,
                                   numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
-        prot2D.inputParticles.set(self.protImport.outputParticles)
+        prot2D.inputParticles.set(self.protNormalize.outputParticles)
         self.launchProtocol(prot2D)        
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
