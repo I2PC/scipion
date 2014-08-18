@@ -64,3 +64,19 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
         
         # Check if write function is necessary
         class3D.write()
+        
+
+def parseCtffindOutput(filename):
+    """ Retrieve defocus U, V and angle from the 
+    output file of the ctffind3 execution.
+    """
+    f = open(filename)
+    result = None
+    for line in f:
+        if 'Final Values' in line:
+            # Take DefocusU, DefocusV and Angle as a tuple
+            # that are the first three values in the line
+            result = tuple(map(float, line.split()[:3]))
+            break
+    f.close()
+    return result
