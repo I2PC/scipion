@@ -323,9 +323,15 @@ class ProtImportVolumes(ProtImport):
             for f in filePaths:
                 volSet.append(self.createVolume(f))
             self._defineOutputs(outputVolumes=volSet)
-    
-    def getFiles(self):
+
+    def getPattern(self):
+        """ Expand the pattern using environ vars or username
+        and also replacing special character # by digit matching.
+        """
+        pattern = expandPattern(self.pattern.get())    
+        return pattern  
         
+    def getFiles(self):
         pattern = self.getPattern()
         n = self._getNumberFilePaths(pattern)
         
@@ -369,7 +375,7 @@ class ProtImportVolumes(ProtImport):
     
     def _validate(self):
         errors = []
-        if self.getPattern():
+        if not self.getPattern():
             errors.append(Message.ERROR_PATTERN_EMPTY)
         
         if self._getNumberFilePaths(self.pattern.get()) == 0:
