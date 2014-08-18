@@ -49,7 +49,7 @@ class ProtFrealignBase(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        self._lastIter = Integer(1)
+        self._lastIter = Integer(0)
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -466,18 +466,13 @@ class ProtFrealignBase(EMProtocol):
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
-        numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
-        depsRecons = []
+        self.numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         
         self._createFilenameTemplates()
         self._insertContinueStep()
-        for it in range(self.initIter, self.lastIter):
-            initId = self._insertFunctionStep('initIterStep', it, numberOfBlocks, prerequisites=depsRecons)
-            depsRefine = self._insertRefineIterStep(it, numberOfBlocks, [initId])
-            reconsId = self._insertFunctionStep("reconstructVolumeStep", it, numberOfBlocks, prerequisites=depsRefine)
-            depsRecons = [reconsId]
-        self._insertFunctionStep("createOutputStep", prerequisites=depsRecons)
-        
+        self._insertItersSteps()
+        self._insertFunctionStep("createOutputStep")
+    
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
@@ -485,61 +480,71 @@ class ProtFrealignBase(EMProtocol):
             self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
             if self.continueIter.get() == 'last':
-                self.initIter = continueRun._getLastIter() + 1
+                self.initIter = continueRun._getCurrIter()
             else:
                 self.initIter = int(self.continueIter.get())
-            self._setLastIter(self.initIter)
-#             self._createFilenameTemplates()
-            self._insertFunctionStep('continueStep')
+                self._insertFunctionStep('continueStep', self.initIter)
         else:
             self.initIter = 1
-        self.lastIter = self.initIter + self.numberOfIterations.get()
+            
+        self.finalIter = self.initIter + self.numberOfIterations.get()
     
-    def _insertRefineIterStep(self, iter, numberOfBlocks, depsInitId):
+    def _insertItersSteps(self):
+        """ Insert the steps for all iters """
+        
+        for iterN in self._allItersN():
+            initId = self._insertFunctionStep('initIterStep', iterN)
+            paramsDic = self._getParamsIteration(iterN)
+            depsRefine = self._insertRefineIterStep(iterN, paramsDic, [initId])
+            self._insertFunctionStep("reconstructVolumeStep", iterN, paramsDic, prerequisites=depsRefine)
+        
+    def _insertRefineIterStep(self, iterN, paramsDic, depsInitId):
         """ execute the refinement for the current iteration """
         
         depsRefine = []
-        iterDir = self._iterWorkingDir(iter)
-        
-        if iter == 1:
+        if iterN == 1:
             if not self.useInitialAngles.get():
-                stepConstructId = self._insertFunctionStep("constructParamFilesStep", numberOfBlocks, iterDir, iter, prerequisites=depsInitId)
+                stepConstructId = self._insertFunctionStep("constructParamFilesStep", paramsDic, prerequisites=depsInitId)
                 depsConstruct = [stepConstructId]
-                for block in range(1, numberOfBlocks + 1):
-                    refineId = self._insertFunctionStep("refineBlockStep", iterDir, block, prerequisites=depsConstruct)
+                for block in self._allBlocks():
+                    refineId = self._insertFunctionStep("refineBlockStep", block, prerequisites=depsConstruct)
                     depsRefine.append(refineId)
             else:
-                # ToDo: Construct the function to extract the coordinates and euler angles for each particle from SetOfParticles.
-                pass
+                initAngStepId = self._insertFunctionStep("writeInitialAnglesStep", prerequisites=depsInitId)
+                paramsDic['paramRefine'] = '0, 0, 0, 1, 1'
+                for block in self._allBlocks():
+                    refineId = self._insertFunctionStep("refineParticlesStep", iterN, block, paramsDic, prerequisites=[initAngStepId])
+                    depsRefine.append(refineId)
         else:
-            for block in range(1, numberOfBlocks + 1):
-                refineId = self._insertFunctionStep("refineParticlesStep", iter, block, numberOfBlocks, prerequisites=depsInitId)
+            for block in self._allBlocks():
+                refineId = self._insertFunctionStep("refineParticlesStep", iterN, block, paramsDic, prerequisites=depsInitId)
                 depsRefine.append(refineId)
         return depsRefine
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def continueStep(self):
+    def continueStep(self, iterN):
         """Create a symbolic link of a previous iteration from a previous run."""
+        
+        self._setLastIter(iterN)
         continueRun = self.continueRun.get()
-        prevDir = continueRun._iterWorkingDir(self.initIter)
-        currDir = self._iterWorkingDir(self.initIter)
+        prevDir = continueRun._iterWorkingDir(iterN)
+        currDir = self._iterWorkingDir(iterN)
         createLink(prevDir, currDir)
         
         imgSet = self.inputParticles.get()
         imgFn = self._getFileName('particles')
         imgSet.writeStack(imgFn)
         
-    def initIterStep(self, iter, numberOfBlocks):
+    def initIterStep(self, iterN):
         """ Prepare files and directories for the current iteration """
         
-        self._createIterWorkingDir(iter) # create the working directory for the current iteration.
-#         self._createFilenameTemplates()
-        prevIter = iter - 1
-        refVol = self._getFileName('ref_vol', iter=iter) # reference volume of the step.
-        iterVol =  self._getFileName('iter_vol', iter=iter) # refined volume of the step
+        self._createIterWorkingDir(iterN) # create the working directory for the current iteration.
+        prevIter = iterN - 1
+        refVol = self._getFileName('ref_vol', iter=iterN) # reference volume of the step.
+        iterVol =  self._getFileName('iter_vol', iter=iterN) # refined volume of the step
         prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
         
-        if iter == 1:
+        if iterN == 1:
             imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
             
@@ -549,32 +554,31 @@ class ProtFrealignBase(EMProtocol):
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
         else:
-            self._splitParFile(iter, numberOfBlocks)
+            self._splitParFile(iterN, self.numberOfBlocks)
             copyFile(prevIterVol, refVol)   #Copy the reference volume as refined volume.
         copyFile(refVol, iterVol)   #Copy the reference volume as refined volume.
     
-    def constructParamFilesStep(self, numberOfBlocks, iterDir, iter):
+    def constructParamFilesStep(self, paramsDic):
         """ Construct a parameter file (.par) with the information of the SetOfParticles. """
 
         #  This function will be called only in iteration 1.
 
+        iterN = 1
+        iterDir = self._iterWorkingDir(iterN)
         self._enterDir(iterDir)
         
         imgSet = self.inputParticles.get()
         magnification = imgSet.getAcquisition().getMagnification()
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        initParamsDict = self._getParamsIteration(imgSet, iter)
         params = {}
-        lastPart = 0
-        for block in range(numberOfBlocks):
+        
+        for block in self._allBlocks():
             more = 1
-            params['initParticle'] = 1 + lastPart
-            lastPart = lastPart + blockParticles[block]
+            initPart, lastPart = self._initFinalBlockPaticles(block)
+            params['initParticle'] = initPart
             params['finalParticle'] = lastPart
-            numberOfBlock = block + 1
-            paramDic = self._setParamsRefineParticles(iter, numberOfBlock)
-            paramsRefine = dict(initParamsDict.items() + params.items() + paramDic.items())
-            f = self.__openParamFile(block + 1, paramsRefine)
+            paramDic = self._setParamsRefineParticles(iterN, block)
+            paramsRefine = dict(paramsDic.items() + params.items() + paramDic.items())
+            f = self.__openParamFile(block, paramsRefine)
             
             # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
             for i, img in enumerate(imgSet):
@@ -594,70 +598,97 @@ class ProtFrealignBase(EMProtocol):
                     break
         self._leaveDir()
     
-    def refineBlockStep(self, iterDir, block):
+    def refineBlockStep(self, block):
         """ This function execute the bash script for refine a subset(block) of images.
         It will enter in the iteration dir and execute the script there. 
         """
+        iterDir = self._iterWorkingDir(1)
         program = "./block%03d.sh" % block
         os.chmod(join(iterDir, program), 0775)
         self.runJob(program, "", cwd=iterDir)
     
-    def refineParticlesStep(self, iter, block, numberOfBlocks):
+    def writeInitialAnglesStep(self):
+        """This function write a .par file with all necessary information for a refinement"""
+        
+        imgSet = self.inputParticles.get()
+        
+        for block in self._allBlocks():
+            more = 1
+            _, lastPart = self._initFinalBlockPaticles(block)
+            parFn = self._getFileName('input_par_block', block= block, iter=1, prevIter=0)
+            f = open(parFn, 'w')
+            f.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
+                    "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
+            
+            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+            for i, img in enumerate(imgSet):
+                partCounter = i + 1
+
+                if partCounter == lastPart: # The last particle in the block
+                    more = 0
+                
+                self.writeAnglesLines(partCounter, img, f)
+            
+                if more == 0: # close the block.
+                    f.close()
+                    break
+    
+    def refineParticlesStep(self, iterN, block, paramsDic):
         """Only refine the parameters of the SetOfParticles
         """
         param = {}
-        imgSet = self.inputParticles.get()
         
-        iterDir = self._iterWorkingDir(iter)
+        iterDir = self._iterWorkingDir(iterN)
         
-        iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
-        prevIter = iter - 1
-        param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iter, prevIter=prevIter)
+        iniPart, lastPart = self._initFinalBlockPaticles(block)
+        prevIter = iterN - 1
+        param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
         param['initParticle'] = iniPart 
         param['finalParticle'] = lastPart
         
-        paramDic = self._setParamsRefineParticles(iter, block)
-        initParamsDict = self._getParamsIteration(imgSet, iter)
+        paramDic = self._setParamsRefineParticles(iterN, block)
         
-        paramsRefine = dict(initParamsDict.items() + paramDic.items() + param.items())
+        paramsRefine = dict(paramsDic.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
         # frealign program is already in the args script, that's why runJob('')
         self.runJob('', args % paramsRefine, cwd=iterDir)
     
-    def reconstructVolumeStep(self, iter, numberOfBlocks):
+    def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
         """
+        
         imgSet = self.inputParticles.get()
-        self._mergeAllParFiles(iter, numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
+        self._mergeAllParFiles(iterN, self.numberOfBlocks)  # merge all parameter files generated in a refineIterStep function.
         
         initParticle = 1
         finalParticle = imgSet.getSize()
-        params = self._getParamsIteration(imgSet, iter)
         
-        os.environ['NCPUS'] = str(numberOfBlocks)
-        params['frealign'] = FREALIGNMP_PATH
-        params['outputParFn'] = self._getFileName('output_vol_par', iter=iter)
-        params['initParticle'] = initParticle
-        params['finalParticle'] = finalParticle
-
-        params2 = self._setParams3DR(iter)
+        os.environ['NCPUS'] = str(self.numberOfBlocks)
+        paramsDic['frealign'] = FREALIGNMP_PATH
+        paramsDic['outputParFn'] = self._getFileName('output_vol_par', iter=iterN)
+        paramsDic['initParticle'] = initParticle
+        paramsDic['finalParticle'] = finalParticle
+        paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
         
-        params3DR = dict(params.items() + params2.items())
+        params2 = self._setParams3DR(iterN)
+        
+        params3DR = dict(paramsDic.items() + params2.items())
         
         args = self._prepareCommand()
-        iterDir = self._iterWorkingDir(iter)
+        iterDir = self._iterWorkingDir(iterN)
         # frealign program is already in the args script, that's why runJob('')
         self.runJob('', args % params3DR, cwd=iterDir)
-        self._setLastIter(iter)
-#         self._leaveDir()
+        self._setLastIter(iterN)
     
-    def createOutputStep(self, lastIter):
+    def createOutputStep(self):
         pass # should be implemented in subclasses
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
+        imgSet = self.inputParticles.get()
+        
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
         partSizeX, _, _ = self.inputParticles.get().getDim()
@@ -667,6 +698,8 @@ class ProtFrealignBase(EMProtocol):
             errors.append('Particle dimensions must be even!!!')
         if partSizeX != volSizeX:
             errors.append('Volume and particles dimensions must be equal!!!')
+        if not imgSet.hasAlignment() and self.useInitialAngles.get():
+            errors.append("Particles has not initial angles !!!")
         return errors
     
     def _summary(self):
@@ -691,16 +724,14 @@ class ProtFrealignBase(EMProtocol):
         return self._summary()
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _getParamsIteration(self, imgSet, iter):
+    def _getParamsIteration(self, iterN):
         """ Defining the current iteration
         """
+        imgSet = self.inputParticles.get()
         
-        iterDir = self._iterWorkingDir(iter)
-        samplingRate3DR = imgSet.getSamplingRate()
-        #Prepare arguments to call program fralign_v9.exe        
+        #Prepare arguments to call program fralign_v9.exe
         paramsDic = {'frealign': FREALIGN_PATH,
                      'mode': self.mode.get(),
-                     'useInitialAngles': self.useInitialAngles.get(),
                      'innerRadius': self.innerRadius.get(),
                      'outerRadius': self.outerRadius.get(),
                      'molMass': self.molMass.get(),
@@ -722,13 +753,14 @@ class ProtFrealignBase(EMProtocol):
                      'resolClass': self.resolClass.get(),
                      'defocusUncertainty': self.defocusUncertainty.get(),
                      'Bfactor': self.Bfactor.get(),
-                     'sampling3DR': samplingRate3DR
+                     'sampling3DR': imgSet.getSamplingRate()
                     }
         
         # Get the particles stack
-        imgsFn = os.path.relpath(self._getTmpPath('particles.mrc'), iterDir)
-        paramsDic['imageFn'] = imgsFn
+        iterDir = self._iterWorkingDir(iterN)
+        paramsDic['imageFn'] = os.path.relpath(self._getFileName("particles"), iterDir)
         acquisition = imgSet.getAcquisition()
+        
         # Get the amplitude Contrast of the micrographs
         paramsDic['ampContrast'] = acquisition.getAmplitudeContrast()
         # Get the scanned pixel size of the micrographs
@@ -871,15 +903,15 @@ class ProtFrealignBase(EMProtocol):
                 blockParticles[i] += 1
         return blockParticles
         
-    def _createIterWorkingDir(self, iter):
+    def _createIterWorkingDir(self, iterN):
         """create a new directory for the iterarion and change to this directory.
         """
-        workDir = self._iterWorkingDir(iter)
+        workDir = self._iterWorkingDir(iterN)
         makePath(workDir)   # Create a directory for a current iteration
     
-    def _iterWorkingDir(self, iter, *paths):
+    def _iterWorkingDir(self, iterN, *paths):
         """ Define which is the directory for the current iteration"""
-        iterDir = 'iter_%03d' % iter
+        iterDir = 'iter_%03d' % iterN
         workDir = self._getExtraPath(iterDir, *paths)
         return workDir
 
@@ -901,37 +933,37 @@ class ProtFrealignBase(EMProtocol):
         particlesInilast = [initPart, lastPart]
         return particlesInilast
     
-    def _setParamsRefineParticles(self, iter, block):
+    def _setParamsRefineParticles(self, iterN, block):
         paramDics = {}
         paramDics['stopParam'] = -100
-        paramDics['volume'] = self._getBaseName('ref_vol', iter=iter)
-        paramDics['outputParFn'] = self._getBaseName('output_par_block', block=block, iter=iter)
+        paramDics['volume'] = self._getBaseName('ref_vol', iter=iterN)
+        paramDics['outputParFn'] = self._getBaseName('output_par_block', block=block, iter=iterN)
         paramDics['inputParFn'] = paramDics['outputParFn']
-        paramDics['imgFnMatch'] = self._getFileName('match_block', block=block, iter=iter)
-        paramDics['outputShiftFn'] = self._getFileName('shift_block', block=block, iter=iter)
-        paramDics['3Dweigh'] = self._getFileName('weight_block', block=block, iter=iter)
-        paramDics['FSC3DR1'] = self._getFileName('vol1_block', block=block, iter=iter)
-        paramDics['FSC3DR2'] = self._getFileName('vol2_block', block=block, iter=iter)
-        paramDics['VolPhResidual'] = self._getFileName('phase_block', block=block, iter=iter)
-        paramDics['VolpointSpread'] = self._getFileName('spread_block', block=block, iter=iter)
-        paramDics['logFile'] = self._getFileName('logFileRefine', block=block, iter=iter, ref=1)
+        paramDics['imgFnMatch'] = self._getFileName('match_block', block=block, iter=iterN)
+        paramDics['outputShiftFn'] = self._getFileName('shift_block', block=block, iter=iterN)
+        paramDics['3Dweigh'] = self._getFileName('weight_block', block=block, iter=iterN)
+        paramDics['FSC3DR1'] = self._getFileName('vol1_block', block=block, iter=iterN)
+        paramDics['FSC3DR2'] = self._getFileName('vol2_block', block=block, iter=iterN)
+        paramDics['VolPhResidual'] = self._getFileName('phase_block', block=block, iter=iterN)
+        paramDics['VolpointSpread'] = self._getFileName('spread_block', block=block, iter=iterN)
+        paramDics['logFile'] = self._getFileName('logFileRefine', block=block, iter=iterN, ref=1)
         return paramDics
     
-    def _setParams3DR(self, iter):
+    def _setParams3DR(self, iterN):
         """ Setting the parameters to reconstruct a new 3DR"""
         paramDics = {}
         paramDics['mode'] = 0
         paramDics['stopParam'] = 0   #The stopParam must be 0 if you want obtain a 3D reconstruction.
-        paramDics['volume'] = self._getBaseName('iter_vol', iter=iter)
-        paramDics['inputParFn'] = self._getBaseName('output_par', iter=iter)
-        paramDics['imgFnMatch'] = self._getFileName('match', iter=iter)
-        paramDics['outputShiftFn'] = self._getFileName('shift', iter=iter)
-        paramDics['3Dweigh'] = self._getFileName('weight', iter=iter)
-        paramDics['FSC3DR1'] = self._getFileName('vol1', iter=iter)
-        paramDics['FSC3DR2'] = self._getFileName('vol2', iter=iter)
-        paramDics['VolPhResidual'] = self._getFileName('phase', iter=iter)
-        paramDics['VolpointSpread'] = self._getFileName('spread', iter=iter)
-        paramDics['logFile'] = self._getFileName('logFileRecons', iter=iter, ref=1)
+        paramDics['volume'] = self._getBaseName('iter_vol', iter=iterN)
+        paramDics['inputParFn'] = self._getBaseName('output_par', iter=iterN)
+        paramDics['imgFnMatch'] = self._getFileName('match', iter=iterN)
+        paramDics['outputShiftFn'] = self._getFileName('shift', iter=iterN)
+        paramDics['3Dweigh'] = self._getFileName('weight', iter=iterN)
+        paramDics['FSC3DR1'] = self._getFileName('vol1', iter=iterN)
+        paramDics['FSC3DR2'] = self._getFileName('vol2', iter=iterN)
+        paramDics['VolPhResidual'] = self._getFileName('phase', iter=iterN)
+        paramDics['VolpointSpread'] = self._getFileName('spread', iter=iterN)
+        paramDics['logFile'] = self._getFileName('logFileRecons', iter=iterN, ref=1)
         return paramDics
         
     def __openParamFile(self, blockNumber, paramsDict):
@@ -1003,15 +1035,16 @@ eot
 """
         return args
     
-    def _mergeAllParFiles(self, iter, numberOfBlocks):
+    def _mergeAllParFiles(self, iterN, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
         
-        file2 = self._getFileName('output_par', iter=iter)
+        file2 = self._getFileName('output_par', iter=iterN)
         if numberOfBlocks != 1:
             f2 = open(file2, 'w+')
-            
+            f2.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
+                     "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
             for block in range(1, numberOfBlocks + 1):
-                file1 = self._getFileName('output_par_block', block=block, iter=iter)
+                file1 = self._getFileName('output_par_block', block=block, iter=iterN)
                 f1 = open(file1)
                 
 #                 if block == 1:
@@ -1024,20 +1057,23 @@ eot
                 f1.close()
             f2.close()
         else:
-            file1 = self._getBaseName('output_par_block', block=1, iter=iter)
+            file1 = self._getFileName('output_par_block', block=1, iter=iterN)
             copyFile(file1, file2)
     
-    def _splitParFile(self, iter, numberOfBlocks):
+    def _splitParFile(self, iterN, numberOfBlocks):
         """ This method split the parameter files that has been previosuly merged """
         
-        prevIter = iter -1
+        prevIter = iterN -1
         file1 = self._getFileName('output_par', iter=prevIter)
         if numberOfBlocks != 1:
             for block in range(1, numberOfBlocks + 1):
                 f1 = open(file1)
-                file2 = self._getFileName('input_par_block', block= block, iter=iter, prevIter=prevIter)
+                file2 = self._getFileName('input_par_block', block=block, iter=iterN, prevIter=prevIter)
                 f2 = open(file2, 'w+')
-                initpart, finalPart = self._particlesInBlock(block, numberOfBlocks)
+                f2.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
+                         "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
+
+                _, finalPart = self._initFinalBlockPaticles(block)
                 
                 for l in f1:
                     
@@ -1054,12 +1090,59 @@ eot
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('input_par_block', block= block, iter=iter, prevIter=prevIter)
+            file2 = self._getFileName('input_par_block', block=1, iter=iter, prevIter=prevIter)
             copyFile(file1, file2)
     
-    def _setLastIter(self, iter):
-        self._lastIter.set(iter)
+    def _setLastIter(self, iterN):
+        self._lastIter.set(iterN)
     
     def _getLastIter(self):
         return self._lastIter.get()
-
+    
+    def _getCurrIter(self):
+        return self._getLastIter() + 1
+    
+    def _allItersN(self):
+        """ Iterate over iterations steps """
+        for iterN in range(self.initIter, self.finalIter):
+            yield iterN
+    
+    def _allBlocks(self):
+        """ Iterate over all iterations. """
+        for i in range(1, self.numberOfBlocks+1):
+            yield i
+    
+    def _initFinalBlockPaticles(self, block):
+        """ return initial and final particle number for a determined block """
+        finalPart = 0
+        for i in range(block):
+            particlesPerBlock = self._particlesPerBlock(self.numberOfBlocks, self.inputParticles.get().getSize())
+            initPart = 1 + finalPart
+            finalPart = finalPart + particlesPerBlock[i]
+        return initPart, finalPart
+    
+    def writeAnglesLines(self, counter, img, filePar):
+        
+        objId = img.getObjId()
+        
+        # get alignment parameters for each particle
+        align = img.getAlignment()
+        
+        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
+        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
+        psi = float(str(align._xmipp_anglePsi))
+        theta = float(str(align._xmipp_angleTilt))
+        phi = float(str(align._xmipp_angleRot))
+                    
+        # get ctfModel for each particle
+        ctfModel = img.getCTF()
+        defU = float(str(ctfModel.getDefocusU()))
+        defV = float(str(ctfModel.getDefocusV()))
+        defAngle = float(str(ctfModel.getDefocusAngle()))
+        
+        # get the adquisition info
+        acquisition = img.getAcquisition()
+        mag = float(str(acquisition.getMagnification()))
+        
+        filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f %(shiftX)9.2f %(shiftY)9.2f"
+                   " %(mag)7.0f %(objId)5d %(defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000     0.5000   00.00   00.00\n" % locals())
