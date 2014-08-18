@@ -502,8 +502,8 @@ class ProtImportCTF(ProtImport, ProtCTFMicrographs):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection('Input')
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
-                          label='Input particles',
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
+                          label='Input micrographs',
                           help='Select the particles that you want to update the CTF parameters.')
         form.addParam('pattern', PathParam, 
                       label='CTF pattern',
@@ -540,8 +540,12 @@ class ProtImportCTF(ProtImport, ProtCTFMicrographs):
         from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
 
         for mic in inputMics:
-            result = parseCtffindOutput(ctfDict[mic.getObjId()])
-            defocusU, defocusV, defocusAngle = result
+            if mic.getObjId() in ctfDict:
+                defocusU, defocusV, defocusAngle = parseCtffindOutput(ctfDict[mic.getObjId()])
+            else:
+                self.warning("CTF for micrograph id %d was not found." % mic.getObjId())
+                defocusU, defocusV, defocusAngle = -999, -1, -999
+            
             # save the values of defocus for each micrograph in a list
             ctf = CTFModel()
             ctf.copyObjId(mic)
