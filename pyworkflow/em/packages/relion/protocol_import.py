@@ -29,7 +29,7 @@ This module contains the protocol for 3d classification with relion.
 
 import os
 
-from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam
+from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
 
@@ -55,6 +55,12 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         form.addParam('samplingRate', FloatParam, 
                       label=Message.LABEL_SAMP_RATE,
                       help='Provide the sampling rate of your particles. (in Angstroms per pixel)')
+        form.addParam('magnification', IntParam, default=50000,
+           label=Message.LABEL_MAGNI_RATE)
+        form.addParam('isPhaseFlipped', BooleanParam, default=False,
+                      label='The particles are phase flipped?')
+        form.addParam('hasAlignment', BooleanParam, default=False,
+                      label='The particles has alignment?')
         
         form.addParam('importClasses', BooleanParam, default=True,
                       label='Import also classes?')
@@ -87,12 +93,18 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         # Create the set of particles
         partSet = self._createSetOfParticles()
         self._findImagesPath(dataFile)
-        readSetOfParticles(dataFile, partSet, preprocessRow=self._preprocessRow)
-        particle = partSet.getFirstItem() 
+        readSetOfParticles(dataFile, partSet, preprocessRow=self._preprocessRow, magnification=self.magnification.get())
+        particle = partSet.getFirstItem()
         
         # Copy acquisition from first element
         partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
+#         partSet.getAcquisition().setMagnification(self.magnification.get())
+        
+        if self.isPhaseFlipped:
+            partSet.setIsPhaseFlipped(True)
+        if self.hasAlignment:
+            partSet.setHasAlignment(True)
         
         return partSet   
     
