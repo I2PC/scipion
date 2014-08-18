@@ -174,8 +174,7 @@ VARS.update(PACKAGES)
 #
 
 def runCmd(cmd):
-    os.environ.update(VARS)
-    os.chdir(SCIPION_HOME)
+    os.environ.update(VARS)    
     sys.stdout.write(">>>>> %s\n" % cmd)
     result = os.system(cmd)
     if not -256 < result < 256:
@@ -185,6 +184,7 @@ def runCmd(cmd):
 # The following functions require a working SCIPION_PYTHON
 
 def runScript(scriptCmd):
+    os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
     runCmd(cmd)
 

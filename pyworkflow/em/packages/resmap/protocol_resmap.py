@@ -24,17 +24,28 @@
 # *
 # **************************************************************************
 """
-This sub-package contains protocol for particles filters operations
+Protocol wrapper around the ResMap tool for local resolutio
 """
 
-from pyworkflow.em import *  
-from pyworkflow.em.constants import NO_INDEX
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, getLastFile
+import os
+import sys
 
-      
+from pyworkflow.object import String
+from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.convert import ImageHandler
+
+
+
 class ProtResMap(ProtAnalysis3D):
-    """ Computes the local resolution of 3D density maps """
-    _label = 'resolution map'
+    """
+    ResMap is software tool for computing the local resolution of 3D
+    density maps studied in structural biology, primarily by cryo-electron
+    microscopy (cryo-EM).
+     
+    Please find the manual at http://resmap.sourceforge.net 
+    """
+    _label = 'local resolution'
              
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -58,12 +69,10 @@ class ProtResMap(ProtAnalysis3D):
         form.addParam('stepRes', FloatParam, default=1,
                       label='Step size (Ang):',
                       help='in Angstroms (min 0.25, default 1.0)')
-        form.addParam('minRes', FloatParam, default=0,
-                      label='Min resolution (Ang):',
-                      help='Default: algorithm will start a just above 2*voxelSize')
-        form.addParam('maxRes', FloatParam, default=0,
-                      label='Max resolutoin (Ang):',
-                      help='Default: algorithm will start a just above 2*voxelSize')
+        line = form.addLine('Resolution Range (A)', 
+                            help='Default: algorithm will start a just above 2*voxelSize')
+        line.addParam('minRes', FloatParam, default=0, label='Min')
+        line.addParam('maxRes', FloatParam, default=0, label='Max')
         form.addParam('pVal', FloatParam, default=0.05,
                       label='Confidence level:',
                       help='usually between [0.01, 0.05]')   
@@ -86,32 +95,53 @@ class ProtResMap(ProtAnalysis3D):
             volLocation2: if not None, a tuple like volLocation1 for the split volume.
         """
         ih = ImageHandler()
-        outputLocation = (NO_INDEX, self._getPath('volume1.map'))
-        ih.convert(volLocation1, outputLocation)
+        ih.convert(volLocation1, self._getPath('volume1.map'))
         if volLocation2 is not None:
-            outputLocation = (NO_INDEX, self._getPath('volume2.map'))
-            ih.convert(volLocation2, outputLocation) 
+            ih.convert(volLocation2, self._getPath('volume2.map')) 
             
 
-    def estimateResolution(self, pVal, minRes, maxRes, stepRes):
+    def estimateResolution(self, pValue, minRes, maxRes, stepRes):
         """ Call ResMap.py with the appropiate parameters. """
         self._enterWorkingDir()
         
-        inputVol = 'volume1.map'
-        vxSize = self.inputVolume.get().getSamplingRate()
+        volumes = ['volume1.map', 'volume2.map']
         
-        path = os.environ['RESMAP_HOME']
-        os.environ['PATH'] = path + os.pathsep + os.environ['PATH']
-        os.environ['PYTHONPATH'] = path + os.pathsep + os.environ['PYTHONPATH']
-        args = join(path, 'ResMap.py')
+        # Add resmap libraries to the path
+        sys.path.append(os.environ['RESMAP_HOME'])
+        from ResMap_algorithm import ResMap_algorithm
+        from ResMap_fileIO import MRC_Data
+        
+        # Always read the first volume as mrc data
+        data1 = MRC_Data(volumes[0],'ccp4')
+        
+        args = {'vxSize': self.inputVolume.get().getSamplingRate(),
+                'pValue': pValue,
+                'minRes': minRes,
+                'maxRes': maxRes,
+                'stepRes': stepRes,
+                'chimeraLaunch': False,
+                'graphicalOutput': False, #FIXME: change to False and move t
+                }
+        
         if self.useSplitVolume:
-            args += ' --noguiSplit volume1.map volume2.map '
+            # Read the second splitted volume
+            data2 = MRC_Data(volumes[0],'ccp4')
+            args.update({'inputFileName1': 'volume1.map',
+                         'inputFileName2': 'volume2.map',
+                         'data1': data1,
+                         'data2': data2,
+                         })
         else:
-            args += ' --noguiSingle volume1.map '
-        args += '--vxSize=%(vxSize)f --pVal=%(pVal)f '
-        args += '--minRes=%(minRes)f --maxRes=%(maxRes)f --stepRes=%(stepRes)f '
-        args += '--vis2D' # TODO: move this to viewer
-        self.runJob('xmipp_python', args % locals())
+            args.update({'inputFileName': 'volume1.map',
+                         'data': data1,
+                         })   
+            
+             
+        results = ResMap_algorithm(**args)  
+        
+        from cPickle import dumps
+        self.histogramData = String(dumps(results['resHisto']))
+        #  
                     
         self._leaveWorkingDir()
         

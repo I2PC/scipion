@@ -31,4 +31,5 @@ _logo = "resmap_logo.png"
 _references = ['kucukelbir2014']
 
 from protocol_resmap import ProtResMap
+from viewer_resmap import ResMapViewer
 
