@@ -319,6 +319,9 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
         
     if kwargs.get('readAcquisition', True):
         img.setAcquisition(rowToAcquisition(imgRow))
+        
+    if kwargs.get('magnification', None):
+        img.getAcquisition().setMagnification(kwargs.get("magnification"))
     
     setObjId(img, imgRow)
     # Read some extra labels
