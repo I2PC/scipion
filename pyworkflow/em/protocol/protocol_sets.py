@@ -401,7 +401,7 @@ class ProtIntersectSet(ProtSets):
                            'ones of this input set.'
                            )
         form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
-                      pointerClass='SetOfImages', 
+                      pointerClass='EMSet', 
                       help='The elements that are in this (normally smaller) set and \n'
                            'in the full set will be included in the result set'
                            )
