@@ -250,7 +250,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					double cdfccthis=DIRECT_A1D_ELEM(cdfcc,idx);
 					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
-					bool condition=!useImed || (useImed && cdfimedthis<=currentAlpha);
+					// bool condition=!useImed || (useImed && cdfimedthis<=currentAlpha);
 //					if (cc>ccl)
 //						std::cout << "Image " << nImg << " " << fnImg << " qualifies by Fisher to dir=" << nDir << std::endl;
 //					if (!(cdfccthis>=one_alpha) && cc>ccl)
