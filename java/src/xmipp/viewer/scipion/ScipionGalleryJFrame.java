@@ -27,6 +27,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -310,9 +311,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         boolean proceed = true;
         if (data.hasMdChanges())
-        {       String question = String.format("File has been modified. Are you sure you want to discard changes?", sqlitefile);
-                proceed = XmippDialog.showYesNoQuestion(ScipionGalleryJFrame.this, question);
-                new File(sqlitefile).delete();
+        {       String question = String.format("File has been modified. Do you wish to save changes?", sqlitefile);
+                int option = XmippDialog.showQuestionYesNoCancel(ScipionGalleryJFrame.this, question);
+                if(option == XmippQuestionDialog.NO_OPTION)
+                    new File(sqlitefile).delete();
+                proceed = option != XmippQuestionDialog.CANCEL_OPTION;
         }
                         
         return proceed;

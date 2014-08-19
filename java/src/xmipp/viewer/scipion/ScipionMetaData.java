@@ -1053,7 +1053,7 @@ public class ScipionMetaData extends MetaData {
         Class.forName("org.sqlite.JDBC");
         String file = getTmpFile();
         if(checkTmp == null && new File(file).exists())
-            checkTmp = XmippQuestionDialog.showYesNoQuestion(null, "Temporary save has been detected. Do you wish to import it?");
+            checkTmp = true;//XmippQuestionDialog.showYesNoQuestion(null, "Temporary save has been detected. Do you wish to import it?");
         if(checkTmp == null || !checkTmp)
             file = filename;
         Connection c = DriverManager.getConnection("jdbc:sqlite:" + file);
