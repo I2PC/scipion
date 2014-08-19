@@ -244,7 +244,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             });
         }
         timer = new Timer();
-        long time = 10000;//ten seconds
+        long time = 5000;//ten seconds
         timer.scheduleAtFixedRate(new Saver(), time, time);
     }
     
@@ -311,7 +311,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         boolean proceed = true;
         if (data.hasMdChanges())
-        {       String question = String.format("File has been modified. Do you wish to save changes?", sqlitefile);
+        {       String question = String.format("File has pending changes. Do you wish to save them?", sqlitefile);
                 int option = XmippDialog.showQuestionYesNoCancel(ScipionGalleryJFrame.this, question);
                 if(option == XmippQuestionDialog.NO_OPTION)
                     new File(sqlitefile).delete();

@@ -159,7 +159,10 @@ public class ScipionMetaData extends MetaData {
                             emo.values.put(column, value);
                         }
                 emobjects.add(emo);
-                enableds ++;
+                if(emo.isEnabled())
+                    enableds ++;
+                else
+                    emo.changed = true;
                 index ++;
             }
             
@@ -911,6 +914,7 @@ public class ScipionMetaData extends MetaData {
    
     public boolean isChanged()
     {
+        
         for(EMObject emo: emobjects)
             if(emo.changed)
                 return true;
