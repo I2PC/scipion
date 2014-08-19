@@ -273,7 +273,7 @@ void ProgARTPseudo::produceSideInfo()
             Matrix2D<double> mode;
             mode.initZeros(atomPosition.size(),3);
             FileName fnMode;
-            DFNMA.getValue( MDL_IMAGE, fnMode,__iter.objId);
+            DFNMA.getValue( MDL_NMA_MODEFILE, fnMode,__iter.objId);
             mode.read(fnMode);
             NMA.push_back(mode);
         }
