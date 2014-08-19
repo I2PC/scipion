@@ -353,7 +353,9 @@ class ProtRecalculateCTF(ProtMicrographs):
     
     def _loadDbNamePrefix(self):
         """ Setup filename and prefix for db connection. """
-        self._dbName = self.sqliteFile.get()
+        _dbName = self.sqliteFile.get()
+        self._dbName = self._getPath('subset.sqlite')
+        os.rename(_dbName, self._dbName)
         self._dbPrefix = ""
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1] 

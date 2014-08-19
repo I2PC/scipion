@@ -30,7 +30,7 @@ This module contains protocols related to Set operations such us:
 - split
 ... etc
 """
-
+import os
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
                                         MultiPointerParam, IntParam)
@@ -244,7 +244,11 @@ class ProtUserSubSet(ProtSets):
         
     def _loadDbNamePrefix(self):
         """ Setup filename and prefix for db connection. """
-        self._dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+        
+        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+        self._dbName = self._getPath('subset.sqlite')
+        os.rename(_dbName, self._dbName)
+
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1] 
             
