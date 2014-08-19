@@ -65,6 +65,7 @@ marginal likelihood.
             self._insertFunctionStep('continueStep', self.initIter)
         else:
             self.initIter = 1
+            self.numberOfRef = self.numberOfClasses.get()
         self.finalIter = self.initIter + self.numberOfIterations.get()
         self.cpuList = self._cpusPerClass(self.numberOfBlocks, self.numberOfRef)
     
@@ -227,9 +228,8 @@ marginal likelihood.
         if isLastIterStep:
             self._setLastIter(iterN)
     
-    def createOutputStep(self, lastIter):
+    def createOutputStep(self):
         from convert import readSetOfClasses3D
-#         self._createFilenameTemplates(lastIter)
         numberOfClasses = self.numberOfRef
         imgSet = self.inputParticles.get()
         volumes = self._createSetOfVolumes()
@@ -240,8 +240,8 @@ marginal likelihood.
         
         for ref in range(1, numberOfClasses + 1):
             vol = Volume()
-            filepar = self._getFileName('output_par_class', iter=lastIter, ref=ref)
-            volFn = self._getFileName('iter_vol_class', iter=lastIter, ref=ref)
+            filepar = self._getFileName('output_par_class', iter=self._getLastIter(), ref=ref)
+            volFn = self._getFileName('iter_vol_class', iter=self._getLastIter(), ref=ref)
             vol.setFileName(volFn)
             volumes.append(vol)
             fileparList.append(filepar)
