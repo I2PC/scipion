@@ -36,7 +36,10 @@ from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, Poi
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert import ImageHandler
 
-from constants import *
+from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT, EWA_DISABLE, FSC_CALC, MEM_0,
+                       INTERPOLATION_1, REF_ALL, MOD_RECONSTRUCTION, MOD_RANDOM_SEARCH_REFINEMENT,
+                       MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE, EWA_SIMPLE_HAND, EWA_SIMPLE,
+                       FSC_3DR_ODD, FSC_3DR_EVEN, FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0, REF_ANGLES, REF_SHIFTS)
 from brandeis import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
 
 
@@ -482,8 +485,8 @@ class ProtFrealignBase(EMProtocol):
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
             else:
-                self.initIter = int(self.continueIter.get())
-                self._insertFunctionStep('continueStep', self.initIter)
+                self.initIter = int(self.continueIter.get()) + 1
+            self._insertFunctionStep('continueStep', self.initIter)
         else:
             self.initIter = 1
             
@@ -524,7 +527,7 @@ class ProtFrealignBase(EMProtocol):
     #--------------------------- STEPS functions ---------------------------------------------------
     def continueStep(self, iterN):
         """Create a symbolic link of a previous iteration from a previous run."""
-        
+        iterN = iterN - 1
         self._setLastIter(iterN)
         continueRun = self.continueRun.get()
         prevDir = continueRun._iterWorkingDir(iterN)
@@ -669,7 +672,7 @@ class ProtFrealignBase(EMProtocol):
         paramsDic['outputParFn'] = self._getFileName('output_vol_par', iter=iterN)
         paramsDic['initParticle'] = initParticle
         paramsDic['finalParticle'] = finalParticle
-        paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
+#         paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
         
         params2 = self._setParams3DR(iterN)
         
@@ -919,20 +922,6 @@ class ProtFrealignBase(EMProtocol):
         """ Remove the folders and return the file from the filename. """
         return basename(self._getFileName(key, **args))
     
-    def _particlesInBlock(self, block, numberOfBlocks):
-        """calculate the initial and final particles that belongs to this block"""
-        
-        imgSet = self.inputParticles.get()
-        
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        initPart = 0
-        lastPart = 0
-        for i in range(block):
-            initPart = lastPart + 1
-            lastPart = lastPart + blockParticles[i]
-        particlesInilast = [initPart, lastPart]
-        return particlesInilast
-    
     def _setParamsRefineParticles(self, iterN, block):
         paramDics = {}
         paramDics['stopParam'] = -100
@@ -1108,7 +1097,7 @@ eot
             yield iterN
     
     def _allBlocks(self):
-        """ Iterate over all iterations. """
+        """ Iterate over all numberOfCPUs. """
         for i in range(1, self.numberOfBlocks+1):
             yield i
     
