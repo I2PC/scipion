@@ -116,7 +116,7 @@ class RelionBandpassWizard(FilterParticlesWizard):
             d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
-                form.setVar('iniLowPassFilter', 1/d.getHighFreq()*d.itemDim)
+                form.setVar('iniLowPassFilter', d.samplingRate/d.getHighFreq())
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)
 
