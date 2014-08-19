@@ -13,7 +13,10 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -22,8 +25,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -47,14 +50,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton representativesbt;
     private ScipionMessageDialog dlg;
     private String tmpdir;
+    private Timer timer;
     
    
 
-    public ScipionGalleryJFrame(String filename, ScipionMetaData md, ScipionParams parameters) {
-        super(filename, md, parameters);
-        readScipionParams(parameters);
-        setScipionImageIcon();
-    }
+    
     
       public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
@@ -85,8 +85,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             String filename = data.getFileName();
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
-            String ext = data.getFileExtension();
-            sqlitefile = filename.replace(ext, "_selection" + ext);
+            sqlitefile = ((ScipionMetaData)data.getMd()).getTmpFile();
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             other = parameters.other;
@@ -191,6 +190,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                                 return;
                                         
                             }
+                            timer.cancel();
+                            timer.purge();
                             String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
                             ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                             ((ScipionGalleryData)data).overwrite(sqlitefile);
@@ -241,7 +242,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
         }
-
+        timer = new Timer();
+        long time = 10000;//ten seconds
+        timer.scheduleAtFixedRate(new Saver(), time, time);
     }
     
     public boolean confirmCreate(String output, int size)
@@ -307,8 +310,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         boolean proceed = true;
         if (data.hasMdChanges())
-        {       String question = String.format("Input file has been modified. Are you sure you want to discard changes?", sqlitefile);
+        {       String question = String.format("File has been modified. Are you sure you want to discard changes?", sqlitefile);
                 proceed = XmippDialog.showYesNoQuestion(ScipionGalleryJFrame.this, question);
+                new File(sqlitefile).delete();
         }
                         
         return proceed;
@@ -321,7 +325,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
             @Override
             public void run() {
-
+                timer.cancel();
+                timer.purge();
                 try {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
                     String output = XmippWindowUtil.executeCommand(command, true);
@@ -348,18 +353,41 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 	 * Open another metadata separataly *
 	 */
     @Override
-	public void openMetadata(MetaData md)
-	{
-            try
-            {
-                String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
-                ScipionParams params = new ScipionParams(args);
-                new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
-            }
-            catch(Exception e)
-            {
-                XmippDialog.showError(this, e.getMessage());
-            }
-	}
+    public void openMetadata(MetaData md)
+    {
+        try
+        {
+            String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
+            ScipionParams params = new ScipionParams(args);
+            new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
+        }
+        catch(Exception e)
+        {
+            XmippDialog.showError(this, e.getMessage());
+        }
+    }
+    
+    public class Saver extends TimerTask
+    {
+
+        @Override
+        public void run() {
+            if(data.hasMdChanges())
+                try {
+
+                    ((ScipionGalleryData)data).overwrite(sqlitefile);
+                    StopWatch.getInstance().printElapsedTime("saving temporary copy");
+                } catch (SQLException ex) {
+                    Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, "temporary save failed");
+                    Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+        }
+            
+
+
+
+    }
+        
+        
 
 }

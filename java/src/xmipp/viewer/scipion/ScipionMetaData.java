@@ -22,6 +22,9 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippQuestionDialog;
+import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -40,6 +43,7 @@ public class ScipionMetaData extends MetaData {
     private String preffix = "";
     private String[] blocks;
     private int enableds;
+    Boolean checkTmp;
     
     
 
@@ -126,8 +130,7 @@ public class ScipionMetaData extends MetaData {
             commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
             columns.add(commentci);
 
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + filename);
+            c = getConnection();
             stmt = c.createStatement();
             ResultSet rs;
 
@@ -191,6 +194,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
+    
     
     public void setParent(ScipionMetaData md) {
         this.parent = md;
@@ -845,8 +849,7 @@ public class ScipionMetaData extends MetaData {
             try {
                 String name, alias;
                 Object value;
-                Class.forName("org.sqlite.JDBC");
-                c = DriverManager.getConnection("jdbc:sqlite:" + filename);
+                c = getConnection();
                 String columns = column.comment;
                 ColumnInfo indexci = null;
                 if(column.labelName.endsWith("_filename"))
@@ -1032,15 +1035,29 @@ public class ScipionMetaData extends MetaData {
         }
         
         
+        
     }
+    
+    public String getTmpFile() {
+            String ext = XmippStringUtils.getFileExtension(filename);
+            String ext2 = "_selection" + ext;
+            String sqlitefile = filename;
+            if(!filename.endsWith(ext2))
+                sqlitefile = filename.replace(ext, ext2);
+            return sqlitefile;
+    }
+        
 
-    
-    
-    
-    
-    
-    
-    
-    
+    protected Connection getConnection() throws ClassNotFoundException, SQLException
+    {
+        Class.forName("org.sqlite.JDBC");
+        String file = getTmpFile();
+        if(checkTmp == null && new File(file).exists())
+            checkTmp = XmippQuestionDialog.showYesNoQuestion(null, "Temporary save has been detected. Do you wish to import it?");
+        if(checkTmp == null || !checkTmp)
+            file = filename;
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + file);
+        return c;
+    }
    
 }

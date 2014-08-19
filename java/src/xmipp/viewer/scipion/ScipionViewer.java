@@ -58,7 +58,7 @@ public class ScipionViewer extends Viewer {
             if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
             {
                 StopWatch.getInstance().printElapsedTime("reading db");
-                ScipionGalleryData data = new ScipionGalleryData(null, parameters, new ScipionMetaData(filename));
+                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters);
                 ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
                 
             }

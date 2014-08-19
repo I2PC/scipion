@@ -343,6 +343,7 @@ public class ScipionGalleryData extends GalleryData {
      /**
      * Set enabled state
      */
+    @Override
     public void setEnabled(int index, boolean isenabled) {
         try {
             if (!isVolumeMode()) { // slices in a volume are always enabled
@@ -389,6 +390,7 @@ public class ScipionGalleryData extends GalleryData {
         try {
             getEMObjects().get(index).setValue(ci, value);
             setMdChanges(true);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
