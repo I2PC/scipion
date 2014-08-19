@@ -184,6 +184,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //					}
 
 					DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir)=corr;
+					// For the paper plot: std::cout << corr << " " << imed << std::endl;
 					size_t idx=nVolume*Ndirs+nDir;
 					DIRECT_A1D_ELEM(imgcc,idx)=corr;
 					DIRECT_A1D_ELEM(imgimed,idx)=imed;
@@ -250,8 +251,15 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
 					bool condition=!useImed || (useImed && cdfimedthis<=currentAlpha);
-					if (cdfccthis>=one_alpha && cc>ccl && condition)
+//					if (cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " qualifies by Fisher to dir=" << nDir << std::endl;
+//					if (!(cdfccthis>=one_alpha) && cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by correlation percentile to " << nDir << " -> " << cdfccthis << " " << one_alpha << std::endl;
+//					if (!condition && cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by imed percentile to " << nDir << " -> " << cdfimedthis << " " << currentAlpha<< std::endl;
+					if (cdfccthis>=one_alpha && cc>ccl)// COSS: && condition): this condition is too restrictive
 					{
+//						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 						if (maxShift>0)
@@ -396,8 +404,11 @@ void ProgReconstructSignificant::run()
 					{
 						double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
 						double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
-						if (cdfThis>=oneAlpha || !strict)
+						if ((cdfThis>=oneAlpha || !strict) && DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)>0)
+						{
+							std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
+						}
 						else
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)=0;
 					}
@@ -419,6 +430,8 @@ void ProgReconstructSignificant::run()
 					mdReconstruction.getValue(MDL_REF,nDir,__iter.objId);
 					mdReconstruction.getValue(MDL_REF3D,nVol,__iter.objId);
 					mdReconstruction.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
+					if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
+						std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
 				}
 
 				// Remove zero-weight images
@@ -461,7 +474,7 @@ void ProgReconstructSignificant::run()
 					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
-				deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+				//deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
 			}
 
 			if (verbose>=2)
