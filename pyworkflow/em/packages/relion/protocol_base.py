@@ -469,7 +469,6 @@ class ProtRelionBase(EMProtocol):
         
         if self.doNormalize:
             # Enter here to generate the star file or to normalize the images
-            self._loadEnvironment()
             self._enterDir(self._getPath())
             imgFn = os.path.relpath(imgFn, self._getPath())
             radius = self.backRadius.get()
@@ -490,7 +489,6 @@ class ProtRelionBase(EMProtocol):
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
-        self._loadEnvironment()
         params += ' --j %d' % self.numberOfThreads.get()
         print "PARAMS: ", params
         self.runJob(self._getProgram(), params)
@@ -555,15 +553,6 @@ class ProtRelionBase(EMProtocol):
             return self.continueRun.get().inputParticles.get()
         else:
             return self.inputParticles.get()
-    
-    def _loadEnvironment(self):
-        """ Setup the environment variables needed to launch Relion. """
-        RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LIB = join(os.environ['RELION_HOME'], 'lib')
-        RELION_LIB64 = join(os.environ['RELION_HOME'], 'lib64')
-        environAdd('PATH', RELION_BIN)
-        environAdd('LD_LIBRARY_PATH', RELION_LIB)
-        environAdd('LD_LIBRARY_PATH', RELION_LIB64)
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
