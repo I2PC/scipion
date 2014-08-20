@@ -129,15 +129,15 @@ class ProtRelionBase(EMProtocol):
                       condition='not doContinue',
                       label="Input particles",  
                       help='Select the input images from the project.')   
-        form.addParam('doNormalize', BooleanParam, default=False,
-                      condition='not doContinue',
-                      label='Normalize (TODO: REMOVE)',
-                      help='If set to True, particles will be normalized in the way RELION prefers it.')
-        form.addParam('backRadius', IntParam, default=0,
-                      condition='doNormalize and not doContinue',
-                      label='Background radius',
-                      help='Pixels outside this circle are assumed to be noise and their stddev '
-                      'is set to 1. Radius for background circle definition (in pix.).')
+#         form.addParam('doNormalize', BooleanParam, default=False,
+#                       condition='not doContinue and not isClassify',
+#                       label='Normalize (TODO: REMOVE)',
+#                       help='If set to True, particles will be normalized in the way RELION prefers it.')
+#         form.addParam('backRadius', IntParam, default=0,
+#                       condition='doNormalize and not doContinue',
+#                       label='Background radius',
+#                       help='Pixels outside this circle are assumed to be noise and their stddev '
+#                       'is set to 1. Radius for background circle definition (in pix.).')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',
@@ -465,28 +465,29 @@ class ProtRelionBase(EMProtocol):
         
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
         from convert import writeSetOfParticles
-        writeSetOfParticles(imgSet, imgStar, imgFn)
+        # Pass stack file as None to avoid write the images files
+        writeSetOfParticles(imgSet, imgStar, None)
         
-        if self.doNormalize:
-            # Enter here to generate the star file or to normalize the images
-            self._loadEnvironment()
-            self._enterDir(self._getPath())
-            imgFn = os.path.relpath(imgFn, self._getPath())
-            radius = self.backRadius.get()
-            if radius <= 0:
-                radius = Xdim / 2
-            params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
-            self.runJob(self._getProgram('relion_preprocess'), params % locals())
-            
-            outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
-            if not outputMrcs:
-                raise Exception("Not particles produced by 'relion_preprocess'")
-            outFn = outputMrcs[0]
-            outStar = 'particles.star'
-            
-            moveFile(outFn, imgFn)
-            cleanPath(outStar)
-            self._leaveDir()
+#         if self.doNormalize:
+#             # Enter here to generate the star file or to normalize the images
+#             self._loadEnvironment()
+#             self._enterDir(self._getPath())
+#             imgFn = os.path.relpath(imgFn, self._getPath())
+#             radius = self.backRadius.get()
+#             if radius <= 0:
+#                 radius = Xdim / 2
+#             params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
+#             self.runJob(self._getProgram('relion_preprocess'), params % locals())
+#              
+#             outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
+#             if not outputMrcs:
+#                 raise Exception("Not particles produced by 'relion_preprocess'")
+#             outFn = outputMrcs[0]
+#             outStar = 'particles.star'
+#              
+#             moveFile(outFn, imgFn)
+#             cleanPath(outStar)
+#             self._leaveDir()
     
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """

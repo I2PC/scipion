@@ -82,7 +82,7 @@ class ParticleAdaptor():
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, imgSet, stackFile):
+    def __init__(self, imgSet, stackFile=None):
         self._rowCount = 1
         self._ih = ImageHandler()
         self._imgSet = imgSet
@@ -93,11 +93,12 @@ class ParticleAdaptor():
         
     def setupRow(self, img, imgRow):
         """ Convert image and modify the row. """
-        #newLoc = (self._rowCount, self._stackFile)
-        #TODO: Check whether the input image format is valid for Relion
-        #self._ih.convert(img.getLocation(), newLoc)
-        #img.setLocation(newLoc)
-        # Re-write the row with the new location
+        if self._stackFile is not None:
+            newLoc = (self._rowCount, self._stackFile)
+            #TODO: Check whether the input image format is valid for Relion
+            self._ih.convert(img.getLocation(), newLoc)
+            img.setLocation(newLoc)
+            # Re-write the row with the new location
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
         coord = img.getCoordinate()
         if coord is not None:
