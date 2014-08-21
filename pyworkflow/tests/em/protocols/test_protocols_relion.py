@@ -146,5 +146,25 @@ class TestRelionImport(BaseTest):
         relionReconstruct = self.newProtocol(ProtRelionReconstruct)
         relionReconstruct.inputParticles.set(relionImport.outputParticles)
         self.launchProtocol(relionReconstruct)
+        
+class TestRelionPreprocess(TestRelionBase):
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestRelionBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+            
+    def testNormalize(self):
+        """ Firt try to import from an star file with not micrograph id
+        and not binaries files.
+        """
+       
+        # Test now a normalization after the imported particles   
+        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
+        relionNormalize.inputParticles.set(self.protImport.outputParticles)
+        relionNormalize.doNormalize.set(True)
+        relionNormalize.backRadius.set(40)
+        self.launchProtocol(relionNormalize)
 
        
