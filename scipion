@@ -174,8 +174,7 @@ VARS.update(PACKAGES)
 #
 
 def runCmd(cmd):
-    os.environ.update(VARS)
-    os.chdir(SCIPION_HOME)
+    os.environ.update(VARS)    
     sys.stdout.write(">>>>> %s\n" % cmd)
     result = os.system(cmd)
     if not -256 < result < 256:
@@ -185,6 +184,7 @@ def runCmd(cmd):
 # The following functions require a working SCIPION_PYTHON
 
 def runScript(scriptCmd):
+    os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
     runCmd(cmd)
 
@@ -356,10 +356,13 @@ def main():
         sys.exit(0)
 
     elif mode == 'runprotocol':
-        if n == 5:
-            params = ['"%s"' % s for s in sys.argv[2:5]]
+        if n == 6:
+            # this could be pw_protocol_run.py or pw_protocol_mpirun.py
+            protocolApp = sys.argv[2] 
+            # This should be (projectPath, protocolDb and protocolId)
+            params = ['"%s"' % s for s in sys.argv[3:6]]
             args = ' '.join(params)
-            runApp('pw_protocol_run.py', args)
+            runApp(protocolApp, args)
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.

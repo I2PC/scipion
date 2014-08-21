@@ -54,6 +54,8 @@ class TestXmippBase(BaseTest):
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
             
         cls.proj.launchProtocol(cls.protImport, wait=True)
+        if cls.protImport.isFailed():
+            raise Exception("Protocol has failed. Error: ", cls.protImport.getErrorMessage())
         # check that input micrographs have been imported (a better way to do this?)
         if cls.protImport.outputMicrographs is None:
             raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
@@ -130,6 +132,25 @@ class TestImportMicrographs(TestXmippBase):
         self.assertEquals(protImport.outputMicrographs.getSamplingRate(), samplingRate, "Incorrect SamplingRate on output micrographs.")
         self.assertEquals(m.getVoltage(), voltage, "Incorrect Voltage on output micrographs.")
         self.assertEquals(m.getSphericalAberration(), sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
+
+    def testImport3(self):
+        pattern = self.dataset.getFile('micrographs/BPV_####.mrc')
+        samplingRate = 2.56
+        scannedPixelSize = 7
+        magnification = 56000
+        voltage = 400
+        sphericalAberration = 2.5
+        
+        protImport = self.runImportMicrograph(pattern, samplingRate=samplingRate, 
+                                              scannedPixelSize=scannedPixelSize, 
+                                              magnification=magnification, voltage=voltage, 
+                                              sphericalAberration=sphericalAberration)
+        m = protImport.outputMicrographs.getAcquisition()
+        # Check that sampling rate on output micrographs is equal to 
+        self.assertEquals(protImport.outputMicrographs.getSamplingRate(), samplingRate, "Incorrect SamplingRate on output micrographs.")
+        self.assertEquals(m.getVoltage(), voltage, "Incorrect Voltage on output micrographs.")
+        self.assertEquals(m.getSphericalAberration(), sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
+
 
 
 class TestXmippPreprocessMicrographs(TestXmippBase):

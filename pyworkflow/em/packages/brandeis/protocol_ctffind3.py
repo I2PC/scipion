@@ -31,6 +31,7 @@ This module contains the protocol for CTF estimation with ctffind3
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath
 from pyworkflow.em import *
 from brandeis import *
+from convert import parseCtffindOutput
 # from pyworkflow.utils.which import which
 
 
@@ -57,16 +58,7 @@ estimate CTF on a set of micrographs using ctffind """
         """ Try to find the output estimation parameters
         from filename. It search for a line containing: Final Values.
         """
-        f = open(filename)
-        result = None
-        for line in f:
-            if 'Final Values' in line:
-                # Take DefocusU, DefocusV and Angle as a tuple
-                # that are the first three values in the line
-                result = tuple(map(float, line.split()[:3]))
-                break
-        f.close()
-        return result
+        return parseCtffindOutput(filename)
             
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()

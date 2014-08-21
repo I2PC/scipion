@@ -48,8 +48,8 @@ def getEnviron():
     environ = Environ(os.environ)
     environ.update({
             'PATH': join(os.environ['RELION_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+#             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
             }, position=Environ.BEGIN)
     return environ
 

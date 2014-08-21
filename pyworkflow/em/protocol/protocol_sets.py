@@ -34,7 +34,8 @@ This module contains protocols related to Set operations such us:
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses2D #we need to import this to used dynamically 
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
+                                SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
 
 
@@ -400,7 +401,7 @@ class ProtIntersectSet(ProtSets):
                            'ones of this input set.'
                            )
         form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
-                      pointerClass='SetOfImages', 
+                      pointerClass='EMSet', 
                       help='The elements that are in this (normally smaller) set and \n'
                            'in the full set will be included in the result set'
                            )

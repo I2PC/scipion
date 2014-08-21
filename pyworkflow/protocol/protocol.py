@@ -1297,7 +1297,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
             prog = join(os.environ['SCIPION_HOME'], 'scipion')
-            params = ['run', 'pyworkflow/apps/pw_protocol_mpirun.py', projectPath, protDbPath, protId]
+            params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)
