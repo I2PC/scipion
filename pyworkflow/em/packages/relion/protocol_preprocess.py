@@ -27,8 +27,8 @@
 This module contains the protocol base class for Relion protocols
 """
 from pyworkflow.em import * 
-from pyworkflow.utils import environAdd, moveFile, cleanPath
 from convert import writeSetOfParticles, readSetOfParticles
+from pyworkflow.protocol.params import Positive
 
 from protocol_base import ProtRelionBase
 
@@ -46,15 +46,43 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles",  
                       help='Select the input images from the project.')   
+        form.addParam('doInvert', BooleanParam, default=False,
+                      label='Invert contrast', 
+                      help='Invert the contrast if your particles are black over a white background.')
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize',
                       help='If set to True, particles will be normalized in the way RELION prefers it.')
-        form.addParam('backRadius', IntParam, default=0,
+        form.addParam('backRadius', IntParam, default=-1,
                       condition='doNormalize',
                       label='Background radius',
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pix.).')
-    
+        form.addParam('doScale', BooleanParam, default=False,
+                      label='Scale particles', 
+                      help='Re-scale the particles to this size (in pixels).')
+        form.addParam('scaleSize', IntParam, validators=[Positive],
+                      condition='doScale',
+                      label='Scale size',
+                      help='New particle size.')  
+        form.addParam('doWindow', BooleanParam, default=False,
+                      label='Window particles', 
+                      help='Re-window the particles to this size (in pixels).')
+        form.addParam('windowSize', IntParam, validators=[Positive],
+                      condition='doWindow',
+                      label='Window size',
+                      help='New window size.')  
+        form.addParam('doRemoveDust', BooleanParam, default=False,
+                      label='Remove dust from particles', 
+                      help='Remove dust from particles.')
+        form.addParam('whiteDust', IntParam, validators=[Positive],
+                      condition='doRemoveDust',
+                      label='White dust',
+                      help='Sigma-values above which white dust will be removed.')
+        form.addParam('blackDust', IntParam, validators=[Positive],
+                      condition='doRemoveDust',
+                      label='Black dust',
+                      help='Sigma-values above which black dust will be removed.')   
+        
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
@@ -62,7 +90,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         self.imgFn = self._getPath('input_particles.mrcs')
         self._insertFunctionStep("convertInputStep")
         print "IMAGES STAR=%s" % self.imgStar
-        self._insertProcessStep()
+        self._insertFunctionStep('processStep')
         
         self._insertFunctionStep('createOutputStep')
         
@@ -73,39 +101,51 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, self.imgStar, self.imgFn)
         
-    def _insertProcessStep(self):
-        if self.doNormalize:
-            self._insertFunctionStep("normalizeStep")
-            
-    def normalizeStep(self):
-
-        # Enter here to generate the star file or to normalize the images
+    def processStep(self):
+        # Enter here to generate the star file or to preprocess the images
         imgSet = self.inputParticles.get()
         Xdim = imgSet.getDimensions()[0]
         
         self._enterDir(self._getPath())
         imgFn = os.path.relpath(self.imgFn, self._getPath())
-        radius = self.backRadius.get()
-        if radius <= 0:
-            radius = Xdim / 2
-        params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
+        
+        params = ' --operate_on %(imgFn)s'
+        if self.doNormalize:
+            radius = self.backRadius.get()
+            if radius <= 0:
+                radius = Xdim / 2
+            params = params + ' --norm --bg_radius %(radius)s'
+            
+        if self.doRemoveDust:
+            wDust = self.whiteDust.get()
+            bDust = self.blackDust.get()
+            params = params + ' --white_dust %(wDust)s --black_dust %(bDust)s'
+            
+        if self.doInvert:
+            params = params + ' --invert_contrast'            
+        
+        if self.doScale:
+            eSize = self.scaleSize.get()
+            params = params + ' --scale %(eSize)s'
+
+        if self.doWindow:
+            wSize = self.windowSize.get()
+            params = params + ' --window %(wSize)s'
+
         self.runJob(self._getProgram('relion_preprocess'), params % locals())
-         
+                             
         outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
         if not outputMrcs:
             raise Exception("Not particles produced by 'relion_preprocess'")
-        outFn = outputMrcs[0]
-        outStar = 'particles.star'
          
-        moveFile(outFn, imgFn)
-        cleanPath(outStar)
-        self._leaveDir()
+        self._leaveDir()        
 
               
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.imgStar, imgSet)
+        outputStar = self._getPath('particles.star')
+        readSetOfParticles(outputStar, imgSet)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), self.outputParticles)
 
@@ -114,10 +154,15 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        if self.doScale and self.scaleSize.get() % 2 != 0:
+            errors += ["Only re-scaling to even-sized images is allowed in RELION."]
+        if self.doWindow and self.windowSize.get() % 2 != 0:
+            errors += ["Only re-windowing to even-sized images is allowed in RELION."]
+        return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overriden   subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         return []

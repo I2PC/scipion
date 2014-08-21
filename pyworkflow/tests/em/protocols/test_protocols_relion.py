@@ -148,7 +148,7 @@ class TestRelionImport(BaseTest):
         self.launchProtocol(relionReconstruct)
         
 class TestRelionPreprocess(TestRelionBase):
-
+    """ This class helps to test all different preprocessing particles options on RElion. """
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -156,8 +156,7 @@ class TestRelionPreprocess(TestRelionBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
             
     def testNormalize(self):
-        """ Firt try to import from an star file with not micrograph id
-        and not binaries files.
+        """ Normalize particles.
         """
        
         # Test now a normalization after the imported particles   
@@ -167,4 +166,22 @@ class TestRelionPreprocess(TestRelionBase):
         relionNormalize.backRadius.set(40)
         self.launchProtocol(relionNormalize)
 
+    def testAllOptions(self):
+        """ Test all options at once.
+        """
        
+        # Test now a normalization after the imported particles   
+        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
+        relionNormalize.inputParticles.set(self.protImport.outputParticles)
+        relionNormalize.doNormalize.set(True)
+        relionNormalize.backRadius.set(40)
+        relionNormalize.doScale.set(True)
+        relionNormalize.scaleSize.set(24)
+        relionNormalize.doWindow.set(True)
+        relionNormalize.windowSize.set(120)
+        relionNormalize.doInvert.set(True)
+        relionNormalize.doRemoveDust.set(True)
+        relionNormalize.whiteDust.set(4)
+        relionNormalize.blackDust.set(8)
+        
+        self.launchProtocol(relionNormalize)       
