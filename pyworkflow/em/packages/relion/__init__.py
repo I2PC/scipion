@@ -39,6 +39,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_import import ProtRelionImport
 from protocol_reconstruct import ProtRelionReconstruct
 from protocol_postprocess import ProtRelionPostprocess
+from protocol_preprocess import ProtRelionPreprocessParticles
 
 # Wizards
 from wizard import *

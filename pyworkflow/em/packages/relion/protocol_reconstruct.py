@@ -47,9 +47,9 @@ class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles",  
                       help='Select the input images from the project.')     
-        form.addParam('doNormalize', BooleanParam, default=False,
-                      label='Normalize',
-                      help='If set to True, particles will be normalized in the way RELION prefers it.')
+#         form.addParam('doNormalize', BooleanParam, default=False,
+#                       label='Normalize',
+#                       help='If set to True, particles will be normalized in the way RELION prefers it.')
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
                       help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '

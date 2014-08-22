@@ -35,16 +35,19 @@ from pyworkflow.em.wizard import *
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
+from protocol_preprocess import ProtRelionPreprocessParticles
 
 #===============================================================================
 # MASKS
 #===============================================================================
 
 class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [(ProtRelionClassify2D, ['backRadius']),
-                (ProtRelionRefine3D, ['backRadius']),
-                (ProtRelionClassify3D, ['backRadius']),
-                (ProtRelionClassify2D, ['backRadius'])]
+    _targets = [
+#                 (ProtRelionClassify2D, ['backRadius']),
+#                 (ProtRelionRefine3D, ['backRadius']),
+#                 (ProtRelionClassify3D, ['backRadius']),
+#                 (ProtRelionClassify2D, ['backRadius']),
+                (ProtRelionPreprocessParticles, ['backRadius'])]
     _unit = UNIT_PIXEL
     
     def _getParameters(self, protocol):
