@@ -46,9 +46,17 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles",  
                       help='Select the input images from the project.')   
-        form.addParam('doInvert', BooleanParam, default=False,
-                      label='Invert contrast', 
-                      help='Invert the contrast if your particles are black over a white background.')
+        form.addParam('doRemoveDust', BooleanParam, default=False,
+                      label='Remove dust from particles', 
+                      help='Remove dust from particles.')
+        form.addParam('whiteDust', IntParam, validators=[Positive],
+                      condition='doRemoveDust',
+                      label='White dust',
+                      help='Sigma-values above which white dust will be removed.')
+        form.addParam('blackDust', IntParam, validators=[Positive],
+                      condition='doRemoveDust',
+                      label='Black dust',
+                      help='Sigma-values above which black dust will be removed.')   
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize',
                       help='If set to True, particles will be normalized in the way RELION prefers it.')
@@ -56,7 +64,10 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                       condition='doNormalize',
                       label='Background radius',
                       help='Pixels outside this circle are assumed to be noise and their stddev '
-                      'is set to 1. Radius for background circle definition (in pix.).')
+                      'is set to 1. Radius for background circle definition (in pix.).')        
+        form.addParam('doInvert', BooleanParam, default=False,
+                      label='Invert contrast', 
+                      help='Invert the contrast if your particles are black over a white background.')
         form.addParam('doScale', BooleanParam, default=False,
                       label='Scale particles', 
                       help='Re-scale the particles to this size (in pixels).')
@@ -71,18 +82,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                       condition='doWindow',
                       label='Window size',
                       help='New window size.')  
-        form.addParam('doRemoveDust', BooleanParam, default=False,
-                      label='Remove dust from particles', 
-                      help='Remove dust from particles.')
-        form.addParam('whiteDust', IntParam, validators=[Positive],
-                      condition='doRemoveDust',
-                      label='White dust',
-                      help='Sigma-values above which white dust will be removed.')
-        form.addParam('blackDust', IntParam, validators=[Positive],
-                      condition='doRemoveDust',
-                      label='Black dust',
-                      help='Sigma-values above which black dust will be removed.')   
-        
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
@@ -103,8 +102,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         
     def processStep(self):
         # Enter here to generate the star file or to preprocess the images
-        imgSet = self.inputParticles.get()
-        Xdim = imgSet.getDimensions()[0]
+        
+        size = self._getSize()
         
         self._enterDir(self._getPath())
         imgFn = os.path.relpath(self.imgFn, self._getPath())
@@ -113,7 +112,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         if self.doNormalize:
             radius = self.backRadius.get()
             if radius <= 0:
-                radius = Xdim / 2
+                radius = size
             params = params + ' --norm --bg_radius %(radius)s'
             
         if self.doRemoveDust:
@@ -154,16 +153,36 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        errors = []
+        validateMsgs = []
         if self.doScale and self.scaleSize.get() % 2 != 0:
-            errors += ["Only re-scaling to even-sized images is allowed in RELION."]
+            validateMsgs += ["Only re-scaling to even-sized images is allowed in RELION."]
         if self.doWindow and self.windowSize.get() % 2 != 0:
-            errors += ["Only re-windowing to even-sized images is allowed in RELION."]
-        return errors
+            validateMsgs += ["Only re-windowing to even-sized images is allowed in RELION."]
+
+        if self.doNormalize:
+            size = self._getSize()
+            if self.backRadius.get() > size:
+                validateMsgs.append('Set a valid Background radius less than %d' % size)
+        return validateMsgs
     
     def _summary(self):
-        """ Should be overriden   subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
-        return []
-            
+        summary = []
+        summary.append("Input particles: %s" % self.inputParticles.get().getName())
+        
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Dust removal: %s" % self.doRemoveDust)
+            summary.append("Normalize the background: %s" % self.doNormalize)
+            summary.append("Invert contrast: %s" % self.doInvert)
+            summary.append("Scaled particles to size: %s" % self.scaleSize.get())
+            summary.append("Windowed particles to size: %s" % self.windowSize.get())
+        return summary
+                
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _getSize(self):
+        """ get the size of SetOfParticles object"""
+
+        Xdim = self.inputParticles.get().getDimensions()[0]
+        size = int(Xdim/2)
+        return size
