@@ -404,8 +404,7 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    pass
 
 
 class Particle(Image):
@@ -1196,85 +1195,32 @@ class NormalModes(EMObject):
         return self._filename.get()
 
 
-class Movie(SetOfMicrographs):
+class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
-    def __init__(self, **args):
-        SetOfMicrographs.__init__(self, **args)
+    def isCompressed(self):
+        return self.getFileName().endswith('bz2') 
+        
+    def getDim(self):
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
+        Consider compressed Movie files"""
+        if not self.isCompressed():
+            return Image.getDim(self)
+        return None
 
 
-class SetOfMovies(EMSet):
+class SetOfMovies(SetOfMicrographs):
     """ Represents a set of Movies. """
     ITEM_TYPE = Movie
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._acquisition = Acquisition()
-        self._samplingRate = Float()
-        self._scannedPixelSize = Float()
-        self._representatives = Boolean(False)
-        self._imagesPointer = Pointer()
+    def __init__(self, **kwargs):
+        SetOfMicrographs.__init__(self, **kwargs)
+        self._gainFile = String()
+        
+    def setGain(self, gain):
+        self._gainFile.set(gain)
+        
+    def getGain(self):
+        return self._gainFile.get()
     
-    def setSamplingRate(self, samplingRate):
-        """ Set the sampling rate and adjust the scannedPixelSize. """
-        self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
     
-    def getScannedPixelSize(self):
-        return self._scannedPixelSize.get()
-    
-    def setScannedPixelSize(self, scannedPixelSize):
-        """ Set scannedPixelSize and update samplingRate. """
-        self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
-    
-    def getSamplingRate(self):
-        return self._samplingRate.get()
-    
-    def getAcquisition(self):
-        return self._acquisition
-    
-    def setAcquisition(self, acquisition):
-        self._acquisition = acquisition
-    
-    def copyInfo(self, other):
-        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
-        from other set of movies to current one"""
-        self.copyAttributes(other, '_samplingRate')
-        self._acquisition.copyInfo(other._acquisition)
-    
-    def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getFileName())
-        for item in self:
-            filePaths.add(item.getFileName())
-        return filePaths
-    
-    def iterMovieFrames(self):
-        """ Iterate over the frames of a movie. """
-        pass
-    
-    def hasRepresentatives(self):
-        return self._representatives.get()
-    
-    def getMicrographs(self):
-        """ Return the SetOfMicrographs used to create the SetOfMovies. """
-        return self._imagesPointer.get()
-    
-    def setMicrographs(self, micrographs):
-        self._imagesPointer.set(micrographs)
-    
-    def getDimensions(self):
-        """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim)"""
-        if self.hasRepresentatives():
-            return self.getRepresentatives().getDimensions()
-    
-    def _insertItem(self, movie):
-        """ Create the SetOfMicrographs assigned to a Movie.
-        If the file exists, it will load the Set.
-        """
-        if movie.getFileName() is None:
-            moviePrefix = 'Movie%03d' % movie.getObjId()
-            movie._mapperPath.set('%s,%s' % (self.getFileName(), moviePrefix))
-        EMSet._insertItem(self, movie)
-        movie.write()#Set.write(self)

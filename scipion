@@ -94,6 +94,8 @@ FREALIGN_HOME = %(EM_ROOT)s/frealign
 CTFFIND_HOME = %(EM_ROOT)s/ctffind
 RELION_HOME = %(EM_ROOT)s/relion
 BSOFT_HOME = %(EM_ROOT)s/bsoft
+DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
+
 """)
 
 

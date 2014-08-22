@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,21 +25,28 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
+List of related references in Bibtex format for dosefgpu programs
+developed by Xueming Li at Yifan Cheng lab.
 """
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
 
-from parallel import ProtTestParallel
+_bibtexStr = """
 
+@article{lix2013,
+  title={Electron counting and beam-induced motion correction enables near atomic resolution single particle cryoEM.},
+  author={Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Chris Michael B. Braunfeld, Sander Gubbens, David A. Agard and Yifan Cheng},
+  journal={Nature Methods},
+  volume={10},
+  number={1},
+  pages={584--590},
+  year={2013},
+  publisher={Nature Publishing Group},
+  doi = {http://dx.doi.org/10.1038/nmeth.2727}
+}
+
+"""
+
+
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
