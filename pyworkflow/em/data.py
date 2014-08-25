@@ -1198,6 +1198,10 @@ class NormalModes(EMObject):
 class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
+    def __init__(self, filename=None, **kwargs):
+        Micrograph.__init__(self, filename=filename, **kwargs)
+        self._alignment = None
+
     def isCompressed(self):
         return self.getFileName().endswith('bz2') 
         
@@ -1207,6 +1211,15 @@ class Movie(Micrograph):
         if not self.isCompressed():
             return Image.getDim(self)
         return None
+    
+    def hasAlignment(self):
+        return self._aligment is not None
+    
+    def getAlignment(self):
+        return self._alignment
+    
+    def setAlignment(self, alignment):
+        self._alignment = alignment
     
     
 class MovieAlignment(EMObject):

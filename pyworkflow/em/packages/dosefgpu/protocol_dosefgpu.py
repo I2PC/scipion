@@ -28,10 +28,13 @@ Protocol wrapper around the ResMap tool for local resolution
 """
 
 from os.path import join
+from glob import glob
 
 from pyworkflow.utils import makePath, moveFile
 from pyworkflow.protocol.params import StringParam, IntParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtProcessMovies
+
+from convert import parseMovieAlignment
 
 
 
@@ -152,21 +155,33 @@ class ProtDosefGpu(ProtProcessMovies):
         
         for movie in inputMovies():
             movieId = movie.getObjId()
+            movieFolder = self._getMovieFolder(movieId)
             micName = self._getMicName(movieId)
-            micNameSrc = join(self._getMovieFolder(movieId), micName)
+            micNameSrc = join(movieFolder, micName)
             micNameDst = join(micsFolder, micName)
             # Move the resulting micrograph before delete of movies folder
             moveFile(micNameSrc, micNameDst)            
             mic = micSet.ITEM_TYPE()
             mic.setFileName(micNameDst)
-            
-            # Parse the alignment parameters and store the log files
-            
             micSet.append(mic)
             
+            # Parse the alignment parameters and store the log files
+            alignedMovie = movie.clone()
+            logFile = self._getLogFile(movieFolder)
+            alignment = parseMovieAlignment(logFile)
+            alignedMovie.setAlignment(alignment)
             
         self._defineOutputs(outputMicrographs=micSet)
         self._defineTransformRelation(inputMovies, micSet)
+        
+        self._defineOutpus(outputMovies=movieSet)
+        self._defineTransformRelation(inputMovies, movieSet)
+        
+    def _getLogFile(self, movieFolder):
+        """ Get the output log file. 
+        Assuming that the is only one file end with *_Log.txt in that folder.
+        """
+        return glob(join(movieFolder, '*_Log.txt'))[0]
         
     def _summary(self):
         summary = []
