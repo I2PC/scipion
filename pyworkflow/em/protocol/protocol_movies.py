@@ -73,7 +73,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self._insertFunctionStep('processMovieStep', 
                                      movie.getObjId(), movie.getFileName())
         self._insertFunctionStep('createOutputStep')
-        self._insertFunctionStep('cleanMovieDataStep')
+        self._insertFunctionStep('cleanMovieDataStep', self.cleanMovieData.get())
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMovieStep(self, movieId, movieFn):
@@ -97,8 +97,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         
         self._leaveDir()
         
-    def cleanMovieDataStep(self):
-        if self.cleanMovieData:
+    def cleanMovieDataStep(self, cleanMovieData):
+        if cleanMovieData:
             for movie in self.inputMovies.get():
                 movieFolder = self._getMovieFolder(movie.getObjId())
                 self.info('Cleanning folder: %s' % movieFolder)
