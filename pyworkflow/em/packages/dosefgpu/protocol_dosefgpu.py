@@ -24,13 +24,12 @@
 # *
 # **************************************************************************
 """
-Protocol wrapper around the ResMap tool for local resolutio
+Protocol wrapper around the ResMap tool for local resolution
 """
 
-import os
 from os.path import join
 
-from pyworkflow.utils import Environ, makePath, moveFile
+from pyworkflow.utils import makePath, moveFile
 from pyworkflow.protocol.params import StringParam, IntParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtProcessMovies
 
@@ -178,13 +177,3 @@ class ProtDosefGpu(ProtProcessMovies):
                 
         return errors
     
-
-def getEnviron():
-    """ Return the envirion settings to run dosefgpu programs. """
-    """ Setup the environment variables needed to launch Relion. """
-    environ = Environ(os.environ)
-    environ.update({
-            'PATH': join(os.environ['DOSEFGPU_HOME']),
-            'LD_LIBRARY_PATH': join(os.environ['DOSEFGPU_CUDA_LIB'])
-            }, position=Environ.BEGIN)
-    return environ   

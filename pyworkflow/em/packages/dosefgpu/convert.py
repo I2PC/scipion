@@ -24,7 +24,23 @@
 # *
 # **************************************************************************
 
+import os
+from os.path import join
+
+from pyworkflow.utils import Environ
 from pyworkflow.em.data import MovieAlignment
+
+
+
+def getEnviron():
+    """ Return the envirion settings to run dosefgpu programs. """
+    """ Setup the environment variables needed to launch Relion. """
+    environ = Environ(os.environ)
+    environ.update({
+            'PATH': join(os.environ['DOSEFGPU_HOME']),
+            'LD_LIBRARY_PATH': join(os.environ['DOSEFGPU_CUDA_LIB'])
+            }, position=Environ.BEGIN)
+    return environ  
 
 
 def parseMovieAlignment(logFile):
