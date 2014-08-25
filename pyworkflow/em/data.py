@@ -1187,8 +1187,8 @@ class SetOfClassesVol(SetOfClasses3D):
 
 class NormalModes(EMObject):
     """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, filename=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._filename = String(filename)
         
     def getFileName(self):
@@ -1207,6 +1207,29 @@ class Movie(Micrograph):
         if not self.isCompressed():
             return Image.getDim(self)
         return None
+    
+    
+class MovieAlignment(EMObject):
+    """ Store the alignment between the different Movie frames.
+    Also store the first and last frames used for alignment.
+    """
+    def __init__(self, first=0, last=0, shifts=[], **kwargs):
+        EMObject.__init__(**kwargs)
+        self._first = Integer(0)
+        self._last = Integer(0)
+        self._shifts = CsvList(pType=float)
+        
+    def getRange(self):
+        """ Return the first and last frames used for alignment.
+        The first frame in a movie stack is 0.
+        """
+        return self._firstFrame.get(), self._lastFrame.get()
+    
+    def getShifts(self):
+        """ Return the list of alignment between one frame
+        to another, from first to last frame used.
+        """
+        return self._alignment.get()
 
 
 class SetOfMovies(SetOfMicrographs):
