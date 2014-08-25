@@ -1215,9 +1215,10 @@ class MovieAlignment(EMObject):
     """
     def __init__(self, first=0, last=0, shifts=[], **kwargs):
         EMObject.__init__(**kwargs)
-        self._first = Integer(0)
-        self._last = Integer(0)
+        self._first = Integer(first)
+        self._last = Integer(last)
         self._shifts = CsvList(pType=float)
+        self._shifts.set(shifts)
         
     def getRange(self):
         """ Return the first and last frames used for alignment.
