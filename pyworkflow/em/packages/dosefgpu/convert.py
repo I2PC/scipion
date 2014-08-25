@@ -63,6 +63,6 @@ def parseMovieAlignment(logFile):
             
     f.close()
     
-    return MovieAlignment(first=first, last=first+len(shifts)-1, shifts=shifts)
+    return MovieAlignment(first=first, last=first+len(shifts)/2-1, shifts=shifts)
     
     
