@@ -37,6 +37,7 @@ from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Micrograph
 
 from protocol_micrographs import ProtPreprocessMicrographs
+from protocol_particles import ProtExtractParticles
 
 
 
@@ -188,12 +189,12 @@ class ProtOpticalAlignment(ProtProcessMovies):
         form.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_EXPERT,
                       help="Window size (shifts are assumed to be constant within this window).")
-        line = form.addLine('Drop Frames (NOT IMPLEMENTED):',
+        line = form.addLine('Frames rangeDrop Frames (NOT IMPLEMENTED):',
                       help='Drop first and last frames. set to 0 in orser to keep all\n\n'
                            'NOT IMPLEMENTED YET.')
-        line.addParam('firstFrames', IntParam, default='0',
+        line.addParam('firstFrame', IntParam, default='0',
                       label='First')
-        line.addParam('lastFrames',  IntParam, default='0',
+        line.addParam('lastFrame',  IntParam, default='0',
                       label='Last')
         form.addParallelSection(threads=1, mpi=1)
     
@@ -257,4 +258,26 @@ class ProtOpticalAlignment(ProtProcessMovies):
             self._program = 'xmipp_optical_alignment_cpu'
     
     
-
+class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
+    """ Extract a set of Particles from each frame of a set of Movies.
+    """
+    _label = 'movie extract particles' 
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
+                      important=True,
+                      label=Message.LABEL_INPUT_MOVS)
+        form.addParam('inputCoordinates', PointerParam, pointerClass='SetOfCoordinates',
+                      important=True,
+                      label='Input coordinates')
+        
+        line = form.addLine('Frames range',
+                      help='')
+        line.addParam('firstFrame', IntParam, default=0,
+                      label='First')
+        line.addParam('lastFrame',  IntParam, default=0,
+                      label='Last')
+        form.addParallelSection(threads=1, mpi=1)    

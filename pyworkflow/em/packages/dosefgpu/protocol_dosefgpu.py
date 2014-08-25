@@ -27,10 +27,10 @@
 Protocol wrapper around the ResMap tool for local resolution
 """
 
-from os.path import join, exists
+from os.path import join, exists, basename
 from glob import glob
 
-from pyworkflow.utils import makePath, moveFile
+from pyworkflow.utils import makePath, moveFile, copyFile
 from pyworkflow.protocol.params import StringParam, IntParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtProcessMovies
 
@@ -168,10 +168,14 @@ class ProtDosefGpu(ProtProcessMovies):
             
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
-            logFile = self._getLogFile(movieFolder)
-            alignment = parseMovieAlignment(logFile)
+            logFileSrc = self._getLogFile(movieFolder)
+            alignment = parseMovieAlignment(logFileSrc)
             alignedMovie.setAlignment(alignment)
             movieSet.append(alignedMovie)
+            # Just make a copy of the log file that can be used
+            # to import in another project
+            logFileDst = join(micsFolder, basename(logFileSrc))
+            copyFile(logFileSrc, logFileDst)
             
         self._defineOutputs(outputMicrographs=micSet)
         self._defineTransformRelation(inputMovies, micSet)
