@@ -29,7 +29,7 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-from os.path import join, basename
+from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
 from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile
@@ -83,12 +83,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         copyFile(movieFn, join(movieFolder, movieName))
         
         self._enterDir(movieFolder)
-        if movieName.endswith('bz2'):
-            self.runJob('bzip2', '-d %s' % movieName)
-            movieName = movieName.replace('.bz2', '')
 
-        self.info("Processing movie: %s" % movieName)            
-        self._processMovie(movieId, movieName)
+        if movieName.endswith('bz2'):
+            movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
+            if not exists(movieMrc):
+                self.runJob('bzip2', '-d %s' % movieName)
+        else:
+            movieMrc = movieName
+
+        self.info("Processing movie: %s" % movieMrc)            
+        self._processMovie(movieId, movieMrc)
         
         self._leaveDir()
         
@@ -110,7 +114,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return 'movie_%06d%s' % (movieId, ext) 
     
     def _getMicName(self, movieId):
-        return 'movie_%06d_micrograph.mrc' % movieId
+        return 'micrograph_%06d.mrc' % movieId
     
     
 class ProtAverageMovies(ProtProcessMovies):
@@ -138,7 +142,6 @@ class ProtAverageMovies(ProtProcessMovies):
                 sumImg = img
         #sumImg *= (1./n)
         sumImg.write(self._getMicName(movieId))
-        cleanPath(movieName)
         
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()

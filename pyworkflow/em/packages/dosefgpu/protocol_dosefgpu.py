@@ -29,13 +29,10 @@ Protocol wrapper around the ResMap tool for local resolutio
 
 import os
 from os.path import join
-import sys
 
-from pyworkflow.object import String
-from pyworkflow.utils import Environ
-from pyworkflow.protocol.params import StringParam, BooleanParam, IntParam, LEVEL_ADVANCED
+from pyworkflow.utils import Environ, makePath, moveFile
+from pyworkflow.protocol.params import StringParam, IntParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtProcessMovies
-from pyworkflow.em.convert import ImageHandler
 
 
 
@@ -109,14 +106,16 @@ class ProtDosefGpu(ProtProcessMovies):
                      
     def _processMovie(self, movieId, movieName):
         inputName = movieName
+        micrographName = self._getMicName(movieId)
         gainFile = self.inputMovies.get().getGain()
-        
+        gpuId = self.gpuId.get()
+
         if gainFile is not None:
             # Apply the gain correction to flat the raw movie
             correctedName = movieName.replace('.mrc', '_corrected.mrc')
             
-            self.printJob('dosefgpu_flat', 
-                        '%(inputName)s %(correctedName)s %(gainFile)s' % locals())
+            self.runJob('dosefgpu_flat', 
+                        '%(inputName)s %(correctedName)s %(gainFile)s %(gpuId)s' % locals())
             
             inputName = correctedName
         
@@ -128,15 +127,14 @@ class ProtDosefGpu(ProtProcessMovies):
                 '-ned': self.alignFrameN.get(),
                 '-nss': self.sumFrame0.get(),
                 '-nes': self.sumFrameN.get(),
-                '-gpu': self.gpuId.get(),
+                '-gpu': gpuId,
                 }
         
-        alignedName = movieName.replace('.mrc', '_aligned.mrc') 
-        command = '%(inputName)s -fcs %(alignedName)s ' % locals()
+        command = '%(inputName)s -fcs %(micrographName)s ' % locals()
         command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
         command += ' ' + self.extraParams.get()
 
-        self.printJob('dosefgpu_driffcorr', command)
+        self.runJob('dosefgpu_driftcorr', command)
         
     def printJob(self, program, args):
         self.info(">>> Running: %s %s" % (program, args))
@@ -145,14 +143,28 @@ class ProtDosefGpu(ProtProcessMovies):
         inputMovies = self.inputMovies.get()
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
+        # Also create a Set of Movies with the alignment parameters
+        movieSet = self._createSetOfMovies()
+        movieSet.copyInfo(inputMovies)
         
-        for movie in self.inputMovies.get():
+        # Create a folder to store the resulting micrographs
+        micsFolder = self._getPath('micrographs')
+        makePath(micsFolder)
+        
+        for movie in inputMovies():
             movieId = movie.getObjId()
-            micName = join(self._getMovieFolder(movieId), 
-                           self._getMicName(movieId))
+            micName = self._getMicName(movieId)
+            micNameSrc = join(self._getMovieFolder(movieId), micName)
+            micNameDst = join(micsFolder, micName)
+            # Move the resulting micrograph before delete of movies folder
+            moveFile(micNameSrc, micNameDst)            
             mic = micSet.ITEM_TYPE()
-            mic.setFileName(micName)
+            mic.setFileName(micNameDst)
+            
+            # Parse the alignment parameters and store the log files
+            
             micSet.append(mic)
+            
             
         self._defineOutputs(outputMicrographs=micSet)
         self._defineTransformRelation(inputMovies, micSet)
@@ -176,4 +188,3 @@ def getEnviron():
             'LD_LIBRARY_PATH': join(os.environ['DOSEFGPU_CUDA_LIB'])
             }, position=Environ.BEGIN)
     return environ   
-    pass
