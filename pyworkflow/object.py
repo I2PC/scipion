@@ -731,8 +731,8 @@ class List(Object, list):
     
         
 class PointerList(List):
-    def __init__(self, **args):
-        List.__init__(self, **args)
+    def __init__(self, **kwargs):
+        List.__init__(self, **kwargs)
         
     def _convertValue(self, value):
         if isinstance(value, list):
@@ -747,8 +747,8 @@ class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
     pType: the type of the list elememnts, int, bool, str"""
-    def __init__(self, pType=str, **args):
-        Scalar.__init__(self, **args)
+    def __init__(self, pType=str, **kwargs):
+        Scalar.__init__(self, **kwargs)
         list.__init__(self)
         self._pType = pType
         
@@ -763,7 +763,7 @@ class CsvList(Scalar, list):
                     self.append(self._pType(s))
             elif isinstance(value, list) or isinstance(value, tuple):
                 for s in value:
-                    self.append(s)
+                    self.append(self._pType(s))
             else:
                 raise Exception("CsvList.set: Invalid value type: ", type(value))
             
