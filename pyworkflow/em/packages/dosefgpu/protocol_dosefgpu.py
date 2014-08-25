@@ -171,11 +171,12 @@ class ProtDosefGpu(ProtProcessMovies):
             logFile = self._getLogFile(movieFolder)
             alignment = parseMovieAlignment(logFile)
             alignedMovie.setAlignment(alignment)
+            movieSet.append(alignedMovie)
             
         self._defineOutputs(outputMicrographs=micSet)
         self._defineTransformRelation(inputMovies, micSet)
         
-        self._defineOutpus(outputMovies=movieSet)
+        self._defineOutputs(outputMovies=movieSet)
         self._defineTransformRelation(inputMovies, movieSet)
         
     def _getLogFile(self, movieFolder):
