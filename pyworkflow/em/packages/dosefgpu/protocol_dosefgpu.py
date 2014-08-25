@@ -27,7 +27,7 @@
 Protocol wrapper around the ResMap tool for local resolution
 """
 
-from os.path import join
+from os.path import join, exists
 from glob import glob
 
 from pyworkflow.utils import makePath, moveFile
@@ -153,14 +153,15 @@ class ProtDosefGpu(ProtProcessMovies):
         micsFolder = self._getPath('micrographs')
         makePath(micsFolder)
         
-        for movie in inputMovies():
+        for movie in inputMovies:
             movieId = movie.getObjId()
             movieFolder = self._getMovieFolder(movieId)
             micName = self._getMicName(movieId)
             micNameSrc = join(movieFolder, micName)
             micNameDst = join(micsFolder, micName)
             # Move the resulting micrograph before delete of movies folder
-            moveFile(micNameSrc, micNameDst)            
+            if not exists(micNameDst):
+                moveFile(micNameSrc, micNameDst)            
             mic = micSet.ITEM_TYPE()
             mic.setFileName(micNameDst)
             micSet.append(mic)

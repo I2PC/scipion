@@ -1227,7 +1227,7 @@ class MovieAlignment(EMObject):
     Also store the first and last frames used for alignment.
     """
     def __init__(self, first=0, last=0, shifts=[], **kwargs):
-        EMObject.__init__(**kwargs)
+        EMObject.__init__(self, **kwargs)
         self._first = Integer(first)
         self._last = Integer(last)
         self._shifts = CsvList(pType=float)

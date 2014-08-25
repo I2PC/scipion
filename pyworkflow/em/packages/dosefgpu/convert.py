@@ -58,8 +58,8 @@ def parseMovieAlignment(logFile):
             if first is None: # read the first frame number
                 first = int(parts[2][1:]) # take the id from #000 format
             # take the id from the last two colums of the line
-            shifts.append(int(parts[-2]))
-            shifts.append(int(parts[-1]))
+            shifts.append(float(parts[-2]))
+            shifts.append(float(parts[-1]))
             
     f.close()
     
