@@ -43,9 +43,33 @@ from protocol import EMProtocol
 from protocol_micrographs import ProtCTFMicrographs
 
 
+
 class ProtImport(EMProtocol):
     """ Base class for other Import protocols. """
-    pass
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def getPattern(self):
+        """ Expand the pattern using environ vars or username
+        and also replacing special character # by digit matching.
+        """
+        import re
+        self._idRegex = None
+        pattern = expandPattern(self.pattern.get())
+        match = re.match('[^#]*(#+)[^#]*', pattern)
+        if match is not None:
+            g = match.group(1)
+            n = len(g)
+            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
+            pattern = pattern.replace(g, '[0-9]'*n)
+        else:
+            raise Exception("Importing ctf will required match micrographs ids.")
+        return pattern   
+    
+    def _getFilePaths(self, pattern):
+        """ Return a sorted list with the paths of files"""
+        filePaths = glob(pattern)
+        filePaths.sort()
+        
+        return filePaths
 
 
 class ProtImportImages(ProtImport):
@@ -433,95 +457,3 @@ class ProtImportPdb(ProtImport):
         return errors
     
     
-class ProtImportCTF(ProtImport, ProtCTFMicrographs):
-    """Protocol to import a set of movies (from direct detector cameras) to the project"""
-    _label = 'import ctf'
-    
-    #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
-        form.addSection('Input')
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
-                          label='Input micrographs',
-                          help='Select the particles that you want to update the CTF parameters.')
-        form.addParam('pattern', PathParam, 
-                      label='CTF pattern',
-                      help='Select files containing the CTF estimation.\n'
-                           'You should use #### characters in the pattern\n'
-                           'to mark where the micrograph id will be taken from. ')
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        self._insertFunctionStep('importCtfStep', 
-                                 self.inputMicrographs.get().getObjId(),
-                                 self.getPattern())
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def importCtfStep(self, micsId, pattern):
-        """ Copy movies matching the filename pattern
-        Register other parameters.
-        """
-        inputMics = self.inputMicrographs.get()
-        ctfSet = self._createSetOfCTF()
-        ctfSet.setMicrographs(inputMics)
-        
-        ctfFiles = self._getFilePaths(pattern)
-        ctfDict = {}
-        for fn in ctfFiles:
-            # Try to match the micrograph id from filename
-            # this is set by the user by using #### format in the pattern
-            match = self._idRegex.match(fn)
-            if match is None:
-                raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
-            ctfId = int(match.group(1))
-            ctfDict[ctfId] = fn
-            
-        from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
-
-        for mic in inputMics:
-            if mic.getObjId() in ctfDict:
-                defocusU, defocusV, defocusAngle = parseCtffindOutput(ctfDict[mic.getObjId()])
-            else:
-                self.warning("CTF for micrograph id %d was not found." % mic.getObjId())
-                defocusU, defocusV, defocusAngle = -999, -1, -999
-            
-            # save the values of defocus for each micrograph in a list
-            ctf = CTFModel()
-            ctf.copyObjId(mic)
-            ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
-            ctf.setMicrograph(mic)
-            ctfSet.append(ctf)
-        
-        self._defineOutputs(outputCTF=ctfSet)
-        self._defineCtfRelation(inputMics, ctfSet)            
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def getPattern(self):
-        """ Expand the pattern using environ vars or username
-        and also replacing special character # by digit matching.
-        """
-        import re
-        self._idRegex = None
-        pattern = expandPattern(self.pattern.get())
-        match = re.match('[^#]*(#+)[^#]*', pattern)
-        if match is not None:
-            g = match.group(1)
-            n = len(g)
-            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
-            pattern = pattern.replace(g, '[0-9]'*n)
-        else:
-            raise Exception("Importing ctf will required match micrographs ids.")
-        return pattern   
-    
-    def _getFilePaths(self, pattern):
-        """ Return a sorted list with the paths of files"""
-        filePaths = glob(pattern)
-        filePaths.sort()
-        
-        return filePaths
-    
-    def _summary(self):
-        summary = []
-        return summary    
-    
-    def _methods(self):
-        return []

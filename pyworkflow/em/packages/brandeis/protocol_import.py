@@ -20,85 +20,78 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around the ResMap tool for local resolution
-"""
-
-from glob import glob
-
-from pyworkflow.utils import expandPattern
-from pyworkflow.protocol.params import PointerParam, PathParam
-from pyworkflow.em.protocol import ProtProcessMovies, ProtImport
-
-from convert import parseMovieAlignment
 
 
 
-class ProtDosefGpuImport(ProtImport, ProtProcessMovies):
-    """
-    Import alignment from 
+from pyworkflow.protocol.params import PathParam, PointerParam
+from pyworkflow.em.data import CTFModel
+
+from pyworkflow.em.protocol import ProtImport, ProtCTFMicrographs
+
+
+class ProtImportCTF(ProtImport, ProtCTFMicrographs):
+    """Protocol to import a set of movies (from direct detector cameras) to the project"""
+    _label = 'import ctf'
     
-    Dose Fractionation Tool: Flat fielding and Drift correction
-    Wrote by Xueming Li @ Yifan Cheng Lab, UCSF   
-    """
-    _label = 'import movie alignment'
-             
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection('Input')
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMicrographs', 
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
                           label='Input micrographs',
                           help='Select the particles that you want to update the CTF parameters.')
         form.addParam('pattern', PathParam, 
-                      label='Alignment pattern',
-                      help='Select files containing the dosefgpu alignment *_Log.txt files\n'
+                      label='CTF pattern',
+                      help='Select files containing the CTF estimation.\n'
                            'You should use #### characters in the pattern\n'
-                           'to mark where the movie id will be taken from. ')
+                           'to mark where the micrograph id will be taken from. ')
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importAlignmentStep', 
-                                 self.inputMovies.get().getObjId(),
+        self._insertFunctionStep('importCtfStep', 
+                                 self.inputMicrographs.get().getObjId(),
                                  self.getPattern())
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importAlignmentStep(self, micsId, pattern):
-        """ Copy alignment matching the filename pattern
+    def importCtfStep(self, micsId, pattern):
+        """ Copy movies matching the filename pattern
+        Register other parameters.
         """
-        inputMovies = self.inputMovies.get()
-        # Also create a Set of Movies with the alignment parameters
-        movieSet = self._createSetOfMovies()
-        movieSet.copyInfo(inputMovies)
+        inputMics = self.inputMicrographs.get()
+        ctfSet = self._createSetOfCTF()
+        ctfSet.setMicrographs(inputMics)
         
-        alignmentFiles = self._getFilePaths(pattern)
-        movieDict = {}
-        
-        for fn in alignmentFiles:
+        ctfFiles = self._getFilePaths(pattern)
+        ctfDict = {}
+        for fn in ctfFiles:
             # Try to match the micrograph id from filename
             # this is set by the user by using #### format in the pattern
             match = self._idRegex.match(fn)
             if match is None:
                 raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
-            movieId = int(match.group(1))
-            movieDict[movieId] = fn
+            ctfId = int(match.group(1))
+            ctfDict[ctfId] = fn
             
-        for movie in inputMovies:
-            movieId = movie.getObjId()
-            if movieId in movieDict:
-                # Parse the alignment parameters and store the log files
-                alignedMovie = movie.clone()
-                logFileSrc = movieDict[movieId]
-                alignment = parseMovieAlignment(logFileSrc)
-                alignedMovie.setAlignment(alignment)
-                movieSet.append(alignedMovie)
+        from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
+
+        for mic in inputMics:
+            if mic.getObjId() in ctfDict:
+                defocusU, defocusV, defocusAngle = parseCtffindOutput(ctfDict[mic.getObjId()])
             else:
-                self.warning("Alignment for movie with id %d was not found. DISCARDED!!!" % movieId)
+                self.warning("CTF for micrograph id %d was not found." % mic.getObjId())
+                defocusU, defocusV, defocusAngle = -999, -1, -999
             
-        self._defineOutputs(outputMovies=movieSet)
-        self._defineTransformRelation(inputMovies, movieSet)          
+            # save the values of defocus for each micrograph in a list
+            ctf = CTFModel()
+            ctf.copyObjId(mic)
+            ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
+            ctf.setMicrograph(mic)
+            ctfSet.append(ctf)
+        
+        self._defineOutputs(outputCTF=ctfSet)
+        self._defineCtfRelation(inputMics, ctfSet)            
     
     def _summary(self):
         summary = []
@@ -106,4 +99,3 @@ class ProtDosefGpuImport(ProtImport, ProtProcessMovies):
     
     def _methods(self):
         return []
-    
