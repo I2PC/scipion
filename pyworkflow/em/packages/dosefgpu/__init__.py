@@ -31,6 +31,8 @@ from bibtex import _bibtex # Load bibtex dict with references
 _references = ['lix2013']
 
 from protocol_dosefgpu import ProtDosefGpu
+from protocol_import import ProtDosefGpuImport
+
 from convert import getEnviron
 
 _environ = getEnviron()
