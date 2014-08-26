@@ -192,6 +192,7 @@ enum MDLabel
 
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_FOM, ///< Figure of Merit in 0-1 range (double)
+    MDL_FRAME_ID, ///< Unique id of frame inside a Movie
     MDL_IDX, ///< Index within a list (size_t)
     MDL_IMAGE, ///< Name of an image (std::string)
     MDL_IMAGE_IDX, ///< Index of an image within a list (size_t)
@@ -219,7 +220,9 @@ enum MDLabel
     MDL_MAXCC, ///< Maximum cross-correlation for the image (double)
     MDL_MAX, ///< Maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MICROGRAPH_ID, ///< Micrograph unique id for reference (MDL_ITEM_ID should be used for Micrographs list)
     MDL_MICROGRAPH_MOVIE, ///< Name of a movie (std::string)
+    MDL_MICROGRAPH_MOVIE_ID, ///< Unique identifier of a movie.
     MDL_MICROGRAPH_PARTICLES, ///< Name of a position file (std::string)
     MDL_MICROGRAPH_ORIGINAL, ///< Name of the original micrograph, MDL_MICROGRAPH is probably a downsampled version of this one (std::string)
     MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
@@ -259,6 +262,7 @@ enum MDLabel
     MDL_ORIGIN_Y, ///< Origin for the image in the Y axis (double)
     MDL_ORIGIN_Z, ///< Origin for the image in the Z axis (double)
 
+    MDL_PARTICLE_ID, ///< Particle unique identifier for reference. (The MDL_ITEM_ID should be used when particle list)
     MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
     MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
     MDL_PHANTOM_FEATURE_DENSITY, ///< The density of the feature (double)
@@ -780,6 +784,7 @@ private:
         MDL::addLabelAlias(MDL_CLASSIFICATION_FRC_05, "ClassificationFRC05");
         MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "classificationIntraclassDistance");
         MDL::addLabelAlias(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, "ClassificationIntraclassDistance");
+        MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT2, LABEL_SIZET, "count2");
@@ -955,6 +960,8 @@ private:
         MDL::addLabel(MDL_FLIP, LABEL_BOOL, "flip");
         MDL::addLabelAlias(MDL_FLIP, "Flip");
         MDL::addLabel(MDL_FOM, LABEL_DOUBLE, "fom");
+        MDL::addLabel(MDL_FRAME_ID, LABEL_SIZET, "frameId");
+
         MDL::addLabel(MDL_IDX, LABEL_SIZET, "index");
         MDL::addLabel(MDL_IMAGE1, LABEL_STRING, "image1", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_IMAGE2, LABEL_STRING, "image2", TAGLABEL_IMAGE);
@@ -991,12 +998,16 @@ private:
         MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "kstest");
         MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood");
         MDL::addLabelAlias(MDL_LL, "LL");
+        MDL::addLabel(MDL_MACRO_CMD, LABEL_STRING, "macroCmd");
+        MDL::addLabel(MDL_MACRO_CMD_ARGS, LABEL_STRING, "macroCmdArgs");
         MDL::addLabel(MDL_MAGNIFICATION, LABEL_DOUBLE, "magnification");
         MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
+        MDL::addLabel(MDL_MICROGRAPH_ID, LABEL_SIZET, "micrographId");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph", TAGLABEL_MICROGRAPH);
+        MDL::addLabel(MDL_MICROGRAPH_MOVIE_ID, LABEL_SIZET, "micrographMovieId");
         MDL::addLabel(MDL_MICROGRAPH_MOVIE, LABEL_STRING, "movie", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_PARTICLES, LABEL_STRING, "micrographParticles", TAGLABEL_MICROGRAPH);
         MDL::addLabel(MDL_MICROGRAPH_ORIGINAL, LABEL_STRING, "micrographOriginal", TAGLABEL_MICROGRAPH);
@@ -1039,15 +1050,13 @@ private:
         MDL::addLabel(MDL_ORIGIN_X, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGIN_Y, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGIN_Z, LABEL_DOUBLE, "originZ");
+        MDL::addLabel(MDL_PARTICLE_ID, LABEL_SIZET, "particleId");
         MDL::addLabel(MDL_PHANTOM_BGDENSITY, LABEL_DOUBLE, "phantomBGDensity");
         MDL::addLabel(MDL_PHANTOM_FEATURE_CENTER, LABEL_VECTOR_DOUBLE, "featureCenter");
         MDL::addLabel(MDL_PHANTOM_FEATURE_DENSITY, LABEL_DOUBLE, "featureDensity");
         MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
         MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
         MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
-        MDL::addLabel(MDL_MACRO_CMD, LABEL_STRING, "macroCmd");
-        MDL::addLabel(MDL_MACRO_CMD_ARGS, LABEL_STRING, "macroCmdArgs");
-        MDL::addLabel(MDL_COLOR, LABEL_INT, "color");
         MDL::addLabel(MDL_PICKING_STATE, LABEL_STRING, "pickingState");
         MDL::addLabelAlias(MDL_PICKING_STATE, "picking_state");//3.0
         MDL::addLabel(MDL_PICKING_MICROGRAPH_STATE, LABEL_STRING, "pickingMicrographState");
