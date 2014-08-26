@@ -96,7 +96,55 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
             if not os.path.exists(ctfparam):
-                ctfparam = 'xmipp_default_ctf.ctfparam'
+                ctfparam = join(micDir, 'xmipp_error_ctf.ctfparam')
+                f = open(ctfparam, 'w+')
+                lines = """# XMIPP_STAR_1 * 
+# 
+data_fullMicrograph
+ _ctfSamplingRate -999
+ _ctfVoltage -999
+ _ctfDefocusU -999
+ _ctfDefocusV -999
+ _ctfDefocusAngle -999
+ _ctfSphericalAberration -999
+ _ctfChromaticAberration -999
+ _ctfEnergyLoss -999
+ _ctfLensStability -999
+ _ctfConvergenceCone -999
+ _ctfLongitudinalDisplacement -999
+ _ctfTransversalDisplacement -999
+ _ctfQ0 -999
+ _ctfK -999
+ _ctfBgGaussianK -999
+ _ctfBgGaussianSigmaU -999
+ _ctfBgGaussianSigmaV -999
+ _ctfBgGaussianCU -999
+ _ctfBgGaussianCV -999
+ _ctfBgGaussianAngle -999
+ _ctfBgSqrtK -999
+ _ctfBgSqrtU -999
+ _ctfBgSqrtV -999
+ _ctfBgSqrtAngle -999
+ _ctfBgBaseline -999
+ _ctfBgGaussian2K -999
+ _ctfBgGaussian2SigmaU -999
+ _ctfBgGaussian2SigmaV -999
+ _ctfBgGaussian2CU -999
+ _ctfBgGaussian2CV -999
+ _ctfBgGaussian2Angle -999
+ _ctfX0 -999
+ _ctfXF -999
+ _ctfY0 -999
+ _ctfYF -999
+ _ctfCritFitting -999
+ _ctfCritCorr13 -999
+ _CtfDownsampleFactor -999
+ _ctfCritPsdStdQ -999
+ _ctfCritPsdPCA1 -999
+ _ctfCritPsdPCARuns -999
+"""
+                f.write(lines)
+                f.close()
                 
             ctfModel = readCTFModel(ctfparam, mic)
             self._setPsdFiles(ctfModel, micDir)
