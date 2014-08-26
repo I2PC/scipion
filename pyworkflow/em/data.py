@@ -843,12 +843,18 @@ class Coordinate(EMObject):
     
     def setX(self, x):
         self._x.set(x)
+        
+    def shiftX(self, shiftX):
+        self._x.sum(shiftX)
     
     def getY(self):
         return self._y.get()
     
     def setY(self, y):
-        self._y.set(y)        
+        self._y.set(y)
+        
+    def shiftY(self, shiftY):
+        self._y.sum(shiftY)    
     
     def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
@@ -1213,7 +1219,7 @@ class Movie(Micrograph):
         return None
     
     def hasAlignment(self):
-        return self._aligment is not None
+        return self._alignment is not None
     
     def getAlignment(self):
         return self._alignment
@@ -1243,7 +1249,7 @@ class MovieAlignment(EMObject):
         """ Return the list of alignment between one frame
         to another, from first to last frame used.
         """
-        return self._alignment.get()
+        return self._shifts
 
 
 class SetOfMovies(SetOfMicrographs):
@@ -1259,5 +1265,12 @@ class SetOfMovies(SetOfMicrographs):
         
     def getGain(self):
         return self._gainFile.get()
+    
+    
+class SetOfMovieParticles(SetOfParticles):
+    """ This is just to distinguish the special case
+    when the particles have been extracted from a set of movies.
+    """
+    pass
     
     
