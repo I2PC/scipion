@@ -26,7 +26,8 @@
 """
 This module contains the protocol base class for Relion protocols
 """
-from pyworkflow.em import * 
+from pyworkflow.em import *
+from pyworkflow.utils.path import moveFile
 from convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.protocol.params import Positive
 
@@ -87,6 +88,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     def _insertAllSteps(self):
         self.imgStar = self._getPath('input_particles.star')
         self.imgFn = self._getPath('input_particles.mrcs')
+        self.outFn = self._getPath('particles.mrcs')
         self._insertFunctionStep("convertInputStep")
         print "IMAGES STAR=%s" % self.imgStar
         self._insertFunctionStep('processStep')
@@ -105,7 +107,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         
         size = self._getSize()
         
-        self._enterDir(self._getPath())
         imgFn = os.path.relpath(self.imgFn, self._getPath())
         
         params = ' --operate_on %(imgFn)s'
@@ -131,15 +132,13 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
             wSize = self.windowSize.get()
             params = params + ' --window %(wSize)s'
 
-        self.runJob(self._getProgram('relion_preprocess'), params % locals())
+        self.runJob(self._getProgram('relion_preprocess'), params % locals(), cwd=self._getPath())
                              
-        outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
-        if not outputMrcs:
-            raise Exception("Not particles produced by 'relion_preprocess'")
-         
-        self._leaveDir()        
-
-              
+        outputMrcs = glob(self._getPath('particles*.mrcs')) # In Relion 1.3 it is produces particles.mrcs.mrcs
+        outFile = outputMrcs[0]
+        if outFile != self.outFn:
+            moveFile(outFile, self.outFn)
+    
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
