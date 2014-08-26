@@ -104,7 +104,6 @@ class ProtDosefGpu(ProtProcessMovies):
         form.addParam('binFactor', IntParam, default=1, 
                       label='Binning factor',
                       help='1x or 2x. Bin stack before processing.')
-        
                      
     def _processMovie(self, movieId, movieName):
         inputName = movieName
@@ -138,9 +137,6 @@ class ProtDosefGpu(ProtProcessMovies):
 
         self.runJob('dosefgpu_driftcorr', command)
         
-    def printJob(self, program, args):
-        self.info(">>> Running: %s %s" % (program, args))
-        
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
         micSet = self._createSetOfMicrographs()
@@ -163,6 +159,7 @@ class ProtDosefGpu(ProtProcessMovies):
             if not exists(micNameDst):
                 moveFile(micNameSrc, micNameDst)            
             mic = micSet.ITEM_TYPE()
+            mic.setObjId(movieId)
             mic.setFileName(micNameDst)
             micSet.append(mic)
             
