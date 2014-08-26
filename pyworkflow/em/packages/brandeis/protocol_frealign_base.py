@@ -585,7 +585,7 @@ class ProtFrealignBase(EMProtocol):
             
             # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
             for i, img in enumerate(imgSet):
-                film = img.getObjId()
+                film = img.getMicId()
                 ctf = img.getCTF()
                 defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
                 partCounter = i + 1
@@ -791,25 +791,25 @@ class ProtFrealignBase(EMProtocol):
             paramsDic['mode2'] = -4
 
         # Defining if magnification refinement is going to do
-        if self.doMagRefinement:
+        if self.doMagRefinement and iterN != 1:
             paramsDic['doMagRefinement'] = 'T'
         else:
             paramsDic['doMagRefinement'] = 'F'
             
         # Defining if defocus refinement is going to do
-        if self.doDefRefinement:
+        if self.doDefRefinement and iterN != 1:
             paramsDic['doDefocusRef'] = 'T'
         else:
             paramsDic['doDefocusRef'] = 'F'
 
         # Defining if astigmatism refinement is going to do
-        if self.doAstigRefinement:
+        if self.doAstigRefinement and iterN != 1:
             paramsDic['doAstigRef'] = 'T'
         else:
             paramsDic['doAstigRef'] = 'F'
         
         # Defining if defocus refinement for individual particles is going to do
-        if self.doDefPartRefinement:
+        if self.doDefPartRefinement and iterN != 1:
             paramsDic['doDefocusPartRef'] = 'T'
         else:
             paramsDic['doDefocusPartRef'] = 'F'
@@ -1112,7 +1112,7 @@ eot
     
     def writeAnglesLines(self, counter, img, filePar):
         
-        objId = img.getObjId()
+        objId = img.getMicId()
         
         # get alignment parameters for each particle
         align = img.getAlignment()
