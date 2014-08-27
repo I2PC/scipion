@@ -76,28 +76,34 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         self._insertFunctionStep('cleanMovieDataStep', self.cleanMovieData.get())
 
     #--------------------------- STEPS functions ---------------------------------------------------
+    def _filterMovie(self, movieId, movieFn):
+        """ Check if process or not this movie.
+        """
+        return True
+    
     def processMovieStep(self, movieId, movieFn):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
         
-        makePath(movieFolder)
-        copyFile(movieFn, join(movieFolder, movieName))
-        toDelete = [movieName]
-        self._enterDir(movieFolder)
-
-        if movieName.endswith('bz2'):
-            movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
-            toDelete.append(movieMrc)
-            if not exists(movieMrc):
-                self.runJob('bzip2', '-d %s' % movieName)
-        else:
-            movieMrc = movieName
-
-        self.info("Processing movie: %s" % movieMrc)            
-        self._processMovie(movieId, movieMrc)
-        cleanPath(*toDelete)
-        
-        self._leaveDir()
+        if self._filterMovie(movieId, movieFn):
+            makePath(movieFolder)
+            copyFile(movieFn, join(movieFolder, movieName))
+            toDelete = [movieName]
+            self._enterDir(movieFolder)
+    
+            if movieName.endswith('bz2'):
+                movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
+                toDelete.append(movieMrc)
+                if not exists(movieMrc):
+                    self.runJob('bzip2', '-d %s' % movieName)
+            else:
+                movieMrc = movieName
+    
+            self.info("Processing movie: %s" % movieMrc)            
+            self._processMovie(movieId, movieMrc)
+            cleanPath(*toDelete)
+            
+            self._leaveDir()
         
     def cleanMovieDataStep(self, cleanMovieData):
         if cleanMovieData:
@@ -352,11 +358,14 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
                 frameMd.merge(frameMdImages)
                 
                 for objId in frameMd:
+                    stkIndex += 1
                     frameRow.readFromMd(frameMd, objId)
                     img.read(frameRow.getValue(xmipp.MDL_IMAGE))
-                    stkIndex += 1
-                    newImageName = '%d@%s' % (stkIndex, movieStk)
-                    img.write(newImageName)
+                    img.write('%d@%s' % (stkIndex, movieStk))
+                    # Fix the name to be accesible from the Project directory
+                    # so we know that the movie stack file will be moved
+                    # to final particles folder
+                    newImageName = '%d@%s' % (stkIndex, self._getPath('particles', movieStk))
                     frameRow.setValue(xmipp.MDL_IMAGE, newImageName)
                     frameRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(movieId))
                     frameRow.setValue(xmipp.MDL_MICROGRAPH, str(movieId))
@@ -404,6 +413,26 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(inputMovies, particleSet)
     
+    def _filterMovie(self, movieId, movieFn):
+        """ Check if process or not this movie.
+        In this case if there are not coordinates, do not process it.
+        """
+        coordinates = self.inputCoordinates.get()
+        micrograph = coordinates.getMicrographs()[movieId]
+        
+        if micrograph is None:
+            self.warning("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
+            return False
+        
+        n = len([coord for coord in coordinates.iterCoordinates(micrograph)])
+        
+        if n == 0:
+            self.warning("Skipping micrograph with id %d, not coordinates found!!!" % movieId)
+            return False
+        
+        return True
+        
+        
     def _writeXmippPosFile(self, movieId, movieName, coordinatesName, shiftX, shiftY):
         """ Create an Xmipp coordinates files to be extracted
         from the frames of the movie.
@@ -415,14 +444,14 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         micrograph = coordinates.getMicrographs()[movieId]
         
         if micrograph is None:
-            raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!")
+            raise Exception("Micrograph with id %d was not found in SetOfCoordinates!!!" % movieId)
         
         md = xmipp.MetaData()
         coordRow = XmippMdRow()
         
         for coord in coordinates.iterCoordinates(micrograph):
-            coord.shiftX(-1 * int(round(float(shiftX))))
-            coord.shiftY(-1 * int(round(float(shiftY))))
+            coord.shiftX(1 * int(round(float(shiftX))))
+            coord.shiftY(1 * int(round(float(shiftY))))
             coordinateToRow(coord, coordRow)
             coordRow.writeToMd(md, md.addObject())
             
