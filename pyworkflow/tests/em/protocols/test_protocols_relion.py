@@ -100,12 +100,17 @@ class TestRelionClassify3D(TestRelionBase):
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
     
     def testProtRelionClassify3D(self):
+        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
+        relionNormalize.inputParticles.set(self.protImport.outputParticles)
+        relionNormalize.doNormalize.set(True)
+        self.launchProtocol(relionNormalize)
+
         print "Run ProtRelionClassify3D"
         relion3DClass = self.newProtocol(ProtRelionClassify3D, 
                                          numberOfClasses=3, numberOfIterations=4, 
                                          doCTF=False, runMode=1,
                                          numberOfMpi=2, numberOfThreads=2)
-        relion3DClass.inputParticles.set(self.protImport.outputParticles)
+        relion3DClass.inputParticles.set(relionNormalize.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(relion3DClass)
         
