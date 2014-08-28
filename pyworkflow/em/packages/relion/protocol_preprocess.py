@@ -143,7 +143,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         outputStar = self._getPath('particles.star')
-        readSetOfParticles(outputStar, imgSet)
+        readSetOfParticles(outputStar, imgSet, preprocessRow=self._preprocessRow)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), self.outputParticles)
 
@@ -185,3 +185,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         Xdim = self.inputParticles.get().getDimensions()[0]
         size = int(Xdim/2)
         return size
+    
+    def _preprocessRow(self, imgRow):
+        from convert import setupCTF, prependToFileName
+        prependToFileName(imgRow, self._getPath())
+        setupCTF(imgRow, self.inputParticles.get().getSamplingRate())
