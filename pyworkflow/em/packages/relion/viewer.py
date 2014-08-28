@@ -36,6 +36,7 @@ from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
+from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
 from convert import addRelionLabels, addRelionLabelsToEnviron
 import xmipp
@@ -534,3 +535,79 @@ Examples:
             
         return [xplotter]
         
+
+class PostprocessViewer(ProtocolViewer):
+    """ Class to visualize Relion postprocess protocol """
+    _targets = [ProtRelionPostprocess]
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    _label = 'viewer postprocess relion'
+    
+    def setProtocol(self, protocol):
+        ProtocolViewer.setProtocol(self, protocol)
+        self.__defineParams(self._form)
+        self._createVarsFromDefinition()
+        self._env = os.environ.copy()
+        addRelionLabelsToEnviron(self._env)
+#        self._load()
+        
+    def _defineParams(self, form):
+        self._form = form
+        
+    def __defineParams(self, form):
+        form.addSection(label='Visualization')
+        group = form.addGroup('3D analysis')
+        
+        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      label='Display volume with',
+                      help='*slices*: display volumes as 2D slices along z axis.\n'
+                           '*chimera*: display volumes as surface with Chimera.')
+        group.addParam('displayMaskedVol', EnumParam, choices=['slices', 'chimera'], 
+                      display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                      label='Display masked volume with',
+                      help='*slices*: display masked volume as 2D slices along z axis.\n'
+                           '*chimera*: display masked volume as surface with Chimera.')
+        group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
+                      label='Display SSNR plots?',
+                      help='Display signal to noise ratio plots (SSNR) ')
+    
+    def _getVisualizeDict(self):
+#         self._load()
+        return {'displayVol': self._showVolume,
+                'displayMaskedVol': self._showMaskedVolume,
+#                 'displayAngDist': self._showAngularDistribution,
+#                 'resolutionPlotsSSNR': self._showSSNR,
+#                 'resolutionPlotsFSC': self._showFSC
+                }
+#===============================================================================
+# ShowVolumes
+#===============================================================================
+        
+    def _showVolumeShowj(self, volPath):
+        
+        return [DataView(volPath)]
+    
+    def _showVolumesChimera(self, volPath):
+        """ Create a chimera script to visualize selected volumes. """
+        
+        view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
+        return [view]
+            
+    def _showVolume(self, paramName=None):
+        volPath = self.protocol._getExtraPath('postprocess.mrc:mrc')
+        
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera(volPath)
+        
+        elif self.displayVol == VOLUME_SLICES:
+            return self._showVolumeShowj(volPath)
+                
+    def _showMaskedVolume(self, paramName=None):
+        volPath = self.protocol._getExtraPath('postprocess_masked.mrc:mrc')
+        
+        if self.displayVol == VOLUME_CHIMERA:
+            return self._showVolumesChimera(volPath)
+        
+        elif self.displayVol == VOLUME_SLICES:
+            return self._showVolumeShowj(volPath)
