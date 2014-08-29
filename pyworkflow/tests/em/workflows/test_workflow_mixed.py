@@ -70,7 +70,7 @@ class TestMixedBPV(TestWorkflow):
         # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
         protFrealign = self.newProtocol(ProtFrealign, angStepSize=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
-                                    innerRadius=100, outerRadius=320, symmetry='I2', PhaseResidual=30,molMass=19400,
+                                    innerRadius=130, outerRadius=300, symmetry='I1', PhaseResidual=30,molMass=19400,
                                     score=5, resolution=20, runMode=1, numberOfMpi=5)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
