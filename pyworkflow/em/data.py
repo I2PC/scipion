@@ -438,6 +438,9 @@ class Particle(Image):
     
     def setMicId(self, micId):
         self._micId.set(micId)
+        
+    def hasMicId(self):
+        return self.getMicId() is not None
 
 
 class Mask(Particle):
