@@ -100,9 +100,10 @@ class ParticleAdaptor():
             img.setLocation(newLoc)
             # Re-write the row with the new location
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
+        if img.hasMicId():
+            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(img.getMicId()))
         coord = img.getCoordinate()
         if coord is not None:
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
             imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
             
