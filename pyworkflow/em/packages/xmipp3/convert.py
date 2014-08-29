@@ -385,7 +385,10 @@ def rowToParticle(partRow, **kwargs):
     img.setCoordinate(rowToCoordinate(partRow))
     # Setup the micId if is integer value
     try:
-        img.setMicId(int(partRow.getValue(xmipp.MDL_MICROGRAPH)))
+        if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
+            img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
+        else:
+            img.setMicId(int(partRow.getValue(xmipp.MDL_MICROGRAPH)))
     except Exception:
         pass    
     return img
@@ -397,7 +400,8 @@ def particleToRow(part, partRow, **kwargs):
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
-    if part.getMicId() is not None:
+    if part.hasMicId():
+        partRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(part.getMicId()))
         partRow.setValue(xmipp.MDL_MICROGRAPH, str(part.getMicId()))
 
 def rowToClass(classRow, classItem):
