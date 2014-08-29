@@ -66,8 +66,9 @@ leads to objective and high-quality results.
         # Sampling stuff
         args['--healpix_order'] = self.angularSamplingDeg.get()
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
-        args['--auto_refine'] = ''
-        args['--split_random_halves'] = ''
+        if not self.doContinue:
+            args['--auto_refine'] = ''
+            args['--split_random_halves'] = ''
         
         # Set movie refinement arguments
         if self.realignMovieFrames:

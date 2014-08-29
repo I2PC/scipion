@@ -82,11 +82,12 @@ class ParticleAdaptor():
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, imgSet, stackFile=None):
+    def __init__(self, imgSet, stackFile=None, originalSet=None):
         self._rowCount = 1
         self._ih = ImageHandler()
         self._imgSet = imgSet
         self._stackFile = stackFile
+        self._originalSet = originalSet
         
         import pyworkflow.em.packages.xmipp3 as xmipp3
         self._particleToRow = xmipp3.particleToRow
@@ -114,7 +115,8 @@ class ParticleAdaptor():
             frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
             micName = '%06d@%s' % (frameId, movieName)
             particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
-            particleName = '%06d@particles_%06d.mrcs' % (particleId, movieId)
+            particle = self._originalSet[particleId]
+            particleName = locationToRelion(*particle.getLocation())
             imgRow.setValue('rlnMicrographName', micName)
             imgRow.setValue('rlnParticleName', particleName)
             
@@ -157,7 +159,7 @@ def readSetOfParticles(filename, partSet, **kwargs):
     restoreXmippLabels()
 
     
-def writeSetOfParticles(imgSet, starFile, stackFile):
+def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
@@ -165,7 +167,7 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
-    pa = ParticleAdaptor(imgSet, stackFile)
+    pa = ParticleAdaptor(imgSet, stackFile, originalSet)
     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()

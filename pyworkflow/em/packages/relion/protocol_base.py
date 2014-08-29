@@ -492,7 +492,7 @@ class ProtRelionBase(EMProtocol):
         
         if self.realignMovieFrames:
             writeSetOfParticles(self.inputMovieParticles.get(),
-                                self._getFileName('movie_particles'), None)
+                                self._getFileName('movie_particles'), None, originalSet=imgSet)
         
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
