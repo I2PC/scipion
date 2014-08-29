@@ -491,8 +491,18 @@ class ProtRelionBase(EMProtocol):
         writeSetOfParticles(imgSet, imgStar, None)
         
         if self.realignMovieFrames:
-            writeSetOfParticles(self.inputMovieParticles.get(),
+            movieParticleSet = self.inputMovieParticles.get()
+            auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
+            auxMovieParticles.copyInfo(movieParticleSet)
+            # Discard the movie particles that are not present in the refinement set
+            for movieParticle in movieParticleSet:
+                particle = imgSet[movieParticle._xmipp_particleId.get()]
+                if particle is not None:
+                    auxMovieParticles.append(particle)
+                    
+            writeSetOfParticles(auxMovieParticles,
                                 self._getFileName('movie_particles'), None, originalSet=imgSet)
+            cleanPath(auxMovieParticles.getFileName())
         
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
