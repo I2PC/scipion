@@ -138,10 +138,16 @@ class XmippMdRow():
     def setValue(self, label, value):
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""
+        # Allow setValue using the label string
+        if isinstance(label, basestring):
+            label = xmipp.str2Label(label)
         self._labelDict[label] = value
             
     def getValue(self, label, default=None):
         """ Return the value of the row for a given label. """
+        # Allow getValue using the label string
+        if isinstance(label, basestring):
+            label = xmipp.str2Label(label)
         return self._labelDict.get(label, default)
     
     def getValueAsObject(self, label, default=None):
