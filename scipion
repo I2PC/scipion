@@ -185,13 +185,14 @@ def runCmd(cmd):
 
 # The following functions require a working SCIPION_PYTHON
 
-def runScript(scriptCmd):
-    os.chdir(SCIPION_HOME)
+def runScript(scriptCmd, chdir=True):
+    if chdir:
+        os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
     runCmd(cmd)
 
-def runApp(app, args=''):
-    runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
+def runApp(app, args='', chdir=True):
+    runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
 #
@@ -318,7 +319,7 @@ def main():
 
     elif mode == MODE_VIEWER:
         viewerArgs = ' '.join(sys.argv[2:])
-        runApp('pw_viewer.py', args=viewerArgs)
+        runApp('pw_viewer.py', args=viewerArgs, chdir=False)
 
     elif mode == MODE_INSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
