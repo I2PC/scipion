@@ -82,7 +82,7 @@ def build(args):
         tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)
 
         # Install it.
-        command = [sys.executable, 'setup.py', 'install', '--prefix=%s' % SOFTWARE, '--libdir=%s' % join(SOFTWARE, 'lib')]
+        command = [sys.executable, 'setup.py', 'install', '--prefix=%s' % SOFTWARE]
         sys.stdout.write('Executing: %s\n' % ' '.join(command))
         with open(LOGFILE, 'w') as logFile:
             r = subprocess.call(command, cwd=join(INSTALL, SCONS),
