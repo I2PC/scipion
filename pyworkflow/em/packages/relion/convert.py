@@ -111,7 +111,7 @@ class ParticleAdaptor():
             # Write stuff for particle polishing
             movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
             movieName = 'movie_%06d.mrcs' % movieId 
-            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID)
+            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
             micName = '%06d@%s' % (frameId, movieName)
             particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
             particleName = '%06d@particles_%06d.mrcs' % (particleId, movieId)

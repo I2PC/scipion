@@ -94,6 +94,9 @@ XMIPP_RELION_LABELS = {
                        ,xmipp.MDL_YSIZE:              'rlnImageSizeY'
                        ,xmipp.MDL_WEIGHT:             'rlnNrOfSignificantSamples'
                        ,xmipp.MDL_ZSIZE:              'rlnImageSizeZ'
+                       # relion 1.3
+                       ,xmipp.MDL_IMAGE2: 'rlnParticleName'
+                       ,xmipp.MDL_IMAGE_ORIGINAL: 'rlnOriginalParticleName'
                        }
 
 XMIPP_RELION_LABELS_EXTRA = {
@@ -143,8 +146,6 @@ XMIPP_RELION_LABELS_EXTRA = {
                        ,xmipp.MDL_SHIFT_X2 : 'rlnOriginXPrior' 
                        ,xmipp.MDL_SHIFT_Y2 : 'rlnOriginYPrior' 
                        ,xmipp.MDL_ZSCORE: 'rlnParticleSelectZScore' 
-                       ,xmipp.MDL_IMAGE2: 'rlnParticleName'
-                       ,xmipp.MDL_IMAGE_ORIGINAL: 'rlnOriginalParticleName'
                        ,xmipp.MDL_COUNT2: 'rlnNrOfFrames'
                        # Not the best labels, but just to grab some
                        ,xmipp.MDL_CLASSIFICATION_DPR_05: 'rlnClassPriorOffsetX'
