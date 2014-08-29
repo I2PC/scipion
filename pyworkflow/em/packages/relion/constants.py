@@ -42,10 +42,11 @@ ANGULAR_SAMPLING_LIST = ['30', '15', '7.5', '3.7', '1.8', '0.9', '0.5', '0.2', '
 XMIPP_RELION_LABELS = {
                         xmipp.MDL_ANGLE_ROT:         'rlnAngleRot'
                        ,xmipp.MDL_ANGLE_TILT:        'rlnAngleTilt'
+                       ,xmipp.MDL_ANGLE_PSI:         'rlnAnglePsi'
                        ,xmipp.MDL_AVG_CHANGES_ORIENTATIONS:'rlnChangesOptimalOrientations'
                        ,xmipp.MDL_AVG_CHANGES_OFFSETS:     'rlnChangesOptimalOffsets'
                        ,xmipp.MDL_AVG_CHANGES_CLASSES:     'rlnChangesOptimalClasses'
-                       ,xmipp.MDL_ANGLE_PSI:         'rlnAnglePsi'
+                       ,xmipp.MDL_AVGPMAX:           'rlnAveragePmax'
                        ,xmipp.MDL_CLASS_PERCENTAGE:  'rlnClassDistribution'
                        ,xmipp.MDL_CTF_CA:            'rlnChromaticAberration'
                        ,xmipp.MDL_CTF_CONVERGENCE_CONE: 'rlnConvergenceCone'
@@ -67,10 +68,10 @@ XMIPP_RELION_LABELS = {
                        ,xmipp.MDL_IMAGE_REF:         'rlnReferenceImage'
                        ,xmipp.MDL_ITEM_ID:           'rlnImageId'
                        ,xmipp.MDL_MAXCC:             'rlnLogLikelihood'
+                       ,xmipp.MDL_PSD:               'rlnCtfImage' # relion 1.3
                        ,xmipp.MDL_LL:                'rlnLogLikeliContribution'
                        ,xmipp.MDL_MAGNIFICATION:     'rlnMagnification'
                        ,xmipp.MDL_MICROGRAPH:        'rlnMicrographName'
-                       ,xmipp.MDL_AVGPMAX:           'rlnAveragePmax'
                        ,xmipp.MDL_REF:               'rlnClassNumber'
                        ,xmipp.MDL_RESOLUTION_FREQREAL:'rlnAngstromResolution'
                        ,xmipp.MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
@@ -98,7 +99,11 @@ XMIPP_RELION_LABELS = {
 XMIPP_RELION_LABELS_EXTRA = {
                        # Following labels have no correct matching, just to 
                        # pick one with the same datatype
-                       xmipp.MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
+                       xmipp.MDL_ANGLE_Y2 : 'rlnOrientationalPriorMode' #int
+                       ,xmipp.MDL_ANGLE_ROT2 : 'rlnSigmaPriorRotAngle' #double
+                       ,xmipp.MDL_ANGLE_TILT2 : 'rlnSigmaPriorTiltAngle' #double
+                       ,xmipp.MDL_ANGLE_PSI2 : 'rlnSigmaPriorPsiAngle' #double
+                       ,xmipp.MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
                        ,xmipp.MDL_COUNT:             'rlnGroupNrParticles' # just one
                        ,xmipp.MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
                        ,xmipp.MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
@@ -116,21 +121,33 @@ XMIPP_RELION_LABELS_EXTRA = {
                        ,xmipp.MDL_NMA_COLLECTIVITY : 'rlnTau2FudgeFactor' #double
                        ,xmipp.MDL_NMA_SCORE : 'rlnNormCorrectionAverage' #double
                        ,xmipp.MDL_SIGMAOFFSET : 'rlnSigmaOffsets' #double
-                       ,xmipp.MDL_ANGLE_Y2 : 'rlnOrientationalPriorMode' #int
-                       ,xmipp.MDL_ANGLE_ROT2 : 'rlnSigmaPriorRotAngle' #double
-                       ,xmipp.MDL_ANGLE_TILT2 : 'rlnSigmaPriorTiltAngle' #double
-                       ,xmipp.MDL_ANGLE_PSI2 : 'rlnSigmaPriorPsiAngle' #double
-
+                       
                        ,xmipp.MDL_MLF_WIENER: 'rlnOrientationDistribution' #double
                        ,xmipp.MDL_IDX: 'rlnSpectralIndex' #int
                        ,xmipp.MDL_MLF_NOISE: 'rlnSigma2Noise' #double
                        ,xmipp.MDL_DM3_TAGNAME: 'rlnGroupName'  #string
                        ,xmipp.MDL_MLF_SIGNAL: 'rlnGroupScaleCorrection' #double
                        
+                       ,xmipp.MDL_FOM: 'rlnAutopickFigureOfMerit'
                        ,xmipp.MDL_ZSCORE_SHAPE1: 'rlnAccuracyRotations'
                        ,xmipp.MDL_ZSCORE_SHAPE2: 'rlnAccuracyTranslations'
                        ,xmipp.MDL_ZSCORE_SNR1: 'rlnReferenceSigma2'
                        ,xmipp.MDL_ZSCORE_SNR2: 'rlnReferenceTau2'
                        ,xmipp.MDL_ZSCORE_RESCOV: 'rlnSpectralOrientabilityContribution'
 
+                       # Keep relion 1.3 new labels at the end
+                       # just in case we want to keep 1.2 compatibility
+                       ,xmipp.MDL_ANGLE_ROT2:         'rlnAngleRotPrior'
+                       ,xmipp.MDL_ANGLE_TILT2:        'rlnAngleTiltPrior'
+                       ,xmipp.MDL_ANGLE_PSI2:         'rlnAnglePsiPrior'                       
+                       ,xmipp.MDL_SHIFT_X2 : 'rlnOriginXPrior' 
+                       ,xmipp.MDL_SHIFT_Y2 : 'rlnOriginYPrior' 
+                       ,xmipp.MDL_ZSCORE: 'rlnParticleSelectZScore' 
+                       ,xmipp.MDL_IMAGE2: 'rlnParticleName'
+                       ,xmipp.MDL_IMAGE_ORIGINAL: 'rlnOriginalParticleName'
+                       ,xmipp.MDL_COUNT2: 'rlnNrOfFrames'
+                       # Not the best labels, but just to grab some
+                       ,xmipp.MDL_CLASSIFICATION_DPR_05: 'rlnClassPriorOffsetX'
+                       ,xmipp.MDL_CLASSIFICATION_FRC_05: 'rlnClassPriorOffsetY'
+                       #,xmipp.MDL_CLASSIFICATION_INTRACLASS_DISTANCE: ''
                        }
