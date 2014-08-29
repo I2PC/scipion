@@ -356,6 +356,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
                 frameMdImages.read(frameMdFile)
                 frameMd.read('particles@%s' % framePosFile)
                 frameMd.merge(frameMdImages)
+                frameMd.removeDisabled()
                 
                 for objId in frameMd:
                     stkIndex += 1
