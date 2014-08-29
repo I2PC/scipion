@@ -68,6 +68,18 @@ leads to objective and high-quality results.
         args['--auto_local_healpix_order'] = self.localSearchAutoSamplingDeg.get()
         args['--auto_refine'] = ''
         args['--split_random_halves'] = ''
+        
+        # Set movie refinement arguments
+        if self.realignMovieFrames:
+            args['--realign_movie_frames'] = self._getFileName('movie_particles')
+            args['--movie_frames_running_avg'] = self.movieAvgWindow.get()
+            args['--sigma_off'] = self.movieStdTrans.get()
+            if not self.movieIncludeRotSearch:
+                args['--skip_rotate'] = ''
+                args['--skip_maximize'] = ''
+            else:
+                args['--sigma_ang'] = self.movieStdRot.get()
+        
         #TODO: check why only for C*???
         # I have added by default for refine3d 
         # as extra parameters

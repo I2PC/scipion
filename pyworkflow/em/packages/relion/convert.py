@@ -107,6 +107,17 @@ class ParticleAdaptor():
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
             imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
             
+        if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
+            # Write stuff for particle polishing
+            movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
+            movieName = 'movie_%06d.mrcs' % movieId 
+            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID)
+            micName = '%06d@%s' % (frameId, movieName)
+            particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
+            particleName = '%06d@particles_%06d.mrcs' % (particleId, movieId)
+            imgRow.setValue('rlnMicrographName', micName)
+            imgRow.setValue('rlnParticleName', particleName)
+            
         for label, _ in imgRow:
             if not label in XMIPP_RELION_LABELS:
                 imgRow.removeLabel(label)
