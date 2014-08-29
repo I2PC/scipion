@@ -116,7 +116,11 @@ class ParticleAdaptor():
             micName = '%06d@%s' % (frameId, movieName)
             particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
             particle = self._originalSet[particleId]
-            particleName = locationToRelion(*particle.getLocation())
+            if particle is None:
+                particleName = 'None'
+            else:
+                particleName = locationToRelion(*particle.getLocation())
+                
             imgRow.setValue('rlnMicrographName', micName)
             imgRow.setValue('rlnParticleName', particleName)
             
