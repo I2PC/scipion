@@ -499,7 +499,7 @@ class ProtRelionBase(EMProtocol):
             for movieParticle in movieParticleSet:
                 particle = imgSet[movieParticle._xmipp_particleId.get()]
                 if particle is not None:
-                    auxMovieParticles.append(particle)
+                    auxMovieParticles.append(movieParticle)
                     
             writeSetOfParticles(auxMovieParticles,
                                 self._getFileName('movie_particles'), None, originalSet=imgSet)
