@@ -359,6 +359,7 @@ class ProtRelionBase(EMProtocol):
                 group = form.addGroup('Movie frames alignment',
                                       condition='realignMovieFrames and doContinue')
                 group.addParam('inputMovieParticles', PointerParam, pointerClass='SetOfMovieParticles',
+                               allowsNull=True, important=True,
                                label='Input movie particles')
                 group.addParam('movieAvgWindow', FloatParam, default=5,
                               label='Running average window',
