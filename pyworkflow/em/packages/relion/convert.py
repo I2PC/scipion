@@ -101,8 +101,11 @@ class ParticleAdaptor():
             img.setLocation(newLoc)
             # Re-write the row with the new location
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
+        
         if img.hasMicId():
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(img.getMicId()))
+            imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
+            imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
+            
         coord = img.getCoordinate()
         if coord is not None:
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
@@ -111,13 +114,14 @@ class ParticleAdaptor():
         if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
             # Write stuff for particle polishing
             movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
-            movieName = 'movie_%06d.mrcs' % movieId 
+            movieName = 'fake_micrograph_%06d_movie.mrcs' % movieId 
             frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
             micName = '%06d@%s' % (frameId, movieName)
             particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
             particle = self._originalSet[particleId]
             if particle is None:
                 particleName = 'None'
+                raise Exception("Particle with id %d not found!!!" % particleId)
             else:
                 particleName = locationToRelion(*particle.getLocation())
                 
