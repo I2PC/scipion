@@ -409,7 +409,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         particleMd = self._getPath('movie_particles.xmd')
         mdAll.addItemId()
         mdAll.write(particleMd)
-        xmipp3.readSetOfParticles(particleMd, particleSet)
+        xmipp3.readSetOfParticles(particleMd, particleSet, removeDisabled=False)
         
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(inputMovies, particleSet)

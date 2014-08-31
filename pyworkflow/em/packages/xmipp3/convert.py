@@ -617,7 +617,10 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """    
     imgMd = xmipp.MetaData(filename)
-    imgMd.removeDisabled()
+    # This patch is just to avoid removing disabled images
+    # after extracting particles from frames.
+    if kwargs.get('removeDisabled', True):
+        imgMd.removeDisabled()
     # Read the sampling rate from the acquisition info file if exists
     
     acqFile = join(dirname(filename), 'acquisition_info.xmd')
