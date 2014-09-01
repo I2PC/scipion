@@ -86,13 +86,11 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        self.imgStar = self._getPath('input_particles.star')
-        self.imgFn = self._getPath('input_particles.mrcs')
-        self.outFn = self._getPath('particles.mrcs')
+        self.imgStar = self._getPath('scipion_particles.star')
+        self.imgMrcs = self._getPath('scipion_particles.mrcs')
+
         self._insertFunctionStep("convertInputStep")
-        print "IMAGES STAR=%s" % self.imgStar
         self._insertFunctionStep('processStep')
-        
         self._insertFunctionStep('createOutputStep')
         
     def convertInputStep(self):
@@ -100,16 +98,17 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         If the input particles comes from Relion, just link the file. 
         """
         imgSet = self.inputParticles.get()
-        writeSetOfParticles(imgSet, self.imgStar, self.imgFn)
+        writeSetOfParticles(imgSet, self.imgStar, self.imgMrcs)
         
     def processStep(self):
         # Enter here to generate the star file or to preprocess the images
         
         size = self._getSize()
         
-        imgFn = os.path.relpath(self.imgFn, self._getPath())
+        imgMrcs = os.path.relpath(self.imgMrcs, self._getPath())
         
-        params = ' --operate_on %(imgFn)s'
+        params = ' --operate_on %(imgMrcs)s'
+        
         if self.doNormalize:
             radius = self.backRadius.get()
             if radius <= 0:
@@ -134,18 +133,17 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
 
         self.runJob(self._getProgram('relion_preprocess'), params % locals(), cwd=self._getPath())
                              
-        outputMrcs = glob(self._getPath('particles*.mrcs')) # In Relion 1.3 it is produces particles.mrcs.mrcs
-        outFile = outputMrcs[0]
-        if outFile != self.outFn:
-            moveFile(outFile, self.outFn)
+        outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
+        # Override the initial converted mrcs particles stack
+        # It also make easy to use the same .star file as output
+        moveFile(outputMrcs, self.imgMrcs)
     
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        outputStar = self._getPath('particles.star')
-        readSetOfParticles(outputStar, imgSet, preprocessRow=self._preprocessRow)
+        readSetOfParticles(self.imgStar, imgSet, preprocessRow=self._preprocessRow)
         self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(self.inputParticles.get(), self.outputParticles)
+        self._defineTransformRelation(self.inputParticles.get(), imgSet)
 
 #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
@@ -187,6 +185,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         return size
     
     def _preprocessRow(self, imgRow):
-        from convert import setupCTF, prependToFileName
-        prependToFileName(imgRow, self._getPath())
+        from convert import setupCTF#, prependToFileName
+        #prependToFileName(imgRow, self._getPath())
         setupCTF(imgRow, self.inputParticles.get().getSamplingRate())
+        

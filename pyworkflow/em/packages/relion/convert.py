@@ -82,11 +82,12 @@ class ParticleAdaptor():
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, imgSet, stackFile=None):
+    def __init__(self, imgSet, stackFile=None, originalSet=None):
         self._rowCount = 1
         self._ih = ImageHandler()
         self._imgSet = imgSet
         self._stackFile = stackFile
+        self._originalSet = originalSet
         
         import pyworkflow.em.packages.xmipp3 as xmipp3
         self._particleToRow = xmipp3.particleToRow
@@ -100,11 +101,32 @@ class ParticleAdaptor():
             img.setLocation(newLoc)
             # Re-write the row with the new location
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
+        
+        if img.hasMicId():
+            imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
+            imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
+            
         coord = img.getCoordinate()
         if coord is not None:
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
             imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
+            
+        if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
+            # Write stuff for particle polishing
+            movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
+            movieName = 'fake_micrograph_%06d_movie.mrcs' % movieId 
+            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
+            micName = '%06d@%s' % (frameId, movieName)
+            particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
+            particle = self._originalSet[particleId]
+            if particle is None:
+                particleName = 'None'
+                raise Exception("Particle with id %d not found!!!" % particleId)
+            else:
+                particleName = locationToRelion(*particle.getLocation())
+                
+            imgRow.setValue('rlnMicrographName', micName)
+            imgRow.setValue('rlnParticleName', particleName)
             
         for label, _ in imgRow:
             if not label in XMIPP_RELION_LABELS:
@@ -145,7 +167,7 @@ def readSetOfParticles(filename, partSet, **kwargs):
     restoreXmippLabels()
 
     
-def writeSetOfParticles(imgSet, starFile, stackFile):
+def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
@@ -153,7 +175,7 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
-    pa = ParticleAdaptor(imgSet, stackFile)
+    pa = ParticleAdaptor(imgSet, stackFile, originalSet)
     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()

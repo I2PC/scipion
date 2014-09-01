@@ -356,6 +356,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
                 frameMdImages.read(frameMdFile)
                 frameMd.read('particles@%s' % framePosFile)
                 frameMd.merge(frameMdImages)
+                #frameMd.removeDisabled()
                 
                 for objId in frameMd:
                     stkIndex += 1
@@ -408,7 +409,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         particleMd = self._getPath('movie_particles.xmd')
         mdAll.addItemId()
         mdAll.write(particleMd)
-        xmipp3.readSetOfParticles(particleMd, particleSet)
+        xmipp3.readSetOfParticles(particleMd, particleSet, removeDisabled=False)
         
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(inputMovies, particleSet)
