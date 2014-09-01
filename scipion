@@ -340,6 +340,15 @@ def main():
         if ret == 0 and '--help' not in args and '-h' not in args:
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
+            sys.stdout.write("""
+
+  ************************************************************************
+  *                                                                      *
+  *         Congratulations, Scipion was installed successfully          *
+  *                                                                      *
+  ************************************************************************
+
+""")
             runApp('config.py')
             # FIXME: I am not sure this is a good idea. To begin with,
             # right now it expects xmipp to be installed.
