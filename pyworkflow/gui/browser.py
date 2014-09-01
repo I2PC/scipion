@@ -334,7 +334,7 @@ class MdFileHandler(ImageFileHandler):
         elif ext == '.star':
             msg = "*Relion STAR file* \n"
             from pyworkflow.em.packages.relion.convert import addRelionLabels, restoreXmippLabels
-            addRelionLabels(replace=True)
+            addRelionLabels(replace=True, extended=True)
             msg += self._getMdString(filename)
             restoreXmippLabels()
             
