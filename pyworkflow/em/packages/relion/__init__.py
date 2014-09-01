@@ -40,6 +40,7 @@ from protocol_import import ProtRelionImport
 from protocol_reconstruct import ProtRelionReconstruct
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_preprocess import ProtRelionPreprocessParticles
+from protocol_polish import ProtRelionPolish
 
 # Wizards
 from wizard import *
