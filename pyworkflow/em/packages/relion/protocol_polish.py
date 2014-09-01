@@ -118,7 +118,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         #--white_dust -1 --black_dust -1
         
         params = ' --i %s' % imgStar
-        params += ' --o %s' % self._getExtraPath('shiny')
+        params += ' --o %s' % 'shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
         params += ' --movie_frames_running_avg %f' % refineRun.movieAvgWindow.get()
         params += ' --dont_read_old_files'
