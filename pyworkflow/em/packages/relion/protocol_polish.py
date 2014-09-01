@@ -84,7 +84,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                        label='Lowres-limit B-factor estimation (A)',
                        help='This value describes the lowest resolution that is included in the B-factor estimation of the per-frame reconstructions. Because the power spectrum of per-frame reconstructions is compared to the power spectrum of the reconstruction from all frames, a much lower value than the 10A described in the Rosenthal and Henderson (2003) paper in JMB can be used. Probably a value around 20A is still OK.')
            
-        group.addParam('maskForReconstructions', PointerParam, pointerClass='Mask',
+        group.addParam('maskForReconstructions', PointerParam, pointerClass='VolumeMask',
                       label='Mask for the reconstructions', allowsNull=True,
                       help='A continuous mask with values between 0 (solvent) and 1 (protein). You may provide the same map that was obtained in the post-processing of the corresponding auto-refine jobs before the movie processing.') 
 
