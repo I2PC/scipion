@@ -70,7 +70,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     
         group = form.addGroup('Damage')
         group.addParam('performBfactorWeighting', BooleanParam, default=True,
-                      label='Linear fit particle movements?',
+                      label='Perform B-factor weighting?',
                       help='If set to Yes, then running averages of the individual frames of recorded movies will also be aligned rotationally. \n'
                            'If one wants to perform particle polishing, then rotational alignments of the movie frames is NOT necessary and will only take more computing time.')
         #NOTE: we do not need to ask for running average windows as in relion gui
@@ -84,11 +84,11 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                        label='Lowres-limit B-factor estimation (A)',
                        help='This value describes the lowest resolution that is included in the B-factor estimation of the per-frame reconstructions. Because the power spectrum of per-frame reconstructions is compared to the power spectrum of the reconstruction from all frames, a much lower value than the 10A described in the Rosenthal and Henderson (2003) paper in JMB can be used. Probably a value around 20A is still OK.')
            
-        form.addParam('maskForReconstructions', PointerParam, pointerClass='Mask',
+        group.addParam('maskForReconstructions', PointerParam, pointerClass='Mask',
                       label='Mask for the reconstructions', allowsNull=True,
                       help='A continuous mask with values between 0 (solvent) and 1 (protein). You may provide the same map that was obtained in the post-processing of the corresponding auto-refine jobs before the movie processing.') 
 
-        self.addSymmetry(form)
+        self.addSymmetry(group)
         
         form.addParam('extraParams', StringParam, default='',
                       expertLevel=LEVEL_ADVANCED,
@@ -127,6 +127,12 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
         params += ' --autob_lowres %0.3f' % self.lowresLimitBfactorEstimation.get()
         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
+        if self.performBfactorWeighting:
+            params += ' --mask %s' % self.maskForReconstructions.get().getFileName()
+        else:
+            params += ' --skip_bfactor_weighting'
+            if '--bg_radius' not in self.extraParams.get():
+                params += ' --bg_radius -1'
         params += ' ' + self.extraParams.get()
         
         self._insertFunctionStep('polishStep', params)
@@ -146,7 +152,11 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        if self.performBfactorWeighting:
+            if self.maskForReconstructions.get() is None:
+                errors.append('You should select a *mask* if performing b-factor weighting.')
+        return errors
     
     def _summary(self):
         """ Should be overriden in subclasses to 
