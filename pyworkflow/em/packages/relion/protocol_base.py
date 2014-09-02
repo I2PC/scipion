@@ -171,10 +171,9 @@ class ProtRelionBase(EMProtocol):
                            'prior to the second iteration the map will be filtered again using the initial low-pass filter.'
                            'This procedure is relatively quick and typically does not negatively affect the outcome of the'
                            'subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No.')        
-        group.addParam('symmetryGroup', StringParam, default='c1',
-                      label="Symmetry group", 
-                      help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
-                           'for a description of the symmetry format accepted by Relion')  
+        
+        self.addSymmetry(group)
+
         group.addParam('initialLowPassFilterA', FloatParam, default=60,
                       condition='not is2D',
                       label='Initial low-pass filter (A)',
@@ -378,6 +377,16 @@ class ProtRelionBase(EMProtocol):
 
         form.addParallelSection(threads=1, mpi=3)
     
+    def addSymmetry(self, container):
+        container.addParam('symmetryGroup', StringParam, default='c1',
+                      label="Symmetry", 
+                      help='If the molecule is asymmetric, set Symmetry group to C1. Note their are multiple possibilities for icosahedral symmetry: \n'
+                         '* I1: No-Crowther 222 (standard in Heymann, Chagoyen & Belnap, JSB, 151 (2005) 196-207)\n'
+                         '* I2: Crowther 222                                                                     \n'
+                         '* I3: 52-setting (as used in SPIDER?)                                                  \n'
+                         '* I4: A different 52 setting                                                           \n'
+                         'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
+
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
         self._initialize()

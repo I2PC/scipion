@@ -469,8 +469,8 @@ class ProtImportCoordinates(ProtImport, ProtParticlePicking):
                           label='Input micrographs',
                           help='Select the particles that you want to import coordinates.')
         form.addParam('pattern', PathParam, 
-                      label='CTF pattern',
-                      help='Select files containing the coordinates estimation.\n'
+                      label='Coordinate files pattern',
+                      help='Select files containing the coordinate files in Arachnid format.\n'
                            'You should use #### characters in the pattern\n'
                            'to mark where the micrograph id will be taken from. ')
         form.addParam('boxSize', IntParam, 

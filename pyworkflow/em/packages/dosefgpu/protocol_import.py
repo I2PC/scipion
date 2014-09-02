@@ -50,8 +50,8 @@ class ProtDosefGpuImport(ProtImport, ProtProcessMovies):
     def _defineParams(self, form):
         form.addSection('Input')
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMicrographs', 
-                          label='Input micrographs',
-                          help='Select the particles that you want to update the CTF parameters.')
+                          label='Input movies',
+                          help='Select the movies to which assign the alignment parameters')
         form.addParam('pattern', PathParam, 
                       label='Alignment pattern',
                       help='Select files containing the dosefgpu alignment *_Log.txt files\n'
