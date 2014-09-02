@@ -79,11 +79,9 @@ $(document).ready(function() {
 	initializeGoToEvent()
 	initializeTableWidth()
 	
-	console.log("ORDER : INI " + jsonTableLayoutConfiguration.colsOrder + " END.")
-	
-	order = (jsonTableLayoutConfiguration.colsOrder).split(" ")
-	
-	console.log(order)
+// 	console.log("ORDER : INI " + jsonTableLayoutConfiguration.colsOrder + " END.")
+// 	order = (jsonTableLayoutConfiguration.colsOrder).split(" ")
+// 	console.log(order)
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable({
@@ -106,9 +104,9 @@ $(document).ready(function() {
 			                '</select> records'
 			        },
 
- 			    	"oColReorder": {
-		    			"aiOrder": order
-		    		},
+//  			    "oColReorder": {
+// 		    			"aiOrder": order
+// 		    		},
 		    		
 		    		"bProcessing": true,
 /* 		            "bServerSide": true, */

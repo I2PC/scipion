@@ -39,7 +39,7 @@ class EmanViewer(XmippViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _environments = [DESKTOP_TKINTER]
     _targets = [EmanProtBoxing, EmanProtInitModel]
  
     def _visualize(self, obj, **args):
