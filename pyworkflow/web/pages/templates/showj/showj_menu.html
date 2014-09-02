@@ -57,19 +57,22 @@
 			 />
 			 {% endif %}
 			 
-			 <!-- VOLUME VISUALIZE WITH CHIMERA -->
-			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
-			<input type="button" id="volume_chimera" name="select_mode" 
-			onclick="changeMode('volume_chimera');"
-			class="submitButton
-			 {% if form.mode.value != 'volume_chimera' %}
-			 visualizeVolOff
-			 {% else %}
-			  visualizeVolOn
-			 {% endif %}
-			 "
-			 />
-			 {% endif %}
+			 
+			 <!-- VOLUME VISUALIZE WITH CHIMERA HEADLESS -->
+			
+<!-- 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %}  -->
+<!-- 			<input type="button" id="volume_chimera" name="select_mode"  -->
+<!-- 			onclick="changeMode('volume_chimera');" -->
+<!-- 			class="submitButton -->
+<!-- 			 {% if form.mode.value != 'volume_chimera' %} -->
+<!-- 			 visualizeVolOff -->
+<!-- 			 {% else %} -->
+<!-- 			  visualizeVolOn -->
+<!-- 			 {% endif %} -->
+<!-- 			 " -->
+<!-- 			 /> -->
+<!-- 			 {% endif %} -->
+			 
 		</div>
 		
 		{% if not form.zoom.is_hidden %}
