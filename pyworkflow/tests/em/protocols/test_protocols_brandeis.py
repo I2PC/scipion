@@ -71,7 +71,10 @@ class TestBrandeisCtffind(TestBrandeisBase):
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-
+        ctfModel = protCTF.outputCTF.getFirstItem()
+        self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, places=1)
+        self.assertAlmostEquals(ctfModel.getDefocusV(),23640.28, places=1)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, places=2)
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)

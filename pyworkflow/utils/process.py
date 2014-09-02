@@ -29,6 +29,7 @@ This module handles process execution
 """
 
 import sys
+import os.path
 import resource
 from subprocess import call
 
@@ -74,6 +75,13 @@ def runCommand(command, env=None, cwd=None):
 def buildRunCommand(log, programname, params,
                     numberOfMpi, numberOfThreads, runInBackground,
                     hostConfig=None):
+    """ Return a string with the command line to run """
+
+    # Convert our list of params to a string, with each element escaped
+    # with "" in case there are spaces.
+    if not isinstance(params, basestring):
+        params = ' '.join('"%s"' % p for p in params)
+
     if numberOfMpi <= 1:
         command = programname + ' ' + params
     else:
@@ -99,9 +107,8 @@ def loadHostConfig(host='localhost'):
     and how to submit jobs to the queue system if exists.
     """
     from pyworkflow.hosts import HostMapper
-    from pyworkflow.apps.config import getConfigPath
-    fn = getConfigPath()
-    mapper = HostMapper(fn)
+    from pyworkflow import HOME
+    mapper = HostMapper(os.path.join(HOME, '..', 'settings'))
     return mapper.selectByLabel(host)
 
 

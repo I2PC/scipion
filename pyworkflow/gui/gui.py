@@ -368,4 +368,7 @@ class Window():
         """
         return Button(parent, Message.LABEL_BUTTON_CLOSE, Icon.ACTION_CLOSE, 
                           command=self.close)
+        
+    def configureWeights(self, row=0, column=0):
+        configureWeigths(self.root, row, column)
 

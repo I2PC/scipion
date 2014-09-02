@@ -696,7 +696,7 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info("STARTED: %s, index: %d" % (step.funcName.get(), step._index))
+        self.info("STARTED: %s, step %d" % (step.funcName.get(), step._index))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -704,9 +704,9 @@ class Protocol(Step):
         has finished its run.
         """
         doContinue = True
-        if step.status == STATUS_INTERACTIVE:
+        if step.isInteractive():
             doContinue = False
-        elif step.status == STATUS_FAILED:
+        elif step.isFailed():
             doContinue = False
             errorMsg = "Protocol failed: " + step.getErrorMessage()
             self.setFailed(errorMsg)
@@ -717,8 +717,12 @@ class Protocol(Step):
         self._stepsDone.increment()
         self._store(self._stepsDone)
         
-        self.info("FINISHED: %s, index: %d" % (step.funcName.get(), step._index))
+        self.info("%s: %s, step %d" % (step.getStatus().upper(), step.funcName.get(), step._index))
         
+        if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
+            # In parallel mode the executor will exit to close
+            # all working threads, so we need to close
+            self._endRun()
         return doContinue
     
     def _runSteps(self, startIndex):
@@ -845,8 +849,14 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
+        self.info('          MPI: %d' % self.numberOfMpi.get())
+        self.info('      threads: %d' % self.numberOfThreads.get())
 
-        Step.run(self)        
+        Step.run(self)     
+        self._endRun()
+        
+    def _endRun(self):
+        """ Print some ending message and close some files. """   
         self._store()
         self.info('------------------- PROTOCOL ' + self.getStatusMessage().upper())
         self.__closeLogs()
@@ -939,6 +949,9 @@ class Protocol(Step):
     def setMapper(self, mapper):
         """ Set a new mapper for the protocol to persist state. """
         self.mapper = mapper
+        
+    def getMapper(self):
+        return self.mapper
         
     def getDbPath(self):
         return self._getLogsPath('run.db')
@@ -1271,10 +1284,11 @@ def runProtocolMain(projectPath, protDbPath, protId):
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
             from pyworkflow.utils import runJob
-            prog = os.environ['SCIPION_PYTHON']
-            params = pw.join('apps', 'pw_protocol_mpirun.py')
-            params += ' %s %s' % (protDbPath, protId)
-            
+            # We run "scipion run pyworkflow/...mpirun.py blah" instead of
+            # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
+            # when it runs on a MPI node, it *always* has the scipion env.
+            prog = join(os.environ['SCIPION_HOME'], 'scipion')
+            params = ['run', 'pyworkflow/apps/pw_protocol_mpirun.py', projectPath, protDbPath, protId]
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)
@@ -1288,11 +1302,12 @@ def runProtocolMain(projectPath, protDbPath, protId):
     protocol.run()
     
     
-def runProtocolMainMPI(dbPath, protId, mpiComm):
+def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
     """ This function only should be called after enter in runProtocolMain
     and the proper MPI scripts have been started...so no validations 
     will be made.
     """ 
+    os.chdir(projectPath)
     protocol = getProtocolFromDb(dbPath, protId)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor

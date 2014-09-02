@@ -29,7 +29,7 @@ This modules handles the Project management
 
 import os
 import re
-from os.path import abspath, split
+from os.path import abspath
 
 from pyworkflow.em import *
 from pyworkflow.apps.config import *

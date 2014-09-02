@@ -122,6 +122,7 @@ class TestMixedFrealignClassify(TestWorkflow):
     def test_workflow(self):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
+        #TODO missing contrst amplitude ROB
         protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRateMode=1, magnification=79096,
                                            scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import 20 mics')

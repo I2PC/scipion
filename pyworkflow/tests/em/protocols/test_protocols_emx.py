@@ -27,11 +27,9 @@ MODIFICATION ADVICE:
 Please,  do not  generate or  distribute 
 a modified version of this file under its original name. 
 """
-import unittest, sys
-from itertools import izip
 from pyworkflow.em import *
 from pyworkflow.tests import *
-
+from pyworkflow.em.packages.emxlib import ProtEmxImport
 
 class TestEmxBase(BaseTest):
     @classmethod
@@ -44,7 +42,7 @@ class TestEmxBase(BaseTest):
         and a few coordinates.
         """
         emxFn = self.dataset.getFile('coordinatesT1')
-        protEmxImport = self.newProtocol(ProtEmxImport, 
+        protEmxImport = self.newProtocol(ProtEmxImport,
                                          inputEMX=emxFn,
                                          amplitudeContrast=0.1,
                                          sphericalAberration=2.,
@@ -55,18 +53,11 @@ class TestEmxBase(BaseTest):
         coords = SetOfCoordinates(filename=self.dataset.getFile('coordinatesGoldT1'))
         BaseTest.compareSets(self, protEmxImport.outputCoordinates, coords)
         
-    def test_particleDefocus(self):
+    def test_particleImportDefocus(self):
         """ Import an EMX file with a stack of particles
         that has defocus
         """
-        #SCIPION_TESTS=/home/roberto/Scipion/pyworkflow-code/data/tests
-        #SCIPION_USER_DATA=/home/roberto/ScipionUserData
-
-        print "self.folder", self.dataset.folder
-        #os.chdir(os.environ['SCIPION_TESTS'])
-        print "os.environ['SCIPION_HOME']", os.environ['SCIPION_HOME']
         emxFn = self.dataset.getFile('defocusParticleT2')
-        print "emxFn1",emxFn
         protEmxImport = self.newProtocol(ProtEmxImport, 
                                          inputEMX=emxFn
                                          )
@@ -79,11 +70,22 @@ class TestEmxBase(BaseTest):
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
-            mic1.printAll()
-            mic2.printAll()
             self.assertTrue(mic1.equalAttributes(mic2))
 
+    def test_micrographImport(self):
+        """ Import an EMX file with micrographs and defocus
+        """
+        emxFn = self.dataset.getFile('emxMicrographCtf1')
+        protEmxImport = self.newProtocol(ProtEmxImport,
+                                         inputEMX=emxFn
+                                         )
+        self.launchProtocol(protEmxImport)
+        micFn =self.dataset.getFile('emxMicrographCtf1Gold')
+        mics  = SetOfMicrographs(filename = micFn)
 
-
-
-
+        for mic1, mic2 in izip(mics, protEmxImport.outputMicrographs):
+            # Remove the absolute path in the micrographs to
+            # really check that the attributes should be equal
+            mic1.setFileName(os.path.basename(mic1.getFileName()))
+            mic2.setFileName(os.path.basename(mic2.getFileName()))
+            self.assertTrue(mic1.equalAttributes(mic2))

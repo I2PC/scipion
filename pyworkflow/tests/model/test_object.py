@@ -170,6 +170,31 @@ class TestUtils(BaseTest):
             self.assertAlmostEqual(l, goldList)
             if n:
                 self.assertEqual(n, len(l))
+                
+    def test_Environ(self):
+        """ Test the Environ class with its utilities. """
+        from pyworkflow.utils import Environ
+        env = Environ({'PATH': '/usr/bin:/usr/local/bin',
+                       'LD_LIBRARY_PATH': '/usr/lib:/usr/lib64'
+                       })
+        env1 = Environ(env)
+        env1.set('PATH', '/usr/local/xmipp')
+        self.assertEqual(env1['PATH'],'/usr/local/xmipp')
+        self.assertEqual(env1['LD_LIBRARY_PATH'], env['LD_LIBRARY_PATH'])
+        
+        env2 = Environ(env)
+        env2.set('PATH', '/usr/local/xmipp', position=Environ.BEGIN)
+        self.assertEqual(env2['PATH'],'/usr/local/xmipp' + os.pathsep + env['PATH'])
+        self.assertEqual(env2['LD_LIBRARY_PATH'], env['LD_LIBRARY_PATH'])
+        
+        env3 = Environ(env)
+        env3.update({'PATH': '/usr/local/xmipp', 
+                     'LD_LIBRARY_PATH': '/usr/local/xmipp/lib'},
+                    position=Environ.END)
+        self.assertEqual(env3['PATH'],env['PATH'] + os.pathsep +  '/usr/local/xmipp')
+        self.assertEqual(env3['LD_LIBRARY_PATH'],env['LD_LIBRARY_PATH'] + os.pathsep +  '/usr/local/xmipp/lib')      
+        
+        
         
         
             

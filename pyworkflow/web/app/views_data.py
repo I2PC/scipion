@@ -27,7 +27,6 @@
 import json
 from views_base import getResourceCss, getResourceIcon, getResourceJs 
 from views_base import loadProject, base_flex, render_to_response 
-from views_tree import loadObjTree
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 
@@ -39,17 +38,14 @@ def data_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
     project = loadProject(projectName)
     
-    # load the object tree 
-    root = loadObjTree(project)
-    
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
                'graph_utils': getResourceJs('graph_utils'),
                'project_content_utils': getResourceJs('project_content_utils'),
+               'data_content_utils': getResourceJs('data_content_utils'),
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
-               'sections': root.childs,
                'view':'data'
                }
     
@@ -73,4 +69,25 @@ def object_info(request):
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
+
+
+def object_tree(request):
+    from views_tree import getGraphClassesNode, TreeItem, populateObjTree
+    from views_tree import convertObjTree
+    
+    #Get Project
+    projectName = request.session['projectName'] 
+    project = loadProject(projectName) 
+    
+    #Obtain the classes graph
+    classesGraph = getGraphClassesNode(project)
+    
+    #Organize the graph with childs
+    root = TreeItem('root', 'root', '', '')
+    populateObjTree(root, classesGraph.getRootNodes())
+    
+    #Convert tree object to html 
+    html = convertObjTree(root)
+    
+    return HttpResponse(html, mimetype='application/javascript')
 

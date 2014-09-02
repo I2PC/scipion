@@ -353,6 +353,21 @@ author = "J. Vargas and J. Otón and R. Marabini and S. Jonic and J.M. de la Rosa
 keywords = "Contrast transfer function, Power spectrum, Single particle analysis "
 }
 
+@article{Marabini2014a,
+title = "CTF Challenge... ",
+journal = "JSB",
+volume = "",
+number = "",
+pages = "",
+year = "",
+note = "submitted",
+issn = "",
+doi = "",
+url = "",
+author = "Marabini et al.",
+keywords = "Contrast transfer function"
+}
+
 """
 
 

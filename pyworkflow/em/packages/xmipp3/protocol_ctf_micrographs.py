@@ -32,7 +32,6 @@ This sub-package contains the XmippCtfMicrographs protocol
 from pyworkflow.em import *  
 from pyworkflow.utils.path import makePath, moveFile, removeBaseExt
 from convert import *
-from xmipp3 import XmippMdRow
 
 
 class XmippCTFBase():
@@ -59,7 +58,6 @@ estimate CTF on a set of micrographs using xmipp3 """
         ctfModel._xmipp_enhanced_psd = String(self._getFileName('enhanced_psd', micDir=micDir))
         ctfModel._xmipp_ctfmodel_quadrant = String(self._getFileName('ctfmodel_quadrant', micDir=micDir))
         ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
-        return ctfModel
     
     def _citations(self):
         return ['Vargas2013']
@@ -83,8 +81,11 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         # Update _params dictionary with mic and micDir
         self._params['micFn'] = micFn
         self._params['micDir'] = self._getFileName('prefix', micDir=micDir)
-        # CTF estimation with Xmipp                
-        self.runJob(self._program, self._args % self._params)    
+        # CTF estimation with Xmipp  
+        try:              
+            self.runJob(self._program, self._args % self._params)
+        except Exception:
+            self._log.info("FAILED ESTIMATION FOR: " + micFn)    
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
@@ -94,13 +95,17 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         for _, micDir, mic in self._iterMicrographs():
             ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
+            if not os.path.exists(ctfparam):
+                ctfparam = 'xmipp_default_ctf.ctfparam'
+                
             ctfModel = readCTFModel(ctfparam, mic)
-            ctfSet.append(self._setPsdFiles(ctfModel, micDir))
+            self._setPsdFiles(ctfModel, micDir)
+            ctfSet.append(ctfModel)
             
             # save the values of defocus for each micrograph in a list
             defocusList.append(ctfModel.getDefocusU())
             defocusList.append(ctfModel.getDefocusV())
-        
+                
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(self.inputMics, ctfSet)
         self._defocusMaxMin(defocusList)

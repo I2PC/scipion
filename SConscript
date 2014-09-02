@@ -94,6 +94,10 @@ def addModule(*args, **kwargs):
     return env.AddModule(*args, **kwargs)
 
 
+# The flag '--old-and-unmanageable' used in some modules avoids
+# creating a single Python egg. That way the modules create a full
+# directory with the name of package, and we use that as a target.
+
 setuptools = addModule(
     'setuptools',
     tar='setuptools-5.4.1.tgz',
@@ -114,9 +118,6 @@ dateutil = addModule(
     tar='python-dateutil-1.5.tgz',
     flags=['--old-and-unmanageable'],
     deps=[setuptools, six])
-# The option '--old-and-unmanageable' avoids creating a single Python
-# egg, and so we have a "matplotlib" directory that can be used as a
-# target (because it is not passed as argument, it has the default value).
 
 pyparsing = addModule(
     'pyparsing',
@@ -171,10 +172,10 @@ addModule(
 #  *                                                                      *
 #  ************************************************************************
 
+# extraActions is a list of (target, command) to run after installation.
+
 env.AddPackage('xmipp',
-               tar='Xmipp-3.1-src.tar.gz',
-               url='http://xmipp.cnb.csic.es/Downloads/Xmipp-3.1-src.tar.gz',
-               buildDir='xmipp',
+               tar='xmipp_scipion.tgz',
                extraActions=[('xmipp.bashrc',
                              './install.sh --unattended=true --gui=false -j %s'
                               % GetOption('num_jobs'))],
@@ -199,7 +200,6 @@ env.AddPackage('eman',
                tar='eman2.1beta3.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
-# extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('frealign',
                tar='frealign_v9.07.tgz',

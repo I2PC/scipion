@@ -108,10 +108,13 @@ class EmanProtInitModel(ProtInitialVolume):
         classes2DSet = self.inputClasses.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate())
+        if isinstance(self.inputClasses.get(), SetOfClasses):
+            volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate())
+        else:
+            volumes.setSamplingRate(self.inputClasses.get().getSamplingRate())
         
         for k in range(1, self.numberOfModels.get() + 1):
-            volFn = self._getPath('initial_models/model_00_%02d.hdf' % k)
+            volFn = self._getExtraPath('initial_models/model_00_%02d.hdf' % k)
             vol = Volume()
             vol.setFileName(volFn)
             volumes.append(vol)

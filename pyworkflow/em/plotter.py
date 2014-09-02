@@ -28,11 +28,18 @@ This module implement the classes to create plots on xmipp.
 """
 from pyworkflow.gui.plotter import Plotter
 from itertools import izip
+import matplotlib.pyplot as plt 
+
+
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
-    
-    def plotAngularDistribution(self, title, rot, tilt, weight=[], max_p=40, min_p=5, max_w=2, min_w=1, color='blue'):
+    def __init__(self, **args):
+        Plotter.__init__(self, **args)
+
+    def plotAngularDistribution(self, title, rot, 
+                                tilt, weight=[], max_p=40, 
+                                min_p=5, max_w=2, min_w=1, color='blue'):
         '''Create an special type of subplot, representing the angular
         distribution of weight projections. '''
         if weight:
@@ -47,19 +54,31 @@ class EmPlotter(Plotter):
             for r, t in izip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
       
-    def plotHist(self, xCol, yCol, color, **args):
-        """ plot columns xCol and yCol
-            if nbins is in args then and histogram over y data is made
+    def plotHist(self, yValues, nbins, color='blue', **kwargs):
+        """ Create an histogram. """
+        self.hist(yValues, nbins, facecolor=color, **kwargs)
+        
+    def plotMatrix(self,_matrix,cmap='Greens'
+                       , xticksLablesMajor=None
+                       , yticksLablesMajor=None):
+        im = plt.imshow(_matrix, interpolation="none", cmap=cmap)
+        if (xticksLablesMajor is not None):       
+            plt.xticks(range(len(xticksLablesMajor)), 
+                                 xticksLablesMajor[:len(xticksLablesMajor)],
+                                 rotation=90)
+        if (yticksLablesMajor is not None):       
+            plt.yticks(range(len(yticksLablesMajor)),
+                                 yticksLablesMajor[:len(yticksLablesMajor)])
+        cax = plt.colorbar(im)
+        #im.cmap.set_over('g')#outbound values
+
+    def plotData(self, xValues, yValues, color='blue', **kwargs):
+        """ Shortcut function to plot some values.
+        Params:
+            xValues: list of values to show in x-axis
+            yValues: list of values to show as values in y-axis
+            color: color for the plot.
+            **kwargs: keyword arguments that accepts:
+                marker, linestyle
         """
-        nbins = args.pop('nbins', None)
-        marker = args.pop('marker', None)
-        linestyle = args.pop('linestyle', None)
-        if nbins is None:
-            if not marker is None:
-                args['marker'] = marker     
-            if not linestyle is None:
-                args['linestyle'] = linestyle
-            self.plot(xCol, yCol, color, **args) #no histogram
-        else:
-            self.hist(yCol,nbins, facecolor=color, **args)
-    
+        self.plot(xValues, yValues, color, **kwargs) 

@@ -67,9 +67,7 @@ estimate CTF on a set of micrographs using ctffind """
             
     def _getCTFModel(self, defocusU, defocusV, defocusAngle, psdFile):
         ctf = CTFModel()
-        ctf.setDefocusU(defocusU)
-        ctf.setDefocusV(defocusV)
-        ctf.setDefocusAngle(defocusAngle)
+        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
         ctf.setPsdFile(psdFile)
         
         return ctf

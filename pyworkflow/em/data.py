@@ -91,7 +91,14 @@ class Acquisition(EMObject):
     
     def setAmplitudeContrast(self, value):
         self._amplitudeContrast.set(value)        
-       
+
+    def __str__(self):
+        return "\n    mag=%f\n    volt= %f\n    Cs=%f\n    Q0=%f\n\n"%(self._magnification.get(),
+                                                                     self._voltage.get(),
+                                                                     self._sphericalAberration.get(),
+                                                                     self._amplitudeContrast.get())
+
+
     
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
@@ -139,6 +146,34 @@ class CTFModel(EMObject):
     def setMicrograph(self, mic):
         self._micObj = mic
 
+    def getDefocus(self, mic):
+        """ Returns defocusU, defocusV and defocusAngle. """
+        return (self._defocusU.get(), 
+                self._defocusV.get(), 
+                self._defocusAngle.get())
+
+    def setStandardDefocus(self, defocusU, defocusV, defocusAngle):
+        """ Set defocus values following emx conventions. 
+        See _standardize function."""
+        self._defocusU.set(defocusU)
+        self._defocusV.set(defocusV)
+        self._defocusAngle.set(defocusAngle)
+        self.standardize()
+
+    def standardize(self):
+        """ Modify defocusU, defocusV and defocusAngle to conform 
+        the EMX standard: defocusU > defocusV, 0 <= defocusAngle < 180
+        and the defocusAnges is between x-axis and defocusU.
+        For more details see:
+        http://i2pc.cnb.csic.es/emx/LoadDictionaryFormat.htm?type=Convention#ctf
+        """
+        if self._defocusV > self._defocusU:
+            self._defocusV.swap(self._defocusU) # exchange defocuU by defocuV
+            self._defocusAngle.sum(90.)
+        if self._defocusAngle >= 180.:
+            self._defocusAngle.sum(-180.)
+        elif self._defocusAngle < 0.:
+            self._defocusAngle.sum(180.)
 
 
 class DefocusGroup(EMObject):
@@ -461,6 +496,9 @@ class SetOfImages(EMSet):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
+    def hasAcquisition(self):
+        return self._acquisition.getMagnification() is not None
+        
     def hasCTF(self):
         """Return True if the SetOfImages has associated a CTF model"""
         return self._hasCtf.get()  
@@ -499,7 +537,8 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         # Copy the acquistion from the set to images
-        image.setAcquisition(self.getAcquisition())
+        if self.hasAcquisition(): # only override acquisition if not None
+            image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
         if self._firstDim.isEmpty():
@@ -591,7 +630,11 @@ class SetOfImages(EMSet):
     def __iter__(self):
         """ Redefine iteration to set the acquisition to images. """
         for img in self._iterItems():
-            img.setAcquisition(self.getAcquisition())
+            # Sometimes the images items in the set could
+            # have the acquisition info per data row and we
+            # dont want to override with the set acquistion for this case
+            if not img.hasAcquisition():
+                img.setAcquisition(self.getAcquisition())
             yield img
             
     def appendFromImages(self, imagesSet):

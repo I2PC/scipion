@@ -27,30 +27,22 @@
 """
 Data-oriented view of the project objects.
 """
-import os, sys
-from os.path import join, exists, basename
 
 import Tkinter as tk
 import ttk
 import tkFont
 
-from pyworkflow.gui.tree import TreeProvider, BoundTree
-from pyworkflow.protocol.protocol import *
-
-from pyworkflow.object import *
-from pyworkflow.em import *
-from pyworkflow.protocol import *
-from pyworkflow.protocol.params import *
+import pyworkflow.protocol.protocol as prot
+from pyworkflow.em import findViewers, DESKTOP_TKINTER
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.properties import Message, Icon, Color
 
 import pyworkflow.gui as gui
-from pyworkflow.gui.tree import Tree, ObjectTreeProvider, DbTreeProvider, ProjectRunsTreeProvider
-from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
+from pyworkflow.gui.tree import Tree
+from pyworkflow.gui.dialog import EditObjectDialog
 from pyworkflow.gui.text import TaggedText
 from pyworkflow.gui import Canvas, RoundedTextBox
 from pyworkflow.gui.graph import LevelTree
-from config import *
 from pyworkflow.gui.form import getObjectLabel
 
 
@@ -83,14 +75,14 @@ ActionIcons = {
                }
 
 STATUS_COLORS = {
-               STATUS_SAVED: '#D9F1FA', 
-               STATUS_LAUNCHED: '#D9F1FA', 
-               STATUS_RUNNING: '#FCCE62', 
-               STATUS_FINISHED: '#D2F5CB', 
-               STATUS_FAILED: '#F5CCCB', 
-               STATUS_INTERACTIVE: '#F3F5CB',
-               STATUS_ABORTED: '#F5CCCB',
-               #STATUS_SAVED: '#124EB0',
+               prot.STATUS_SAVED: '#D9F1FA',
+               prot.STATUS_LAUNCHED: '#D9F1FA',
+               prot.STATUS_RUNNING: '#FCCE62',
+               prot.STATUS_FINISHED: '#D2F5CB',
+               prot.STATUS_FAILED: '#F5CCCB',
+               prot.STATUS_INTERACTIVE: '#F3F5CB',
+               prot.STATUS_ABORTED: '#F5CCCB',
+               #prot.STATUS_SAVED: '#124EB0',
                }
 
 def populateTree(tree, elements, parentId=''):
@@ -240,7 +232,9 @@ class ProjectDataView(tk.Frame):
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
         v.grid(row=1, column=0, sticky='news')
-    
+
+    # TODO(josemi): check that the call to RoundedTextBox is correct
+    # It looks suspicious because RoundedTextBox() needs 5 arguments, not 3
     def _createNode(self, canvas, node, y):
         """ Create Data node to be painted in the graph. """
         node.selected = False

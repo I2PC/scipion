@@ -67,6 +67,7 @@ class Message():
     LABEL_STEPS = 'Steps'
     LABEL_BROWSE = 'Browse'
     LABEL_BROWSE_ACTION = 'Browse '
+    LABEL_DB = 'Db'
     LABEL_STOP = 'Stop'
     LABEL_STOP_ACTION = 'Stop execution'
     LABEL_ANALYZE = 'Analyze Results'
@@ -292,8 +293,9 @@ class Icon():
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
     # TODO: change action_steps icon - fa-codefork?
-    ACTION_STEPS = 'fa-sitemap.png'
+    ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
+    ACTION_DB = 'fa-database.png'
     ACTION_TREE = None
     ACTION_LIST = 'fa-bars.png'
     ACTION_STOP = 'fa-stop.png'
@@ -333,3 +335,12 @@ class Color():
     LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
     LIGHT_GREY_COLOR_2 = '#F2F2F2' # Very light grey for odd rows, input background, etc
     DARK_GREY_COLOR = '#6E6E6E' # Very dark grey for project title, tubes, etc
+    
+    STATUS_SAVED = '#D9F1FA', 
+    STATUS_LAUNCHED = '#D9F1FA', 
+    STATUS_RUNNING = '#FCCE62', 
+    STATUS_FINISHED = '#D2F5CB', 
+    STATUS_FAILED = '#F5CCCB', 
+    STATUS_INTERACTIVE = '#F3F5CB',
+    STATUS_ABORTED = '#F5CCCB',
+    #STATUS_SAVED = '#124EB0',

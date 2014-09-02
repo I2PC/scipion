@@ -77,54 +77,85 @@ def populateProtTree(tree, obj):
 # OBJECT TREE
 #===============================================================================
 
-def loadObjTree(project):
-    root = TreeItem('root', 'root', '', '')
-    g = project.getSourceGraph()
+def getGraphClassesNode(project):
+    from pyworkflow.utils.graph import Graph
+    classesGraph = Graph()
     
-    listObjs = []
+    # Method to create class nodes
+    def createClassNode(classObj):
+        """ Add the object class to hierarchy and 
+        any needed subclass. """
+        className = classObj.__name__
+        classNode = classesGraph.getNode(className)
+        
+        if not classNode:
+            classNode = classesGraph.createNode(className)
+            if className != 'EMObject' and classObj.__bases__:
+                baseClass = classObj.__bases__[0]
+                for b in classObj.__bases__:
+                    if b.__name__ == 'EMObject':
+                        baseClass = b
+                        break
+                parent = createClassNode(baseClass)
+                parent.addChild(classNode)
+            classNode.count = 0
+        return classNode
+    
+    g = project.getSourceGraph()
+
     for node in g.getNodes():
         id = node.getName()
         if id != 'PROJECT':
             obj = project.mapper.selectById(id)
-            listObjs.append(obj)
-            
-    populateObjTree(root, listObjs)
+            classNode = createClassNode(obj.getClass())
+            classNode.count += 1
     
-    return root
-
-def populateObjTree(tree, listObjs):
-    list = {}
+    return classesGraph
     
-    for obj in listObjs:
-        baseClass = obj.__class__
-        base = baseClass.__bases__[0].__name__
-        className = baseClass.__name__
-#        for b in baseClass.__bases__:
-#            if b.__name__== 'EMObject':
-#                base = b.__name__
-#        print "className", className, "bases:", baseClass.__bases__
-        
-        if base not in list:
-            list.update({base:{className : 1}})
-        else:
-            if not className in list[base]:
-                list[base].update({className : 1})
-            else:   
-                list[base][className] = list[base][className]+1
-    
-    for base in list:
-        baseItem = ObjItem(base)
-        tree.childs.append(baseItem)
-        for obj in list[base]:
-            count =  list[base][obj]
-            item = ObjItem(obj, count)
-            baseItem.childs.append(item)
-            
-
+def populateObjTree(tree, elements):
+    for node in elements:
+        if node.getName() != "ROOT":
+#            print "HERE->", node.getName()
+#            print "CHILDS: ", [i.getName() for i in node.getChilds()]
+            item = ObjItem(node.getName(), node.count)
+            tree.childs.append(item)
+            if len(node.getChilds()) > 0:
+                populateObjTree(item, node.getChilds())
+         
 class ObjItem():
     def __init__(self, name, count=None):
         self.name = name
         self.count = count
         self.openItem = True
         self.childs = []
+        
+
+def convertObjTree(tree):
+    sections = tree.childs
+    for section in sections:
+        html = getChildrens(section)
+    return html
+        
+        
+def getChildrens(tree):
+    hasChilds = False
+    
+    html = '<span>'
+    if len(tree.childs) > 0:
+        html += tree.name
+        hasChilds = True
+    else:
+        html = '<strong>'+tree.name +' ('+str(tree.count)+')</strong>'
+    html += '</span>'
+        
+    if hasChilds:
+        html += '<ul>'
+        childrens = tree.childs
+        for child in childrens:
+            html += '<li>'
+            html += getChildrens(child)
+            html += '</li>'
+        html += '</ul>'
+    
+    return html
 

@@ -112,8 +112,8 @@ class TestSetOfMicrographs(BaseTest):
         counter=0
         for mic in micSet:
             mic2.setFileName(fileNames[counter])
-            mic.printAll(acquisition)
-            mic2.printAll(acquisition)
+            #mic.printAll(acquisition)
+            #mic2.printAll(acquisition)
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 

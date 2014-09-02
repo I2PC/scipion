@@ -25,11 +25,13 @@
 <!-- JS Libs -->
 <script src={{jquery_cookie}} type="text/javascript"></script>
 <script src={{project_content_utils}} type="text/javascript"></script>
+<script src={{data_content_utils}} type="text/javascript"></script>
 <script src={{graph_utils}} type="text/javascript"></script>
 <script type="text/javascript">
 	$(function() {
 		$("#tabs").tabs();
 		callPaintObjGraph();
+		callPaintObjTree();
 	});
 	
 	jQuery(function($) {
@@ -57,7 +59,9 @@
 {% block sideLeft %}
 <div id="westContainer">	
 	<div class="protFieldsetTree">
-	{% include "data_content/tree_obj_view.html" %}
+		<ul id="browser" class="filetree">
+			<!-- Tree Object View ---------------------->
+		</ul>
 	</div>
 </div>
 {% endblock %} 
@@ -85,9 +89,9 @@
 
 {% block contentNorth %}
 <div id="runsInfo">
-	<!-- Data Graph ---------------------->
 	<div id="runGraph">
 		<div id="graphActiv" data-time="first" data-project="{{projectName}}">
+			<!-- Data Graph ---------------------->
 		</div>
 	</div>
 </div>

@@ -109,13 +109,17 @@ def main():
     if args.check_all:
         datasets = [x.strip('./') for x in
                     urlopen('%s/MANIFEST' % args.url).read().splitlines()]
-        if args.verbose:
-            print 'Datasets: %s' % ' '.join(datasets)
+        print 'Checking datasets: %s' % ' '.join(datasets)
 
         all_uptodate = True
         for dataset in datasets:
             all_uptodate &= check(dataset, url=args.url, verbose=args.verbose)
-        sys.exit(0 if all_uptodate else 1)
+        if all_uptodate:
+            print 'All datasets are up-to-date.'
+            sys.exit(0)
+        else:
+            print 'Some datasets are not updated.'
+            sys.exit(1)
 
     if not args.datasets:
         sys.exit('At least --list, --check-all or datasets needed.\n'
@@ -134,14 +138,20 @@ def main():
 
     if args.download:
         # Download datasets.
-        for dataset in args.datasets:
-            if exists(join(os.environ['SCIPION_TESTS'], dataset)):
-                print 'Local copy of dataset %s detected.' % dataset
-                print 'Checking for updates...'
-                update(dataset, url=args.url, verbose=args.verbose)
-            else:
-                print 'Dataset %s not in local machine. Downloading...' % dataset
-                download(dataset, url=args.url, verbose=args.verbose)
+        try:
+            for dataset in args.datasets:
+                if exists(join(os.environ['SCIPION_TESTS'], dataset)):
+                    print 'Local copy of dataset %s detected.' % dataset
+                    print 'Checking for updates...'
+                    update(dataset, url=args.url, verbose=args.verbose)
+                else:
+                    print 'Dataset %s not in local machine. Downloading...' % dataset
+                    download(dataset, url=args.url, verbose=args.verbose)
+        except IOError as e:
+            print 'Warning: %s' % e
+            if e.errno == 13:  # permission denied
+                print 'Maybe you need to run as the user that did the global installation?'
+            sys.exit(1)
         sys.exit(0)
 
     if args.upload:
@@ -207,7 +217,7 @@ def check(dataset, url, verbose=False):
 
 
 def download(dataset, destination=None, url=None, verbose=False):
-    """ Download all the data files mentioned in url/datasetName/MANIFEST """
+    """ Download all the data files mentioned in url/dataset/MANIFEST """
 
     destination = destination if destination else os.environ['SCIPION_TESTS']
 
@@ -355,8 +365,8 @@ def upload(dataset, delete=False):
 
     # Upload the dataset files (with rsync)
     print 'Uploading files...'
-    call(['rsync', '-av', localFolder, '%s:%s' % (remoteLoc, remoteFolder)] +
-         (['--delete'] if delete else []))
+    call(['rsync', '-rlv', '--chmod=a+r', localFolder,
+          '%s:%s' % (remoteLoc, remoteFolder)] + (['--delete'] if delete else []))
 
     # Regenerate remote MANIFEST (which contains a list of datasets)
     print 'Regenerating remote MANIFEST file...'

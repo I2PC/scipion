@@ -168,7 +168,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputCoordinates'):
+        if not getattr(self, 'outputCoordinates', None):
             summary.append("Output coordinates not ready yet.") 
         else:
             summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())

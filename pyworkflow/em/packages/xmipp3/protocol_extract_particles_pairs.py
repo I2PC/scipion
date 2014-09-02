@@ -255,7 +255,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         
         imgSetAuxU = self._createSetOfParticles('auxU')
         imgSetAuxU.copyInfo(imgSetU)
-        readSetOfParticles(fnUntilted, imgSetAuxU, False)
+        readSetOfParticles(fnUntilted, imgSetAuxU)
         imgSetAuxU.write()
         # For each untilted particle retrieve micId from SetOFCoordinates untilted
         for img, coord in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
@@ -268,7 +268,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         imgSetAuxT = self._createSetOfParticles('auxT')
         imgSetAuxT.copyInfo(imgSetT)
-        readSetOfParticles(fnTilted, imgSetAuxT, False)    
+        readSetOfParticles(fnTilted, imgSetAuxT)    
         imgSetAuxT.write()        
         # For each untilted particle retrieve micId from SetOFCoordinates tilted
         #for img in imgSetAuxU:

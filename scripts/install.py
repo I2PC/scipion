@@ -82,7 +82,7 @@ def build(args):
         tarfile.open(fileobj=StringIO(urlopen(url).read())).extractall(INSTALL)
 
         # Install it.
-        command = ['python', 'setup.py', 'install', '--prefix=%s' % SOFTWARE]
+        command = [sys.executable, 'setup.py', 'install', '--prefix=%s' % SOFTWARE]
         sys.stdout.write('Executing: %s\n' % ' '.join(command))
         with open(LOGFILE, 'w') as logFile:
             r = subprocess.call(command, cwd=join(INSTALL, SCONS),
@@ -91,7 +91,7 @@ def build(args):
             return r
 
     # Call SCons and show the output on the screen and logfile.
-    proc = subprocess.Popen(['software/bin/scons'] + args,
+    proc = subprocess.Popen([sys.executable, 'software/bin/scons'] + args,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     with open(LOGFILE, 'a') as logFile:
         while True:

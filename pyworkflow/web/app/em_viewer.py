@@ -25,18 +25,16 @@
 # **************************************************************************
 
 import json
-from pyworkflow.em import *
-from views_util import *
-from views_protocol import updateProtocolParams
 from django.http import HttpResponse
-from pyworkflow.gui.plotter import Plotter
-from pyworkflow.viewer import *
-from pyworkflow.em.viewer import *
+from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView
 
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
 def launch_viewer(request):
+    from views_util import loadProject
+    from pyworkflow.em import findViewers, EMProtocol, EMObject
+    
     projectName = request.session['projectName']
     project = loadProject(projectName)
     objId = request.GET.get('objectId', None)
@@ -85,7 +83,10 @@ def viewerForm(project, protocol, viewer):
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
-    
+    from views_util import savePlot
+    from pyworkflow.gui.plotter import Plotter
+    from pyworkflow.em import TABLE_NAME, DataView, PATH
+
     # PLOT
     if isinstance(view, Plotter):
         url = 'url::' + savePlot(request, view)
@@ -115,6 +116,9 @@ def viewToUrl(request, view):
     return url
 
 def viewer_element(request):
+    from views_util import loadProtocolProject
+    from views_protocol import updateProtocolParams
+    
     project, protocolViewer = loadProtocolProject(request)
     protId = request.POST.get('protRunIdViewer', None)
     viewerParam = request.POST.get('viewerParam', None)

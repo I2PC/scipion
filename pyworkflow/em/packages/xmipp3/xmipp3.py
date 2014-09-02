@@ -35,6 +35,8 @@ import xmipp
 from collections import OrderedDict
 from constants import *
 import pyworkflow.dataset as ds
+
+from pyworkflow.utils import Environ
 from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE
 
 from xmipp import MetaData, MetaDataInfo, MDL_IMAGE, MDL_IMAGE1, MDL_IMAGE_REF, MDL_ANGLE_ROT, MDL_ANGLE_TILT, MDL_ANGLE_PSI, MDL_REF, \
@@ -48,15 +50,14 @@ LABEL_TYPES = {
                xmipp.LABEL_BOOL: bool              
                }
 
-def getEnviron():
+def getEnviron(xmippFirst=True):
     """ Create the needed environment for Xmipp programs. """
-    environ = dict(os.environ)
+    environ = Environ(os.environ)
+    pos = Environ.BEGIN if xmippFirst else Environ.END
     environ.update({
-            'PATH': os.pathsep.join([join(os.environ['XMIPP_HOME'], 'bin'),
-                                     os.environ['PATH']]),
-            'LD_LIBRARY_PATH': os.pathsep.join([join(os.environ['XMIPP_HOME'], 'lib'),
-                                                os.environ['LD_LIBRARY_PATH']])
-            })
+            'PATH': join(os.environ['XMIPP_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib')
+            }, position=pos)
     return environ
     
 def getLabelPythonType(label):
@@ -113,13 +114,19 @@ class XmippProtocol():
 
 class XmippMdRow():
     """ Support Xmipp class to store label and value pairs 
-    corresponding to a Metadata row. It can be used as base
-    for classes that maps to a MetaData row like XmippImage, XmippMicrograph..etc. 
+    corresponding to a Metadata row. 
     """
     def __init__(self):
         self._labelDict = OrderedDict() # Dictionary containing labels and values
+        self._objId = None # Set this id when reading from a metadata
+        
+    def getObjId(self):
+        return self._objId
     
     def hasLabel(self, label):
+        return self.containsLabel(label)
+    
+    def containsLabel(self, label):
         return label in self._labelDict
     
     def removeLabel(self, label):
@@ -137,6 +144,8 @@ class XmippMdRow():
     def readFromMd(self, md, objId):
         """ Get all row values from a given id of a metadata. """
         self._labelDict.clear()
+        self._objId = objId
+        
         for label in md.getActiveLabels():
             self._labelDict[label] = md.getValue(label, objId)
             

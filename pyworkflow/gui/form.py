@@ -633,10 +633,11 @@ class ParamWidget():
         t = type(param)
         entryWidth = 30
 
-        if t is BooleanParam:
+        if t is HiddenBooleanParam:
+           var=0
+        elif t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
             frame.grid(row=0, column=0, sticky='w')
-            
         elif t is EnumParam:
             var = ComboVar(param)
             if param.display == EnumParam.DISPLAY_COMBO:

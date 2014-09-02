@@ -43,7 +43,7 @@ from pyworkflow.utils.properties import Icon
 import gui
 from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
 from tree import BoundTree, TreeProvider
-from text import TaggedText
+from text import TaggedText, showTextFileViewer, openTextFileEditor
 from widgets import Button, HotButton
 
 
@@ -95,7 +95,6 @@ class ObjectBrowser(tk.Frame):
         frame.columnconfigure(0, weight=1)
         
         if self.showPreviewTop:
-            print "showing top....."
             top = tk.Frame(frame)
             top.grid(row=0, column=0, sticky='news')
             frame.rowconfigure(0, weight=3)
@@ -188,6 +187,13 @@ class FileHandler(object):
             return 'fa-folder-open.png', None
         return None, None
     
+    def getFileActions(self, objFile):
+        """ Return actions that can be done with this object.
+        Actions will be displayed in the context menu 
+        and the first one will be the default when double-click.
+        """
+        return []
+    
     
 class TextFileHandler(FileHandler):   
     def __init__(self, textIcon):
@@ -197,6 +203,12 @@ class TextFileHandler(FileHandler):
     def getFileIcon(self, objFile):
         return self._icon
 
+    def getFileActions(self, objFile):
+        fn = objFile.getPath()
+        return [("Open external Editor", lambda: openTextFileEditor(fn), Icon.ACTION_REFERENCES)]
+                # Not working
+                #("Open with Scipion", lambda: showTextFileViewer(fn, [fn]), Icon.ACTION_VISUALIZE)]
+    
     
 class SqlFileHandler(FileHandler):
     def getFileIcon(self, objFile):
@@ -232,6 +244,11 @@ class ImageFileHandler(FileHandler):
     def getFilePreview(self, objFile):
         fn = objFile.getPath()
         return self._getImagePreview(fn), self._getImageString(fn)
+    
+    def getFileActions(self, objFile):
+        from pyworkflow.em.viewer import DataView
+        fn = objFile.getPath()
+        return [('Open with Xmipp viewer', lambda : DataView(fn).show(), Icon.ACTION_VISUALIZE)]
     
     
 class ParticleFileHandler(ImageFileHandler):
@@ -366,7 +383,8 @@ class FileTreeProvider(TreeProvider):
         return fileHandler.getFilePreview(obj)
     
     def getObjectActions(self, obj):
-        return []
+        fileHandler = self.getFileHandler(obj)
+        return fileHandler.getFileActions(obj)
     
     def getObjects(self):
         files = os.listdir(self._currentDir)
@@ -399,8 +417,8 @@ class FileBrowser(ObjectBrowser):
                  showHidden=False):
         """ 
         """
-        tp = FileTreeProvider(initialDir, showHidden)
-        ObjectBrowser.__init__(self, parent, tp)
+        self._provider = FileTreeProvider(initialDir, showHidden)
+        ObjectBrowser.__init__(self, parent, self._provider)
         
         if selectionType != SELECT_NONE:
             buttonsFrame = tk.Frame(self)
@@ -470,12 +488,16 @@ class FileBrowser(ObjectBrowser):
     def _itemDoubleClick(self, obj):
         if obj.isDir():
             self._goDir(obj.getPath())
+        else:
+            actions = self._provider.getObjectActions(obj)
+            if actions:
+                actions[0][1]() # actions[0] = first Action, [1] = the action callback
             
     def onClose(self):
         pass
     
     def onSelect(self, obj):
-        pass
+        print obj, "type: ", type(obj)
     
     def _close(self, e=None):
         self.onClose()
@@ -512,11 +534,12 @@ class FileBrowserWindow(BrowserWindow):
         self.setBrowser(browser) 
         
     def registerHandlers(self):
-        FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), '.txt', '.log', '.out', '.err')
+        FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), 
+                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
-        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star')
-        FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite')
+        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos')
+        FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite', '.db')
         FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
                                              '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
                                              '.ser', '.img', '.hed')

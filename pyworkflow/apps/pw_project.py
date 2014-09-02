@@ -31,13 +31,13 @@ Launch main project window
 import sys
 import os
 
+from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
 
 
 
 if __name__ == '__main__':
     
-    from pyworkflow.manager import Manager
     
     if len(sys.argv) > 1:
         manager = Manager()

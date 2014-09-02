@@ -51,20 +51,23 @@ class ProtFrealignBase(EMProtocol):
         self.stepsExecutionMode = STEPS_PARALLEL
         self._lastIter = Integer(1)
     
-    def _createFilenameTemplates(self, iter):
+    def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
-        prevIter = iter - 1
+        
+        def iterFile(suffix=''):
+            iterDn = 'iter_%(iter)03d'
+            iterDir = self._getExtraPath(iterDn)
+            return join(iterDir, suffix)
+        
         myDict = {
                   'particles': self._getTmpPath('particles.mrc'),
                   'init_vol': self._getTmpPath('volume.mrc'),
                   # Volumes for the iteration
-                  'ref_vol': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d.mrc'),
-                  'iter_vol': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d.mrc'),
-                  'prev_vol': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d.mrc'),
+                  'ref_vol': iterFile('reference_volume_iter_%(iter)03d.mrc'),
+                  'iter_vol': iterFile('volume_iter_%(iter)03d.mrc'),
                   'output_vol_par': 'output_vol_iter_%(iter)03d.par',
                   # dictionary for all set
-                  'input_par': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d.par'),
-                  'output_par': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d.par'),
+                  'output_par': iterFile('particles_iter_%(iter)03d.par'),
                   'shift' : 'particles_shifts_iter_%(iter)03d.shft',
                   'match' : 'particles_match_iter_%(iter)03d.mrc',
                   'weight' : 'volume_weights_iter_%(iter)03d.mrc',
@@ -73,8 +76,8 @@ class ProtFrealignBase(EMProtocol):
                   'phase' : 'volume_phasediffs_iter_%(iter)03d.mrc',
                   'spread' : 'volume_pointspread_iter_%(iter)03d.mrc',
                   # dictionary for each processing block
-                  'input_par_block': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_%(block)02d.par'),
-                  'output_par_block': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_%(block)02d.par'),
+                  'input_par_block': iterFile('particles_iter_%(prevIter)03d_%(block)02d.par'),
+                  'output_par_block': iterFile('particles_iter_%(iter)03d_%(block)02d.par'),
                   'shift_block' : 'particles_shifts_iter_%(iter)03d_%(block)02d.shft',
                   'match_block' : 'particles_match_iter_%(iter)03d_%(block)02d.mrc', 
                   'weight_block' : 'volume_weights_iter_%(iter)03d_%(block)02d',
@@ -83,14 +86,12 @@ class ProtFrealignBase(EMProtocol):
                   'phase_block' : 'volume_phasediffs_iter_%(iter)03d_%(block)02d',
                   'spread_block' : 'volume_pointspread_iter_%(iter)03d_%(block)02d',
                   # each class volumes for the iteration
-                  'ref_vol_class': self._iterWorkingDir(iter, 'reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-                  'iter_vol_class': self._iterWorkingDir(iter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
-                  'prev_vol_class': self._iterWorkingDir(prevIter, 'volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
+                  'ref_vol_class': iterFile('reference_volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
+                  'iter_vol_class': iterFile('volume_iter_%(iter)03d_class_%(ref)02d.mrc'),
                   'output_vol_par_class': 'output_vol_iter_%(iter)03d_class_%(ref)02d.par',
                   # dictionary for each class
-                  'input_par_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
-                  'output_par_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d.par'),
-                  'output_par_class_tmp': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_0.par'),
+                  'output_par_class': iterFile('particles_iter_%(iter)03d_class_%(ref)02d.par'),
+                  'output_par_class_tmp': iterFile('particles_iter_%(iter)03d_class_0.par'),
                   'shift_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d.shft',
                   'match_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d.mrc',
                   'weight_class' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d.mrc',
@@ -100,8 +101,8 @@ class ProtFrealignBase(EMProtocol):
                   'spread_class' : 'volume_pointspread_iter_%(iter)03d_class_%(ref)02d.mrc',
                   'logFileRecons' : 'logRecons_iter_%(iter)03d_class_%(ref)02d.log',
                   # dictionary for each processing block and class
-                  'input_par_block_class': self._iterWorkingDir(prevIter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
-                  'output_par_block_class': self._iterWorkingDir(iter, 'particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
+                  'input_par_block_class': iterFile('particles_iter_%(prevIter)03d_class_%(ref)02d_%(block)02d.par'),
+                  'output_par_block_class': iterFile('particles_iter_%(iter)03d_class_%(ref)02d_%(block)02d.par'),
                   'shift_block_class' : 'particles_shifts_iter_%(iter)03d_class_%(ref)02d_%(block)02d.shft',
                   'match_block_class' : 'particles_match_iter_%(iter)03d_class_%(ref)02d_%(block)02d.mrc', 
                   'weight_block_class' : 'volume_weights_iter_%(iter)03d_class_%(ref)02d_%(block)02d',
@@ -468,27 +469,31 @@ class ProtFrealignBase(EMProtocol):
         numberOfBlocks = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         depsRecons = []
         
+        self._createFilenameTemplates()
+        self._insertContinueStep()
+        for it in range(self.initIter, self.lastIter):
+            initId = self._insertFunctionStep('initIterStep', it, numberOfBlocks, prerequisites=depsRecons)
+            depsRefine = self._insertRefineIterStep(it, numberOfBlocks, [initId])
+            reconsId = self._insertFunctionStep("reconstructVolumeStep", it, numberOfBlocks, prerequisites=depsRefine)
+            depsRecons = [reconsId]
+        self._insertFunctionStep("createOutputStep", prerequisites=depsRecons)
+        
+    def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
             self.inputParticles.set(continueRun.inputParticles.get())
             self.symmetry.set(continueRun.symmetry.get())
             self.input3DReference.set(None)
             if self.continueIter.get() == 'last':
-                initIter = continueRun._getLastIter() + 1
+                self.initIter = continueRun._getLastIter() + 1
             else:
-                initIter = int(self.continueIter.get())
-            self._setLastIter(initIter)
-            self._insertFunctionStep('continueStep', initIter)
+                self.initIter = int(self.continueIter.get())
+            self._setLastIter(self.initIter)
+#             self._createFilenameTemplates()
+            self._insertFunctionStep('continueStep')
         else:
-            initIter = 1
-        lastIter = initIter + self.numberOfIterations.get()
-        
-        for iter in range(initIter, lastIter):
-            initId = self._insertFunctionStep('initIterStep', iter, numberOfBlocks, prerequisites=depsRecons)
-            depsRefine = self._insertRefineIterStep(iter, numberOfBlocks, [initId])
-            reconsId = self._insertFunctionStep("reconstructVolumeStep", iter, numberOfBlocks, prerequisites=depsRefine)
-            depsRecons = [reconsId]
-        self._insertFunctionStep("createOutputStep",lastIter-1, prerequisites=depsRecons)
+            self.initIter = 1
+        self.lastIter = self.initIter + self.numberOfIterations.get()
     
     def _insertRefineIterStep(self, iter, numberOfBlocks, depsInitId):
         """ execute the refinement for the current iteration """
@@ -513,15 +518,14 @@ class ProtFrealignBase(EMProtocol):
         return depsRefine
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def continueStep(self, initIter):
+    def continueStep(self):
         """Create a symbolic link of a previous iteration from a previous run."""
         continueRun = self.continueRun.get()
-        prevDir = continueRun._iterWorkingDir(initIter)
-        currDir = self._iterWorkingDir(initIter)
+        prevDir = continueRun._iterWorkingDir(self.initIter)
+        currDir = self._iterWorkingDir(self.initIter)
         createLink(prevDir, currDir)
         
         imgSet = self.inputParticles.get()
-        self._createFilenameTemplates(initIter)
         imgFn = self._getFileName('particles')
         imgSet.writeStack(imgFn)
         
@@ -529,13 +533,13 @@ class ProtFrealignBase(EMProtocol):
         """ Prepare files and directories for the current iteration """
         
         self._createIterWorkingDir(iter) # create the working directory for the current iteration.
-        self._createFilenameTemplates(iter)
+#         self._createFilenameTemplates()
         prevIter = iter - 1
         refVol = self._getFileName('ref_vol', iter=iter) # reference volume of the step.
         iterVol =  self._getFileName('iter_vol', iter=iter) # refined volume of the step
-        prevIterVol = self._getFileName('prev_vol', iter=prevIter) # volume of the previous iteration
+        prevIterVol = self._getFileName('iter_vol', iter=prevIter) # volume of the previous iteration
         
-        if iter==1:
+        if iter == 1:
             imgSet = self.inputParticles.get()
             vol = self.input3DReference.get()
             
@@ -608,8 +612,8 @@ class ProtFrealignBase(EMProtocol):
         
         iniPart, lastPart = self._particlesInBlock(block, numberOfBlocks)
         prevIter = iter - 1
-        param['inputParFn'] = self._getBaseName('input_par_block', iter=prevIter, block=block)
-        param['initParticle'] = iniPart
+        param['inputParFn'] = self._getBaseName('input_par_block', block= block, iter=iter, prevIter=prevIter)
+        param['initParticle'] = iniPart 
         param['finalParticle'] = lastPart
         
         paramDic = self._setParamsRefineParticles(iter, block)
@@ -910,6 +914,7 @@ class ProtFrealignBase(EMProtocol):
         paramDics['FSC3DR2'] = self._getFileName('vol2_block', block=block, iter=iter)
         paramDics['VolPhResidual'] = self._getFileName('phase_block', block=block, iter=iter)
         paramDics['VolpointSpread'] = self._getFileName('spread_block', block=block, iter=iter)
+        paramDics['logFile'] = self._getFileName('logFileRefine', block=block, iter=iter, ref=1)
         return paramDics
     
     def _setParams3DR(self, iter):
@@ -926,13 +931,14 @@ class ProtFrealignBase(EMProtocol):
         paramDics['FSC3DR2'] = self._getFileName('vol2', iter=iter)
         paramDics['VolPhResidual'] = self._getFileName('phase', iter=iter)
         paramDics['VolpointSpread'] = self._getFileName('spread', iter=iter)
+        paramDics['logFile'] = self._getFileName('logFileRecons', iter=iter, ref=1)
         return paramDics
         
     def __openParamFile(self, blockNumber, paramsDict):
         """ Open the file and write the first part of the block param file. """
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        initaLines = """%(frealign)s << eot
+        initaLines = """%(frealign)s << eot > %(logFile)s
 M,%(mode2)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -973,7 +979,7 @@ eot
 
         if not exists(FREALIGN_PATH):
             raise Exception('Missing ' + FREALIGN)
-        args = """%(frealign)s  << eot
+        args = """%(frealign)s  << eot > %(logFile)s
 M,%(mode)s,%(doMagRefinement)s,%(doDefocusRef)s,%(doAstigRef)s,%(doDefocusPartRef)s,%(metEwaldSphere)s,%(doExtraRealSpaceSym)s,%(doWienerFilter)s,%(doBfactor)s,%(writeMatchProj)s,%(metFsc)s,%(doAditionalStatisFSC)s,%(memory)s,%(interpolation)s
 %(outerRadius)s,%(innerRadius)s,%(sampling3DR)s,%(molMass)s,%(ampContrast)s,%(ThresholdMask)s,%(pseudoBFactor)s,%(avePhaseResidual)s,%(angStepSize)s,%(numberRandomSearch)s,%(numberPotentialMatches)s
 %(paramRefine)s
@@ -1025,11 +1031,11 @@ eot
         """ This method split the parameter files that has been previosuly merged """
         
         prevIter = iter -1
-        file1 = self._getFileName('input_par', iter=prevIter)
+        file1 = self._getFileName('output_par', iter=prevIter)
         if numberOfBlocks != 1:
             for block in range(1, numberOfBlocks + 1):
                 f1 = open(file1)
-                file2 = self._getFileName('output_par_block', block= block, iter=prevIter)
+                file2 = self._getFileName('input_par_block', block= block, iter=iter, prevIter=prevIter)
                 f2 = open(file2, 'w+')
                 initpart, finalPart = self._particlesInBlock(block, numberOfBlocks)
                 
@@ -1048,7 +1054,7 @@ eot
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('output_par_block', block=1, iter=prevIter)
+            file2 = self._getFileName('input_par_block', block= block, iter=iter, prevIter=prevIter)
             copyFile(file1, file2)
     
     def _setLastIter(self, iter):

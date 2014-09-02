@@ -25,23 +25,12 @@
 # **************************************************************************
 
 import os
-import xmipp
 import json
-from pyworkflow.protocol.params import RelationParam, Group, Line
-from pyworkflow.viewer import WEB_DJANGO
-from pyworkflow.em import *
-from views_base import * 
-from views_util import * 
-from pyworkflow.manager import Manager
-from pyworkflow.project import Project
-from django.core.context_processors import csrf
-from django.shortcuts import render_to_response
+from views_util import loadProject, loadProtocolProject, parseText
 from django.http import HttpResponse
-
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
-
 
 def getPointerHtml(protVar):
     if protVar.hasValue():
@@ -51,6 +40,8 @@ def getPointerHtml(protVar):
         
 def findWizardsWeb(protocol):   
     import em_wizard
+    from pyworkflow.viewer import WEB_DJANGO
+    from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
     
     webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
     
@@ -58,6 +49,12 @@ def findWizardsWeb(protocol):
 
      
 def form(request):
+    from django.shortcuts import render_to_response
+    from views_base import base_form
+    from django.core.context_processors import csrf
+    from views_util import getResourceCss, getResourceIcon, getResourceJs, getResourceLogo
+    from pyworkflow.protocol.params import Group, Line
+    
     project, protocol = loadProtocolProject(request, requestType='GET')
     action = request.GET.get('action', None)
     paramProt = request.GET.get('paramProt', None)
@@ -173,6 +170,8 @@ def form(request):
     return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
+    from pyworkflow.em import Boolean, PointerParam
+    from pyworkflow.protocol.params import MultiPointerParam, RelationParam
     
     if isinstance(param, MultiPointerParam):
         htmlValueList = []
@@ -277,6 +276,8 @@ def getPointerValue(project, attr, value, paramName):
     return obj
  
 def updateParam(request, project, protocol, paramName):
+    from pyworkflow.em import Pointer, PointerList
+    
     """
     Params:
         request: current request handler

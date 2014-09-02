@@ -47,9 +47,9 @@ reconstructions.
     def __init__(self, **args):
         ProtFrealignBase.__init__(self, **args)
     
-    def createOutputStep(self, lastIter):
-        lastIterDir = self._iterWorkingDir(lastIter)
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
+    def createOutputStep(self):
+        lastIterDir = self._iterWorkingDir(self.lastIter-1)
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % (self.lastIter-1))
         vol = Volume()
         vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
         vol.setFileName(volFn)

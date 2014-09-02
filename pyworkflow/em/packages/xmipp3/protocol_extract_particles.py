@@ -347,16 +347,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             imgSet.setIsPhaseFlipped(True)
         
         #imgSet.setHasCTF(self.fnCTF is not None)
-        imgSet.setHasCTF(self.ctfRelations.hasValue())
         if self.downsampleType == OTHER:
             imgSet.setSamplingRate(self.inputMics.getSamplingRate()*self.downFactor.get())
         imgSet.setCoordinates(self.inputCoords)
         
-        imgSetAux = self._createSetOfParticles('aux')
-        imgSetAux.copyInfo(imgSet)
-        readSetOfParticles(fnImages, imgSetAux, imgSet.hasCTF())
+        readSetOfParticles(fnImages, imgSet)
+        imgSet.setHasCTF(self.ctfRelations.hasValue())
         # For each particle retrieve micId from SetOFCoordinates and set it on the CTFModel
-        for img in imgSetAux:
+        for img in imgSet:
             #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
             coord = self.inputCoords[img.getObjId()]
             ctfModel = img.getCTF()
@@ -364,8 +362,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 ctfModel.setObjId(coord.getMicId())
                 ##img.setCTF(ctfModel)####JM
             img.setCoordinate(coord)
-            img.cleanObjId()
-            imgSet.append(img)
+            imgSet.update(img)
+            
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoords, imgSet)

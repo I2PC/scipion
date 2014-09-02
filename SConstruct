@@ -126,15 +126,18 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     targets = targets or ['lib/lib%s.so' % name]
 
-    # Add "software/lib" to the beginning of LD_LIBRARY_PATH.
-    for i in range(len(flags)):
-        if flags[i].startswith('LD_LIBRARY_PATH='):
-            flags[i] = 'LD_LIBRARY_PATH=%s:%s' % (abspath('software/lib'),
-                                                  flags[i].split('=', 1)[1])
-            break
-    else:  # we did not find any flag starting with 'LD_LIBRARY_PATH='
-        flags.insert(0, 'LD_LIBRARY_PATH=%s' % abspath('software/lib'))
+    # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
+    def pathAppend(var, value):
+        valueOld = os.environ.get(var, '')
+        for i in range(len(flags)):
+            if flags[i].startswith('%s=' % var):
+                valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
+                break
+        flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
+    pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
+    pathAppend('PATH', abspath('software/bin'))
 
+    # Install everything in the appropriate place.
     flags += ['--prefix=%s' % abspath('software'),
               '--libdir=%s' % abspath('software/lib')]  # not lib64
 
@@ -221,8 +224,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         ['software/lib/python2.7/site-packages/%s' % t for t in targets],
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
+               'PATH="%(root)s/bin:%(PATH)s" '
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
+                                                   'PATH': os.environ['PATH'],
                                                    'flags': ' '.join(flags),
                                                    'name': name},
                'Compiling & installing %s > software/log/%s.log' % (name, name),

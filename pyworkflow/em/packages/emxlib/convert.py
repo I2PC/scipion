@@ -69,10 +69,10 @@ def importData(protocol, emxFile, outputDir, acquisition,
     """
     emxData = emxlib.EmxData()
     emxData.read(emxFile)
-    
+
     _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
                         samplingRate, doCopyFiles)
-    _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
+    _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition,
                       samplingRate, doCopyFiles)
 
 
@@ -300,53 +300,52 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
     be registered as output of the protocol.
     """
     emxMic = emxData.getFirstObject(emxlib.MICROGRAPH)
-    
-    if emxMic is not None:        
+    if emxMic is not None:
         micSet = protocol._createSetOfMicrographs()
         mic = Micrograph()
         mic.setAcquisition(acquisition)
-        
+
         if _hasCtfLabels(emxMic):
             mic.setCTF(CTFModel())
             ctfSet = protocol._createSetOfCTF()
         else:
             ctfSet = None
-            
+
         _micrographFromEmx(emxMic, mic)
-        acq = mic.getAcquisition().clone()        
+        acq = mic.getAcquisition().clone()
         micSet.setAcquisition(acq)
         if not samplingRate:
             samplingRate = mic.getSamplingRate()
         micSet.setSamplingRate(samplingRate)
         micDir = dirname(emxFile)
-        
-        for emxMic in emxData.iterClasses(emxlib.MICROGRAPH):
-            _micrographFromEmx(emxMic, mic)
-            _, fn = mic.getLocation()
-            micFn = join(micDir, fn)
-            if doCopyFiles and exists(micFn):
-                micBase = basename(micFn)
-                newFn = join(outputDir, micBase)
-                copyFile(micFn, newFn)
-                mic.setLocation(newFn)                
-            else:
-                mic.setLocation(micFn)
-            micSet.append(mic)
-            emxMic._micId = mic.getObjId()
-            mic.cleanObjId()
-            if ctfSet is not None:
-                ctf = mic.getCTF().clone()
-                ctf.setMicFile(newFn) 
-                ctfSet.append(ctf)
-            
-        micSet.printAll()
-            
-        protocol._defineOutputs(outputMicrographs=micSet)
-        if ctfSet is not None:
-            protocol._defineOutputs(outputCTF=ctfSet)
-            protocol._defineCtfRelation(micSet, ctfSet)
 
-  
+    for emxMic in emxData.iterClasses(emxlib.MICROGRAPH):
+        _micrographFromEmx(emxMic, mic)
+        _, fn = mic.getLocation()
+        micFn = join(micDir, fn)
+        if doCopyFiles and exists(micFn):
+            micBase = basename(micFn)
+            newFn = join(outputDir, micBase)
+            copyFile(micFn, newFn)
+            mic.setLocation(newFn)
+        else:
+            mic.setLocation(micFn)
+        micSet.append(mic)
+        emxMic._micId = mic.getObjId()
+        mic.cleanObjId()
+        if ctfSet is not None:
+            ctf = mic.getCTF().clone()
+            #TODO I do not think next line is needed
+            #ctf.setMicFile(newFn)
+            ctfSet.append(ctf)
+
+
+    protocol._defineOutputs(outputMicrographs=micSet)
+    if ctfSet is not None:
+        protocol._defineOutputs(outputCTF=ctfSet)
+        protocol._defineCtfRelation(micSet, ctfSet)
+
+
 def _particlesFromEmx(protocol
                       , emxData
                       , emxFile
