@@ -32,7 +32,10 @@ def loadProtTree(project):
     protCfg = project.getSettings().getCurrentProtocolMenu()
     root = TreeItem('root', 'root', '', '')
     populateProtTree(root, protCfg)
-    return root
+#    return root
+    
+    html = convertProtTree(root)
+    return html
 
 class TreeItem():
     def __init__(self, name, tag, icon, openItem, protClassName=None, protClass=None):
@@ -72,6 +75,55 @@ def populateProtTree(tree, obj):
             item.protClass = protClassName
             populateProtTree(item, sub)
 
+
+def convertProtTree(tree):
+    sections = tree.childs
+    html = ''
+    for section in sections:
+        if section.tag == 'section':
+            html += '<li><span class="section">'+ section.name +'</span><ul>'        
+            html += convertProtTree(section)
+            html += '</ul></li>'
+        else:
+            html += getProtChildrens(section)
+    return html
+        
+        
+def getProtChildrens(tree):
+    html = ''
+        
+    if tree.tag == 'protocol':
+        html += '<li><span class="protocol">'
+        if tree.icon != None:
+            html += '<img src="/resources/'+ tree.icon +'"/>'
+        function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
+        html += '<a href=' + function + '>'+ tree.name +'</a>'
+        html += '</span></li>'
+    
+    elif tree.tag == 'protocol_class':
+        html += '<li><span class="protocol_class">'
+        if tree.icon != None:
+            html += '<img src="/resources/'+ tree.icon +'"/>'
+        function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
+        html += '<a href=' + function + '>'+ tree.name +'</a>'
+        html += '</span></li>'
+    
+    elif tree.tag == 'protocol_base':
+        openItem = ""
+        if tree.openItem != True:
+            openItem = "closed"
+        html += '<li class="'+ openItem +'"><span class="protocol_base">'
+        if tree.icon != None:
+            html += '<img src="/resources/' + tree.icon +'"/>'
+        html += tree.name + '</span>'
+    
+        html += '<ul>'
+        childrens = tree.childs
+        for child in childrens:
+            html += getProtChildrens(child)
+        html += '</ul>'
+    
+    return html
 
 #===============================================================================
 # OBJECT TREE

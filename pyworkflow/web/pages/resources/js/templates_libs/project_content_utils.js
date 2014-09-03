@@ -950,7 +950,10 @@ function changeTreeView(){
 		dataType:"text",
 		success : function() {
 			$.ajax({
+				type : "GET",
 				url: '/tree_prot_view/',
+				dataType: "html",
+				async: false,
 				success: function(data) {
 					$('div.protFieldsetTree').html(data);
 				}
