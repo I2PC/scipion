@@ -137,9 +137,9 @@ class ProtXmippMicsImport(ProtImport):
 #                         ctfparam = md.getValue(xmipp.MDL_CTF_MODEL, objId)
 #                         ctfModel = readCTFModel(ctfparam, mic)
                         ctfModel = CTFModel()
-                        defU = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
-                        defV = md.getValue(xmipp.MDL_CTF_DEFOCUSV, objId)
-                        angle = md.getValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, objId)
+                        defU = float(md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId))
+                        defV = float(md.getValue(xmipp.MDL_CTF_DEFOCUSV, objId))
+                        angle = float(md.getValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, objId))
                         ctfModel.setStandardDefocus(defU, defV, angle)
                         ctfModel._psdFile = String(md.getValue(xmipp.MDL_PSD, objId))
                         break
