@@ -34,7 +34,7 @@ from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
 from convert import xmippToLocation
-
+from pyworkflow.em.data import CTFModel
 
 
 class ProtXmippMicsImport(ProtImport):
@@ -133,19 +133,19 @@ class ProtXmippMicsImport(ProtImport):
                     _, xmippfileName = xmippToLocation(md.getValue(xmipp.MDL_MICROGRAPH, objId))
                     
                     if mic.getFileName() == xmippfileName:
-                        ctfparam = md.getValue(xmipp.MDL_CTF_MODEL, objId)
-                        ctfModel = readCTFModel(ctfparam, mic)
-                        
+                        # ToDo: search why readCTFModel doesnt work
+#                         ctfparam = md.getValue(xmipp.MDL_CTF_MODEL, objId)
+#                         ctfModel = readCTFModel(ctfparam, mic)
+                        ctfModel = CTFModel()
+                        defU = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+                        defV = md.getValue(xmipp.MDL_CTF_DEFOCUSV, objId)
+                        angle = md.getValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, objId)
+                        ctfModel.setStandardDefocus(defU, defV, angle)
                         ctfModel._psdFile = String(md.getValue(xmipp.MDL_PSD, objId))
-                        ctfModel._xmipp_enhanced_psd = String(md.getValue(xmipp.MDL_PSD_ENHANCED, objId))
-                        ctfModel._xmipp_ctfmodel_quadrant = String(md.getValue(xmipp.MDL_IMAGE1, objId))
-                        ctfModel._xmipp_ctfmodel_halfplane = String(md.getValue(xmipp.MDL_IMAGE2, objId))
-                        
                         break
                 ctfSet.append(ctfModel)
             self._defineOutputs(outputCTF=ctfSet)
             self._defineCtfRelation(micSet, ctfSet)
-
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
