@@ -39,11 +39,9 @@ from utils import greenStr, envVarOn
 # The job should be launched from the working directory!
 def runJob(log, programname, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, hostConfig=None, env=None, cwd=None):
+           hostConfig=None, env=None, cwd=None):
 
-    command = buildRunCommand(log, programname, params,
-                              numberOfMpi, numberOfThreads, runInBackground,
-                              hostConfig)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig)
     
     if log is None:
         print "** Running command: %s" % greenStr(command)
@@ -63,11 +61,10 @@ def runCommand(command, env=None, cwd=None):
         # This is like "ulimit -u 99999999", so we can create core dumps
 
     check_call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
+    # It would be nice to avoid shell=True and calling buildRunCommand()...
 
     
-def buildRunCommand(log, programname, params,
-                    numberOfMpi, numberOfThreads, runInBackground,
-                    hostConfig=None):
+def buildRunCommand(programname, params, numberOfMpi, hostConfig=None):
     """ Return a string with the command line to run """
 
     # Convert our list of params to a string, with each element escaped
@@ -76,22 +73,17 @@ def buildRunCommand(log, programname, params,
         params = ' '.join('"%s"' % p for p in params)
 
     if numberOfMpi <= 1:
-        command = programname + ' ' + params
+        return '%s %s' % (programname, params)
     else:
+        assert hostConfig is not None, 'hostConfig needed to launch MPI processes.'
+
         if programname.startswith('xmipp'):
             programname = programname.replace('xmipp', 'xmipp_mpi')
-        paramsDict = {'JOB_NODES': numberOfMpi,
-                      'COMMAND': "`which %s` %s" % (programname, params)
-                      }
-        if hostConfig is None:
-            raise Exception('buildRunCommand: hostConfig is needed to launch MPI processes.')
-            #hostConfig = loadHostConfig()
-        command = hostConfig.mpiCommand.get() % paramsDict
 
-    if runInBackground:
-        command += " &"
-
-    return command
+        return hostConfig.mpiCommand.get() % {
+            'JOB_NODES': numberOfMpi,
+            'COMMAND': "`which %s` %s" % (programname, params),
+        }
 
 
 def loadHostConfig(host='localhost'):

@@ -111,7 +111,7 @@ def _launchLocal(protocol, wait):
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     #bg = not wait and not useQueue
-    #command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
+    #command = process.buildRunCommand(script, params, mpi, hostConfig)
     # Check if need to submit to queue    
     if useQueue:        
         submitDict = protocol.getSubmitDict()
