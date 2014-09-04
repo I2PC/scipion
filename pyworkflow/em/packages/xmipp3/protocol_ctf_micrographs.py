@@ -96,6 +96,43 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             ctfparam = self._getFileName('ctfparam', micDir=micDir)
             
             if not os.path.exists(ctfparam):
+                ctfparam = self._createErrorCtfParam(micDir)
+                
+            ctfModel = readCTFModel(ctfparam, mic)
+            self._setPsdFiles(ctfModel, micDir)
+            ctfSet.append(ctfModel)
+            
+            # save the values of defocus for each micrograph in a list
+            defocusList.append(ctfModel.getDefocusU())
+            defocusList.append(ctfModel.getDefocusV())
+                
+        self._defineOutputs(outputCTF=ctfSet)
+        self._defineCtfRelation(self.inputMics, ctfSet)
+        self._defocusMaxMin(defocusList)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _prepareCommand(self):
+        self._createFilenameTemplates()
+        self._program = 'xmipp_ctf_estimate_from_micrograph'       
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
+        
+        # Mapping between base protocol parameters and the package specific command options
+        self.__params = {'kV': self._params['voltage'],
+                'Cs': self._params['sphericalAberration'],
+                'sampling_rate': self._params['samplingRate'], 
+                'ctfmodelSize': self._params['windowSize'],
+                'Q0': self._params['ampContrast'],
+                'min_freq': self._params['lowRes'],
+                'max_freq': self._params['highRes'],
+                'pieceDim': self._params['windowSize'],
+                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2,
+                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2
+                }
+        
+        for par, val in self.__params.iteritems():
+            self._args += " --%s %s" % (par, str(val))
+    
+    def _createErrorCtfParam(self, micDir):
                 ctfparam = join(micDir, 'xmipp_error_ctf.ctfparam')
                 f = open(ctfparam, 'w+')
                 lines = """# XMIPP_STAR_1 * 
@@ -145,40 +182,7 @@ data_fullMicrograph
 """
                 f.write(lines)
                 f.close()
-                
-            ctfModel = readCTFModel(ctfparam, mic)
-            self._setPsdFiles(ctfModel, micDir)
-            ctfSet.append(ctfModel)
-            
-            # save the values of defocus for each micrograph in a list
-            defocusList.append(ctfModel.getDefocusU())
-            defocusList.append(ctfModel.getDefocusV())
-                
-        self._defineOutputs(outputCTF=ctfSet)
-        self._defineCtfRelation(self.inputMics, ctfSet)
-        self._defocusMaxMin(defocusList)
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self):
-        self._createFilenameTemplates()
-        self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --fastDefocus"
-        
-        # Mapping between base protocol parameters and the package specific command options
-        self.__params = {'kV': self._params['voltage'],
-                'Cs': self._params['sphericalAberration'],
-                'sampling_rate': self._params['samplingRate'], 
-                'ctfmodelSize': self._params['windowSize'],
-                'Q0': self._params['ampContrast'],
-                'min_freq': self._params['lowRes'],
-                'max_freq': self._params['highRes'],
-                'pieceDim': self._params['windowSize'],
-                'defocusU': (self._params['maxDefocus']+self._params['minDefocus'])/2,
-                'defocus_range': (self._params['maxDefocus']-self._params['minDefocus'])/2
-                }
-        
-        for par, val in self.__params.iteritems():
-            self._args += " --%s %s" % (par, str(val))
+                return ctfparam
 
 
 class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):

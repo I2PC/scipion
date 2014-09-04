@@ -626,7 +626,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
     acqFile = join(dirname(filename), 'acquisition_info.xmd')
     if exists(acqFile):
         md = RowMetaData(acqFile)
-        samplingRate = md.getValue(xmipp.MDL_SAMPLING_RATE)
+        samplingRate = md.getValue(xmipp.MDL_SAMPLINGRATE)
         imgSet.setSamplingRate(samplingRate)
     else:
         pass # TODO: what to do if not exists
