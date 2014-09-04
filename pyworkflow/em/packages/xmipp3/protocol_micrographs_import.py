@@ -29,7 +29,7 @@ This module contains the protocol to import micrographs from xmipp projects.
 
 import os
 import xmipp
-from pyworkflow.protocol.params import FileParam, IntParam, FloatParam, String
+from pyworkflow.protocol.params import FileParam, IntParam, FloatParam, String, Float
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import copyFile
@@ -134,12 +134,14 @@ class ProtXmippMicsImport(ProtImport):
                     
                     if mic.getFileName() == xmippfileName:
                         # ToDo: search why readCTFModel doesnt work
-#                         ctfparam = md.getValue(xmipp.MDL_CTF_MODEL, objId)
-#                         ctfModel = readCTFModel(ctfparam, mic)
                         ctfModel = CTFModel()
-                        defU = float(md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId))
-                        defV = float(md.getValue(xmipp.MDL_CTF_DEFOCUSV, objId))
-                        angle = float(md.getValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, objId))
+                        ctfparam = md.getValue(xmipp.MDL_CTF_MODEL, objId)
+#                         ctfModel = readCTFModel(ctfparam, mic)
+                        ctfMd = xmipp.MetaData(ctfparam)
+                        
+                        defU = ctfMd.getValue(xmipp.MDL_CTF_DEFOCUSU, 1)
+                        defV = ctfMd.getValue(xmipp.MDL_CTF_DEFOCUSV, 1)
+                        angle = ctfMd.getValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 1)
                         ctfModel.setStandardDefocus(defU, defV, angle)
                         ctfModel._psdFile = String(md.getValue(xmipp.MDL_PSD, objId))
                         break
