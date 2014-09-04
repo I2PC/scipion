@@ -31,7 +31,7 @@ This module handles process execution
 import sys
 import os.path
 import resource
-from subprocess import call
+from subprocess import check_call
 
 from utils import greenStr, envVarOn
 
@@ -62,15 +62,8 @@ def runCommand(command, env=None, cwd=None):
                            (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
         # This is like "ulimit -u 99999999", so we can create core dumps
 
-    try:
-        retcode = call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
-        if retcode != 0:
-            raise Exception("Process returned with code %d, command: %s" % (retcode,command))
-    except OSError, e:
-        raise Exception("Execution failed %s, command: %s" % (e, command))
+    check_call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
 
-    return retcode
-    
     
 def buildRunCommand(log, programname, params,
                     numberOfMpi, numberOfThreads, runInBackground,

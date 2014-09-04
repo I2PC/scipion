@@ -271,7 +271,7 @@ class XmippViewer(Viewer):
             app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
-            runJavaIJapp("%dg"%(2), app, args, True)
+            runJavaIJapp("2g", app, args)
          
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
@@ -304,19 +304,19 @@ class XmippViewer(Viewer):
                 self._visualize(obj.getCoords())
             
         elif issubclass(cls, XmippParticlePickingAutomatic):
-        	micSet = obj.getInputMicrographs()
-        	mdFn = getattr(micSet, '_xmippMd', None)
-        	if mdFn:
-        		micsfn = mdFn.get()
-        	else:  # happens if protocol is not an xmipp one
-        		micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
+            micSet = obj.getInputMicrographs()
+            mdFn = getattr(micSet, '_xmippMd', None)
+            if mdFn:
+                micsfn = mdFn.get()
+            else:  # happens if protocol is not an xmipp one
+                micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, micsfn)
                 
-           	posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
-           	scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
-        	app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
-        	args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
-        	runJavaIJapp("%dg" % (2), app, args, True)
+            posDir = getattr(obj.getCoords(), '_xmippMd').get()  # extra dir istead of md file for SetOfCoordinates
+            scipion = "%s %s \"%s\" %s" % (pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getProject().getDbPath(), obj.strId())
+            app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"# Launch the particle picking GUI
+            args = "--input %(micsfn)s --output %(posDir)s --mode review  --scipion %(scipion)s" % locals()
+            runJavaIJapp("2g", app, args)
             # self._views.append(CoordinatesObjectView(fn, tmpDir, 'review', self._project.getName(), obj.strId()))
 
         elif issubclass(cls, XmippProtParticlePickingPairs):
@@ -332,7 +332,7 @@ class XmippViewer(Viewer):
             app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
-            runJavaIJapp("%dg"%(obj.memory.get()), app, args, True)
+            runJavaIJapp("%dg" % obj.memory.get(), app, args)
             
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)

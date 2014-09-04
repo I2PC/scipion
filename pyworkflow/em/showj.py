@@ -33,8 +33,8 @@ became xmipp_showj.
 import os
 from os.path import join
 from collections import OrderedDict
+import subprocess
 
-from pyworkflow.utils import runJob
 from pyworkflow.dataset import COL_RENDER_ID, COL_RENDER_TEXT, COL_RENDER_IMAGE, COL_RENDER_VOLUME
 
 
@@ -232,12 +232,10 @@ def getJavaIJappArguments(memory, appName, appArgs):
     args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
-    
-def runJavaIJapp(memory, appName, args, batchMode=True, env={}):
+
+def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
     
     args = getJavaIJappArguments(memory, appName, args)
-    runJob(None, "java", args, runInBackground=batchMode, env=env)
-    
-
+    subprocess.Popen('java ' + args, shell=True, env=env)

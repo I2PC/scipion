@@ -115,7 +115,7 @@ class ThreadStepExecutor(StepExecutor):
         self.numberOfThreads = nThreads
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
-        """ Create threads and syncronize the steps execution. 
+        """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
         self.stepStartedCallback = stepStartedCallback
@@ -136,7 +136,7 @@ class ThreadStepExecutor(StepExecutor):
             th = StepThread(i, self.condition)
             self.thList.append(th)
             th.start()
-            
+
         self.condition.acquire()
         
         while self.stepsLeft:
@@ -173,8 +173,9 @@ class ThreadStepExecutor(StepExecutor):
                     self.stepFinishedCallback(th.step)
                     if th.step.isFailed():
                         self.stepsLeft = 0
-                        import sys
-                        sys.exit(1)
+                        self.finishThread(th)
+                        import os
+                        os._exit(1)
                         #raise Exception("Step failed!!!")
                     else:
                         self.stepsLeft -= 1
