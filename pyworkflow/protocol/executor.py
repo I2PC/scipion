@@ -173,8 +173,9 @@ class ThreadStepExecutor(StepExecutor):
                     self.stepFinishedCallback(th.step)
                     if th.step.isFailed():
                         self.stepsLeft = 0
-                        import sys
-                        sys.exit(1)
+                        self.finishThread(th)
+                        import os
+                        os._exit(1)
                         #raise Exception("Step failed!!!")
                     else:
                         self.stepsLeft -= 1
