@@ -195,7 +195,7 @@ class FunctionStep(Step):
     def _runFunc(self):
         """ Return the possible result files after running the function. """
         return self._func(*self._args)
-    
+
     def _run(self):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
