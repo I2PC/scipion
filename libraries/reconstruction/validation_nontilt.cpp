@@ -77,8 +77,8 @@ void ProgValidationNonTilt::defineParams()
 void ProgValidationNonTilt::run()
 {
 	char buffer[400];
-	//sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
-	//system(buffer);
+	sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
+	system(buffer);
 
 	MetaData md,tempMd,mdOut,tempMd2;
 	FileName fnMd,fnOut,fnFSC;
