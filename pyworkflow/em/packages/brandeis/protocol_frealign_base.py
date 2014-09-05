@@ -690,17 +690,24 @@ class ProtFrealignBase(EMProtocol):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        imgSet = self.inputParticles.get()
+        if self.doContinue:
+            continueRun = self.continueRun.get()
+            imgSet = continueRun.inputParticles.get()
+        else:
+            imgSet = self.inputParticles.get()
         
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
-        partSizeX, _, _ = self.inputParticles.get().getDim()
-        volSizeX, _, _ = self.input3DReference.get().getDim()
+        
+        partSizeX, _, _ = imgSet.getDim()
+        if not self.doContinue:
+            volSizeX, _, _ = self.input3DReference.get().getDim()
+            if partSizeX != volSizeX:
+                errors.append('Volume and particles dimensions must be equal!!!')
+        
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if partSizeX != volSizeX:
-            errors.append('Volume and particles dimensions must be equal!!!')
         if not imgSet.hasAlignment() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
