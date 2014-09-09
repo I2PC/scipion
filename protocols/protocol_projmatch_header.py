@@ -51,7 +51,7 @@ NumberOfIterations = 4
 Save disk space by cleaning up intermediate files
 mainly volumes
 """
-CleanUpFiles = True
+CleanUpFiles = False
 
 #-----------------------------------------------------------------------------
 # {section}{has_question} CTF correction
