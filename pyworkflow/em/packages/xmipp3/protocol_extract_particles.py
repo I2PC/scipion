@@ -368,6 +368,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
                 ##img.setCTF(ctfModel)####JM
+            img.setMicId(coord.getMicId())
             img.setCoordinate(coord)
             imgSet.append(img)
             
