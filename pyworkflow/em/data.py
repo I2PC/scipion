@@ -363,6 +363,7 @@ class Image(EMObject):
         self._ctfModel = newCTF
         
     def hasAcquisition(self):
+        # This doesn't work
         return self._acquisition is not None
         #FIXME: check this later, very very IMPORTANT!!!
         #return (self._acquisition is not None and 

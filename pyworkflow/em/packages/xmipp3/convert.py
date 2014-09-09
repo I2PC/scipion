@@ -344,7 +344,7 @@ def rowToMicrograph(micRow, **kwargs):
 
 def volumeToRow(vol, volRow, **kwargs):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE, **kwargs)
+    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE, writeAcquisition=False, **kwargs)
 
 
 def rowToVolume(volRow, **kwargs):
