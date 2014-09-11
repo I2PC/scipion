@@ -176,9 +176,9 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='xmipp_scipion.tgz',
-               extraActions=[('xmipp.bashrc',
-                             './install.sh --unattended=true --gui=false -j %s'
-                              % GetOption('num_jobs'))],
+#               extraActions=[('xmipp.bashrc',
+#                             './install.sh --unattended=true --gui=false -j %s'
+#                              % GetOption('num_jobs'))],
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',

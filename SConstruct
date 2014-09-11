@@ -72,6 +72,9 @@ elif MACOSX:
 elif WINDOWS:
     print "OS not tested yet"
 
+# Python and SCons versions are fixed
+env.EnsurePythonVersion(2,7)
+env.EnsureSConsVersion(2,3,2)
 
 #  ************************************************************************
 #  *                                                                      *
@@ -268,6 +271,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    confPath = 'software/cfg/%s.cfg' % name
 
     # Minimum requirements must be accomplished. To check them, we use
     # the req list, iterating with SConf CheckLib on it
@@ -300,15 +304,18 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     if not (default or packageHome):
         return ''
 
-    # If we do have a local installation, link to it and exit.
+    # If we have received a home for the package
     if packageHome != 'unset':  # default value when calling only --with-package
-        # Just link to it and do nothing more.
+        # If it's a completed local installation. Just link to it and do nothing more.
         return env.Command(
             'software/em/%s/bin' % name,
             Dir(packageHome),
             Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
+
+    # If we haven't received a home for the package, we set it automatically to em folder
+    packageHome = 'software/em/%s' % name
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -330,11 +337,35 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
-    for target, command in extraActions:
-        lastTarget = env.Command('software/em/%s/%s' % (name, target),
-                                 lastTarget,
-                                 Action(command, chdir='software/em/%s' % name))
-        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+    
+    # Load Package vars
+    # First we search this in cfg folder and otherwise in package home
+    if not os.path.exists(confPath):
+        confPath = join(packageHome, '%s.cfg' % name)
+    if not os.path.exists(confPath):
+        confPath = 'unset'
+    opts = Variables(confPath)
+    opts.Add('PACKAGE_SCRIPT')
+    opts.Update(env)
+#    print opts.keys()
+    scriptPath = env.get('PACKAGE_SCRIPT')
+    altScriptPath = join(packageHome, 'SConscript')
+    print altScriptPath
+    if scriptPath and os.path.exists(scriptPath):
+        print "Reading config file at %s" % scriptPath
+        Export('env')
+        env.SConscript(scriptPath)
+    elif os.path.exists(altScriptPath):
+        print "Config file not present. Trying SConscript in package home"
+        Export('env')
+        env.SConscript(altScriptPath)
+    else:
+        # If we can't find the SConscript, then only extra actions can be done
+        for target, command in extraActions:
+            lastTarget = env.Command('software/em/%s/%s' % (name, target),
+                                     lastTarget,
+                                     Action(command, chdir='software/em/%s' % name))
+            SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
 
     # Clean the special generated files
     for cFile in clean:
@@ -452,5 +483,4 @@ AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
 
 
 Export('env')
-
 env.SConscript('SConscript')
