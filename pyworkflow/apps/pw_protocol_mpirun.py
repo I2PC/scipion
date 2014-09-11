@@ -34,12 +34,14 @@ from mpi4py import MPI
 from pyworkflow.protocol import runProtocolMainMPI
 from pyworkflow.utils.mpi import runJobMPISlave
 
+# Add callback for remote debugging if available.
 try:
     from rpdb2 import start_embedded_debugger
     from signal import signal, SIGUSR2
     signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
 except ImportError:
     pass
+
 
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
