@@ -87,7 +87,12 @@ class ProtCTFMicrographs(ProtMicrographs):
                            'estimations are noisier.')
         
         form.addParallelSection(threads=2, mpi=1)       
-    
+
+    def _defineProcessParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass
+        
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
@@ -98,7 +103,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
         for micFn, micDir, _ in self._iterMicrographs():
-            # CTF estimation with Xmipp
+            # CTF estimation
             stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
                                               prerequisites=[]) # Make estimation steps indepent between them
             deps.append(stepId)
