@@ -28,7 +28,6 @@
 
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
-import xmipp
 from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.em.constants import *
 from constants import *
@@ -110,16 +109,41 @@ class XmippProtResize():
                       help='This is the size in pixels of the particle images.')
                 
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
+    def _insertProcessStep(self):
+        isFirstStep = True
+        
         if self.doResize:
-            self._insertFunctionStep("resizeStep", outputFn) # The input is outputFn that is a stack of images
+            isFirstStep = False
+            args = self._resizeArgs()
+            self._insertFunctionStep("resizeStep", args)
+            
         if self.doWindow:
-            self._insertFunctionStep("windowStep", outputFn) # The input is outputFn that is a stack of images
+            args = self._windowArgs(isFirstStep)
+            self._insertFunctionStep("windowStep", args)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def resizeStep(self, inputFn):
-        samplingRate = self._getSetSampling()
+    def resizeStep(self, args):
+        self.runJob(self._programResize, args)
+    
+    def windowStep(self, args):
+        self.runJob(self._programWindow, args)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        errors = []
         
+        if self.doResize and self.resizeOption.get() == RESIZE_SAMPLINGRATE and self.doFourier:
+#             imgSet = self.inputParticles.get()
+            size = self._getSetSize()
+            if self.resizeDim.get() > size:
+                errors.append('Fourier resize method cannot be used to increase the dimensions')
+                
+        return errors
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _resizeCommonArgs(self):
+        samplingRate = self._getSetSampling()
+        inputFn = self.inputFn
         if self.resizeOption == RESIZE_SAMPLINGRATE:
             newSamplingRate = self.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
@@ -147,35 +171,22 @@ class XmippProtResize():
             self.samplingRate = samplingRate / factor
             args = self._args + " --pyramid %(level)d"
             
-        self.runJob(self._programResize, args % locals())
+        return args % locals()
     
-    def windowStep(self, inputFn):
+    def _windowCommonArgs(self):
         dim = self._getSetSize()
-        
         if self.getEnumText('windowOperation') == "crop":
             cropSize = self.cropSize.get() * 2
             windowSize = dim - cropSize
-            args = self._args + " --crop %(cropSize)s "
+            args = " --crop %(cropSize)s "
         else:
             windowSize = self.windowSize.get()
-            args = self._args + " --size %(windowSize)s"
+            args = " --size %(windowSize)s"
         
         self.newWindowSize = windowSize
-        self.runJob(self._programWindow, args % locals())
-    
-    #--------------------------- INFO functions ----------------------------------------------------
-    def _validate(self):
-        errors = []
         
-        if self.doResize and self.resizeOption.get() == RESIZE_SAMPLINGRATE and self.doFourier:
-#             imgSet = self.inputParticles.get()
-            size = self._getSetSize()
-            if self.resizeDim.get() > size:
-                errors.append('Fourier resize method cannot be used to increase the dimensions')
-                
-        return errors
+        return args % locals()
     
-    #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self, imgSet):
         """ get the size of an object"""
         if isinstance(imgSet, Volume):
@@ -207,25 +218,26 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self):
         """ convert if necessary"""
-        imgSet = self.inputParticles.get()
-        imgSet.writeStack(self.outputStk)
+        pass
+#         imgSet = self.inputParticles.get()
+#         imgSet.writeStack(self.outputStk)
     
-    def createOutputStep(self):
-        inImgSet = self.inputParticles.get()
-        outImgSet = self._createSetOfParticles()
-        outImgSet.copyInfo(inImgSet)
-        if self.doResize:
-            outImgSet.setSamplingRate(self.samplingRate)
-        
-        for i, img in enumerate(inImgSet):
-            j = i + 1
-            img.setLocation(j, self.outputStk)
-            if self.doResize:
-                img.setSamplingRate(self.samplingRate)
-            outImgSet.append(img)
-        
-        self._defineOutputs(outputParticles=outImgSet)
-        self._defineTransformRelation(inImgSet, self.outputParticles)
+#     def createOutputStep(self):
+#         inImgSet = self.inputParticles.get()
+#         outImgSet = self._createSetOfParticles()
+#         outImgSet.copyInfo(inImgSet)
+#         if self.doResize:
+#             outImgSet.setSamplingRate(self.samplingRate)
+#         
+#         for i, img in enumerate(inImgSet):
+#             j = i + 1
+#             img.setLocation(j, self.outputStk)
+#             if self.doResize:
+#                 img.setSamplingRate(self.samplingRate)
+#             outImgSet.append(img)
+#         
+#         self._defineOutputs(outputParticles=outImgSet)
+#         self._defineTransformRelation(inImgSet, self.outputParticles)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
@@ -246,6 +258,19 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
         return summary
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _resizeArgs(self):
+        args = self._resizeCommonArgs()
+        args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
+        return args
+    
+    def _windowArgs(self, isFirstStep):
+        if isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._windowCommonArgs()
+        return args
+    
     def _getSetSize(self):
         """ get the size of SetOfParticles object"""
         imgSet = self.inputParticles.get()
@@ -316,6 +341,25 @@ class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippPr
         return summary
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _resizeArgs(self):
+        args = self._resizeCommonArgs()
+        if self._isSingleInput():
+            args += " -o %s" % self.outputStk
+        else:
+            args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
+        return args
+    
+    def _windowArgs(self, isFirstStep):
+        if isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._windowCommonArgs()
+        return args
+    
     def _getSetSize(self):
         """ get the size of either Volume or SetOfVolumes objects"""
         imgSet = self.inputVolumes.get()
