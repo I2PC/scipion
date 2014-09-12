@@ -176,6 +176,11 @@ addModule(
     flags=['--old-and-unmanageable'],
     deps=[setuptools])
 
+addModule(
+    'winpdb',
+    tar='winpdb-1.4.8.tgz',
+    default=False)
+
 
 #  ************************************************************************
 #  *                                                                      *

@@ -100,11 +100,15 @@ def runJobMPISlave(mpiComm):
     while True:
         # Receive command in a non-blocking way
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        t0 = time()
         while True:
             done, command = req_recv.test()
             if done:
                 break
             sleep(1)
+            if time() - t0 > TIMEOUT:
+                print "Timeout, did not receive command from master."
+                return
 
         print "Slave %d received command." % rank
         if command == 'None':

@@ -368,13 +368,13 @@ def main():
         sys.exit(0)
 
     elif mode == 'runprotocol':
-        if n == 6:
-            # this could be pw_protocol_run.py or pw_protocol_mpirun.py
-            protocolApp = sys.argv[2] 
-            # This should be (projectPath, protocolDb and protocolId)
-            params = ['"%s"' % s for s in sys.argv[3:6]]
-            args = ' '.join(params)
-            runApp(protocolApp, args)
+        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
+        # this could be pw_protocol_run.py or pw_protocol_mpirun.py
+        protocolApp = sys.argv[2]
+        # This should be (projectPath, protocolDb and protocolId)
+        params = ['"%s"' % s for s in sys.argv[3:6]]
+        args = ' '.join(params)
+        runApp(protocolApp, args)
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
@@ -385,7 +385,7 @@ def main():
 
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
-        cmd = ' '.join('"%s"' % p for p in sys.argv[2:])
+        cmd = ' '.join(['"%s"' % p for p in sys.argv[2:]])
         runCmd(cmd)
 
     elif mode == MODE_HELP:

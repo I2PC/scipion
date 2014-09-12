@@ -133,7 +133,7 @@ class HostConfig(OrderedObject):
         self.password = String()
         self.hostPath = String()
         self.mpiCommand = String()
-        self.queueSystem = None
+        self.queueSystem = QueueSystemConfig()
     
     def getLabel(self):
         return self.label.get()
