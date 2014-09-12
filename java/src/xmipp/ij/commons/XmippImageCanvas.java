@@ -115,7 +115,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		if (!e.isShiftDown())
 			return;
-                System.out.println("mouse wheel moved");
+        //System.out.println("mouse wheel moved");  // sorry Airen :)
 		int x = e.getX();
 		int y = e.getY();
 
