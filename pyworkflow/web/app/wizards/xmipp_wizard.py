@@ -81,7 +81,7 @@ class XmippCTFWeb(XmippCTFWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_ctf.html', context)
+            return render_to_response('wizards/wiz_ctf_downsampling.html', context)
         
 #===============================================================================
 # MASKS

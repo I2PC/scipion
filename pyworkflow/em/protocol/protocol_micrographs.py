@@ -58,6 +58,8 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
+        
+        self._defineProcessParams(form)
 
         line = form.addLine('Resolution', 
                             help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
@@ -71,8 +73,8 @@ class ProtCTFMicrographs(ProtMicrographs):
                       label='Lowest' )
         line.addParam('highRes', FloatParam, default=0.35,
                       label='Highest')
-        
-        line = form.addLine('Defocus search range (microns)', expertLevel=LEVEL_ADVANCED,
+        # Switched (microns) by 'in microns' by fail in the identifier with jquery
+        line = form.addLine('Defocus search range in microns', expertLevel=LEVEL_ADVANCED,
                             help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
                                  'Underfocus is represented by a positive number.')
         line.addParam('minDefocus', FloatParam, default=0.5, 

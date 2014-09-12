@@ -123,7 +123,7 @@ class XmippCTFWizard(CtfWizard):
     
     @classmethod    
     def getView(self):
-        return "wiz_ctf_downsample"  
+        return "wiz_ctf_downsampling"  
     
 #===============================================================================
 # MASKS 

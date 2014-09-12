@@ -196,7 +196,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
     def _validate(self):
         validateMsgs = []
         # downsampling factor must be greater than 0
-        if self.ctfDownFactor < 1:
+        if self.ctfDownFactor.get() < 1:
             validateMsgs.append('Downsampling factor must be >=1.')
         return validateMsgs
         
