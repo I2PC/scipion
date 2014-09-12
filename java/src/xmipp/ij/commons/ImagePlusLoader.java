@@ -63,9 +63,9 @@ public class ImagePlusLoader {
         int index2 = -1;
         if (fileName != null) {
             
-            if (fileName.contains("@")) {
+            if (Filename.hasPrefix(fileName)) {
                 
-                int arrobaindex = fileName.lastIndexOf("@");
+                int arrobaindex = fileName.lastIndexOf(Filename.SEPARATOR);
                 String header = fileName.substring(0, arrobaindex);
 
                 int sepindex = header.lastIndexOf(File.separator);//-1 if separator does not exists
@@ -79,7 +79,8 @@ public class ImagePlusLoader {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
             }
-            existsfile = new File(fileName).exists();
+            String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
+            existsfile = path != null;
         }
         if (existsfile) 
             impreader = new ImagePlusFromFile(fileName, imp, ig);

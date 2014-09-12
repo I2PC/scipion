@@ -10,8 +10,9 @@ import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
-class Main
+public class Main
 {
+    public static String selfile, outputdir;
 	// 0 --> input metadata
 	// 1 --> output dir
 	// 2 --> mode
@@ -37,8 +38,8 @@ class Main
 				try
 				{
 					SupervisedParticlePicker ppicker = null;
-					String selfile = myargs[0];
-					String outputdir = myargs[1];
+					selfile = myargs[0];
+					outputdir = myargs[1];
 					//mode is the third argument 
 					Mode mode = Mode.getMode(myargs[2]);
 

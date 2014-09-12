@@ -1171,7 +1171,8 @@ public class GalleryData {
             shiftx = md.getValueDouble(MDLabel.MDL_SHIFT_X, id);
             shifty = md.getValueDouble(MDLabel.MDL_SHIFT_Y, id);
             psiangle = md.getValueDouble(MDLabel.MDL_ANGLE_PSI, id);
-            return new Geometry(shiftx, shifty, psiangle);
+            boolean flip = md.getValueBoolean(MDLabel.MDL_FLIP, id);
+            return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
        

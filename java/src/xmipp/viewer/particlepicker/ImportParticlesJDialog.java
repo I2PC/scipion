@@ -132,7 +132,7 @@ public class ImportParticlesJDialog extends XmippDialog {
 
 	@Override
 	public void handleOk() {
-		try {
+		
 			path = sourcetf.getText().trim();
 
 			if (path == null || path.equals(""))
@@ -146,14 +146,17 @@ public class ImportParticlesJDialog extends XmippDialog {
 					XmippDialog.showInfo(this.parent, result);
 
 			}
-		} catch (Exception e) {
-			XmippDialog.showException(parent, e);
-		}
+		
 	}
 	
 	protected String importParticles()
 	{
-		return parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+            try {
+                    return parent.importParticles(format, path, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
+            } catch (Exception e) {
+                    XmippDialog.showException(parent, e);
+            }
+            return null;
 
 	}
 	

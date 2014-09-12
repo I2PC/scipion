@@ -13,12 +13,14 @@ package xmipp.ij.commons;
  public class Geometry
         {
             public double shiftx, shifty, psiangle;
+            boolean flip;
             
-            public Geometry(double shiftx, double shifty, double psiangle)
+            public Geometry(double shiftx, double shifty, double psiangle, boolean flip)
             {
                 this.shiftx = shiftx;
                 this.shifty = shifty;
                 this.psiangle = psiangle;
+                this.flip = flip;
             }
         }
         

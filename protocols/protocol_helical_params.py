@@ -28,7 +28,8 @@ class ProtHelicalParams(XmippProtocol):
                         Rot0=self.Rot0, RotF=self.RotF, RotStep=self.RotStep, Z0=self.Z0, ZF=self.ZF, ZStep=self.ZStep,
                         NumberOfThreads=self.NumberOfThreads, fnCoarse=self.fnCoarse)
         self.insertStep('fineSearch',verifyfiles=[self.fnFine],WorkingDir=self.WorkingDir,InputVolume=self.InputVolume,
-                        CylinderRadius=self.CylinderRadius,fnCoarse=self.fnCoarse,fnFine=self.fnFine)
+                        CylinderRadius=self.CylinderRadius,fnCoarse=self.fnCoarse,
+                        Rot0=self.Rot0, RotF=self.RotF, Z0=self.Z0, ZF=self.ZF, fnFine=self.fnFine)
         self.insertStep('symmetrize',verifyfiles=[self.fnSym],WorkingDir=self.WorkingDir,InputVolume=self.InputVolume,
                         OutputVolume=self.fnSym,CylinderRadius=self.CylinderRadius, fnFine=self.fnFine)
         if self.Dihedrical:
@@ -65,12 +66,13 @@ def coarseSearch(log,WorkingDir,InputVolume,CylinderRadius,Rot0, RotF, RotStep, 
         args+=" --mask cylinder %d %d"%(int(-CylinderRadius),int(-xdim))
     runJob(log,'xmipp_volume_find_symmetry',args)
 
-def fineSearch(log,WorkingDir,InputVolume,CylinderRadius,fnCoarse,fnFine):
+def fineSearch(log,WorkingDir,InputVolume,CylinderRadius,fnCoarse,Rot0, RotF, Z0, ZF,fnFine):
     md=MetaData(fnCoarse)
     id=md.firstObject()
     rot0=md.getValue(MDL_ANGLE_ROT,id)
     z0=md.getValue(MDL_SHIFT_Z,id)
-    args="-i %s --sym helical --localHelical %f %f -o %s"%(InputVolume,z0,rot0,fnFine)
+    args="-i %s --sym helical -z %f %f --rotHelical %f %f --localHelical %f %f -o %s"%(InputVolume,float(Z0),float(ZF),
+                                                                                       float(Rot0),float(RotF),z0,rot0,fnFine)
     if CylinderRadius>0:
         [xdim,ydim,zdim,ndim]=getImageSize(InputVolume)
         args+=" --mask cylinder %d %d"%(int(-CylinderRadius),int(-xdim))

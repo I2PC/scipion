@@ -57,6 +57,10 @@ void ProgAngularDiscreteAssign::readParams()
     smax = getIntParam("--smax");
     pick = getIntParam("--pick");
     tell = 0;
+    if (checkParam("--dont_check_mirrors"))
+    	checkMirrors=0;
+    else
+    	checkMirrors=1;
     if (checkParam("--show_rot_tilt"))
         tell |= TELL_ROT_TILT;
     if (checkParam("--show_psi_shift"))
@@ -82,6 +86,7 @@ void ProgAngularDiscreteAssign::show()
     << "Pick: " << pick << std::endl
     << "Show level: " << tell << std::endl
     << "5D search: " << search5D << std::endl
+    << "Check mirrors: " << checkMirrors << std::endl
     ;
 }
 
@@ -114,6 +119,8 @@ void ProgAngularDiscreteAssign::defineParams()
     addParamsLine("  [--shift_step <r=1>]         : Step in shift in pixels");
     addParamsLine("==+Extra parameters==");
     addParamsLine("  [--search5D]                 : Perform a 5D search instead of 3D+2D");
+    addParamsLine("  [--dont_check_mirrors]       : Do not check mirrors of the input images");
+    addParamsLine("                               :+In this case, the projection library should have the mirrors.");
     addParamsLine("  [--max_proj_change <ang=-1>] : Maximum change allowed in rot-tilt");
     addParamsLine("  [--max_psi_change <ang=-1>]  : Maximum change allowed in psi");
     addParamsLine("  [--keep <th=50>]             : How many images are kept each round (%)");
@@ -754,7 +761,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     double bestCorr=-1e38;
 #endif
 
-    for (int flip=0; flip<=1; ++flip)
+    for (int flip=0; flip<=checkMirrors; ++flip)
 		for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
 			for (double shiftY = Yoff - max_shift_change; shiftY <= Yoff + max_shift_change; shiftY += shift_step)
 			{
@@ -1049,6 +1056,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
             VECTOR_R2(shift, Xoff, Yoff);
             translate(LINEAR,Ip(),img(),shift,WRAP);
         }
+        Ip().setXmippOrigin();
 
         double shiftX, shiftY;
         CorrelationAux aux;

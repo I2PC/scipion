@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
 import xmipp.jni.Filename;
@@ -19,7 +16,6 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
-import xmipp.utils.DEBUG;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -84,6 +80,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				templates.read(templatesfile, false);
 				radialtemplates = new ImageGeneric(ImageGeneric.Float);
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
+                                templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
             templates.getRadialAvg(radialtemplates);
 
@@ -207,7 +204,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
 
-		updateTemplatesStack();
+		updateTemplatesStack(num);
                 saveConfig();
 	}
 
@@ -227,7 +224,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			// one function
 			matrix = ig.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
 			templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-			// System.out.printf("setTemplate " + templateindex + "\n");
 			templateindex++;
 
 		}
@@ -251,53 +247,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	
 
-	public synchronized void updateTemplates(int num)
+	public synchronized void updateTemplates(ImageGeneric templates, int templateindex)
 	{
 		try
 		{
-			if (getMode() != Mode.Manual)
-				return;
-
-			initTemplates(num);
-			ImageGeneric igp;
-			List<ManualParticle> particles;
-			
-			ManualParticle particle;
-			double[] align;
-
-			//FIXME: the template update needs to be done in a 
-			// more efficient way, now we are using this maxcount
-			// to limit the number of particles used in the update
-			int count = 0;
-			int maxcount = 100;
-			//FIXME: This is a tweak to avoid losing time with big particles
-			if (getSize() > 256)
-				maxcount = 10;
-
-			for (SupervisedParticlePickerMicrograph m : getMicrographs())
-			{
-				if (count >= maxcount)
-					break;
-				particles = m.getManualParticles();
-				
-				for (int i = 0; i < particles.size(); i++)
-				{
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (getTemplateIndex() < getTemplatesNumber())
-						setTemplate(igp);
-					else
-					{
-						align = templates.alignImage(igp);
-						applyAlignment(particle, igp, align);
-					}
-					count++;
-
-				}
-				saveTemplates(); //Save templates after each micrograph?
-			}
+			this.templates = templates;
+                        radialtemplates = new ImageGeneric(ImageGeneric.Float);
+			radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
 			templates.getRadialAvg(radialtemplates);
-			saveTemplates();
+			this.templateindex = templateindex;
+                        saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -319,8 +278,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 				applyAlignment(particle, igp, align);
 			}
 			templates.getRadialAvg(radialtemplates);
-			saveTemplates();
-
 		}
 		catch (Exception e)
 		{
@@ -365,9 +322,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 			particle.setLastalign(align);
 			templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle
 					.getTemplatePsi());
-			// System.out.printf("adding particle: %d %.2f %.2f %.2f\n",
-			// particle.getTemplateIndex(), particle.getTemplateRotation(),
-			// particle.getTemplateTilt(), particle.getTemplatePsi());
 		}
 		catch (Exception e)
 		{
@@ -386,13 +340,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 		try
 		{
-			templates.write(getTemplatesFile());
+                    if(templateindex == getTemplatesNumber())    
+                        templates.write(getTemplatesFile());
 		}
 		catch (Exception e)
 		{
 			throw new IllegalArgumentException(e);
 		}
-
 	}
 
 	@Override
@@ -481,6 +435,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			}
 			md.destroy();
 			saveAutomaticParticles(tm);
+                        saveTemplates();
 		}
 		catch (Exception e)
 		{
@@ -792,27 +747,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 	}
 
-	// returns micrograph particles filepath, according to format
-	public String getImportMicrographName(String path, String filename, Format f)
-	{
-
-		String base = Filename.removeExtension(Filename.getBaseName(filename));
-		switch (f)
-		{
-		case Xmipp24:
-			return Filename.join(path, base, base + ".raw.Common.pos");
-		case Xmipp30:
-			return Filename.join(path, base + ".pos");
-		case Xmipp301:
-			return Filename.join(path, base + ".pos");
-		case Eman:
-			return Filename.join(path, base + ".box");
-
-		default:
-			return null;
-		}
-
-	}
+	
+        
+        
 
 	/** Return the number of particles imported */
 	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
@@ -821,7 +758,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (f == Format.Auto)
 			f = detectFormat(path);
 		if (f == Format.Unknown)
-			throw new IllegalArgumentException("Unable to detect format");
+			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
 		String result = "";
 
@@ -833,18 +770,12 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		importSize(path, f, scale);
-               
-
-                File[] files = new File(path).listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        String lowercasename = name.toLowerCase();
-                        return lowercasename.endsWith(".pos") || lowercasename.endsWith(".box");
-                    }
-                });
+                File[] files = getCoordsFiles(path);
         
                 boolean imported;
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
+                    resetMicrograph(m);
                     imported = false;
                     for(File fit: files)
                         if(!imported && fit.getName().contains(m.getName()))
@@ -884,7 +815,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	public String importParticlesFromMd(SupervisedParticlePickerMicrograph m, MetaData md)
 	{
 
-		resetMicrograph(m);
 		long[] ids = md.findObjects();
 		int x, y;
 		String result = "";
@@ -1030,7 +960,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return false;
 	}
 
-	public int getTemplateIndex()
+	public synchronized int getTemplateIndex()
 	{
 		return templateindex;
 	}
@@ -1362,16 +1292,15 @@ public class SupervisedParticlePicker extends ParticlePicker
     
     public void updateTemplatesStack()
     {
-        if(uttask != null)
-        {
-            uttask.cancel(true);
-            new File(templatesfile).delete();
-            uttask = null;
-        }
-
-        uttask = new UpdateTemplatesTask();
-        
-        uttask.execute();
+        updateTemplatesStack(getTemplatesNumber());
+    }
+     
+    public void updateTemplatesStack(int num)
+    {
+        if(mode != Mode.Manual)
+            return;
+        initTemplates(num);//to avoid any error with templates while updating
+        new UpdateTemplatesTask().execute();
     }
     
     public void setTemplatesDialog(TemplatesJDialog d)
@@ -1386,7 +1315,64 @@ public class SupervisedParticlePicker extends ParticlePicker
             {
                     try
                     {
-                            updateTemplates(getTemplatesNumber());
+                        if(uttask != null)
+                            uttask.cancel(true);
+                        uttask = this;
+                        try
+		{
+			
+			ImageGeneric templates = new ImageGeneric(ImageGeneric.Float);
+			templates.resize(getSize(), getSize(), 1, getTemplatesNumber());
+			
+			ImageGeneric igp;
+			List<ManualParticle> particles;
+			
+			ManualParticle particle;
+			double[] align;
+
+			//FIXME: the template update needs to be done in a 
+			// more efficient way, now we are using this maxcount
+			// to limit the number of particles used in the update
+			int count = 0;
+			int maxcount = 100;
+			//FIXME: This is a tweak to avoid losing time with big particles
+			if (getSize() > 256)
+				maxcount = 10;
+                        float[] matrix;
+                        int templateindex = 0;
+			for (SupervisedParticlePickerMicrograph m : getMicrographs())
+			{
+				if (count >= maxcount)
+					break;
+				particles = m.getManualParticles();
+				
+				for (int i = 0; i < particles.size(); i++)
+				{
+					particle = particles.get(i);
+					igp = particle.getImageGeneric();
+					if (templateindex < getTemplatesNumber())
+                                        {
+                                            matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                            templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                            templateindex ++;
+                                        }
+					else
+					{
+						align = templates.alignImage(igp);
+						particle.setLastalign(align);
+                                                templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+					}
+					count++;
+
+				}
+			}
+			
+			updateTemplates(templates, templateindex);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException(e.getMessage());
+		}
                     }
                     catch (Exception e)
                     {
@@ -1402,9 +1388,6 @@ public class SupervisedParticlePicker extends ParticlePicker
             }
 
 
-            
-            
-            
 
     }
 

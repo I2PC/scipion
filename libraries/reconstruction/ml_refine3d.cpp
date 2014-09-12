@@ -102,7 +102,7 @@ void ProgMLRefine3D::defineParams()
     addParamsLine(" [ --sym <symfile=c1> ]             : Symmetry group ");
     addParamsLine(" [ --low_pass <freq=-1> ]           : Low-pass filter volume every iteration ");
     addParamsLine(" [ --sym_mask <maskfile=\"\"> ]     : Local symmetry (only inside mask) ");
-    addParamsLine(" [ --tilt <min=-91.> <max=91.> ]    : Minimum and maximum values for restriction tilt angle search ");
+    addParamsLine(" [ --tilt <min=0> <max=180> ]       : Minimum and maximum values for restriction tilt angle search ");
     addParamsLine(" [ --perturb ]                      : Randomly perturb reference projection directions ");
     //hidden params
     ml2d->defineHiddenParams(this);
@@ -329,7 +329,7 @@ void ProgMLRefine3D::show()
     std::cout << "  Convergence criterion    : " << eps << std::endl;
     if (lowpass > 0)
         std::cout << "  Low-pass filter          : " << lowpass << std::endl;
-    if (tilt_range0 > -91. || tilt_rangeF < 91.)
+    if (tilt_range0 >= 0 || tilt_rangeF <= 180)
         std::cout << "  Limited tilt range       : " << tilt_range0 << "  " << tilt_rangeF << std::endl;
     if (wlsart_no_start)
         std::cout << "  -> Start wlsART reconstructions from all-zero volumes " << std::endl;

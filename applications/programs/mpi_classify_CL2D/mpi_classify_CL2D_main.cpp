@@ -951,7 +951,7 @@ void CL2D::lookNode(MultidimArray<double> &I, int oldnode, int &newnode,
 #endif
 			if ((!prm->classicalMultiref && assignment.likelihood > bestAssignment.likelihood) ||
 				(prm->classicalMultiref && assignment.corr > bestAssignment.corr) ||
-				 prm->classifyAllImages) {
+				 prm->classifyAllImages && bestAssignment.corr==0) {
 				bestq = q;
 				bestImg = Iaux;
 				bestAssignment = assignment;
@@ -994,6 +994,16 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 
     if (prm->node->rank == 0)
         std::cout << "Quantizing with " << Q << " codes...\n";
+#ifdef DEBUG
+    Image<double> save;
+    for (int q=0; q<Q; q++)
+    {
+    	save()=P[q]->P;
+    	save.write(formatString("PPPclass%04d.xmp",q));
+    }
+    std::cout << "Classes written. Press any key" << std::endl;
+    char c; std::cin >> c;
+#endif
 
     std::vector<int> oldAssignment, newAssignment;
 
@@ -1123,8 +1133,8 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
                 if (sizeSmallestNode < prm->PminSize * Nimgs / Q * 0.01 && sizeSmallestNode<0.25*sizeLargestNode)
                 {
                     if (prm->node->rank == 0 && prm->verbose)
-                        std::cout << "Splitting node " << largestNode
-                        << " by overwriting " << smallNode << std::endl;
+                        std::cout << "Splitting node " << largestNode << " (size=" << sizeLargestNode << ") "
+                        << " by overwriting " << smallNode << " (size=" << sizeSmallestNode << ")" << std::endl;
                     smallNodes = true;
 
                     // Clear the old assignment of the images in the small node
@@ -1178,6 +1188,7 @@ void CL2D::run(const FileName &fnODir, const FileName &fnOut, int level)
 
     std::sort(P.begin(), P.end(), SDescendingClusterSort());
 }
+#undef DEBUG
 
 /* Clean ------------------------------------------------------------------- */
 int CL2D::cleanEmptyNodes()
@@ -1220,9 +1231,11 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     	// Sort the currentListImg to make sure that all nodes have the same order
     	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL2DAssignmentComparator);
 #ifdef DEBUG
-	std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;
+    		std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;
+    		Image<double> save;
+    		save()=node->P;
+    		save.write("PPPnodeToSplit.xmp");
 #endif
-
         finish = true;
         node2->neighboursIdx = node1->neighboursIdx = node->neighboursIdx;
         node2->P = node1->P = node->P;
@@ -1307,6 +1320,12 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                 node2->transferUpdate();
 #ifdef DEBUG
             std::cout << "Splitting at random " << node1->currentListImg.size() << " " << node2->currentListImg.size() << std::endl;
+            save()=node1->P;
+            save.write("PPPnode1.xmp");
+            save()=node2->P;
+            save.write("PPPnode2.xmp");
+            std::cout << "Press any key" << std::endl;
+            char c; std::cin >> c;
 #endif
                 success = true;
                 break;
@@ -1347,6 +1366,12 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
 
 #ifdef DEBUG
 	std::cout << "After first split Node1: " << node1->currentListImg.size() << " Node2 " << node2->currentListImg.size() << std::endl;
+    save()=node1->P;
+    save.write("PPPnode1.xmp");
+    save()=node2->P;
+    save.write("PPPnode2.xmp");
+    std::cout << "Press any key" << std::endl;
+    char c; std::cin >> c;
 #endif
 
 	// Backup the first split in case it fails
@@ -1384,17 +1409,38 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
                     Iaux2 = I();
                     node2->fit(Iaux2, assignment2);
 
-                    if (assignment1.likelihood > assignment2.likelihood)
+                    //std::cout << "Image " << i << " Likelihood: " << assignment1.likelihood << " " << assignment2.likelihood << std::endl;
+                	//std::cout << "Image " << i << " Corr: " << assignment1.corr << " " << assignment2.corr << std::endl;
+                    if (assignment1.likelihood > assignment2.likelihood && !prm->classicalSplit)
                     {
                         node1->updateProjection(Iaux1, assignment1);
                         VEC_ELEM(newAssignment,i) = 1;
                         node2->updateNonProjection(assignment2.corr);
+                        //std::cout << "Assigned to 1" << std::endl;
                     }
-                    else if (assignment2.likelihood > assignment1.likelihood)
+                    else if (assignment2.likelihood > assignment1.likelihood && !prm->classicalSplit)
                     {
                         node2->updateProjection(Iaux2, assignment2);
                         VEC_ELEM(newAssignment,i) = 2;
                         node1->updateNonProjection(assignment1.corr);
+                        //std::cout << "Assigned to 2" << std::endl;
+                    }
+                    else if (prm->classifyAllImages || prm->classicalSplit)
+                    {
+                        if (assignment1.corr > assignment2.corr)
+                        {
+                            node1->updateProjection(Iaux1, assignment1);
+                            VEC_ELEM(newAssignment,i) = 1;
+                            node2->updateNonProjection(assignment2.corr);
+                            //std::cout << "Assigned to 1" << std::endl;
+                        }
+                        else if (assignment2.corr > assignment1.corr)
+                        {
+                            node2->updateProjection(Iaux2, assignment2);
+                            VEC_ELEM(newAssignment,i) = 2;
+                            node1->updateNonProjection(assignment1.corr);
+                            //std::cout << "Assigned to 2" << std::endl;
+                        }
                     }
                 }
                 if (prm->node->rank == 0 && i % 25 == 0 && prm->verbose >= 2)
@@ -1406,6 +1452,12 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
 
 #ifdef DEBUG
 	std::cout << "After refinement iteration: " << it << " Node1: " << node1->currentListImg.size() << " Node2 " << node2->currentListImg.size() << std::endl;
+    save()=node1->P;
+    save.write("PPPnode1.xmp");
+    save()=node2->P;
+    save.write("PPPnode2.xmp");
+    std::cout << "Press any key" << std::endl;
+    std::cin >> c;
 #endif
 
 	        int Nchanges = 0;
@@ -1426,8 +1478,8 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
         if (node1->currentListImg.size() < minAllowedSize && node2->currentListImg.size() < minAllowedSize)
         {
             if (prm->node->rank == 0 && prm->verbose >= 2)
-                std::cout << "Removing both nodes, they are too small "
-                << node1->currentListImg.size() << " "
+                std::cout << "Removing both nodes, they are too small. Current size: "
+                << node1->currentListImg.size() << " Minimum allowed: "
                 << minAllowedSize << "...\n";
             if (node1 != node)
                 delete node1;
@@ -1551,6 +1603,7 @@ void ProgClassifyCL2D::readParams()
     aux = getParam("--distance");
     useCorrelation = aux == "correlation";
     classicalMultiref = checkParam("--classicalMultiref");
+    classicalSplit = checkParam("--classicalSplit");
     maxShift = getDoubleParam("--maxShift");
 	classifyAllImages = checkParam("--classifyAllImages");
 	normalizeImages = !checkParam("--dontNormalizeImages");
@@ -1575,6 +1628,7 @@ void ProgClassifyCL2D::show() const {
 			<< "Minimum node size:       " << PminSize << std::endl
 			<< "Use Correlation:         " << useCorrelation << std::endl
 			<< "Classical Multiref:      " << classicalMultiref << std::endl
+			<< "Classical Split:         " << classicalSplit << std::endl
 			<< "Maximum shift:           " << maxShift << std::endl
 			<< "Classify all images:     " << classifyAllImages << std::endl
 			<< "Normalize images:        " << normalizeImages << std::endl
@@ -1617,6 +1671,7 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("            where <type>");
     addParamsLine("                       correntropy correlation: See CL2D paper for the definition of correntropy");
     addParamsLine("   [--classicalMultiref]     : Instead of enhanced clustering");
+    addParamsLine("   [--classicalSplit]        : Instead of enhanced clustering at the split iterations");
     addParamsLine("   [--maxShift <d=10>]       : Maximum allowed shift");
 	addParamsLine("   [--classifyAllImages]     : By default, some images may not be classified. Use this option to classify them all.");
 	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
@@ -1644,7 +1699,7 @@ void ProgClassifyCL2D::produceSideInfo()
 
     // Prepare the Task distributor
     SF.findObjects(objId);
-    size_t Nimgs = objId.size();
+    // size_t Nimgs = objId.size();
 
     // Prepare mask for evaluating the noise outside
     mask.resize(prm->Ydim, prm->Xdim);

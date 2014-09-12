@@ -429,6 +429,20 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
     return retval;
 }
 
+/** IMED distance.
+ * See Wang, L et al. On the Euclidean distance of images. IEEE PAMI 27: 1334-1339 (2005)
+ */
+double imedDistance(const MultidimArray<double>& I1, const MultidimArray<double>& I2);
+
+/** IMED normalized distance.
+*/
+double imedNormalizedDistance(const MultidimArray<double>& I1, const MultidimArray<double>& I2);
+
+/** SVD correlation.
+ *
+ */
+double svdCorrelation(const MultidimArray<double>& I1, const MultidimArray<double>& I2, const MultidimArray< int >* mask = NULL);
+
 /** Translational search
  * @ingroup Filters
  *

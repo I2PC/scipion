@@ -1277,6 +1277,9 @@ private:
         char* fdata;
         double min0 = 0, max0 = 0;
 
+        if (wDType == myT() && castMode == CW_CONVERT)
+               	castMode = CW_CAST;
+
         if (castMode != CW_CAST)
             data.computeDoubleMinMaxRange(min0, max0, offset, datasize_n);
 

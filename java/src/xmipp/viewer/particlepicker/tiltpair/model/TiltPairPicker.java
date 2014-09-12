@@ -299,6 +299,8 @@ public class TiltPairPicker extends ParticlePicker
 		}
 
 	}
+        
+        
 
 	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
 	{
@@ -307,19 +309,26 @@ public class TiltPairPicker extends ParticlePicker
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException("Unable to detect format");
 
-		String uFn, tFn;
+		String uFn = null, tFn = null;
 		String result = "";
                 importSize(path, f, scale);
-		for (UntiltedMicrograph um : micrographs)
-		{
-			uFn = getImportMicrographName(path, um.getFile(), f);
-			tFn = getImportMicrographName(path, um.getTiltedMicrograph().getFile(), f);
-			if (Filename.exists(uFn) && Filename.exists(tFn))
-			{
-				result += importParticlesFromFiles(uFn, tFn, f, um, scale, invertx, inverty);
-				saveData(um);
 
-			}
+		
+                for(UntiltedMicrograph m: micrographs)
+                {
+                    uFn = null; tFn = null;
+                    for (File file: getCoordsFiles(path))
+                    {
+                        if(file.getName().contains(m.getName()))
+                            uFn = file.getAbsolutePath();
+                        if(file.getName().contains(m.getTiltedMicrograph().getName()))
+                            tFn = file.getAbsolutePath();
+                    }
+                    if(uFn != null && tFn != null)
+                    {
+                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty);
+                        saveData(m);
+                    }           
 		}
                 super.saveData();
 		return result;
@@ -338,30 +347,7 @@ public class TiltPairPicker extends ParticlePicker
 		return result;
 	}// function importParticlesFromFiles
 
-	public String getImportMicrographName(String path, String filename, Format f)
-	{
-		String base = Filename.removeExtension(Filename.getBaseName(filename));
-		switch (f)
-		{
-		case Xmipp24:
-			return Filename.join(path, base, base + ".raw.Common.pos");
-		case Xmipp24a:
-			return Filename.join(path, base + ".raw.Common.pos");
-		case Xmipp24b:
-			return Filename.join(path, base.replaceAll("down[0-9]_", ""), base + ".raw.Common.pos");
-		case Xmipp24c:
-			return Filename.join(path, base + ".raw.pos");
-		case Xmipp30:
-			return Filename.join(path, base + ".pos");
-		case Xmipp301:
-			return Filename.join(path, base + ".pos");
-		case Eman:
-			return Filename.join(path, base + "_ptcls.box");
-
-		default:
-			return null;
-		}
-	}
+	
 
 	public UntiltedMicrograph getMicrograph()
 	{

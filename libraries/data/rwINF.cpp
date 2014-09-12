@@ -125,7 +125,7 @@ int ImageBase::readINF(size_t select_img,bool isStack)
 /** INF Writer
   * @ingroup INF
 */
-int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDepth, bool adjust)
+int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDepth, CastWriteMode castMode)
 {
     //#define DEBUG
 #ifdef DEBUG
@@ -149,12 +149,10 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
                      "not append.");
 
     DataType wDType,myTypeID = myT();
-    CastWriteMode castMode = CW_CAST;
 
     if (bitDepth != "")
     {
         myTypeID = (bitDepth == "default") ? DT_Float : datatypeRAW(bitDepth);
-        castMode = (adjust)? CW_ADJUST : CW_CONVERT;
     }
 
     switch(myTypeID)

@@ -10,11 +10,11 @@ def projMatch(log,Volume,AngularSampling,SymmetryGroup,Images,ExtraDir,fnAngles,
 
     # Generate gallery of projections        
     fnGallery=os.path.join(ExtraDir,'gallery.stk')
-    runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
+    runJob(log,"xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --max_tilt_angle 90 --experimental_images %s -v 0"\
                %(Volume,fnGallery,float(AngularSampling),SymmetryGroup,Images),NumberOfMpi)
 
     # Assign angles
-    runJob(log,"xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append"\
+    runJob(log,"xmipp_angular_projection_matching", "-i %s -o %s --ref %s --Ri 0 --Ro %s --max_shift 1000 --search5d_shift %s --search5d_step  %s --append -v 0"\
                %(Images,fnAngles,fnGallery,str(Xdim/2),str(int(Xdim/10)),str(int(Xdim/25))),NumberOfMpi)
     deleteFile(log, os.path.join(ExtraDir,'gallery_sampling.xmd'))
     deleteFile(log, os.path.join(ExtraDir,'gallery_angles.doc'))

@@ -270,7 +270,6 @@ void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
         flip=0;
         weight=0;
         (*docfile).getValue(MDL_FLIP,flip,found[0]);
-        // COSS, ROB porque no coger weight?
         (*docfile).getValue(MDL_WEIGHT,weight,found[0]);
     }
     else

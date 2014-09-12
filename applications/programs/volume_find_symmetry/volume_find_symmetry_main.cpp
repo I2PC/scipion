@@ -43,9 +43,9 @@ public:
     int rot_sym;
     bool useSplines;
     FileName fn_input, fn_output;
-    double   rot0,  rotF,  step_rot;
+    double   rot0,  rotF,  step_rot, rotLocal;
     double   tilt0, tiltF, step_tilt;
-    double   z0, zF, step_z;
+    double   z0, zF, step_z, zLocal;
     bool     local;
     bool     helical;
     Mask mask_prm;
@@ -113,18 +113,15 @@ public:
             local=checkParam("--localHelical");
             if (local)
             {
-                z0=getDoubleParam("--localHelical",0);
-                rot0=getDoubleParam("--localHelical",1);
+                zLocal=getDoubleParam("--localHelical",0);
+                rotLocal=getDoubleParam("--localHelical",1);
             }
-            else
-            {
-                z0=getDoubleParam("-z",0);
-                zF=getDoubleParam("-z",1);
-                step_z=getDoubleParam("-z",2);
-                rot0=getDoubleParam("--rotHelical",0);
-                rotF=getDoubleParam("--rotHelical",1);
-                step_rot=getDoubleParam("--rotHelical",2);
-            }
+			z0=getDoubleParam("-z",0);
+			zF=getDoubleParam("-z",1);
+			step_z=getDoubleParam("-z",2);
+			rot0=getDoubleParam("--rotHelical",0);
+			rotF=getDoubleParam("--rotHelical",1);
+			step_rot=getDoubleParam("--rotHelical",2);
         }
         else
         {
@@ -301,8 +298,8 @@ public:
             else
             {
                 Matrix1D<double> p(2), steps(2);
-                p(0)=rot0;
-                p(1)=z0;
+                p(0)=rotLocal;
+                p(1)=zLocal;
                 double fitness;
                 int iter;
                 steps.initConstant(1);
@@ -371,11 +368,13 @@ public:
         }
         else
         {
-            double rotHelical=DEG2RAD(p[1]);
+            double rotHelical=p[1];
             double zHelical=p[2];
             if (zHelical<0 || zHelical>ZSIZE(mVolume)*0.4)
             	return 1e38;
-            symmetry_Helical(volume_sym, mVolume, zHelical, rotHelical, 0, &mask_prm.get_binary_mask());
+            if (zHelical<z0 || zHelical>zF || rotHelical<rot0 || rotHelical>rotF)
+            	return 1e38;
+            symmetry_Helical(volume_sym, mVolume, zHelical, DEG2RAD(rotHelical), 0, &mask_prm.get_binary_mask());
 			double corr=correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
 //#define DEBUG
 #ifdef DEBUG

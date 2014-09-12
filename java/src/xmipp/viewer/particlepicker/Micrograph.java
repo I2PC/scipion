@@ -2,22 +2,18 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.ImagePlus;
-
 import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-
-import xmipp.ij.commons.XmippUtil;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
+import xmipp.viewer.particlepicker.training.Main;
 
 public abstract class Micrograph {
 
@@ -56,20 +52,18 @@ public abstract class Micrograph {
 		this.file = file;
 		this.psd = psd;
 		this.ctf = ctf;
-		// if (!new File(file).exists()) throw new
-		// IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file",
-		// file));
-		// ImageGeneric ig;
-		// try {
-		// ig = new ImageGeneric(file);
-		//
-		// width = ig.getXDim();
-		// height = ig.getYDim();
-		// } catch (Exception e) {
-		//
-		// e.printStackTrace();
-		// throw new IllegalArgumentException(e.getMessage());
-		// }
+                String path = file;
+                if(Filename.hasPrefix(file))
+                    path = Filename.removePrefix(file);
+               
+		 if (!new File(path).exists()) 
+                 {
+                     file = Filename.findImagePath(name, Main.selfile, true);
+                     if(file == null)
+                        throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
+                    
+                 }
+		
 		this.name = name;
 		this.posfile = name + ext;
                 loadDimensions(); // ensure width and height get updated

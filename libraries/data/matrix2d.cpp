@@ -536,6 +536,18 @@ void matrixOperation_AB(const Matrix2D <double> &A, const Matrix2D<double> &B, M
 		}
 }
 
+void matrixOperation_Ax(const Matrix2D <double> &A, const Matrix1D<double> &x, Matrix1D<double> &y)
+{
+    y.initZeros(MAT_YSIZE(A));
+	for (size_t i = 0; i < MAT_YSIZE(A); ++i)
+	{
+		double aux=0.;
+		for (size_t k = 0; k < MAT_XSIZE(A); ++k)
+			aux += MAT_ELEM(A, i, k) * VEC_ELEM(x, k);
+		VEC_ELEM(y, i)=aux;
+	}
+}
+
 void matrixOperation_AtA(const Matrix2D <double> &A, Matrix2D<double> &B)
 {
     B.resizeNoCopy(MAT_XSIZE(A), MAT_XSIZE(A));
@@ -586,6 +598,18 @@ void matrixOperation_AtB(const Matrix2D <double> &A, const Matrix2D<double> &B, 
                 aux += MAT_ELEM(A, k, i) * MAT_ELEM(B, k, j);
 			MAT_ELEM(C, i, j)=aux;
         }
+}
+
+void matrixOperation_Atx(const Matrix2D <double> &A, const Matrix1D<double> &x, Matrix1D<double> &y)
+{
+    y.resizeNoCopy(MAT_XSIZE(A));
+    for (size_t i = 0; i < MAT_XSIZE(A); ++i)
+	{
+		double aux=0.;
+		for (size_t k = 0; k < MAT_YSIZE(A); ++k)
+			aux += MAT_ELEM(A, k, i) * VEC_ELEM(x, k);
+		VEC_ELEM(y, i)=aux;
+	}
 }
 
 void matrixOperation_AtBt(const Matrix2D <double> &A, const Matrix2D<double> &B, Matrix2D<double> &C)

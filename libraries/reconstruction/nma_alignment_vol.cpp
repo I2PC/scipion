@@ -295,6 +295,7 @@ void ProgNmaAlignmentVol::writeVolumeParameters(const FileName &fnImg) {
 		vectortemp.push_back(lambdaj);
 		energy+=lambdaj*lambdaj;
 	}
+	energy/=numberOfModes;
 
 	md.setValue(MDL_NMA, vectortemp, objId);
 	md.setValue(MDL_NMA_ENERGY, energy, objId);

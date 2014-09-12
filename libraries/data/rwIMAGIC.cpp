@@ -246,7 +246,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth, bool adjust)
+int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth, CastWriteMode castMode)
 {
 #undef DEBUG
     //#define DEBUG
@@ -258,7 +258,6 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth,
 
     // Cast T to datatype without convert data
     DataType wDType, myTypeID = myT();
-    CastWriteMode castMode = CW_CAST;
 
     if (bitDepth == "")
     {
@@ -273,12 +272,14 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth,
             break;
         case DT_UShort:
             castMode = CW_CONVERT;
+            /* no break */
         case DT_Short:
             wDType = DT_Short;
             strncpy(header.type,"INTG", sizeof(header.type));
             break;
         case DT_SChar:
             castMode = CW_CONVERT;
+            /* no break */
         case DT_UChar:
             wDType = DT_UChar;
             strncpy(header.type,"PACK", sizeof(header.type));
@@ -302,11 +303,9 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, const String &bitDepth,
         {
         case DT_UChar:
             strncpy(header.type,"PACK", sizeof(header.type));
-            castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case DT_Short:
             strncpy(header.type,"INTG", sizeof(header.type));
-            castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case DT_Float:
             (strncpy)(header.type,"REAL", sizeof(header.type));
