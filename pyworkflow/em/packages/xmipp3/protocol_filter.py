@@ -66,14 +66,6 @@ class XmippProtFilter():
                       DigFreqParam, default=0.35, 
                       condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_HIGH_PASS),
                       label='Highest')
-#        form.addParam('lowFreq', DigFreqParam, default=0.02, 
-#                      condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_LOW_PASS),
-#                      label='Low frequency (0 < f < 0.5)',
-#                      help='Low frequency cuttoff to apply the filter. \n ')          
-#        form.addParam('highFreq', DigFreqParam, default=0.35, 
-#                      condition='filterType == %d and fourierMode != %d' % (FILTER_FOURIER, FILTER_HIGH_PASS),
-#                      label='High frequency (0 < f < 0.5)', 
-#                      help='High frequency cuttoff to apply the filter.')          
         form.addParam('freqDecay', FloatParam, default=0.02, 
                       condition='filterType == %d' % FILTER_FOURIER, 
                       label='Frequency decay',
@@ -81,10 +73,13 @@ class XmippProtFilter():
         form.addParam('freqSigma', FloatParam, default=0.04, 
                       condition='filterType == %d' % FILTER_GAUSSIAN,
                       label='Frequency sigma',
-                      help='Remind that the Fourier frequency is normalized between 0 and 0.5')   
+                      help='Remind that the Fourier frequency is normalized between 0 and 0.5')
     
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _getCommand(self, inputFn):
+    #--------------------------- INSERT steps functions --------------------------------------------    
+    def _insertProcessStep(self):
+        
+        inputFn = self.inputFn
+        
         if self.filterType == FILTER_FOURIER:
             lowFreq = self.lowFreq.get()
             highFreq = self.highFreq.get()
@@ -105,8 +100,8 @@ class XmippProtFilter():
             
         else:
             raise Exception("Unknown filter type: %d" % self.filterType.get())
-            
-        return args
+        
+        self._insertFunctionStep("filterStep", args)
 
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
@@ -121,11 +116,16 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, Xmipp
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         XmippProtFilter._defineProcessParams(self, form)
+    
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def filterStep(self, args):
+        args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
+        self.runJob("xmipp_transform_filter", args)
 
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFilter):
     """ Apply Fourier filters to a set of volumes """
-    _label = 'filter volumes'
+    _label = 'filter volumes'    #--------------------------- UTILS functions ---------------------------------------------------
     
     def __init__(self, **args):
         ProtFilterVolumes.__init__(self, **args)
@@ -136,3 +136,12 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFi
     def _defineProcessParams(self, form):
         XmippProtFilter._defineProcessParams(self, form)
     
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def filterStep(self, args):
+        if self._isSingleInput():
+            args += " -o %s" % self.outputStk
+        else:
+            args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
+        
+        self.runJob("xmipp_transform_filter", args)
+
