@@ -188,7 +188,8 @@ def wizardMpi(tab_mpi):
 def wizardJava(tab_java):
     java_home = detectJava()
     if java_home:
-        tab_java.setValue('JAVA_HOME', java_home)  
+        tab_java.setValue('JAVA_HOME', java_home) 
+	tab_java.setValue('JAVA_BINDIR', os.path.join(java_home, 'bin'))
         return ""
     return "JAVA_HOME could not be found."  
 
@@ -235,6 +236,7 @@ def addTabs(nb):
     tab.addGroupPanel("Java")
     addTabOption(tab,'JAVAC', 'Java compiler', 'javac', 'Java')
     addTabOption(tab,'JAVA_HOME', 'Java installation directory', '', 'Java', wiz=wizardJava, browse=True)
+    addTabOption(tab,'JAVA_BINDIR', 'Java binaries directory', '', 'Java', browse=True)
     tab.finishGroupPanel("Java")
     tab_gui = tab
     
@@ -316,6 +318,9 @@ def run(notebook):
                     if parts[0].strip() == 'MPI_BINDIR':
                         parts[1] = parts[1].replace("'", "").strip()
                         os.environ['PATH'] += os.pathsep + parts[1]        
+                    if parts[0].strip() == 'JAVA_BINDIR':
+                        parts[1] = parts[1].replace("'", "").strip()
+                        os.environ['PATH'] += os.pathsep + parts[1]
         cmd += ('echo "*** CREATING PROGRAMS DATABASE..." >> %(out)s 2>&1\n xmipp_apropos --update >> %(out)s' % locals())    
         
     proc = Popen(cmd % locals(), shell=True)    

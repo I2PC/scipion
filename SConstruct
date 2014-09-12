@@ -145,6 +145,7 @@ opts.Add('CUDA_LIB_PATH', 'CUDA RunTimeLib dir', '/usr/local/cuda/lib64')
 
 opts.Add('JAVAC', 'Java compiler', 'javac')
 opts.Add('JAVA_HOME', 'Java installation directory', '')
+opts.Add('JAVA_BINDIR', 'Java bin directory', '')
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 #print 'en opts-2', opts['MPI_LINKERFORPROGRAMS']
 
@@ -162,8 +163,8 @@ env.SetDefault(LIBS='')
 env.SetDefault(LIBPATH='')
 env.SetDefault(CPPPATH='')
 
-def checkMpiInBashrc(mpiPath, type, shellType='bash'):
-    fileToOpen = foundPath = stringToSearch = separator = ''
+def checkInBashrc(path, shellType='bash', stringToSearch=None):
+    fileToOpen = foundPath = separator = ''
     exists = different = False
     if shellType == 'bash':
         fileToOpen = BASHRC
@@ -171,10 +172,6 @@ def checkMpiInBashrc(mpiPath, type, shellType='bash'):
     elif shellType == 'csh':
         fileToOpen = CSH
         separator = ' '
-    if type == 'lib':
-        stringToSearch = 'XMIPP_MPI_LIBDIR'
-    elif type == 'bin':
-        stringToSearch = 'XMIPP_MPI_BINDIR'
     if os.path.exists(fileToOpen):
         for line in open(fileToOpen):
             parts = line.split(separator)
@@ -182,17 +179,17 @@ def checkMpiInBashrc(mpiPath, type, shellType='bash'):
                 if parts[0].strip() == ('export '+stringToSearch):
                     exists = True
                     foundPath = parts[1]
-                    different = (foundPath.strip() != mpiPath)
+                    different = (foundPath.strip() != path)
             elif len(parts) == 3:
                 if parts[1].strip() == (stringToSearch):
                     exists = True
                     foundPath = parts[2]
-                    different = (foundPath.strip() != mpiPath)
+                    different = (foundPath.strip() != path)
                     break #In CSH file, we have to find only the first occurrence             
     return exists, different, foundPath
 
-def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
-    fileToOpen = preserv = stringToSearch = stringToAppend = ''
+def addToBashrc(path, shellType='bash', replace=False, stringToSearch=None, stringToAppend=None):
+    fileToOpen = preserv = '' 
     separator = '='
     exportation = 'export'
     if shellType == 'bash':
@@ -207,16 +204,10 @@ def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
         lines = open(fileToOpen, 'r').readlines()
         filew = open(fileToOpen, 'w')
         found = -1
-        if type == 'lib':
-            stringToSearch = 'LD_LIBRARY_PATH'
-            stringToAppend = 'XMIPP_MPI_LIBDIR'
-        elif type == 'bin':
-            stringToSearch = 'PATH'
-            stringToAppend = 'XMIPP_MPI_BINDIR'
         if replace:
-            stringToSearch = (exportation + ' ' + stringToAppend)
+            stringToSearch = '%s %s' % (exportation, stringToAppend)
         else:
-            stringToSearch = (exportation+ ' ' + stringToSearch)
+            stringToSearch = '%s %s' % (exportation, stringToSearch)
         for index, line in enumerate(lines):
             parts = line.strip().split(separator)
             if len(parts) == 2:
@@ -231,9 +222,9 @@ def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
         if found != -1:
             if not replace:
                 lines[found] = (stringToSearch + separator + preserv + ':${' + stringToAppend + '}' + "\n")
-                lines[found] = (exportation + ' ' + stringToAppend + separator + mpiPath + "\n") + lines[found]
+                lines[found] = (exportation + ' ' + stringToAppend + separator + path + "\n") + lines[found]
             else:
-                lines[found] = (stringToSearch+separator+mpiPath+"\n")
+                lines[found] = (stringToSearch+separator+path+"\n")
             filew.writelines(lines)
 
 
@@ -396,6 +387,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     env = conf.Finish()
     CONFIG = '.xmipp_scons.options'
     opts.Save(CONFIG, env)
+    MPI_LIBDIR=''
+    MPI_BINDIR=''
+    JAVA_BINDIR=''
     if os.path.exists(CONFIG):
         for line in open(CONFIG):
             parts = line.split('=')
@@ -406,35 +400,52 @@ if (ARGUMENTS['mode'] == 'configure'):
                     os.environ['LD_LIBRARY_PATH'] += os.pathsep + parts[1]
                     os.environ['MPI_LIBDIR'] = os.pathsep + parts[1]
                     MPI_LIBDIR = os.environ['MPI_LIBDIR']
-                if parts[0].strip() == 'MPI_BINDIR':
+                elif parts[0].strip() == 'MPI_BINDIR':
                     parts[1] = parts[1].replace("'", "").strip()
                     os.environ['PATH'] += os.pathsep + parts[1]
                     os.environ['MPI_BINDIR'] = os.pathsep + parts[1]
                     MPI_BINDIR = os.environ['MPI_BINDIR']
+                elif parts[0].strip() == 'JAVA_HOME':
+                    parts[1] = parts[1].replace("'", "").strip()
+                    os.environ['PATH'] += os.pathsep + parts[1]
+                    os.environ['JAVA_HOME'] = os.pathsep + parts[1]
+		    os.environ['JAVA_BINDIR'] = os.path.join(os.environ['JAVA_HOME'], 'bin')
+                    JAVA_BINDIR = os.environ['JAVA_BINDIR']
     
     # When we are going to install, we need to put some vars in bashrc file
     if not 'unattended' in ARGUMENTS or (ARGUMENTS('unattended') != 'yes'):
         for shell in ['bash', 'csh']:
             try:
-                mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkMpiInBashrc(MPI_LIBDIR, 'lib', shell)
+                mpiLibDirExists, mpiLibDirIsDifferent, mpiLibDirPath = checkInBashrc(MPI_LIBDIR, shell, stringToSearch='XMIPP_MPI_LIBDIR')
                 if not mpiLibDirExists:
-                    addMpiToBashrc(MPI_LIBDIR, 'lib', shell)
+                    addToBashrc(MPI_LIBDIR, shell, stringToSearch='LD_LIBRARY_PATH', stringToAppend='XMIPP_MPI_LIBDIR')
                 elif mpiLibDirIsDifferent:
-                    addMpiToBashrc(MPI_LIBDIR, 'lib', shell, True)
+                    addToBashrc(MPI_LIBDIR, shell, True, stringToSearch='LD_LIBRARY_PATH', stringToAppend='XMIPP_MPI_LIBDIR')
                 else:
                     print "MPI_LIBDIR untouched. Already set in "+BASHRC+" file"
             except NameError:
                 print "Be careful, your MPI_LIBDIR has not been set!"
             try:
-                mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkMpiInBashrc(MPI_BINDIR, 'bin', shell)
+                mpiBinDirExists, mpiBinDirIsDifferent, mpiBinDirPath = checkInBashrc(MPI_BINDIR, shell, stringToSearch='XMIPP_MPI_BINDIR')
                 if not mpiBinDirExists:
-                    addMpiToBashrc(MPI_BINDIR, 'bin', shell)
+                    addToBashrc(MPI_BINDIR, shell, stringToSearch='PATH', stringToAppend='XMIPP_MPI_BINDIR')
                 elif mpiBinDirIsDifferent:
-                    addMpiToBashrc(MPI_BINDIR, 'bin', shell, True)
+                    addToBashrc(MPI_BINDIR, shell, True, stringToSearch='PATH', stringToAppend='XMIPP_MPI_BINDIR')
                 else:
                     print "MPI_BINDIR untouched. Already set in "+BASHRC+" file"
             except NameError:
                 print "Be careful, your MPI_BINDIR has not been set! You may need to manually set it in your bashrc"
+            try:
+                javaBinDirExists, javaBinDirIsDifferent, javaBinDirPath = checkInBashrc(JAVA_BINDIR, shell, stringToSearch='XMIPP_JAVA_BINDIR')
+                if not javaBinDirExists:
+                    addToBashrc(JAVA_BINDIR, shell, stringToSearch='PATH', stringToAppend='XMIPP_JAVA_BINDIR')
+                elif javaBinDirIsDifferent:
+                    addToBashrc(JAVA_BINDIR, shell, True, stringToSearch='PATH', stringToAppend='XMIPP_JAVA_BINDIR')
+                else:
+                    print "JAVA_BINDIR untouched. Already set in "+BASHRC+" file"
+            except NameError:
+                print "Be careful, your JAVA_BINDIR has not been set! You may need to manually set it in your bashrc"
+                    
 
 elif (ARGUMENTS['mode'] == 'compile'):
     # --- This is the compilation mode
