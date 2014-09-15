@@ -211,8 +211,8 @@ class ProtOpticalAlignment(ProtProcessMovies):
         movSet = self.inputMovies.get()
         for mov in movSet:
             #TODO What milks is this?
-            mov.load()
-            movFn = mov.getFirstItem().getFileName()
+#             mov.load()
+            movFn = mov.getFileName()
             self._insertFunctionStep('processMoviesStep', movFn)
         self._insertFunctionStep('createOutputStep')
     
