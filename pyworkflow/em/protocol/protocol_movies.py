@@ -33,7 +33,7 @@ from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile
+from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile, getExt
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Micrograph
 
@@ -230,6 +230,10 @@ class ProtOpticalAlignment(ProtProcessMovies):
         self._defineProgram()
         self._micList = []
         micFn = self._getExtraPath( movName+ "_aligned.spi")
+        
+        movExt = getExt(movFn)
+        if movExt == "mrc":
+            movFn = movFn + ":mrcs"
         args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
         if False:
             args += ' --dropFirst %d --dropLast %d' % (self.firstFrames.get(),self.lastFrames.get())
