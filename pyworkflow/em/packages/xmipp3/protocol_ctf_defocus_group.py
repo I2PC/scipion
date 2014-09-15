@@ -32,6 +32,7 @@ from pyworkflow.utils import *
 from convert import createXmippInputImages, writeSetOfDefocusGroups
 import xmipp
 from math import pi
+from pyworkflow.protocol.params import GE
 
 # TODO: change the base class to a more apropiated one
 class XmippProtCTFDefocusGroup(ProtProcessParticles):
