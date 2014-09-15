@@ -32,6 +32,7 @@ In this module are protocol base classes related to EM Micrographs
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
+from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Micrograph
@@ -180,8 +181,12 @@ class ProtAverageMovies(ProtProcessMovies):
 class ProtOpticalAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
-    _label = 'movie alignment' 
+    _label = 'movie alignment'
     
+    def __init__(self, **args):
+        ProtProcessMovies.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -208,13 +213,15 @@ class ProtOpticalAlignment(ProtProcessMovies):
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+        listProcess = []
         movSet = self.inputMovies.get()
         for mov in movSet:
             #TODO What milks is this?
 #             mov.load()
             movFn = mov.getFileName()
-            self._insertFunctionStep('processMoviesStep', movFn)
-        self._insertFunctionStep('createOutputStep')
+            processId = self._insertFunctionStep('processMoviesStep', movFn)
+            listProcess.append(processId)
+        self._insertFunctionStep('createOutputStep', prerequisites=listProcess)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self, movFn):
