@@ -90,5 +90,11 @@ public:
 
     void run();
 
+private:
+    void obtainSumU(MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0);
+
+    void obtainSumW(MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H);
+
+
 };
 #endif /* VALIDATION_NONTILT_H_ */
