@@ -219,7 +219,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
             #TODO What milks is this?
 #             mov.load()
             movFn = mov.getFileName()
-            processId = self._insertFunctionStep('processMoviesStep', movFn)
+            processId = self._insertFunctionStep('processMoviesStep', movFn, prerequisites=[])
             listProcess.append(processId)
         self._insertFunctionStep('createOutputStep', prerequisites=listProcess)
     
