@@ -80,7 +80,6 @@ void ProgValidationNonTilt::defineParams()
 
 void ProgValidationNonTilt::run()
 {
-    //std::srand(std::time(0));
     //Clustering Tendency and Cluster Validity
     //Stephen D. Scott
 
@@ -154,6 +153,26 @@ void ProgValidationNonTilt::run()
     }
 
     mdOut.write(fnOut);
+
+    FileName fnVolume=fnDir+"/volume_projMatch.vol";
+    String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnMd.c_str(),fnVolume.c_str(),fnSym.c_str());
+    String cmd=(String)"xmipp_reconstruct_fourier "+args;
+
+    if (system(cmd.c_str())==-1)
+        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+
+    // Size of the images
+    size_t Xdim, Ydim, Zdim,Ndim;
+    getImageSize(fnVolume,Xdim,Ydim,Zdim,Ndim);
+    args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-Xdim/2);
+    cmd=(String)"xmipp_transform_mask "+args;
+    if (system(cmd.c_str())==-1)
+        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+    FileName fnVolumeSig=fnDir+"/volume_iter01_00.vol";
+    sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumeSig.c_str(),sampling_rate,fnFSC.c_str());
+    system(buffer);
 
     /*
 
@@ -286,25 +305,7 @@ void ProgValidationNonTilt::run()
        if (!fnAngles.exists())
            REPORT_ERROR(ERR_UNCLASSIFIED,"Angles file does not exist");
 
-       FileName fnVolume=fnDir+"/volume_projMatch.vol";
-       String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
-       String cmd=(String)"xmipp_reconstruct_fourier "+args;
 
-       if (system(cmd.c_str())==-1)
-           REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-
-       // Size of the images
-       size_t Xdim, Ydim, Zdim,Ndim;
-       getImageSize(fnVolume,Xdim,Ydim,Zdim,Ndim);
-       args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-Xdim/2);
-       cmd=(String)"xmipp_transform_mask "+args;
-       if (system(cmd.c_str())==-1)
-           REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-       FileName fnVolumeSig=fnDir+"/volume_iter01_00.vol";
-       sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumeSig.c_str(),sampling_rate,fnFSC.c_str());
-       system(buffer);
 
 
 
