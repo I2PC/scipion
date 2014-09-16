@@ -80,8 +80,7 @@ void ProgValidationNonTilt::defineParams()
 
 void ProgValidationNonTilt::run()
 {
-    //Clustering Tendency and Cluster Validity
-    //Stephen D. Scott
+    //Clustering Tendency and Cluster Validity Stephen D. Scott
 
     randomize_random_generator();
     char buffer[400];
@@ -102,8 +101,6 @@ void ProgValidationNonTilt::run()
     md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 
     String expression;
-
-    //double H,H0,d;
     double W,sumW;
     double tempW;
     MDRow row;
@@ -140,7 +137,7 @@ void ProgValidationNonTilt::run()
         std::cout << "P : " << P << std::endl;
 
         row.setValue(MDL_IMAGE_IDX,i);
-        row.setValue(MDL_ZSCORE,P);
+        row.setValue(MDL_WEIGHT,P);
         mdOut.addRow(row);
 
         sum_u.clear();
@@ -330,6 +327,7 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
         sumWRan = 0;
         for (size_t nS=0; nS<tempMd.size(); nS++)
         {
+            //double non_reduntant_area_of_sphere = chunk_mysampling.SL.nonRedundantProjectionSphere(symmetry,sym_order);
             xRan=(std::rand()-RAND_MAX/2);
             yRan=(std::rand()-RAND_MAX/2);
             zRan=(std::rand()-RAND_MAX/2);
