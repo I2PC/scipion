@@ -97,5 +97,8 @@ urlpatterns = patterns('',
     url(r'^update_host', 'app.views_host.updateHost'),
     url(r'^delete host/$', 'app.views_host.deleteHost'),
     url(r'^host_form/$', 'app.views_host.hostForm'),
+    
+    #UPLOAD
+    url(r'^upload/', 'app.views_upload.upload', name='upload'),
 
 )
