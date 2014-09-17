@@ -100,5 +100,6 @@ urlpatterns = patterns('',
     
     #UPLOAD
     url(r'^upload/', 'app.views_upload.upload', name='upload'),
+    url(r'^doUpload/', 'app.views_upload.doUpload'),
 
 )
