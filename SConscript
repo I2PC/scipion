@@ -160,9 +160,15 @@ addModule(
     'bibtexparser',
     tar='bibtexparser-0.5.tgz')
 
-addModule(
+django = addModule(
     'django',
     tar='Django-1.5.5.tgz')
+
+addModule(
+    'filemanager',
+    tar='django-filemanager-0.0.5.tgz',
+    flags=['--old-and-unmanageable'],
+    deps=[django])
 
 addModule(
     'paramiko',
