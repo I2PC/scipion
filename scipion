@@ -4,7 +4,7 @@
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              I. Foche Perez (ifoche@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -220,6 +220,7 @@ MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_LAST = 'last' # shortcut to 'project last'
 MODE_WEBSERVER = 'webserver'
+MODE_SYNCDB = 'syncdb'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests' # keep tests for compatibility
 MODE_TEST = 'test' # also allow 'test', in singular
@@ -284,11 +285,13 @@ def main():
             sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
             sys.exit(0)
 
-        elif option in ['django', 'collectstatic']:
+        elif option in ['django', 'collectstatic', 'syncdb']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
-            else:
+            elif option == MODE_SYNCDB:
+                args = 'syncdb'
+            elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
             runScript('%s %s' % (manage, args))
         else:
