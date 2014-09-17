@@ -38,7 +38,7 @@ import numpy
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.utils.path import join, dirname, replaceBaseExt
+from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt
 
 
 # This dictionary will be used to map
@@ -388,7 +388,9 @@ def rowToParticle(partRow, **kwargs):
         if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
         else:
-            img.setMicId(int(partRow.getValue(xmipp.MDL_MICROGRAPH)))
+            # this is changed to get the micId from relion metadata micrograph name(rlnMicrographName)
+            micName = removeExt(partRow.getValue(xmipp.MDL_MICROGRAPH))
+            img.setMicId([int(s) for s in micName.split("_") if s.isdigit()][0])
     except Exception:
         pass    
     return img
