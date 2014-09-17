@@ -27,6 +27,7 @@
 #include <cstdlib>      // std::rand, std::srand
 #include <ctime>        // std::time
 #include <algorithm>
+#include "data/sampling.h"
 
 
 void ProgValidationNonTilt::readParams()
@@ -133,7 +134,7 @@ void ProgValidationNonTilt::run()
                 P += 1;
         }
 
-        P = (P/nSamplesRandom);
+        P = (P/(double)nSamplesRandom);
         std::cout << "P : " << P << std::endl;
 
         row.setValue(MDL_IMAGE_IDX,i);
@@ -322,12 +323,21 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
     std::vector<double> weightV;
     double a;
 
+    SymList SL;
+    int symmetry, sym_order;
+    SL.readSymmetryFile(fnSym.c_str());
+    SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+
+    double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
+    double area_of_sphere_no_symmetry = 4.*PI;
+    double correction = non_reduntant_area_of_sphere/area_of_sphere_no_symmetry;
+
     for (size_t n=0; n<sum_u.size(); n++)
     {
         sumWRan = 0;
         for (size_t nS=0; nS<tempMd.size(); nS++)
         {
-            //double non_reduntant_area_of_sphere = chunk_mysampling.SL.nonRedundantProjectionSphere(symmetry,sym_order);
+            //
             xRan=(std::rand()-RAND_MAX/2);
             yRan=(std::rand()-RAND_MAX/2);
             zRan=(std::rand()-RAND_MAX/2);
@@ -363,7 +373,7 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
             }
             sumWRan += WRan;
         }
-        sum_u.at(n)=sumWRan;
+        sum_u.at(n)=sumWRan*correction;
     }
 
     size_t idx = 0;
