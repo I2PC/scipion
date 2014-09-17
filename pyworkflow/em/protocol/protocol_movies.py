@@ -213,26 +213,25 @@ class ProtOpticalAlignment(ProtProcessMovies):
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+        micList = []
         listProcess = []
         movSet = self.inputMovies.get()
         for mov in movSet:
-            #TODO What milks is this?
-#             mov.load()
             movFn = mov.getFileName()
             processId = self._insertFunctionStep('processMoviesStep', movFn, prerequisites=[])
+            micList.append(self._defineMicFn(movFn))
             listProcess.append(processId)
-        self._insertFunctionStep('createOutputStep', prerequisites=listProcess)
+        self._insertFunctionStep('createOutputStep', micList, prerequisites=listProcess)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self, movFn):
         movName = removeBaseExt(movFn)
         self._createMovWorkingDir(movName)
         self._defineProgram()
-        self._micList = []
-        micFn = self._getExtraPath( movName+ "_aligned.spi")
+        micFn = self._defineMicFn(movFn)
         
         movExt = getExt(movFn)
-        if movExt == "mrc":
+        if movExt == ".mrc":
             movFn = movFn + ":mrcs"
         args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
         if False:
@@ -240,19 +239,14 @@ class ProtOpticalAlignment(ProtProcessMovies):
         if self.doGPU:
             args += ' --gpu %d' % self.GPUCore.get()
         self.runJob(self._program, args)
-
-        # micJob = join(movDir, "justtest.mrc")
-        # micFn = self._getExtraPath(movName + ".mrc")
-        # moveFile(micJob, micFn)
-        self._micList.append(micFn)
     
-    def createOutputStep(self):
+    def createOutputStep(self, micList):
         micSet = self._createSetOfMicrographs()
         movSet = self.inputMovies.get()
         micSet.setAcquisition(movSet.getAcquisition())
         micSet.setSamplingRate(movSet.getSamplingRate())
         
-        for m in self._micList:
+        for m in micList:
             mic = Micrograph()
             mic.setFileName(m)
             micSet.append(mic)
@@ -276,6 +270,9 @@ class ProtOpticalAlignment(ProtProcessMovies):
         else:
             self._program = 'xmipp_optical_alignment_cpu'
     
+    def _defineMicFn(self, movFn):
+        micFn = self._getExtraPath(removeBaseExt(movFn) + "_aligned.spi")
+        return micFn
     
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
