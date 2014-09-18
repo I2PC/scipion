@@ -94,7 +94,7 @@ void ProgValidationNonTilt::run()
     fnOut = fnDir+"/kk.xmd";
     fnOut2 = fnDir+"/kk2.xmd";
     fnFSC = fnDir+"/fsc.xmd";
-    size_t nSamplesRandom = 20;
+    size_t nSamplesRandom = 100;
 
     md.read(fnMd);
     size_t maxNImg;
@@ -110,16 +110,16 @@ void ProgValidationNonTilt::run()
     for (size_t i=0; i<=maxNImg;i++)
     {
     	MetaData tempMd;
-        expression = formatString("imageIndex == %lu",1);
-        tempMd.importObjects(md, MDExpression(expression));
-
-        if (tempMd.size()==0)
-            continue;
-
         std::vector<double> sum_u(nSamplesRandom);
         std::vector<double> sum_w(nSamplesRandom);
         std::vector<double> H0(nSamplesRandom);
         std::vector<double> H(nSamplesRandom);
+
+        expression = formatString("imageIndex == %lu",i);
+        tempMd.importObjects(md, MDExpression(expression));
+
+        if (tempMd.size()==0)
+            continue;
 
         obtainSumU(tempMd,sum_u,H0);
         obtainSumW(tempMd,sum_w,sum_u,H);
@@ -127,16 +127,14 @@ void ProgValidationNonTilt::run()
         std::sort(H0.begin(),H0.end());
         std::sort(H.begin(),H.end());
 
-        double P = 0;
+        double P = 0.;
         for(int i=0; i<sum_u.size();i++)
         {
-            if (H0.at(i)>H.at(i) )
-                P += 1;
+            if (H0.at(i) > H.at(i) )
+                P += 1.;
         }
 
-        P = (P/(double)nSamplesRandom);
-        std::cout << "P : " << P << std::endl;
-
+        P = (P/nSamplesRandom);
         row.setValue(MDL_IMAGE_IDX,i);
         row.setValue(MDL_WEIGHT,P);
         mdOut.addRow(row);
@@ -171,143 +169,6 @@ void ProgValidationNonTilt::run()
     FileName fnVolumeSig=fnDir+"/volume_iter01_00.vol";
     sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumeSig.c_str(),sampling_rate,fnFSC.c_str());
     system(buffer);
-
-    /*
-
-
-
-    size_t sz = md.size();
-    md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
-    std::cout << maxNImg << "\n";
-
-    std::vector<double> clustering(maxNImg+1);
-    std::vector<double> clusteringRandom(maxNImg+1);
-
-    size_t nSamplesRandom = 30;
-    double sumWRan;
-
-    init_progress_bar(maxNImg);
-
-    for (size_t i=0; i<=maxNImg;i++)
-{
-
-
-        //For each projection we have different number of orientations with weights within
-        //the significant value. We have for each projection obtain the null hypotesis with
-        // points uniformily distributed in the sphere
-        //null Hypothesis
-
-
-
-        // sumWRanArray[n] = sumWRan;
-        //sumWRan = 1e3;
-        // for (int var = 0; var < nSamplesRandom; var++)
-        //if (sumWRanArray[var] < sumWRan)
-        //  sumWRan += sumWRanArray[var];
-        //sumWRan += sumWRanArray[var];
-
-        //clusteringRandom.at(i)=sumWRan/nSamplesRandom;
-        clusteringRandom.at(i)=sumWRan/nSamplesRandom;
-        sumWRan = 0;
-
-        //END null Hypothesis
-        double a;
-        sumW=0;
-        FOR_ALL_OBJECTS_IN_METADATA(tempMd)
-        {
-            tempMd2.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-            tempMd2.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-            tempMd2.getValue(MDL_WEIGHT,w,__iter.objId);
-            x = sin(tilt*PI/180)*cos(rot*PI/180);
-            y = sin(tilt*PI/180)*sin(rot*PI/180);
-            z = std::abs(cos(tilt*PI/180));
-
-            tempW = 20;
-            FOR_ALL_OBJECTS_IN_METADATA(tempMd)
-            {
-                tempMd2.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-                tempMd2.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-                tempMd2.getValue(MDL_WEIGHT,w2,__iter.objId);
-                xx = sin(tilt*PI/180)*cos(rot*PI/180);
-                yy = sin(tilt*PI/180)*sin(rot*PI/180);
-                zz = std::abs(cos(tilt*PI/180));
-                a = std::abs(std::acos(x*xx+y*yy+z*zz));
-
-                if ( (a<tempW) && (a != 0))
-                {
-                    //W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
-                    W = a;
-                    tempW = a;
-                }
-            }
-            sumW += W;
-        }
-
-        clustering.at(i)=sumW;
-        progress_bar(i+1);
-}
-
-    std::vector<double> H(maxNImg+1);
-    std::vector<double> H0(maxNImg+1);
-
-    for (size_t i=0; i<=maxNImg;i++)
-{
-        H[i] = clustering.at(i)/(clusteringRandom.at(i)+clustering.at(i));
-        row.setValue(MDL_IMAGE_IDX,i);
-        row.setValue(MDL_ZSCORE,clustering.at(i));
-        row.setValue(MDL_ZSCORE_SHAPE1,clusteringRandom.at(i));
-        row.setValue(MDL_ZSCORE_SHAPE2,H[i]);
-        mdOut.addRow(row);
-}
-
-    for (size_t i=0; i<=maxNImg;i++)
-{
-
-        std::srand(std::time(0));
-        std::random_shuffle(clusteringRandom.begin(), clusteringRandom.end());
-
-        H0[i] = clusteringRandom.at(0)/(clusteringRandom.at(0)+clusteringRandom.at(i));
-        row.setValue(MDL_IMAGE_IDX,i);
-        row.setValue(MDL_ZSCORE,clusteringRandom.at(0));
-        row.setValue(MDL_ZSCORE_SHAPE1,clusteringRandom.at(i));
-        row.setValue(MDL_ZSCORE_SHAPE2,H0[i]);
-        mdOut2.addRow(row);
-}
-
-    std::sort(H.begin(), H.end());
-    std::sort(H0.begin(), H0.end());
-
-    double p5Rand =  H0.at(std::floor(maxNImg*0.05));
-    double pValue;
-    for (size_t i=0; i<=maxNImg;i++)
-        if (H[i] <= p5Rand)
-        {
-            pValue = double(i)/maxNImg;
-        }
-
-    mdOut.write(fnOut);
-    mdOut2.write(fnOut2);
-
-    std :: cout << " p5Rand : " << p5Rand << std::endl;
-    std :: cout << " pValue : " << pValue << std::endl;
-
-
-       size_t p50,p15,p85;
-       sz = mdOut.size();
-       p50 = std::floor(sz/2);
-       p15 = std::floor(sz/2);
-       p85 = std::floor(sz/2);
-
-       //Reconstruct the "projection matching" volume and after that compare with significant volume
-       FileName fnAngles=fnDir+"/images_significant_iter01_00.xmd";
-       if (!fnAngles.exists())
-           REPORT_ERROR(ERR_UNCLASSIFIED,"Angles file does not exist");
-
-
-
-
-
-    */
 }
 
 void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
@@ -316,6 +177,7 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
     //FileName fnMd;
     //randomize_random_generator();
     double xRan,yRan,zRan,norm;
+    double tilt,rot;
     double sumWRan;
     double xRanArray[tempMd.size()];
     double yRanArray[tempMd.size()];
@@ -330,21 +192,32 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
 
     double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
     double area_of_sphere_no_symmetry = 4.*PI;
-    double correction = non_reduntant_area_of_sphere/area_of_sphere_no_symmetry;
+    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 
     for (size_t n=0; n<sum_u.size(); n++)
     {
         sumWRan = 0;
         for (size_t nS=0; nS<tempMd.size(); nS++)
         {
-            //
-            xRan=(std::rand()-RAND_MAX/2);
-            yRan=(std::rand()-RAND_MAX/2);
-            zRan=(std::rand()-RAND_MAX/2);
-            norm = std::sqrt(xRan*xRan+yRan*yRan+zRan*zRan);
-            xRan = (xRan/norm);
-            yRan = (yRan/norm);
-            zRan = std::abs(zRan/norm);
+             /*
+                x = sin(tilt*PI/180)*cos(rot*PI/180);
+        		y = sin(tilt*PI/180)*sin(rot*PI/180);
+        		z = std::abs(cos(tilt*PI/180));
+             */
+
+        	tilt =(double(std::rand())/RAND_MAX)*(PI/2);
+        	rot  =(std::rand()-RAND_MAX/2)*(PI/RAND_MAX);
+        	xRan = sin(tilt)*cos(rot);
+        	yRan = sin(tilt)*sin(rot);
+        	zRan = (cos(tilt));
+
+        	//std::cout << tilt << " " << rot << std::endl;
+        	//std::cout << xRan << " " << yRan << " " << zRan << " " << std::endl;
+            //zRan=(std::rand()-RAND_MAX/2);
+            //norm = std::sqrt(xRan*xRan+yRan*yRan+zRan*zRan);
+            //xRan = (xRan/norm);
+            //yRan = (yRan/norm);
+            //zRan = std::abs(zRan/norm);
 
             xRanArray[nS] = xRan;
             yRanArray[nS] = yRan;
@@ -390,6 +263,8 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
 
 }
 
+#define _FOR_ALL_OBJECTS_IN_METADATA2(__md) \
+        for(MDIterator __iter2(__md); __iter2.hasNext(); __iter2.moveNext())
 void ProgValidationNonTilt::obtainSumW(MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H)
 {
     double a;
@@ -407,19 +282,19 @@ void ProgValidationNonTilt::obtainSumW(MetaData & tempMd,std::vector<double> & s
         tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         tempMd.getValue(MDL_WEIGHT,w,__iter.objId);
-        x = sin(tilt*PI/180)*cos(rot*PI/180);
-        y = sin(tilt*PI/180)*sin(rot*PI/180);
-        z = std::abs(cos(tilt*PI/180));
+        x = sin(tilt*PI/180.)*cos(rot*PI/180.);
+        y = sin(tilt*PI/180.)*sin(rot*PI/180.);
+        z = std::abs(cos(tilt*PI/180.));
 
         tempW = 1e3;
-        FOR_ALL_OBJECTS_IN_METADATA(tempMd)
+        _FOR_ALL_OBJECTS_IN_METADATA2(tempMd)
         {
-            tempMd.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-            tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-            tempMd.getValue(MDL_WEIGHT,w2,__iter.objId);
-            xx = sin(tilt*PI/180)*cos(rot*PI/180);
-            yy = sin(tilt*PI/180)*sin(rot*PI/180);
-            zz = std::abs(cos(tilt*PI/180));
+            tempMd.getValue(MDL_ANGLE_ROT,rot,__iter2.objId);
+            tempMd.getValue(MDL_ANGLE_TILT,tilt,__iter2.objId);
+            tempMd.getValue(MDL_WEIGHT,w2,__iter2.objId);
+            xx = sin(tilt*PI/180.)*cos(rot*PI/180.);
+            yy = sin(tilt*PI/180.)*sin(rot*PI/180.);
+            zz = std::abs(cos(tilt*PI/180.));
             a = std::abs(std::acos(x*xx+y*yy+z*zz));
 
             if ( (a<tempW) && (a != 0))
