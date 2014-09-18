@@ -165,12 +165,6 @@ django = addModule(
     tar='Django-1.5.5.tgz')
 
 addModule(
-    'filemanager',
-    tar='django-filemanager-0.0.5.tgz',
-    flags=['--old-and-unmanageable'],
-    deps=[django])
-
-addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
     default=False)
