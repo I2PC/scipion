@@ -145,7 +145,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # 'django.contrib.admindocs',
     'app',
-    'filemanager',
 )
 
 # A sample logging configuration. The only tangible logging
