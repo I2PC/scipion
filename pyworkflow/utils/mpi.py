@@ -111,7 +111,8 @@ def runJobMPISlave(mpiComm):
             if time() - t0 > TIMEOUT:
                 print ("Timeout in process %d, did not receive command from "
                        "master." % os.getpid())
-                return
+                #return
+                os._exit()  # be brave, die like a you care
 
         print "Slave %d received command." % rank
         if command == 'None':
