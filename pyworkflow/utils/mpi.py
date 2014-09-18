@@ -28,6 +28,7 @@ MPI utilities. runJobMPI and runJobMPISlave send and receive the commands
 to execute, in the given directory and with the given environment.
 """
 
+import os
 from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
@@ -58,7 +59,8 @@ def send(command, comm, dest, tag):
     while not req_send.test()[0]:
         sleep(1)
         if time() - t0 > TIMEOUT:
-            raise Exception("Timeout, cannot send command to slave.")
+            raise Exception("Timeout in process %d, cannot send command "
+                            "to slave." % os.getpid())
 
     # Receive the result in a non-blocking way too (with irecv())
     req_recv = comm.irecv(dest=dest, tag=tag)
@@ -107,8 +109,10 @@ def runJobMPISlave(mpiComm):
                 break
             sleep(1)
             if time() - t0 > TIMEOUT:
-                print "Timeout, did not receive command from master."
-                return
+                print ("Timeout in process %d, did not receive command from "
+                       "master." % os.getpid())
+                #return
+                os._exit()  # be brave, die like a you care
 
         print "Slave %d received command." % rank
         if command == 'None':
@@ -136,7 +140,8 @@ def runJobMPISlave(mpiComm):
             while not req_send.test()[0]:
                 sleep(1)
                 if time() - t0 > TIMEOUT:
-                    print "Timeout, cannot send error message to master."
+                    print ("Timeout in process %d, cannot send error "
+                           "message to master." % os.getpid())
                     return
             return
 
@@ -146,5 +151,6 @@ def runJobMPISlave(mpiComm):
         while not req_send.test()[0]:
             sleep(1)
             if time() - t0 > TIMEOUT:
-                print "Timeout, cannot send result to master."
+                print ("Timeout in process %d, cannot send result "
+                       "to master." % os.getpid())
                 return
