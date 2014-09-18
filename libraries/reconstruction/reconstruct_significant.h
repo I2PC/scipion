@@ -77,6 +77,9 @@ public:
     /** Number of volumes to reconstruct */
     int Nvolumes;
 
+    /** Apply fisher */
+    bool applyFisher;
+
 public: // Internal members
     size_t rank, Nprocessors;
 

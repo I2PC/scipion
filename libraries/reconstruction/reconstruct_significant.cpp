@@ -55,6 +55,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
     addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
+    addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
 }
 
 // Read arguments ==========================================================
@@ -76,6 +77,7 @@ void ProgReconstructSignificant::readParams()
     strict=checkParam("--strictDirection");
     angDistance=getDoubleParam("--angDistance");
     Nvolumes=getIntParam("--numberOfVolumes");
+    applyFisher=checkParam("--dontApplyFisher");
 }
 
 // Show ====================================================================
@@ -95,6 +97,7 @@ void ProgReconstructSignificant::show()
         std::cout << "Maximum tilt                : "  << tiltF << std::endl;
         std::cout << "Use Imed                    : "  << useImed << std::endl;
         std::cout << "Angular distance            : "  << angDistance << std::endl;
+        std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -257,7 +260,10 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by correlation percentile to " << nDir << " -> " << cdfccthis << " " << one_alpha << std::endl;
 //					if (!condition && cc>ccl)
 //						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by imed percentile to " << nDir << " -> " << cdfimedthis << " " << currentAlpha<< std::endl;
-					if (cdfccthis>=one_alpha && cc>ccl)// COSS: && condition): this condition is too restrictive
+					bool condition=true;
+					condition=condition && (applyFisher && cc>ccl || !applyFisher);
+					condition=condition && cdfccthis>=one_alpha;
+					if (condition)
 					{
 //						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
