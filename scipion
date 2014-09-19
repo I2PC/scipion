@@ -285,14 +285,10 @@ def main():
             sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
             sys.exit(0)
 
-        elif option in ['django', 'collectstatic', 'syncdb','test']:
+        elif option in ['django', 'collectstatic']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
-            elif option == MODE_SYNCDB:
-                args = 'syncdb'
-            elif option == MODE_TEST:
-                args = 'test'+' ' +str(sys.argv[3])
             elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
             runScript('%s %s' % (manage, args))
