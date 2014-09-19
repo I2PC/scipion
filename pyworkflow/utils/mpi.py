@@ -112,6 +112,8 @@ def runJobMPISlave(mpiComm):
                 print ("Timeout in process %d, did not receive command from "
                        "master." % os.getpid())
                 #return
+                mpiComm.Disconnect()
+                # next thing, I'll try the rain dance
                 os._exit()  # be brave, die like a you care
 
         print "Slave %d received command." % rank
