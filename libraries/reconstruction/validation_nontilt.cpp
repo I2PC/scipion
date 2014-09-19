@@ -130,10 +130,12 @@ void ProgValidationNonTilt::run()
         double P = 0.;
         for(int i=0; i<sum_u.size();i++)
         {
-            if (H0.at(i) > H.at(i) )
-                P += 1.;
+        	std::cout << H0.at(i) << " " << H.at(i) << " " << std::endl;
+            //if (H0.at(i) > H.at(i) )
+                P += H0.at(i)/H.at(i);
         }
 
+        std::cout << "---------------------" << " " << std::endl;
         P = (P/nSamplesRandom);
         row.setValue(MDL_IMAGE_IDX,i);
         row.setValue(MDL_WEIGHT,P);
@@ -173,9 +175,7 @@ void ProgValidationNonTilt::run()
 
 void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
 {
-    //MetaData md,tempMd,mdWeight;
-    //FileName fnMd;
-    //randomize_random_generator();
+
     double xRan,yRan,zRan,norm;
     double tilt,rot;
     double sumWRan;
@@ -192,8 +192,8 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
 
     double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
     double area_of_sphere_no_symmetry = 4.*PI;
-    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
-
+    //double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
+    double correction = 1;
     for (size_t n=0; n<sum_u.size(); n++)
     {
         sumWRan = 0;
@@ -205,11 +205,11 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
         		z = std::abs(cos(tilt*PI/180));
              */
 
-        	tilt =(double(std::rand())/RAND_MAX)*(PI/2);
-        	rot  =(std::rand()-RAND_MAX/2)*(PI/RAND_MAX);
+        	tilt =(double(std::rand())/RAND_MAX)*(PI);
+        	rot  =(std::rand()-RAND_MAX/2)*(2*PI/RAND_MAX);
         	xRan = sin(tilt)*cos(rot);
         	yRan = sin(tilt)*sin(rot);
-        	zRan = (cos(tilt));
+        	zRan = std::abs(cos(tilt));
 
         	//std::cout << tilt << " " << rot << std::endl;
         	//std::cout << xRan << " " << yRan << " " << zRan << " " << std::endl;
@@ -240,8 +240,8 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
                     tempWRan = a;
                     tempW2 = weightV[nS2];
                     tempW1 = weightV[nS1];
-                    WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
                     //WRan = a;
+                    WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
                 }
             }
             sumWRan += WRan;
