@@ -165,6 +165,16 @@ django = addModule(
     tar='Django-1.5.5.tgz')
 
 addModule(
+    'grappelli',
+    tar='django-grappelli-2.4.tgz',
+    deps=[django])
+
+addModule(
+    'filebrowser',
+    tar='django-filebrowser-3.5.tgz',
+    deps=[django])
+
+addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
     default=False)
