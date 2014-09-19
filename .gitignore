@@ -71,9 +71,6 @@ pw.bashrc
 pw.cshrc
 
 # Static Path
-pyworkflow/web/static/js
-pyworkflow/web/static/css
-pyworkflow/web/static/astex
-pyworkflow/web/static/admin
+pyworkflow/web/static/
 software/em/
 data
