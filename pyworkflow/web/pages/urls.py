@@ -3,20 +3,22 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
+from filebrowser.sites import site
+
+#===============================================================================
+# URL ASSOCIATION
+#===============================================================================
 
 urlpatterns = patterns('',
+    
+    # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
-    # Examples:
-    # url(r'^pages/', include('pages.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
+    url(r'^admin/filebrowser/', include(site.urls)),
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    
+    # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
     # If no path given, load the projects view
     url(r'^$', 'app.views_project.projects'),
@@ -79,7 +81,7 @@ urlpatterns = patterns('',
     url(r'^file_downloader/$', 'app.views_util.file_downloader'),
     
     #SHOWJ 
-    url(r'^showj/$', 'app.views_showj.showj'), #Load web
+    url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     
     #UPLOAD

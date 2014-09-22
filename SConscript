@@ -167,11 +167,12 @@ django = addModule(
 addModule(
     'grappelli',
     tar='django-grappelli-2.5.tgz',
+    flags=['--old-and-unmanageable'],
     deps=[django])
 
 addModule(
     'filebrowser',
-    tar='django-filebrowser-3.5.tgz',
+    tar='django-filebrowser-3.5.8.tgz',
     flags=['--old-and-unmanageable'],
     deps=[django])
 
