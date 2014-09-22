@@ -74,6 +74,7 @@ class ProtUserSubSet(ProtSets):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        self._defineSourceRelation(inputImages, output)
         
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
@@ -196,7 +197,7 @@ class ProtUserSubSet(ProtSets):
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj) 
+                self._createMicsSubSetFromCTF(inputObj)
             else:
                 self._createSubSetOfCTF(inputObj)
             
