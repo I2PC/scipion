@@ -173,15 +173,16 @@ void ProgValidationNonTilt::run()
     system(buffer);
 }
 
-void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
+void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
 {
 
     double xRan,yRan,zRan,norm;
     double tilt,rot;
     double sumWRan;
-    double xRanArray[tempMd.size()];
-    double yRanArray[tempMd.size()];
-    double zRanArray[tempMd.size()];
+    size_t tempMdSz= tempMd.size();
+    double xRanArray[tempMdSz];
+    double yRanArray[tempMdSz];
+    double zRanArray[tempMdSz];
     std::vector<double> weightV;
     double a;
 
@@ -265,7 +266,7 @@ void ProgValidationNonTilt::obtainSumU(MetaData & tempMd,std::vector<double> & s
 
 #define _FOR_ALL_OBJECTS_IN_METADATA2(__md) \
         for(MDIterator __iter2(__md); __iter2.hasNext(); __iter2.moveNext())
-void ProgValidationNonTilt::obtainSumW(MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H)
+void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<double> & sum_W,std::vector<double> & sum_u,std::vector<double> & H)
 {
     double a;
     double rot,tilt,w;
