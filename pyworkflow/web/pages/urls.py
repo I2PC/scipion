@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
-    url(r'^admin/filebrowser/', include(site.urls)),
+    url(r'^filebrowser/', include(site.urls)),
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
