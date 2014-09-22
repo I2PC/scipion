@@ -176,13 +176,13 @@ void ProgValidationNonTilt::run()
 void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
 {
 
-	static const size_t tempMdSz= tempMd.size();
+	const size_t tempMdSz= tempMd.size();
     double xRan,yRan,zRan,norm;
     double tilt,rot;
     double sumWRan;
-    double xRanArray[tempMdSz];
-    double yRanArray[tempMdSz];
-    double zRanArray[tempMdSz];
+    double * xRanArray = new double[tempMdSz];
+    double * yRanArray = new double[tempMdSz];
+    double * zRanArray  = new double[tempMdSz];
     std::vector<double> weightV;
     double a;
 
@@ -261,6 +261,10 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
             idx += 1;
         }
     }
+
+    delete xRanArray;
+    delete yRanArray;
+    delete zRanArray;
 
 }
 
