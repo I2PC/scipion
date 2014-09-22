@@ -25,4 +25,4 @@
 
 #include <reconstruction/nma_alignment_vol.h>
 
-RUN_XMIPP_PROGRAM(ProgNmaAlignmentVol);
+RUN_XMIPP_PROGRAM(ProgNmaAlignmentVol)
