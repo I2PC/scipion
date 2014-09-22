@@ -176,10 +176,10 @@ void ProgValidationNonTilt::run()
 void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
 {
 
+	static const size_t tempMdSz= tempMd.size();
     double xRan,yRan,zRan,norm;
     double tilt,rot;
     double sumWRan;
-    size_t tempMdSz= tempMd.size();
     double xRanArray[tempMdSz];
     double yRanArray[tempMdSz];
     double zRanArray[tempMdSz];
