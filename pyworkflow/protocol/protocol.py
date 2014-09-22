@@ -1299,10 +1299,8 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # when it runs on a MPI node, it *always* has the scipion env.
             prog = join(os.environ['SCIPION_HOME'], 'scipion')
             params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
-            # retcode = runJob(None, prog, params,
-            #                  numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
-            retcode =  runJob(None, prog, params,
-                              numberOfThreads=protocol.numberOfMpi.get(), hostConfig=hostConfig)
+            retcode = runJob(None, prog, params,
+                             numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
