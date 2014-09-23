@@ -43,6 +43,7 @@ ParticleSize = 0
 # {expert} Sort the particles
 """ Set to true if you what to sort the particles according to some quality value"""
 DoSort=True
+
 # {expert}{condition}(DoSort==True){list_combo}(None, MaxZscore, Percentage) Automatic particle rejection
 """ How to automatically reject particles. It can be none (no rejection), maxZscore (reject a particle
 if its Zscore is larger than this value), Percentage (reject a given percentage in each one of the screening criteria). """
