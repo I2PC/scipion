@@ -84,6 +84,10 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk])
 
+env.AddLibrary(
+    'parallel',
+    tar='parallel-20140922.tgz')
+
 boost_headers_only = env.ManualInstall(
     'boost_headers_only',
     tar='boost_1_56_0.tgz',
