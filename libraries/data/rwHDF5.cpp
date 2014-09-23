@@ -134,7 +134,7 @@ int ImageBase::readHDF5(size_t select_img)
     int rank;
 
     String dsname = filename.getBlockName();
-
+    
     // Setting default dataset name
     if (dsname.empty())
     {
@@ -151,6 +151,17 @@ int ImageBase::readHDF5(size_t select_img)
             dsname = formatString(dsname.c_str(), IMG_INDEX(select_img));
 
             H5Gclose(grpid);
+            break;
+        default:
+            break;
+        }
+    }
+    else
+    {
+        switch (provider.first)
+        {
+        case EMAN: // Images in stack are stored in separated groups
+            nobjEman=1;
             break;
         default:
             break;
