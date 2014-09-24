@@ -329,7 +329,8 @@ def main():
         args = sys.argv[2:]
         from scripts.install import build
         ret = build(args=args)
-        if ret == 0 and '--help' not in args and '-h' not in args:
+        if ret == 0 and not (
+                '--help' in args or '-h' in args or '-c' not in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
