@@ -73,6 +73,7 @@ tk = env.AddLibrary(
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
+    targets=['lib/libz.so'],
     addPath=False)
 
 sqlite = env.AddLibrary(
@@ -92,6 +93,7 @@ python = env.AddLibrary(
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
+    targets=['bin/parallel'],
     deps=[zlib])
 
 boost_headers_only = env.ManualInstall(
