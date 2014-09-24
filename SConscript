@@ -70,6 +70,11 @@ tk = env.AddLibrary(
     deps=[tcl],
     clean=['software/tmp/tk8.6.1'])
 
+zlib = env.AddLibrary(
+    'zlib',
+    tar='zlib-1.2.8.tgz',
+    addPath=False)
+
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -82,11 +87,12 @@ python = env.AddLibrary(
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared'],
-    deps=[sqlite, tk])
+    deps=[sqlite, tk, zlib])
 
 env.AddLibrary(
     'parallel',
-    tar='parallel-20140922.tgz')
+    tar='parallel-20140922.tgz',
+    deps=[zlib])
 
 boost_headers_only = env.ManualInstall(
     'boost_headers_only',
