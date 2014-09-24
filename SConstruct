@@ -298,6 +298,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
+        if packageHome is not None:
+            Default('software/em/%s/bin' % name)
         return env.Command(
             Dir('software/em/%s/bin' % name),
             Dir(packageHome),
