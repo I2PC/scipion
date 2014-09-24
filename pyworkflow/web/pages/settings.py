@@ -153,8 +153,8 @@ INSTALLED_APPS = (
 try:
     import imp
     imp.find_module('gunicorn')
-    INSTALLED_APPS = INSTALLED_APPS + ('gunicorn')
-except:
+    INSTALLED_APPS = INSTALLED_APPS + ('gunicorn', 'gunicorn')
+except ImportError:
     print "gunicorn not found"
 
 # A sample logging configuration. The only tangible logging
