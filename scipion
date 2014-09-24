@@ -274,20 +274,12 @@ def main():
         else:
             option = 'django'
 
-        if option == 'apache_vars':
-            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
-            #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
-            #   * HOME: so it can reach Scipion directory
-            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
-            #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
-            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-            sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
-            sys.exit(0)
-
-        elif option in ['django', 'collectstatic']:
+        if option in ['django', 'collectstatic', 'gunicorn']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
+            elif option == 'gunicorn':
+                args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
             elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
             runScript('%s %s' % (manage, args))
@@ -337,7 +329,8 @@ def main():
         args = sys.argv[2:]
         from scripts.install import build
         ret = build(args=args)
-        if ret == 0 and '--help' not in args and '-h' not in args:
+        if ret == 0 and not (
+                '--help' in args or '-h' in args or '-c' not in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
@@ -457,22 +450,3 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 if __name__ == '__main__':
     main()
-
-elif __name__.startswith('_mod_wsgi'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
-    os.environ.update(VARS)
-    # !!!! reuse VARS for these sys.path too
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib', 'python2.7', 'site-packages'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'protocols'))
-    # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
-
-    pages_settings_path = join(SCIPION_HOME,'pyworkflow','web')
-    if not pages_settings_path in sys.path:
-        sys.path.append(pages_settings_path)
-
-    import django.core.handlers.wsgi
-
-    # default name for the function that WSGI calls is "application"
-    # you can change it wsgi.conf
-    application = django.core.handlers.wsgi.WSGIHandler()

@@ -144,11 +144,18 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
+    # 'gunicorn',
     'app',
-    
     'grappelli',
     'filebrowser',
 )
+
+try:
+    import imp
+    imp.find_module('gunicorn')
+    INSTALLED_APPS = INSTALLED_APPS + ('gunicorn', 'gunicorn')
+except ImportError:
+    print "gunicorn not found"
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
