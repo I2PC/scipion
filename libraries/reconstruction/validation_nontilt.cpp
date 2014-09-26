@@ -111,7 +111,7 @@ void ProgValidationNonTilt::run()
 
     double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
     double area_of_sphere_no_symmetry = 4.*PI;
-    double correction = non_reduntant_area_of_sphere/area_of_sphere_no_symmetry;
+    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
     double validation = 0;
 
     init_progress_bar(maxNImg);
@@ -308,7 +308,6 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<doubl
             if ( (a<tempW) && (a != 0))
             {
                 W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
-                //W = a;
                 tempW = a;
             }
         }
