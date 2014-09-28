@@ -73,27 +73,39 @@ class XmippPreprocess():
                       help=' Substitute selected pixels by this value.')
     
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertCommonSteps(self, outputFn):
+    def _insertCommonSteps(self, changeInserts):
         if self.doInvert:
-            self._insertFunctionStep("invertStep", outputFn)
+            args = self._argsInvert()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("invertStep", args, changeInserts)
         
         if self.doThreshold:
-            self._insertFunctionStep("thresholdStep", outputFn, self.threshold.get())
+            args = self._argsThreshold()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("thresholdStep", args, changeInserts)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def invertStep(self, outputFn):
-        args = ' -i %s --mult -1' % outputFn
+    def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
     
-    def thresholdStep(self, outputFn, threshold):
-        args = " -i %(outputFn)s --select below %(threshold)f "
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _argsCommonInvert(self):
+        args = ' --mult -1'
+        return args
+    
+    def _argsCommonThreshold(self):
+        args = " --select below %f" % self.threshold.get()
         fillStr = self.getEnumText('fillType')
-        args += "--substitute %(fillStr)s "
+        args += " --substitute %s " % fillStr
         
         if self.fillType == MASK_FILL_VALUE:
             args += " %f" % self.fillValue.get()
-            
-        self.runJob("xmipp_transform_threshold", args % locals())
+        return args
 
 
 class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
@@ -155,36 +167,33 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
 #                       help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
     
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
+    def _insertProcessStep(self):
+        self.isFirstStep = True
+        # this is for when the options selected has changed and the protocol is resumed
+        changeInserts = [self.doRemoveDust, self.doNormalize, self.doInvert, self.doThreshold]
+        
         if self.doRemoveDust:
-            self._insertFunctionStep("removeDustStep", outputFn)
+            args = self._argsRemoveDust()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("removeDustStep", args, changeInserts)
         
         if self.doNormalize:
-            self._insertFunctionStep("normalizeStep", outputFn, self.normType.get(), self.backRadius.get())
+            args = self._argsNormalize()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("normalizeStep", args, changeInserts)
         
-        self._insertCommonSteps(outputFn)
+        self._insertCommonSteps(changeInserts)
         
 #         if self.getEnumText('autoParRejection') != 'None':
 #             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def removeDustStep(self, outputFn):
-        threshold = self.thresholdDust.get()
-        self.runJob('xmipp_transform_filter','-i %(outputFn)s --bad_pixels outliers %(threshold)f' % locals())
+    def removeDustStep(self, args, changeInserts):
+        self.runJob('xmipp_transform_filter', args)
     
-    def normalizeStep(self, ImagesMd, normType, bgRadius):
-        args = "-i %(ImagesMd)s "
-        radii = self._getSize()
-        print "RADIUS:", radii
-        if bgRadius <= 0:
-            bgRadius = int(radii)
-        
-        if normType == "OldXmipp":
-            args += "--method OldXmipp"
-        elif normType == "NewXmipp":
-            args += "--method NewXmipp --background circle %(bgRadius)d"
-        else:
-            args += "--method Ramp --background circle %(bgRadius)d"
+    def normalizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_normalize", args % locals())
     
     def sortImages(self, outputFn, outputMd):
@@ -204,24 +213,24 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
 #         #if Ndim > 0:
 #         self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
 #     
-    def convertStep(self):
-        """ convert if necessary"""
-        imgSet = self.inputParticles.get()
-        imgSet.writeStack(self.outputStk)
-    
-    def createOutputStep(self):
-        inImgSet = self.inputParticles.get()
-        outImgSet = self._createSetOfParticles()
-        outImgSet.copyInfo(inImgSet)
-        
-        for i, img in enumerate(inImgSet):
-            j = i + 1
-            img.setLocation(j, self.outputStk)
-            outImgSet.append(img)
-        
-        self._defineOutputs(outputParticles=outImgSet)
-        self._defineTransformRelation(inImgSet, self.outputParticles)
-    
+#     def convertStep(self):
+#         """ convert if necessary"""
+#         imgSet = self.inputParticles.get()
+#         imgSet.writeStack(self.outputStk)
+#     
+#     def createOutputStep(self):
+#         inImgSet = self.inputParticles.get()
+#         outImgSet = self._createSetOfParticles()
+#         outImgSet.copyInfo(inImgSet)
+#         
+#         for i, img in enumerate(inImgSet):
+#             j = i + 1
+#             img.setLocation(j, self.outputStk)
+#             outImgSet.append(img)
+#         
+#         self._defineOutputs(outputParticles=outImgSet)
+#         self._defineTransformRelation(inImgSet, self.outputParticles)
+#     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         validateMsgs = []
@@ -234,7 +243,7 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def _summary(self):
         summary = []
-        summary.append("Input particles: %s" % self.inputParticles.get().getName())
+        summary.append("Input particles: %s" % self.inputParticles.get().getFileName())
         
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
@@ -247,7 +256,7 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def _methods(self):
         methods = []
-        methods.append("Input particles: %s" % self.inputParticles.get().getName())
+        methods.append("Input particles: %s" % self.inputParticles.get().getFileName())
         
         if hasattr(self, 'outputParticles'):
             methods.append("A set of %d particles was preprocessed." % self.outputParticles.getSize())
@@ -260,6 +269,50 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _argsRemoveDust(self):
+        if self.isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += " --bad_pixels outliers %f" % self.thresholdDust.get()
+        return args
+    
+    def _argsNormalize(self):
+        if self.isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        
+        normType = self.normType.get()
+        bgRadius = self.backRadius.get()
+        radii = self._getSize()
+        if bgRadius <= 0:
+            bgRadius = int(radii)
+        
+        if normType == "OldXmipp":
+            args += " --method OldXmipp"
+        elif normType == "NewXmipp":
+            args += " --method NewXmipp --background circle %d" % bgRadius
+        else:
+            args += " --method Ramp --background circle %d" % bgRadius
+        return args
+    
+    def _argsInvert(self):
+        if self.isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._argsCommonInvert()
+        return args
+    
+    def _argsThreshold(self):
+        if self.isFirstStep:
+            args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._argsCommonThreshold()
+        return args
+    
     def _getSize(self):
         """ get the size of SetOfParticles object"""
 
@@ -344,61 +397,158 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         XmippPreprocess._defineProcessParams(self, form)
         
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertProcessStep(self, inputFn, outputFn, outputMd):
+    def _insertProcessStep(self):
+        self.isFirstStep = True
+        # this is for when the options selected has changed and the protocol is resumed
+        changeInserts = [self.doChangeHand, self.doRandomize, self.doSymmetrize, self.doAdjust, self.doSegment, self.doInvert, self.doNormalize, self.doThreshold]
+
         if self.doChangeHand:
-            self._insertFunctionStep("changeHandStep", outputFn)
+            args = self._argsChangeHand()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("changeHandStep", args, changeInserts)
         
         if self.doRandomize:
-            self._insertFunctionStep("randomizeStep", outputFn, self.maxResolutionRandomize.get())
+            args = self._argsRandomize()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("randomizeStep", args, changeInserts)
         
         if self.doSymmetrize:
-            self._insertFunctionStep("symmetrizeStep", outputFn, self.symmetryGroup.get(), self.aggregation.get())
+            args = self._argsSymmetrize()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("symmetrizeStep", args, changeInserts)
         
         if self.doAdjust:
-            self._insertFunctionStep("adjustStep", outputFn, self.setOfProjections.get())
+            args = self._argsAdjust()
+            self._insertFunctionStep("adjustStep", args, changeInserts)
+            if self.isFirstStep:
+                self.isFirstStep = False
 
         if self.doSegment:
-            self._insertFunctionStep("segmentStep", outputFn, self.segmentationType.get(), self.segmentationMass.get())
+            args = self._argsSegment()
+            self._insertFunctionStep("segmentStep", args, changeInserts)
+            if self.isFirstStep:
+                self.isFirstStep = False
         
         if self.doNormalize:
-            self._insertFunctionStep("normalizeStep", outputFn, self.backRadius.get())
+            args = self._argsNormalize()
+            if self.isFirstStep:
+                self.isFirstStep = False
+            self._insertFunctionStep("normalizeStep", args, changeInserts)
         
-        self._insertCommonSteps(outputFn)
+        self._insertCommonSteps(changeInserts)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def changeHandStep(self, outModel):
-        self.runJob("xmipp_transform_mirror","-i %s --flipX" % outModel)
+    def changeHandStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_mirror", args)
     
-    def randomizeStep(self, outModel, maxResolution):
-        samplingRate = self.inputVolumes.get().getSamplingRate()
-        self.runJob("xmipp_transform_randomize_phases", "-i %s --freq continuous %f %f" % (outModel,float(maxResolution),samplingRate))
+    def randomizeStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_randomize_phases", args)
     
-    def symmetrizeStep(self, outModel, symmetry, symmetryAggregation):
-        if symmetry!='c1':
-            args="-i %s --sym %s"%(outModel, symmetry)
-            if symmetryAggregation=="sum":
-                args+=" --sum"
-            self.runJob("xmipp_transform_symmetrize", args)
+    def symmetrizeStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_symmetrize", args)
     
-    def adjustStep(self, outModel, setOfImages):
-        self.runJob("xmipp_adjust_volume_grey_levels", "-i %s -m %s" % (outModel, setOfImages))
-    
-    def segmentStep(self, outModel, segmentationType, segmentationMass):
-        
+    def adjustStep(self, args, changeInserts):
         if self._isSingleInput():
-            self._segmentVolume(outModel, segmentationType, segmentationMass)
+            localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
+            self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
         else:
-            numberOfParticles = self.inputVolumes.get().getSize()
-            for i in range(1, numberOfParticles + 1):
-                
-                volOutModel = locationToXmipp(i, outModel)
-                self._segmentVolume(volOutModel, segmentationType, segmentationMass)
-        
-    def _segmentVolume(self, outModel, segmentationType, segmentationMass):
+            numberOfVols = self.inputVolumes.get().getSize()
+            
+            for i in range(1, numberOfVols + 1):
+                inputVol = locationToXmipp(i, self.inputFn)
+                outputVol = locationToXmipp(i, self.outputStk)
+                localArgs = self._adjustLocalArgs(self.inputFn, self.outputStk, args)
+                self.runJob("xmipp_transform_adjust_volume_grey_levels", localArgs)
+    
+    def segmentStep(self, args, changeInserts):
         fnMask = self._getTmpPath("mask.vol")
-        ts = self._getSize()
-        args = "-i %s -o %s --method " % (outModel, fnMask)
+        if self._isSingleInput():
+            localArgs = self._segmentLocalArgs(self.inputFn, fnMask, args)
+            maskArgs = self._segMentMaskArgs(self.inputFn, self.outputStk, fnMask)
+            self._segmentVolume(localArgs, maskArgs, fnMask)
+        else:
+            numberOfVols = self.inputVolumes.get().getSize()
+            
+            for i in range(1, numberOfVols + 1):
+                inputVol = locationToXmipp(i, self.inputFn)
+                outputVol = locationToXmipp(i, self.outputStk)
+                localArgs = self._segmentLocalArgs(self.inputFn, fnMask, args)
+                maskArgs = self._segMentMaskArgs(inputVol, outputVol, fnMask)
+                self._segmentVolume(localArgs, maskArgs, fnMask)
+    
+    def _segmentVolume(self, localArgs, maskArgs, fnMask):
+        self.runJob("xmipp_volume_segment", localArgs)
+        if exists(fnMask):
+            self.runJob("xmipp_transform_mask", maskArgs)
+            cleanPath(fnMask)
+    
+    def normalizeStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_normalize", args)
+    
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _argsChangeHand(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += " --flipX"
+        return args
+    
+    def _argsRandomize(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
         
+        samplingRate = self.inputVolumes.get().getSamplingRate()
+        resol = self.maxResolutionRandomize.get()
+        args += " --freq continuous %f %f" % (float(resol),samplingRate)
+        return args
+    
+    def _argsSymmetrize(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        
+        symmetry = self.symmetryGroup.get()
+        symmetryAggregation = self.aggregation.get()
+        
+        if symmetry != 'c1':
+            args += " --sym %s"%symmetry
+            if symmetryAggregation == "sum":
+                args += " --sum"
+        return args
+    
+    def _argsAdjust(self):
+        args = " -m %s" % self.setOfProjections.get()
+        return args
+    
+    def _adjustLocalArgs(self, inputVol, outputVol, args):
+            if self.isFirstStep:
+                localArgs = "-i %s -o %s" % (inputVol, outputVol) + args
+            else:
+                localArgs = "-i %s" % outputVol + args
+            return localArgs
+    
+    def _argsSegment(self):
+        segmentationType = self.segmentationType.get()
+        segmentationMass = self.segmentationMass.get()
+        ts = self._getSize()
+        
+        args = " --method "
         if segmentationType == "Voxel mass":
             args += "voxel_mass %d" % (int(segmentationMass))
         elif segmentationType == "Aminoacid mass":
@@ -407,19 +557,59 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
             args += "dalton_mass %d %f" % (int(segmentationMass),float(ts))
         else:
             args += "otsu"
-        self.runJob("xmipp_volume_segment", args)
         
-        if exists(fnMask):
-            self.runJob("xmipp_transform_mask", "-i %s --mask binary_file %s" % (outModel, fnMask))
-            cleanPath(fnMask)
+        return args
     
-    def normalizeStep(self, outModel, maskRadius):
+    def _segmentLocalArgs(self, inputVol, fnMask, args):
+        return "-i %s -o %s --method " % (inputVol, fnMask) + args
+    
+    def _segMentMaskArgs(self, inputVol, outputVol, fnMask):
+            if self.isFirstStep:
+                maskArgs = "-i %s -o %s" % (inputVol, outputVol)
+            else:
+                maskArgs = "-i %s" % outputVol
+            maskArgs += " --mask binary_file %s" % fnMask
+            return maskArgs
+    
+    def _argsNormalize(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        
+        maskRadius = self.backRadius.get()
         if maskRadius <= 0:
             size = self._getSize()
             maskRadius = size/2
-        self.runJob("xmipp_transform_normalize", "-i %s --method NewXmipp --background circle %d" % (outModel, int(maskRadius)))
+        
+        args += " --method NewXmipp --background circle %d" % int(maskRadius)
+        return args
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    def _argsInvert(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._argsCommonInvert()
+        return args
+    
+    def _argsThreshold(self):
+        if self.isFirstStep:
+            if self._isSingleInput():
+                args = "-i %s -o %s" % (self.inputFn, self.outputStk)
+            else:
+                args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
+        else:
+            args = "-i %s" % self.outputStk
+        args += self._argsCommonThreshold()
+        return args
+
     def _validate(self):
         validateMsgs = []
         

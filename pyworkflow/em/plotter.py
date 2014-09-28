@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
-    def __init__(self, **args):
-        Plotter.__init__(self, **args)
+    def __init__(self, x=1, y=1, mainTitle="", **args):
+        Plotter.__init__(self, x, y, mainTitle, **args)
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
@@ -60,15 +60,18 @@ class EmPlotter(Plotter):
         
     def plotMatrix(self,_matrix,cmap='Greens'
                        , xticksLablesMajor=None
-                       , yticksLablesMajor=None):
+                       , yticksLablesMajor=None
+                       , rotationX=90.
+                       , rotationY=0.):
         im = plt.imshow(_matrix, interpolation="none", cmap=cmap)
         if (xticksLablesMajor is not None):       
             plt.xticks(range(len(xticksLablesMajor)), 
                                  xticksLablesMajor[:len(xticksLablesMajor)],
-                                 rotation=90)
+                                 rotation=rotationX)
         if (yticksLablesMajor is not None):       
             plt.yticks(range(len(yticksLablesMajor)),
-                                 yticksLablesMajor[:len(yticksLablesMajor)])
+                                 yticksLablesMajor[:len(yticksLablesMajor)],
+                                 rotation=rotationY)
         cax = plt.colorbar(im)
         #im.cmap.set_over('g')#outbound values
 

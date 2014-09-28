@@ -234,23 +234,38 @@ class SubclassesTreeProvider(TreeProvider):
             
     def getObjects(self):
         objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
-        
+
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
+
             if not self._containsObject(objects, setObject):
+           
                 objects.append(setObject)
                 setObject._allowSelection = False # Do not allows set to be selected here
-                for item in setObject:
-                    newItem = item.clone()
-                    newItem.setObjId(item.getObjId())
-                    newItem._parentObject = setObject
-                    objects.append(newItem)
+            else:
+                for o in objects:
+                    if o.getObjId() == setObject.getObjId():      
+                        setObject = o 
+                        break         
+                setObject._allowSelection = True # Do not allows set to be selected here
+                
+            for item in setObject:
+                newItem = item.clone()
+                newItem.setObjId(item.getObjId())
+                newItem._parentObject = setObject
+                objects.append(newItem)
+                
         
         return objects
             
     def classFilter(self, obj):
         """ Filter Set with the specified class name. """
-        itemType = getattr(obj, 'ITEM_TYPE', None)        
-        return (itemType and itemType.__name__ == self.className)
+        itemType = getattr(obj, 'ITEM_TYPE', None)   
+        filter = False
+        for objClass in self.className.split(","):
+            filter = (itemType and itemType.__name__ == objClass)
+            if filter: 
+                break
+        return filter
         
     def objFilter(self, obj):
         result = True
@@ -1307,21 +1322,25 @@ class FormWindow(Window):
         parent = groupWidget.content
         r = 0
         for paramName, param in groupParam.iterParams():
-            protVar = getattr(self.protocol, paramName, None)
-            
-            if protVar is None:
-                raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
-            
-            if isinstance(param, PointerParam):
-                visualizeCallback = self._visualize # Add visualize icon for pointer params
+            if isinstance (param, Line):
+                widget = LineWidget(r, paramName, param, self, parent, None)
+                self._fillLine(param, widget)
             else:
-                visualizeCallback = self.visualizeDict.get(paramName, None)
-            
-            widget = ParamWidget(r, paramName, param, self, parent, 
-                                                     value=self.getWidgetValue(protVar, param),
-                                                     callback=self._checkChanges,
-                                                     visualizeCallback=visualizeCallback)
-            widget.show() # Show always, conditions will be checked later
+                protVar = getattr(self.protocol, paramName, None)
+                
+                if protVar is None:
+                    raise Exception("_fillSection: param '%s' not found in protocol" % paramName)
+                
+                if isinstance(param, PointerParam):
+                    visualizeCallback = self._visualize # Add visualize icon for pointer params
+                else:
+                    visualizeCallback = self.visualizeDict.get(paramName, None)
+                
+                widget = ParamWidget(r, paramName, param, self, parent, 
+                                                         value=self.getWidgetValue(protVar, param),
+                                                         callback=self._checkChanges,
+                                                         visualizeCallback=visualizeCallback)
+                widget.show() # Show always, conditions will be checked later
             r += 1         
             self.widgetDict[paramName] = widget
  

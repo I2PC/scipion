@@ -44,7 +44,7 @@ class DataView(View):
     """ Wrapper the arguments to showj (either web or desktop). """
     def __init__(self, path, viewParams={}, **kwargs):
         View.__init__(self)
-        self._memory = '1g'
+        self._memory = '2g'
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
@@ -63,7 +63,7 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):        
-        runJavaIJapp(self._memory, 'xmipp.viewer.Viewer', self.getShowJParams(), True, env=self._env)
+        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
     
     def getShowJParams(self):
         params = '-i ' + self._path
@@ -137,7 +137,7 @@ class ObjectView(DataView):
         return params
     
     def show(self):
-        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), True, env=self._env)
+        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
         
         
 class ClassesView(ObjectView):
@@ -173,7 +173,7 @@ class CoordinatesObjectView(DataView):
         return params
     
     def show(self):
-        runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), True, env=self._env)
+        runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
         
         
 #------------------------ Some viewers ------------------------

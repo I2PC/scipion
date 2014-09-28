@@ -105,7 +105,7 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
-            if attr._objDoStore:
+            if attr is not None and attr._objDoStore:
                 yield (key, attr)
                 
     def isPointer(self):
@@ -287,13 +287,14 @@ class Object(object):
         if prefix:
             prefix += '.'
         for k, v in self.getAttributesToStore():
-            kPrefix = prefix + k
-            if includeClass:
-                objDict[kPrefix] = (v.getClassName(), v.getObjValue())
-            else:
-                objDict[kPrefix] = v.getObjValue()
-            if not isinstance(v, Scalar):
-                v.__getObjDict(kPrefix, objDict, includeClass)
+            if not v.isPointer():
+                kPrefix = prefix + k
+                if includeClass:
+                    objDict[kPrefix] = (v.getClassName(), v.getObjValue())
+                else:
+                    objDict[kPrefix] = v.getObjValue()
+                if not isinstance(v, Scalar):
+                    v.__getObjDict(kPrefix, objDict, includeClass)
             
     def getObjDict(self, includeClass=False):
         """ Return all attributes and values in a dictionary.
@@ -405,11 +406,11 @@ class Object(object):
         for k, v in self.getAttributes():
             v.printAll(k, level + 1)
             
-    def printObjDict(self):
+    def printObjDict(self, includeClasses=False):
         """Print object dictionary. Main for debugging"""
         import pprint
         pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(self.getObjDict())        
+        pp.pprint(dict(self.getObjDict(includeClasses)))        
 
 
 class OrderedObject(Object):
@@ -539,6 +540,9 @@ class Scalar(Object):
     def sum(self, value):
         self._objValue += self._convertValue(value)
         
+    def multiply(self, value):
+        self._objValue *= value
+        
     
 class Integer(Scalar):
     """Integer object"""
@@ -604,7 +608,9 @@ class Boolean(Scalar):
         return bool(value) 
     
     def __nonzero__(self):
-        return self.get()
+        if not self.hasValue():
+            return False
+        return self.get() 
     
     def __bool__(self):
         return self.get()  
@@ -725,8 +731,8 @@ class List(Object, list):
     
         
 class PointerList(List):
-    def __init__(self, **args):
-        List.__init__(self, **args)
+    def __init__(self, **kwargs):
+        List.__init__(self, **kwargs)
         
     def _convertValue(self, value):
         if isinstance(value, list):
@@ -741,8 +747,8 @@ class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
     pType: the type of the list elememnts, int, bool, str"""
-    def __init__(self, pType=str, **args):
-        Scalar.__init__(self, **args)
+    def __init__(self, pType=str, **kwargs):
+        Scalar.__init__(self, **kwargs)
         list.__init__(self)
         self._pType = pType
         
@@ -757,7 +763,7 @@ class CsvList(Scalar, list):
                     self.append(self._pType(s))
             elif isinstance(value, list) or isinstance(value, tuple):
                 for s in value:
-                    self.append(s)
+                    self.append(self._pType(s))
             else:
                 raise Exception("CsvList.set: Invalid value type: ", type(value))
             

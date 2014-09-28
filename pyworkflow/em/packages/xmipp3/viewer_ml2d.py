@@ -164,7 +164,7 @@ def createPlots(protML, selectedPlots):
     else:
         gridsize = [2, 2]
         
-    xplotter = XmippPlotter(*gridsize)
+    xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1])
         
     # Create data to plot
     iters = range(1, lastIter+1)

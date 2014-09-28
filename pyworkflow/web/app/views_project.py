@@ -133,12 +133,12 @@ def save_selection(request):
 
 def tree_prot_view(request):
     projectName = request.session['projectName'] 
-    project = loadProject(projectName)   
+    project = loadProject(projectName)
      
     # load the protocol tree current active
-    root = loadProtTree(project)
+    htmlTree = loadProtTree(project)
     
-    return render_to_response('project_content/tree_prot_view.html', {'sections': root.childs})
+    return render_to_response('project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
     
 def run_table_graph(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
@@ -240,7 +240,7 @@ def project_content(request):
     graphView = settings.graphView.get()
     
     # load the protocol tree current active
-    root = loadProtTree(project)
+    htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
     choices = [pm.text.get() for pm in settings.protMenuList]
@@ -262,7 +262,7 @@ def project_content(request):
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
-               'sections': root.childs,
+               'protTreeHtml': htmlTree,
                'choices':choices,
                'choiceSelected': choiceSelected,
                'runs': runs,
@@ -283,50 +283,52 @@ def protocol_info(request):
 #    print "ENTER IN PROTOCOL INFO METHOD"
 
     if request.is_ajax():
+        jsonStr = ''
         projectName = request.session['projectName']
         protId = request.GET.get('protocolId', None)
 
         project = loadProject(projectName)
-        protocol = project.getProtocol(int(protId))
         
-        # PROTOCOL IO
-        input_obj = [{'name':name, 
-                      'nameId': attr.getNameId(), 
-                      'id': attr.getObjId(), 
-                      'info': str(attr)} 
-                     for name, attr in protocol.iterInputAttributes()]
-        
-        output_obj = [{'name':name, 
-                       'nameId': attr.getNameId(), 
-                       'id': attr.getObjId(), 
-                       'info': str(attr)} 
-                      for name, attr in protocol.iterOutputAttributes(EMObject)]
-
-        # PROTOCOL SUMMARY
-        summary = parseText(protocol.summary())
-        
-        # PROTOCOL METHODS
-        methods = parseText(protocol.methods())
-
-        # STATUS
-        status = protocol.status.get()
-        
-        # LOGS (ERROR & OUTPUT)
-        fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
-
-        ioDict = {'inputs': input_obj,
-                  'outputs': output_obj,
-                  'summary': summary,
-                  'methods': methods, 
-                  'status': status,
-                  'logs_out': parseText(fOutString),
-                  'logs_error': parseText(fErrString),
-                  'logs_scipion': parseText(fScpnString)
-                  }
-        
-#        print "ioDict: ", ioDict
-        
-        jsonStr = json.dumps(ioDict, ensure_ascii=False)
+        if len(protId) > 0: 
+            protocol = project.getProtocol(int(protId))
+            
+            # PROTOCOL IO
+            input_obj = [{'name':name, 
+                          'nameId': attr.getNameId(), 
+                          'id': attr.getObjId(), 
+                          'info': str(attr)} 
+                         for name, attr in protocol.iterInputAttributes()]
+            
+            output_obj = [{'name':name, 
+                           'nameId': attr.getNameId(), 
+                           'id': attr.getObjId(), 
+                           'info': str(attr)} 
+                          for name, attr in protocol.iterOutputAttributes(EMObject)]
+    
+            # PROTOCOL SUMMARY
+            summary = parseText(protocol.summary())
+            
+            # PROTOCOL METHODS
+            methods = parseText(protocol.methods())
+    
+            # STATUS
+            status = protocol.status.get()
+            
+            # LOGS (ERROR & OUTPUT)
+            fOutString, fErrString, fScpnString = protocol.getLogsAsStrings()
+    
+            ioDict = {'inputs': input_obj,
+                      'outputs': output_obj,
+                      'summary': summary,
+                      'methods': methods, 
+                      'status': status,
+                      'logs_out': parseText(fOutString),
+                      'logs_error': parseText(fErrString),
+                      'logs_scipion': parseText(fScpnString)
+                      }
+            
+    #        print "ioDict: ", ioDict
+            jsonStr = json.dumps(ioDict, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 

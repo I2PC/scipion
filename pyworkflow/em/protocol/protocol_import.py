@@ -31,24 +31,57 @@ import sys
 from os.path import exists, basename
 from glob import glob
 
+from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, 
-                                        EnumParam, IntParam, StringParam)
-from pyworkflow.utils.path import removeBaseExt, expandPattern, createLink, copyFile
+from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
+                                        EnumParam, IntParam, StringParam, PointerParam)
+from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import Micrograph, Volume, Movie, PdbFile
+from pyworkflow.em.data import Volume, PdbFile, Coordinate
+
 from protocol import EMProtocol
+from protocol_particles import ProtParticlePicking
 
 
 
 class ProtImport(EMProtocol):
     """ Base class for other Import protocols. """
-    pass
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def getPattern(self):
+        """ Expand the pattern using environ vars or username
+        and also replacing special character # by digit matching.
+        """
+        import re
+        self._idRegex = None
+        pattern = expandPattern(self.pattern.get())
+        match = re.match('[^#]*(#+)[^#]*', pattern)
+        if match is not None:
+            g = match.group(1)
+            n = len(g)
+            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
+            pattern = pattern.replace(g, '[0-9]'*n)
+        else:
+            raise Exception("Importing ctf will required match micrographs ids.")
+        return pattern   
+    
+    def _getFilePaths(self, pattern):
+        """ Return a sorted list with the paths of files"""
+        filePaths = glob(pattern)
+        filePaths.sort()
+        
+        return filePaths
 
 
 class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
+    # This label should be set in subclasses
+    _label = 'None'
+    # The following class property should be set in each import subclass
+    # for example, if set to SetOfParticles, this will the output classes
+    # It is also assumed that a function with the name _createSetOfParticles
+    # exists in the EMProtocol base class
+    _outputClassName = 'None'  
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -64,27 +97,39 @@ class ProtImportImages(ProtImport):
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
-    
+        form.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE)
+        
+    #--------------------------- INSERT functions ---------------------------------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('importImagesStep', self.getPattern(), self.checkStack.get(), 
+                                 self.voltage.get(), self.sphericalAberration.get(), 
+                                 self.ampContrast.get(), self.magnification.get()) #, self.samplingRate.get(),
+        
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importImages(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast):
+    def importImagesStep(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
-        filePaths = glob(expandPattern(pattern))
+        self.info("Using pattern: '%s'" % pattern)
+        filePaths = glob(pattern)
         
-        imgSet = self._createSet()
+        createSetFunc = getattr(self, '_create' + self._outputClassName)
+        imgSet = createSetFunc()
         acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
         acquisition.setVoltage(voltage)
         acquisition.setSphericalAberration(sphericalAberration)
         acquisition.setAmplitudeContrast(amplitudeContrast)
+        acquisition.setMagnification(magnification)
         
         # Call a function that should be implemented by each subclass
-        self._setOtherPars(imgSet)
+        self._setSampling(imgSet)
         
         outFiles = [imgSet.getFileName()]
         imgh = ImageHandler()
         img = imgSet.ITEM_TYPE()
+        img.setAcquisition(acquisition)
         n = 1
         size = len(filePaths)
         
@@ -101,14 +146,25 @@ class ProtImportImages(ProtImport):
             if checkStack:
                 _, _, _, n = imgh.getDimensions(dst)
             
+            if self._idRegex:
+                # Try to match the micrograph id from filename
+                # this is set by the user by using #### format in the pattern
+                match = self._idRegex.match(fn)
+                if match is None:
+                    raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
+                micId = int(match.group(1))
+            else:
+                micId = None
+                
             if n > 1:
                 for index in range(1, n+1):
                     img.cleanObjId()
+                    img.setMicId(micId)
                     img.setFileName(dst)
                     img.setIndex(index)
                     imgSet.append(img)
             else:
-                img.cleanObjId()
+                img.setObjId(micId)
                 img.setFileName(dst)
                 imgSet.append(img)
             outFiles.append(dst)
@@ -119,61 +175,86 @@ class ProtImportImages(ProtImport):
         print "\n"
         
         args = {}
-        outputSet = self._getOutputSet(self._className)
+        outputSet = self._getOutputName()
         args[outputSet] = imgSet
         self._defineOutputs(**args)
         
         return outFiles
     
     #--------------------------- INFO functions ----------------------------------------------------
+    def getPattern(self):
+        """ Expand the pattern using environ vars or username
+        and also replacing special character # by digit matching.
+        """
+        import re
+        self._idRegex = None
+        pattern = expandPattern(self.pattern.get())
+        match = re.match('[^#]*(#+)[^#]*', pattern)
+        if match is not None:
+            g = match.group(1)
+            n = len(g)
+            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
+            pattern = pattern.replace(g, '[0-9]'*n)
+        return pattern   
+        
     def _validate(self):
         errors = []
-        if not self.pattern.get():
+        if not self.getPattern():
             errors.append(Message.ERROR_PATTERN_EMPTY)
         else:
-            filePaths = glob(expandPattern(self.pattern.get()))
+            print "Validating pattern '%s'" % self.getPattern()
+            filePaths = glob(self.getPattern())
         
             if len(filePaths) == 0:
-                errors.append(Message.ERROR_PATTERN_FILES)
+                errors.append(Message.ERROR_PATTERN_FILES + " %s" % self.getPattern())
 
         return errors
     
     def _summary(self):
         summary = []
-        outputSet = self._getOutputSet(self._className)
-        if not hasattr(self, outputSet):
-            summary.append("Output " + self._className + "s not ready yet.") 
+        outputSet = self._getOutputSet()
+        if outputSet is None:
+            summary.append("Output " + self._outputClassName + " not ready yet.") 
             if self.copyToProj:
                 summary.append("*Warning*: Import step could be take a long time due to the images are copying in the project.")
         else:
-            summary.append("Import of %d " % getattr(self, outputSet).getSize() + self._className + "s from %s" % self.pattern.get())
-            summary.append("Sampling rate : %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
+            summary.append("Import of *%d* %s from %s" % (outputSet.getSize(), self._getOutputItemName(), self.pattern.get()))
+            summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
         
         return summary
     
     def _methods(self):
         methods = []
-        outputSet = self._getOutputSet(self._className)
-        if hasattr(self, outputSet):
-            methods.append("%d " % getattr(self, outputSet).getSize() + self._className + "s has been imported")
-            methods.append("with a sampling rate of %0.2f A/px" % getattr(self, outputSet).getSamplingRate())
+        outputSet = self._getOutputSet()
+        if outputSet is not None:
+            methods.append("*%d* %s has been imported" % (outputSet.getSize(), self._getOutputItemName()))
+            methods.append("with a sampling rate of *%0.2f* A/px" % outputSet.getSamplingRate())
             
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def getFiles(self):
-        return getattr(self, self._getOutputSet(self._className)).getFiles()
+        outputSet = self._getOutputSet()
+        if outputSet is not None:
+            return self._getOutputSet().getFiles()
+        else:
+            return []
     
-    def _getOutputSet(self, setName):
-        return "output" + setName + "s"
-
-
-class ProtImportMicrographs(ProtImportImages):
-    """Protocol to import a set of micrographs to the project"""
-
-    _className = 'Micrograph'
-    _label = 'import micrographs'
+    def _getOutputName(self):
+        # We assume that the import output is always a 'SetOfSomething'
+        return self._outputClassName.replace('SetOf', 'output')
     
+    def _getOutputItemName(self):
+        return self._outputClassName.replace('SetOf', '')
+    
+    def _getOutputSet(self):
+        return getattr(self, self._getOutputName(), None)
+
+
+class ProtImportMicBase(ProtImportImages):
+    """ Just to have a base class to both 
+    ProtImportMicrographs and ProtImportMovies
+    """
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
@@ -182,67 +263,53 @@ class ProtImportMicrographs(ProtImportImages):
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-    
-    def _insertAllSteps(self):
-        self._createSet = self._createSetOfMicrographs
-        self._insertFunctionStep('importImages', self.pattern.get(), self.checkStack.get(), 
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get()) #, self.samplingRate.get(),
-    
-    def _validate(self):
-        errors = ProtImportImages._validate(self)
-#         if self._checkMrcStack():
-#             errors.append("The micrographs can't be a mrc stack")
-        return errors
-    
-    def _setOtherPars(self, micSet):
-        micSet.getAcquisition().setMagnification(self.magnification.get())
         
+    def _setSampling(self, micSet):
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
+        
     
-    def _checkMrcStack(self):
-        filePaths = glob(expandPattern(self.pattern.get()))
-        imgh = ImageHandler()
-        stack = False
-        for f in filePaths:
-            ext = removeBaseExt(f)
-            _, _, _, n = imgh.getDimensions(f)
-            if ext == ".mrc" and n > 1:
-                stack = True
-                break
-        return stack
+class ProtImportMicrographs(ProtImportMicBase):
+    """Protocol to import a set of micrographs to the project"""
+    _label = 'import micrographs'
+    _outputClassName = 'SetOfMicrographs' 
+    pass
 
+
+class ProtImportMovies(ProtImportMicBase):
+    """Protocol to import a set of movies (from direct detector cameras) to the project"""
+    _label = 'import movies'
+    _outputClassName = 'SetOfMovies'
+        
+    def _defineParams(self, form):
+        ProtImportMicBase._defineParams(self, form)    
+        form.addParam('gainFile', FileParam,  
+                      label='Gain image', 
+                      help='')
+        
+    def _setSampling(self, movieSet):
+        ProtImportMicBase._setSampling(self, movieSet)
+        movieSet.setGain(self.gainFile.get())
+                    
 
 class ProtImportParticles(ProtImportImages):
     """Protocol to import a set of particles to the project"""
- 
-    _className = 'Particle'
     _label = 'import particles'
+    _outputClassName = 'SetOfParticles'
         
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
         
-    def _insertAllSteps(self):
-        self._createSet = self._createSetOfParticles
-        self._insertFunctionStep('importImages', self.pattern.get(),
-                                self.checkStack.get(), self.voltage.get(), self.sphericalAberration.get(),
-                                self.ampContrast.get())
-        
-    def _setOtherPars(self, imgSet):
+    def _setSampling(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())
     
-    def getFiles(self):
-        return self.outputParticles.getFiles()
 
 
 class ProtImportVolumes(ProtImport):
@@ -259,7 +326,7 @@ class ProtImportVolumes(ProtImport):
                    label=Message.LABEL_SAMP_RATE)
     
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumes', self.pattern.get(), self.samplingRate.get())
+        self._insertFunctionStep('importVolumes', self.getPattern(), self.samplingRate.get())
         
     def createVolume(self, volumePath):
         """ Copy the volume to WorkingDir and create
@@ -292,10 +359,16 @@ class ProtImportVolumes(ProtImport):
             for f in filePaths:
                 volSet.append(self.createVolume(f))
             self._defineOutputs(outputVolumes=volSet)
-    
-    def getFiles(self):
+
+    def getPattern(self):
+        """ Expand the pattern using environ vars or username
+        and also replacing special character # by digit matching.
+        """
+        pattern = expandPattern(self.pattern.get())    
+        return pattern  
         
-        pattern = self.pattern.get()
+    def getFiles(self):
+        pattern = self.getPattern()
         n = self._getNumberFilePaths(pattern)
         
         if n == 1:
@@ -318,27 +391,27 @@ class ProtImportVolumes(ProtImport):
 
     def _summary(self):
         summary = []
-        pattern = self.pattern.get()
+        pattern = self.getPattern()
         n = self._getNumberFilePaths(pattern)
         
         if n == 1:
             if not hasattr(self, 'outputVolume'):
                 summary.append("Output volume not ready yet.") 
             else:
-                summary.append("Import of %d volumes from %s" % (1, self.pattern.get()))
+                summary.append("Import of %d volumes from %s" % (1, self.getPattern()))
                 summary.append("Sampling rate : %f" % self.samplingRate.get())
         else:
             if not hasattr(self, 'outputVolumes'):
                 summary.append("Output volumes not ready yet.") 
             else:
-                summary.append("Import of %d volumes from %s" % (n, self.pattern.get()))
+                summary.append("Import of %d volumes from %s" % (n, self.getPattern()))
                 summary.append("Sampling rate : %f" % self.samplingRate.get())
         
         return summary
     
     def _validate(self):
         errors = []
-        if self.pattern.get() == "":
+        if not self.getPattern():
             errors.append(Message.ERROR_PATTERN_EMPTY)
         
         if self._getNumberFilePaths(self.pattern.get()) == 0:
@@ -383,83 +456,89 @@ class ProtImportPdb(ProtImport):
         if not exists(self.path.get()):
             errors.append("PDB not found at *%s*" % self.path.get())
         return errors
-
-
-class ProtImportMovies(ProtImportImages):
-    """Protocol to import a set of movies (from direct detector cameras) to the project"""
     
-    _className = 'Movie'
-    _label = 'import movies'
+    
+class ProtImportCoordinates(ProtImport, ProtParticlePicking):
+    """ Protocol to import a set of coordinates """
+    _label = 'import coordinates'
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        ProtImportImages._defineParams(self, form)
-        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label=Message.LABEL_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
-        form.addParam('samplingRate', FloatParam, default=1, 
-                   label=Message.LABEL_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label=Message.LABEL_SCANNED,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addSection('Input')
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
+                          label='Input micrographs',
+                          help='Select the particles that you want to import coordinates.')
+        form.addParam('pattern', PathParam, 
+                      label='Coordinate files pattern',
+                      help='Select files containing the coordinate files in Arachnid format.\n'
+                           'You should use #### characters in the pattern\n'
+                           'to mark where the micrograph id will be taken from. ')
+        form.addParam('boxSize', IntParam, 
+                      label='Box size',
+                      help='')
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importMoviesStep', self.pattern.get(), self.voltage.get(), self.magnification.get(),
-                                 self.sphericalAberration.get(), self.ampContrast.get())
+        self._insertFunctionStep('importCoordinateStep', 
+                                 self.inputMicrographs.get().getObjId(),
+                                 self.getPattern())
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importMoviesStep(self, pattern, voltage, magnification, sphericalAberration, amplitudeContrast):
+    def importCoordinateStep(self, micsId, pattern):
         """ Copy movies matching the filename pattern
         Register other parameters.
         """
-        filePaths = self._getFilePaths(pattern)
-        movSet = self._createSetOfMovies()
-        acquisition = movSet.getAcquisition()
-        # Setting Acquisition properties
-        acquisition.setVoltage(voltage)
-        acquisition.setSphericalAberration(sphericalAberration)
-        acquisition.setAmplitudeContrast(amplitudeContrast)
-        acquisition.setMagnification(magnification)
+        inputMics = self.inputMicrographs.get()
+        coordSet = self._createSetOfCoordinates(inputMics)
+        coordSet.setBoxSize(self.boxSize.get())
         
-        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
-            movSet.setSamplingRate(self.samplingRate.get())
-        else:
-            movSet.setScannedPixelSize(self.scannedPixelSize.get())
+        coordFiles = self._getFilePaths(pattern)
+        coordDict = {}
+        for fn in coordFiles:
+            # Try to match the micrograph id from filename
+            # this is set by the user by using #### format in the pattern
+            match = self._idRegex.match(fn)
+            if match is None:
+                raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
+            ctfId = int(match.group(1))
+            coordDict[ctfId] = fn
+            
+        coordinate = Coordinate()
+        coordinate._araId = Integer()
+        coordinate._araPeak = Float()
         
-        imgh = ImageHandler()
-        
-        for f in filePaths:
-            dst = self._getPath(basename(f))
-            if self.copyToProj:
-                copyFile(f, dst)
+        for mic in inputMics:
+            micId = mic.getObjId()
+            if micId in coordDict:
+                araFile = coordDict[micId]
+                for araId, araPeak, araX, araY in self._parseCoordinateFile(araFile):
+                    coordinate.setX(araX)
+                    coordinate.setY(araY)
+                    coordinate.setMicId(micId)
+                    coordinate._araId.set(araId)
+                    coordinate._araPeak.set(araPeak)
+                    coordinate.cleanObjId()
+                    coordSet.append(coordinate)
             else:
-                createLink(f, dst)
-            _, _, _, n = imgh.getDimensions(dst)
+                self.warning("Coordinates for micrograph with id %d were not found." % mic.getObjId())
             
-            mov = Movie()
-            mov.setAcquisition(acquisition)
-            mov.setSamplingRate(movSet.getSamplingRate())
-            movSet.append(mov)
-            
-            for i in range(1, n + 1):
-                mic = Micrograph()
-                mic.setAcquisition(acquisition)
-                mic.setLocation(i, dst)
-                mic.setSamplingRate(mov.getSamplingRate())
-                mov.append(mic)
-        
-        self._defineOutputs(outputMovies=movSet)
+        self._defineOutputs(outputCoordinates=coordSet)
+        self._defineSourceRelation(inputMics, coordSet)            
     
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _getFilePaths(self, pattern):
-        """ Return a sorted list with the paths of files"""
-        filePaths = glob(expandPattern(pattern))
-        filePaths.sort()
+    def _parseCoordinateFile(self, filename):
+        """ Parse filename and return iterator over rows data """
+        f = open(filename)
+        for line in f:
+            l = line.strip()
+            if not l.startswith(';'):
+                parts = l.split()
+                yield parts[-4:]                
+        f.close()
         
-        return filePaths
-
+    def _summary(self):
+        summary = []
+        return summary    
+    
+    def _methods(self):
+        return []
+    

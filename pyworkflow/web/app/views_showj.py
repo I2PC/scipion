@@ -370,7 +370,7 @@ def createContext(dataset, table, columnsConfig, request, showjForm, inputParams
     if columnsConfig is not None:
         
         context.update({sj.COLS_CONFIG: json.dumps({'columnsLayout': columnsConfig._columnsDict,
-#                                                    'colsOrder': inputParams[sj.ORDER]
+                                                    'colsOrder': inputParams[sj.ORDER]
                                                    },
                                                    ensure_ascii=False,
                                                    cls=ColumnPropertiesEncoder)})

@@ -66,6 +66,7 @@ from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes
+from protocol_micrographs_import import ProtXmippMicsImport
 from protocol_ml2d import XmippProtML2D
 from protocol_nma_alignment import XmippProtAlignmentNMA
 #from protocol_nma_choose import XmippProtNMAChoose
@@ -84,6 +85,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
+
 
 # Wizards
 from wizard import *

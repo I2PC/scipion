@@ -31,7 +31,6 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
-from data import *
 from brandeis import *
 
 
@@ -40,7 +39,6 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     """read from frealign .par.
     """
     imgSet = classes3DSet.getImages()
-    samplingRate = imgSet.getSamplingRate()
     
     for ref, volFn in enumerate(volumeList):
         class3D = Class3D()
@@ -59,11 +57,26 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
                 values = l.split()
                 prob = float(values[11])
                 if prob > 0:
-                    id = int(values[7])
-                    img = imgSet[id]
+                    objId = int(values[7])
+                    img = imgSet[objId]
                     class3D.append(img)
         f1.close()
         
         # Check if write function is necessary
         class3D.write()
+        
 
+def parseCtffindOutput(filename):
+    """ Retrieve defocus U, V and angle from the 
+    output file of the ctffind3 execution.
+    """
+    f = open(filename)
+    result = None
+    for line in f:
+        if 'Final Values' in line:
+            # Take DefocusU, DefocusV and Angle as a tuple
+            # that are the first three values in the line
+            result = tuple(map(float, line.split()[:3]))
+            break
+    f.close()
+    return result

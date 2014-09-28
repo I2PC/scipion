@@ -34,7 +34,9 @@ class DataSet:
         self.filesDict = files
         
     def getFile(self, key):
-        return join(self.path, self.filesDict[key])
+        if key in self.filesDict:
+            return join(self.path, self.filesDict[key])
+        return join(self.path, key)
     
     def getPath(self):
         return self.path

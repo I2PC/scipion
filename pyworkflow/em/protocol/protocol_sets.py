@@ -34,7 +34,8 @@ This module contains protocols related to Set operations such us:
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses2D #we need to import this to used dynamically 
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
+                                SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
 
 
@@ -49,6 +50,7 @@ class ProtUserSubSet(ProtSets):
     from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
     file that will be read to create the new subset.
     """
+    _label = 'create subset'
      
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -72,6 +74,7 @@ class ProtUserSubSet(ProtSets):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        self._defineSourceRelation(inputImages, output)
         
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
@@ -97,7 +100,7 @@ class ProtUserSubSet(ProtSets):
         else:
             raise Exception("Unrecognized output type: '%s'" % outputClassName)  
               
-    def _createSubSetFromCTF(self, inputCTFs):
+    def _createMicsSubSetFromCTF(self, inputCTFs):
         """ Create a subset of Micrographs analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
@@ -112,6 +115,22 @@ class ProtUserSubSet(ProtSets):
                 
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(setOfMics, outputMics)
+        
+    def _createSubSetOfCTF(self, inputCtf):
+        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
+        
+        
+        setOfCtf = self._createSetOfCTF("_subset")
+        
+        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        
+        for ctf in modifiedSet:
+            if ctf.isEnabled():
+                mic = ctf.getMicrograph()
+                setOfCtf.append(ctf)
+                
+         # Register outputs
+        self._defineOutput(self.outputClassName.get(), setOfCtf)
         
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
@@ -176,13 +195,14 @@ class ProtUserSubSet(ProtSets):
             self._createSubSetFromClasses(inputObj)
            
         elif isinstance(inputObj, SetOfCTF):
-            self._createSubSetFromCTF(inputObj) 
+            outputClassName = self.outputClassName.get()
+            if outputClassName.startswith('SetOfMicrographs'):
+                self._createMicsSubSetFromCTF(inputObj)
+            else:
+                self._createSubSetOfCTF(inputObj)
             
         elif isinstance(inputObj, EMProtocol):
-            from pyworkflow.mapper.sqlite import SqliteFlatDb
-            db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-            setClassName = db.getProperty('self') # get the set class name
-            setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+            setObj = self.getSetObject()
             otherObj = self.otherObject.get()
             
             if isinstance(setObj, SetOfClasses):
@@ -195,13 +215,18 @@ class ProtUserSubSet(ProtSets):
                 
             # Clean the pointer to other, to avoid dependency in the graph
             self.otherObject.set(None)
-                
+    
+    def getSetObject(self):            
+        from pyworkflow.mapper.sqlite import SqliteFlatDb
+        db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
+        setClassName = db.getProperty('self') # get the set class name
+        setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+        return setObj    
             
-            
-    def defineOutputSet(self, outputset):
-        outputs = {'output' + self.getOutputType(): outputset}
-        self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.getInput(), outputset)
+#     def defineOutputSet(self, outputset):
+#         outputs = {'output' + self.getOutputType(): outputset}
+#         self._defineOutputs(**outputs)
+#         self._defineSourceRelation(self.getInput(), outputset)
     
     def _summary(self):
         summary = []
@@ -368,16 +393,16 @@ class ProtIntersectSet(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputFullSet', PointerParam, label="Full images set", important=True, 
-                      pointerClass='SetOfImages', 
+        form.addParam('inputFullSet', PointerParam, label="Full set of items", important=True, 
+                      pointerClass='EMSet', 
                       help='Even if the intersection can be applied to two subsets,\n'
                            'the most common use-case is to retrieve a subset of  \n'
                            'elements from an original full set.\n' 
                            '*Note*: the images of the result set will be the same \n'
                            'ones of this input set.'
                            )
-        form.addParam('inputSubSet', PointerParam, label="Subset of images", important=True, 
-                      pointerClass='SetOfImages', 
+        form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
+                      pointerClass='EMSet', 
                       help='The elements that are in this (normally smaller) set and \n'
                            'in the full set will be included in the result set'
                            )
@@ -402,7 +427,8 @@ class ProtIntersectSet(ProtSets):
             #TODO: this can be improved if you perform an
             # intersection directly in sqlite
             origImg = inputFullSet[img.getObjId()]
-            outputSet.append(origImg)
+            if origImg is not None:
+                outputSet.append(origImg)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
@@ -412,9 +438,9 @@ class ProtIntersectSet(ProtSets):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
-            errors.append("Both the full set and the subset should be of the same")
-            errors.append("type of elements (micrographs, particles, volumes).")
+#         if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
+#             errors.append("Both the full set and the subset should be of the same")
+#             errors.append("type of elements (micrographs, particles, volumes).")
         return errors   
 
     

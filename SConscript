@@ -50,6 +50,13 @@ if not env.GetOption('clean'):
 # But because freetype's compilation is a pain, it's better to use whatever
 # version is in the system.
 
+fftw = env.AddLibrary(
+    'fftw',
+    tar='fftw-3.3.4.tgz',
+    targets=['lib/libfftw3.so'],
+    flags=['--enable-threads', '--enable-shared'],
+    default=False)
+
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
@@ -67,6 +74,12 @@ tk = env.AddLibrary(
     deps=[tcl],
     clean=['software/tmp/tk8.6.1'])
 
+zlib = env.AddLibrary(
+    'zlib',
+    tar='zlib-1.2.8.tgz',
+    targets=['lib/libz.so'],
+    addPath=False)
+
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -79,7 +92,21 @@ python = env.AddLibrary(
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared'],
-    deps=[sqlite, tk])
+    deps=[sqlite, tk, zlib])
+
+env.AddLibrary(
+    'parallel',
+    tar='parallel-20140922.tgz',
+    targets=['bin/parallel'],
+    deps=[zlib])
+
+boost_headers_only = env.ManualInstall(
+    'boost_headers_only',
+    tar='boost_1_56_0.tgz',
+    extraActions=[
+        ('%s/software/include/boost' % env['SCIPION_HOME'],
+         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+    default=False)
 
 
 #  ************************************************************************
@@ -149,9 +176,21 @@ addModule(
     'bibtexparser',
     tar='bibtexparser-0.5.tgz')
 
-addModule(
+django = addModule(
     'django',
     tar='Django-1.5.5.tgz')
+
+addModule(
+    'grappelli',
+    tar='django-grappelli-2.5.tgz',
+    flags=['--old-and-unmanageable'],
+    deps=[django])
+
+addModule(
+    'filebrowser',
+    tar='django-filebrowser-3.5.8.tgz',
+    flags=['--old-and-unmanageable'],
+    deps=[django])
 
 addModule(
     'paramiko',
@@ -164,6 +203,11 @@ addModule(
     targets=['PIL'],
     flags=['--old-and-unmanageable'],
     deps=[setuptools])
+
+addModule(
+    'winpdb',
+    tar='winpdb-1.4.8.tgz',
+    default=False)
 
 
 #  ************************************************************************
@@ -205,14 +249,24 @@ env.AddPackage('frealign',
                tar='frealign_v9.07.tgz',
                default=False)
 
+env.AddPackage('pytom',
+               tar='pytom_develop0.962.tgz',
+               extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
+                             'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
+                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
+               default=False)
+
 env.AddPackage('relion',
                tar='relion-1.2.tgz',
+               extraActions=[
+                   ('lib', 'ln -fs lib64 lib'),
+                   ('relion_build.log', './INSTALL.sh -j %s'
+                    % GetOption('num_jobs'))],
                default=False)
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
                default=False)
-
 
 # TODO: check if we have to use the "purge" option below:
 

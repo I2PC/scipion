@@ -34,7 +34,6 @@ import datetime as dt
 import pickle
 import time
 from collections import OrderedDict
-
 import pyworkflow as pw
 from pyworkflow.object import *
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
@@ -196,7 +195,7 @@ class FunctionStep(Step):
     def _runFunc(self):
         """ Return the possible result files after running the function. """
         return self._func(*self._args)
-    
+
     def _run(self):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
@@ -428,6 +427,13 @@ class Protocol(Step):
         for key, attr in self.getAttributes():
             if isinstance(attr, outputClass):
                 yield key, attr
+    
+    def getOutputsSize(self):
+        from pyworkflow.em.data import EMObject
+        count = 0
+        for key, output in self.iterOutputAttributes(EMObject):
+            count += 1
+        return count;
             
     def copyDefinitionAttributes(self, other):
         """ Copy definition attributes to other protocol. """
@@ -849,8 +855,9 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-        self.info('          MPI: %d' % self.numberOfMpi.get())
-        self.info('      threads: %d' % self.numberOfThreads.get())
+#        Commented lines by some fails when a protocol not used this options
+#        self.info('          MPI: %d' % self.numberOfMpi.get())
+#        self.info('      threads: %d' % self.numberOfThreads.get())
 
         Step.run(self)     
         self._endRun()
@@ -1102,7 +1109,10 @@ class Protocol(Step):
         
     def summary(self):
         """ Return a summary message to provide some information to users. """
-        baseSummary = self._summary() or []        
+        try:
+            baseSummary = self._summary() or []
+        except Exception as ex:
+            baseSummary = [str(ex)]        
             
         comments = self.getObjComment()
         if comments:
@@ -1288,7 +1298,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
             prog = join(os.environ['SCIPION_HOME'], 'scipion')
-            params = ['run', 'pyworkflow/apps/pw_protocol_mpirun.py', projectPath, protDbPath, protId]
+            params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)

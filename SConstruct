@@ -82,12 +82,13 @@ env.EnsureSConsVersion(2,3,2)
 #  *                                                                      *
 #  ************************************************************************
 
-# We have 3 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
+# We have 4 "Pseudo-Builders" http://www.scons.org/doc/HTML/scons-user/ch20.html
 #
 # They are:
-#   addLibrary - install a library
-#   addModule  - install a Python module
-#   addPackage - install an EM package
+#   addLibrary    - install a library
+#   addModule     - install a Python module
+#   addPackage    - install an EM package
+#   manualInstall - install by manually running commands
 #
 # Their structure is similar:
 #   * Define reasonable defaults
@@ -108,7 +109,7 @@ env.EnsureSConsVersion(2,3,2)
 # to do one step while the previous one is still running in the background.
 
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
-               targets=None, url=None, flags=[], autoConfigTarget='Makefile',
+               targets=None, url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -139,8 +140,9 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
                 break
         flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-    pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
-    pathAppend('PATH', Dir('#software/bin').abspath)
+    if addPath:
+        pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
+        pathAppend('PATH', Dir('#software/bin').abspath)
 
     # Install everything in the appropriate place.
     flags += ['--prefix=%s' % Dir('#software').abspath,
@@ -151,8 +153,6 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
-        if  not GetOption(name):
-            return ''
 
     # Create and concatenate the builders.
     tDownload = Download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
@@ -185,7 +185,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     for dep in deps:
         Depends(tConfig, dep)
 
-    return tMake
+    if default or GetOption(name):
+        Default(tMake)
 
 
 def addOwnLibrary(env, name, dir=None, incs=None, libs=None, src=None, default=True):
@@ -230,8 +231,6 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate module %s' % name)
-        if  not GetOption(name):
-            return ''
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -261,6 +260,9 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     # Add the dependencies.
     for dep in deps:
         Depends(tInstall, dep)
+
+    if default or GetOption(name):
+        Default(tInstall)
 
     return tInstall
 
@@ -318,16 +320,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     packageHome = GetOption(name) or defaultPackageHome
 
-    if not (default or packageHome):
-        return ''
-
-    # If we have received a home for the package
+    # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         #FIXME: only for operating while programming
         if not os.path.exists(packageHome):
             # If it's a completed local installation. Just link to it and do nothing more.
             return env.Command(
-                'software/em/%s/bin' % name,
+                Dir('software/em/%s/bin' % name),
                 Dir(packageHome),
                 Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                        'Linking package %s to software/em/%s' % (name, name),
@@ -404,8 +403,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     for dep in deps:
         Depends(tLink, dep)
 
-    return lastTarget
+    if default or packageHome:
+        Default(lastTarget)
 
+    return lastTarget
 
 def compilerConfig(env):
     """Check the good state of the C and C++ compilers and return the proper env."""
@@ -487,13 +488,92 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
     context.Result(ret)
     return ret
 
+def manualInstall(env, name, tar=None, buildDir=None, url=None,
+                  extraActions=[], deps=[], clean=[], default=True):
+    """Just download and run extraActions.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file and runs extraActions on it. It also tells SCons about
+    the proper dependencies (deps).
+
+    extraActions is a list of (target, command) that should be
+    executed after the package is properly installed.
+
+    If default=False, the package will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final target in extraActions.
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/external/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate it even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate %s' % name)
+
+    # Donload, untar, and execute any extra actions.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
+                   cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    lastTarget = tUntar
+
+    for target, command in extraActions:
+        lastTarget = env.Command(
+            target,
+            lastTarget,
+            Action(command, chdir='software/tmp/%s' % buildDir))
+        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+
+    # Clean the special generated files.
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+
+    # Add the dependencies.
+    for dep in deps:
+        Depends(tUntar, dep)
+
+    if default or GetOption(name):
+        Default(lastTarget)
+
+    return lastTarget
+
 
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
+env.AddMethod(manualInstall, "ManualInstall")
 env.AddMethod(compilerConfig, "CompilerConfig")
 
+
+#  ************************************************************************
+#  *                                                                      *
+#  *                            Extra options                             *
+#  *                                                                      *
+#  ************************************************************************
+
+
+opts = Variables(None, ARGUMENTS)
+
+opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
+opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
+opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
+opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
+opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
+opts.Add('MPI_LIB', 'MPI library', 'mpi')
+opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
+
+opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
+
+opts.Update(env)
 
 # TODO: check the code below to see if we can do a nice "purge".
 
@@ -550,4 +630,5 @@ AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
 
 
 Export('env')
+
 env.SConscript('SConscript')

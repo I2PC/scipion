@@ -31,11 +31,14 @@ each EM-software package.
 from protocol import *
 from protocol_import import *
 from protocol_micrographs import *
+from protocol_movies import *
 from protocol_particles import *
 from protocol_2d import *
 from protocol_3d import *
 from protocol_sets import *
 from protocol_tiltpairs import *
+from protocol_ctf_assign import ProtCTFAssign
+from protocol_alignment_assign import ProtAlignmentAssign
 
 from parallel import ProtTestParallel
 

@@ -38,6 +38,7 @@ class Message():
     VIEW_PROTOCOLS = 'Protocols'
     VIEW_DATA = 'Data'
     VIEW_HOSTS = 'Hosts'
+    VIEW_UPLOAD = 'Upload'
     
     # Projects Template
     LABEL_PROJECTS = 'Projects'

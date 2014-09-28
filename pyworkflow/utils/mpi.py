@@ -28,6 +28,7 @@ MPI utilities. runJobMPI and runJobMPISlave send and receive the commands
 to execute, in the given directory and with the given environment.
 """
 
+import os
 from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
@@ -41,7 +42,11 @@ TAG_RUN_JOB = 1000
 
 
 def send(command, comm, dest, tag):
-    """ Send command in a non-blocking way and return the exit code. """
+    """ Send command in a non-blocking way and raise exception on error. """
+
+    # This function blocks, but it uses the isend() function (which is
+    # nonblocking) and sleeps without using the cpu while we try to send.
+    # Also, if we cannot send after TIMEOUT seconds, raise exception.
 
     if command.startswith('env='):
         print "Sending environment to %d" % dest
@@ -54,9 +59,10 @@ def send(command, comm, dest, tag):
     while not req_send.test()[0]:
         sleep(1)
         if time() - t0 > TIMEOUT:
-            raise Exception("Timeout, cannot send command to slave.")
+            raise Exception("Timeout in process %d, cannot send command "
+                            "to slave." % os.getpid())
 
-    # Receive the exit code in a non-blocking way too (with irecv())
+    # Receive the result in a non-blocking way too (with irecv())
     req_recv = comm.irecv(dest=dest, tag=tag)
     while True:
         done, result = req_recv.test()
@@ -64,29 +70,22 @@ def send(command, comm, dest, tag):
             break
         sleep(1)
 
-    # Our convention: if we get a string, an error happened.
-    # Else, it is the return code of our command, which we return too.
-    if isinstance(result, str):
-        raise Exception(result)
-    else:
-        return result
+    if result != 0:  # result will then be a string with the error
+        raise Exception(str(result))
 
 
-def runJobMPI(log, programname, params, mpiComm, mpiDest,
-              numberOfMpi=1, numberOfThreads=1,
-              runInBackground=False, hostConfig=None, 
+def runJobMPI(programname, params, mpiComm, mpiDest,
+              numberOfMpi=1, hostConfig=None,
               env=None, cwd=None):
     """ Send the command to the MPI node in which it will be executed. """
 
-    command = buildRunCommand(log, programname, params,
-                              numberOfMpi, numberOfThreads,
-                              runInBackground, hostConfig)
+    command = buildRunCommand(programname, params, numberOfMpi, hostConfig)
     if cwd is not None:
         send("cwd=%s" % cwd, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
     if env is not None:
         send("env=%s" % dumps(env), mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
-    return send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
+    send(command, mpiComm, mpiDest, TAG_RUN_JOB+mpiDest)
 
 
 def runJobMPISlave(mpiComm):
@@ -103,11 +102,19 @@ def runJobMPISlave(mpiComm):
     while True:
         # Receive command in a non-blocking way
         req_recv = mpiComm.irecv(dest=0, tag=TAG_RUN_JOB+rank)
+        t0 = time()
         while True:
             done, command = req_recv.test()
             if done:
                 break
             sleep(1)
+            if time() - t0 > TIMEOUT:
+                print ("Timeout in process %d, did not receive command from "
+                       "master." % os.getpid())
+                #return
+                mpiComm.Disconnect()
+                # next thing, I'll try the rain dance
+                os._exit()  # be brave, die like a you care
 
         print "Slave %d received command." % rank
         if command == 'None':
@@ -119,26 +126,33 @@ def runJobMPISlave(mpiComm):
             if command.startswith("cwd="):
                 cwd = command.split("=", 1)[-1]
                 print "  Changing to dir %s ..." % cwd
-                result = 0
             elif command.startswith("env="):
                 env = loads(command.split("=", 1)[-1])
                 print "  Setting the environment..."
                 if envVarOn('SCIPION_DEBUG'):
                     print env
-                result = 0
             else:
                 print "  %s" % command
-                result = runCommand(command, cwd=cwd, env=env)
+                runCommand(command, cwd=cwd, env=env)
                 cwd = None  # unset directory
                 env = None  # unset environment
-        except Exception, e:
-            result = str(e)
+        except Exception as e:
+            req_send = mpiComm.isend(str(e), dest=0, tag=TAG_RUN_JOB+rank)
+            t0 = time()
+            while not req_send.test()[0]:
+                sleep(1)
+                if time() - t0 > TIMEOUT:
+                    print ("Timeout in process %d, cannot send error "
+                           "message to master." % os.getpid())
+                    return
+            return
 
-        # Send result in a non-blocking way
-        req_send = mpiComm.isend(result, dest=0, tag=TAG_RUN_JOB+rank)
+        # Send 0 (it worked!) in a non-blocking way.
+        req_send = mpiComm.isend(0, dest=0, tag=TAG_RUN_JOB+rank)
         t0 = time()
         while not req_send.test()[0]:
             sleep(1)
             if time() - t0 > TIMEOUT:
-                print "Timeout, cannot send result to master."
-                break
+                print ("Timeout in process %d, cannot send result "
+                       "to master." % os.getpid())
+                return

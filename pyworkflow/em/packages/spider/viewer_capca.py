@@ -36,6 +36,7 @@ from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.canvas import Canvas, ImageBox
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.em.viewer import DataView
+from pyworkflow.em.plotter import EmPlotter
 
 from spider import PcaFile
 from protocol.protocol_ca_pca import SpiderProtCAPCA
@@ -92,7 +93,6 @@ class SpiderViewerCAPCA(ProtocolViewer):
         """
         from numpy import arange
         from matplotlib.ticker import FormatStrFormatter
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
         
         fn = self.protocol._getFileName('eigFile')
         f = open(fn)
@@ -110,7 +110,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
         f.close()
         
         width = 0.85
-        xplotter = XmippPlotter()
+        xplotter = EmPlotter()
         a = xplotter.createSubPlot('Eigenvalues histogram', 'Eigenvalue number', '%')
         a.set_xticks(factors + 0.45)
         a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
@@ -125,8 +125,6 @@ class SpiderViewerCAPCA(ProtocolViewer):
         return [xplotter]
         
     def _plotFactorMaps(self, param=None):
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
-        
         # Parse the file
         fn = self.protocol._getFileName('imcFile')
         f = open(fn)
@@ -150,7 +148,7 @@ class SpiderViewerCAPCA(ProtocolViewer):
         f.close() 
         
         # Create the plot
-        xplotter = XmippPlotter(1,1)
+        xplotter = EmPlotter(1,1)
         a = xplotter.createSubPlot("Factor %d vs %d" % (x, y), 
                                    "Factor %d" % x, "Factor %d" % y)
         a.plot(xFactors, yFactors, 'o')

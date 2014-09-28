@@ -107,11 +107,11 @@ def _launchLocal(protocol, wait):
     #threads = protocol.numberOfThreads.get()
     python = os.environ['SCIPION_PYTHON']
     scipion = os.path.join(os.environ['SCIPION_HOME'], 'scipion')
-    command = '%s %s runprotocol "%s" "%s" %s' % (python, scipion, protocol.getProject().path, protocol.getDbPath(), protStrId)
+    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion, protocol.getProject().path, protocol.getDbPath(), protStrId)
     hostConfig = protocol.getHostConfig()
     useQueue = hostConfig.isQueueMandatory() or protocol.useQueue()
     #bg = not wait and not useQueue
-    #command = process.buildRunCommand(None, script, params, mpi, threads, bg, hostConfig)
+    #command = process.buildRunCommand(script, params, mpi, hostConfig)
     # Check if need to submit to queue    
     if useQueue:        
         submitDict = protocol.getSubmitDict()
@@ -143,6 +143,7 @@ def _launchRemote(protocol, wait):
             break
     return jobId
 
+
 def _copyFiles(protocol, rpath):
     """ Copy all required files for protocol to run
     in a remote execution host.
@@ -160,8 +161,9 @@ def _copyFiles(protocol, rpath):
         remoteFile = join(remotePath, f)
         rpath.putFile(f, remoteFile)
 
+
 def _submit(hostConfig, submitDict):
-    """ Submit a protocol to a queue system. 
+    """ Submit a protocol to a queue system. Return its job id.
     """
     # Create forst the submission script to be launched
     # formatting using the template
@@ -181,14 +183,13 @@ def _submit(hostConfig, submitDict):
     p = Popen(command, shell=True, stdout=PIPE)
     out = p.communicate()[0]
     # Try to parse the result of qsub, searching for a number (jobId)
-    jobId = UNKNOWN_JOBID
     s = re.search('(\d+)', out)
     if s:
-        jobId = int(s.group(0))
+        return int(s.group(0))
     else:
         print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
-        
-    return jobId 
+        return UNKNOWN_JOBID
+
     
 def _run(command, wait):
     """ Execute a command in a subprocess and return the pid. """
@@ -198,8 +199,9 @@ def _run(command, wait):
     jobId = p.pid
     if wait:
         p.wait()
-        
+
     return jobId
+
 
 # ******************************************************************
 # *                 Function related to STOP
@@ -214,7 +216,8 @@ def _stopLocal(protocol):
         _run(cancelCmd, wait=True)
     else:
         process.killWithChilds(protocol.getPid())
-    
+
+
 def _stopRemote(protocol):
     raise Exception("_stopRemote not implemented yet")
     from pyworkflow.utils.remote import sshConnectFromHost, RemotePath

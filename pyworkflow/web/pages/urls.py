@@ -3,19 +3,22 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
+from filebrowser.sites import site
+
+#===============================================================================
+# URL ASSOCIATION
+#===============================================================================
 
 urlpatterns = patterns('',
+    
+    # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
-    # Examples:
-    # url(r'^pages/', include('pages.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
+    url(r'^filebrowser/', include(site.urls)),
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
+    # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
     # If no path given, load the projects view
     url(r'^$', 'app.views_project.projects'),
@@ -28,7 +31,6 @@ urlpatterns = patterns('',
     url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
     url(r'^run_table_graph/$', 'app.views_project.run_table_graph'),
     url(r'^protocol_info/$', 'app.views_project.protocol_info'),
-    url(r'^protocol_status/$', 'app.views_project.protocol_status'),
     url(r'^update_graph_view/$', 'app.views_project.update_graph_view'),
     url(r'^update_prot_tree/$', 'app.views_project.update_prot_tree'),
     url(r'^save_selection/$', 'app.views_project.save_selection'),
@@ -78,24 +80,26 @@ urlpatterns = patterns('',
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
     url(r'^file_downloader/$', 'app.views_util.file_downloader'),
     
-    #SHOWJ
-    url(r'^showj/$', 'app.views_showj.showj'), #Load web
-    url(r'^showj_pdb/', 'app.views_showj.showj_pdb'), #Load web
-    url(r'^showVolVisualization/', 'app.views_showj.showVolVisualization'),
+    #SHOWJ 
+    url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
-    url(r'^showj_menu/$', 'app.views_showj.showj_menu'), #Load showj web menu
-    url(r'^showj_gallery/$', 'app.views_showj.showj_gallery'), #Load showj web gallery
-    url(r'^showj_table/$', 'app.views_showj.showj_table'), #Load showj web table
-    url(r'^showj_volume_astex/$', 'app.views_showj.showj_volume_astex'), #Load showj web astex visualizer
-    url(r'^showj_volume_chimera/$', 'app.views_showj.showj_volume_chimera'), #Load showj web chimera visualizer
     
+    #UPLOAD
+    url(r'^upload/', 'app.views_upload.upload', name='upload'),
+    url(r'^doUpload/', 'app.views_upload.doUpload'),
+    
+
+#===============================================================================
+# OLD     
+#===============================================================================
+
     #TESTING
-    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
+#    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
 
     #HOST
-    url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
-    url(r'^update_host', 'app.views_host.updateHost'),
-    url(r'^delete host/$', 'app.views_host.deleteHost'),
-    url(r'^host_form/$', 'app.views_host.hostForm'),
+#    url(r'^view_hosts', 'app.views_host.viewHosts', name='view_hosts'),    
+#    url(r'^update_host', 'app.views_host.updateHost'),
+#    url(r'^delete host/$', 'app.views_host.deleteHost'),
+#    url(r'^host_form/$', 'app.views_host.hostForm'),
 
 )

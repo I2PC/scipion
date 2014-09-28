@@ -38,8 +38,9 @@ import numpy as np
 
 #class XmippCTFDiscrepancyViewer(Viewer):
 class XmippCTFDiscrepancyViewer(ProtocolViewer):
-    """ Wrapper to visualize different type of data objects
-    with the Xmipp program xmipp_showj
+    """ This protocol computes the maximum resolution up to which two
+     CTF estimations would be ``equivalent'', defining ``equivalent'' as having
+      a wave aberration function shift smaller than 90 degrees
     """
     _label = 'viewer CTF Discrepancy'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
@@ -52,15 +53,20 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         #group = form.addGroup('Overall results')
-        form.addParam('resolutionThreshold', FloatParam, default=0., 
+        form.addParam('resolutionThreshold', FloatParam, default=999999.,
                       label='resolution threshold (A)',
                       help='Select only CTF consistent at this resolution (in A).')
         form.addParam('visualizeTable', HiddenBooleanParam, default=False,
-                      label="Visualize Table.")
+                      label="Visualize Table.",
+                      help="List with resolution at which the CTF estimated by a pair of methods"
+                           " is no longer equivalent."  )
         form.addParam('visualizeMatrix', HiddenBooleanParam, default=False,
-                      label="Visualize Matrix.")
+                      label="Visualize Matrix.",
+                      help="Number of micrographs that have a CTF estimation"
+                           " -given by two methods- that are equivalent at resolution=threshold")
         form.addParam('visualizeHistogram', IntParam, default=10,
-                      label="Visualize Histogram (Bin size)")
+                      label="Visualize Histogram (Bin size)",
+                      help="Histogram of the resolution at which two methods are equivalent")
 
 
 
@@ -75,6 +81,14 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         """create new ctf_set with ctf that satisfies the
         constraint and persist it
         """
+        try:
+            self.setOfCTFsConst
+        except AttributeError:
+            pass
+        else:
+            #TODO close the mapper, if not the object cannot be reused (Although it should be able)
+            self.setOfCTFsConst.close()
+
         #metadata file with protocol output
         self.sourceFile = self.protocol.outputCTF.getFileName()
         #get temporary fileName for metadata file
@@ -85,21 +99,22 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         if exists(self.targetFile):
             remove(self.targetFile)
         #metadata with selected CTFs
-        _setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
+        self.setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
         #object read metadata file
         ctfs  = data.SetOfCTF(filename = self.sourceFile)
         #condition to be satisfized for CTFs
         for ctf in ctfs:
-            #print "ctf", ctf.printAll()
-            if ctf.resolution.get()>resolutionThreshold:
-                _setOfCTFsConst.append(ctf)
+            print "ctf", ctf.printAll()
+            if ctf.resolution.get()<resolutionThreshold:
+                self.setOfCTFsConst.append(ctf)
         #new file with selected CTFs
-        _setOfCTFsConst.write()
+        self.setOfCTFsConst.write()
         #check if empty
-        if _setOfCTFsConst.getSize()<1:
+        if self.setOfCTFsConst.getSize()<1:
             print "WARNING: Empty set of CTFs."
-        #close the mapper, if not the object cannot be reused (Although it should be able)
-        _setOfCTFsConst.close()
+        #TODO aggregation function to compute the minimum resolution by micrograph
+        #TODO aggregation function to compute the average resolution by micrograph
+        #self._setOfCTFsConst.close()
 
     def isComputed(self):
         _resolutionThreshold = self.resolutionThreshold.get()
@@ -128,35 +143,42 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
         plotter = EmPlotter()
         plotter.createSubPlot("Resolution Discrepancies histogram", 
-                      "Resolution", "# of Micrographs")
+                      "Resolution (A)", "# of Micrographs")
         resolution = [ctf.resolution.get() for ctf in self.setOfCTFsConst]
         plotter.plotHist(resolution, nbins=numberOfBins)
         return views.append(plotter)
+
+    def extract(self, string, start='(', stop=')'):
+        return string[string.index(start)+1:string.index(stop)]
 
     def _visualizeMatrix(self,e=None):
         views = []
         self.isComputed()
         inputCTFs=self.protocol.inputCTFs
-        _matrix = np.zeros(shape=(len(inputCTFs), len(inputCTFs)))
-        _matrix[0][0]=1
-        _matrix[1][0]=2
-        _matrix[0][1]=3
-        _matrix[1][1]=4
-        
-        ticksLablesMajor=[]
+        shape=len(inputCTFs)#number of methods
+        _matrix = np.zeros(shape=(shape, shape))
+        ticksLablesMajorX=[None] * shape
+        ticksLablesMajorY=[None] * shape
+        for ctf in self.setOfCTFsConst:
+            m1 = int(self.extract(ctf.getAttributeValue('method1')))-1
+            m2 = int(self.extract(ctf.getAttributeValue('method2')))-1
+            _matrix[m1][m2] += 1
+            _matrix[m2][m1] = _matrix[m1][m2]
+            #rather inefficient but since  outputCTF is not ordered...
+            if ticksLablesMajorX[m1] is None:
+                ticksLablesMajorX[m1] = "(%d)"%(m1+1)
+                ticksLablesMajorY[m1] = ctf.getAttributeValue('method1')
+            if ticksLablesMajorX[m2] is None:
+                ticksLablesMajorX[m2] = "(%d)"%(m2+1)
+                ticksLablesMajorY[m2] = ctf.getAttributeValue('method2')
 
-        self.methodNames = collections.OrderedDict()
-        for i, ctf in enumerate(inputCTFs):
-            protocol = self.protocol.getMapper().getParent(ctf.get())
-            name = "(%d) %s " % (i+1, protocol.getClassLabel())
-            ticksLablesMajor.append(name)
         plotter = EmPlotter(fontsize=14)
-        resolution=2
-        plotter.createSubPlot("# micrographs with resolution\n lower than %d"%(resolution), 
-                      "Resolution", "# of Micrographs")
+        resolution=self.resolutionThreshold.get()
+        plotter.createSubPlot("# micrographs with resolution (A)\n lower than %d"%(resolution),
+                      "Method #", "Method")
 #        plotter.plotMatrix(_matrix,cmap='seismic_r'
         plotter.plotMatrix(_matrix,cmap='Greens'
-                        , xticksLablesMajor=ticksLablesMajor
-                        , yticksLablesMajor=ticksLablesMajor)
+                        , xticksLablesMajor=ticksLablesMajorX,rotationX=0
+                        , yticksLablesMajor=ticksLablesMajorY)
         return views.append(plotter)
 

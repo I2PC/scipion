@@ -31,7 +31,9 @@ This module contains converter functions that will serve to:
 """
 
 import os
+from os.path import join
 from pyworkflow.object import String
+from pyworkflow.utils import Environ
 from pyworkflow.utils.path import createLink
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import Class2D, SetOfClasses2D, SetOfClasses3D
@@ -40,6 +42,16 @@ from constants import *
 # the xmipp3 tools implemented for Scipion here
 import xmipp
 
+
+def getEnviron():
+    """ Setup the environment variables needed to launch Relion. """
+    environ = Environ(os.environ)
+    environ.update({
+            'PATH': join(os.environ['RELION_HOME'], 'bin'),
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+#             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib64'),
+            }, position=Environ.BEGIN)
+    return environ
 
 
 def locationToRelion(index, filename):
@@ -70,27 +82,51 @@ class ParticleAdaptor():
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, imgSet, stackFile):
+    def __init__(self, imgSet, stackFile=None, originalSet=None):
         self._rowCount = 1
         self._ih = ImageHandler()
         self._imgSet = imgSet
         self._stackFile = stackFile
+        self._originalSet = originalSet
         
         import pyworkflow.em.packages.xmipp3 as xmipp3
         self._particleToRow = xmipp3.particleToRow
         
     def setupRow(self, img, imgRow):
         """ Convert image and modify the row. """
-        newLoc = (self._rowCount, self._stackFile)
-        self._ih.convert(img.getLocation(), newLoc)
-        img.setLocation(newLoc)
-        # Re-write the row with the new location
-        self._particleToRow(img, imgRow, writeAlignment=False)
+        if self._stackFile is not None:
+            newLoc = (self._rowCount, self._stackFile)
+            #TODO: Check whether the input image format is valid for Relion
+            self._ih.convert(img.getLocation(), newLoc)
+            img.setLocation(newLoc)
+            # Re-write the row with the new location
+        self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
+        
+        if img.hasMicId():
+            imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
+            imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
+            
         coord = img.getCoordinate()
         if coord is not None:
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
             imgRow.setValue(xmipp.MDL_XCOOR, coord.getX())
             imgRow.setValue(xmipp.MDL_YCOOR, coord.getY())
+            
+        if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
+            # Write stuff for particle polishing
+            movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
+            movieName = 'fake_micrograph_%06d_movie.mrcs' % movieId 
+            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
+            micName = '%06d@%s' % (frameId, movieName)
+            particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
+            particle = self._originalSet[particleId]
+            if particle is None:
+                particleName = 'None'
+                raise Exception("Particle with id %d not found!!!" % particleId)
+            else:
+                particleName = locationToRelion(*particle.getLocation())
+                
+            imgRow.setValue('rlnMicrographName', micName)
+            imgRow.setValue('rlnParticleName', particleName)
             
         for label, _ in imgRow:
             if not label in XMIPP_RELION_LABELS:
@@ -124,7 +160,14 @@ def addRelionLabelsToEnviron(env):
     env['XMIPP_EXTRA_ALIASES'] = varStr
     
     
-def writeSetOfParticles(imgSet, starFile, stackFile):
+def readSetOfParticles(filename, partSet, **kwargs):
+    import pyworkflow.em.packages.xmipp3 as xmipp3
+    addRelionLabels(replace=True)
+    xmipp3.readSetOfParticles(filename, partSet, **kwargs)
+    restoreXmippLabels()
+
+    
+def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
@@ -132,7 +175,7 @@ def writeSetOfParticles(imgSet, starFile, stackFile):
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
-    pa = ParticleAdaptor(imgSet, stackFile)
+    pa = ParticleAdaptor(imgSet, stackFile, originalSet)
     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()
@@ -152,7 +195,7 @@ def createRelionInputParticles(imgSet, starFile, stackFile):
 
 
 def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter):
+                            classLabel, classFnTemplate, iter, preprocessRow=None):
     """ From an intermediate dataXXX.star file produced by relion, create
     the set of classes in which those images are classified.
     Params:
@@ -169,7 +212,7 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                                   classLabel, classFnTemplate, iter)
+                                   classLabel, classFnTemplate, iter, preprocessRow)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):
@@ -197,3 +240,50 @@ def sortImagesByLL(imgStar, imgSortedStar):
     md.write('images_sorted@' + imgSortedStar)   
     restoreXmippLabels()
     
+    
+def getMdFirstRow(starfile):
+    addRelionLabels(replace=True, extended=True)
+    from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
+    row = getMdFirstRow(starfile)
+    restoreXmippLabels()
+    return row
+
+def findImagesPath(starFile):
+    """ Find the path of the images relative to some star file. """
+    absPath = os.path.dirname(os.path.abspath(starFile))
+    row = getMdFirstRow(starFile)
+    _, imgFile = relionToLocation(row.getValue(xmipp.MDL_IMAGE))
+    
+    while absPath is not None and absPath != '/':
+        if os.path.exists(os.path.join(absPath, imgFile)):
+            return os.path.relpath(absPath)
+        absPath = os.path.dirname(absPath)
+        
+    return None
+
+
+def prependToFileName(imgRow, prefixPath):
+    """ Prepend some root name to imageRow filename. """
+    index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+    newLoc = locationToRelion(index, os.path.join(prefixPath, imgPath))
+    imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
+    
+    
+def setupCTF(imgRow, sampling):
+    """ Do some validations and set some values
+    for Relion import.
+    """
+    imgRow.setValue(xmipp.MDL_SAMPLINGRATE, sampling)
+    #TODO: check if we want to move this behaviour to setup CTFModel by default
+    hasDefocusU = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUSU)
+    hasDefocusV = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUSV)
+    hasDefocusAngle = imgRow.containsLabel(xmipp.MDL_CTF_DEFOCUS_ANGLE)
+    
+    if hasDefocusU or hasDefocusV:
+        if not hasDefocusU:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUSU, imgRow.getValue(xmipp.MDL_CTF_DEFOCUSV))
+        if not hasDefocusV:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUSV, imgRow.getValue(xmipp.MDL_CTF_DEFOCUSU))
+        if not hasDefocusAngle:
+            imgRow.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 0.)
+            

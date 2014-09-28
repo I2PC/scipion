@@ -28,7 +28,7 @@ This module contains the protocol for 3d classification with relion.
 """
 
 from pyworkflow.em.protocol import ProtClassify3D
-
+from pyworkflow.em.data import Volume
 from protocol_base import *
 
 
@@ -64,13 +64,29 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         from convert import readSetOfClasses3D
-        classesSqlite = self._getIterClasses(self._lastIter())
+        
         imgSet = self.inputParticles.get()
+        
+        # create a SetOfClasses3D and define its relations
+        classesSqlite = self._getIterClasses(self._lastIter())
         classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, classesSqlite)
+        
         self._defineOutputs(outputClasses=classes)
         self._defineSourceRelation(imgSet, classes)
         self._defineSourceRelation(self.referenceVolume.get(), classes)
+        
+        # create a SetOfVolumes and define its relations
+        volumes = self._createSetOfVolumes()
+        volumes.setSamplingRate(imgSet.getSamplingRate())
+        
+        for ref3d in range(1, self.numberOfClasses.get()+1):
+            vol = Volume()
+            vol.setFileName(self._getFileName('volume', iter=self._lastIter(), ref3d=ref3d))
+            volumes.append(vol)
+        
+        self._defineOutputs(outputVolumes=volumes)
+        self._defineSourceRelation(imgSet, volumes)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):

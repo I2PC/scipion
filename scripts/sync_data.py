@@ -4,7 +4,7 @@
 # * Authors:     I. Foche Perez (ifoche@cnb.csic.es)
 # *              J. Burguet Castell (jburguet@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -68,35 +68,10 @@ QL jmQQQgmQQQQQQmaaaQWQQQ
 """
 
 
+
 def main():
-    # Arguments parsing
-    parser = argparse.ArgumentParser(description=__doc__)
-    g = parser.add_mutually_exclusive_group()
-    g.add_argument('--download', action='store_true', help="Download dataset.")
-    g.add_argument(
-        '--upload', action='store_true',
-        help=("Upload local dataset to the scipion server. The dataset name must"
-              "be the name of its folder relative to the SCIPION_TESTS folder."))
-    g.add_argument(
-        '--list', action='store_true',
-        help=('List local datasets (from $SCIPION_TESTS) and remote ones '
-              '(remote url can be specified with --url).'))
-    g.add_argument(
-        '--format', action='store_true',
-        help='Create a MANIFEST file with checksums in the datasets folders.')
-    add = parser.add_argument  # shortcut
-    add('datasets', metavar='DATASET', nargs='*', help='Name of a dataset.')
-    add('--delete', action='store_true',
-        help=('When uploading, delete any remote files in the dataset not'
-              'present in local. It leaves the remote scipion data directory '
-              'as it is in the local one. Dangerous, use with caution.'))
-    add('-u', '--url',
-        default='http://scipionwiki.cnb.csic.es/files/scipion/data/tests',
-        help='URL where remote datasets will be looked for.')
-    add('--check-all', action='store_true',
-        help='See if there is any remote dataset not in sync with locals.')
-    add('-v', '--verbose', action='store_true', help='Print more details.')
-    args = parser.parse_args()
+    # Get arguments.
+    args = get_parser().parse_args()
 
     #print scipion_logo
 
@@ -129,9 +104,9 @@ def main():
 
     if args.format:
         for dataset in args.datasets:
-            print 'Formatting %s' % dataset
+            print 'Formatting %s (creating MANIFEST file)' % dataset
             if not exists(join(os.environ['SCIPION_TESTS'], dataset)):
-                sys.exit('ERROR: %s folder does not exist in datasets folder %s.' %
+                sys.exit('ERROR: %s does not exist in datasets folder %s.' %
                          (dataset, os.environ['SCIPION_TESTS']))
             createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
         sys.exit(0)
@@ -145,12 +120,14 @@ def main():
                     print 'Checking for updates...'
                     update(dataset, url=args.url, verbose=args.verbose)
                 else:
-                    print 'Dataset %s not in local machine. Downloading...' % dataset
+                    print ('Dataset %s not in local machine. '
+                           'Downloading...' % dataset)
                     download(dataset, url=args.url, verbose=args.verbose)
         except IOError as e:
             print 'Warning: %s' % e
             if e.errno == 13:  # permission denied
-                print 'Maybe you need to run as the user that did the global installation?'
+                print ('Maybe you need to run as the user that '
+                       'did the global installation?')
             sys.exit(1)
         sys.exit(0)
 
@@ -167,6 +144,39 @@ def main():
 
     # If we get here, we did not use the right arguments. Show a little help.
     parser.print_usage()
+
+
+def get_parser():
+    """ Return the argparse parser, so we can get the arguments """
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    g = parser.add_mutually_exclusive_group()
+    g.add_argument('--download', action='store_true', help="Download dataset.")
+    g.add_argument(
+        '--upload', action='store_true',
+        help=("Upload local dataset to the server. The dataset name must be "
+              "the name of its folder relative to the SCIPION_TESTS folder."))
+    g.add_argument(
+        '--list', action='store_true',
+        help=('List local datasets (from $SCIPION_TESTS) and remote ones '
+              '(remote url can be specified with --url).'))
+    g.add_argument(
+        '--format', action='store_true',
+        help='Create a MANIFEST file with checksums in the datasets folders.')
+    add = parser.add_argument  # shortcut
+    add('datasets', metavar='DATASET', nargs='*', help='Name of a dataset.')
+    add('--delete', action='store_true',
+        help=('When uploading, delete any remote files in the dataset not '
+              'present in local. It leaves the remote scipion data directory '
+              'as it is in the local one. Dangerous, use with caution.'))
+    add('-u', '--url',
+        default='http://scipionwiki.cnb.csic.es/files/scipion/data/tests',
+        help='URL where remote datasets will be looked for.')
+    add('--check-all', action='store_true',
+        help='See if there is any remote dataset not in sync with locals.')
+    add('-v', '--verbose', action='store_true', help='Print more details.')
+
+    return parser
 
 
 def listDatasets(url):
@@ -190,13 +200,19 @@ def listDatasets(url):
         print 'Error reading %s (%s)' % (url, e)
 
 
-def check(dataset, url, verbose=False):
+def check(dataset, url, verbose=False, updateMANIFEST=False):
     """ See if our local copy of dataset is the same as the remote one.
     Return True if it is (if all the checksums are equal), False if not.
     """
     def vlog(txt): sys.stdout.write(txt) if verbose else None  # verbose log
 
     vlog('Checking dataset %s ... ' % dataset)
+
+    if updateMANIFEST:
+        createMANIFEST(join(os.environ['SCIPION_TESTS'], dataset))
+    else:
+        vlog('(not updating local MANIFEST) ')
+
     try:
         md5sRemote = dict(x.split() for x in
                           urlopen('%s/%s/MANIFEST' %
@@ -210,6 +226,14 @@ def check(dataset, url, verbose=False):
             return True
         else:
             vlog('\thas differences\n')
+            flocal = set(md5sLocal.keys())
+            fremote = set(md5sRemote.keys())
+            def show(txt, lst):
+                if lst: vlog('  %s: %s\n' % (txt, ' '.join(lst)))
+            show('Local files missing in the server', flocal - fremote)
+            show('Remote files missing locally', fremote - flocal)
+            show('Files with differences', [f for f in fremote & flocal
+                                            if md5sLocal[f] != md5sRemote[f]])
             return False
     except Exception as e:
         vlog('\terror: %s\n' % e)
