@@ -214,14 +214,13 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')        
-        #NOTE: this is read from the input particles object
-#         form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
-#                       label='Have data been phase-flipped?',
-#                       help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
-#                            'Note that CTF-phase flipping is NOT a necessary pre-processing step for MAP-refinement in RELION, ' 
-#                            'as this can be done inside the internal CTF-correction. However, if the phases do have been flipped, ' 
-#                            'one should tell the program about it using this option.'
-#                            '*TODO*: remove this property if we keep track of phase flipped')   
+        form.addParam('doCtfManualGroups', BooleanParam, default=False,
+                      label='Do manual grouping ctfs?',
+                      condition='not is2D',
+                      help='Set this to Yes the CTFs will grouping manually.')
+        form.addParam('numberOfGroups', IntParam, default=200,
+                      label='Number of ctf groups', condition='doCtfManualGroups and not is2D',
+                      help='Number of ctf groups that will be create')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
@@ -399,6 +398,7 @@ class ProtRelionBase(EMProtocol):
         """ Prepare the command line arguments before calling Relion. """
         # Join in a single line all key, value pairs of the args dict    
         args = {}
+        
         if self.doContinue:
             self._setContinueArgs(args)
         else:
@@ -500,6 +500,9 @@ class ProtRelionBase(EMProtocol):
         from convert import writeSetOfParticles
         # Pass stack file as None to avoid write the images files
         writeSetOfParticles(imgSet, imgStar, None)
+        
+        if self.doCtfManualGroups:
+            self._splitInCTFGroups(imgStar)
         
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
@@ -657,4 +660,42 @@ class ProtRelionBase(EMProtocol):
                 blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
                 print "Writing angular distribution to: ", blockName + data_angularDist
                 mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)  
-           
+    
+    def _splitInCTFGroups(self, imgStar):
+        """ Add a new colunm in the image star to separate the particles into ctf groups """
+        addRelionLabels()
+        
+        groups = self.numberOfGroups.get()
+        md = xmipp.MetaData(imgStar)
+        defocus = [md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) for objId in md]
+        
+        minDef = min(defocus)
+        maxDef = max(defocus)
+        
+        increment = (maxDef - minDef) / groups
+        counter = 1
+        part = 1
+        md.sort(xmipp.MDL_CTF_DEFOCUSU)
+        
+        for objId in md:
+            partDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+            currDef = minDef + increment
+            
+            if partDef <= currDef:
+                part = part + 1
+                md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+            else:
+                if part < 20:
+                    increment = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) - minDef
+                    part = part + 1
+                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+                else:
+                    part = 1
+                    minDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+                    counter = counter + 1
+                    increment = (maxDef - minDef) / (groups - counter)
+                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+        md.write(imgStar)
+    
+    
+    
