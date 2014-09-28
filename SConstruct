@@ -107,8 +107,8 @@ env.EnsureSConsVersion(2,3,2)
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
-def addLibrary(env, name, tar=None, buildDir=None, targets=None,
-               url=None, flags=[], autoConfigTarget='Makefile',
+def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
+               targets=None, url=None, flags=[], autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -127,22 +127,24 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/external/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+    configDir = configDir or buildDir
     targets = targets or ['lib/lib%s.so' % name]
 
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
         valueOld = os.environ.get(var, '')
+        i = 0  # so if flags is empty, we put it at the beginning too
         for i in range(len(flags)):
             if flags[i].startswith('%s=' % var):
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
                 break
         flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-    pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
-    pathAppend('PATH', abspath('software/bin'))
+    pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
+    pathAppend('PATH', Dir('#software/bin').abspath)
 
     # Install everything in the appropriate place.
-    flags += ['--prefix=%s' % abspath('software'),
-              '--libdir=%s' % abspath('software/lib')]  # not lib64
+    flags += ['--prefix=%s' % Dir('#software').abspath,
+              '--libdir=%s' % Dir('#software/lib').abspath]  # not lib64
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the library even if it is not on by default.
@@ -153,26 +155,26 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
             return ''
 
     # Create and concatenate the builders.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = Download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
-                   cdir='software/tmp')
+    tUntar = Untar(env, File('#software/tmp/%s/configure' % configDir).abspath, tDownload,
+                   cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
     tConfig = env.AutoConfig(
-        source=Dir('software/tmp/%s' % buildDir),
+        source=Dir('#software/tmp/%s' % configDir),
         AutoConfigTarget=autoConfigTarget,
         AutoConfigSource='configure',
         AutoConfigParams=flags,
-        AutoConfigStdOut='software/log/%s_config.log' % name)
+        AutoConfigStdOut=File('#software/log/%s_config.log' % name).abspath)
     SideEffect('dummy', tConfig)  # so it works fine in parallel builds
     tMake = env.Make(
         source=tConfig,
-        target=['software/%s' % t for t in targets],
-        MakePath='software/tmp/%s' % buildDir,
+        target=['#software/%s' % t for t in targets],
+        MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
         MakeEnv=os.environ,
         MakeTargets='install',
-        MakeStdOut='software/log/%s_make.log' % name)
+        MakeStdOut=File('#software/log/%s_make.log' % name).abspath)
     SideEffect('dummy', tMake)  # so it works fine in parallel builds
 
     # Clean the special generated files
@@ -184,6 +186,21 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         Depends(tConfig, dep)
 
     return tMake
+
+
+def addOwnLibrary(env, name, dir=None, incs=None, libs=None, src=None, default=True):
+    """Add self-made and compiled shared library to the compilation process
+    
+    This pseudobuilder access given directory, compiles it
+    and installs it. It also tells SCons about it dependencies.
+
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+    """
+    lib = lib or 'lib%s' % name
+    #dir = 
 
 
 def addModule(env, name, tar=None, buildDir=None, targets=None,
@@ -306,16 +323,18 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     # If we have received a home for the package
     if packageHome != 'unset':  # default value when calling only --with-package
-        # If it's a completed local installation. Just link to it and do nothing more.
-        return env.Command(
-            'software/em/%s/bin' % name,
-            Dir(packageHome),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
-                   'Linking package %s to software/em/%s' % (name, name),
-                   chdir='software/em'))
+        #FIXME: only for operating while programming
+        if not os.path.exists(packageHome):
+            # If it's a completed local installation. Just link to it and do nothing more.
+            return env.Command(
+                'software/em/%s/bin' % name,
+                Dir(packageHome),
+                Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
+                       'Linking package %s to software/em/%s' % (name, name),
+                       chdir='software/em'))
 
     # If we haven't received a home for the package, we set it automatically to em folder
-    packageHome = 'software/em/%s' % name
+    #packageHome = 'software/em/%s' % name
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -345,18 +364,28 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     if not os.path.exists(confPath):
         confPath = 'unset'
     opts = Variables(confPath)
-    opts.Add('PACKAGE_SCRIPT')
+    opts.Add('PRIVATE_KEYS')
+    opts.Add('BOOL_PRIVATE_KEYS')
+    opts.Update(env) 
+    for var in env.get('PRIVATE_KEYS'):
+        opts.Add(var)
+        opts.Update(env)
+        opts.Add(*(env.get(var)))
+    for var in env.get('BOOL_PRIVATE_KEYS'):
+        opts.Add(var)
+        opts.Update(env)
+        opts.Add(BoolVariable(*env.get(var)))
     opts.Update(env)
 #    print opts.keys()
     scriptPath = env.get('PACKAGE_SCRIPT')
     altScriptPath = join(packageHome, 'SConscript')
-    print altScriptPath
+    # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
     if scriptPath and os.path.exists(scriptPath):
         print "Reading config file at %s" % scriptPath
         Export('env')
         env.SConscript(scriptPath)
     elif os.path.exists(altScriptPath):
-        print "Config file not present. Trying SConscript in package home"
+        print "Config file not present. Trying SConscript in package home %s" % altScriptPath
         Export('env')
         env.SConscript(altScriptPath)
     else:
@@ -419,6 +448,44 @@ def libraryTest(env, name, lang='cxx'):
     conf.Finish()
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
+
+def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
+    context.Message('* Checking for MPI ... ')
+
+    lastLIBS = context.env['LIBS']
+    lastLIBPATH = context.env['LIBPATH']
+    lastCPPPATH = context.env['CPPPATH']
+    lastCC = context.env['CC']
+    lastCXX = context.env['CXX']
+
+    # TODO Replace() also here?
+    context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
+                       CPPPATH=mpi_inc)
+    context.env.Replace(LINK=mpi_link)
+    context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
+
+    # Test only C++ mpi compiler
+    ret = context.TryLink('''
+    #include <mpi.h>
+    int main(int argc, char** argv)
+    {
+        MPI_Init(0, 0);
+        MPI_Finalize();
+        return 0;
+    }
+    ''', '.cpp')
+
+    # NOTE: We don't want MPI flags for not-mpi programs (always revert)
+    # env['mpi'] remains 1 so those can be enabled again when needed
+
+    context.env.Replace(LIBS=lastLIBS)
+    context.env.Replace(LIBPATH=lastLIBPATH)
+    context.env.Replace(CPPPATH=lastCPPPATH)
+    context.env.Replace(CC=lastCC)
+    context.env.Replace(CXX=lastCXX)
+
+    context.Result(ret)
+    return ret
 
 
 # Add methods so SConscript can call them.
