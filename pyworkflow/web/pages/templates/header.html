@@ -17,11 +17,15 @@
 			{% else %}
 				{% if projectName != None and projectName != ''%}
 				<a href="/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
-				<span id="tube">|</span><a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
-				<span id="tube">|</span><a href="/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
-			
-					<span id="tube">|</span><a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
-					<!-- <span id="tube">|</span><a href="/view_hosts" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
+				<span id="tube">|</span>
+				<a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
+				<span id="tube">|</span>
+				<a href="/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
+				<span id="tube">|</span>
+				<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
+				<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
+				<span id="tube">|</span>
+				<a href='javascript:popup("/upload/")' class="headerLink">{{msg.VIEW_UPLOAD}}</a>
 				{% endif %}
 			{% endif %}
 		</div>

@@ -105,7 +105,7 @@ elif WINDOWS:
 # to do one step while the previous one is still running in the background.
 
 def addLibrary(env, name, tar=None, buildDir=None, targets=None,
-               url=None, flags=[], autoConfigTarget='Makefile',
+               url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -135,8 +135,9 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
                 break
         flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-    pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
-    pathAppend('PATH', abspath('software/bin'))
+    if addPath:
+        pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
+        pathAppend('PATH', abspath('software/bin'))
 
     # Install everything in the appropriate place.
     flags += ['--prefix=%s' % abspath('software'),
@@ -297,6 +298,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
+        if packageHome is not None:
+            Default('software/em/%s/bin' % name)
         return env.Command(
             Dir('software/em/%s/bin' % name),
             Dir(packageHome),

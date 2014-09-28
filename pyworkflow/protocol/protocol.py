@@ -855,8 +855,9 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-        self.info('          MPI: %d' % self.numberOfMpi.get())
-        self.info('      threads: %d' % self.numberOfThreads.get())
+#        Commented lines by some fails when a protocol not used this options
+#        self.info('          MPI: %d' % self.numberOfMpi.get())
+#        self.info('      threads: %d' % self.numberOfThreads.get())
 
         Step.run(self)     
         self._endRun()

@@ -409,3 +409,9 @@ class VolVisualizationForm(forms.Form):
                              choices=volumeTypes)
     threshold = forms.DecimalField(label='Threshold', required=True,
                                 widget=forms.TextInput(attrs={'size' : 10})) 
+    
+    
+class DocumentForm(forms.Form):
+    docfile = forms.FileField(
+        label='Select a file'
+    )

@@ -32,7 +32,8 @@ In this module are protocol base classes related to EM Micrographs
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
-from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile
+from pyworkflow.protocol.constants import STEPS_PARALLEL
+from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile, getExt
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Micrograph
 
@@ -180,8 +181,12 @@ class ProtAverageMovies(ProtProcessMovies):
 class ProtOpticalAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
-    _label = 'movie alignment' 
+    _label = 'movie alignment'
     
+    def __init__(self, **args):
+        ProtProcessMovies.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -208,40 +213,40 @@ class ProtOpticalAlignment(ProtProcessMovies):
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+        micList = []
+        listProcess = []
         movSet = self.inputMovies.get()
         for mov in movSet:
-            #TODO What milks is this?
-            mov.load()
-            movFn = mov.getFirstItem().getFileName()
-            self._insertFunctionStep('processMoviesStep', movFn)
-        self._insertFunctionStep('createOutputStep')
+            movFn = mov.getFileName()
+            processId = self._insertFunctionStep('processMoviesStep', movFn, prerequisites=[])
+            micList.append(self._defineMicFn(movFn))
+            listProcess.append(processId)
+        self._insertFunctionStep('createOutputStep', micList, prerequisites=listProcess)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMoviesStep(self, movFn):
         movName = removeBaseExt(movFn)
         self._createMovWorkingDir(movName)
         self._defineProgram()
-        self._micList = []
-        micFn = self._getExtraPath( movName+ "_aligned.spi")
+        micFn = self._defineMicFn(movFn)
+        
+        movExt = getExt(movFn)
+        if movExt == ".mrc":
+            movFn = movFn + ":mrcs"
         args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
         if False:
             args += ' --dropFirst %d --dropLast %d' % (self.firstFrames.get(),self.lastFrames.get())
         if self.doGPU:
             args += ' --gpu %d' % self.GPUCore.get()
         self.runJob(self._program, args)
-
-        # micJob = join(movDir, "justtest.mrc")
-        # micFn = self._getExtraPath(movName + ".mrc")
-        # moveFile(micJob, micFn)
-        self._micList.append(micFn)
     
-    def createOutputStep(self):
+    def createOutputStep(self, micList):
         micSet = self._createSetOfMicrographs()
         movSet = self.inputMovies.get()
         micSet.setAcquisition(movSet.getAcquisition())
         micSet.setSamplingRate(movSet.getSamplingRate())
         
-        for m in self._micList:
+        for m in micList:
             mic = Micrograph()
             mic.setFileName(m)
             micSet.append(mic)
@@ -265,6 +270,9 @@ class ProtOpticalAlignment(ProtProcessMovies):
         else:
             self._program = 'xmipp_optical_alignment_cpu'
     
+    def _defineMicFn(self, movFn):
+        micFn = self._getExtraPath(removeBaseExt(movFn) + "_aligned.spi")
+        return micFn
     
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.

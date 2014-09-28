@@ -4,7 +4,7 @@
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              I. Foche Perez (ifoche@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -274,21 +274,13 @@ def main():
         else:
             option = 'django'
 
-        if option == 'apache_vars':
-            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
-            #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
-            #   * HOME: so it can reach Scipion directory
-            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
-            #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
-            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-            sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
-            sys.exit(0)
-
-        elif option in ['django', 'collectstatic']:
+        if option in ['django', 'collectstatic', 'gunicorn']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
-            else:
+            elif option == 'gunicorn':
+                args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
+            elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
             runScript('%s %s' % (manage, args))
         else:
@@ -337,7 +329,7 @@ def main():
         args = sys.argv[2:]
         from scripts.install import build
         ret = build(args=args)
-        if ret == 0 and '--help' not in args and '-h' not in args:
+        if ret == 0 and not ('--help' in args or '-h' in args or '-c' in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
@@ -368,13 +360,13 @@ def main():
         sys.exit(0)
 
     elif mode == 'runprotocol':
-        if n == 6:
-            # this could be pw_protocol_run.py or pw_protocol_mpirun.py
-            protocolApp = sys.argv[2] 
-            # This should be (projectPath, protocolDb and protocolId)
-            params = ['"%s"' % s for s in sys.argv[3:6]]
-            args = ' '.join(params)
-            runApp(protocolApp, args)
+        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
+        # this could be pw_protocol_run.py or pw_protocol_mpirun.py
+        protocolApp = sys.argv[2]
+        # This should be (projectPath, protocolDb and protocolId)
+        params = ['"%s"' % s for s in sys.argv[3:6]]
+        args = ' '.join(params)
+        runApp(protocolApp, args)
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
@@ -385,7 +377,7 @@ def main():
 
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
-        cmd = ' '.join('"%s"' % p for p in sys.argv[2:])
+        cmd = ' '.join(['"%s"' % p for p in sys.argv[2:]])
         runCmd(cmd)
 
     elif mode == MODE_HELP:
@@ -457,22 +449,3 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 if __name__ == '__main__':
     main()
-
-elif __name__.startswith('_mod_wsgi'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
-    os.environ.update(VARS)
-    # !!!! reuse VARS for these sys.path too
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib', 'python2.7', 'site-packages'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'protocols'))
-    # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
-
-    pages_settings_path = join(SCIPION_HOME,'pyworkflow','web')
-    if not pages_settings_path in sys.path:
-        sys.path.append(pages_settings_path)
-
-    import django.core.handlers.wsgi
-
-    # default name for the function that WSGI calls is "application"
-    # you can change it wsgi.conf
-    application = django.core.handlers.wsgi.WSGIHandler()

@@ -58,6 +58,8 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
+        
+        self._defineProcessParams(form)
 
         line = form.addLine('Resolution', 
                             help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
@@ -71,8 +73,8 @@ class ProtCTFMicrographs(ProtMicrographs):
                       label='Lowest' )
         line.addParam('highRes', FloatParam, default=0.35,
                       label='Highest')
-        
-        line = form.addLine('Defocus search range (microns)', expertLevel=LEVEL_ADVANCED,
+        # Switched (microns) by 'in microns' by fail in the identifier with jquery
+        line = form.addLine('Defocus search range in microns', expertLevel=LEVEL_ADVANCED,
                             help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
                                  'Underfocus is represented by a positive number.')
         line.addParam('minDefocus', FloatParam, default=0.5, 
@@ -87,7 +89,12 @@ class ProtCTFMicrographs(ProtMicrographs):
                            'estimations are noisier.')
         
         form.addParallelSection(threads=2, mpi=1)       
-    
+
+    def _defineProcessParams(self, form):
+        """ This method should be implemented by subclasses
+        to add other parameter relatives to the specific operation."""
+        pass
+        
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
@@ -98,7 +105,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
         for micFn, micDir, _ in self._iterMicrographs():
-            # CTF estimation with Xmipp
+            # CTF estimation
             stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
                                               prerequisites=[]) # Make estimation steps indepent between them
             deps.append(stepId)

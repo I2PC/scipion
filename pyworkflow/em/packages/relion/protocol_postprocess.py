@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco     (jgomez@cnb.csic.es)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,7 +27,7 @@
 
 from pyworkflow.protocol.params import (PointerParam, FloatParam, PathParam,
                                         BooleanParam, IntParam, LEVEL_EXPERT)
-from pyworkflow.em.data import Volume
+from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D
 
 from protocol_base import ProtRelionBase
@@ -181,9 +182,15 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         volume.setFileName(self._getExtraPath('postprocess.mrc'))
         volume.setSamplingRate(self.samplingRate)
         vol = self.protRelionRefine.get().outputVolume
+        mask = VolumeMask()
+        mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
+        mask.setSamplingRate(self.samplingRate)
+        
         
         self._defineOutputs(outputVolume=volume)
+        self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(vol, volume)
+        self._defineSourceRelation(vol, mask)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

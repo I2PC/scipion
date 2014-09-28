@@ -38,11 +38,33 @@
 	<script src={{protocol_form_utils}} type="text/javascript"></script>
 	<script src="{{jquery_ui}} "type="text/javascript"></script>
 	<script>
+	
 	function putMode(mode){
 		$(".multipleSelect option").prop('selected',true);
 		$("#protocolForm").attr('data-mode', mode);
+		
+		if(mode == 'execute'){
+			var optSelect = $('select#runMode_select').find(":selected").text();
+			if(optSelect == 'restart'){
+				var msg = "</td><td class='content' value='"
+				msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+				msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+				
+				warningPopup('Confirm DELETE',msg, 'launchSubmitProtocol')
+			}
+			else{
+				$('#protocolForm').submit();
+			}
+		}
+		else{
+			$('#protocolForm').submit();
+		}
+	}
+	
+	function launchSubmitProtocol(){
 		$('#protocolForm').submit();
 	}
+	
 	function putModeWiz(className){
 		$("input#wizClassName").attr("value", className);
 		putMode("wiz");

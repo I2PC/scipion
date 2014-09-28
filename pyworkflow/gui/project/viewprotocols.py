@@ -333,16 +333,17 @@ class RunIOTreeProvider(TreeProvider):
         actions = []    
         
         viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        def yatevalejosemi(v):
+            return lambda: self._visualizeObject(v, obj)
         for v in viewers:
-            actions.append(('Open with %s' % v.__name__, 
-                            lambda : self._visualizeObject(v, obj), 
+            actions.append(('Open with %s' % v.__name__,
+                            yatevalejosemi(v), 
                             Icon.ACTION_VISUALIZE))
             
         # EDIT 
         actions.append((Message.LABEL_EDIT, 
                         lambda : self._editObject(obj),
                         Icon.ACTION_EDIT))
-            
         return actions
     
     def getObjectLabel(self, obj, parent):
