@@ -26,11 +26,13 @@
 """
 This module implement the import/export of Micrographs and Particles to EMX
 """
+from __future__ import print_function
+#unused import from pyworkflow.em.packages.emxlib.emxlib import emxDataTypes
 from pyworkflow.utils import *
 from pyworkflow.em.data import *
 import emxlib
 from collections import OrderedDict
-    
+
         
 def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
     """ Export micrographs, coordinates or particles to  EMX format. """
@@ -113,7 +115,10 @@ def _micrographToEmx(mic):
     """ Create an EMX micrograph and fill all the values. """
     index, fn = mic.getLocation()
     i = index or 1
-    emxMic = emxlib.EmxMicrograph(fileName=fn, index=i)
+    #TODO: this basename(fn) if potentially dangerous if two micrographs
+    #have the same name but it is not easy to do a more general approach
+
+    emxMic = emxlib.EmxMicrograph(fileName=basename(fn), index=i)
     _acquisitionToEmx(emxMic, mic.getAcquisition())
     _samplingToEmx(emxMic, mic.getSamplingRate())
     if mic.hasCTF():
@@ -136,8 +141,9 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
         mic = micSet[coordinate.getMicId()] # get micrograph
         index, filename = mic.getLocation()
         i = index or 1
-        filename = basename(filename)
+        filename = basename(filename)  ## Careful here if two micrographs have the same name...
         mapKey = OrderedDict([('fileName', filename), ('index', i)])
+
         emxMic = emxData.getObject(mapKey)
         emxParticle.setMicrograph(emxMic)
         #TODO: ADD foreign key
@@ -148,6 +154,8 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
            
            
 def _particleToEmx(emxData, particle, micSet):
+    #import pdb
+    #pdb.set_trace()
     index, filename = particle.getLocation()
     emxParticle = _setupEmxParticle(emxData, particle.getCoordinate(), index, filename, micSet)
     if particle.hasCTF():
@@ -190,7 +198,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
         filename: the EMX file where to store the micrographs information.
     """
     ih = ImageHandler()
-    
+
     for i, particle in enumerate(partSet):
         if stackFn:
             loc = particle.getLocation()

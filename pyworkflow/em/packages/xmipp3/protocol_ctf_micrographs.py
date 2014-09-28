@@ -89,19 +89,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         form.addParam('doFastDefocus', BooleanParam, default=True,
               label="Fast defocus estimate", expertLevel=LEVEL_ADVANCED,
               help='Perform fast defocus estimate.')
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def _preprocessCTF(self, micFn):
-        """ Do the needed preprocess for each micrograph.
-        Params:
-         micFn: micrograph filename
-        """
-        micTmp = self._getTmpPath(basename(micFn))
-        args = "-i %s -o %s --step %f --method fourier" % (micFn,micTmp,self.ctfDownFactor.get())
-        try:              
-            self.runJob("xmipp_transform_downsample", args % self._params)
-        except Exception:
-            self._log.info("Failed Downsampling for: " + micFn)          
-        
+    #--------------------------- STEPS functions ---------------------------------------------------      
     def _estimateCTF(self, micFn, micDir):
         """ Run the estimate CTF program """        
         # Create micrograph dir under extra directory
@@ -130,6 +118,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             # Update _params dictionary with mic and micDir
             self._params['micFn'] = finalName
             self._params['micDir'] = self._getFileName('prefix', micDir=micDir)
+            self._params['samplingRate'] = self.inputMics.getSamplingRate() * downFactor
+            
             
             # CTF estimation with Xmipp  
             self.runJob(self._program, self._args % self._params)
@@ -204,12 +194,12 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
     def _prepareCommand(self):
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_micrograph'       
-        self._args = "--micrograph %(micFn)s --oroot %(micDir)s"
+        self._args = "--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate %(samplingRate)s"
         
         # Mapping between base protocol parameters and the package specific command options
         self.__params = {'kV': self._params['voltage'],
                 'Cs': self._params['sphericalAberration'],
-                'sampling_rate': self._params['samplingRate'], 
+#                'sampling_rate': self._params['samplingRate'], 
                 'ctfmodelSize': self._params['windowSize'],
                 'Q0': self._params['ampContrast'],
                 'min_freq': self._params['lowRes'],

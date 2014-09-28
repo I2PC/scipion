@@ -1,6 +1,7 @@
+#===============================================================================
 # Django settings for ScipionWeb project.
+#===============================================================================
 
-# Checking the project directory
 import os
 from os.path import dirname, realpath, join
 import pyworkflow as pw
@@ -59,9 +60,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-# MEDIA_ROOT = '/home/josegutab/workspaceScipion/ScipionWeb/ScipionWeb/resources'
 
-# MEDIA_ROOT = os.path.join(DIRECTORY_PROJECT,'resources')
 MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
@@ -82,8 +81,7 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-        os.path.join(pw.HOME, 'web', 'pages','resources'),
-    #    os.path.join(pw.HOME, 'web', 'pages', 'resources'),
+      os.path.join(pw.HOME, 'web', 'pages','resources'),
     
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
@@ -146,11 +144,19 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
+    # 'gunicorn',
     'app',
-    
     'grappelli',
     'filebrowser',
 )
+
+try:
+    import imp
+    imp.find_module('gunicorn')
+    INSTALLED_APPS = INSTALLED_APPS + ('gunicorn', 'gunicorn')
+except ImportError:
+    pass
+    #print "gunicorn not found"
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
