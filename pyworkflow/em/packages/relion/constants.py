@@ -97,6 +97,7 @@ XMIPP_RELION_LABELS = {
                        # relion 1.3
                        ,xmipp.MDL_IMAGE2: 'rlnParticleName'
                        ,xmipp.MDL_IMAGE_ORIGINAL: 'rlnOriginalParticleName'
+                       ,xmipp.MDL_SERIE: 'rlnGroupName'
                        }
 
 XMIPP_RELION_LABELS_EXTRA = {

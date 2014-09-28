@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels
+from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels, restoreXmippLabels
 
 
 
@@ -663,7 +663,7 @@ class ProtRelionBase(EMProtocol):
     
     def _splitInCTFGroups(self, imgStar):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
-        addRelionLabels()
+        addRelionLabels(replace=True)
         
         groups = self.numberOfGroups.get()
         md = xmipp.MetaData(imgStar)
@@ -696,6 +696,6 @@ class ProtRelionBase(EMProtocol):
                     increment = (maxDef - minDef) / (groups - counter)
                     md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
         md.write(imgStar)
-    
+        restoreXmippLabels()
     
     
