@@ -685,7 +685,7 @@ class ProtRelionBase(EMProtocol):
                 part = part + 1
                 md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
             else:
-                if part < 60:
+                if part < 100:
                     increment = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) - minDef
                     part = part + 1
                     md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
