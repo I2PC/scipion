@@ -267,45 +267,6 @@ env['STATIC_FLAG'] = '-static'
 if (ARGUMENTS['mode'] == 'configure'):
     # --- This is the configure mode
 
-    # Custom tests
-    def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
-        context.Message('* Checking for MPI ... ')
-
-        lastLIBS = context.env['LIBS']
-        lastLIBPATH = context.env['LIBPATH']
-        lastCPPPATH = context.env['CPPPATH']
-        lastCC = context.env['CC']
-        lastCXX = context.env['CXX']
-
-        # TODO Replace() also here?
-        context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
-                           CPPPATH=mpi_inc)
-        context.env.Replace(LINK=mpi_link)
-        context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
-
-        # Test only C++ mpi compiler
-        ret = context.TryLink('''
-        #include <mpi.h>
-        int main(int argc, char** argv)
-        {
-            MPI_Init(0, 0);
-            MPI_Finalize();
-            return 0;
-        }
-    ''', '.cpp')
-
-        # NOTE: We don't want MPI flags for not-mpi programs (always revert)
-        # env['mpi'] remains 1 so those can be enabled again when needed
-
-        context.env.Replace(LIBS=lastLIBS)
-        context.env.Replace(LIBPATH=lastLIBPATH)
-        context.env.Replace(CPPPATH=lastCPPPATH)
-        context.env.Replace(CC=lastCC)
-        context.env.Replace(CXX=lastCXX)
-
-        context.Result(ret)
-        return ret
-
     # Configuration or cleaning
     if env.GetOption('clean'):
         print '* Cleaning  ...'
