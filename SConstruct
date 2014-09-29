@@ -249,7 +249,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     return tInstall
 
 
-def addPackage(env, name, tar=None, buildDir=None, url=None,
+def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                extraActions=[], deps=[], clean=[], default=True):
     """Add external (EM) package <name> to the construction process.
 
@@ -306,6 +306,20 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
             Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
+
+    for p in neededProgs:
+        if not any(os.path.exists('%s/%s' % (base, p)) for base in
+                   os.environ.get('PATH', '').split(os.pathsep)):
+            print """
+  ************************************************************************
+
+    Warning: Cannot find program "%s" needed by %s
+
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))

@@ -255,6 +255,7 @@ env.AddPackage('relion',
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
+               neededProgs=['csh'],
                default=False)
 
 # TODO: check if we have to use the "purge" option below:
