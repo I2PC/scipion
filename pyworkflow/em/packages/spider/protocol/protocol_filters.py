@@ -32,7 +32,7 @@ from pyworkflow.em.protocol import ProtFilterParticles
 from pyworkflow.protocol.params import EnumParam, BooleanParam, DigFreqParam, FloatParam
 from pyworkflow.utils.path import removeBaseExt
 
-from ..constants import FILTER_GAUSSIAN, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS
+from ..constants import FILTER_SPACE_REAL, FILTER_FERMI, FILTER_BUTTERWORTH, FILTER_LOWPASS
 from ..spider import SpiderShell
 from protocol_base import SpiderProtocol
         
@@ -95,11 +95,11 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
                            'artifacts near boundary of image.')
         form.addParam('filterRadius', DigFreqParam, default=0.12, 
                       label='Filter radius (0 < f < 0.5)',
-                      condition='filterType <= %d or filterType == %d' % (FILTER_GAUSSIAN,FILTER_FERMI),
+                      condition='filterType <= %d or filterType == %d' % (FILTER_SPACE_REAL,FILTER_FERMI),
                       help='Low frequency cutoff to apply the filter.\n')  
         
         line = form.addLine('Frequency', 
-                            condition='filterType > %d and filterType != %d' % (FILTER_GAUSSIAN,FILTER_FERMI),
+                            condition='filterType > %d and filterType != %d' % (FILTER_SPACE_REAL,FILTER_FERMI),
                             help='Range to apply the filter. Expected values between 0 and 0.5.')
         line.addParam('lowFreq', DigFreqParam, default=0.1, 
                     label='Lowest')
@@ -135,7 +135,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         if not self.usePadding:
             OP += ' NP'
         
-        if filterType <= FILTER_GAUSSIAN:
+        if filterType <= FILTER_SPACE_REAL:
             args.append(self.filterRadius.get())
         else:
             args.append('%f %f' % (self.lowFreq.get(), self.highFreq.get()))
@@ -190,7 +190,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         summary = []
         summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
  
-        if self.filterType <= FILTER_GAUSSIAN or self.filterType == FILTER_FERMI: 
+        if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
             summary.append('Filter radius: *%s px^-1*' % self.filterRadius.get())
             radiusAngstroms = pixelSize/self.filterRadius.get()
             summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
@@ -207,7 +207,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         methods = []
         msg = '\nParticles were %s filtered using a %s filter' % (self.getEnumText('filterMode'),self.getEnumText('filterType'))
 
-        if self.filterType <= FILTER_GAUSSIAN or self.filterType == FILTER_FERMI: 
+        if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
             msg += ' using a radius of %s px^-1' % self.filterRadius.get()
         else:
             msg += ' using a frequency range of %s to %s px^-1' % (self.lowFreq.get(), self.highFreq.get())

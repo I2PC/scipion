@@ -42,7 +42,7 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
 from spider import SpiderShell, runScript, runCustomMaskScript
-from constants import FILTER_GAUSSIAN, FILTER_FERMI
+from constants import FILTER_SPACE_REAL, FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
                       SpiderProtFilter, SpiderProtCustomMask)
@@ -133,7 +133,7 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
             d = SpiderFilterDialog(form.root, provider, 
                                           protocolParent=protocol)
             if d.resultYes():
-                if protocol.filterType <= FILTER_GAUSSIAN:
+                if protocol.filterType <= FILTER_SPACE_REAL:
                     form.setVar('filterRadius', d.getRadius())
                 else:
                     form.setVar('lowFreq', d.getLowFreq())
@@ -162,7 +162,7 @@ class SpiderFilterDialog(DownsampleDialog):
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
-        if self.protocolParent.filterType <= FILTER_GAUSSIAN:
+        if self.protocolParent.filterType <= FILTER_SPACE_REAL:
             self.radiusSlider = self.addFreqSlider('Radius', self.protocolParent.filterRadius.get(), col=0)
         else:
             self.lfSlider = self.addFreqSlider('Low freq', self.protocolParent.lowFreq.get(), col=0)
@@ -221,7 +221,7 @@ class SpiderFilterDialog(DownsampleDialog):
         pars["usePadding"] = self.protocolParent.usePadding.get()
         pars["op"] = "FQ"
         
-        if self.protocolParent.filterType <= FILTER_GAUSSIAN:
+        if self.protocolParent.filterType <= FILTER_SPACE_REAL:
             pars['filterRadius'] = self.getRadius()
         else:
             pars['lowFreq'] = self.getLowFreq()
@@ -256,7 +256,7 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
         
     args = []
     
-    if pars["filterType"] <= FILTER_GAUSSIAN:
+    if pars["filterType"] <= FILTER_SPACE_REAL:
         args.append(pars['filterRadius'])
     else:
         args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))

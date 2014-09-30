@@ -781,7 +781,11 @@ class ProtocolsView(tk.Frame):
         self.settings.graphView.set(self.showGraph)
     
     def _protocolItemClick(self, e=None):
-        protClassName = self.protTree.getFirst().split('.')[-1]
+        # Get the tree widget that originated the event
+        # it could be the left panel protocols tree or just
+        # the search protocol dialog tree
+        tree = e.widget
+        protClassName = tree.getFirst().split('.')[-1]
         protClass = emProtocolsDict.get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
