@@ -31,6 +31,7 @@ This sub-package contains protocols for creating masks.
 from pyworkflow.em import *  
 from constants import *
 
+
 class XmippGeometricalMask3D:
     """ Basic class for protocols using geometrical masks 3D"""
     
