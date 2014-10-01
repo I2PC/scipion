@@ -39,6 +39,7 @@ void ProgReconstructSignificant::defineParams()
     addUsageLine("Generate 3D reconstructions from projections using random orientations");
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
+    addParamsLine("  [--numberOfVolumes <N=1>]    : Number of volumes to reconstruct");
     addParamsLine("  [--initvolumes <md_file=\"\">] : Set of initial volumes. If none is given, a single volume");
     addParamsLine("                               : is reconstructed with random angles assigned to the images");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
@@ -54,6 +55,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--useImed]                  : Use Imed for weighting");
     addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
+    addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
 }
 
 // Read arguments ==========================================================
@@ -74,6 +76,8 @@ void ProgReconstructSignificant::readParams()
     useImed=checkParam("--useImed");
     strict=checkParam("--strictDirection");
     angDistance=getDoubleParam("--angDistance");
+    Nvolumes=getIntParam("--numberOfVolumes");
+    applyFisher=checkParam("--dontApplyFisher");
 }
 
 // Show ====================================================================
@@ -93,10 +97,13 @@ void ProgReconstructSignificant::show()
         std::cout << "Maximum tilt                : "  << tiltF << std::endl;
         std::cout << "Use Imed                    : "  << useImed << std::endl;
         std::cout << "Angular distance            : "  << angDistance << std::endl;
+        std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
             std::cout << "Initial volume              : "  << fnInit << std::endl;
+        else
+        	std::cout << "Number of volumes           : "  << Nvolumes << std::endl;
     }
 }
 
@@ -135,6 +142,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 		std::cerr << "Aligning images ...\n";
 		init_progress_bar(mdIn.size());
 	}
+
+	MultidimArray<double> ccVol(Nvols);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		if ((nImg+1)%Nprocessors==rank)
@@ -178,6 +187,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //					}
 
 					DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir)=corr;
+					// For the paper plot: std::cout << corr << " " << imed << std::endl;
 					size_t idx=nVolume*Ndirs+nDir;
 					DIRECT_A1D_ELEM(imgcc,idx)=corr;
 					DIRECT_A1D_ELEM(imgimed,idx)=imed;
@@ -225,10 +235,16 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			double zl=z-2.96*sqrt(1.0/MULTIDIM_SIZE(mCurrentImage));
 			double ccl=tanh(zl);
 
-	    	// Get the best images
+			// Compute the cumulative distributions
 			imgcc.cumlativeDensityFunction(cdfcc);
 			imgimed.cumlativeDensityFunction(cdfimed);
-			for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+
+			// Check if force 1 volume
+			size_t firstVolume=0;
+			size_t lastVolume=Nvols-1;
+
+	    	// Get the best images
+			for (size_t nVolume=firstVolume; nVolume<=lastVolume; ++nVolume)
 			{
 				MetaData &mdPartial=mdReconstructionPartial[nVolume];
 				for (size_t nDir=0; nDir<Ndirs; ++nDir)
@@ -237,9 +253,19 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					double cdfccthis=DIRECT_A1D_ELEM(cdfcc,idx);
 					double cdfimedthis=DIRECT_A1D_ELEM(cdfimed,idx);
 					double cc=DIRECT_A1D_ELEM(imgcc,idx);
-					bool condition=!useImed || (useImed && cdfimedthis<=currentAlpha);
-					if (cdfccthis>=one_alpha && cc>ccl && condition)
+					// bool condition=!useImed || (useImed && cdfimedthis<=currentAlpha);
+//					if (cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " qualifies by Fisher to dir=" << nDir << std::endl;
+//					if (!(cdfccthis>=one_alpha) && cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by correlation percentile to " << nDir << " -> " << cdfccthis << " " << one_alpha << std::endl;
+//					if (!condition && cc>ccl)
+//						std::cout << "Image " << nImg << " " << fnImg << " does not qualify by imed percentile to " << nDir << " -> " << cdfimedthis << " " << currentAlpha<< std::endl;
+					bool condition=true;
+					condition=condition && (applyFisher && cc>ccl || !applyFisher);
+					condition=condition && cdfccthis>=one_alpha;
+					if (condition)
 					{
+//						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
 						if (maxShift>0)
@@ -249,6 +275,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 							shiftX*=-1;
 
 						double thisWeight=cdfccthis*(cc/bestCorr);
+						// COSS: To promote sparsity in the volume assignment: sum_i(cc_i^p)/sum_i(cc_i)*cc_i^p/cc_i
 						if (useImed)
 							thisWeight*=(1-cdfimedthis)*(bestImed/imed);
 						DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)=thisWeight;
@@ -383,8 +410,11 @@ void ProgReconstructSignificant::run()
 					{
 						double ccimg=DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir);
 						double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
-						if (cdfThis>=oneAlpha || !strict)
+						if ((cdfThis>=oneAlpha || !strict) && DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)>0)
+						{
+							std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
+						}
 						else
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)=0;
 					}
@@ -406,6 +436,8 @@ void ProgReconstructSignificant::run()
 					mdReconstruction.getValue(MDL_REF,nDir,__iter.objId);
 					mdReconstruction.getValue(MDL_REF3D,nVol,__iter.objId);
 					mdReconstruction.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
+					if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
+						std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
 				}
 
 				// Remove zero-weight images
@@ -448,7 +480,7 @@ void ProgReconstructSignificant::run()
 					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
-				deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+				//deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
 			}
 
 			if (verbose>=2)
@@ -559,40 +591,49 @@ void ProgReconstructSignificant::produceSideinfo()
 	// If there is not any input volume, create a random one
 	if (fnInit=="")
 	{
-		fnInit=fnDir+"/volume_random.vol";
-		if (rank==0)
+		MetaData mdAux;
+		for (int n=0; n<Nvolumes; ++n)
 		{
-			MetaData mdRandom;
-			mdRandom=mdIn;
-			FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+			fnInit=fnDir+"/volume_random.xmd";
+			if (rank==0)
 			{
-				mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
-				mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
-				mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
-				mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
-				mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+				MetaData mdRandom;
+				mdRandom=mdIn;
+				FOR_ALL_OBJECTS_IN_METADATA(mdRandom)
+				{
+					mdRandom.setValue(MDL_ANGLE_ROT,rnd_unif(0,360),__iter.objId);
+					mdRandom.setValue(MDL_ANGLE_TILT,rnd_unif(0,180),__iter.objId);
+					mdRandom.setValue(MDL_ANGLE_PSI,rnd_unif(0,360),__iter.objId);
+					mdRandom.setValue(MDL_SHIFT_X,0.0,__iter.objId);
+					mdRandom.setValue(MDL_SHIFT_Y,0.0,__iter.objId);
+				}
+				FileName fnAngles=fnDir+formatString("/angles_random_%02d.xmd",n);
+				FileName fnVolume=fnDir+formatString("/volume_random_%02d.vol",n);
+				mdRandom.write(fnAngles);
+				String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
+				String cmd=(String)"xmipp_reconstruct_fourier "+args;
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				// Symmetrize with many different possibilities to have a spherical volume
+				args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+				cmd=(String)"xmipp_transform_symmetrize "+args;
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+				args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+				if (system(cmd.c_str())==-1)
+					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+				deleteFile(fnAngles);
+				mdAux.setValue(MDL_IMAGE,fnVolume,mdAux.addObject());
 			}
-			FileName fnAngles=fnDir+"/angles_random.xmd";
-			mdRandom.write(fnAngles);
-			String args=formatString("-i %s -o %s --sym %s -v 0",fnAngles.c_str(),fnInit.c_str(),fnSym.c_str());
-			String cmd=(String)"xmipp_reconstruct_fourier "+args;
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			// Symmetrize with many different possibilities to have a spherical volume
-			args=formatString("-i %s --sym i1 -v 0",fnInit.c_str());
-			cmd=(String)"xmipp_transform_symmetrize "+args;
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			args=formatString("-i %s --sym i3 -v 0",fnInit.c_str());
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
-			args=formatString("-i %s --sym i2 -v 0",fnInit.c_str());
-			if (system(cmd.c_str())==-1)
-				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 		}
+		if (rank==0)
+			mdAux.write(fnInit);
 		synchronize();
 	}
 

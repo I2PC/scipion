@@ -647,7 +647,7 @@ void XmippMetadataProgram::setup(MetaData *md, const FileName &out, const FileNa
 
     /* Save metadata related to output stack only if required,
      * and output is a stack.*/
-    save_metadata_stack = save_metadata_stack && output_is_stack;
+    //save_metadata_stack = save_metadata_stack && output_is_stack;
 
     // Only delete output stack in case we are not overwriting input
     delete_output_stack = (output_is_stack && delete_output_stack) ?

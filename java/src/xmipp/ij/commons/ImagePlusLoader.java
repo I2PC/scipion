@@ -61,10 +61,15 @@ public class ImagePlusLoader {
 
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
         int index2 = -1;
-        existsfile = fileName != null;
-        if (existsfile) {
-            
-            if (Filename.hasPrefix(fileName)) {
+
+        if (fileName != null) {
+            //ROB & KINO: This breaks hdf files IO
+            //If filename should be manipulated it would be better to do it with the
+            //C++ FileNAme class if a label is needed for the windows title
+            //create a variable for the title.
+        	
+        	/*if (Filename.hasPrefix(fileName)) {
+
                 
                 int arrobaindex = fileName.lastIndexOf(Filename.SEPARATOR);
                 String header = fileName.substring(0, arrobaindex);
@@ -79,7 +84,7 @@ public class ImagePlusLoader {
                 if (sepindex != -1) {
                     fileName = Filename.join(header.replace(textindex + "@", ""), fileName);
                 }
-            }
+            }*/
 
             String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
             existsfile = path != null;
