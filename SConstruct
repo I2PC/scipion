@@ -155,7 +155,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not env.progInPath(p):
+        if not progInPath(env, p):
             print """
   ************************************************************************
 
@@ -327,7 +327,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not env.progInPath(p):
+        if not progInPath(env, p):
             print """
   ************************************************************************
 
