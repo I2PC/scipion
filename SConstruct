@@ -104,7 +104,7 @@ elif WINDOWS:
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
-def addLibrary(env, name, tar=None, buildDir=None, targets=None,
+def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
                url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
@@ -148,6 +148,21 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
+
+    # Check that all needed programs are there.
+    for p in neededProgs:
+        if not any(os.path.exists('%s/%s' % (base, p)) for base in
+                   os.environ.get('PATH', '').split(os.pathsep)):
+            print """
+  ************************************************************************
+
+    Warning: Cannot find program "%s" needed by %s
+
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -307,6 +322,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
 
+    # Check that all needed programs are there.
     for p in neededProgs:
         if not any(os.path.exists('%s/%s' % (base, p)) for base in
                    os.environ.get('PATH', '').split(os.pathsep)):
