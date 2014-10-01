@@ -62,8 +62,9 @@ env = Environment(ENV=os.environ,
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
-def progInPath(env, p):
-    return any(os.path.exists('%s/%s' % (base, p)) for base in
+def progInPath(env, prog):
+    "Is program prog in PATH?"
+    return any(os.path.exists('%s/%s' % (base, prog)) for base in
                os.environ.get('PATH', '').split(os.pathsep))
 
 # Add the path to dynamic libraries so the linker can find them.
@@ -155,7 +156,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not env.progInPath(p):
+        if not progInPath(env, p):
             print """
   ************************************************************************
 
@@ -327,7 +328,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not env.progInPath(p):
+        if not progInPath(env, p):
             print """
   ************************************************************************
 
