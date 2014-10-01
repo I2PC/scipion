@@ -76,12 +76,17 @@ zlib = env.AddLibrary(
     targets=['lib/libz.so'],
     addPath=False)
 
-jpeg = env.AddLibrary(
-    'jpeg',
-    tar='libjpeg-turbo-1.3.1.tgz',
-    neededProgs=['nasm'],
-#    targets=
-    )
+
+if env.ProgInPath('nasm'):
+    jpeg = env.AddLibrary(
+        'jpeg',
+        tar='libjpeg-turbo-1.3.1.tgz',
+        neededProgs=['nasm'])
+else:
+    jpeg = env.AddLibrary(
+        'jpeg',
+        tar='libjpeg-turbo-1.3.1.tgz',
+        flags=['--without-simd'])
 
 sqlite = env.AddLibrary(
     'sqlite',

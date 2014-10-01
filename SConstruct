@@ -62,6 +62,10 @@ env = Environment(ENV=os.environ,
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
+def progInPath(env, p):
+    return any(os.path.exists('%s/%s' % (base, p)) for base in
+               os.environ.get('PATH', '').split(os.pathsep))
+
 # Add the path to dynamic libraries so the linker can find them.
 if LINUX:
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
@@ -151,8 +155,7 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not any(os.path.exists('%s/%s' % (base, p)) for base in
-                   os.environ.get('PATH', '').split(os.pathsep)):
+        if not env.progInPath(p):
             print """
   ************************************************************************
 
@@ -324,8 +327,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
 
     # Check that all needed programs are there.
     for p in neededProgs:
-        if not any(os.path.exists('%s/%s' % (base, p)) for base in
-                   os.environ.get('PATH', '').split(os.pathsep)):
+        if not env.progInPath(p):
             print """
   ************************************************************************
 
@@ -441,6 +443,7 @@ env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
 env.AddMethod(manualInstall, "ManualInstall")
+env.AddMethod(progInPath, "ProgInPath")
 
 
 #  ************************************************************************
