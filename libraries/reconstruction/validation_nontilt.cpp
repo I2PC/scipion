@@ -82,17 +82,17 @@ void ProgValidationNonTilt::defineParams()
 void ProgValidationNonTilt::run()
 {
     //Clustering Tendency and Cluster Validity Stephen D. Scott
-
     randomize_random_generator();
     char buffer[400];
     sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
     system(buffer);
 
     MetaData md,mdOut,mdOut2,tempMd2,mdWeight;
-    FileName fnMd,fnOut,fnFSC,fnOut2;
+    FileName fnMd,fnMdProj,fnOut,fnFSC,fnOut2;
     fnMd = fnDir+"/angles_iter01_00.xmd";
-    fnOut = fnDir+"/kk.xmd";
-    fnOut2 = fnDir+"/kk2.xmd";
+    fnMdProj = fnDir+"/images_iter01_00.xmd";
+    fnOut = fnDir+"/clusteringTendency.xmd";
+    fnOut2 = fnDir+"/validation.xmd";
     fnFSC = fnDir+"/fsc.xmd";
     size_t nSamplesRandom = 100;
 
@@ -102,13 +102,22 @@ void ProgValidationNonTilt::run()
     md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 
     String expression;
-    double W,sumW;
-    double tempW;
-    MDRow row;
+    MDRow row,row2;
+
+    SymList SL;
+    int symmetry, sym_order;
+    SL.readSymmetryFile(fnSym.c_str());
+    SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
+
+    double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
+    double area_of_sphere_no_symmetry = 4.*PI;
+    double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
+    double validation = 0;
 
     init_progress_bar(maxNImg);
     for (size_t i=0; i<=maxNImg;i++)
     {
+
     	MetaData tempMd;
         std::vector<double> sum_u(nSamplesRandom);
         std::vector<double> sum_w(nSamplesRandom);
@@ -128,18 +137,16 @@ void ProgValidationNonTilt::run()
         std::sort(H.begin(),H.end());
 
         double P = 0.;
-        for(int i=0; i<sum_u.size();i++)
-        {
-        	std::cout << H0.at(i) << " " << H.at(i) << " " << std::endl;
-            //if (H0.at(i) > H.at(i) )
-                P += H0.at(i)/H.at(i);
-        }
+        for(size_t j=0; j<sum_u.size();j++)
+        	P += H0.at(j)/H.at(j);
 
-        std::cout << "---------------------" << " " << std::endl;
-        P = (P/nSamplesRandom);
+        P /= (nSamplesRandom/correction);
         row.setValue(MDL_IMAGE_IDX,i);
         row.setValue(MDL_WEIGHT,P);
         mdOut.addRow(row);
+
+        if ( P > 1)
+        	validation++;
 
         sum_u.clear();
 		sum_w.clear();
@@ -147,18 +154,22 @@ void ProgValidationNonTilt::run()
 		H.clear();
 		tempMd.clear();
         progress_bar(i+1);
-
     }
 
+    validation /= maxNImg;
+    row2.setValue(MDL_IMAGE,fnInit);
+    row2.setValue(MDL_WEIGHT,validation);
+    mdOut2.addRow(row2);
+
     mdOut.write(fnOut);
+    mdOut2.write(fnOut2);
 
     FileName fnVolume=fnDir+"/volume_projMatch.vol";
-    String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnMd.c_str(),fnVolume.c_str(),fnSym.c_str());
+    String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnMdProj.c_str(),fnVolume.c_str(),fnSym.c_str());
     String cmd=(String)"xmipp_reconstruct_fourier "+args;
 
     if (system(cmd.c_str())==-1)
-        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
-
+       REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
     // Size of the images
     size_t Xdim, Ydim, Zdim,Ndim;
@@ -171,13 +182,30 @@ void ProgValidationNonTilt::run()
     FileName fnVolumeSig=fnDir+"/volume_iter01_00.vol";
     sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumeSig.c_str(),sampling_rate,fnFSC.c_str());
     system(buffer);
+
+    FileName fnVolumekk1=fnDir+"/kk1.vol";
+    sprintf(buffer, "xmipp_transform_filter -i %s -o %s --fourier low_pass %f",fnVolume.c_str(),fnVolumekk1.c_str(),0.05);
+    system(buffer);
+
+    FileName fnVolumekk2=fnDir+"/kk2.vol";
+    sprintf(buffer, "xmipp_transform_filter -i %s -o %s --fourier low_pass %f",fnVolumeSig.c_str(),fnVolumekk2.c_str(),0.05);
+    system(buffer);
+
+    FileName fnVolumeDiff=fnDir+"/diffVolume.vol";
+    sprintf(buffer, "xmipp_image_operate -i %s --minus %s -o %s",fnVolumekk2.c_str(),fnVolumekk1.c_str(),fnVolumeDiff.c_str());
+    system(buffer);
+
+    sprintf(buffer, "rm %s ",fnVolumekk1.c_str());
+    system(buffer);
+    sprintf(buffer, "rm %s ",fnVolumekk2.c_str());
+    system(buffer);
 }
 
 void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
 {
 
 	const size_t tempMdSz= tempMd.size();
-    double xRan,yRan,zRan,norm;
+    double xRan,yRan,zRan;
     double tilt,rot;
     double sumWRan;
     double * xRanArray = new double[tempMdSz];
@@ -186,15 +214,6 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
     std::vector<double> weightV;
     double a;
 
-    SymList SL;
-    int symmetry, sym_order;
-    SL.readSymmetryFile(fnSym.c_str());
-    SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
-
-    double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
-    double area_of_sphere_no_symmetry = 4.*PI;
-    //double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
-    double correction = 1;
     for (size_t n=0; n<sum_u.size(); n++)
     {
         sumWRan = 0;
@@ -241,13 +260,12 @@ void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<doubl
                     tempWRan = a;
                     tempW2 = weightV[nS2];
                     tempW1 = weightV[nS1];
-                    //WRan = a;
                     WRan = a*std::exp(std::abs(tempW1-tempW2))*std::exp(-(tempW1+tempW2));
                 }
             }
             sumWRan += WRan;
         }
-        sum_u.at(n)=sumWRan*correction;
+        sum_u.at(n)=sumWRan;
     }
 
     size_t idx = 0;
@@ -305,14 +323,12 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd,std::vector<doubl
             if ( (a<tempW) && (a != 0))
             {
                 W = a*std::exp(std::abs(w-w2))*std::exp(-(w+w2));
-                //W = a;
                 tempW = a;
             }
         }
         sumW +=  W;
     }
 
-    size_t idx = 0;
     for (size_t n=0; n<sum_u.size(); n++)
     {
         H[n] = sumW/(sumW+sum_u.at(n));
