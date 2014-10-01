@@ -106,8 +106,35 @@
 								{% endif %}	
 							{% endif %}
 							</td>
+<!-- PATH PARAM -->
+						{% if param.getClassName == "PathParam" %}
+						
+						<script type="text/javascript" language="javascript">
+							$(document).ready(function() {
+							    $('#Button1').serverBrowser({
+							        onSelect: function(path) {
+							            $('[name="pattern"]').val(path);
+							        },
+							        onLoad: function() {
+							            return $('[name="pattern"]').val();
+							        },
+							        imageUrl: 'img/icons/',
+							        systemImageUrl: 'img/browser/',
+							        handlerUrl: 'getpath.txt',
+							        title: 'Browse1',
+							        basePath: '',
+							        requestMethod: 'GET'
+							    });
+							});
+						</script>
+						
+							<td class="ico">
+								<a id="Button1">
+									<i id="Button1" class="fa fa-search" style="font-size:1.1em;"></i>
+								</a>
+							</td>
 <!-- POINTER PARAM -->
-						{% if param.getClassName == "PointerParam" %}
+						{% elif param.getClassName == "PointerParam" %}
 							<td class="ico">
 								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
