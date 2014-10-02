@@ -148,8 +148,8 @@ class CTFModel(EMObject):
         return self._defocusRatio.get()
 
     def copyInfo(self, other):
-        self.copyAttributes(other, '_defocusU', '_defocusV',
-                            '_defocusAngle', '_psdFile', '_micFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV','_defocusAngle',
+                            '_defocusRatio', '_psdFile', '_micFile')
         
     def getPsdFile(self):
         return self._psdFile.get()
