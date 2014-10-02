@@ -146,13 +146,10 @@ class CTFModel(EMObject):
         
     def getDefocusRatio(self):
         return self._defocusRatio.get()
-        
-    def setDefocusRatio(self, value):
-        self._defocusRatio.set(value)
-        
+
     def copyInfo(self, other):
-        self.copyAttributes(other, '_defocusU', '_defocusV',
-                            '_defocusAngle', '_psdFile', '_micFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV','_defocusAngle',
+                            '_defocusRatio', '_psdFile', '_micFile')
         
     def getPsdFile(self):
         return self._psdFile.get()
@@ -167,7 +164,7 @@ class CTFModel(EMObject):
     def setMicrograph(self, mic):
         self._micObj = mic
 
-    def getDefocus(self, mic):
+    def getDefocus(self):
         """ Returns defocusU, defocusV and defocusAngle. """
         return (self._defocusU.get(), 
                 self._defocusV.get(), 
@@ -196,7 +193,9 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(-180.)
         elif self._defocusAngle < 0.:
             self._defocusAngle.sum(180.)
-        self.setDefocusRatio(self.getDefocusU()/self.getDefocusV())
+        # At this point defocusU is always greater than defocusV
+        # following the EMX standard
+        self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
 
 
 class DefocusGroup(EMObject):

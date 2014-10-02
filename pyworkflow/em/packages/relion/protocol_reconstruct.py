@@ -27,12 +27,12 @@
 from pyworkflow.protocol.params import (PointerParam, FloatParam,  
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume 
-from pyworkflow.em.protocol import ProtRefine3D
+from pyworkflow.em.protocol import ProtReconstruct3D
 
 from protocol_base import ProtRelionBase
 
 
-class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
+class ProtRelionReconstruct(ProtReconstruct3D, ProtRelionBase):
     """    
     Reconstruct a volume using Relion from a given set of particles.
     The alignment parameters will be converted to a Relion star file

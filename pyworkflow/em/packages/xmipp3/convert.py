@@ -95,7 +95,12 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
     xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
     xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
-    xmipp.MDL_CTF_CRIT_NORMALITY,  
+    xmipp.MDL_CTF_CRIT_NORMALITY,
+    # In xmipp the ctf also contains acquisition information
+    xmipp.MDL_CTF_Q0,
+    xmipp.MDL_CTF_CS,
+    xmipp.MDL_CTF_VOLTAGE,
+    xmipp.MDL_CTF_SAMPLING_RATE
     ]
 
 # Some extra labels to take into account the zscore
@@ -438,7 +443,7 @@ def class2DToRow(class2D, classRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
-    objectToRow(ctfModel, ctfRow, CTF_DICT)
+    objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
 
 
 def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
@@ -450,7 +455,7 @@ def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
     if _containsAll(ctfRow, CTF_DICT):
         ctfModel = CTFModel()
-        rowToObject(ctfRow, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
+        rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
     else:
         ctfModel = None
@@ -706,6 +711,20 @@ def setOfMicrographsToMd(imgSet, md, rowFunc=None, **kwargs):
 
 def writeSetOfParticles(imgSet, filename, rowFunc=None, blockName='Particles', **kwargs):
     writeSetOfImages(imgSet, filename, particleToRow, rowFunc, blockName, **kwargs)
+
+
+def writeCTFModel(ctfModel, ctfFile):
+    """ Given a CTFModel object write as Xmipp ctfparam
+    """
+    md = xmipp.MetaData()
+
+    objId = md.addObject()
+    ctfRow = XmippMdRow()
+    ctfModelToRow(ctfModel, ctfRow)
+    ctfRow.writeToMd(md, objId)
+
+    md.setColumnFormat(False)
+    md.write(ctfFile)
 
 
 def writeSetOfCTFs(ctfSet, mdCTF):
