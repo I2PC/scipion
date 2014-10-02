@@ -1,4 +1,6 @@
-from django.shortcuts import render_to_response
+import os
+import json
+from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
 
 from models import Document
@@ -29,3 +31,28 @@ def doUpload(request):
         newdoc.save()
         
     return renderUpload(request, form)
+
+
+def getPath(request):
+    # Not Used
+    # action = request.GET.get('action')
+    # time = request.GET.get('time')
+    
+    path_browse = request.GET.get('path')
+    
+    ioDict = []
+    for fi in os.listdir(path_browse): 
+        file_path = os.path.join(path_browse , fi)
+        
+        folder = False
+        if os.path.isdir(file_path):
+            folder = True
+            
+        ob = {'name': fi,'isFolder': folder,'isError': False}
+        ioDict.append(ob)
+        
+            
+    jsonStr = json.dumps(ioDict, ensure_ascii=False)
+    return HttpResponse(jsonStr, mimetype='application/javascript')
+
+

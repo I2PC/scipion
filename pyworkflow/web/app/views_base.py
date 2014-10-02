@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from views_util import getResourceCss, getResourceIcon, getResourceJs
-
+from pyworkflow.web.pages import settings
 
 def base(request, context):
     from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
@@ -61,6 +61,8 @@ def base(request, context):
 def base_form(request, context):
     
     context_base = {
+                    #Folder
+                    'user_folder': settings.MEDIA_ROOT,
                     #CSS
                     'form_css': getResourceCss('form'),
                     'jquery_ui_css': getResourceCss('jquery_ui'),
