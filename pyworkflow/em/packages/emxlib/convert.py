@@ -256,9 +256,9 @@ def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
     if _hasCtfLabels(emxObj):
         # Multiply by 10 to convert from nm to A
-        ctf.setDefocusU(emxObj.get('defocusU')*10.0)
-        ctf.setDefocusV(emxObj.get('defocusV')*10.0)
-        ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
+        ctf.setStandardDefocus(emxObj.get('defocusU')*10.0,
+                               emxObj.get('defocusV')*10.0,
+                               emxObj.get('defocusUAngle'))
     else: # Consider the case of been a Particle and take CTF from Micrograph
         if isinstance(emxObj, emxlib.EmxParticle):
             _ctfFromEmx(emxObj.getMicrograph(), ctf)
