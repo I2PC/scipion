@@ -126,6 +126,10 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
+        form.addParam('verboseLevel', EnumParam, default=1,
+                      choices=['0 low','1 high'],
+                      label='Verbose Level',
+                      help='the higher the more verbose output')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -455,6 +459,8 @@ class ProtRelionBase(EMProtocol):
                      '--o': self._getExtraPath('relion'),
                      '--oversampling': '1'
                     })
+
+        args['--verb'] = self.verboseLevel.get()
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self.numberOfIterations.get()

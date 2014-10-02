@@ -111,26 +111,30 @@
 						
 						<script type="text/javascript" language="javascript">
 							$(document).ready(function() {
-							    $('#Button1').serverBrowser({
+							    $('#FButton').serverBrowser({
 							        onSelect: function(path) {
 							            $('[name="pattern"]').val(path);
 							        },
 							        onLoad: function() {
 							            return $('[name="pattern"]').val();
 							        },
-							        imageUrl: 'img/icons/',
-							        systemImageUrl: 'img/browser/',
-							        handlerUrl: 'getpath.txt',
-							        title: 'Browse1',
-							        basePath: '',
-							        requestMethod: 'GET'
+							        handlerUrl: '/getPath/',
+							        title: 'Select input file',
+							        basePath: '{{user_folder}}',
+							        requestMethod: 'GET',
+							        
+							        // SIZE
+							        resizable:false,
+							        width: '30em', 
+// 							        height: '500px',
+							        
 							    });
 							});
 						</script>
 						
 							<td class="ico">
-								<a id="Button1">
-									<i id="Button1" class="fa fa-search" style="font-size:1.1em;"></i>
+								<a id="FButton" href="#">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a>
 							</td>
 <!-- POINTER PARAM -->

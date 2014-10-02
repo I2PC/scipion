@@ -86,9 +86,10 @@ urlpatterns = patterns('',
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     
-    #UPLOAD
-    url(r'^upload/', 'app.views_upload.upload', name='upload'),
-    url(r'^doUpload/', 'app.views_upload.doUpload'),
+    #UPLOAD & BROWSER FILES
+    url(r'^upload/', 'app.views_management.upload', name='upload'),
+    url(r'^doUpload/', 'app.views_management.doUpload'),
+    url(r'^getPath/', 'app.views_management.getPath'),
     
 
 #===============================================================================
