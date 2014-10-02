@@ -651,6 +651,12 @@ class Pointer(Object):
             
         return value
     
+    def set(self, other):
+        """ Set the pointer value but cleanning the extendend property.
+        """
+        Object.set(self, other)
+        self._extended = None
+        
     def setExtendedAttribute(self, attributeName):
         """ Point to an attribute of the pointed object. """
         if not self._extended:

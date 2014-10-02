@@ -30,6 +30,7 @@ from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
 
+
 class TestXmippBase(BaseTest):
     """ Some utility functions to import volumes that are used in several tests."""
 
@@ -44,8 +45,9 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
-        cls.protImport = ProtImportVolumes(pattern=pattern, samplingRate=samplingRate)
-        cls.proj.launchProtocol(cls.protImport, wait=True)
+        cls.protImport = cls.newProtocol(ProtImportVolumes, 
+                                         pattern=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(cls.protImport)
         return cls.protImport
     
     @classmethod
@@ -69,7 +71,8 @@ class TestXmippBase(BaseTest):
         cls.launchProtocol(cls.ProtClassify)
         return cls.ProtClassify
     
-class TestXmippCeateMask3D(TestXmippBase):
+    
+class TestXmippCreateMask3D(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -78,22 +81,37 @@ class TestXmippCeateMask3D(TestXmippBase):
     
     def testCreateMask1(self):
         print "Run create mask from volume"
-        protMask1 = XmippProtCreateMask3D(source=0, threshold=0.4)
-        protMask1.volume.set(self.protImport.outputVolume)
-        self.proj.launchProtocol(protMask1, wait=True)
+        protMask1 = self.newProtocol(XmippProtCreateMask3D, 
+                                     source=0, threshold=0.4)
+        protMask1.inputVolume.set(self.protImport.outputVolume)
+        protMask1.setObjLabel('thresold mask')
+        self.launchProtocol(protMask1)
         self.assertIsNotNone(protMask1.outputMask, "There was a problem with create mask from volume")          
         
-        print "Run create mask from geometry"
-        protMask2 = XmippProtCreateMask3D(source=1, size=64, samplingRate=9.89, geo=6, innerRadius=10, outerRadius=25, borderDecay=2)
-        self.proj.launchProtocol(protMask2, wait=True)        
-        self.assertIsNotNone(protMask2.outputMask, "There was a problem with create mask from geometry")          
-        
         print "Run create mask from another mask"
-        protMask3 = XmippProtCreateMask3D(source=2, doMorphological=True, elementSize=3)
-        protMask3.inputMask.set(protMask1.outputMask)
-        self.proj.launchProtocol(protMask3, wait=True)        
-        self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")          
-
+        protMask2 = self.newProtocol(XmippProtCreateMask3D, 
+                                     source=2, doMorphological=True, elementSize=3)
+        protMask2.inputMask.set(protMask1.outputMask)
+        protMask2.setObjLabel('dilation mask')
+        self.launchProtocol(protMask2)        
+        self.assertIsNotNone(protMask2.outputMask, "There was a problem with mask from another mask") 
+        
+        print "Apply dilation mask to imported volume"
+        protMaskVolume = self.newProtocol(XmippProtMaskVolumes)
+        protMaskVolume.inputVolumes.set(self.protImport.outputVolume)
+        protMaskVolume.source.set(SOURCE_MASK)
+        protMaskVolume.inputMask.set(protMask2.outputMask)
+        self.launchProtocol(protMaskVolume)        
+        self.assertIsNotNone(protMaskVolume.outputVol, "There was a problem with applying mask to a volume")                 
+        
+        print "Run create mask from geometry"
+        protMask3 = self.newProtocol(XmippProtCreateMask3D, 
+                                     source=1, size=64, samplingRate=9.89, 
+                                     geo=6, innerRadius=10, outerRadius=25, borderDecay=2)
+        protMask3.setObjLabel('crown mask')
+        self.launchProtocol(protMask3)        
+        self.assertIsNotNone(protMask3.outputMask, "There was a problem with create mask from geometry")          
+        
 
 class TestXmippResolution3D(TestXmippBase):
     @classmethod
@@ -171,13 +189,15 @@ class TestXmippMaskVolumes(TestXmippBase):
     
     def testMaskVolumes(self):
         print "Run mask single volume"
-        protMaskVolume = XmippProtMaskVolumes(radius=23)
+        protMaskVolume = self.newProtocol(XmippProtMaskVolumes, 
+                                          radius=23)
         protMaskVolume.inputVolumes.set(self.protImport2.outputVolume)
-        self.proj.launchProtocol(protMaskVolume, wait=True)        
+        self.launchProtocol(protMaskVolume)        
         self.assertIsNotNone(protMaskVolume.outputVol, "There was a problem with applying mask to a volume")
 
         print "Run mask SetOfVolumes"
-        protMaskVolumes = XmippProtMaskVolumes(geo=MASK3D_CROWN, innerRadius=18, outerRadius=23)
+        protMaskVolumes = self.newProtocol(XmippProtMaskVolumes, 
+                                           geo=MASK3D_CROWN, innerRadius=18, outerRadius=23)
         protMaskVolumes.inputVolumes.set(self.protImport1.outputVolumes)
         self.proj.launchProtocol(protMaskVolumes, wait=True)        
         self.assertIsNotNone(protMaskVolumes.outputVol, "There was a problem with applying mask to SetOfVolumes")

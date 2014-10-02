@@ -76,6 +76,11 @@ zlib = env.AddLibrary(
     targets=['lib/libz.so'],
     addPath=False)
 
+jpeg = env.AddLibrary(
+    'jpeg',
+    tar='libjpeg-turbo-1.3.1.tgz',
+    flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -198,7 +203,7 @@ addModule(
     tar='Pillow-2.5.1.tgz',
     targets=['PIL'],
     flags=['--old-and-unmanageable'],
-    deps=[setuptools])
+    deps=[setuptools, jpeg])
 
 addModule(
     'winpdb',
@@ -255,6 +260,7 @@ env.AddPackage('relion',
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
+               neededProgs=['csh'],
                default=False)
 
 # TODO: check if we have to use the "purge" option below:

@@ -49,7 +49,6 @@ def projects(request):
     context = {'projects': projects,
                'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
-               'view': 'projects',
                }
     
     context = base_grid(request, context)
@@ -248,6 +247,9 @@ def project_content(request):
     # get the choice current 
     choiceSelected =  settings.protMenuList.getIndex()
     
+    # show the project name in the header.html
+    projectNameHeader = 'Project '+ str(projectName)
+    
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
@@ -267,7 +269,7 @@ def project_content(request):
                'choiceSelected': choiceSelected,
                'runs': runs,
                'columns': provider.getColumns(),
-               'view': 'protocols',
+               'projectNameHeader': projectNameHeader, 
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
@@ -333,3 +335,16 @@ def protocol_info(request):
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
+def service_projects(request):
+
+    if 'projectName' in request.session: request.session['projectName'] = ""
+    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+    context = {'projects_css': getResourceCss('projects'),
+               'project_utils_js': getResourceJs('project_utils'),
+               'projectNameHeader': 'Initial Volume Service',
+               }
+    
+    context = base_grid(request, context)
+    
+    return render_to_response('service_projects.html', context)
