@@ -39,6 +39,8 @@ from pyworkflow.em.data import Micrograph
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
+#from pyworkflow.em.packages.dosefgpu.protocol_dosefgpu import ProtDosefGpu
+#from pyworkflow.em.protocol import ProtProcessMovies
 
 
 
@@ -66,7 +68,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                            'finishing. Results files should be copied in \n'
                            'the "createOutputStep" function.\n'
                            'If set to *No*, the folder will not be deleted.')
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         
@@ -178,7 +180,7 @@ class ProtAverageMovies(ProtProcessMovies):
         self._defineTransformRelation(inputMovies, micSet)
             
     
-class ProtOpticalAlignment(ProtProcessMovies):
+class ProtOpticalAlignment(ProtProcessMovies    ):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
     _label = 'movie alignment'
@@ -190,7 +192,8 @@ class ProtOpticalAlignment(ProtProcessMovies):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
-        
+        #ProtProcessMovies._defineParams(self, form)
+
         form.addParam('inputMovies', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
         form.addParam('doGPU', BooleanParam, default=False,
@@ -202,15 +205,15 @@ class ProtOpticalAlignment(ProtProcessMovies):
         form.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_EXPERT,
                       help="Window size (shifts are assumed to be constant within this window).")
-        line = form.addLine('Frames rangeDrop Frames (NOT IMPLEMENTED):',
-                      help='Drop first and last frames. set to 0 in orser to keep all\n\n'
-                           'NOT IMPLEMENTED YET.')
+        line = form.addLine('Skip Frames:',
+                      help='Drop first and last frames. set to 0 in order to keep all\n'
+                           'First frame is 1\n')
         line.addParam('firstFrame', IntParam, default='0',
                       label='First')
         line.addParam('lastFrame',  IntParam, default='0',
                       label='Last')
         form.addParallelSection(threads=1, mpi=1)
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         micList = []
@@ -234,8 +237,11 @@ class ProtOpticalAlignment(ProtProcessMovies):
         if movExt == ".mrc":
             movFn = movFn + ":mrcs"
         args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
-        if False:
-            args += ' --dropFirst %d --dropLast %d' % (self.firstFrames.get(),self.lastFrames.get())
+        firstFrame = self.firstFrame.get()
+        lastFrame = self.lastFrame.get()
+        if firstFrame or lastFrame:
+            if firstFrame == 0: firstFrame = 1
+            args += ' --nst %d --ned %d' % (firstFrame,lastFrame)
         if self.doGPU:
             args += ' --gpu %d' % self.GPUCore.get()
         self.runJob(self._program, args)
