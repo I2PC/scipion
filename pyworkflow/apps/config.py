@@ -31,6 +31,9 @@ mainly for project GUI
 import os
 from os.path import join, exists
 import time
+from ConfigParser import ConfigParser
+import json
+
 from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
 from pyworkflow.object import Boolean, Integer, String, List, OrderedObject, CsvList
@@ -230,6 +233,7 @@ class ProtocolConfig(MenuConfig):
                 args['icon'] = 'class_obj.gif'
         return MenuConfig.addSubMenu(self, text, value, **args)
 
+
 def addMenus(settings):
     """Write default configuration files"""
     # Write menu configuration
@@ -256,165 +260,34 @@ def addMenus(settings):
     #writeConfig(menu, 'menu_test.xml')
     settings.addMenu(menu)
 
+
 def addProtocols(settings):
     """ Write protocols configuration. """
-    menu = ProtocolConfig("Protocols SPA")
 
-    # ------------------- Imports ----------------------------
-    m1 = menu.addSubMenu('Imports', tag='section', icon='bookmark.png')
+    # Helper function to recursively add items to a menu.
+    def add(menu, item):
+        "Add item (a dictionary that can contain more dictionaries) to menu"
+        children = item.pop('children', [])
+        subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
+        for child in children:
+            add(subMenu, child)  # add recursively to sub-menu
 
-    m1.addSubMenu('import micrographs', value='ProtImportMicrographs',
-                  tag='protocol')
-    m1.addSubMenu('import particles', value='ProtImportParticles',
-                  tag='protocol')
-    m1.addSubMenu('import volumes', value='ProtImportVolumes',
-                 tag='protocol')
-    m1.addSubMenu('import PDB', value='ProtImportPdb',
-                 tag='protocol')
-    m1.addSubMenu('import movies', value='ProtImportMovies',
-                  tag='protocol')
-    m1.addSubMenu('import from EMX', value='ProtEmxImport',
-                  tag='protocol')
-    m1.addSubMenu('export to EMX', value='ProtEmxExport',
-                  tag='protocol')
-    m1.addSubMenu('import from Relion', value='ProtRelionImport',
-                  tag='protocol')
-    m1.addSubMenu('import from Xmipp', value='ProtXmippMicsImport',
-                  tag='protocol')
+    # Read menus from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
+    # Also mentioned in /scipion . Maybe we could do better.
 
-    # ------------------- Micrographs ----------------------------
-    m1 = menu.addSubMenu('Micrographs', tag='section')
+    assert cp.read(MENU_FILE) != [], 'Missing file %s' % MENU_FILE
 
-    m1.addSubMenu('Preprocess', value='ProtPreprocessMicrographs',
-                  tag='protocol_base')
-    m1.addSubMenu('CTF estimation', value='ProtCTFMicrographs',
-                  tag='protocol_base')
+    # Populate the protocol menu from the config file.
+    for menuName in cp.options('PROTOCOLS'):
+        menu = ProtocolConfig(menuName)
+        children = json.loads(cp.get('PROTOCOLS', menuName))
+        for child in children:
+            add(menu, child)
+        settings.addProtocolMenu(menu)
 
-
-    # ------------------- Particles ----------------------------
-    m1 = menu.addSubMenu('Particles', tag='section')
-
-
-    m1.addSubMenu('Set operations', value='ProtSets',
-                  tag='protocol_base', icon='bookmark.png')
-
-    m1.addSubMenu('Picking', value='ProtParticlePicking',
-                  tag='protocol_base')
-    m1.addSubMenu('Extract', value='ProtExtractParticles',
-                  tag='protocol_base')
-    m1.addSubMenu('Process', value='ProtProcessParticles',
-                  tag='protocol_base')
-
-    # ------------------- 2D ----------------------------
-    m1 = menu.addSubMenu('2D', tag='section')
-
-    m1.addSubMenu('Align', value='ProtAlign2D',
-                  tag = 'protocol_base', icon='class_obj.gif')
-    m1.addSubMenu('Classify', value='ProtClassify2D',
-                  tag = 'protocol_base', icon='class_obj.gif')
-
-    m1.addSubMenu('Analysis', value='ProtAnalysis2D',
-                  tag = 'protocol_base')
-
-
-    # ------------------- 3D ----------------------------
-    m1 = menu.addSubMenu('3D', tag='section')
-
-    m1.addSubMenu('Initial volume', value='ProtInitialVolume',
-                  tag='protocol_base')
-    m1.addSubMenu('Preprocess', value='ProtPreprocessVolumes',
-                  tag='protocol_base')
-    m1.addSubMenu('Refine', value='ProtRefine3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Classify', value='ProtClassify3D',
-                  tag='protocol_base')
-    m1.addSubMenu('Analysis', value='ProtAnalysis3D',
-                  tag = 'protocol_base')
-
-    settings.addProtocolMenu(menu)
-
-    addSpiderMDAProtocols(settings)
-
-    addRCTProtocols(settings)
-
-    addNMAProtocols(settings)
-
-
-def addSpiderMDAProtocols(settings):
-    """ Write protocols related to Spider MDA workflow. """
-    menu = ProtocolConfig("MDA workflow")
-
-    # ------------------- Particles ----------------------------
-    m1 = menu.addSubMenu('MDA workflow', tag='section')
-
-    m1.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
-                  value='ProtImportParticles')
-    m1.addSubMenu(' Filter (optional)', tag='protocol',
-                  value='SpiderProtFilter')
-    m1.addSubMenu(' Align', tag='protocol_base', openItem=True,
-                  value='ProtAlign2D')
-    m1.addSubMenu(' Create mask (optional)', tag='protocol',
-                  value='SpiderProtCustomMask')
-    m1.addSubMenu(' Dimension reduction', tag='protocol',
-                  value='SpiderProtCAPCA')
-    m1.addSubMenu(' Classify', tag='protocol_base', openItem=True,
-                  value='SpiderProtClassify')
-    #m1.addSubMenu(' Classification', tag='protocol',
-    #              value='SpiderProtClassifyWard')
-
-    m2 = menu.addSubMenu('Protocol MDA', tag='protocol',
-                         value='SpiderWfMDA')
-
-    settings.addProtocolMenu(menu)
-
-def addNMAProtocols(settings):
-    """ Write protocols related to Flexible Analysis (NMA) workflow. """
-    m = ProtocolConfig("HEMNMA")
-
-    # ------------------- Particles ----------------------------
-    m1 = m.addSubMenu('1. Import PDB or Volume', tag='section')
-    m1.addSubMenu(' Import PDB', tag='protocol', icon='bookmark.png',
-                  value='ProtImportPdb')
-    m1.addSubMenu(' Import volume', tag='protocol', icon='bookmark.png',
-                  value='ProtImportVolumes')
-
-    m2 = m.addSubMenu('2. Compute Normal Modes', tag='section')
-    m2.addSubMenu('NMA', tag='protocol', value='XmippProtNMA')
-
-    m3 = m.addSubMenu('3. Analyze results (select modes)', tag='section')
-
-    m4 = m.addSubMenu('4. Stop here or continue', tag='section')
-    m4.addSubMenu(' Import particles', tag='protocol', icon='bookmark.png',
-                  value='ProtImportParticles')
-
-    m5 = m.addSubMenu('5. Optional', tag='section')
-    m5.addSubMenu(' Resize particles', tag='protocol', value='XmippProtResize')
-
-    m6 = m.addSubMenu('6. Analyze images', tag='section')
-    m6.addSubMenu('Flexibility analysis', tag='protocol', value='XmippProtAlignmentNMA')
-
-    m7 = m.addSubMenu('7. Analyze results (plot deformations)', tag='section')
-
-    settings.addProtocolMenu(m)
-
-def addRCTProtocols(settings):
-    """ Write protocols related to Random Conical Tilt (RCT) workflow. """
-    m1 = ProtocolConfig("Random Conical Tilt")
-
-    m1.addSubMenu(' Import micrographs pairs', tag='protocol', icon='bookmark.png',
-                  value='ProtImportMicrographsTiltPairs')
-
-    m1.addSubMenu(' Picking micrographs pairs', tag='protocol',
-                  value='XmippProtParticlePickingPairs')
-
-
-    m1.addSubMenu(' Extract particles pairs', tag='protocol',
-                  value='XmippProtExtractParticlesPairs')
-
-    m1.addSubMenu(' Random Conical Tilt', tag='protocol',
-                  value='XmippProtRCT')
-
-    settings.addProtocolMenu(m1)
 
 def setQueueSystem(host, maxCores):
     host.mpiCommand.set('mpirun -np %(JOB_NODES)d -bynode %(COMMAND)s')

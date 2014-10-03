@@ -240,7 +240,6 @@ class ProtOpticalAlignment(ProtProcessMovies    ):
         firstFrame = self.firstFrame.get()
         lastFrame = self.lastFrame.get()
         if firstFrame or lastFrame:
-            if firstFrame == 0: firstFrame = 1
             args += ' --nst %d --ned %d' % (firstFrame,lastFrame)
         if self.doGPU:
             args += ' --gpu %d' % self.GPUCore.get()

@@ -30,7 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import time
 try:
     from ConfigParser import ConfigParser
@@ -64,39 +64,17 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 #
 
 CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
 
-def createConf():
-    if not exists(dirname(CONF_FILE)):
-        os.makedirs(dirname(CONF_FILE))
-    if exists(CONF_FILE):
-        backup = '%s.%d' % (CONF_FILE, int(time.time()))
+def createConf(fpath):
+    if not exists(dirname(fpath)):
+        os.makedirs(dirname(fpath))
+    if exists(fpath):
+        backup = '%s.%d' % (fpath, int(time.time()))
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (CONF_FILE, backup))
-        os.rename(CONF_FILE, backup)
-    open(CONF_FILE, 'w').write("""
-# All relative paths will have $SCIPION_HOME as their root.
-
-[DIRS_LOCAL]
-SCIPION_USER_DATA = ~/ScipionUserData
-SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
-SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
-
-[DIRS_GLOBAL]
-SCIPION_TESTS = data/tests
-SCIPION_SOFTWARE = software
-
-[PACKAGES]
-EM_ROOT = software/em
-XMIPP_HOME = %(EM_ROOT)s/xmipp
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-EMAN2DIR = %(EM_ROOT)s/eman
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-CTFFIND_HOME = %(EM_ROOT)s/ctffind
-RELION_HOME = %(EM_ROOT)s/relion
-BSOFT_HOME = %(EM_ROOT)s/bsoft
-DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
-DOSEFGPU_CUDA_LIB = None
-""")
+                         (fpath, backup))
+        os.rename(fpath, backup)
+    open(fpath, 'w').write(open('settings/%s' % basename(fpath)).read())
 
 
 #
@@ -106,7 +84,11 @@ DOSEFGPU_CUDA_LIB = None
 try:
     if not exists(CONF_FILE):
         sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
-        createConf()
+        createConf(CONF_FILE)
+
+    if not exists(MENU_FILE):
+        sys.stdout.write('Creating local configuration file: %s\n' % MENU_FILE)
+        createConf(MENU_FILE)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -131,7 +113,7 @@ except Exception:
     sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
     try:
         sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
-        createConf()  # try to create a working configuration file
+        createConf(CONF_FILE)  # try to create a working configuration file
     except Exception:
         pass  # but don't be upset if we can't :)
     sys.stdout.write('Please check the configuration file %s and try again.\n' %

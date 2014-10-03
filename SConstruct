@@ -114,10 +114,14 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file, configures the library with the given flags, compiles it
-    (in the given buildDir) and installs it. It also tells SCons about
-    the proper dependencies (deps).
+    This pseudobuilder checks that the needed programs are in PATH,
+    downloads the given url, untars the resulting tar file, configures
+    the library with the given flags, compiles it (in the given
+    buildDir) and installs it. It also tells SCons about the proper
+    dependencies (deps).
+
+    If addPath=False, we will not pass the variables PATH and
+    LD_LIBRARY_PATH pointing to our local installation directory.
 
     If default=False, the library will not be built unless the option
     --with-<name> is used.
@@ -272,10 +276,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                extraActions=[], deps=[], clean=[], default=True):
     """Add external (EM) package <name> to the construction process.
 
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file and copies its content from buildDir into the
-    installation directory <name>. It also tells SCons about the
-    proper dependencies (deps).
+    This pseudobuilder checks that the needed programs are in PATH,
+    downloads the given url, untars the resulting tar file and copies
+    its content from buildDir into the installation directory
+    <name>. It also tells SCons about the proper dependencies (deps).
 
     extraActions is a list of (target, command) that should be
     executed after the package is properly installed.
