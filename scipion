@@ -74,7 +74,8 @@ def createConf(fpath):
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
                          (fpath, backup))
         os.rename(fpath, backup)
-    open(fpath, 'w').write(open('settings/%s' % basename(fpath)).read())
+    ftemplate = '%s/settings/%s' % (SCIPION_HOME, basename(fpath))
+    open(fpath, 'w').write(open(ftemplate).read())
 
 
 #
