@@ -74,7 +74,8 @@ zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
     targets=['lib/libz.so'],
-    addPath=False)
+    addPath=False,
+    autoConfigTarget='zlib.pc')
 
 jpeg = env.AddLibrary(
     'jpeg',
