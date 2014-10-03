@@ -295,7 +295,7 @@ public:
         // Compute the average of the whole stack
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
-        if (lstFrame>=imagenum)
+        if (lstFrame>=imagenum || lstFrame==1)
             lstFrame=imagenum;
         imagenum-=(imagenum-lstFrame) + (fstFrame-1);
         levelNum=sqrt(double(imagenum));
