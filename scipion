@@ -30,7 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import time
 try:
     from ConfigParser import ConfigParser
@@ -64,29 +64,17 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 #
 
 CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
-
-def createConf():
-    if not exists(dirname(CONF_FILE)):
-        os.makedirs(dirname(CONF_FILE))
-    if exists(CONF_FILE):
-        backup = '%s.%d' % (CONF_FILE, int(time.time()))
-        sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (CONF_FILE, backup))
-        os.rename(CONF_FILE, backup)
-    open(CONF_FILE, 'w').write(open('settings/scipion.conf').read())
-
-
 MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
 
-def createMenu():
-    if not exists(dirname(MENU_FILE)):
-        os.makedirs(dirname(MENU_FILE))
-    if exists(MENU_FILE):
-        backup = '%s.%d' % (MENU_FILE, int(time.time()))
+def createConf(fpath):
+    if not exists(dirname(fpath)):
+        os.makedirs(dirname(fpath))
+    if exists(fpath):
+        backup = '%s.%d' % (fpath, int(time.time()))
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (MENU_FILE, backup))
-        os.rename(MENU_FILE, backup)
-    open(MENU_FILE, 'w').write(open('settings/menu.conf').read())
+                         (fpath, backup))
+        os.rename(fpath, backup)
+    open(fpath, 'w').write(open('settings/%s' % basename(fpath)).read())
 
 
 #
@@ -96,11 +84,11 @@ def createMenu():
 try:
     if not exists(CONF_FILE):
         sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
-        createConf()
+        createConf(CONF_FILE)
 
     if not exists(MENU_FILE):
         sys.stdout.write('Creating local configuration file: %s\n' % MENU_FILE)
-        createMenu()
+        createConf(MENU_FILE)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -125,7 +113,7 @@ except Exception:
     sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
     try:
         sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
-        createConf()  # try to create a working configuration file
+        createConf(CONF_FILE)  # try to create a working configuration file
     except Exception:
         pass  # but don't be upset if we can't :)
     sys.stdout.write('Please check the configuration file %s and try again.\n' %

@@ -233,6 +233,7 @@ class ProtocolConfig(MenuConfig):
                 args['icon'] = 'class_obj.gif'
         return MenuConfig.addSubMenu(self, text, value, **args)
 
+
 def addMenus(settings):
     """Write default configuration files"""
     # Write menu configuration
@@ -263,16 +264,23 @@ def addMenus(settings):
 def addProtocols(settings):
     """ Write protocols configuration. """
 
+    # Helper function to recursively add items to a menu.
     def add(menu, item):
+        "Add item (a dictionary that can contain more dictionaries) to menu"
         children = item.pop('children', [])
-        subMenu = menu.addSubMenu(**item)
+        subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
         for child in children:
-            add(subMenu, child)
+            add(subMenu, child)  # add recursively to sub-menu
 
+    # Read menus from users' config file.
     cp = ConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    MENU_FILE = '~/.config/scipion/menu.conf'
-    assert cp.read(os.path.expanduser(MENU_FILE)) != [], 'Missing file %s' % MENU_FILE
+    MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
+    # Also mentioned in /scipion . Maybe we could do better.
+
+    assert cp.read(MENU_FILE) != [], 'Missing file %s' % MENU_FILE
+
+    # Populate the protocol menu from the config file.
     for menuName in cp.options('PROTOCOLS'):
         menu = ProtocolConfig(menuName)
         children = json.loads(cp.get('PROTOCOLS', menuName))
