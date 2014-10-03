@@ -59,7 +59,7 @@ iconDict = {
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
-            'loading' : 'loading.gif'
+            'loading' : 'loading.gif',          
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -114,7 +114,6 @@ jsDict = {'jquery': 'jquery/jquery.js',
           
           'messi': 'messi/messi.js',
           'raphael': 'raphael/raphael.js',
-          
           }
 
 def getResourceIcon(icon):

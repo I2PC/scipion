@@ -3,7 +3,6 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
-from filebrowser.sites import site as fb
 
 #===============================================================================
 # URL ASSOCIATION
@@ -88,6 +87,7 @@ urlpatterns = patterns('',
     url(r'^upload/', 'app.views_management.upload', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
     url(r'^getPath/', 'app.views_management.getPath'),
+    url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     
 
 #===============================================================================
