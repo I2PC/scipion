@@ -73,30 +73,20 @@ def createConf():
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
                          (CONF_FILE, backup))
         os.rename(CONF_FILE, backup)
-    open(CONF_FILE, 'w').write("""
-# All relative paths will have $SCIPION_HOME as their root.
+    open(CONF_FILE, 'w').write(open('settings/scipion.conf').read())
 
-[DIRS_LOCAL]
-SCIPION_USER_DATA = ~/ScipionUserData
-SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
-SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
 
-[DIRS_GLOBAL]
-SCIPION_TESTS = data/tests
-SCIPION_SOFTWARE = software
+MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
 
-[PACKAGES]
-EM_ROOT = software/em
-XMIPP_HOME = %(EM_ROOT)s/xmipp
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-EMAN2DIR = %(EM_ROOT)s/eman
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-CTFFIND_HOME = %(EM_ROOT)s/ctffind
-RELION_HOME = %(EM_ROOT)s/relion
-BSOFT_HOME = %(EM_ROOT)s/bsoft
-DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
-DOSEFGPU_CUDA_LIB = None
-""")
+def createMenu():
+    if not exists(dirname(MENU_FILE)):
+        os.makedirs(dirname(MENU_FILE))
+    if exists(MENU_FILE):
+        backup = '%s.%d' % (MENU_FILE, int(time.time()))
+        sys.stdout.write('File %s already exists. Creating backup %s.\n' %
+                         (MENU_FILE, backup))
+        os.rename(MENU_FILE, backup)
+    open(MENU_FILE, 'w').write(open('settings/menu.conf').read())
 
 
 #
@@ -107,6 +97,10 @@ try:
     if not exists(CONF_FILE):
         sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
         createConf()
+
+    if not exists(MENU_FILE):
+        sys.stdout.write('Creating local configuration file: %s\n' % MENU_FILE)
+        createMenu()
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)

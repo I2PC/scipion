@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<ALL>
-  <ProjectConfig>
-    <menu>menu_default.xml</menu>
-    <protocols>protocols_default.xml</protocols>
-    <icon>scipion_bn.xbm</icon>
-    <logo>scipion_logo_small.gif</logo>
-  </ProjectConfig>
-</ALL>
