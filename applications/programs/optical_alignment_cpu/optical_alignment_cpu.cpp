@@ -1,3 +1,28 @@
+/***************************************************************************
+ * Authors:     Vahid Abrishami (vabrishami@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -36,8 +61,8 @@ public:
         addUsageLine ("Align moviews using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("     [--nst <int=1>]     : first frame used in alignment");
-        addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in stack ");
+        addParamsLine("     [--nst <int=1>]     : first frame used in alignment (0 = first frame in the movie");
+        addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--saveAverage <fileName>]: compute aveage of the whole stack");
 #ifdef GPU
@@ -268,7 +293,9 @@ public:
         tStart2=clock();
 
         // Compute the average of the whole stack
-        if (lstFrame==0)
+        fstFrame++; // Just to adapt to Li algorithm
+        lstFrame++; // Just to adapt to Li algorithm
+        if (lstFrame>=imagenum)
             lstFrame=imagenum;
         imagenum-=(imagenum-lstFrame) + (fstFrame-1);
         levelNum=sqrt(double(imagenum));
