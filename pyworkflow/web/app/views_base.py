@@ -62,7 +62,7 @@ def base_form(request, context):
     
     context_base = {
                     #Folder
-                    'user_folder': settings.MEDIA_ROOT,
+                    'media_folder': settings.MEDIA_ROOT,
                     #CSS
                     'form_css': getResourceCss('form'),
                     'jquery_ui_css': getResourceCss('jquery_ui'),

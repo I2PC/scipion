@@ -15,8 +15,6 @@ urlpatterns = patterns('',
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
-    url(r'^admin/filebrowser/', include(fb.urls)),
-    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
@@ -86,7 +84,7 @@ urlpatterns = patterns('',
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     
-    #UPLOAD & BROWSER FILES
+    #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
     url(r'^getPath/', 'app.views_management.getPath'),

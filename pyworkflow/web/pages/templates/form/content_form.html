@@ -112,22 +112,29 @@
 						<script type="text/javascript" language="javascript">
 							$(document).ready(function() {
 							    $('#FButton').serverBrowser({
+							        //Accesing path
+							    	title: 'Select input file',
+							        handlerUrl: '/getPath/',
+							        requestMethod: 'GET',
+							        basePath: '{{media_folder}}/uploads',
+							        
+							        //Config
+// 							        knownExt: ['png'],
+					                knownPaths: [{text:'UserFolder', image:'home.png', path: '{{media_folder}}/uploads'}],
+					                imageUrl: '/resources/filebrowser_ext/',
+							        
+					                //Size
+							        resizable:true,
+							        width: '30em',
+// 							        height: '70%',
+							        
+							        //Functionality
 							        onSelect: function(path) {
 							            $('[name="pattern"]').val(path);
 							        },
 							        onLoad: function() {
 							            return $('[name="pattern"]').val();
 							        },
-							        handlerUrl: '/getPath/',
-							        title: 'Select input file',
-							        basePath: '{{user_folder}}',
-							        requestMethod: 'GET',
-							        
-							        // SIZE
-							        resizable:false,
-							        width: '30em', 
-// 							        height: '500px',
-							        
 							    });
 							});
 						</script>
