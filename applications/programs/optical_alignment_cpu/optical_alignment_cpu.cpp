@@ -306,6 +306,7 @@ public:
             II.write("avgimage.mrc");
         }
 
+        cout<<"Frames "<<fstFrame<<"to "<<lstFrame<<"under processing ..."<<std::endl;
         while (div!=1)
         {
             div=int(imagenum/cnt);
