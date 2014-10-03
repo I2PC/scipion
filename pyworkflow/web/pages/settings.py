@@ -146,8 +146,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     # 'gunicorn',
     'app',
-    'grappelli',
-    'filebrowser',
 )
 
 try:
