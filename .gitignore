@@ -74,3 +74,4 @@ pw.cshrc
 pyworkflow/web/static/
 software/em/
 data
+pyworkflow/resources/uploads
