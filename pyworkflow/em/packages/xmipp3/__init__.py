@@ -80,6 +80,7 @@ from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_projmatch import XmippProtProjMatch, XmippProjMatchViewer
 from protocol_random_conical_tilt import XmippProtRCT
 from protocol_ransac import XmippProtRansac
+from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_screen_classes import XmippProtScreenClasses
