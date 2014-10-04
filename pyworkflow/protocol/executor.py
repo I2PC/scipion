@@ -48,13 +48,13 @@ class StepExecutor():
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, env=None, cwd=None):
+           env=None, cwd=None):
         """ This function is a wrapper around runJob, 
         providing the host configuration. 
         """
         process.runJob(log, programName, params,
                        numberOfMpi, numberOfThreads, 
-                       runInBackground, self.hostConfig, 
+                       self.hostConfig,
                        env=env, cwd=cwd)
     
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
@@ -115,7 +115,7 @@ class ThreadStepExecutor(StepExecutor):
         self.numberOfThreads = nThreads
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
-        """ Create threads and syncronize the steps execution. 
+        """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
         self.stepStartedCallback = stepStartedCallback
@@ -136,7 +136,7 @@ class ThreadStepExecutor(StepExecutor):
             th = StepThread(i, self.condition)
             self.thList.append(th)
             th.start()
-            
+
         self.condition.acquire()
         
         while self.stepsLeft:
@@ -173,8 +173,9 @@ class ThreadStepExecutor(StepExecutor):
                     self.stepFinishedCallback(th.step)
                     if th.step.isFailed():
                         self.stepsLeft = 0
-                        import sys
-                        sys.exit(1)
+                        self.finishThread(th)
+                        import os
+                        os._exit(1)
                         #raise Exception("Step failed!!!")
                     else:
                         self.stepsLeft -= 1
@@ -218,14 +219,13 @@ class MPIStepExecutor(ThreadStepExecutor):
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
-           runInBackground=False, env=None, cwd=None):
+           env=None, cwd=None):
         from pyworkflow.utils.mpi import runJobMPI
         node = current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
-        runJobMPI(log, programName, params, self.comm, node,
-                  numberOfMpi, numberOfThreads, 
-                  runInBackground, hostConfig=self.hostConfig, 
+        runJobMPI(programName, params, self.comm, node,
+                  numberOfMpi, hostConfig=self.hostConfig,
                   env=env, cwd=cwd)
         
     def finishThread(self, th):

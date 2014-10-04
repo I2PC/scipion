@@ -38,6 +38,7 @@ from protocol_ctffind3 import ProtCTFFind
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign
+from protocol_ml_classification import ProtFrealignClassify
 
 from pyworkflow import findResource
 
@@ -73,7 +74,8 @@ class BrandeisCTFWizard(CtfWizard):
 #===============================================================================
 
 class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
-    _targets = [(ProtFrealign, ['innerRadius', 'outerRadius'])]
+    _targets = [(ProtFrealign, ['innerRadius', 'outerRadius']),
+                (ProtFrealignClassify, ['innerRadius', 'outerRadius'])]
     
     def _getParameters(self, protocol):
         
@@ -93,7 +95,7 @@ class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        VolumeMaskRadiiWizard.show(self, form, _value, _label, UNIT_ANGSTROM)
 
 
 #===============================================================================
@@ -101,7 +103,8 @@ class FrealignVolRadiiWizard(VolumeMaskRadiiWizard):
 #===============================================================================
  
 class FrealignBandpassWizard(FilterParticlesWizard):
-    _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine'])]
+    _targets = [(ProtFrealign, ['lowResolRefine', 'highResolRefine']),
+                (ProtFrealignClassify, ['lowResolRefine', 'highResolRefine'])]
     
     def _getParameters(self, protocol):
         
@@ -135,16 +138,17 @@ class FrealignBandpassWizard(FilterParticlesWizard):
 
             d = BandPassFilterDialog(form.root, provider, **args)
             
-            if d.resultYes():               
-                form.setVar('highResolRefine', 1/d.getHighFreq()*d.itemDim)
-                form.setVar('lowResolRefine', 1/d.getLowFreq()*d.itemDim)
+            if d.resultYes():
+                form.setVar('highResolRefine', d.samplingRate/d.getHighFreq())
+                form.setVar('lowResolRefine', d.samplingRate/d.getLowFreq())
                 
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
             
  
 class FrealignVolBandpassWizard(FilterVolumesWizard):
-    _targets = [(ProtFrealign, ['resolution'])]
+    _targets = [(ProtFrealign, ['resolution']),
+                (ProtFrealignClassify, ['resolution'])]
     
     def _getParameters(self, protocol):
         
@@ -161,33 +165,27 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
         _objs = self._getParameters(protocol)['input']  
         return FilterVolumesWizard._getListProvider(self, _objs)
     
-    
     def show(self, form):
+        params = self._getParameters(form.protocol)
         protocol = form.protocol
         provider = self._getProvider(protocol)
-        params = self._getParameters(protocol)
 
         if provider is not None:
             
             args = {'mode': params['mode'],                   
-                    'lowFreq': params['value'],
+                    'highFreq': params['value'],
                     'unit': UNIT_ANGSTROM
                     }
             
-            args['showHighFreq'] = False
+            args['showLowFreq'] = False
             args['showDecay'] = False
 
             d = BandPassFilterDialog(form.root, provider, **args)
             
             if d.resultYes():
-#                print "SAMPLING RATE !!", d.samplingRate
-#                print "ITEM DIM !!", d.itemDim
-#                1/self.hfSlider.get()*self.itemDim 
-                
-                form.setVar('resolution', 1/d.getLowFreq()*d.itemDim)
+                form.setVar('resolution', d.samplingRate/d.getHighFreq())
                 
         else:
             dialog.showWarning("Input volumes", "Select volumes first", form.root)  
 
-    
     

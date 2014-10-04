@@ -49,7 +49,6 @@ def projects(request):
     context = {'projects': projects,
                'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
-               'view': 'projects',
                }
     
     context = base_grid(request, context)
@@ -133,12 +132,12 @@ def save_selection(request):
 
 def tree_prot_view(request):
     projectName = request.session['projectName'] 
-    project = loadProject(projectName)   
+    project = loadProject(projectName)
      
     # load the protocol tree current active
-    root = loadProtTree(project)
+    htmlTree = loadProtTree(project)
     
-    return render_to_response('project_content/tree_prot_view.html', {'sections': root.childs})
+    return render_to_response('project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
     
 def run_table_graph(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
@@ -240,13 +239,16 @@ def project_content(request):
     graphView = settings.graphView.get()
     
     # load the protocol tree current active
-    root = loadProtTree(project)
+    htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
     choices = [pm.text.get() for pm in settings.protMenuList]
 
     # get the choice current 
     choiceSelected =  settings.protMenuList.getIndex()
+    
+    # show the project name in the header.html
+    projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
                'editTool': getResourceIcon('edit_toolbar'),
@@ -262,12 +264,12 @@ def project_content(request):
                'jquery_cookie': getResourceJs('jquery_cookie'),
                'jquery_treeview': getResourceJs('jquery_treeview'),
                'project_content_css':getResourceCss('project_content'),
-               'sections': root.childs,
+               'protTreeHtml': htmlTree,
                'choices':choices,
                'choiceSelected': choiceSelected,
                'runs': runs,
                'columns': provider.getColumns(),
-               'view': 'protocols',
+               'projectNameHeader': projectNameHeader, 
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
@@ -333,3 +335,16 @@ def protocol_info(request):
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
+def service_projects(request):
+
+    if 'projectName' in request.session: request.session['projectName'] = ""
+    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+    context = {'projects_css': getResourceCss('projects'),
+               'project_utils_js': getResourceJs('project_utils'),
+               'projectNameHeader': 'Initial Volume Service',
+               }
+    
+    context = base_grid(request, context)
+    
+    return render_to_response('service_projects.html', context)

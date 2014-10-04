@@ -550,7 +550,16 @@ class CtfDialog(DownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
+    
+class CtfDownsampleDialog(CtfDialog):
 
+    def _createControls(self, frame):
+        DownsampleDialog._createControls(self, frame)
+        CtfDialog._createControls(self, frame)
+        self.freqFrame.grid(row=0, column=1)
+        
+    def getDownsample(self):
+        return float(self.downVar.get())
 
 class BandPassFilterDialog(DownsampleDialog):
     

@@ -111,28 +111,65 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
         self._freqResol[(method1, method2, ctfId)] = xmipp.errorMaxFreqCTFs2D(*mdList)
 
     def createOutputStep(self):
-        ctfSet = self._createSetOfCTF()
-#        ctfSet.setMicrographs(self.setOfCTF.getMicrographs())
+        ctfSet     = self._createSetOfCTF()
+        ctfSetPair = self._createSetOfCTF()
         #import pdb
         #pdb.set_trace()
+        minimumResolution   = {}
+        maximumResolution   = {}
+        averageResolution   = {}
+        averageDefocusU     = {}
+        averageDefocusV     = {}
+        averageDefocusAngle = {}
+        for ctf in self.setOfCTF:
+            micFileName = ctf.getMicrograph().getFileName()
+            minimumResolution[micFileName]   = 0
+            maximumResolution[micFileName]   = 0
+            averageResolution[micFileName]   = 0
+            averageDefocusU[micFileName]     = 0
+            averageDefocusV[micFileName]     = 0
+            averageDefocusAngle[micFileName] = 0
         for method1, method2, ctfId in self._freqResol:
             ctf = CTFModel()
             ctf1 = self.inputCTFs[method1].get()[ctfId]
             ctf2 = self.inputCTFs[method2].get()[ctfId]
-            ctf.setDefocusU( (ctf1.getDefocusU() + ctf2.getDefocusU())/2. )
-            ctf.setDefocusV( (ctf1.getDefocusV() + ctf2.getDefocusV())/2. )
-            ctf.setDefocusAngle( (ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2. )
-            ctf.setMicrograph(ctf1.getMicrograph())
-            #SAme ctf apear many times so I can not keep the ctfId
+            ctf.setDefocusU(    (ctf1.getDefocusU() + ctf2.getDefocusU())/2. )
+            ctf.setDefocusV(    (ctf1.getDefocusV() + ctf2.getDefocusV())/2. )
+            ctf.setDefocusAngle((ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2. )
+            ctf.setMicrograph(   ctf1.getMicrograph())
+            #Same ctf appears many times so I can not keep the ctfId
             #ctf.setObjId(ctfId)
-            ctf.resolution = Float(self._freqResol[(method1, method2, ctfId)])
+            resolution = Float(self._freqResol[(method1, method2, ctfId)])
+            ctf.resolution = resolution
             ctf.method1 = String(self.methodNames[method1])
             ctf.method2 = String(self.methodNames[method2])
             # save the values of defocus for each micrograph in a list
-            ctfSet.append(ctf)
+            ctfSetPair.append(ctf)
+            micFileName = ctf1.getMicrograph().getFileName()
+            if resolution < minimumResolution[micFileName]:
+                minimumResolution[micFileName] = resolution
+            if resolution > maximumResolution[micFileName]:
+                maximumResolution[micFileName] = resolution
+            averageResolution[micFileName]    += resolution
+            averageDefocusU[micFileName]      += ctf.getDefocusU()
+            averageDefocusV[micFileName]      += ctf.getDefocusV()
+            averageDefocusAngle[micFileName]  += ctf.getDefocusAngle()
             ctf.cleanObjId()
+        size = float(len(self.setOfCTF))
+
+        for ctf in self.setOfCTF:
+            micFileName = ctf1.getMicrograph().getFileName()
+            averageDefocusV /= size
+            averageDefocusAngle /= size
+            averageResolution /= size
+            ctf.averageDefocusU     = averageDefocusU[micFileName]     / size
+            ctf.averageDefocusV     = averageDefocusV[micFileName]     / size
+            ctf.averageDefocusAngle = averageDefocusAngle[micFileName] / size
+            ctf.averageResolution   = averageResolution[micFileName]   / size
+            ctfSet.append(ctf)
+        self._defineOutputs(outputCTFPair=ctfSetPair)
         self._defineOutputs(outputCTF=ctfSet)
-        
+
     def _citations(self):
         return ['Marabini2014a']
     

@@ -93,7 +93,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         app = "xmipp.viewer.particlepicker.tiltpair.TiltPairPickerRunner"
         args = " --input %(micFn)s --output %(extraDir)s --mode manual --scipion %(scipion)s"%locals()
         
-        runJavaIJapp("%dg"%(self.memory.get()), app, args, True)
+        runJavaIJapp("%dg" % self.memory.get(), app, args)
         
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for

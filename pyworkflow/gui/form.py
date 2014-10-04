@@ -234,23 +234,38 @@ class SubclassesTreeProvider(TreeProvider):
             
     def getObjects(self):
         objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
-        
+
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
+
             if not self._containsObject(objects, setObject):
+           
                 objects.append(setObject)
                 setObject._allowSelection = False # Do not allows set to be selected here
-                for item in setObject:
-                    newItem = item.clone()
-                    newItem.setObjId(item.getObjId())
-                    newItem._parentObject = setObject
-                    objects.append(newItem)
+            else:
+                for o in objects:
+                    if o.getObjId() == setObject.getObjId():      
+                        setObject = o 
+                        break         
+                setObject._allowSelection = True # Do not allows set to be selected here
+                
+            for item in setObject:
+                newItem = item.clone()
+                newItem.setObjId(item.getObjId())
+                newItem._parentObject = setObject
+                objects.append(newItem)
+                
         
         return objects
             
     def classFilter(self, obj):
         """ Filter Set with the specified class name. """
-        itemType = getattr(obj, 'ITEM_TYPE', None)        
-        return (itemType and itemType.__name__ == self.className)
+        itemType = getattr(obj, 'ITEM_TYPE', None)   
+        filter = False
+        for objClass in self.className.split(","):
+            filter = (itemType and itemType.__name__ == objClass)
+            if filter: 
+                break
+        return filter
         
     def objFilter(self, obj):
         result = True

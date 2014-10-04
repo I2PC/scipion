@@ -544,7 +544,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('doSplitReferenceImages', NumericListParam, default='1',
                  label='Split references averages?', expertLevel=LEVEL_EXPERT,
-                 condition="doComputeResolution==True",
+                 condition="doComputeResolution",
                  help="""In theory each reference average should be splited
     in two when computing the resolution. In this way each
     projection direction will be represented in each of the
@@ -572,7 +572,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('useFscForFilter', BooleanParam, default=True,
                   label='Use estimated resolution for low-pass filtering?',
-                  condition="doLowPassFilter==True",
+                  condition="doLowPassFilter",
                   help=""" If set to true, the volume will be filtered at a frecuency equal to
    the  resolution computed with a FSC=0.5 threshold, possibly 
    plus a constant provided by the user in the next input box. 
@@ -584,7 +584,7 @@ def _defineProjectionMatchingParams(self, form):
     
     form.addParam('constantToAddToFiltration', NumericListParam, default='0.05',
                  label='Constant to be added to the estimated resolution',
-                 condition="doLowPassFilter==True",
+                 condition="doLowPassFilter",
                  help=""" The meaning of this field depends on the previous flag.
     If set to true, then the volume will be filtered at a frequency equal to
     the  resolution computed with resolution_fsc (FSC=0.5) plus the value 
@@ -608,7 +608,7 @@ def _defineProjectionMatchingParams(self, form):
 
     form.addParam('constantToAddToMaxReconstructionFrequency', NumericListParam, default='0.1',
                  label='Constant to be added to the reconstruction maximum frequency', expertLevel=LEVEL_ADVANCED,
-                 condition="doLowPassFilter==True",
+                 condition="doLowPassFilter",
                  help=""" The meaning of this field depends on the <use FSC for filter> flag.
     If set to true, then the volume will be reconstructed up to the frequency equal to
     the resolution computed with resolution_fsc (FSC=0.5) plus the value 

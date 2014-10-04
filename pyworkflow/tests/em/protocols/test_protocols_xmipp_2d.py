@@ -45,6 +45,7 @@ class TestXmippBase(BaseTest):
         cls.protImport = cls.newProtocol(ProtImportParticles, 
                                          pattern=pattern, samplingRate=samplingRate, 
                                          checkStack=checkStack)
+        print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:

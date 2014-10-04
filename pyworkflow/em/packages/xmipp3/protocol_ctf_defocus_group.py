@@ -32,6 +32,7 @@ from pyworkflow.utils import *
 from convert import createXmippInputImages, writeSetOfDefocusGroups
 import xmipp
 from math import pi
+from pyworkflow.protocol.params import GE
 
 # TODO: change the base class to a more apropiated one
 class XmippProtCTFDefocusGroup(ProtProcessParticles):
@@ -58,7 +59,7 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
                       label='Error for grouping', validators=[GE(1.,'Error must be greater than 1')],
                       help='Maximum error when grouping, the higher the more groups'
                            'This is a 1D program, only defocus U is used\n '
-                           'the frequency at which the phase difference between the CTF\n'
+                           'The frequency at which the phase difference between the CTFs\n'
                            'belonging to 2 particles is equal to Pi/2 is computed \n '
                            'If this difference is less than 1/(2*factor*sampling_rate)\n' 
                            'then images are placed in different groups')          
@@ -84,6 +85,9 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
         setOfDefocus = SetOfDefocusGroup(filename=fnScipion)
         df = DefocusGroup()
         mdImages    = xmipp.MetaData(imgsFn)
+        if not mdImages.containsLabel(xmipp.MDL_CTF_SAMPLING_RATE):
+            mdImages.setValueCol(xmipp.MDL_CTF_SAMPLING_RATE, self.inputParticles.get().getSamplingRate())
+        
         mdGroups    = xmipp.MetaData()
         mdGroups.aggregateMdGroupBy(mdImages, xmipp.AGGR_COUNT, 
                                                [xmipp.MDL_CTF_DEFOCUSU,

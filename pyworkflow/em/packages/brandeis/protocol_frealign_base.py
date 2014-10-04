@@ -36,7 +36,10 @@ from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, Poi
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert import ImageHandler
 
-from constants import *
+from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT, EWA_DISABLE, FSC_CALC, MEM_0,
+                       INTERPOLATION_1, REF_ALL, MOD_RECONSTRUCTION, MOD_RANDOM_SEARCH_REFINEMENT,
+                       MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE, EWA_SIMPLE_HAND, EWA_SIMPLE,
+                       FSC_3DR_ODD, FSC_3DR_EVEN, FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0, REF_ANGLES, REF_SHIFTS)
 from brandeis import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
 
 
@@ -482,8 +485,8 @@ class ProtFrealignBase(EMProtocol):
             if self.continueIter.get() == 'last':
                 self.initIter = continueRun._getCurrIter()
             else:
-                self.initIter = int(self.continueIter.get())
-                self._insertFunctionStep('continueStep', self.initIter)
+                self.initIter = int(self.continueIter.get()) + 1
+            self._insertFunctionStep('continueStep', self.initIter)
         else:
             self.initIter = 1
             
@@ -524,7 +527,7 @@ class ProtFrealignBase(EMProtocol):
     #--------------------------- STEPS functions ---------------------------------------------------
     def continueStep(self, iterN):
         """Create a symbolic link of a previous iteration from a previous run."""
-        
+        iterN = iterN - 1
         self._setLastIter(iterN)
         continueRun = self.continueRun.get()
         prevDir = continueRun._iterWorkingDir(iterN)
@@ -582,7 +585,7 @@ class ProtFrealignBase(EMProtocol):
             
             # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
             for i, img in enumerate(imgSet):
-                film = img.getObjId()
+                film = img.getMicId()
                 ctf = img.getCTF()
                 defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
                 partCounter = i + 1
@@ -669,7 +672,7 @@ class ProtFrealignBase(EMProtocol):
         paramsDic['outputParFn'] = self._getFileName('output_vol_par', iter=iterN)
         paramsDic['initParticle'] = initParticle
         paramsDic['finalParticle'] = finalParticle
-        paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
+#         paramsDic['paramRefine'] = '0, 0, 0, 0, 0'
         
         params2 = self._setParams3DR(iterN)
         
@@ -687,17 +690,24 @@ class ProtFrealignBase(EMProtocol):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        imgSet = self.inputParticles.get()
+        if self.doContinue:
+            continueRun = self.continueRun.get()
+            imgSet = continueRun.inputParticles.get()
+        else:
+            imgSet = self.inputParticles.get()
         
         if not exists(FREALIGN_PATH):
             errors.append('Missing ' + FREALIGN_PATH)
-        partSizeX, _, _ = self.inputParticles.get().getDim()
-        volSizeX, _, _ = self.input3DReference.get().getDim()
+        
+        partSizeX, _, _ = imgSet.getDim()
+        if not self.doContinue:
+            volSizeX, _, _ = self.input3DReference.get().getDim()
+            if partSizeX != volSizeX:
+                errors.append('Volume and particles dimensions must be equal!!!')
+        
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if partSizeX != volSizeX:
-            errors.append('Volume and particles dimensions must be equal!!!')
         if not imgSet.hasAlignment() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
@@ -788,25 +798,25 @@ class ProtFrealignBase(EMProtocol):
             paramsDic['mode2'] = -4
 
         # Defining if magnification refinement is going to do
-        if self.doMagRefinement:
+        if self.doMagRefinement and iterN != 1:
             paramsDic['doMagRefinement'] = 'T'
         else:
             paramsDic['doMagRefinement'] = 'F'
             
         # Defining if defocus refinement is going to do
-        if self.doDefRefinement:
+        if self.doDefRefinement and iterN != 1:
             paramsDic['doDefocusRef'] = 'T'
         else:
             paramsDic['doDefocusRef'] = 'F'
 
         # Defining if astigmatism refinement is going to do
-        if self.doAstigRefinement:
+        if self.doAstigRefinement and iterN != 1:
             paramsDic['doAstigRef'] = 'T'
         else:
             paramsDic['doAstigRef'] = 'F'
         
         # Defining if defocus refinement for individual particles is going to do
-        if self.doDefPartRefinement:
+        if self.doDefPartRefinement and iterN != 1:
             paramsDic['doDefocusPartRef'] = 'T'
         else:
             paramsDic['doDefocusPartRef'] = 'F'
@@ -918,20 +928,6 @@ class ProtFrealignBase(EMProtocol):
     def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
         return basename(self._getFileName(key, **args))
-    
-    def _particlesInBlock(self, block, numberOfBlocks):
-        """calculate the initial and final particles that belongs to this block"""
-        
-        imgSet = self.inputParticles.get()
-        
-        blockParticles = self._particlesPerBlock(numberOfBlocks, imgSet.getSize())
-        initPart = 0
-        lastPart = 0
-        for i in range(block):
-            initPart = lastPart + 1
-            lastPart = lastPart + blockParticles[i]
-        particlesInilast = [initPart, lastPart]
-        return particlesInilast
     
     def _setParamsRefineParticles(self, iterN, block):
         paramDics = {}
@@ -1108,7 +1104,7 @@ eot
             yield iterN
     
     def _allBlocks(self):
-        """ Iterate over all iterations. """
+        """ Iterate over all numberOfCPUs. """
         for i in range(1, self.numberOfBlocks+1):
             yield i
     
@@ -1123,7 +1119,7 @@ eot
     
     def writeAnglesLines(self, counter, img, filePar):
         
-        objId = img.getObjId()
+        objId = img.getMicId()
         
         # get alignment parameters for each particle
         align = img.getAlignment()

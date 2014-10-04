@@ -62,6 +62,11 @@ env = Environment(ENV=os.environ,
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
+def progInPath(env, prog):
+    "Is program prog in PATH?"
+    return any(os.path.exists('%s/%s' % (base, prog)) for base in
+               os.environ.get('PATH', '').split(os.pathsep))
+
 # Add the path to dynamic libraries so the linker can find them.
 if LINUX:
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
@@ -104,15 +109,19 @@ elif WINDOWS:
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
-def addLibrary(env, name, tar=None, buildDir=None, targets=None,
-               url=None, flags=[], autoConfigTarget='Makefile',
+def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
+               url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file, configures the library with the given flags, compiles it
-    (in the given buildDir) and installs it. It also tells SCons about
-    the proper dependencies (deps).
+    This pseudobuilder checks that the needed programs are in PATH,
+    downloads the given url, untars the resulting tar file, configures
+    the library with the given flags, compiles it (in the given
+    buildDir) and installs it. It also tells SCons about the proper
+    dependencies (deps).
+
+    If addPath=False, we will not pass the variables PATH and
+    LD_LIBRARY_PATH pointing to our local installation directory.
 
     If default=False, the library will not be built unless the option
     --with-<name> is used.
@@ -135,8 +144,9 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
                 valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
                 break
         flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-    pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
-    pathAppend('PATH', abspath('software/bin'))
+    if addPath:
+        pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
+        pathAppend('PATH', abspath('software/bin'))
 
     # Install everything in the appropriate place.
     flags += ['--prefix=%s' % abspath('software'),
@@ -147,6 +157,20 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
+
+    # Check that all needed programs are there.
+    for p in neededProgs:
+        if not progInPath(env, p):
+            print """
+  ************************************************************************
+
+    Warning: Cannot find program "%s" needed by %s
+
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Create and concatenate the builders.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -248,14 +272,14 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     return tInstall
 
 
-def addPackage(env, name, tar=None, buildDir=None, url=None,
+def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                extraActions=[], deps=[], clean=[], default=True):
     """Add external (EM) package <name> to the construction process.
 
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file and copies its content from buildDir into the
-    installation directory <name>. It also tells SCons about the
-    proper dependencies (deps).
+    This pseudobuilder checks that the needed programs are in PATH,
+    downloads the given url, untars the resulting tar file and copies
+    its content from buildDir into the installation directory
+    <name>. It also tells SCons about the proper dependencies (deps).
 
     extraActions is a list of (target, command) that should be
     executed after the package is properly installed.
@@ -297,12 +321,28 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         # Just link to it and do nothing more.
+        if packageHome is not None:
+            Default('software/em/%s/bin' % name)
         return env.Command(
             Dir('software/em/%s/bin' % name),
             Dir(packageHome),
             Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
+
+    # Check that all needed programs are there.
+    for p in neededProgs:
+        if not progInPath(env, p):
+            print """
+  ************************************************************************
+
+    Warning: Cannot find program "%s" needed by %s
+
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
@@ -408,6 +448,7 @@ env.AddMethod(addLibrary, "AddLibrary")
 env.AddMethod(addModule, "AddModule")
 env.AddMethod(addPackage, "AddPackage")
 env.AddMethod(manualInstall, "ManualInstall")
+env.AddMethod(progInPath, "ProgInPath")
 
 
 #  ************************************************************************

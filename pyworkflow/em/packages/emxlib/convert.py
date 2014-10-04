@@ -26,11 +26,13 @@
 """
 This module implement the import/export of Micrographs and Particles to EMX
 """
+from __future__ import print_function
+#unused import from pyworkflow.em.packages.emxlib.emxlib import emxDataTypes
 from pyworkflow.utils import *
 from pyworkflow.em.data import *
 import emxlib
 from collections import OrderedDict
-    
+
         
 def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=None):
     """ Export micrographs, coordinates or particles to  EMX format. """
@@ -113,7 +115,10 @@ def _micrographToEmx(mic):
     """ Create an EMX micrograph and fill all the values. """
     index, fn = mic.getLocation()
     i = index or 1
-    emxMic = emxlib.EmxMicrograph(fileName=fn, index=i)
+    #TODO: this basename(fn) if potentially dangerous if two micrographs
+    #have the same name but it is not easy to do a more general approach
+
+    emxMic = emxlib.EmxMicrograph(fileName=basename(fn), index=i)
     _acquisitionToEmx(emxMic, mic.getAcquisition())
     _samplingToEmx(emxMic, mic.getSamplingRate())
     if mic.hasCTF():
@@ -136,8 +141,9 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
         mic = micSet[coordinate.getMicId()] # get micrograph
         index, filename = mic.getLocation()
         i = index or 1
-        filename = basename(filename)
+        filename = basename(filename)  ## Careful here if two micrographs have the same name...
         mapKey = OrderedDict([('fileName', filename), ('index', i)])
+
         emxMic = emxData.getObject(mapKey)
         emxParticle.setMicrograph(emxMic)
         #TODO: ADD foreign key
@@ -148,6 +154,8 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
            
            
 def _particleToEmx(emxData, particle, micSet):
+    #import pdb
+    #pdb.set_trace()
     index, filename = particle.getLocation()
     emxParticle = _setupEmxParticle(emxData, particle.getCoordinate(), index, filename, micSet)
     if particle.hasCTF():
@@ -190,7 +198,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
         filename: the EMX file where to store the micrographs information.
     """
     ih = ImageHandler()
-    
+
     for i, particle in enumerate(partSet):
         if stackFn:
             loc = particle.getLocation()
@@ -248,9 +256,9 @@ def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
     if _hasCtfLabels(emxObj):
         # Multiply by 10 to convert from nm to A
-        ctf.setDefocusU(emxObj.get('defocusU')*10.0)
-        ctf.setDefocusV(emxObj.get('defocusV')*10.0)
-        ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
+        ctf.setStandardDefocus(emxObj.get('defocusU')*10.0,
+                               emxObj.get('defocusV')*10.0,
+                               emxObj.get('defocusUAngle'))
     else: # Consider the case of been a Particle and take CTF from Micrograph
         if isinstance(emxObj, emxlib.EmxParticle):
             _ctfFromEmx(emxObj.getMicrograph(), ctf)
@@ -282,7 +290,7 @@ def _transformFromEmx(emxParticle, part, transform):
     
     for i in range(3):
         for j in range(4):
-            m.setValue(i, j, emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1)))
+            m[i, j] = emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1))
     
     transform.setObjId(part.getObjId())
             
@@ -340,11 +348,12 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
             #ctf.setMicFile(newFn)
             ctfSet.append(ctf)
 
+    if emxMic is not None:
+        protocol._defineOutputs(outputMicrographs=micSet)
 
-    protocol._defineOutputs(outputMicrographs=micSet)
-    if ctfSet is not None:
-        protocol._defineOutputs(outputCTF=ctfSet)
-        protocol._defineCtfRelation(micSet, ctfSet)
+        if ctfSet is not None:
+            protocol._defineOutputs(outputCTF=ctfSet)
+            protocol._defineCtfRelation(micSet, ctfSet)
 
 
 def _particlesFromEmx(protocol
@@ -360,8 +369,7 @@ def _particlesFromEmx(protocol
     emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
-    alignmentSet = None
-    
+
     if emxParticle is not None:     
         # Check if there are particles or coordinates
         fn = emxParticle.get(emxlib.FILENAME)
@@ -377,7 +385,7 @@ def _particlesFromEmx(protocol
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
-                alignmentSet = protocol._createSetOfAlignment(partSet)
+                partSet.setHasAlignment(True)
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
@@ -404,10 +412,10 @@ def _particlesFromEmx(protocol
                     newLoc = (i, partFn)
                 part.setLocation(newLoc)
                 
-                if alignmentSet is not None:
-                    transform = Transform()
-                    _transformFromEmx(emxParticle, part, transform)  
-                    alignmentSet.append(transform)               
+                if partSet.hasAlignment():
+                    transform = Alignment()
+                    _transformFromEmx(emxParticle, part, transform)
+                    part.setAlignment(transform)
             else:
                 _coordinateFromEmx(emxParticle, part)
                 
@@ -416,8 +424,6 @@ def _particlesFromEmx(protocol
             
         if particles:
             protocol._defineOutputs(outputParticles=partSet)
-            if alignmentSet is not None:
-                protocol._defineOutputs(outputAlignment=alignmentSet)
         else:
             protocol._defineOutputs(outputCoordinates=partSet)
         

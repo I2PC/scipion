@@ -394,7 +394,7 @@ Examples:
                         mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
                         
                     if mdOut.size() == 0:
-                        print "Empty metadata: ", file_name
+                        print "Empty metadata: ", file_nameReferences
                     else:
                         file_nameReferences = self.protocol._getTmpPath('references_library.xmd')
                         sfn = createUniqueFileName(file_nameReferences)
@@ -445,7 +445,7 @@ Examples:
                         mdOut.setValue(xmipp.MDL_IMAGE2, file_reference, id1)
                         
                     if mdOut.size() == 0:
-                        print "Empty metadata: ", file_name
+                        print "Empty metadata: ", file_nameReferences
                     else:
                         file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
                         sfn = createUniqueFileName(file_nameReferences)
@@ -503,7 +503,7 @@ Examples:
                     mdOut.setValue(xmipp.MDL_IMAGE, file_reference, id2)
                     mdOut.setValue(xmipp.MDL_ANGLE_PSI, 0., id2)
                 if mdOut.size() == 0:
-                    print "Empty metadata: ", file_name
+                    print "Empty metadata"
                 else:
                     file_nameReferences = self.protocol._getFileName('projectLibrarySampling', iter=it, ref=ref3d)
                     sfn   = createUniqueFileName(file_nameReferences)
@@ -603,8 +603,6 @@ Examples:
     
     def _createAngDistChimera(self, it):
         arguments = []
-        # FIXME
-        #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
         outerRadius = self.protocol._outerRadius[it]
         radius = float(outerRadius) * 1.1
 

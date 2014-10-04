@@ -38,7 +38,7 @@ import numpy
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.utils.path import join, dirname, replaceBaseExt
+from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt
 
 
 # This dictionary will be used to map
@@ -95,7 +95,12 @@ CTF_EXTRA_LABELS = [
     xmipp.MDL_CTF_CRIT_FIRSTZERORATIO,
     xmipp.MDL_CTF_CRIT_PSDCORRELATION90,
     xmipp.MDL_CTF_CRIT_PSDRADIALINTEGRAL,
-    xmipp.MDL_CTF_CRIT_NORMALITY,  
+    xmipp.MDL_CTF_CRIT_NORMALITY,
+    # In xmipp the ctf also contains acquisition information
+    xmipp.MDL_CTF_Q0,
+    xmipp.MDL_CTF_CS,
+    xmipp.MDL_CTF_VOLTAGE,
+    xmipp.MDL_CTF_SAMPLING_RATE
     ]
 
 # Some extra labels to take into account the zscore
@@ -109,6 +114,8 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_ZSCORE_SHAPE2,
     xmipp.MDL_ZSCORE_SNR1,
     xmipp.MDL_ZSCORE_SNR2,
+    xmipp.MDL_PARTICLE_ID,
+    xmipp.MDL_FRAME_ID,
     ]
 
 ANGLES_DICT = OrderedDict([
@@ -289,7 +296,9 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
         ctfModelToRow(img.getCTF(), imgRow)
         
     if kwargs.get('writeAlignment', True) and img.hasAlignment():
-        alignmentToRow(img.getAlignment(), imgRow)
+        is2D = kwargs.get('is2D', True)
+        isInverseTransform = kwargs.get('isInverseTransform', True)
+        alignmentToRow(img.getAlignment(), imgRow, is2D, isInverseTransform)
         
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
@@ -342,7 +351,7 @@ def rowToMicrograph(micRow, **kwargs):
 
 def volumeToRow(vol, volRow, **kwargs):
     """ Set labels values from Micrograph mic to md row. """
-    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE, **kwargs)
+    imageToRow(vol, volRow, imgLabel=xmipp.MDL_IMAGE, writeAcquisition=False, **kwargs)
 
 
 def rowToVolume(volRow, **kwargs):
@@ -383,7 +392,12 @@ def rowToParticle(partRow, **kwargs):
     img.setCoordinate(rowToCoordinate(partRow))
     # Setup the micId if is integer value
     try:
-        img.setMicId(int(partRow.getValue(xmipp.MDL_MICROGRAPH)))
+        if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
+            img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
+        else:
+            # this is changed to get the micId from relion metadata micrograph name(rlnMicrographName)
+            micName = removeExt(partRow.getValue(xmipp.MDL_MICROGRAPH))
+            img.setMicId([int(s) for s in micName.split("_") if s.isdigit()][0])
     except Exception:
         pass    
     return img
@@ -395,7 +409,8 @@ def particleToRow(part, partRow, **kwargs):
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
-    if part.getMicId() is not None:
+    if part.hasMicId():
+        partRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(part.getMicId()))
         partRow.setValue(xmipp.MDL_MICROGRAPH, str(part.getMicId()))
 
 def rowToClass(classRow, classItem):
@@ -430,7 +445,7 @@ def class2DToRow(class2D, classRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
-    objectToRow(ctfModel, ctfRow, CTF_DICT)
+    objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
 
 
 def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
@@ -442,7 +457,7 @@ def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
     if _containsAll(ctfRow, CTF_DICT):
         ctfModel = CTFModel()
-        rowToObject(ctfRow, ctfModel, CTF_DICT, CTF_EXTRA_LABELS)
+        rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
     else:
         ctfModel = None
@@ -611,13 +626,16 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """    
     imgMd = xmipp.MetaData(filename)
-    imgMd.removeDisabled()
+    # This patch is just to avoid removing disabled images
+    # after extracting particles from frames.
+    if kwargs.get('removeDisabled', True):
+        imgMd.removeDisabled()
     # Read the sampling rate from the acquisition info file if exists
     
     acqFile = join(dirname(filename), 'acquisition_info.xmd')
     if exists(acqFile):
         md = RowMetaData(acqFile)
-        samplingRate = md.getValue(xmipp.MDL_SAMPLING_RATE)
+        samplingRate = md.getValue(xmipp.MDL_SAMPLINGRATE)
         imgSet.setSamplingRate(samplingRate)
     else:
         pass # TODO: what to do if not exists
@@ -670,7 +688,7 @@ def readAnglesFromMicrographs(micFile, anglesSet):
 
 def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, 
                      blockName='Images', **kwargs):
-    """ This function will write a SetOfMicrographs as Xmipp metadata.
+    """ This function will write a SetOfImages as a Xmipp metadata.
     Params:
         imgSet: the set of images to be written (particles, micrographs or volumes)
         filename: the filename where to write the metadata.
@@ -695,6 +713,20 @@ def setOfMicrographsToMd(imgSet, md, rowFunc=None, **kwargs):
 
 def writeSetOfParticles(imgSet, filename, rowFunc=None, blockName='Particles', **kwargs):
     writeSetOfImages(imgSet, filename, particleToRow, rowFunc, blockName, **kwargs)
+
+
+def writeCTFModel(ctfModel, ctfFile):
+    """ Given a CTFModel object write as Xmipp ctfparam
+    """
+    md = xmipp.MetaData()
+
+    objId = md.addObject()
+    ctfRow = XmippMdRow()
+    ctfModelToRow(ctfModel, ctfRow)
+    ctfRow.writeToMd(md, objId)
+
+    md.setColumnFormat(False)
+    md.write(ctfFile)
 
 
 def writeSetOfCTFs(ctfSet, mdCTF):
@@ -950,11 +982,13 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
         ctfFn = ctfMd.get()
     return ctfFn
 
-def geometryFromMatrix(matrix):
+def geometryFromMatrix(matrix, isInvTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    shifts = -translation_from_matrix(matrix)
-    angles = rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    shifts = translation_from_matrix(matrix)
+    if not isInvTransform:
+        matrix = numpy.linalg.inv(matrix)
+    angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
     
     return shifts, angles
 
@@ -1006,15 +1040,28 @@ def rowToAlignment(alignmentRow):
     return alignment
 
 
-def alignmentToRow(alignment, alignmentRow):
-    #FIXME: we should use the transformation matrix
-    #shifts, angles = geometryFromMatrix(alignment.getMatrix())
-    #mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
-    #mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
-    #mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-    for paramName, label in ALIGNMENT_DICT.iteritems():
-        if alignment.hasAttribute(paramName):
-            alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
+def alignmentToRow(alignment, alignmentRow,
+                   is2D=True, isInvTransform=False):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+                          -> for xmipp implies alignment
+    """
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(),isInvTransform)
+
+    if is2D:
+        angle =angles[0] + angles[2]
+        alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
+    else:
+        alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
+        alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
+        alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+    #for paramName, label in ALIGNMENT_DICT.iteritems():
+    #    if alignment.hasAttribute(paramName):
+    #        alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 

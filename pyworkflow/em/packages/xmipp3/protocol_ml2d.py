@@ -63,9 +63,9 @@ class XmippProtML2D(ProtClassify2D):
     def _defineParams(self, form):
         form.addSection(label='Params')
         group = form.addGroup('Input')
-        group.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.')        
+        group.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+                       label="Input particles", important=True,
+                       help='Select the input images from the project.')        
         group.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
                       help='If you set to *No*, you should provide references images'

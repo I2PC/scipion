@@ -79,9 +79,9 @@ $(document).ready(function() {
 	initializeGoToEvent()
 	initializeTableWidth()
 	
-	
-	
-// 	console.log(jsonTableLayoutConfiguration.colsOrder)
+// 	console.log("ORDER : INI " + jsonTableLayoutConfiguration.colsOrder + " END.")
+// 	order = (jsonTableLayoutConfiguration.colsOrder).split(" ")
+// 	console.log(order)
 	
 	/* Init the table */
 	oTable = $('#data_table').dataTable({
@@ -92,7 +92,8 @@ $(document).ready(function() {
 			        "bFilter": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-			        "sDom": 'Rl<"#displayTableContainer">frtip', 
+// 			        "sDom": 'Rl<"#displayTableContainer">frtip', 
+			        "sDom": 'Rlfrtip', 
 			        "iDisplayLength": 50,
 			        "oLanguage": {
 			            "sLengthMenu": 'Display <select>'+
@@ -102,9 +103,10 @@ $(document).ready(function() {
 			                '<option value="-1">All</option>'+
 			                '</select> records'
 			        },
+
 //  			    "oColReorder": {
-// 		    			"aiOrder": jsonTableLayoutConfiguration.colsOrder
-// 		    		},  
+// 		    			"aiOrder": order
+// 		    		},
 		    		
 		    		"bProcessing": true,
 /* 		            "bServerSide": true, */
@@ -151,7 +153,6 @@ $(document).ready(function() {
 	{% endif %}
 	setElementsEditable(null)
 	initializeColumnHeader()
-	initializeTableImageLoad()
 } );
 
 /* Generate data for datatable from table dataset model */
@@ -169,6 +170,7 @@ function generateDataForTable(){
 	{% endfor %}
 	return dataForTable;
 }
+
 </script>
 {% endblock %}
 

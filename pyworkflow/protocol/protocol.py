@@ -195,7 +195,7 @@ class FunctionStep(Step):
     def _runFunc(self):
         """ Return the possible result files after running the function. """
         return self._func(*self._args)
-    
+
     def _run(self):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
@@ -855,8 +855,9 @@ class Protocol(Step):
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
         self.info('      runMode: %d' % self.runMode.get())
-        self.info('          MPI: %d' % self.numberOfMpi.get())
-        self.info('      threads: %d' % self.numberOfThreads.get())
+#        Commented lines by some fails when a protocol not used this options
+#        self.info('          MPI: %d' % self.numberOfMpi.get())
+#        self.info('      threads: %d' % self.numberOfThreads.get())
 
         Step.run(self)     
         self._endRun()
@@ -1297,7 +1298,7 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
             prog = join(os.environ['SCIPION_HOME'], 'scipion')
-            params = ['run', 'pyworkflow/apps/pw_protocol_mpirun.py', projectPath, protDbPath, protId]
+            params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
             retcode = runJob(None, prog, params,
                              numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
             sys.exit(retcode)

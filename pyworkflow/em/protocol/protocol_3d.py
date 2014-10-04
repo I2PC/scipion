@@ -74,6 +74,9 @@ class ProtAlignVolume(ProtPreprocessVolumes):
     pass
 
 
+class ProtReconstruct3D(Prot3D):
+    pass
+
 class ProtRefine3D(Prot3D):
     pass
 

@@ -28,7 +28,7 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 
-from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath
+from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath, getExt, cleanPattern
 from pyworkflow.em import *
 from brandeis import *
 from convert import parseCtffindOutput
@@ -81,12 +81,22 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         """ Run ctffind3 with required parameters """
         # Create micrograph dir 
         makePath(micDir)
+        
+        if getExt(micFn) != ".mrc":
+            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc")) 
+            ImageHandler().convert(micFn, micFnMrc)
+        else: 
+            micFnMrc = micFn
+        
         # Update _params dictionary
-        self._params['micFn'] = micFn
+        self._params['micFn'] = micFnMrc
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = self._getCtfOutPath(micDir)
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
         self.runJob(self._program, self._args % self._params)
+        
+        if getExt(micFn) != ".mrc":
+            cleanPattern(micFnMrc)
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
@@ -150,14 +160,21 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         
         cleanPath(out)
         cleanPath(psdFile)
-        
+        if getExt(micFn) != ".mrc":
+            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc")) 
+            ImageHandler().convert(micFn, micFnMrc)
+        else: 
+            micFnMrc = micFn
+
         # Update _params dictionary
         self._prepareCommand(line)
-        self._params['micFn'] = micFn
+        self._params['micFn'] = micFnMrc
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = out
         self._params['ctffindPSD'] = psdFile
         self.runJob(self._program, self._args % self._params)
+        if getExt(micFn) != ".mrc":
+            cleanPattern(micFnMrc)
     
     def createOutputStep(self):
         setOfMics = self.inputCtf.get().getMicrographs()

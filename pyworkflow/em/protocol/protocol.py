@@ -34,7 +34,8 @@ from pyworkflow.protocol import Protocol
 from pyworkflow.object import Set
 from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles,
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
-                                SetOfVolumes, SetOfCTF, SetOfMovies, SetOfAlignment)
+                                SetOfVolumes, SetOfCTF, SetOfMovies, SetOfAlignment, 
+                                SetOfMovieParticles)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
 from pyworkflow.em.data_tiltpairs import SetOfAngles
 from pyworkflow.utils.path import cleanPath
@@ -70,6 +71,9 @@ class EMProtocol(Protocol):
     
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
+    
+    def _createSetOfMovieParticles(self, suffix=''):
+        return self.__createSet(SetOfMovieParticles, 'movie_particles%s.sqlite', suffix)
     
     def _createSetOfClasses2D(self, imgSet, suffix=''):
         classes = self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)

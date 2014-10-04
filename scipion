@@ -4,7 +4,7 @@
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              I. Foche Perez (ifoche@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import time
 try:
     from ConfigParser import ConfigParser
@@ -64,37 +64,18 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 #
 
 CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
 
-def createConf():
-    if not exists(dirname(CONF_FILE)):
-        os.makedirs(dirname(CONF_FILE))
-    if exists(CONF_FILE):
-        backup = '%s.%d' % (CONF_FILE, int(time.time()))
+def createConf(fpath):
+    if not exists(dirname(fpath)):
+        os.makedirs(dirname(fpath))
+    if exists(fpath):
+        backup = '%s.%d' % (fpath, int(time.time()))
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (CONF_FILE, backup))
-        os.rename(CONF_FILE, backup)
-    open(CONF_FILE, 'w').write("""
-# All relative paths will have $SCIPION_HOME as their root.
-
-[DIRS_LOCAL]
-SCIPION_USER_DATA = ~/ScipionUserData
-SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
-SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
-
-[DIRS_GLOBAL]
-SCIPION_TESTS = data/tests
-SCIPION_SOFTWARE = software
-
-[PACKAGES]
-EM_ROOT = software/em
-XMIPP_HOME = %(EM_ROOT)s/xmipp
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-EMAN2DIR = %(EM_ROOT)s/eman
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-CTFFIND_HOME = %(EM_ROOT)s/ctffind
-RELION_HOME = %(EM_ROOT)s/relion
-BSOFT_HOME = %(EM_ROOT)s/bsoft
-""")
+                         (fpath, backup))
+        os.rename(fpath, backup)
+    ftemplate = '%s/settings/%s' % (SCIPION_HOME, basename(fpath))
+    open(fpath, 'w').write(open(ftemplate).read())
 
 
 #
@@ -104,7 +85,11 @@ BSOFT_HOME = %(EM_ROOT)s/bsoft
 try:
     if not exists(CONF_FILE):
         sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
-        createConf()
+        createConf(CONF_FILE)
+
+    if not exists(MENU_FILE):
+        sys.stdout.write('Creating local configuration file: %s\n' % MENU_FILE)
+        createConf(MENU_FILE)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
@@ -129,7 +114,7 @@ except Exception:
     sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
     try:
         sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
-        createConf()  # try to create a working configuration file
+        createConf(CONF_FILE)  # try to create a working configuration file
     except Exception:
         pass  # but don't be upset if we can't :)
     sys.stdout.write('Please check the configuration file %s and try again.\n' %
@@ -183,13 +168,14 @@ def runCmd(cmd):
 
 # The following functions require a working SCIPION_PYTHON
 
-def runScript(scriptCmd):
-    os.chdir(SCIPION_HOME)
+def runScript(scriptCmd, chdir=True):
+    if chdir:
+        os.chdir(SCIPION_HOME)
     cmd = '%s %s' % (VARS['SCIPION_PYTHON'], scriptCmd)
     runCmd(cmd)
 
-def runApp(app, args=''):
-    runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args))
+def runApp(app, args='', chdir=True):
+    runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
 
 
 #
@@ -271,21 +257,13 @@ def main():
         else:
             option = 'django'
 
-        if option == 'apache_vars':
-            # WSGI needs some variables set on apache start (/etc/apache2/envvars):
-            #   * SCIPION_HOME: is required to find this script, so it has to be declared "manually" in envvars
-            #   * HOME: so it can reach Scipion directory
-            #   * LD_LIBRARY_PATH:  set it with a call to this mode. For example,
-            #       scipion_ld_library_path=$( ${SCIPION_HOME}/scipion apache_vars)
-            #       export LD_LIBRARY_PATH=${scipion_ld_library_path}:${LD_LIBRARY_PATH}
-            sys.stdout.write('%s\n' % VARS["LD_LIBRARY_PATH"])
-            sys.exit(0)
-
-        elif option in ['django', 'collectstatic']:
+        if option in ['django', 'collectstatic', 'gunicorn']:
             manage = join(SCIPION_HOME, 'pyworkflow', 'web', 'manage.py')
             if option == 'django':
                 args = 'runserver 0.0.0.0:8000'
-            else:
+            elif option == 'gunicorn':
+                args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
+            elif option == MODE_COLLECTSTATIC:
                 args = 'collectstatic'
             runScript('%s %s' % (manage, args))
         else:
@@ -316,7 +294,7 @@ def main():
 
     elif mode == MODE_VIEWER:
         viewerArgs = ' '.join(sys.argv[2:])
-        runApp('pw_viewer.py', args=viewerArgs)
+        runApp('pw_viewer.py', args=viewerArgs, chdir=False)
 
     elif mode == MODE_INSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
@@ -334,9 +312,18 @@ def main():
         args = sys.argv[2:]
         from scripts.install import build
         ret = build(args=args)
-        if ret == 0 and '--help' not in args and '-h' not in args:
+        if ret == 0 and not ('--help' in args or '-h' in args or '-c' in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
+            sys.stdout.write("""
+
+  ************************************************************************
+  *                                                                      *
+  *         Congratulations, Scipion was installed successfully          *
+  *                                                                      *
+  ************************************************************************
+
+""")
             runApp('config.py')
             # FIXME: I am not sure this is a good idea. To begin with,
             # right now it expects xmipp to be installed.
@@ -356,10 +343,13 @@ def main():
         sys.exit(0)
 
     elif mode == 'runprotocol':
-        if n == 5:
-            params = ['"%s"' % s for s in sys.argv[2:5]]
-            args = ' '.join(params)
-            runApp('pw_protocol_run.py', args)
+        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
+        # this could be pw_protocol_run.py or pw_protocol_mpirun.py
+        protocolApp = sys.argv[2]
+        # This should be (projectPath, protocolDb and protocolId)
+        params = ['"%s"' % s for s in sys.argv[3:6]]
+        args = ' '.join(params)
+        runApp(protocolApp, args)
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
@@ -370,7 +360,7 @@ def main():
 
     elif mode == MODE_RUN:
         # Run any command with the environment of scipion loaded.
-        cmd = ' '.join('"%s"' % p for p in sys.argv[2:])
+        cmd = ' '.join(['"%s"' % p for p in sys.argv[2:]])
         runCmd(cmd)
 
     elif mode == MODE_HELP:
@@ -442,22 +432,3 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 if __name__ == '__main__':
     main()
-
-elif __name__.startswith('_mod_wsgi'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'pages.settings'
-    os.environ.update(VARS)
-    # !!!! reuse VARS for these sys.path too
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'lib', 'python2.7', 'site-packages'))
-    sys.path.append(join(VARS['XMIPP_HOME'], 'protocols'))
-    # sys.path.append(xmipp_home + '/applications/tests/pythonlib')
-
-    pages_settings_path = join(SCIPION_HOME,'pyworkflow','web')
-    if not pages_settings_path in sys.path:
-        sys.path.append(pages_settings_path)
-
-    import django.core.handlers.wsgi
-
-    # default name for the function that WSGI calls is "application"
-    # you can change it wsgi.conf
-    application = django.core.handlers.wsgi.WSGIHandler()

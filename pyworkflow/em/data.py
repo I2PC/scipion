@@ -146,13 +146,10 @@ class CTFModel(EMObject):
         
     def getDefocusRatio(self):
         return self._defocusRatio.get()
-        
-    def setDefocusRatio(self, value):
-        self._defocusRatio.set(value)
-        
+
     def copyInfo(self, other):
-        self.copyAttributes(other, '_defocusU', '_defocusV',
-                            '_defocusAngle', '_psdFile', '_micFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV','_defocusAngle',
+                            '_defocusRatio', '_psdFile', '_micFile')
         
     def getPsdFile(self):
         return self._psdFile.get()
@@ -167,7 +164,7 @@ class CTFModel(EMObject):
     def setMicrograph(self, mic):
         self._micObj = mic
 
-    def getDefocus(self, mic):
+    def getDefocus(self):
         """ Returns defocusU, defocusV and defocusAngle. """
         return (self._defocusU.get(), 
                 self._defocusV.get(), 
@@ -196,7 +193,9 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(-180.)
         elif self._defocusAngle < 0.:
             self._defocusAngle.sum(180.)
-        self.setDefocusRatio(self.getDefocusU()/self.getDefocusV())
+        # At this point defocusU is always greater than defocusV
+        # following the EMX standard
+        self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
 
 
 class DefocusGroup(EMObject):
@@ -363,6 +362,7 @@ class Image(EMObject):
         self._ctfModel = newCTF
         
     def hasAcquisition(self):
+        # This doesn't work
         return self._acquisition is not None
         #FIXME: check this later, very very IMPORTANT!!!
         #return (self._acquisition is not None and 
@@ -404,8 +404,7 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    pass
 
 
 class Particle(Image):
@@ -439,6 +438,9 @@ class Particle(Image):
     
     def setMicId(self, micId):
         self._micId.set(micId)
+        
+    def hasMicId(self):
+        return self.getMicId() is not None
 
 
 class Mask(Particle):
@@ -844,12 +846,18 @@ class Coordinate(EMObject):
     
     def setX(self, x):
         self._x.set(x)
+        
+    def shiftX(self, shiftX):
+        self._x.sum(shiftX)
     
     def getY(self):
         return self._y.get()
     
     def setY(self, y):
-        self._y.set(y)        
+        self._y.set(y)
+        
+    def shiftY(self, shiftY):
+        self._y.sum(shiftY)    
     
     def getPosition(self):
         """ Return the position of the coordinate as a (x, y) tuple.
@@ -999,36 +1007,38 @@ class Transform(EMObject):
     It should contain information about euler angles, translation(or shift)
     and mirroring.
     """
+
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._matrix = Matrix()
-        
+
     def getMatrix(self):
         return self._matrix.getMatrix()
     
     def setMatrix(self, matrix):
         self._matrix.setMatrix(matrix)
-        
+
     def __str__(self):
         return str(self._matrix)
     
     
 class Alignment(Transform):
-    """ Transform used for 2D alignment agains a reference. """
+    """ Transform used for 2D alignment against a reference. """
     pass
-        
+
 
 class SetOfAlignment(EMSet):
-    """ An Aligment is an particular type of Transform.
+    """ An Alignment is an particular type of Transform.
     A set of transform is usually the result of alignment or multi-reference
-    alignment of a SetOfPartices. Each Transformation modifies the original
+    alignment of a SetOfParticles. Each Transformation modifies the original
     image to be the same of a given reference.
     """
     ITEM_TYPE = Alignment
-    
+
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._particlesPointer = Pointer()
+        self._is2D = Boolean(True)
 
     def getParticles(self):
         """ Return the SetOfParticles from which the SetOfAligment was obtained. """
@@ -1038,7 +1048,21 @@ class SetOfAlignment(EMSet):
         """ Set the SetOfParticles associated with this SetOfAlignment..
          """
         self._particlesPointer.set(particles)
-        
+
+    def set2D(self):
+        """ Mark the alignment as 2D transform. """
+        self._is2D.set(True)
+
+    def set3D(self):
+        """ Mark the alignment as 3D transform. """
+        self._is2D.set(False)
+
+    def is2D(self):
+        return self._is2D.get()
+
+    def is3D(self):
+        return not self.is2D()
+
 
 class TransformParams(object):
     """ Class to store transform parameters in the way
@@ -1188,93 +1212,84 @@ class SetOfClassesVol(SetOfClasses3D):
 
 class NormalModes(EMObject):
     """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, filename=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._filename = String(filename)
         
     def getFileName(self):
         return self._filename.get()
 
 
-class Movie(SetOfMicrographs):
+class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
-    def __init__(self, **args):
-        SetOfMicrographs.__init__(self, **args)
+    def __init__(self, filename=None, **kwargs):
+        Micrograph.__init__(self, filename=filename, **kwargs)
+        self._alignment = None
+
+    def isCompressed(self):
+        return self.getFileName().endswith('bz2') 
+        
+    def getDim(self):
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
+        Consider compressed Movie files"""
+        if not self.isCompressed():
+            return Image.getDim(self)
+        return None
+    
+    def hasAlignment(self):
+        return self._alignment is not None
+    
+    def getAlignment(self):
+        return self._alignment
+    
+    def setAlignment(self, alignment):
+        self._alignment = alignment
+    
+    
+class MovieAlignment(EMObject):
+    """ Store the alignment between the different Movie frames.
+    Also store the first and last frames used for alignment.
+    """
+    def __init__(self, first=0, last=0, shifts=[], **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._first = Integer(first)
+        self._last = Integer(last)
+        self._shifts = CsvList(pType=float)
+        self._shifts.set(shifts)
+        
+    def getRange(self):
+        """ Return the first and last frames used for alignment.
+        The first frame in a movie stack is 0.
+        """
+        return self._firstFrame.get(), self._lastFrame.get()
+    
+    def getShifts(self):
+        """ Return the list of alignment between one frame
+        to another, from first to last frame used.
+        """
+        return self._shifts
 
 
-class SetOfMovies(EMSet):
+class SetOfMovies(SetOfMicrographs):
     """ Represents a set of Movies. """
     ITEM_TYPE = Movie
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._acquisition = Acquisition()
-        self._samplingRate = Float()
-        self._scannedPixelSize = Float()
-        self._representatives = Boolean(False)
-        self._imagesPointer = Pointer()
+    def __init__(self, **kwargs):
+        SetOfMicrographs.__init__(self, **kwargs)
+        self._gainFile = String()
+        
+    def setGain(self, gain):
+        self._gainFile.set(gain)
+        
+    def getGain(self):
+        return self._gainFile.get()
     
-    def setSamplingRate(self, samplingRate):
-        """ Set the sampling rate and adjust the scannedPixelSize. """
-        self._samplingRate.set(samplingRate)
-        self._scannedPixelSize.set(1e-4 * samplingRate * self._acquisition.getMagnification())
     
-    def getScannedPixelSize(self):
-        return self._scannedPixelSize.get()
+class SetOfMovieParticles(SetOfParticles):
+    """ This is just to distinguish the special case
+    when the particles have been extracted from a set of movies.
+    """
+    pass
     
-    def setScannedPixelSize(self, scannedPixelSize):
-        """ Set scannedPixelSize and update samplingRate. """
-        self._scannedPixelSize.set(scannedPixelSize)
-        self._samplingRate.set((1e+4 * scannedPixelSize) / self._acquisition.getMagnification())
     
-    def getSamplingRate(self):
-        return self._samplingRate.get()
-    
-    def getAcquisition(self):
-        return self._acquisition
-    
-    def setAcquisition(self, acquisition):
-        self._acquisition = acquisition
-    
-    def copyInfo(self, other):
-        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
-        from other set of movies to current one"""
-        self.copyAttributes(other, '_samplingRate')
-        self._acquisition.copyInfo(other._acquisition)
-    
-    def getFiles(self):
-        filePaths = set()
-        filePaths.add(self.getFileName())
-        for item in self:
-            filePaths.add(item.getFileName())
-        return filePaths
-    
-    def iterMovieFrames(self):
-        """ Iterate over the frames of a movie. """
-        pass
-    
-    def hasRepresentatives(self):
-        return self._representatives.get()
-    
-    def getMicrographs(self):
-        """ Return the SetOfMicrographs used to create the SetOfMovies. """
-        return self._imagesPointer.get()
-    
-    def setMicrographs(self, micrographs):
-        self._imagesPointer.set(micrographs)
-    
-    def getDimensions(self):
-        """Return first micrograph dimensions as a tuple: (xdim, ydim, zdim)"""
-        if self.hasRepresentatives():
-            return self.getRepresentatives().getDimensions()
-    
-    def _insertItem(self, movie):
-        """ Create the SetOfMicrographs assigned to a Movie.
-        If the file exists, it will load the Set.
-        """
-        if movie.getFileName() is None:
-            moviePrefix = 'Movie%03d' % movie.getObjId()
-            movie._mapperPath.set('%s,%s' % (self.getFileName(), moviePrefix))
-        EMSet._insertItem(self, movie)
-        movie.write()#Set.write(self)

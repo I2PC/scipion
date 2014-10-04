@@ -106,8 +106,74 @@
 								{% endif %}	
 							{% endif %}
 							</td>
+<!-- PATH PARAM -->
+						{% if param.getClassName == "PathParam" %}
+						
+						<style>
+							.top-div { border:none;}
+							.left-div { border-radius: 4px;}
+							.right-div { border-radius: 4px;}
+							.state-active {
+								border: 1px solid #aaaaaa;
+								background: firebrick;
+								font-weight: bold;
+								color: white;
+							}
+							.state-hover {
+								border: 1px solid #aaaaaa;
+								background: firebrick;
+								font-weight: bold;
+								color: white;
+							}
+			
+			
+						</style>
+						
+						<script type="text/javascript" language="javascript">
+							function getKnownExt(){
+								return ['txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx','py', 'pyc',
+								        'java','xmd', 'star', 'pos','sqlite', 'db','xmp', 'tif', 'tiff', 
+								        'spi', 'mrc', 'map', 'raw', 'inf', 'dm3', '.em', 'pif', 'psd', 
+								        'spe', 'ser', 'img', 'hed', 'vol','stk', 'mrcs', 'st', 'pif',
+								        'png', 'gif', 'jpg', 'jpeg']
+							}
+						
+							$(document).ready(function() {
+							    $('#FButton').serverBrowser({
+							        //Accesing path
+							    	title: 'Select input',
+							        handlerUrl: '/getPath/',
+							        requestMethod: 'GET',
+							        basePath: '{{media_folder}}/uploads',
+							        
+							        //Config
+							        knownExt: getKnownExt(),
+					                knownPaths: [{text:'UserFolder', image:'fa-home.png', path: '{{media_folder}}/uploads'}],
+					                imageUrl: '/resources/',
+							        
+					                //Size
+							        resizable:true,
+							        width: 450,
+					                height: 450,
+							        
+							        //Functionality
+							        onSelect: function(path) {
+							            $('[name="pattern"]').val(path);
+							        },
+							        onLoad: function() {
+							            return $('[name="pattern"]').val();
+							        },
+							    });
+							});
+						</script>
+						
+							<td class="ico">
+								<a id="FButton" href="#">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
+								</a>
+							</td>
 <!-- POINTER PARAM -->
-						{% if param.getClassName == "PointerParam" %}
+						{% elif param.getClassName == "PointerParam" %}
 							<td class="ico">
 								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>

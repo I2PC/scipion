@@ -70,6 +70,18 @@ tk = env.AddLibrary(
     deps=[tcl],
     clean=['software/tmp/tk8.6.1'])
 
+zlib = env.AddLibrary(
+    'zlib',
+    tar='zlib-1.2.8.tgz',
+    targets=['lib/libz.so'],
+    addPath=False,
+    autoConfigTarget='zlib.pc')
+
+jpeg = env.AddLibrary(
+    'jpeg',
+    tar='libjpeg-turbo-1.3.1.tgz',
+    flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
+
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
@@ -82,7 +94,13 @@ python = env.AddLibrary(
     tar='Python-2.7.8.tgz',
     targets=['lib/libpython2.7.so', 'bin/python'],
     flags=['--enable-shared'],
-    deps=[sqlite, tk])
+    deps=[sqlite, tk, zlib])
+
+env.AddLibrary(
+    'parallel',
+    tar='parallel-20140922.tgz',
+    targets=['bin/parallel'],
+    deps=[zlib])
 
 boost_headers_only = env.ManualInstall(
     'boost_headers_only',
@@ -160,7 +178,7 @@ addModule(
     'bibtexparser',
     tar='bibtexparser-0.5.tgz')
 
-addModule(
+django = addModule(
     'django',
     tar='Django-1.5.5.tgz')
 
@@ -174,7 +192,12 @@ addModule(
     tar='Pillow-2.5.1.tgz',
     targets=['PIL'],
     flags=['--old-and-unmanageable'],
-    deps=[setuptools])
+    deps=[setuptools, jpeg])
+
+addModule(
+    'winpdb',
+    tar='winpdb-1.4.8.tgz',
+    default=False)
 
 
 #  ************************************************************************
@@ -226,6 +249,7 @@ env.AddPackage('relion',
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
+               neededProgs=['csh'],
                default=False)
 
 # TODO: check if we have to use the "purge" option below:

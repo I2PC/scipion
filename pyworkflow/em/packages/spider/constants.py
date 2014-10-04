@@ -33,7 +33,7 @@ SPIDER_DOCS = 'http://spider.wadsworth.org/spider_doc/spider/docs/man/'
 
 # Filter types
 FILTER_TOPHAT = 0
-FILTER_GAUSSIAN = 1
+FILTER_SPACE_REAL = 1
 FILTER_FERMI = 2
 FILTER_BUTTERWORTH = 3
 FILTER_RAISEDCOS = 4

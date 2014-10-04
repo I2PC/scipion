@@ -59,7 +59,7 @@ iconDict = {
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
-            'loading' : 'loading.gif'
+            'loading' : 'loading.gif',          
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -88,6 +88,8 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_ui': 'jquery/jquery-ui.js',
           'jquery_ui_touch': 'jquery/jquery.ui.touch-punch.min.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
+          'jquery_browser':'jquery/jquery.serverBrowser.js',
+          
           'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
@@ -112,7 +114,6 @@ jsDict = {'jquery': 'jquery/jquery.js',
           
           'messi': 'messi/messi.js',
           'raphael': 'raphael/raphael.js',
-          
           }
 
 def getResourceIcon(icon):

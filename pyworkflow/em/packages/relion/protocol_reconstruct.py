@@ -27,18 +27,16 @@
 from pyworkflow.protocol.params import (PointerParam, FloatParam,  
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume 
-from pyworkflow.em.protocol import ProtRefine3D
+from pyworkflow.em.protocol import ProtReconstruct3D
 
-from protocol_base import ProtRelionBase
-
-
-class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
+class ProtRelionReconstruct(ProtReconstruct3D):
     """    
     Reconstruct a volume using Relion from a given set of particles.
     The alignment parameters will be converted to a Relion star file
     and used as direction projections to reconstruct.
     """
     _label = 'reconstruct'
+    ##doContinue = False
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -47,9 +45,9 @@ class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label="Input particles",  
                       help='Select the input images from the project.')     
-        form.addParam('doNormalize', BooleanParam, default=False,
-                      label='Normalize',
-                      help='If set to True, particles will be normalized in the way RELION prefers it.')
+#         form.addParam('doNormalize', BooleanParam, default=False,
+#                       label='Normalize',
+#                       help='If set to True, particles will be normalized in the way RELION prefers it.')
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
                       help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
@@ -103,14 +101,21 @@ class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self): 
-        self._initialize()
+        ##self._initialize()
+        self._createFilenameTemplates()
         self._insertFunctionStep('convertInputStep')
         self._insertReconstructStep()
         self._insertFunctionStep('createOutputStep')
-        
+
+    def _getProgram(self, program='relion_refine'):
+        """ Get the program name depending on the MPI use or not. """
+        if self.numberOfMpi > 1:
+            program += '_mpi'
+        return program
+
     def _insertReconstructStep(self):
         imgSet = self.inputParticles.get()
-        imgStar = self._getFileName('input_star')
+        imgStar = self._getFileName('input_particles.star')
         
         params = ' --i %s' % imgStar
         params += ' --o %s' % self._getPath('output_volume.vol')
@@ -131,18 +136,42 @@ class ProtRelionReconstruct(ProtRefine3D, ProtRelionBase):
             params += ' --beamtilt_y %0.3f' % self.beamTiltY.get()
         
         self._insertFunctionStep('reconstructStep', params)
-        
+
     #--------------------------- STEPS functions --------------------------------------------
     def reconstructStep(self, params):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
         self.runJob(self._getProgram('relion_reconstruct'), params)
-            
+
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called for iterations and references. """
+        myDict = {
+            'input_particles.star': self._getTmpPath('input_particles.star'),
+            'output_volume': self._getPath('output_volume.vol')
+            }
+        self._updateFilenamesDict(myDict)
+
+
+    def convertInputStep(self):
+        """ Create the input file in STAR format as expected by Relion.
+        If the input particles comes from Relion, just link the file.
+        """
+        imgSet  = self.inputParticles.get()
+        imgStar = self._getFileName('input_particles.star')
+
+        from convert import writeSetOfParticles
+        # Pass stack file as None to avoid write the images files
+        #TODO ROB: this does not check binary files
+        print("Be aware that we are not checking binary files format")
+        writeSetOfParticles(imgSet,imgStar,None,
+                            is2D=False, isInverseTransform=True,
+                            writeAlignment=True)
+
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         volume = Volume()
-        volume.setFileName(self._getPath('output_volume.vol'))
+        volume.setFileName(self._getFileName('output_volume.vol'))
         volume.setSamplingRate(imgSet.getSamplingRate())
         
         self._defineOutputs(outputVolume=volume)

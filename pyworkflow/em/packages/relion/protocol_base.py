@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels
+from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels, restoreXmippLabels
 
 
 
@@ -91,7 +91,8 @@ class ProtRelionBase(EMProtocol):
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
-                  'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd')
+                  'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd'),
+                  'movie_particles': self._getPath('movie_particles.star')
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
@@ -125,19 +126,15 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
+        form.addParam('verboseLevel', EnumParam, default=1,
+                      choices=['0 low','1 high'],
+                      label='Verbose Level',
+                      help='the higher the more verbose output')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
+                      important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')   
-        form.addParam('doNormalize', BooleanParam, default=False,
-                      condition='not doContinue',
-                      label='Normalize (TODO: REMOVE)',
-                      help='If set to True, particles will be normalized in the way RELION prefers it.')
-        form.addParam('backRadius', IntParam, default=0,
-                      condition='doNormalize and not doContinue',
-                      label='Background radius',
-                      help='Pixels outside this circle are assumed to be noise and their stddev '
-                      'is set to 1. Radius for background circle definition (in pix.).')
         form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',
@@ -156,13 +153,15 @@ class ProtRelionBase(EMProtocol):
                            'These classes will be made in an unsupervised manner from a single'
                            'reference by division of the data into random subsets during the'
                            'first iteration.')
-        form.addParam('referenceVolume', PointerParam, pointerClass='Volume',
-                      condition='not doContinue and not is2D',
-                      label="Initial 3D map", 
-                      help='Initial reference 3D map, it should have the same '
+        group = form.addGroup('Reference 3D map',
+                              condition='not doContinue and not is2D')
+        group.addParam('referenceVolume', PointerParam, pointerClass='Volume',
+                       important=True,
+                       label="Input volume",
+                       condition='not doContinue and not is2D',
+                       help='Initial reference 3D map, it should have the same '
                            'dimensions and the same pixel size as your input particles.')
-        form.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
-                      condition='not doContinue and not is2D',
+        group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                       label="Is initial 3D map on absolute greyscale?", 
                       help='The probabilities are based on squared differences, '
                            'so that the absolute grey scale is important. \n'
@@ -177,11 +176,16 @@ class ProtRelionBase(EMProtocol):
                            'prior to the second iteration the map will be filtered again using the initial low-pass filter.'
                            'This procedure is relatively quick and typically does not negatively affect the outcome of the'
                            'subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No.')        
-        form.addParam('symmetryGroup', StringParam, default='c1',
-                      condition='not doContinue and not is2D',
-                      label="Symmetry group", 
-                      help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
-                           'for a description of the symmetry format accepted by Relion')  
+        
+        self.addSymmetry(group)
+
+        group.addParam('initialLowPassFilterA', FloatParam, default=60,
+                      condition='not is2D',
+                      label='Initial low-pass filter (A)',
+                      help='It is recommended to strongly low-pass filter your initial reference map. '
+                           'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
+                           'If set to 0, no low-pass filter will be applied to the initial reference(s).')
+        
         form.addParam('paddingFactor', FloatParam, default=3,
                       condition='isClassify', expertLevel=LEVEL_EXPERT,
                       label='Padding factor',
@@ -214,14 +218,13 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')        
-        #NOTE: this is read from the input particles object
-#         form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
-#                       label='Have data been phase-flipped?',
-#                       help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
-#                            'Note that CTF-phase flipping is NOT a necessary pre-processing step for MAP-refinement in RELION, ' 
-#                            'as this can be done inside the internal CTF-correction. However, if the phases do have been flipped, ' 
-#                            'one should tell the program about it using this option.'
-#                            '*TODO*: remove this property if we keep track of phase flipped')   
+        form.addParam('doCtfManualGroups', BooleanParam, default=False,
+                      label='Do manual grouping ctfs?',
+                      condition='not is2D',
+                      help='Set this to Yes the CTFs will grouping manually.')
+        form.addParam('numberOfGroups', IntParam, default=200,
+                      label='Number of ctf groups', condition='doCtfManualGroups and not is2D',
+                      help='Number of ctf groups that will be create')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
@@ -231,12 +234,6 @@ class ProtRelionBase(EMProtocol):
                            'Therefore, this option is not generally recommended.')    
         
         form.addSection(label='Optimisation')
-        form.addParam('initialLowPassFilterA', FloatParam, default=60,
-                      condition='not is2D',
-                      label='Initial low-pass filter (A)',
-                      help='It is recommended to strongly low-pass filter your initial reference map. '
-                           'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
-                           'If set to 0, no low-pass filter will be applied to the initial reference(s).')
         if self.IS_CLASSIFY:
             form.addParam('numberOfIterations', IntParam, default=25,
                           label='Number of iterations',
@@ -294,10 +291,12 @@ class ProtRelionBase(EMProtocol):
                            'set to a constant. Note that this second mask should have one-values inside the '
                            'virion and zero-values in the capsid and the solvent areas.') 
         
-        samplingSection = 'Sampling'
-        if not self.IS_CLASSIFY:
-            samplingSection += ' (initial value will be autoincremented)'
-        form.addSection(samplingSection)
+        # Change the Sampling section name depending if classify or refine 3D
+        if self.IS_CLASSIFY:
+            form.addSection('Sampling')
+        else:
+            form.addSection('Auto-Sampling')
+        
         if self.IS_3D:
             form.addParam('angularSamplingDeg', EnumParam, default=2,
                           choices=ANGULAR_SAMPLING_LIST,
@@ -345,6 +344,8 @@ class ProtRelionBase(EMProtocol):
                                    'previous option) will be applied, so that orientations \n'
                                    'closer to the optimal orientation in the previous iteration \n'
                                    'will get higher weights than those further away.')
+                
+                
             else:
                 form.addParam('localSearchAutoSamplingDeg', EnumParam, default=4,
                               choices=ANGULAR_SAMPLING_LIST,
@@ -353,8 +354,43 @@ class ProtRelionBase(EMProtocol):
                                    'local angular searches of -6/+6 times the sampling rate will\n'
                                    'be used from this angular sampling rate onwards.')
             
+                form.addSection("Movies")
+                form.addParam('realignMovieFrames', BooleanParam, default=False,
+                              label='Realign movie frames?',
+                              help='If set to Yes, then running averages of the individual frames of recorded movies will be aligned as independent particles.')
+                
+                group = form.addGroup('Movie frames alignment',
+                                      condition='realignMovieFrames and doContinue')
+                group.addParam('inputMovieParticles', PointerParam, pointerClass='SetOfMovieParticles',
+                               allowsNull=True, important=True,
+                               label='Input movie particles')
+                group.addParam('movieAvgWindow', FloatParam, default=5,
+                              label='Running average window',
+                              help='The individual movie frames will be averaged using a running average window with the specified width. Use an odd number. The optimal value will depend on the SNR in the individual movie frames. For ribosomes, we used a value of 5, where each movie frame integrated approximately 1 electron per squared Angstrom.')
+                group.addParam('movieStdTrans', FloatParam, default=1,
+                              label='Stddev on the translations (px)',
+                              help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 2 pixels. ')
+                group.addParam('movieIncludeRotSearch', BooleanParam, default=False,
+                              label='Also include rotational searches?',
+                              help='If set to Yes, then running averages of the individual frames of recorded movies will also be aligned rotationally. \n'
+                                   'If one wants to perform particle polishing, then rotational alignments of the movie frames is NOT necessary and will only take more computing time.')
+                group.addParam('movieStdRot', FloatParam, default=1,
+                              condition='movieIncludeRotSearch',
+                              label='Stddev on the rotations (deg)',
+                              help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
+
         form.addParallelSection(threads=1, mpi=3)
     
+    def addSymmetry(self, container):
+        container.addParam('symmetryGroup', StringParam, default='c1',
+                      label="Symmetry", 
+                      help='If the molecule is asymmetric, set Symmetry group to C1. Note their are multiple possibilities for icosahedral symmetry: \n'
+                         '* I1: No-Crowther 222 (standard in Heymann, Chagoyen & Belnap, JSB, 151 (2005) 196-207)\n'
+                         '* I2: Crowther 222                                                                     \n'
+                         '* I3: 52-setting (as used in SPIDER?)                                                  \n'
+                         '* I4: A different 52 setting                                                           \n'
+                         'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
+
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
         self._initialize()
@@ -366,6 +402,7 @@ class ProtRelionBase(EMProtocol):
         """ Prepare the command line arguments before calling Relion. """
         # Join in a single line all key, value pairs of the args dict    
         args = {}
+        
         if self.doContinue:
             self._setContinueArgs(args)
         else:
@@ -422,6 +459,8 @@ class ProtRelionBase(EMProtocol):
                      '--o': self._getExtraPath('relion'),
                      '--oversampling': '1'
                     })
+
+        args['--verb'] = self.verboseLevel.get()
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self.numberOfIterations.get()
@@ -465,34 +504,30 @@ class ProtRelionBase(EMProtocol):
         
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
         from convert import writeSetOfParticles
-        writeSetOfParticles(imgSet, imgStar, imgFn)
+        # Pass stack file as None to avoid write the images files
+        writeSetOfParticles(imgSet, imgStar, None)
         
-        if self.doNormalize:
-            # Enter here to generate the star file or to normalize the images
-            self._loadEnvironment()
-            self._enterDir(self._getPath())
-            imgFn = os.path.relpath(imgFn, self._getPath())
-            radius = self.backRadius.get()
-            if radius <= 0:
-                radius = Xdim / 2
-            params = '--operate_on %(imgFn)s --norm --bg_radius %(radius)s'
-            self.runJob(self._getProgram('relion_preprocess'), params % locals())
-            
-            outputMrcs = glob('particles*.mrcs') # In Relion 1.3 it is produces particles.mrcs.mrcs
-            if not outputMrcs:
-                raise Exception("Not particles produced by 'relion_preprocess'")
-            outFn = outputMrcs[0]
-            outStar = 'particles.star'
-            
-            moveFile(outFn, imgFn)
-            cleanPath(outStar)
-            self._leaveDir()
-    
+        if self.doCtfManualGroups:
+            self._splitInCTFGroups(imgStar)
+        
+        if not self.IS_CLASSIFY:
+            if self.realignMovieFrames:
+                movieParticleSet = self.inputMovieParticles.get()
+                auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
+                auxMovieParticles.copyInfo(movieParticleSet)
+                # Discard the movie particles that are not present in the refinement set
+                for movieParticle in movieParticleSet:
+                    particle = imgSet[movieParticle._xmipp_particleId.get()]
+                    if particle is not None:
+                        auxMovieParticles.append(movieParticle)
+                        
+                writeSetOfParticles(auxMovieParticles,
+                                    self._getFileName('movie_particles'), None, originalSet=imgSet)
+                cleanPath(auxMovieParticles.getFileName())
+        
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
-        self._loadEnvironment()
         params += ' --j %d' % self.numberOfThreads.get()
-        print "PARAMS: ", params
         self.runJob(self._getProgram(), params)
     
     def createOutputStep(self):
@@ -555,15 +590,6 @@ class ProtRelionBase(EMProtocol):
             return self.continueRun.get().inputParticles.get()
         else:
             return self.inputParticles.get()
-    
-    def _loadEnvironment(self):
-        """ Setup the environment variables needed to launch Relion. """
-        RELION_BIN = join(os.environ['RELION_HOME'], 'bin')
-        RELION_LIB = join(os.environ['RELION_HOME'], 'lib')
-        RELION_LIB64 = join(os.environ['RELION_HOME'], 'lib64')
-        environAdd('PATH', RELION_BIN)
-        environAdd('LD_LIBRARY_PATH', RELION_LIB)
-        environAdd('LD_LIBRARY_PATH', RELION_LIB64)
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
@@ -640,4 +666,42 @@ class ProtRelionBase(EMProtocol):
                 blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
                 print "Writing angular distribution to: ", blockName + data_angularDist
                 mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)  
-           
+    
+    def _splitInCTFGroups(self, imgStar):
+        """ Add a new colunm in the image star to separate the particles into ctf groups """
+        addRelionLabels(replace=True)
+        
+        groups = self.numberOfGroups.get()
+        md = xmipp.MetaData(imgStar)
+        defocus = [md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) for objId in md]
+        
+        minDef = min(defocus)
+        maxDef = max(defocus)
+        
+        increment = (maxDef - minDef) / groups
+        counter = 1
+        part = 1
+        md.sort(xmipp.MDL_CTF_DEFOCUSU)
+        
+        for objId in md:
+            partDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+            currDef = minDef + increment
+            
+            if partDef <= currDef:
+                part = part + 1
+                md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+            else:
+                if part < 100:
+                    increment = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) - minDef
+                    part = part + 1
+                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+                else:
+                    part = 1
+                    minDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+                    counter = counter + 1
+                    increment = (maxDef - minDef) / (groups - counter)
+                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+        md.write(imgStar)
+        restoreXmippLabels()
+    
+    
