@@ -97,7 +97,7 @@
                     "Cancel": function() {
                         browserDlg.dialog("close");
                     },
-                    "Open": function() {
+                    "Select": function() {
                         doneOk();
                     }
                 },
@@ -138,16 +138,16 @@
 // It contains textbox field and buttons
 // User can enter any paths he want to open in this textbox and press enter
 // There is 3 buttons on the panel:
-            var enterPathDiv = $('<div></div>').addClass('ui-widget-content').appendTo(browserDlg).css({'height': '30px', 'width': '100%', 'padding-top': '7px'});
+            var enterPathDiv = $('<div class="top-div"></div>').addClass('ui-widget-content').appendTo(browserDlg).css({'height': '30px', 'width': '100%', 'padding-top': '7px'});
             
             var enterButton = $('<div></div>').css({'float': 'left', 'vertical-align': 'middle', 'margin-left': '6px'}).addClass('ui-corner-all').hover(
                 function() { $(this).addClass('ui-state-hover'); },
                 function() { $(this).removeClass('ui-state-hover'); }
             );
 
-            var enterLabel = $('<span></span>').text('Look in: ').appendTo(enterButton.clone(false).appendTo(enterPathDiv));
+            var enterLabel = $('<span></span>').text('Path: ').appendTo(enterButton.clone(false).appendTo(enterPathDiv));
 
-            var enterText = $('<input type="text">').keypress(function(e) {
+            var enterText = $('<input type="text" style="width:20em;">').keypress(function(e) {
                 if (e.keyCode == '13') {
                     e.preventDefault();
                     loadPath(enterText.val());
@@ -178,18 +178,18 @@
 // Second div is on the left
 // It contains images and texts for pre-defined paths
 // User just click on them and it will open pre-defined path
-            var knownPathDiv = $('<div></div>').addClass('ui-widget-content').css({'text-align':'center', 'overflow': 'auto', 'float': 'left', 'width': '100px'});
+            var knownPathDiv = $('<div class="left-div"></div>').addClass('ui-widget-content').css({'text-align':'center', 'overflow': 'auto', 'float': 'left', 'width': '100px'});
             if(config.useKnownPaths){
                 knownPathDiv.appendTo(browserDlg);
                 $.each(config.knownPaths, function(index, path) {
-                    var knownDiv = $('<div></div>').css({'margin':'10px'}).hover(
+                    var knownDiv = $('<div></div>').css({'margin':'3px'}).hover(
                         function() { $(this).addClass('ui-state-hover'); },
                         function() { $(this).removeClass('ui-state-hover'); }
                     ).click(function() {
                         loadPath(path.path);
                     }).appendTo(knownPathDiv);
 
-                    $('<img />').attr({ src: systemImageUrl() + config.separatorPath + path.image }).css({ width: '32px', margin: '5px 10px 5px 5px' }).appendTo(knownDiv);
+                    $('<img />').attr({ src: systemImageUrl() + config.separatorPath + path.image }).css({ width: '15px', margin: '3px 7px 3px 3px' }).appendTo(knownDiv);
                     $('<br/>').appendTo(knownDiv);
                     $('<span></span>').text(path.text).appendTo(knownDiv);
                 });
@@ -200,7 +200,7 @@
 // User can click on path to select or deselect it
 // Doubleclick on path will open it
 // Also doubleclick on file will select this file and close dialog
-            var browserPathDiv = $('<div></div>').addClass('ui-widget-content').css({'float': 'right', 'overflow': 'auto'}).appendTo(browserDlg);
+            var browserPathDiv = $('<div class="right-div"></div>').addClass('ui-widget-content').css({'float': 'right', 'overflow': 'auto'}).appendTo(browserDlg);
             
 // Now everything is done
 // When user will be ready - he just click on the area you select for this plugin and dialog will appear
@@ -308,6 +308,21 @@
                     );
                     var itemImage = $('<img />').css({ width: '16px', margin: '0 5px 0 0' }).appendTo(itemDiv);
                     var itemText = $('<span></span>').text(file.name).appendTo(itemDiv);
+                    
+                    // NEW CODE - Scipion Mod
+                    if (file.isFolder){
+                    	image_type = 'folder'
+                    } else {
+                        ext = file.name.split('.').pop();
+                        if (ext == '' || ext == file.name || (config.knownExt.length > 0 && $.inArray(ext, config.knownExt) < 0))
+                        	image_type = 'unknown'
+                        else
+                        	image_type = ext
+                    }
+                    image_path = config.imageUrl + getImagePath(image_type)
+                    itemImage.attr({src: image_path})
+                    
+                    /* OLD CODE
                     if (file.isFolder)
                         itemImage.attr({ src: systemImageUrl() + 'folder.png' });
                     else {
@@ -318,9 +333,11 @@
                         else
                             itemImage.attr({ src: config.imageUrl + ext + '.png' });
                     }
+                    */
+                    
                     $.data(itemDiv, 'path', fullPath);
                     itemDiv.unbind('click').bind('click', function(e) {
-                        if(!$(this).hasClass('ui-state-active')) {
+                        if(!$(this).hasClass('state-active')) {
                             if(!config.multiselect && privateConfig.selectedItems.length > 0) {
                                 $(privateConfig.selectedItems[0]).click();
                             }
@@ -333,7 +350,7 @@
                             });
                             privateConfig.selectedItems = newCurPath;
                         }
-                        $(this).toggleClass('ui-state-active');
+                        $(this).toggleClass('state-active');
                     });
 
                     itemDiv.unbind('dblclick').bind('dblclick', function(e) {
@@ -398,3 +415,21 @@
         return this;
     };
 })(jQuery);
+
+
+//Scipion Mod
+function getImagePath(ext){
+	var res = '';
+	
+	$.ajax({
+		type : "GET",
+		url : "/getExtIcon/?ext=" + ext,
+		dataType : "text",
+		async: false,
+		success : function(text) {
+			res = text
+		}
+	});
+	
+	return res;
+}

@@ -28,6 +28,7 @@ This modules serve to define some Configuration classes
 mainly for project GUI
 """
 
+import sys
 import os
 from os.path import join, exists
 import time
@@ -278,70 +279,54 @@ def addProtocols(settings):
     MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
     # Also mentioned in /scipion . Maybe we could do better.
 
-    assert cp.read(MENU_FILE) != [], 'Missing file %s' % MENU_FILE
+    try:
+        assert cp.read(MENU_FILE) != [], 'Missing file %s' % MENU_FILE
 
-    # Populate the protocol menu from the config file.
-    for menuName in cp.options('PROTOCOLS'):
-        menu = ProtocolConfig(menuName)
-        children = json.loads(cp.get('PROTOCOLS', menuName))
-        for child in children:
-            add(menu, child)
-        settings.addProtocolMenu(menu)
+        # Populate the protocol menu from the config file.
+        for menuName in cp.options('PROTOCOLS'):
+            menu = ProtocolConfig(menuName)
+            children = json.loads(cp.get('PROTOCOLS', menuName))
+            for child in children:
+                add(menu, child)
+            settings.addProtocolMenu(menu)
+    except Exception as e:
+        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                 'To solve it, delete %s and run again.' % (e, MENU_FILE))
 
 
-def setQueueSystem(host, maxCores):
-    host.mpiCommand.set('mpirun -np %(JOB_NODES)d -bynode %(COMMAND)s')
-    host.queueSystem = QueueSystemConfig()
-    queueSys = host.queueSystem
-    #queueSys = QueueSystemConfig()
-    queueSys.name.set('PBS/TORQUE')
-    queueSys.mandatory.set(False)
-    queueSys.submitCommand.set('qsub %(JOB_SCRIPT)s')
-    queueSys.submitTemplate.set("""
-#!/bin/bash
-### Inherit all current environment variables
-#PBS -V
-### Job name
-#PBS -N %(JOB_NAME)s
-### Queue name
-###PBS -q %(JOB_QUEUE)s
-### Standard output and standard error messages
-#PBS -k eo
-### Specify the number of nodes and thread (ppn) for your job.
-#PBS -l nodes=%(JOB_NODES)d:ppn=%(JOB_THREADS)d
-### Tell PBS the anticipated run-time for your job, where walltime=HH:MM:SS
-#PBS -l walltime=%(JOB_HOURS)d:00:00
-# Use as working dir the path where qsub was launched
-WORKDIR=$PBS_O_WORKDIR
-#################################
-### Set environment varible to know running mode is non interactive
-export XMIPP_IN_QUEUE=1
-### Switch to the working directory;
-cd $WORKDIR
-# Make a copy of PBS_NODEFILE
-cp $PBS_NODEFILE %(JOB_NODEFILE)s
-# Calculate the number of processors allocated to this run.
-NPROCS=`wc -l < $PBS_NODEFILE`
-# Calculate the number of nodes allocated.
-NNODES=`uniq $PBS_NODEFILE | wc -l`
-### Display the job context
-echo Running on host `hostName`
-echo Time is `date`
-echo Working directory is `pwd`
-echo Using ${NPROCS} processors across ${NNODES} nodes
-echo PBS_NODEFILE:
-cat $PBS_NODEFILE
-#################################
+def setQueueSystem(host):
 
-%(JOB_COMMAND)s
-""")
-    queueSys.cancelCommand.set('canceljob %(JOB_ID)s')
-    queueSys.checkCommand.set('qstat %(JOB_ID)s')
+    # Read from users' config file.
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+    CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+    # Also mentioned in /scipion . Maybe we could do better.
 
-    queue = QueueConfig()
-    queue.maxCores.set(maxCores)
-    queue.allowMPI.set(True)
-    queue.allowThreads.set(True)
+    try:
+        assert cp.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
+
+        # Helper functions (to write less)
+        def get(var): return cp.get('HOSTS', var).replace('%_(', '%(')
+        def isOn(var): return var.lower() in ['true', 'yes', '1']
+
+        host.mpiCommand.set(get('PARALLEL_COMMAND'))
+        host.queueSystem = QueueSystemConfig()
+        queueSys = host.queueSystem
+        #queueSys = QueueSystemConfig()
+        queueSys.name.set(get('NAME'))
+        queueSys.mandatory.set(isOn(get('MANDATORY')))
+        queueSys.submitCommand.set(get('SUBMIT_COMMAND'))
+        queueSys.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+        queueSys.cancelCommand.set(get('CANCEL_COMMAND'))
+        queueSys.checkCommand.set(get('CHECK_COMMAND'))
+
+        queue = QueueConfig()
+        queue.maxCores.set(get('MAX_CORES'))
+        queue.allowMPI.set(isOn(get('ALLOW_MPI')))
+        queue.allowThreads.set(isOn(get('ALLOW_THREADS')))
+    except Exception as e:
+        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                 'To solve it, delete %s and run again.' % (e, CONF_FILE))
 
     queueSys.queues = List()
     queueSys.queues.append(queue)
@@ -354,7 +339,7 @@ def addHosts(settings):
     host.label.set('localhost')
     host.hostName.set('localhost')
     host.hostPath.set(pw.SCIPION_USER_DATA)
-    setQueueSystem(host, maxCores=4)
+    setQueueSystem(host)
 
     #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
     settings.addHost(host)

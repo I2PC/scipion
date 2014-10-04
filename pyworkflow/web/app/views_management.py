@@ -79,3 +79,45 @@ def getPath(request):
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
 
+def getExtIcon(request):
+    ext = request.GET.get('ext')
+
+    txt = {'txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx'}
+    img = {'png', 'gif', 'jpg', 'jpeg'}
+    py = {'py', 'pyc'} 
+    java = {'java'}
+    md = {'xmd', 'star', 'pos'}
+    sqlite = {'sqlite', 'db'}
+    particle = {'xmp', 'tif', 'tiff', 'spi', 'mrc', 'map', 'raw', 
+                'inf', 'dm3', '.em', 'pif', 'psd', 'spe', 
+                'ser', 'img', 'hed'}
+    vol = {'vol'}
+    stk = {'stk', 'mrcs', 'st', 'pif'}
+    
+    res=''
+    if ext == 'folder':
+        res = 'fa-folder-open.png'
+    elif ext == 'unknown':
+        res = 'fa-file-o.png'
+    else:
+        if ext in txt:
+            res = 'file_text.gif'
+        elif ext in img or ext in particle:
+            res = 'file_image.gif'
+        elif ext in py:
+            res = 'file_python.gif'
+        elif ext in java:
+            res = 'file_java.gif'
+        elif ext in md:
+            res = 'file_md.gif'
+        elif ext in md:
+            res = 'file_md.gif'
+        elif ext in sqlite:
+            res = 'file_sqlite.gif'
+        elif ext in vol:
+            res = 'file_vol.gif'
+        elif ext in stk:
+            res = 'file_stack.gif'
+    
+    return HttpResponse(res, mimetype='application/javascript')
+
