@@ -214,6 +214,8 @@ MODE_INSTALL = 'install'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
+MODE_RUNPROTOCOL = 'runprotocol'
+MODE_PROTOCOLS = 'protocols' 
 MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
@@ -342,7 +344,7 @@ def main():
         sys.stdout.write('%s\n' % __version__)
         sys.exit(0)
 
-    elif mode == 'runprotocol':
+    elif mode == MODE_RUNPROTOCOL:
         assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
@@ -350,6 +352,9 @@ def main():
         params = ['"%s"' % s for s in sys.argv[3:6]]
         args = ' '.join(params)
         runApp(protocolApp, args)
+        
+    elif mode == MODE_PROTOCOLS:
+        runApp('pw_protocol_list.py')
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
