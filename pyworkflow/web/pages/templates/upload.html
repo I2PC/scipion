@@ -10,7 +10,11 @@
 		{% if documents %}
 			<ul>
 			{% for document in documents %}
-				<li><a href="{{document.docfile.url}}">{{ document.docfile.name }}</a></li>
+				<li>
+					<a href="{{document.docfile.url}}">
+						{{ document.docfile.name }}
+					</a>
+				</li>
 			{% endfor %}
 			</ul>
 		{% else %}
@@ -22,11 +26,14 @@
 			{% csrf_token %}
 			<p>{{form.non_field_errors}}</p>
 			<p>{{form.docfile.label_tag}} {{form.docfile.help_text}}</p>
+			
 			<p>
 				{{form.docfile.errors}}
 				{{form.docfile}}
 			</p>
-			<p><input type="submit" value="Upload" /></p>
+			<p>
+				<input type="submit" value="Upload" />
+			</p>
 		</form>
 		
 	</body>
