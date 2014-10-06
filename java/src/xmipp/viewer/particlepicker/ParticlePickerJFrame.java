@@ -2,10 +2,11 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -16,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -50,6 +53,7 @@ import javax.swing.event.MenuListener;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.Filename;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
@@ -191,7 +195,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
                 if(picker.isScipionSave())
                 {
-                    saveandexitbt.setText("Create Coordinates");
+                    saveandexitbt.setText("Coordinates");
+                    Image img = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
+                    saveandexitbt.setIcon(new ImageIcon(img));
+                    saveandexitbt.setToolTipText("Create Coordinates");
                     Color color = ScipionMessageDialog.firebrick; 
                     saveandexitbt.setBackground(color);
                     saveandexitbt.setForeground(Color.WHITE);
