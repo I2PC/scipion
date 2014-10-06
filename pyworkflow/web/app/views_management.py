@@ -26,6 +26,8 @@
 
 import os
 import json
+import shutil
+import tempfile
 from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
 
@@ -48,13 +50,50 @@ def renderUpload(request, form):
     return render_to_response('upload.html', context, 
                               context_instance=RequestContext(request))
 
+
+# def doUpload(request):
+#     # Save the files
+#     path = request.session['projectPath']
+#     form = DocumentForm(request.POST, request.FILES)
+#     
+#     def handle_uploaded_file(source):
+#         fd, filepath = tempfile.mkstemp(prefix=source.name, dir=path)
+#         with open(filepath, 'wb') as dest:
+#             shutil.copyfileobj(source, dest)
+#         return filepath
+#     
+#     if form.is_valid():
+#         handle_uploaded_file(request.FILES['docfile'])
+#         #newdoc = Document(docfile = request.FILES['docfile'])
+#         #newdoc.save()
+#         
+#     return renderUpload(request, form)
+
+
 def doUpload(request):
-    # Save the files
     form = DocumentForm(request.POST, request.FILES)
+
+    # Save the files
+    path = os.path.join(request.session['projectPath'],'uploads')
     
-    if form.is_valid():
-        newdoc = Document(docfile = request.FILES['docfile'])
-        newdoc.save()
+    file = request.FILES['docfile']
+    
+    #fd, filepath = tempfile.mkstemp(prefix=source.name, dir=path)
+    print file.name
+    print path
+    
+    #shutil.copy(file, path)
+    shutil.copy2(file, path) #copy file
+    
+    #fd, filepath = tempfile.mkstemp(prefix=file.name, dir=path)
+    
+#     with open(filepath, 'wb') as dest:
+#         shutil.copyfileobj(file, dest)
+            
+    #if form.is_valid():
+        #handle_uploaded_file(request.FILES['docfile'])
+        #newdoc = Document(docfile = request.FILES['docfile'])
+        #newdoc.save()
         
     return renderUpload(request, form)
 
