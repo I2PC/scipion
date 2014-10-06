@@ -290,7 +290,7 @@ def _transformFromEmx(emxParticle, part, transform):
     
     for i in range(3):
         for j in range(4):
-            m.setValue(i, j, emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1)))
+            m[i, j] = emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1))
     
     transform.setObjId(part.getObjId())
             
@@ -348,11 +348,12 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
             #ctf.setMicFile(newFn)
             ctfSet.append(ctf)
 
+    if emxMic is not None:
+        protocol._defineOutputs(outputMicrographs=micSet)
 
-    protocol._defineOutputs(outputMicrographs=micSet)
-    if ctfSet is not None:
-        protocol._defineOutputs(outputCTF=ctfSet)
-        protocol._defineCtfRelation(micSet, ctfSet)
+        if ctfSet is not None:
+            protocol._defineOutputs(outputCTF=ctfSet)
+            protocol._defineCtfRelation(micSet, ctfSet)
 
 
 def _particlesFromEmx(protocol
@@ -368,8 +369,7 @@ def _particlesFromEmx(protocol
     emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
-    alignmentSet = None
-    
+
     if emxParticle is not None:     
         # Check if there are particles or coordinates
         fn = emxParticle.get(emxlib.FILENAME)
@@ -385,7 +385,7 @@ def _particlesFromEmx(protocol
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
-                alignmentSet = protocol._createSetOfAlignment(partSet)
+                partSet.setHasAlignment(True)
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
@@ -412,10 +412,10 @@ def _particlesFromEmx(protocol
                     newLoc = (i, partFn)
                 part.setLocation(newLoc)
                 
-                if alignmentSet is not None:
-                    transform = Transform()
-                    _transformFromEmx(emxParticle, part, transform)  
-                    alignmentSet.append(transform)               
+                if partSet.hasAlignment():
+                    transform = Alignment()
+                    _transformFromEmx(emxParticle, part, transform)
+                    part.setAlignment(transform)
             else:
                 _coordinateFromEmx(emxParticle, part)
                 
@@ -424,8 +424,6 @@ def _particlesFromEmx(protocol
             
         if particles:
             protocol._defineOutputs(outputParticles=partSet)
-            if alignmentSet is not None:
-                protocol._defineOutputs(outputAlignment=alignmentSet)
         else:
             protocol._defineOutputs(outputCoordinates=partSet)
         

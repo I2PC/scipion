@@ -26,7 +26,7 @@
 """
 This module contains protocols related to Set operations such us:
 - subsets
-- joins
+- unions
 - split
 ... etc
 """
@@ -257,7 +257,8 @@ class ProtJoinSets(ProtSets):
     selected sets. It will validate that all sets are of the
     same type of elements (Micrographs, Particles or Volumes) 
     """
-    _label = 'join sets'
+    #TODO  ROB: join or union
+    _label = 'union sets'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
@@ -265,7 +266,7 @@ class ProtJoinSets(ProtSets):
         
         form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
                       pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more set of images (micrographs, particles o volumes) to be joined.'
+                      help='Select two or more set of images (micrographs, particles o volumes) to be united.'
                            'If you select 3 sets with 100, 200, 200 images, the final set should contans a '
                            'total of 500 images. All sets should have the same sampling rate.'
                            )
@@ -286,6 +287,7 @@ class ProtJoinSets(ProtSets):
        
         for itemSet in self.inputSets:
             for itemObj in itemSet.get():
+                print "itemObj", itemObj
                 itemObj.cleanObjId()
                 outputSet.append(itemObj)
         
@@ -312,7 +314,7 @@ class ProtJoinSets(ProtSets):
         if not hasattr(self, 'outputImages'):
             summary.append("Protocol has not finished yet.")
         else:
-            m = "We have joint the following sets: "
+            m = "We have unioned the following sets: "
             #inputSets = [self.inputSet1, self.inputSet2]
             for itemSet in self.inputSets:
                 m += "%s, " % itemSet.get().getNameId()

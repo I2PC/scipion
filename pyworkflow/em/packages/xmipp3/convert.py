@@ -296,7 +296,9 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
         ctfModelToRow(img.getCTF(), imgRow)
         
     if kwargs.get('writeAlignment', True) and img.hasAlignment():
-        alignmentToRow(img.getAlignment(), imgRow)
+        is2D = kwargs.get('is2D', True)
+        isInverseTransform = kwargs.get('isInverseTransform', True)
+        alignmentToRow(img.getAlignment(), imgRow, is2D, isInverseTransform)
         
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
@@ -686,7 +688,7 @@ def readAnglesFromMicrographs(micFile, anglesSet):
 
 def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, 
                      blockName='Images', **kwargs):
-    """ This function will write a SetOfMicrographs as Xmipp metadata.
+    """ This function will write a SetOfImages as a Xmipp metadata.
     Params:
         imgSet: the set of images to be written (particles, micrographs or volumes)
         filename: the filename where to write the metadata.
@@ -980,11 +982,13 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
         ctfFn = ctfMd.get()
     return ctfFn
 
-def geometryFromMatrix(matrix):
+def geometryFromMatrix(matrix, isInvTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    shifts = -translation_from_matrix(matrix)
-    angles = rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    shifts = translation_from_matrix(matrix)
+    if not isInvTransform:
+        matrix = numpy.linalg.inv(matrix)
+    angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
     
     return shifts, angles
 
@@ -1036,15 +1040,28 @@ def rowToAlignment(alignmentRow):
     return alignment
 
 
-def alignmentToRow(alignment, alignmentRow):
-    #FIXME: we should use the transformation matrix
-    #shifts, angles = geometryFromMatrix(alignment.getMatrix())
-    #mdRow.setValue(xmipp.MDL_ANGLE_PSI, angles[2])
-    #mdRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
-    #mdRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-    for paramName, label in ALIGNMENT_DICT.iteritems():
-        if alignment.hasAttribute(paramName):
-            alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
+def alignmentToRow(alignment, alignmentRow,
+                   is2D=True, isInvTransform=False):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+                          -> for xmipp implies alignment
+    """
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(),isInvTransform)
+
+    if is2D:
+        angle =angles[0] + angles[2]
+        alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
+    else:
+        alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
+        alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
+        alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+    #for paramName, label in ALIGNMENT_DICT.iteritems():
+    #    if alignment.hasAttribute(paramName):
+    #        alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 

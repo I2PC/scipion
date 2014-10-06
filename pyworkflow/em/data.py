@@ -1007,36 +1007,38 @@ class Transform(EMObject):
     It should contain information about euler angles, translation(or shift)
     and mirroring.
     """
+
     def __init__(self, **args):
         EMObject.__init__(self, **args)
         self._matrix = Matrix()
-        
+
     def getMatrix(self):
         return self._matrix.getMatrix()
     
     def setMatrix(self, matrix):
         self._matrix.setMatrix(matrix)
-        
+
     def __str__(self):
         return str(self._matrix)
     
     
 class Alignment(Transform):
-    """ Transform used for 2D alignment agains a reference. """
+    """ Transform used for 2D alignment against a reference. """
     pass
-        
+
 
 class SetOfAlignment(EMSet):
-    """ An Aligment is an particular type of Transform.
+    """ An Alignment is an particular type of Transform.
     A set of transform is usually the result of alignment or multi-reference
-    alignment of a SetOfPartices. Each Transformation modifies the original
+    alignment of a SetOfParticles. Each Transformation modifies the original
     image to be the same of a given reference.
     """
     ITEM_TYPE = Alignment
-    
+
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._particlesPointer = Pointer()
+        self._is2D = Boolean(True)
 
     def getParticles(self):
         """ Return the SetOfParticles from which the SetOfAligment was obtained. """
@@ -1046,7 +1048,21 @@ class SetOfAlignment(EMSet):
         """ Set the SetOfParticles associated with this SetOfAlignment..
          """
         self._particlesPointer.set(particles)
-        
+
+    def set2D(self):
+        """ Mark the alignment as 2D transform. """
+        self._is2D.set(True)
+
+    def set3D(self):
+        """ Mark the alignment as 3D transform. """
+        self._is2D.set(False)
+
+    def is2D(self):
+        return self._is2D.get()
+
+    def is3D(self):
+        return not self.is2D()
+
 
 class TransformParams(object):
     """ Class to store transform parameters in the way

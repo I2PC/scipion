@@ -76,7 +76,8 @@ def restoreXmippLabels():
         xmipp.addLabelAlias(k, v, True)
     _xmippLabelsDict = {}
 
-            
+
+#TODO ROB: relion can handle many formats why not check if the stack is in a valid one
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.
     It will write an stack in Spider format and also
@@ -166,8 +167,8 @@ def readSetOfParticles(filename, partSet, **kwargs):
     xmipp3.readSetOfParticles(filename, partSet, **kwargs)
     restoreXmippLabels()
 
-    
-def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None):
+
+def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None, **kwargs):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
@@ -176,7 +177,8 @@ def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None):
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
     pa = ParticleAdaptor(imgSet, stackFile, originalSet)
-    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False)
+    #xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False, **kwargs)
+    xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, **kwargs)
     imgSet._relionStar = String(starFile)
     restoreXmippLabels()
     
