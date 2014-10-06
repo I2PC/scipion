@@ -59,6 +59,7 @@ emViewersDict = getSubclassesFromModules(Viewer, PACKAGES_DICT)
 # Load all subclasses of Wizards
 emWizardsDict = getSubclassesFromModules(Wizard, PACKAGES_DICT)
         
+        
 def findClass(className):
     
     if className in emProtocolsDict:
@@ -68,6 +69,7 @@ def findClass(className):
         return emObjectsDict[className]
     
     raise Exception("findClass: class '%s' not found." % className)
+
 
 def findSubClasses(classDict, className):
     """ Find all subclasses of a give className. """
