@@ -1,6 +1,6 @@
 /***************************************************************************
+ * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
  *
- * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,6 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/nma_alignment_vol.h>
+#include <reconstruction/validation_nontilt.h>
 
-RUN_XMIPP_PROGRAM(ProgNmaAlignmentVol)
+int main(int argc, char **argv)
+{
+	ProgValidationNonTilt prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
+}
