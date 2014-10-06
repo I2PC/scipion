@@ -32,6 +32,8 @@ from django.template import RequestContext
 from pyworkflow.web.pages import settings
 from models import Document
 from forms import DocumentForm
+from views_base import base_form
+from views_util import getResourceIcon
 
 def upload(request):
     return renderUpload(request, DocumentForm())
@@ -40,11 +42,14 @@ def upload(request):
 def renderUpload(request, form):
     # Load documents for the list page
 
-    documents = Document.objects.all()
+    context = {
+               #'documents': Document.objects.all(), 
+               'form': form,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small')
+               }
 
-    context = {'documents': documents, 
-               'form': form}
-
+    context = base_form(request, context)
+    
     # Render list page with the documents and the form
     return render_to_response('upload.html', context, 
                               context_instance=RequestContext(request))
