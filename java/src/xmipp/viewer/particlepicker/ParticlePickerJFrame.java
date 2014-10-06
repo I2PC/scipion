@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -653,7 +654,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
 		{
 			zoom = getCanvas().getMagnification();
-			usezoombt.setText(String.format("%.2f", zoom));
+			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
 		}
 		else if (usezoombt.isSelected())
 			getCanvas().setZoom(zoom);
@@ -674,7 +675,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void displayZoom()
 	{
 
-		usezoombt.setText(String.format("%.2f", getCanvas().getMagnification()));
+		usezoombt.setText(String.format(Locale.US, "%.2f", getCanvas().getMagnification()));
 		pack();
 	}
 
