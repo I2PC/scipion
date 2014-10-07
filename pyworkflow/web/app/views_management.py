@@ -66,7 +66,7 @@ def doUpload(request):
     
         #Move the file to the new folder
         src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', docfile.name)
-        path = os.path.join(request.session['projectPath'],'uploads')
+        path = os.path.join(request.session['projectPath'],'Uploads')
         shutil.move(src, path)
         
     return renderUpload(request, form)
