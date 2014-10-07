@@ -1203,13 +1203,6 @@ class Protocol(Step):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
         
-    def methods_old(self):
-        """ Return a description about methods about current protocol execution. """
-        baseMethods = self._methods()
-        if not baseMethods:
-            baseMethods = []
-        return baseMethods + [''] + self.citations()
-        
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """
         baseMethods = self._methods() or []
