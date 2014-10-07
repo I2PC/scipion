@@ -44,12 +44,26 @@
 		
 		<script>
 		  $(function() {
-		    $("#tabs").tabs();
+			  $("#tabs").tabs();
 		  });
-	  	</script>	
-		
+		  
+		  $(document).ready(function() {
+			  var project_folder = "{{project_folder}}/Uploads"
+			  $.ajax({
+					type : "GET",
+					url : "/getPath/?path="+ project_folder,
+					dataType : "json",
+					async: false,
+					success : function(json) {
+						$.each(json, function(key, value) {
+  						    $("tr#listFiles").append("<tr><td><img src='"+ value.icon +"'> "+ value.name + "</td></tr>")
+						});
+					}
+				});
+		  });	
+	  	</script>		  	
+	  	
 	</head>
-
 	<body>
 		<div>
 			<img src='{{logo_scipion_small}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
@@ -102,10 +116,8 @@
 			<div id="tabs-2">
 	 			<div class="box">
 					<table class="section">
-						<tr>
-						<!-- List of uploaded documents -->
-				 		
-						
+						<tr id="listFiles">
+							<!-- List of uploaded documents -->
 						</tr>
 					</table>
 				</div>
