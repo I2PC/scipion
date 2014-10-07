@@ -31,7 +31,17 @@
 			.ui-state-active .ui-tabs-anchor{
 				color: white !important;
 			} 
-	
+			
+			.ui-progressbar {
+				position: relative;
+		   	}
+		  	.progress-label {
+			    position: absolute;
+			    left: 50%;
+			    top: 4px;
+			    font-weight: bold;
+			    text-shadow: 1px 1px 0 #fff;
+			 }
 		</style>
 		
 		<!-- JS -->
@@ -43,13 +53,47 @@
 		<script src="{{jquery_browser}} "type="text/javascript"></script>
 		
 		<script>
-		  $(function() {
-		    $("#tabs").tabs();
-		  });
-	  	</script>	
-		
+			function launchUpload(){
+				var msg = "</td><td class='content' value='"
+					msg += "'>The file will be <strong>UPLOADED</strong> into the path <strong>{{project_folder}}/Uploads/</strong>. "
+					msg += "Do you really want to continue?</td></tr></table>";
+				warningPopup('Confirm UPLOAD',msg, 'launchSubmitUpload')
+			}
+			
+			function launchSubmitUpload(){
+				$("#progressbar").show()
+   				$('#uploadForm').submit();
+			}
+			
+			$(function() {
+				//tabs				
+				$("#tabs").tabs();
+				
+				//progressbar
+				$("#progressbar").progressbar({
+					value: false
+			    });
+			  });
+			
+			 
+			 $(document).ready(function() {
+				 var project_folder = "{{project_folder}}/Uploads"
+				 $.ajax({
+					type : "GET",
+					url : "/getPath/?path="+ project_folder,
+					dataType : "json",
+					async: false,
+					success : function(json) {
+						$.each(json, function(key, value) {
+							var icon = "<td><img src='"+ value.icon +"' /></td>"
+							var name = "<td><a href='#'>"+ value.name +"</a></td>"
+								    $("tr#listFiles").append("<tr>" +icon + name + "</tr>")
+							});
+						}
+					});
+				 });	
+	  	</script>		  	
 	</head>
-
 	<body>
 		<div>
 			<img src='{{logo_scipion_small}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
@@ -71,8 +115,9 @@
 		<!-- FILE UPLOAD> -->
 			 <div id="tabs-1">
 	 			<div class="box">
-					<form action="/doUpload/" method="post" enctype="multipart/form-data">
+					<form id="uploadForm" action="/doUpload/" method="post" enctype="multipart/form-data">
 					{% csrf_token %}
+						Path: <br /><strong>{{project_folder}}/Uploads</strong>							
 						<table class="section">
 							<tr>
 								<td id="inputName" class="normal">
@@ -91,8 +136,11 @@
 								</td>
 							</tr>
 						</table>
-						<div style="float: right;">
-							<input type="submit" class="btn buttonRed" value="Upload" />
+						<div style="float:right;">
+							<a href="javascript:launchUpload();" class="btn buttonGrey">
+								<i class="fa fa-cogs"></i>
+								Upload
+							</a>
 						</div>
 					</form>
 				</div>
@@ -101,15 +149,21 @@
 		<!-- LIST FILES -->
 			<div id="tabs-2">
 	 			<div class="box">
+	 				Path: <br /><strong>{{project_folder}}/Uploads</strong>	
 					<table class="section">
-						<tr>
-						<!-- List of uploaded documents -->
-				 		
-						
+						<tr id="listFiles">
+							<!-- List of uploaded documents -->
 						</tr>
 					</table>
 				</div>
 			</div>
+		</div>
+		<br />
+		<div id="progressbar" style='display:none;'>
+			<div class="progress-label">Uploading ... </div>	
+		</div>
+		<div class="boxBottom">
+			<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
 		</div>
 	</body>
 </html>
