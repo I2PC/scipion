@@ -79,7 +79,7 @@
 		launchViewer(objId);
 	}
 	</script>
-	 <script>
+	<script>
 	  $(function() {
 	    $("#tabs").tabs();
 	  });
@@ -105,11 +105,9 @@
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
-<!-- 			<input type="hidden" id="windowName" name="windowName" value=""/> -->
 			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
-<!-- 			<input type="hidden" id="wizName" name="wizName" value=""/> -->
 			<input type="hidden" id="wizClassName" name="wizClassName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>
