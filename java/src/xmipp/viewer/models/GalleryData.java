@@ -63,7 +63,7 @@ import xmipp.viewer.windows.SaveJDialog;
 public class GalleryData {
 
 
-    protected ColumnInfo displayci;
+    protected HashMap<String, ColumnInfo> displayci;
     protected MetaData md;
     protected long[] ids;
     protected String[] mdBlocks = null;
@@ -105,7 +105,7 @@ public class GalleryData {
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
     protected HashMap<Long, EllipseCTF> ctfs;
-    protected String displayLabel;
+    protected String[] displayLabel;
     protected String[] renderLabels;
     protected String renderLabel;
     protected String[] visibleLabels;
@@ -158,8 +158,8 @@ public class GalleryData {
             resliceView = parameters.resliceView;
             useGeo = parameters.useGeo;
             wrap = parameters.wrap;
-            displayLabel = parameters.getDisplayLabel();
-
+            displayLabel = parameters.getDisplayLabels();
+            displayci = new HashMap<String, ColumnInfo>();
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) {
                 mode = Mode.TABLE_MD;
             } else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) {
@@ -249,14 +249,17 @@ public class GalleryData {
 
     }
 
-    public void setDisplayLabel(String key) {
-        displayci = null;
-        if(key == null || key.equalsIgnoreCase("none"))
+    public void setDisplayLabel(String key, boolean selected) {
+        if(!selected)
+        {
+            displayci.remove(key);
             return;
+        }
+        
         for(ColumnInfo ci: labels)
             if(ci.labelName.equals(key))
             {
-                displayci = ci;
+                displayci.put(key, ci);
                 break;
             }
     }
@@ -396,9 +399,12 @@ public class GalleryData {
 
    
 
-    public ColumnInfo getDisplayLabel()
+    public String getDisplayLabel(long id)
     {
-        return displayci;
+        String label = "";
+        for(ColumnInfo ci: displayci.values())
+            label += " " + md.getValueString(ci.label, id);
+        return label;
     }
 
     /**
@@ -460,7 +466,9 @@ public class GalleryData {
             labels = newLabels;
             orderLabels();
             
-            setDisplayLabel(displayLabel);
+            if(displayLabel != null)
+                for(String label: displayLabel)
+                    setDisplayLabel(label, true);
 //////            System.out.printf("render: %s %s \n", ciFirstRender, ciFirstRenderVisible);
         } catch (Exception e) {
             e.printStackTrace();

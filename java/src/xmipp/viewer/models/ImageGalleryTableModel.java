@@ -533,7 +533,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void setShowLabels() {
 		
 			calculateCellSize();
-			fireTableDataChanged();
+			fireTableStructureChanged();
 		
 	}
 

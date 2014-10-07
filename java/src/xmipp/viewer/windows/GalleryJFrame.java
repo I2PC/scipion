@@ -47,6 +47,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,6 +61,7 @@ import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -1815,21 +1817,17 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         String id, column;
                         
                        
-                        id = "Display.ShowLabel.None_rb";
-                        column = "none";
-                        mi = addItem(id, column);
-                        setItemSelected(id, true);
-                        mi.addActionListener(new DisplayLabelActionListener());
+                        List<String> displayLabels = Arrays.asList(data.parameters.getDisplayLabels());
                         for(ColumnInfo ci: data.getColumns())
                         {
                             if(ci.visible)
                             {
                                 column = ci.labelName;
-                                id = String.format("Display.ShowLabel.%s_rb", column.replace(".", ""));
+                                id = String.format("Display.ShowLabel.%s_cb", column.replace(".", ""));
                                 mi = addItem(id, column);
                                 mi.addActionListener(new DisplayLabelActionListener());
-                                String displayLabel = data.parameters.getDisplayLabel();
-                                if(displayLabel != null && displayLabel.equals(column))
+                                
+                                if(displayLabels.contains(column))
                                         setItemSelected(id, true);
                             }   
                         }
@@ -1842,10 +1840,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
+				JCheckBoxMenuItem mi = (JCheckBoxMenuItem)e.getSource();
 				String key = mi.getText();
                                 
-				data.setDisplayLabel(key);
+				data.setDisplayLabel(key, mi.isSelected());
 				gallery.setShowLabels();
 			}
 

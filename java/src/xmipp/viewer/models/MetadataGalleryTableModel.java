@@ -183,10 +183,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			long objId = data.ids[index];
 
 
-                        ColumnInfo displayLabel = data.getDisplayLabel();
-                        if(displayLabel == null)
-                            return null;
-                        return data.md.getValueString(data.getDisplayLabel().label, objId);
+                        return data.getDisplayLabel(objId);
                         
 		}
 		catch (Exception e)

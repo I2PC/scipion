@@ -1,5 +1,6 @@
 package xmipp.utils;
 
+import java.util.Arrays;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -34,7 +35,7 @@ public class Params {
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
     public final static String SORTBY_LABEL = "sortby";
-    public final static String DISPLAY_LABEL = "label";
+    public final static String DISPLAY_LABELS = "labels";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -62,7 +63,7 @@ public class Params {
     public int zoom = 0;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
-    public String displayLabel;
+    public String[] displayLabels;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -123,7 +124,9 @@ public class Params {
         opt.setArgs(2);
         options.addOption(opt);
         
-        options.addOption(DISPLAY_LABEL, true, "");
+        opt = new Option(DISPLAY_LABELS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -202,8 +205,8 @@ public class Params {
             	sortby = cmdLine.getOptionValues(SORTBY_LABEL);
                 
             }
-            if(cmdLine.hasOption(DISPLAY_LABEL))
-            	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
+            if(cmdLine.hasOption(DISPLAY_LABELS))
+            	displayLabels = cmdLine.getOptionValues(DISPLAY_LABELS);
             
             debug = cmdLine.hasOption(DEBUG);
             mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
@@ -284,9 +287,9 @@ public class Params {
         return renderLabels[0];
     }
     
-    public String getDisplayLabel()
+    public String[] getDisplayLabels()
     {
-        return displayLabel;
+        return displayLabels;
     }
     
    

@@ -392,9 +392,10 @@ public class ScipionMetaData extends MetaData {
 
     public String getValueString(int label, long id) {
         Object value = getValueObject(label, id);
-        if (value == null) {
+        if (value == null) 
             return "";
-        }
+        if (value instanceof Float)
+            return String.format("%.2f", value);
         return value.toString();
     }
 
