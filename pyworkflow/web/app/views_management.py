@@ -27,12 +27,13 @@
 import os
 import json
 import shutil
-import tempfile
 from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
-
+from pyworkflow.web.pages import settings
 from models import Document
 from forms import DocumentForm
+from views_base import base_form
+from views_util import getResourceIcon
 
 def upload(request):
     return renderUpload(request, DocumentForm())
@@ -41,59 +42,32 @@ def upload(request):
 def renderUpload(request, form):
     # Load documents for the list page
 
-    documents = Document.objects.all()
+    context = {
+               #'documents': Document.objects.all(), 
+               'form': form,
+               'logo_scipion_small': getResourceIcon('logo_scipion_small')
+               }
 
-    context = {'documents': documents, 
-               'form': form}
-
+    context = base_form(request, context)
+    
     # Render list page with the documents and the form
     return render_to_response('upload.html', context, 
                               context_instance=RequestContext(request))
 
-
-# def doUpload(request):
-#     # Save the files
-#     path = request.session['projectPath']
-#     form = DocumentForm(request.POST, request.FILES)
-#     
-#     def handle_uploaded_file(source):
-#         fd, filepath = tempfile.mkstemp(prefix=source.name, dir=path)
-#         with open(filepath, 'wb') as dest:
-#             shutil.copyfileobj(source, dest)
-#         return filepath
-#     
-#     if form.is_valid():
-#         handle_uploaded_file(request.FILES['docfile'])
-#         #newdoc = Document(docfile = request.FILES['docfile'])
-#         #newdoc.save()
-#         
-#     return renderUpload(request, form)
-
-
 def doUpload(request):
-    form = DocumentForm(request.POST, request.FILES)
-
     # Save the files
-    path = os.path.join(request.session['projectPath'],'uploads')
+    form = DocumentForm(request.POST, request.FILES)
+    docfile = request.FILES['docfile']
     
-    file = request.FILES['docfile']
+    if form.is_valid():
+        #Save temporary file
+        newdoc = Document(docfile = request.FILES['docfile'])
+        newdoc.save()
     
-    #fd, filepath = tempfile.mkstemp(prefix=source.name, dir=path)
-    print file.name
-    print path
-    
-    #shutil.copy(file, path)
-    shutil.copy2(file, path) #copy file
-    
-    #fd, filepath = tempfile.mkstemp(prefix=file.name, dir=path)
-    
-#     with open(filepath, 'wb') as dest:
-#         shutil.copyfileobj(file, dest)
-            
-    #if form.is_valid():
-        #handle_uploaded_file(request.FILES['docfile'])
-        #newdoc = Document(docfile = request.FILES['docfile'])
-        #newdoc.save()
+        #Move the file to the new folder
+        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', docfile.name)
+        path = os.path.join(request.session['projectPath'],'Uploads')
+        shutil.move(src, path)
         
     return renderUpload(request, form)
 

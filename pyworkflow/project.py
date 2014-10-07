@@ -45,6 +45,7 @@ PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
 PROJECT_RUNS = 'Runs'
 PROJECT_TMP = 'Tmp'
+PROJECT_UPLOAD = 'Uploads'
 PROJECT_SETTINGS = 'settings.sqlite'
 
 # Regex to get numbering suffix and automatically propose runName
@@ -65,6 +66,7 @@ class Project(object):
         self.logsPath = self.addPath(PROJECT_LOGS)
         self.runsPath = self.addPath(PROJECT_RUNS)
         self.tmpPath = self.addPath(PROJECT_TMP)
+        self.uploadPath = self.addPath(PROJECT_UPLOAD)
         self.settingsPath = self.addPath(PROJECT_SETTINGS)
         self.runs = None
         self._runsGraph = None

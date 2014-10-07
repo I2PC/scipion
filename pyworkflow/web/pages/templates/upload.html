@@ -2,12 +2,27 @@
 <html>
 	<head>
 		<meta charset="utf-8">
+		<link rel="icon" type="image/png" href={{favicon}} />
 		<title>Scipion File Upload</title>	
+
+		<!-- CSS -->
+		<link href="{{general_css}}" rel="stylesheet" type="text/css">
+		<link href={{form_css}} rel="stylesheet" type="text/css">
+		<link href="{{jquery_ui_css}}" rel="stylesheet" type="text/css">
+		<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+			
 	</head>
 
 	<body>
+		<div>
+			<img src='{{logo_scipion_small}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
+			<h3 id="protName" style="">
+					Scipion File Upload 
+			</h3>
+		</div>
+		
 		<!-- List of uploaded documents -->
-		{% if documents %}
+<!-- 		{% if documents %}
 			<ul>
 			{% for document in documents %}
 				<li>
@@ -17,26 +32,50 @@
 				</li>
 			{% endfor %}
 			</ul>
-		{% else %}
-			<p>No documents.</p>
-		{% endif %}
-
-		<!-- Upload form. Note enctype attribute! -->
-		<form action="/doUpload/" method="post" enctype="multipart/form-data">
-			{% csrf_token %}
-			<p>{{form.non_field_errors}}</p>
-			<p>{{form.docfile.label_tag}} {{form.docfile.help_text}}</p>
-			
-			<p>
-				{{form.docfile.errors}}
-				{{form.docfile}}
-			</p>
-			<p>
-				<input type="submit" value="Upload" />
-			</p>
-		</form>
+		{% else %} 
+			<p>No documents.</p>  
+		{% endif %} -->
 		
+		
+		<form action="/doUpload/" method="post" enctype="multipart/form-data">
+		{% csrf_token %}
+			<div id="main">
+			
+				<div id="mainNode1" class="mainNode">
+					<div class="title">
+						File Upload 
+					</div>
+					<table>
+						<tr>
+			<!-- RUN NAME -->
+							<td  colspan="1">
+								<strong>{{form.docfile.label_tag}}</strong>
+							</td>
+							<td colspan="4">
+							
+									<p>{{form.non_field_errors}}</p>
+									
+									<p>{{form.docfile.help_text}}</p>
+									
+									<p>
+										{{form.docfile.errors}}
+										{{form.docfile}}
+									</p>
+							
+							</td>
+	<!-- 						<td class=""> -->
+	<!-- 							<a id="editTool">				 -->
+	<!-- 								<i class="fa fa-pencil"></i> -->
+	<!-- 							</a> -->
+	<!-- 						</td> -->
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div class="boxBottom">
+				<input type="submit" class="btn buttonGrey" value="Upload" />
+			</div>
+		</form>
 	</body>
-
 </html> 
  
