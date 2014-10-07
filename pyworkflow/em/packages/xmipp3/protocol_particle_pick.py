@@ -165,6 +165,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                 summary.append("Last micrograph: " + activemic)
         return summary
     
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
+    
     
     
 
