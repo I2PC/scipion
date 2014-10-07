@@ -30,7 +30,8 @@ visualization program.
 import os
 
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
+    MessageView
 from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
@@ -383,7 +384,9 @@ Examples:
             f.close()
             view = CommandView('chimera %s &' % cmdFile)                    
         else:
-            view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+            #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            view = ChimeraClient(volumes[0])
             
         return [view]
             
@@ -412,7 +415,6 @@ Examples:
         return views
     
     def _createAngDistChimera(self, it):
-        arguments = []
         # FIXME
         #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
         outerRadius = 30
@@ -422,15 +424,19 @@ Examples:
         prefixes = self._getPrefixes()
 
         data_angularDist = self.protocol._getIterAngularDist(it)
-        for ref3d in self._refsList:
+
+        if len(self._refsList) == 1:
+            # If just one reference we can show the angular distribution
+            ref3d = self._refsList[0]
             for prefix in prefixes:
                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                args = "--input '%s' --mode projector 256 -a %sclass%06d_angularDist@%s red %f " % (volFn, prefix, ref3d, data_angularDist, radius)
-                if sphere > 0:
-                    args += ' %f ' % sphere
-                arguments.append(args)
-                   
-        return CommandView('xmipp_chimera_client %s &' % args)
+                angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
+                from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+                return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+        
+        else:
+            return self.infoMessage("Please select only one class to display angular distribution",
+                                    "Input selection") 
         
     
     def _createAngDist2D(self, it):
@@ -584,14 +590,14 @@ class PostprocessViewer(ProtocolViewer):
 # ShowVolumes
 #===============================================================================
         
-    def _showVolumeShowj(self, volPath):
-        
+    def _showVolumeShowj(self, volPath):        
         return [DataView(volPath)]
     
     def _showVolumesChimera(self, volPath):
         """ Create a chimera script to visualize selected volumes. """
-        
-        view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
+        from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+        #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volPath)
+        view = ChimeraClient(volPath)
         return [view]
             
     def _showVolume(self, paramName=None):

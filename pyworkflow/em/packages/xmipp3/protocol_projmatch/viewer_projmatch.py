@@ -35,11 +35,11 @@ from os.path import exists
 from pyworkflow.protocol.executor import StepExecutor
 from pyworkflow.viewer import CommandView, Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView
-from pyworkflow.gui.form import FormWindow
 from pyworkflow.utils import createUniqueFileName, cleanPattern
 from protocol_projmatch import XmippProtProjMatch
 # from projmatch_initialize import createFilenameTemplates
 from pyworkflow.em.packages.xmipp3.convert import * # change this
+from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
 from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam, 
                                         FloatParam, StringParam, Positive, GE,
@@ -307,7 +307,8 @@ Examples:
             f.close()
             view = CommandView('chimera %s &' % cmdFile)                    
         else:
-            view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            #view = CommandView('xmipp_chimera_client --input "%s" --mode projector 256 &' % volumes[0])
+            view = ChimeraClient(volumes[0])
         
         return [view]
     
@@ -606,13 +607,14 @@ Examples:
         outerRadius = self.protocol._outerRadius[it]
         radius = float(outerRadius) * 1.1
 
-        for ref3d in self._refsList:
+        if len(self._refsList) == 1:
+            ref3d = self._refsList[0]
             file_name = self.protocol._getFileName('outClassesXmd', iter=it, ref=ref3d)
             file_name_rec_filt = self.protocol._getFileName('reconstructedFilteredFileNamesIters', iter=it, ref=ref3d)
-            args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
-            arguments.append(args)
-                   
-        return CommandView('xmipp_chimera_client %s &' % args)
+            #args = "--input '%s' --mode projector 256 -a %s red %f" %(file_name_rec_filt, file_name, radius)
+            return ChimeraClient(file_name_rec_filt, angularDist=file_name, radius=radius)
+        else:
+            return self.infoMessage('Please select only one class to display angular distribution')
     
     def _createAngDist2D(self, it):
         # Common variables to use

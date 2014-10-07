@@ -30,11 +30,11 @@ visualization program.
 
 import os
 
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, CommandView
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 
-from xmipp3 import getXmippPath
+from xmipp3 import getXmippPath, getEnviron
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
@@ -338,4 +338,20 @@ class XmippViewer(Viewer):
             self._visualize(obj.outputParticlesTiltPair)
 
         return self._views
+    
+    
+class ChimeraClient(CommandView):
+    """ View for calling an external command. """
+    def __init__(self, inputFile, projectionSize=256, 
+                 angularDist=None, radius=None, sphere=None, **kwargs):
+        cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d &' % locals()
+        if angularDist:
+            cmd += ' -a %(angularDist)s red %(radius)f' % locals() 
+            if sphere > 0:
+                cmd += ' %f' % sphere
+        CommandView.__init__(self, cmd, env=getEnviron())
+        
+    def show(self):
+        from subprocess import call
+        call(self._cmd, shell=True, env=self._env)
         
