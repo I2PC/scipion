@@ -86,6 +86,9 @@
  *  * function launchViewer(id)
  * 	->	Launch the viewers to analyze the results for an object (protocol or object).
  * 
+ * function getKnownExt()
+ * 	->	Return the all extensions used in Scipion to be mapped in a filebrowser.
+ * 
  ******************************************************************************/
 
 /** METHODS *******************************************************************/
