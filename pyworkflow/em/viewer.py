@@ -146,7 +146,7 @@ class ClassesView(ObjectView):
         labels =  'enabled id _size _representative._filename'
         defaultViewParams = {ORDER:labels,
                              VISIBLE: labels, RENDER:'_representative._filename',
-                             'sortby': '_size', 'label': '_size',
+                             'sortby': '_size', 'labels': 'id _size',
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
