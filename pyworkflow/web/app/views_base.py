@@ -62,7 +62,7 @@ def base_form(request, context):
     
     context_base = {
                     #Folder
-                    'media_folder': settings.MEDIA_ROOT,
+                    'project_folder': request.session['projectPath'],
                     #CSS
                     'form_css': getResourceCss('form'),
                     'jquery_ui_css': getResourceCss('jquery_ui'),
@@ -140,6 +140,7 @@ def base_showj(request, context):
 
 
 def base_wiz(request, context):
+    
     context_base = {'general_style': getResourceCss('general'),
                     'wizard_style': getResourceCss('wizard'),
                     'jquery_ui_style': getResourceCss('jquery_ui'),
