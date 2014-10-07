@@ -7,7 +7,7 @@ from os.path import dirname, realpath, join
 import pyworkflow as pw
 
 DIRECTORY_PROJECT = dirname(realpath(__file__))
-DB_PATH = join(pw.HOME, 'web', 'scipion.db')
+DB_PATH = join(pw.HOME, 'web', 'scipion_web.db')
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

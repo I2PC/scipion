@@ -130,13 +130,6 @@
 						</style>
 						
 						<script type="text/javascript" language="javascript">
-							function getKnownExt(){
-								return ['txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx','py', 'pyc',
-								        'java','xmd', 'star', 'pos','sqlite', 'db','xmp', 'tif', 'tiff', 
-								        'spi', 'mrc', 'map', 'raw', 'inf', 'dm3', '.em', 'pif', 'psd', 
-								        'spe', 'ser', 'img', 'hed', 'vol','stk', 'mrcs', 'st', 'pif',
-								        'png', 'gif', 'jpg', 'jpeg']
-							}
 						
 							$(document).ready(function() {
 							    $('#FButton').serverBrowser({
@@ -149,6 +142,7 @@
 							        //Config
 							        knownExt: getKnownExt(),
 					                knownPaths: [{text:'ProjectFolder', image:'fa-home.png', path: '{{project_folder}}'}],
+					                //views_utils gives the entire url (mod into the serverBrowse lib)
 					                imageUrl: '/resources/',
 							        
 					                //Size
