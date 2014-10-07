@@ -87,10 +87,12 @@ def getPath(request):
     for f in os.listdir(path): 
         file_path = os.path.join(path, f)
         folder = os.path.isdir(file_path)
+        ext = f.split('.').pop();
         
         ob = {'name': f,
               'isFolder': folder,
-              'isError': False}
+              'isError': False,
+              'icon': getExtIconPath(ext)}
         
         ioDict.append(ob)
             
@@ -100,6 +102,10 @@ def getPath(request):
 
 def getExtIcon(request):
     ext = request.GET.get('ext')
+    res = getExtIconPath(ext)
+    return HttpResponse(res, mimetype='application/javascript')
+
+def getExtIconPath(ext):
 
     txt = {'txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx'}
     img = {'png', 'gif', 'jpg', 'jpeg'}
@@ -113,11 +119,10 @@ def getExtIcon(request):
     vol = {'vol'}
     stk = {'stk', 'mrcs', 'st', 'pif'}
     
-    res=''
     if ext == 'folder':
         res = getResourceIcon('folder')
-    elif ext == 'unknown':
-        res = getResourceIcon('file')
+#     elif ext == 'unknown':
+#         res = getResourceIcon('file_normal')
     else:
         if ext in txt:
             res = getResourceIcon('file_text')
@@ -135,6 +140,8 @@ def getExtIcon(request):
             res = getResourceIcon('file_vol')
         elif ext in stk:
             res = getResourceIcon('file_stack')
+        else:
+            res = getResourceIcon('file_normal')
     
-    return HttpResponse(res, mimetype='application/javascript')
+    return res
 
