@@ -108,6 +108,7 @@ class Message():
     #-------- Protocol Form messages ----------
     LABEL_CITE = 'Cite'
     LABEL_HELP = 'Help'
+    TEXT_HELP = 'The file selected will be uploaded to the project folder.'
     LABEL_RUNNAME = 'Run name'
     LABEL_RUNMODE = 'Mode' 
     LABEL_HOST = 'Host'

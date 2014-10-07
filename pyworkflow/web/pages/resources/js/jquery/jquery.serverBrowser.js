@@ -319,7 +319,7 @@
                         else
                         	image_type = ext
                     }
-                    image_path = config.imageUrl + getImagePath(image_type)
+                    image_path = getImagePath(image_type)
                     itemImage.attr({src: image_path})
                     
                     /* OLD CODE

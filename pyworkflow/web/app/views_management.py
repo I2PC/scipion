@@ -43,7 +43,7 @@ def renderUpload(request, form):
     # Load documents for the list page
 
     context = {
-               #'documents': Document.objects.all(), 
+               'documents': Document.objects.all(), 
                'form': form,
                'logo_scipion_small': getResourceIcon('logo_scipion_small')
                }
@@ -58,7 +58,7 @@ def doUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
     docfile = request.FILES['docfile']
-    
+     
     if form.is_valid():
         #Save temporary file
         newdoc = Document(docfile = request.FILES['docfile'])
@@ -67,7 +67,13 @@ def doUpload(request):
         #Move the file to the new folder
         src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', docfile.name)
         path = os.path.join(request.session['projectPath'],'Uploads')
+        target = os.path.join(path, docfile.name)
+        if os.path.exists(target):
+            os.remove(target)
         shutil.move(src, path)
+        
+        #Delete the temporary file
+        newdoc.delete()
         
     return renderUpload(request, form)
 
@@ -109,28 +115,26 @@ def getExtIcon(request):
     
     res=''
     if ext == 'folder':
-        res = 'fa-folder-open.png'
+        res = getResourceIcon('folder')
     elif ext == 'unknown':
-        res = 'fa-file-o.png'
+        res = getResourceIcon('file')
     else:
         if ext in txt:
-            res = 'file_text.gif'
+            res = getResourceIcon('file_text')
         elif ext in img or ext in particle:
-            res = 'file_image.gif'
+            res =  getResourceIcon('file_image')
         elif ext in py:
-            res = 'file_python.gif'
+            res = getResourceIcon('file_python')
         elif ext in java:
-            res = 'file_java.gif'
+            res = getResourceIcon('file_java')
         elif ext in md:
-            res = 'file_md.gif'
-        elif ext in md:
-            res = 'file_md.gif'
+            res = getResourceIcon('file_md')
         elif ext in sqlite:
-            res = 'file_sqlite.gif'
+            res = getResourceIcon('file_sqlite')
         elif ext in vol:
-            res = 'file_vol.gif'
+            res = getResourceIcon('file_vol')
         elif ext in stk:
-            res = 'file_stack.gif'
+            res = getResourceIcon('file_stack')
     
     return HttpResponse(res, mimetype='application/javascript')
 

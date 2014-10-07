@@ -488,3 +488,11 @@ function launchViewer(id){
 		}
 	});	
 }
+
+function getKnownExt(){
+	return ['txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx','py', 'pyc',
+	        'java','xmd', 'star', 'pos','sqlite', 'db','xmp', 'tif', 'tiff', 
+	        'spi', 'mrc', 'map', 'raw', 'inf', 'dm3', '.em', 'pif', 'psd', 
+	        'spe', 'ser', 'img', 'hed', 'vol','stk', 'mrcs', 'st', 'pif',
+	        'png', 'gif', 'jpg', 'jpeg']
+}
