@@ -485,10 +485,11 @@ public abstract class ParticlePicker {
             String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
             md.operate(command);
         }
-        md.print();
+        
     }// function importParticlesFromFile
     
     public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
+        
          String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
                 if (MetaData.containsBlock(file, blockname)) {
                     md.read(getParticlesBlock(Format.Xmipp301, file));

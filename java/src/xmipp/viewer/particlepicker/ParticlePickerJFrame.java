@@ -286,7 +286,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
+		importmi = new JMenuItem("Import from folder...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importmi);
 		if (picker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);

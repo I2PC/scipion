@@ -31,6 +31,7 @@ public class TiltPairPicker extends ParticlePicker
 
 		for (UntiltedMicrograph um : micrographs)
 			loadMicrographParticles(um);
+                
 	}
 
 	public void loadData()
@@ -309,11 +310,12 @@ public class TiltPairPicker extends ParticlePicker
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException("Unable to detect format");
 
-		String uFn = null, tFn = null;
+		String uFn, tFn;
 		String result = "";
                 importSize(path, f, scale);
 
-		
+		MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
                 for(UntiltedMicrograph m: micrographs)
                 {
                     uFn = null; tFn = null;
@@ -326,24 +328,38 @@ public class TiltPairPicker extends ParticlePicker
                     }
                     if(uFn != null && tFn != null)
                     {
-                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty);
+                        uMd.clear();tMd.clear();
+                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
                         saveData(m);
                     }           
 		}
+                uMd.destroy();
+                tMd.destroy();
                 super.saveData();
+                
+                
 		return result;
 	}// function importParticlesFromFolder
+        
+        public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+        {
+            	MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
+                String result = importParticlesFromFiles(uPath, tPath, f, um, scale, invertx, inverty, uMd, tMd);
+                uMd.destroy();
+                tMd.destroy();
+                return result;
+            
+        }
 
-	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty, MetaData uMd, MetaData tMd)
 	{
-		MetaData uMd = new MetaData();
+		System.out.printf("importing coords for %s \n", um.getName() );
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
-		MetaData tMd = new MetaData();
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
 
 		String result = loadMicrographParticles(um, uMd, tMd);
-		uMd.destroy();
-		tMd.destroy();
+                
 		return result;
 	}// function importParticlesFromFiles
 

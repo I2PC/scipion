@@ -1064,6 +1064,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 		// Create Main TOOLBAR
 		toolBar = new JToolBar();
+                toolBar.setFloatable(false);
 		toolBar.setRollover(true);
 		toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
