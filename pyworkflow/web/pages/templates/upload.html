@@ -37,8 +37,9 @@
 		   	}
 		  	.progress-label {
 			    position: absolute;
-			    left: 50%;
-			    top: 4px;
+/* 			    left: 50%; */
+			    left: 0.5em;
+			    top: 0.35em;
 			    font-weight: bold;
 			    text-shadow: 1px 1px 0 #fff;
 			 }
@@ -53,6 +54,37 @@
 		<script src="{{jquery_browser}} "type="text/javascript"></script>
 		
 		<script>
+			$(function() {
+				//tabs				
+				$("#tabs").tabs();
+				
+				//progressbar
+				$("#progressbar").progressbar({
+					value: false
+			    });
+			  });
+			 
+			// To fill the list of files tab
+			 $(document).ready(function() {
+				 updateListFiles()
+				 
+				 $("#uploadForm").submit(function(e) {
+						$.ajax({
+							url: '/doUpload/',
+					        type: 'POST',
+					        data: new FormData( this ),
+					        processData: false,
+					        contentType: false,
+					        async: false
+					    });
+						e.preventDefault();
+						infoPopup('Success', "The file was uploaded successfuly",0);
+						$("#progressbar").hide()
+						updateListFiles()
+					});
+				 });
+			 
+			 
 			function launchUpload(){
 				var msg = "</td><td class='content' value='"
 					msg += "'>The file will be <strong>UPLOADED</strong> into the path <strong>{{project_folder}}/Uploads/</strong>. "
@@ -65,20 +97,11 @@
    				$('#uploadForm').submit();
 			}
 			
-			$(function() {
-				//tabs				
-				$("#tabs").tabs();
-				
-				//progressbar
-				$("#progressbar").progressbar({
-					value: false
-			    });
-			  });
-			
-			 
-			 $(document).ready(function() {
-				 var project_folder = "{{project_folder}}/Uploads"
-				 $.ajax({
+			function updateListFiles(){
+				var project_folder = "{{project_folder}}/Uploads"
+				$("tr#listFiles").empty();
+					 
+				$.ajax({
 					type : "GET",
 					url : "/getPath/?path="+ project_folder,
 					dataType : "json",
@@ -87,11 +110,12 @@
 						$.each(json, function(key, value) {
 							var icon = "<td><img src='"+ value.icon +"' /></td>"
 							var name = "<td><a href='#'>"+ value.name +"</a></td>"
-								    $("tr#listFiles").append("<tr>" +icon + name + "</tr>")
-							});
-						}
-					});
-				 });	
+							$("tr#listFiles").append("<tr>"+ icon + name + "</tr>")
+						});
+					}
+				});
+			}
+			
 	  	</script>		  	
 	</head>
 	<body>

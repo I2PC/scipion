@@ -35,11 +35,11 @@ from forms import DocumentForm
 from views_base import base_form
 from views_util import getResourceIcon
 
-def upload(request):
-    return renderUpload(request, DocumentForm())
+# def upload(request):
+#     return renderUpload(request, DocumentForm())
         
 
-def renderUpload(request, form):
+def upload(request, form=None):
     # Load documents for the list page
     
     path = os.path.join(request.session['projectPath'],'Uploads')
@@ -48,7 +48,7 @@ def renderUpload(request, form):
 
 
     context = {'relative_path': relative_path,
-               'form': form,
+               'form': DocumentForm(),
                'logo_scipion_small': getResourceIcon('logo_scipion_small')
                }
 
@@ -61,25 +61,28 @@ def renderUpload(request, form):
 def doUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
-    docfile = request.FILES['docfile']
-     
+    
+    print "aqui!!"
+    
+    file_new = request.FILES['docfile'] 
+    
     if form.is_valid():
         #Save temporary file
-        newdoc = Document(docfile = request.FILES['docfile'])
+        newdoc = Document(docfile = file_new)
         newdoc.save()
     
         #Move the file to the new folder
-        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', docfile.name)
+        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', file_new.name)
         path = os.path.join(request.session['projectPath'],'Uploads')
-        target = os.path.join(path, docfile.name)
+        target = os.path.join(path, file_new.name)
         if os.path.exists(target):
             os.remove(target)
         shutil.move(src, path)
         
         #Delete the temporary file
         newdoc.delete()
-        
-    return renderUpload(request, form)
+            
+    return upload(request, form)
 
 
 def getPath(request):
