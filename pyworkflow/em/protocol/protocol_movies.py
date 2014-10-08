@@ -50,7 +50,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     This base class will iterate throught the movies (extract them if compressed)
     and call a _processMovie method for each one.
     """
-
+    
+    def __init__(self, **kwargs):
+        ProtPreprocessMicrographs.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -71,12 +75,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        
+        allMovies = []
         for movie in self.inputMovies.get():
-            self._insertFunctionStep('processMovieStep', 
-                                     movie.getObjId(), movie.getFileName())
-        self._insertFunctionStep('createOutputStep')
-        self._insertFunctionStep('cleanMovieDataStep', self.cleanMovieData.get())
+            movieStepId = self._insertFunctionStep('processMovieStep', 
+                                                   movie.getObjId(), movie.getFileName(),
+                                                   prerequisites=[])
+            allMovies.append(movieStepId)
+        self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def _filterMovie(self, movieId, movieFn):
@@ -92,7 +97,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             makePath(movieFolder)
             copyFile(movieFn, join(movieFolder, movieName))
             toDelete = [movieName]
-            self._enterDir(movieFolder)
     
             if movieName.endswith('bz2'):
                 movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
@@ -102,21 +106,18 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             else:
                 movieMrc = movieName
     
-            self.info("Processing movie: %s" % movieMrc)            
-            self._processMovie(movieId, movieMrc)
-            cleanPath(*toDelete)
+            self.info("Processing movie: %s" % movieMrc) 
+            program = self._getProgram()
+            args = self._getArgs(movieName)   
+            self._runJob(program, args, cwd=movieFolder)
+            self._copyMovieResults(movieFolder)
             
-            self._leaveDir()
-        
-    def cleanMovieDataStep(self, cleanMovieData):
-        if cleanMovieData:
-            for movie in self.inputMovies.get():
-                movieFolder = self._getMovieFolder(movie.getObjId())
-                self.info('Cleanning folder: %s' % movieFolder)
+            if self.cleanMovieData:
                 cleanPath(movieFolder)
-        else:
-            self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
+            else:
+                self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
 
+        
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getMovieFolder(self, movieId):
         """ Create a Movie folder where to work with it. """
@@ -127,6 +128,20 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     
     def _getMicName(self, movieId):
         return 'micrograph_%06d.mrc' % movieId
+    
+    def _getArgs(self, movieName):
+        """ This function should be implemented to return 
+        the program arguments that will be used to process
+        each movie.
+        """
+        pass
+    
+    def _copyMovieResults(self, movieFolder):
+        """ This method will be called before cleanning a temporary
+        movie folder just to allow each protocol to save some files
+        (such as averaged micrograph or alignment ) to some other directory.
+        """
+        pass
     
     
 class ProtAverageMovies(ProtProcessMovies):
@@ -180,22 +195,15 @@ class ProtAverageMovies(ProtProcessMovies):
         self._defineTransformRelation(inputMovies, micSet)
             
     
-class ProtOpticalAlignment(ProtProcessMovies    ):
+class ProtOpticalAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
     _label = 'movie alignment'
     
-    def __init__(self, **args):
-        ProtProcessMovies.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
-
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
-        #ProtProcessMovies._defineParams(self, form)
+        ProtProcessMovies._defineParams(self, form)
 
-        form.addParam('inputMovies', PointerParam, important=True,
-                      label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
         form.addParam('doGPU', BooleanParam, default=False,
                       label="Use GPU (vs CPU)", help="Set to true if you want the GPU implementation")
         form.addParam('GPUCore', IntParam, default=0,
@@ -214,70 +222,51 @@ class ProtOpticalAlignment(ProtProcessMovies    ):
                       label='Last')
         form.addParallelSection(threads=1, mpi=1)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        micList = []
-        listProcess = []
-        movSet = self.inputMovies.get()
-        for mov in movSet:
-            movFn = mov.getFileName()
-            processId = self._insertFunctionStep('processMoviesStep', movFn, prerequisites=[])
-            micList.append(self._defineMicFn(movFn))
-            listProcess.append(processId)
-        self._insertFunctionStep('createOutputStep', micList, prerequisites=listProcess)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def processMoviesStep(self, movFn):
-        movName = removeBaseExt(movFn)
-        self._createMovWorkingDir(movName)
-        self._defineProgram()
-        micFn = self._defineMicFn(movFn)
-        
-        movExt = getExt(movFn)
-        if movExt == ".mrc":
-            movFn = movFn + ":mrcs"
-        args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
-        firstFrame = self.firstFrame.get()
-        lastFrame = self.lastFrame.get()
-        if firstFrame or lastFrame:
-            args += ' --nst %d --ned %d' % (firstFrame,lastFrame)
-        if self.doGPU:
-            args += ' --gpu %d' % self.GPUCore.get()
-        self.runJob(self._program, args)
-    
     def createOutputStep(self, micList):
-        micSet = self._createSetOfMicrographs()
         movSet = self.inputMovies.get()
+        micSet = self._createSetOfMicrographs()
         micSet.setAcquisition(movSet.getAcquisition())
         micSet.setSamplingRate(movSet.getSamplingRate())
-        
-        for m in micList:
+
+        for movie in self.inputMovies.get():
+            micName = self._getMicName(movie.getObjId())
             mic = Micrograph()
-            mic.setFileName(m)
+            # All micrograph are copied to the 'extra' folder after each step
+            mic.setFileName(self._getExtraPath(micName))
             micSet.append(mic)
+
         self._defineOutputs(outputMicrographs=micSet)
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _createMovWorkingDir(self, movFn):
-        """create a new directory for the movie and change to this directory.
-        """
-        workDir = self._movWorkingDir(movFn)
-        makePath(workDir)   # Create a directory for a current iteration
-    
-    def _movWorkingDir(self, movFn):
-        """ Define which is the directory for the current movie"""
-        workDir = self._getTmpPath(movFn)
-        return workDir
-    
-    def _defineProgram(self):
+    def _getArgs(self, movieId, movieName):
+        micName = self._getMicName(movieId)
+        winSize = self.winSize.get()
+        args = '-i %(movieName)s -o %(micName)s --winSize %(winSize)d' % locals()
+        
+        firstFrame = self.firstFrame.get()
+        lastFrame = self.lastFrame.get()
+        if firstFrame or lastFrame:
+            args += ' --nst %d --ned %d' % (firstFrame, lastFrame)
         if self.doGPU:
-            self._program = 'xmipp_optical_alignment_gpu'
-        else:
-            self._program = 'xmipp_optical_alignment_cpu'
+            args += ' --gpu %d' % self.GPUCore.get()
+        
+        return args
     
-    def _defineMicFn(self, movFn):
-        micFn = self._getExtraPath(removeBaseExt(movFn) + "_aligned.spi")
-        return micFn
+    def _copyMovieResults(self, movieId, movieFolder):
+        micName = self._getMicName(movieId)
+        moveFile(join(movieFolder, micName), self._getExtraPath()) 
+             
+    def _getProgram(self):
+        if self.doGPU:
+            return 'xmipp_optical_alignment_gpu'
+        else:
+            return 'xmipp_optical_alignment_cpu'
+    
+    def _getMovieAligned(self, movieName):
+        return removeBaseExt(movieName) + '_aligned.mrc'
+
     
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
