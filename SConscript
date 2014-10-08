@@ -53,11 +53,6 @@ fftw = env.AddLibrary(
     flags=['--enable-threads', '--enable-shared'],
     default=False)
 
-xft = env.AddLibrary(
-    'xft',
-    tar='libXft-2.1.8.2.tar.gz',
-    targets=['lib/libXft.so'])
-
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
@@ -72,7 +67,7 @@ tk = env.AddLibrary(
     buildDir='tk8.6.1/unix',
     targets=['lib/libtk8.6.so'],
     flags=['--enable-threads'],
-    deps=[tcl, xft],
+    deps=[tcl],
     clean=['software/tmp/tk8.6.1'])
 
 zlib = env.AddLibrary(
