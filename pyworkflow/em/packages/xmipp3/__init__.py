@@ -86,7 +86,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
-
+from protocol_validate_nontilt import XmippProtValidateNonTilt
 
 # Wizards
 from wizard import *
