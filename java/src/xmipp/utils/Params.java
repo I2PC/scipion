@@ -155,9 +155,6 @@ public class Params {
     public void processArgs(String args[]) {
 
 
-       
-       
-        
         try {
             BasicParser parser = new BasicParser();
             cmdLine = parser.parse(options, args);

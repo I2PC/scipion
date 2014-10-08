@@ -1815,9 +1815,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			
                         // Create the popup menu.
                         String id, column;
-                        
-                       
-                        List<String> displayLabels = Arrays.asList(data.parameters.getDisplayLabels());
+                        List<String> displayLabels = null;
+                        if(data.parameters.getDisplayLabels() != null)
+                            displayLabels = Arrays.asList(data.parameters.getDisplayLabels());
                         for(ColumnInfo ci: data.getColumns())
                         {
                             if(ci.visible)
@@ -1827,7 +1827,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 mi = addItem(id, column);
                                 mi.addActionListener(new DisplayLabelActionListener());
                                 
-                                if(displayLabels.contains(column))
+                                if(displayLabels!= null && displayLabels.contains(column))
                                         setItemSelected(id, true);
                             }   
                         }
