@@ -33,7 +33,7 @@ from pyworkflow.web.pages import settings
 from models import Document
 from forms import DocumentForm
 from views_base import base_form
-from views_util import getResourceIcon
+from views_util import getResourceIcon, getResourceJs
 
 # def upload(request):
 #     return renderUpload(request, DocumentForm())
@@ -49,7 +49,8 @@ def upload(request, form=None):
 
     context = {'relative_path': relative_path,
                'form': DocumentForm(),
-               'logo_scipion_small': getResourceIcon('logo_scipion_small')
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               "upload_utils": getResourceJs('upload_utils')
                }
 
     context = base_form(request, context)
@@ -61,8 +62,6 @@ def upload(request, form=None):
 def doUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
-    
-    print "aqui!!"
     
     file_new = request.FILES['docfile'] 
     

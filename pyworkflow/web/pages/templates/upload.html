@@ -49,74 +49,21 @@
 		<script src={{jquery}} type="text/javascript"></script>
 		<script src={{messi_js}} type="text/javascript"></script>
 		<script src={{utils}} type="text/javascript"></script>
-		<script src={{protocol_form_utils}} type="text/javascript"></script>
 		<script src="{{jquery_ui}} "type="text/javascript"></script>
 		<script src="{{jquery_browser}} "type="text/javascript"></script>
-		
+		<script src="{{upload_utils}} "type="text/javascript"></script>
 		<script>
 			$(function() {
 				//tabs				
 				$("#tabs").tabs();
 				
 				//progressbar
-				$("#progressbar").progressbar({
-					value: false
-			    });
-			  });
-			 
-			// To fill the list of files tab
-			 $(document).ready(function() {
-				 updateListFiles()
-				 
-				 $("#uploadForm").submit(function(e) {
-						$.ajax({
-							url: '/doUpload/',
-					        type: 'POST',
-					        data: new FormData( this ),
-					        processData: false,
-					        contentType: false,
-					        async: false
-					    });
-						e.preventDefault();
-						infoPopup('Success', "The file was uploaded successfuly",0);
-						$("#progressbar").hide()
-						updateListFiles()
-					});
-				 });
-			 
-			 
-			function launchUpload(){
-				var msg = "</td><td class='content' value='"
-					msg += "'>The file will be <strong>UPLOADED</strong> into the path <strong>{{project_folder}}/Uploads/</strong>. "
-					msg += "Do you really want to continue?</td></tr></table>";
-				warningPopup('Confirm UPLOAD',msg, 'launchSubmitUpload')
-			}
-			
-			function launchSubmitUpload(){
-				$("#progressbar").show()
-   				$('#uploadForm').submit();
-			}
-			
-			function updateListFiles(){
-				var project_folder = "{{project_folder}}/Uploads"
-				$("tr#listFiles").empty();
-					 
-				$.ajax({
-					type : "GET",
-					url : "/getPath/?path="+ project_folder,
-					dataType : "json",
-					async: false,
-					success : function(json) {
-						$.each(json, function(key, value) {
-							var icon = "<td><img src='"+ value.icon +"' /></td>"
-							var name = "<td><a href='#'>"+ value.name +"</a></td>"
-							$("tr#listFiles").append("<tr>"+ icon + name + "</tr>")
-						});
-					}
-				});
-			}
-			
-	  	</script>		  	
+// 				$("#progressbar").progressbar({
+// 					value: false
+// 				});
+			});
+		</script>
+		
 	</head>
 	<body>
 		<div>
@@ -141,6 +88,7 @@
 	 			<div class="box">
 					<form id="uploadForm" action="/doUpload/" method="post" enctype="multipart/form-data">
 					{% csrf_token %}
+						<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 						<p>
 							<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
 							<strong>{{relative_path}}</strong>
@@ -189,9 +137,9 @@
 			</div>
 		</div>
 		<br />
-		<div id="progressbar" style='display:none;'>
-			<div class="progress-label">Uploading ... </div>	
-		</div>
+<!-- 		<div id="progressbar" style='display:none;'> -->
+<!-- 			<div class="progress-label">Uploading ... </div>	 -->
+<!-- 		</div> -->
 		<div class="boxBottom">
 			<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
 		</div>
