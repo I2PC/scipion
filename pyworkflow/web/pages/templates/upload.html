@@ -117,7 +117,10 @@
 	 			<div class="box">
 					<form id="uploadForm" action="/doUpload/" method="post" enctype="multipart/form-data">
 					{% csrf_token %}
-						Path: <br /><strong>{{project_folder}}/Uploads</strong>							
+						<p>
+							<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
+							<strong>{{relative_path}}</strong>
+						</p>
 						<table class="section">
 							<tr>
 								<td id="inputName" class="normal">
@@ -149,7 +152,10 @@
 		<!-- LIST FILES -->
 			<div id="tabs-2">
 	 			<div class="box">
-	 				Path: <br /><strong>{{project_folder}}/Uploads</strong>	
+	 				<p>
+						<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
+						<strong>{{relative_path}}</strong>
+					</p>	
 					<table class="section">
 						<tr id="listFiles">
 							<!-- List of uploaded documents -->

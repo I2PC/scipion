@@ -41,9 +41,13 @@ def upload(request):
 
 def renderUpload(request, form):
     # Load documents for the list page
+    
+    path = os.path.join(request.session['projectPath'],'Uploads')
+    split_path = path.split("/ScipionUserData/")
+    relative_path = "ScipionUserData/" + split_path[1]
 
-    context = {
-               'documents': Document.objects.all(), 
+
+    context = {'relative_path': relative_path,
                'form': form,
                'logo_scipion_small': getResourceIcon('logo_scipion_small')
                }
