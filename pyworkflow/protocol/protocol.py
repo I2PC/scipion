@@ -1008,17 +1008,23 @@ class Protocol(Step):
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())
+    
+    @classmethod
+    def getClassPackage(cls):
+        """ Return the package module to which this protocol belongs
+        """
+        return getattr(cls, '_package', scipion)
+        
+    @classmethod 
+    def getClassPackageName(cls):
+        return cls.getClassPackage().__name__.replace('pyworkflow.protocol.scipion', 'scipion')
         
     @classmethod
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
         label = getattr(cls, '_label', cls.__name__)
-        label = "%s - %s" % (cls.getClassPackage().__name__.replace('pyworkflow.protocol.scipion', 'scipion'), label)
+        label = "%s - %s" % (cls.getClassPackageName(), label)
         return label
-    
-    @classmethod
-    def getClassPackage(cls):
-        return getattr(cls, '_package', scipion)
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
@@ -1196,13 +1202,6 @@ class Protocol(Step):
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
-        
-    def methods_old(self):
-        """ Return a description about methods about current protocol execution. """
-        baseMethods = self._methods()
-        if not baseMethods:
-            baseMethods = []
-        return baseMethods + [''] + self.citations()
         
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """

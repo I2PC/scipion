@@ -60,7 +60,19 @@ iconDict = {
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
-            'loading' : 'loading.gif',          
+            'loading' : 'loading.gif',
+            
+            #Extensions file
+            'folder': 'fa-folder-open.png',
+            'file_normal': 'fa-file-o.png',
+            'file_text':'file_text.gif',
+            'file_image':'file_image.gif',
+            'file_python': 'file_python.gif',
+            'file_java':'file_java.gif',
+            'file_md':'file_md.gif',
+            'file_sqlite':'file_sqlite.gif',
+            'file_vol':'file_vol.gif',
+            'file_stack':'file_stack.gif',
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -100,6 +112,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'project_utils': 'templates_libs/project_utils.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
+          'upload_utils': 'templates_libs/upload_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'showj_libs/colReorder.js',

@@ -42,6 +42,17 @@ class TiltPair(EMObject):
         self._untilted = untilted
         self._tilted = tilted
         
+    def getUntilted(self):
+        return self._untilted
+    
+    def getTilted(self):
+        return self._tilted
+    
+    def setUntilted(self, untilted):
+        self._untilted = untilted
+        
+    def setTilted(self, tilted):
+        self._tilted = tilted        
         
 class MicrographsTiltPair(EMSet):
     """Represents a Micrographs Tilt Pair"""

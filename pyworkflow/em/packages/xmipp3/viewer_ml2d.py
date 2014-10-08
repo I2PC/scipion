@@ -56,24 +56,28 @@ class XmippML2DViewer(ProtocolViewer):
         group.addParam('classesToShow', EnumParam, choices=ITER_CHOICES,
                       default=ITER_LAST, display=EnumParam.DISPLAY_LIST,
                       label="Visualize 2D references from iter", 
-                      help="Select from which iteration do you want to visualize classes"
-                      )
+                      help="Select from which iteration do you want to visualize classes")
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
                       label="Iter selection",
-                      help="Select several iterations such as: 1,3,4 or 3-5 "
-                      )        
-        group.addParam('doShowPlots', BooleanParam, label="Show all plots per iteration?", default=True,
+                      help="Select several iterations such as: 1,3,4 or 3-5 ")        
+        group.addParam('doShowPlots', BooleanParam, default=True, 
+                       label="Show all plots per iteration?",
                       help='Visualize several plots.')
         
         group = form.addGroup('Iteration plots', condition='doShowPlots')
-        group.addParam('doShowLL', BooleanParam, label="Show Log-Likehood over iterations?", default=False, 
-                      help='The Log-Likelihood value should increase.')      
-        group.addParam('doShowPmax', BooleanParam, label="Show maximum model probability?", default=False, 
-                      help='Show the maximum probability for a model, this should tend to be a deltha function.')      
-        group.addParam('doShowSignalChange', BooleanParam, label="Show plot for signal change?", default=False, 
-                      help='Should approach to zero when convergence.')      
-        group.addParam('doShowMirror', BooleanParam, label="Show mirror fraction for last iteration?", default=False, 
-                      help='he the mirror fraction of each reference in last iteration.')      
+        group.addParam('doShowLL', BooleanParam, default=False, 
+                       label="Show Log-Likehood over iterations?",
+                       help='The Log-Likelihood value should increase.')      
+        group.addParam('doShowPmax', BooleanParam, default=False, 
+                       label="Show maximum model probability?", 
+                       help='Show the maximum probability for a model, \n'
+                            'this should tend to be a deltha function.')      
+        group.addParam('doShowSignalChange', BooleanParam, default=False,
+                       label="Show plot for signal change?", 
+                       help='Should approach to zero when convergence.')      
+        group.addParam('doShowMirror', BooleanParam, default=False,
+                       label="Show mirror fraction for last iteration?", 
+                       help='he the mirror fraction of each reference in last iteration.')      
         
     
     def _getVisualizeDict(self):

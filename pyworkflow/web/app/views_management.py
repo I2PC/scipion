@@ -33,19 +33,24 @@ from pyworkflow.web.pages import settings
 from models import Document
 from forms import DocumentForm
 from views_base import base_form
-from views_util import getResourceIcon
+from views_util import getResourceIcon, getResourceJs
 
-def upload(request):
-    return renderUpload(request, DocumentForm())
+# def upload(request):
+#     return renderUpload(request, DocumentForm())
         
 
-def renderUpload(request, form):
+def upload(request, form=None):
     # Load documents for the list page
+    
+    path = os.path.join(request.session['projectPath'],'Uploads')
+    split_path = path.split("/ScipionUserData/")
+    relative_path = "ScipionUserData/" + split_path[1]
 
-    context = {
-               #'documents': Document.objects.all(), 
-               'form': form,
-               'logo_scipion_small': getResourceIcon('logo_scipion_small')
+
+    context = {'relative_path': relative_path,
+               'form': DocumentForm(),
+               'logo_scipion_small': getResourceIcon('logo_scipion_small'),
+               "upload_utils": getResourceJs('upload_utils')
                }
 
     context = base_form(request, context)
@@ -57,19 +62,26 @@ def renderUpload(request, form):
 def doUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
-    docfile = request.FILES['docfile']
+    
+    file_new = request.FILES['docfile'] 
     
     if form.is_valid():
         #Save temporary file
-        newdoc = Document(docfile = request.FILES['docfile'])
+        newdoc = Document(docfile = file_new)
         newdoc.save()
     
         #Move the file to the new folder
-        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', docfile.name)
+        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', file_new.name)
         path = os.path.join(request.session['projectPath'],'Uploads')
+        target = os.path.join(path, file_new.name)
+        if os.path.exists(target):
+            os.remove(target)
         shutil.move(src, path)
         
-    return renderUpload(request, form)
+        #Delete the temporary file
+        newdoc.delete()
+            
+    return upload(request, form)
 
 
 def getPath(request):
@@ -81,10 +93,12 @@ def getPath(request):
     for f in os.listdir(path): 
         file_path = os.path.join(path, f)
         folder = os.path.isdir(file_path)
+        ext = f.split('.').pop();
         
         ob = {'name': f,
               'isFolder': folder,
-              'isError': False}
+              'isError': False,
+              'icon': getExtIconPath(ext)}
         
         ioDict.append(ob)
             
@@ -94,6 +108,10 @@ def getPath(request):
 
 def getExtIcon(request):
     ext = request.GET.get('ext')
+    res = getExtIconPath(ext)
+    return HttpResponse(res, mimetype='application/javascript')
+
+def getExtIconPath(ext):
 
     txt = {'txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx'}
     img = {'png', 'gif', 'jpg', 'jpeg'}
@@ -107,30 +125,29 @@ def getExtIcon(request):
     vol = {'vol'}
     stk = {'stk', 'mrcs', 'st', 'pif'}
     
-    res=''
     if ext == 'folder':
-        res = 'fa-folder-open.png'
-    elif ext == 'unknown':
-        res = 'fa-file-o.png'
+        res = getResourceIcon('folder')
+#     elif ext == 'unknown':
+#         res = getResourceIcon('file_normal')
     else:
         if ext in txt:
-            res = 'file_text.gif'
+            res = getResourceIcon('file_text')
         elif ext in img or ext in particle:
-            res = 'file_image.gif'
+            res =  getResourceIcon('file_image')
         elif ext in py:
-            res = 'file_python.gif'
+            res = getResourceIcon('file_python')
         elif ext in java:
-            res = 'file_java.gif'
+            res = getResourceIcon('file_java')
         elif ext in md:
-            res = 'file_md.gif'
-        elif ext in md:
-            res = 'file_md.gif'
+            res = getResourceIcon('file_md')
         elif ext in sqlite:
-            res = 'file_sqlite.gif'
+            res = getResourceIcon('file_sqlite')
         elif ext in vol:
-            res = 'file_vol.gif'
+            res = getResourceIcon('file_vol')
         elif ext in stk:
-            res = 'file_stack.gif'
+            res = getResourceIcon('file_stack')
+        else:
+            res = getResourceIcon('file_normal')
     
-    return HttpResponse(res, mimetype='application/javascript')
+    return res
 

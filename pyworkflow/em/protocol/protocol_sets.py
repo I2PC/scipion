@@ -37,7 +37,7 @@ from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
                                 SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
-
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -182,7 +182,26 @@ class ProtUserSubSet(ProtSets):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
-               
+        
+    def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
+        """ Create a subset of Micrographs Tilt Pair. """
+        output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
+        print "self._dbName=%s" % self._dbName
+        modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+
+        for micPairI in modifiedSet:
+            untilted = micPairI.getUntilted()
+            tilted = micPairI.getTilted()
+            if micPairI.isEnabled():
+                print "is enabled"
+                micPairO = TiltPair()
+                micPairO.setUntilted(untilted)
+                micPairO.setTilted(tilted)
+                output.append(micPairO)
+        # Register outputs
+        outputDict = {'outputMicrographsTiltPair': output}
+        self._defineOutputs(**outputDict) 
+        
     def createSetOfImagesStep(self):
         inputObj = self.inputObject.get()
         
@@ -200,7 +219,10 @@ class ProtUserSubSet(ProtSets):
                 self._createMicsSubSetFromCTF(inputObj)
             else:
                 self._createSubSetOfCTF(inputObj)
-            
+                
+        elif isinstance(inputObj, MicrographsTiltPair):
+            self._createSubSetFromMicrographsTiltPair(inputObj)
+        
         elif isinstance(inputObj, EMProtocol):
             setObj = self.getSetObject()
             otherObj = self.otherObject.get()

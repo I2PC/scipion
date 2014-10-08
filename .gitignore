@@ -65,13 +65,14 @@ gmon.out
 \#*
 .\#*
 pyworkflow/tests/classes/tmp
-pyworkflow/web/scipion.db
+pyworkflow/web/scipion_web.db
 .directory
 pw.bashrc
 pw.cshrc
 
 # Static Path
 pyworkflow/web/static/
+pyworkflow/resources/uploads/
 static/
 software/em/
 data

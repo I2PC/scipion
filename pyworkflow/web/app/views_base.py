@@ -140,6 +140,7 @@ def base_showj(request, context):
 
 
 def base_wiz(request, context):
+    
     context_base = {'general_style': getResourceCss('general'),
                     'wizard_style': getResourceCss('wizard'),
                     'jquery_ui_style': getResourceCss('jquery_ui'),
