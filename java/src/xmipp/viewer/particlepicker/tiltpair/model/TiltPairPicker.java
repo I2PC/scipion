@@ -354,7 +354,7 @@ public class TiltPairPicker extends ParticlePicker
 
 	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty, MetaData uMd, MetaData tMd)
 	{
-		System.out.printf("importing coords for %s \n", um.getName() );
+		//System.out.printf("importing coords for %s \n", um.getName() );
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
 
