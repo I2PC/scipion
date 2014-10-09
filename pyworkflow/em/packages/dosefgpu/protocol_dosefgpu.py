@@ -89,24 +89,24 @@ class ProtDosefGpu(ProtProcessMovies):
 -fsc       0                 1: Calculate and log FSC. 0: Not.
                       """)
         
-        form.addSection('Crop and binning')
+        group2 = form.addGroup('Crop and binning')
 
-        line = form.addLine('Crop offsets (px)')
+        line = group2.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', IntParam, default=0, label='X')
         line.addParam('cropOffsetY', IntParam, default=0, label='Y')
     
-    line = form.addLine('Crop dimensions (px)',
+        line = group2.addLine('Crop dimensions (px)',
                       help='How many pixels to crop from offset\n'
                            'If equal to 0, use maximum size.')
         line.addParam('cropDimX', IntParam, default=0, label='X')
         line.addParam('cropDimY', IntParam, default=0, label='Y')
 
 
-        form.addParam('binFactor', IntParam, default=1, 
+        group2.addParam('binFactor', IntParam, default=1, 
                       label='Binning factor',
                       help='1x or 2x. Bin stack before processing.')
               
-    form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=1, mpi=1)
                      
     def _processMovie(self, movieId, movieName, movieFolder):
         inputName = movieName
