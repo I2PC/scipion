@@ -114,7 +114,7 @@ author = "Jonic, S. and C.O.S. Sorzano and P. Thevenaz and C. El-Bez and S. De C
 keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
 }
 
-@article{li2013,
+@article{Li2013,
   title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
   author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
   journal="Nature methods",
@@ -122,7 +122,8 @@ keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
   number="6",
   pages="584-590",
   year="2013",
-  publisher="Nature Publishing Group"
+  publisher="Nature Publishing Group",
+  doi = "http://dx.doi.org/10.1038/nmeth.2727"
 }
 
 @article{Nogales2013,
@@ -365,7 +366,7 @@ keywords = "Downsampling, Single Particles, Electron microscopy"
 
 @article{Vargas2013,
 title = "FASTDEF: Fast defocus and astigmatism estimation for high-throughput transmission electron microscopy ",
-journal = "JSB",
+journal = "J. Structural Biology",
 volume = "181",
 number = "2",
 pages = "136 - 148",
@@ -376,6 +377,17 @@ doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847712003401",
 author = "J. Vargas and J. Otón and R. Marabini and S. Jonic and J.M. de la Rosa-Trevín and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Contrast transfer function, Power spectrum, Single particle analysis "
+}
+
+@Article{Sorzano2007a,
+  Title                    = {Fast, robust and accurate determination of transmission electron microscopy contrast transfer function},
+  Author                   = {Sorzano, C. O. S. and Jonic, S. and N\'u\~nez-Ram\'irez, R. and Boisset, N. and Carazo, J. M.},
+  Journal                  = {J. Structural Biology},
+  Year                     = {2007},
+  Pages                    = {249--262},
+  Volume                   = {160},
+  doi = {http://dx.doi.org/10.1016/j.jsb.2007.08.013},
+  url = "http://www.sciencedirect.com/science/article/pii/S104784770700202X"
 }
 
 @article{Marabini2014a,
