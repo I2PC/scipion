@@ -473,8 +473,8 @@ public abstract class ParticlePicker {
                 md.clear();
         }
         
-        int width = (int) (m.width / scale);// original width
-        int height = (int) (m.height / scale);// original height
+        int width = (int) (m.getWidth() / scale);// original width
+        int height = (int) (m.getHeigth() / scale);// original height
         if (invertx) {
             md.operate(String.format("xcoor=%d-xcoor", width));
         }

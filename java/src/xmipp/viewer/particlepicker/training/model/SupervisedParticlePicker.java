@@ -915,8 +915,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				{
 					String blockName = block + "@" + file;
 					md.read(blockName);
-					width = (int) (m.width / scale);// original width
-					height = (int) (m.height / scale);// original height
+					width = (int) (m.getWidth() / scale);// original width
+					height = (int) (m.getHeigth() / scale);// original height
 					if (invertx)
 						md.operate(String.format("xcoor=%d-xcoor", width));
 					if (inverty)

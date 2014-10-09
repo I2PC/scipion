@@ -56,7 +56,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		super(picker);
 		tppicker = picker;
 		initComponents();
-
 		setChanged(false);
 	}
 

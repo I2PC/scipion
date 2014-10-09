@@ -18,6 +18,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
  * Business object for Tilt Pair Picker GUI. Inherits from ParticlePicker 
  * @author airen
  *
+ * 
  */
 public class TiltPairPicker extends ParticlePicker
 {
@@ -79,6 +80,7 @@ public class TiltPairPicker extends ParticlePicker
 			md.destroy();
 			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
+                        
 
 		}
 		catch (Exception e)
@@ -140,7 +142,7 @@ public class TiltPairPicker extends ParticlePicker
                 if(!result.isEmpty())
                     result = "Particles at: " + result + "without tilted pairs dismissed";
 
-		um.initAligner();
+		//um.initAligner();
 
 		return result;
 	}// loadMicrographs
@@ -328,13 +330,14 @@ public class TiltPairPicker extends ParticlePicker
                     }
                     if(uFn != null && tFn != null)
                     {
-                        uMd.clear();tMd.clear();
+                        uMd.clear();
+                        tMd.clear();
                         result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
                         saveData(m);
                     }           
 		}
                 uMd.destroy();
-                tMd.destroy();
+               tMd.destroy();
                 super.saveData();
                 
                 
@@ -357,7 +360,6 @@ public class TiltPairPicker extends ParticlePicker
 		//System.out.printf("importing coords for %s \n", um.getName() );
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
-
 		String result = loadMicrographParticles(um, uMd, tMd);
                 
 		return result;

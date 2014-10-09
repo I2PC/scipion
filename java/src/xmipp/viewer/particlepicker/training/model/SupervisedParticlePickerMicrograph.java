@@ -309,8 +309,8 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 		radius = radius + radius/5;
 		int x = Math.max(0, (int)(x1 - radius));
 		int y = Math.max(0, (int)(y1 - radius));
-		int width  = Math.min((int)(x2 - x + radius), this.width - 1);
-		int height = Math.min((int)(y2 - y + radius), this.height - 1);
+		int width  = Math.min((int)(x2 - x + radius), this.getWidth() - 1);
+		int height = Math.min((int)(y2 - y + radius), this.getHeigth() - 1);
 		return new Rectangle(x, y, width, height);
 		
 	}

@@ -37,7 +37,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import xmipp.utils.DEBUG;
+import xmipp.utils.DEBUG;
 
 /**
  * Binding class for accessing C++ MetaData implementation.
@@ -104,8 +104,8 @@ public class MetaData {
 
         	/** Create empty metadata */
 	public MetaData() {
-		//DEBUG.printFormat("Java: Creating metadata\n");
-		//DEBUG.printStackTrace();
+		DEBUG.printFormat("Java: Creating metadata\n");
+		DEBUG.printStackTrace();
 		create();
 	}
 
