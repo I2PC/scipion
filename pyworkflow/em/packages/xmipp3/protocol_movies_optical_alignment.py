@@ -129,7 +129,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
     def _summary(self):
         summary = []
         summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
-        summary.append('Using a window size of: *%d*' % self.self.winSize.get())
+        summary.append('Using a window size of: *%d*' % self.winSize.get())
 
         if self.doGPU:
             summary.append('- Used GPU for processing')
