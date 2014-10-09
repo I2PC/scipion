@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Vahid Abrishami (vabrishami@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -86,56 +87,71 @@ class ProtDosefGpu(ProtProcessMovies):
 -atm       1                 1: Align to middle frame. 0: Not.
 -dsp       1                 1: Save quick results. 0: Not.
 -fsc       0                 1: Calculate and log FSC. 0: Not.
--frs       FileName.mrc      Uncorrected sum
--fcs       FileName.mrc      Corrected sum
--fct       FileName.mrc      Corrected stack
--fcm       FileName.mrc      CC map
--flg       FileName.txt      Log file
                       """)
         
-        form.addSection('Crop and binning')
-        line = form.addLine('Crop offsets (px)')
+        group2 = form.addGroup('Crop and binning')
+
+        line = group2.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', IntParam, default=0, label='X')
         line.addParam('cropOffsetY', IntParam, default=0, label='Y')
-        form.addParam('cropDimension', IntParam, default=0, 
-                      label='Crop dimension',
-                      help='How many pixel to crop from offset\n'
+    
+        line = group2.addLine('Crop dimensions (px)',
+                      help='How many pixels to crop from offset\n'
                            'If equal to 0, use maximum size.')
-        form.addParam('binFactor', IntParam, default=1, 
+        line.addParam('cropDimX', IntParam, default=0, label='X')
+        line.addParam('cropDimY', IntParam, default=0, label='Y')
+
+
+        group2.addParam('binFactor', IntParam, default=1, 
                       label='Binning factor',
                       help='1x or 2x. Bin stack before processing.')
+              
+        form.addParallelSection(threads=1, mpi=1)
                      
-    def _processMovie(self, movieId, movieName):
+    def _processMovie(self, movieId, movieName, movieFolder):
         inputName = movieName
-        micrographName = self._getMicName(movieId)
+        micName = self._getMicName(movieId)
+        logFile = self._getLogFile(movieId)
         gainFile = self.inputMovies.get().getGain()
         gpuId = self.gpuId.get()
 
-        if gainFile is not None:
-            # Apply the gain correction to flat the raw movie
-            correctedName = movieName.replace('.mrc', '_corrected.mrc')
-            
-            self.runJob('dosefgpu_flat', 
-                        '%(inputName)s %(correctedName)s %(gainFile)s %(gpuId)s' % locals())
-            
-            inputName = correctedName
+# TODO Check better way to handle gain correction
+#         if gainFile is not None:
+#             # Apply the gain correction to flat the raw movie
+#             correctedName = movieName.replace('.mrc', '_corrected.mrc')
+#             
+#             self.runJob('dosefgpu_flat', 
+#                         '%(inputName)s %(correctedName)s %(gainFile)s %(gpuId)s' % locals(),
+#                         cwd=movieFolder)
+#            
+#            inputName = correctedName
         
         args = {'-crx': self.cropOffsetX.get(),
                 '-cry': self.cropOffsetY.get(),
-                '-crd': self.cropDimension.get(),
+                '-cdx': self.cropDimX.get(),
+                '-cdy': self.cropDimY.get(),
                 '-bin': self.binFactor.get(),
                 '-nst': self.alignFrame0.get(),
                 '-ned': self.alignFrameN.get(),
                 '-nss': self.sumFrame0.get(),
                 '-nes': self.sumFrameN.get(),
                 '-gpu': gpuId,
+                '-flg': logFile,
                 }
         
-        command = '%(inputName)s -fcs %(micrographName)s ' % locals()
+        #TODO: check the gain can be handle in dosefgpu_driftcoor program
+        #if gainFile is not None:
+        #    args['-fgr'] = gainFile
+        
+        command = '%(inputName)s -fcs %(micName)s ' % locals()
         command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
         command += ' ' + self.extraParams.get()
 
-        self.runJob('dosefgpu_driftcorr', command)
+        self.runJob('dosefgpu_driftcorr', command, cwd=movieFolder)
+        # Move the micrograph and alignment text file
+        # before clean of movie folder
+        moveFile(join(movieFolder, micName), self._getExtraPath())
+        moveFile(join(movieFolder, logFile), self._getExtraPath())        
         
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
@@ -145,34 +161,22 @@ class ProtDosefGpu(ProtProcessMovies):
         movieSet = self._createSetOfMovies()
         movieSet.copyInfo(inputMovies)
         
-        # Create a folder to store the resulting micrographs
-        micsFolder = self._getPath('micrographs')
-        makePath(micsFolder)
-        
         for movie in inputMovies:
             movieId = movie.getObjId()
-            movieFolder = self._getMovieFolder(movieId)
             micName = self._getMicName(movieId)
-            micNameSrc = join(movieFolder, micName)
-            micNameDst = join(micsFolder, micName)
-            # Move the resulting micrograph before delete of movies folder
-            if not exists(micNameDst):
-                moveFile(micNameSrc, micNameDst)            
+            movieFolder = self._getMovieFolder(movieId)
+          
             mic = micSet.ITEM_TYPE()
             mic.setObjId(movieId)
-            mic.setFileName(micNameDst)
+            mic.setFileName(self._getExtraPath(micName))
             micSet.append(mic)
             
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
-            logFileSrc = self._getLogFile(movieFolder)
-            alignment = parseMovieAlignment(logFileSrc)
+            logFile = self._getExtraPath(self._getLogFile(movieId))
+            alignment = parseMovieAlignment(logFile)
             alignedMovie.setAlignment(alignment)
             movieSet.append(alignedMovie)
-            # Just make a copy of the log file that can be used
-            # to import in another project
-            logFileDst = join(micsFolder, basename(logFileSrc))
-            copyFile(logFileSrc, logFileDst)
             
         self._defineOutputs(outputMicrographs=micSet)
         self._defineTransformRelation(inputMovies, micSet)
@@ -180,12 +184,11 @@ class ProtDosefGpu(ProtProcessMovies):
         self._defineOutputs(outputMovies=movieSet)
         self._defineTransformRelation(inputMovies, movieSet)
         
-    def _getLogFile(self, movieFolder):
-        """ Get the output log file. 
-        Assuming that the is only one file end with *_Log.txt in that folder.
-        """
-        return glob(join(movieFolder, '*_Log.txt'))[0]
+    #--------------------------- UTILS functions ---------------------------------------------------
         
+    def _getLogFile(self, movieId):
+        return 'micrograph_%06d_Log.txt' % movieId
+            
     def _summary(self):
         summary = []
         return summary
