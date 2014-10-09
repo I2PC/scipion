@@ -36,13 +36,16 @@ import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
-from pyworkflow.utils import environAdd, moveFile, cleanPath
+from pyworkflow.utils import environAdd, moveFile, cleanPath, createLink
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels, restoreXmippLabels
-
+from convert import (createRelionInputParticles
+                   , createClassesFromImages
+                   , addRelionLabels
+                   , restoreXmippLabels
+                   , convertBinaryFiles)
 
 
 class ProtRelionBase(EMProtocol):
@@ -499,13 +502,13 @@ class ProtRelionBase(EMProtocol):
         """
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
-        imgFn = self._getFileName('input_mrcs')
-        Xdim = imgSet.getDimensions()[0]
-        
-        self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
+        filesMapping = convertBinaryFiles(imgSet,self._getTmpPath())
+
+        self.info("Converting set from '%s' into '%s'" %
+                           (imgSet.getFileName(), imgStar))
         from convert import writeSetOfParticles
         # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet, imgStar, None)
+        writeSetOfParticles(imgSet, imgStar, filesMapping)
         
         if self.doCtfManualGroups:
             self._splitInCTFGroups(imgStar)
