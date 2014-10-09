@@ -90,16 +90,23 @@ class ProtDosefGpu(ProtProcessMovies):
                       """)
         
         form.addSection('Crop and binning')
+
         line = form.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', IntParam, default=0, label='X')
         line.addParam('cropOffsetY', IntParam, default=0, label='Y')
-        form.addParam('cropDimension', IntParam, default=0, 
-                      label='Crop dimension',
-                      help='How many pixel to crop from offset\n'
+    
+    line = form.addLine('Crop dimensions (px)',
+                      help='How many pixels to crop from offset\n'
                            'If equal to 0, use maximum size.')
+        line.addParam('cropDimX', IntParam, default=0, label='X')
+        line.addParam('cropDimY', IntParam, default=0, label='Y')
+
+
         form.addParam('binFactor', IntParam, default=1, 
                       label='Binning factor',
                       help='1x or 2x. Bin stack before processing.')
+              
+    form.addParallelSection(threads=1, mpi=1)
                      
     def _processMovie(self, movieId, movieName, movieFolder):
         inputName = movieName
@@ -121,7 +128,8 @@ class ProtDosefGpu(ProtProcessMovies):
         
         args = {'-crx': self.cropOffsetX.get(),
                 '-cry': self.cropOffsetY.get(),
-                '-crd': self.cropDimension.get(),
+                '-cdx': self.cropDimX.get(),
+                '-cdy': self.cropDimY.get(),
                 '-bin': self.binFactor.get(),
                 '-nst': self.alignFrame0.get(),
                 '-ned': self.alignFrameN.get(),
@@ -165,8 +173,8 @@ class ProtDosefGpu(ProtProcessMovies):
             
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
-            logFileSrc = self._getLogFile(movieFolder)
-            alignment = parseMovieAlignment(logFileSrc)
+            logFile = self._getExtraPath(self._getLogFile(movieId))
+            alignment = parseMovieAlignment(logFile)
             alignedMovie.setAlignment(alignment)
             movieSet.append(alignedMovie)
             
@@ -179,7 +187,7 @@ class ProtDosefGpu(ProtProcessMovies):
     #--------------------------- UTILS functions ---------------------------------------------------
         
     def _getLogFile(self, movieId):
-        return 'alignment_%06d_Log.txt' % movieId
+        return 'micrograph_%06d_Log.txt' % movieId
             
     def _summary(self):
         summary = []
