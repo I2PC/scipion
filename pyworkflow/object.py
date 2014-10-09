@@ -838,8 +838,13 @@ class Set(OrderedObject):
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
-        
+            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper
+
+    def aggregate(self, operations
+                      , operationLabel
+                      , groupByLabels=None):
+        return self._mapper.aggregate(operations, operationLabel, groupByLabels)
+
     def setMapperClass(self, MapperClass):
         """ Set the mapper to be used for storage. """
         if MapperClass is None:

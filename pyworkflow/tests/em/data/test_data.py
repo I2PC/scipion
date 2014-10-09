@@ -117,6 +117,7 @@ class TestSetOfMicrographs(BaseTest):
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 
+
 class TestSetOfParticles(BaseTest):
     """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""
     
@@ -166,7 +167,27 @@ class TestSetOfParticles(BaseTest):
             img.cleanObjId()
             
         imgSet.write()
-        
+
+    def test_getFiles(self):
+        #create setofImages
+        dbFn = self.getOutputPath('multistack_set.sqlite')
+        #dbFn = ':memory:'
+        n = 10
+        m = 3
+        img = Particle()
+        imgSet = SetOfParticles(filename=dbFn)
+        imgSet.setSamplingRate(1.0)
+        goldStacks = set()
+
+        for j in range(1, m+1):
+            stackName = 'stack%02d.stk' % j
+            goldStacks.add(stackName)
+            for i in range(1, n+1):
+                img.setLocation(i, stackName)
+                imgSet.append(img)
+                img.cleanObjId()
+
+        self.assertEquals(goldStacks, imgSet.getFiles())
 
 class TestSetOfClasses2D(BaseTest):
     

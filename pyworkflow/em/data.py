@@ -113,15 +113,8 @@ class CTFModel(EMObject):
         self._micObj  = None
 
     def __str__(self):
-        str = """
-        defocusU = %f
-        defocusV = %f
-        defocusAngle = %f
-        psdFile = %s
-        """%(self._defocusU.get()
-            ,self._defocusV.get()
-            ,self._defocusAngle.get()
-            ,self._psdFile.get())
+        str = "defocus(U,V,a) = (%f,%f,%f)"%(self._defocusU.get()
+              , self._defocusV.get(), self._defocusAngle.get())
         if self._micObj:
             str + " %s" % self._micObj
         return str
@@ -212,7 +205,7 @@ class DefocusGroup(EMObject):
         
     def setDefocusMin(self, value):
         self._defocusMin.set(value)
-        
+
     def getDefocusMax(self):
         return self._defocusMax.get()
         
@@ -284,7 +277,7 @@ class Image(EMObject):
     
     def setSamplingRate(self, sampling):
         self._samplingRate.set(sampling)
-    
+
     def getFormat(self):
         pass
     
@@ -304,6 +297,9 @@ class Image(EMObject):
     
     def setIndex(self, index):
         self._index.set(index)
+
+    def lableIndex(self):
+        return 'index'
         
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
@@ -382,7 +378,7 @@ class Image(EMObject):
     
     def setAlignment(self, newAlignment):
         self._alignment = newAlignment
-        
+
     def hasProjection(self):
         return self._projection is not None
     
@@ -601,14 +597,10 @@ class SetOfImages(EMSet):
         
     def getFiles(self):
         filePaths = set()
-        filePaths.add(self.getFileName())
-        for item in self:
-            # item is an XmippImage or an Image
-            filePaths.add(item.getFileName())
-            # If it has CTF we must include ctf file
-#            if item.hasCTF():
-#                # ctf is a XMippCTFModel
-#                filePaths.update(item.getCTF().getFiles())
+        uniqueFiles = self.aggregate(['count'],'_filename',['_filename'])
+
+        for row in uniqueFiles:
+            filePaths.add(row['_filename'])
         return filePaths
     
     def setDownsample(self, downFactor):
@@ -801,7 +793,7 @@ class SetOfCTF(EMSet):
 
 class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
-        id min/max/avg exists the corresponding flaf must be
+        if min/max/avg exists the corresponding flag must be
         set to true.
     """
     ITEM_TYPE = DefocusGroup

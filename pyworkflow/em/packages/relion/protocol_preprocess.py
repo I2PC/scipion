@@ -27,11 +27,14 @@
 This module contains the protocol base class for Relion protocols
 """
 from pyworkflow.em import *
+from pyworkflow.em.packages.relion.convert import convertBinaryFiles
 from pyworkflow.utils.path import moveFile
+from pyworkflow.utils import trace
 from convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.protocol.params import Positive
 
 from protocol_base import ProtRelionBase
+
 
 class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     """ Wrapper to Relion preprocess program.
@@ -86,8 +89,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        self.imgStar = self._getPath('scipion_particles.star')
-        self.imgMrcs = self._getPath('scipion_particles.mrcs')
+        self.imgStar = self._getPath('scipion_particles.star')#input file
+        self.imgMrcs = self._getPath('scipion_particles.mrcs')#output file
 
         self._insertFunctionStep("convertInputStep")
         self._insertFunctionStep('processStep')
@@ -98,16 +101,21 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         If the input particles comes from Relion, just link the file. 
         """
         imgSet = self.inputParticles.get()
-        writeSetOfParticles(imgSet, self.imgStar, self.imgMrcs)
-        
+        filesMapping = convertBinaryFiles(imgSet, self._getExtraPath())
+        #make filesMapping relative
+
+        writeSetOfParticles(imgSet, self.imgStar, filesMapping,
+                            postprocessRow=self._postprocessRow)
+
+
     def processStep(self):
         # Enter here to generate the star file or to preprocess the images
         
         size = self._getSize()
         
-        imgMrcs = os.path.relpath(self.imgMrcs, self._getPath())
-        
-        params = ' --operate_on %(imgMrcs)s'
+        imgStar = 'scipion_particles.star'
+        print "CWD", os.getcwd()
+        params = ' --operate_on %(imgStar)s'
         
         if self.doNormalize:
             radius = self.backRadius.get()
@@ -131,7 +139,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
             wSize = self.windowSize.get()
             params = params + ' --window %(wSize)s'
 
-        self.runJob(self._getProgram('relion_preprocess'), params % locals(), cwd=self._getPath())
+        self.runJob(self._getProgram('relion_preprocess'),
+                    params % locals(), cwd=self._getPath())
                              
         outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
         # Override the initial converted mrcs particles stack
@@ -185,7 +194,16 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         return size
     
     def _preprocessRow(self, imgRow):
+        print "PREPROCES ROW INSIDE"
         from convert import setupCTF#, prependToFileName
         #prependToFileName(imgRow, self._getPath())
         setupCTF(imgRow, self.inputParticles.get().getSamplingRate())
-        
+
+    @trace(10)
+    def _postprocessRow(self, imgRow):
+        """ Since relion_preprocess will runs in its working directory
+        we need to modify the default image path (from project dir)
+        and make them relative to run working dir.
+        """
+        from convert import relativeFromFileName
+        relativeFromFileName(imgRow, self._getPath())

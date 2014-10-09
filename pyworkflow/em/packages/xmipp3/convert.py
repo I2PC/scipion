@@ -291,6 +291,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgRow.setValue(imgLabel, fn)
+    print "xmipp3.imageToRow: after imgRow.setValue fn=", fn
     
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
@@ -303,9 +304,15 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
     
-    
+
     # Write all extra labels to the row    
     objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
+
+    postprocessRow = kwargs.get('postprocessRow', None)
+    print "xmipp3.imageToRow: before postprocess imgRow.getValue(xmipp.MDL_IMAGE)=", imgRow.getValue(xmipp.MDL_IMAGE)
+    if postprocessRow:
+        postprocessRow(imgRow)
+        print "xmipp3.imageToRow: AFTER postprocess imgRow.getValue(xmipp.MDL_IMAGE)=", imgRow.getValue(xmipp.MDL_IMAGE)
     
         
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
@@ -989,7 +996,9 @@ def geometryFromMatrix(matrix, isInvTransform):
     if not isInvTransform:
         matrix = numpy.linalg.inv(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-    
+#XMIPP
+    #shift = tran
+    #angles = -rad
     return shifts, angles
 
 
