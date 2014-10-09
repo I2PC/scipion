@@ -109,3 +109,22 @@ class ProtOpticalAlignment(ProtProcessMovies):
         else:
             return 'xmipp_optical_alignment_cpu'
     
+  #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        numThreads = self.numberOfThreads;
+        if numThreads>1:
+            if self.doGPU:
+                errors.append("GPU mode can not be used in parallel mode")
+        return errors
+
+    def _citations(self):
+
+        return ['Abrishami2014a']
+
+    def _methods(self):
+        """ METHODS TO DO"""
+        pass
+
+    def _summary(self):
+        pass
