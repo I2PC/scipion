@@ -77,17 +77,16 @@ def restoreXmippLabels():
     _xmippLabelsDict = {}
 
 
-#TODO ROB: relion can handle many formats why not check if the stack is in a valid one
 class ParticleAdaptor():
     """ Class used to convert a set of particles for Relion.
     It will write an stack in Spider format and also
     modify the output star file to point to the new stack.
     """
-    def __init__(self, imgSet, stackFile=None, originalSet=None):
+    def __init__(self, imgSet, filesMapping={}, originalSet=None):
         self._rowCount = 1
         self._ih = ImageHandler()
         self._imgSet = imgSet
-        self._stackFile = stackFile
+        self._filesMapping = filesMapping
         self._originalSet = originalSet
         
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -95,14 +94,20 @@ class ParticleAdaptor():
         
     def setupRow(self, img, imgRow):
         """ Convert image and modify the row. """
-        if self._stackFile is not None:
-            newLoc = (self._rowCount, self._stackFile)
-            #TODO: Check whether the input image format is valid for Relion
-            self._ih.convert(img.getLocation(), newLoc)
+        if self._filesMapping:
+            # If the filesMapping is not empty
+            # we assume that the stack files have been converted
+            # to be properly read by relion and also that
+            # each particle preserve its index and only change the filename
+            newFile = self._filesMapping[img.getFileName()]
+
+            newLoc = (img.getIndex(), newFile)
+            print "setupRow.newLoc: ", newLoc
             img.setLocation(newLoc)
             # Re-write the row with the new location
+        print "before particleToRow: img.getLocation", img.getLocation()
         self._particleToRow(img, imgRow) #TODO: CHECK why not the following, writeAlignment=False)
-        
+        print "after particleToRow: imgRow ", imgRow.getValue(xmipp.MDL_IMAGE)
         if img.hasMicId():
             imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
             imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
@@ -168,15 +173,18 @@ def readSetOfParticles(filename, partSet, **kwargs):
     restoreXmippLabels()
 
 
-def writeSetOfParticles(imgSet, starFile, stackFile, originalSet=None, **kwargs):
+def writeSetOfParticles(imgSet, starFile,
+                        filesMapping={},
+                        originalSet=None, **kwargs):
     """ This function will write a SetOfImages as Relion metadata.
     Params:
         imgSet: the SetOfImages instance.
         filename: the filename where to write the metadata.
+        filesMapping: this dict will help when there is need to replace images names
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
     addRelionLabels(replace=True)
-    pa = ParticleAdaptor(imgSet, stackFile, originalSet)
+    pa = ParticleAdaptor(imgSet, filesMapping, originalSet)
     #xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, writeAlignment=False, **kwargs)
     xmipp3.writeSetOfParticles(imgSet, starFile, rowFunc=pa.setupRow, **kwargs)
     imgSet._relionStar = String(starFile)
@@ -269,8 +277,17 @@ def prependToFileName(imgRow, prefixPath):
     index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
     newLoc = locationToRelion(index, os.path.join(prefixPath, imgPath))
     imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
-    
-    
+
+
+def relativeFromFileName(imgRow, prefixPath):
+    """ Remove some prefix from filename in row. """
+    index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+    imgPath = os.path.relpath(imgPath, prefixPath)
+    newLoc = locationToRelion(index, imgPath)
+    print "relativeFromFileName, newLoc:",  newLoc
+    imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
+
+
 def setupCTF(imgRow, sampling):
     """ Do some validations and set some values
     for Relion import.
@@ -289,3 +306,25 @@ def setupCTF(imgRow, sampling):
         if not hasDefocusAngle:
             imgRow.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 0.)
             
+
+def convertBinaryFiles(imgSet, outputDir):
+    """ Convert binary images files to a format read by Relion.
+    Params:
+        imgSet: input image set to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        A dictionary with old-file as key and new-file as value
+        If empty, not conversion was done.
+    """
+    filesMapping = {}
+    # This approach can be extended when
+    # converting from a binary file format that
+    # is not read from Relion
+    if imgSet.getFirstItem().getFileName().endswith('.mrc'):
+        uniqueFiles = list(imgSet.getFiles())
+        for f in uniqueFiles:
+            newFile = os.path.join(outputDir, os.path.basename(f)+'s')
+            createLink(f, newFile)
+            filesMapping[f] = newFile
+
+    return filesMapping
