@@ -240,7 +240,19 @@ class XmippProtML2D(ProtClassify2D):
         return summary
     
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        methods = []
+        methods.append('An input dataset of *%d* images was classified' % self.inputParticles.get().getSize())
+        methods.append('into *%d* 2D classes using Maximum Likelihood (ML) inside Xmipp.' % self.numberOfReferences.get())
+        
+        if self.doMlf:
+            methods.append('ML was used in _Fourier-space_.')
+        elif self.doFast:
+            methods.append('Used _fast_, reduced search-space approach.')
+
+        if self.doNorm:
+            methods.append('The _normalization_ was refined for each experimental image.')
+            
+        return methods
     
     #--------------------------- UTILS functions --------------------------------------------
     
