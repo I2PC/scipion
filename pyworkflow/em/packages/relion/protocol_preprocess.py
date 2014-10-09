@@ -28,11 +28,10 @@ This module contains the protocol base class for Relion protocols
 """
 from pyworkflow.em import *
 from pyworkflow.em.packages.relion.convert import convertBinaryFiles
-from pyworkflow.utils.path import moveFile
 from pyworkflow.utils import trace
-from convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.protocol.params import Positive
 
+from convert import writeSetOfParticles, readSetOfParticles
 from protocol_base import ProtRelionBase
 
 
@@ -89,9 +88,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        self.imgStar = self._getPath('scipion_particles.star')#input file
-        self.imgMrcs = self._getPath('scipion_particles.mrcs')#output file
-
         self._insertFunctionStep("convertInputStep")
         self._insertFunctionStep('processStep')
         self._insertFunctionStep('createOutputStep')
@@ -101,11 +97,10 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         If the input particles comes from Relion, just link the file. 
         """
         imgSet = self.inputParticles.get()
-        filesMapping = convertBinaryFiles(imgSet, self._getExtraPath())
-        #make filesMapping relative
-
-        writeSetOfParticles(imgSet, self.imgStar, filesMapping,
-                            postprocessRow=self._postprocessRow)
+        # Create links to binary files and write the relion .star file
+        writeSetOfParticles(imgSet, self._getPath('input_particles.star'), 
+                            outputDir=self._getExtraPath(),
+                            postprocessImageRow=self._postprocessImageRow)
 
 
     def processStep(self):
@@ -113,8 +108,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         
         size = self._getSize()
         
-        imgStar = 'scipion_particles.star'
-        print "CWD", os.getcwd()
+        imgStar = 'input_particles.star'
         params = ' --operate_on %(imgStar)s'
         
         if self.doNormalize:
@@ -145,12 +139,13 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
         # Override the initial converted mrcs particles stack
         # It also make easy to use the same .star file as output
-        moveFile(outputMrcs, self.imgMrcs)
+        moveFile(outputMrcs, self._getPath('particles.mrcs'))
     
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self.imgStar, imgSet, preprocessRow=self._preprocessRow)
+        readSetOfParticles(self._getPath('particles.star'), imgSet, 
+                           preprocessImageRow=self._preprocessImageRow)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), imgSet)
 
@@ -188,19 +183,16 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getSize(self):
         """ get the size of SetOfParticles object"""
-
         Xdim = self.inputParticles.get().getDimensions()[0]
         size = int(Xdim/2)
         return size
     
-    def _preprocessRow(self, imgRow):
-        print "PREPROCES ROW INSIDE"
-        from convert import setupCTF#, prependToFileName
-        #prependToFileName(imgRow, self._getPath())
+    def _preprocessImageRow(self, img, imgRow):
+        from convert import setupCTF, prependToFileName
+        prependToFileName(imgRow, self._getPath())
         setupCTF(imgRow, self.inputParticles.get().getSamplingRate())
-
-    @trace(10)
-    def _postprocessRow(self, imgRow):
+    
+    def _postprocessImageRow(self, img, imgRow):
         """ Since relion_preprocess will runs in its working directory
         we need to modify the default image path (from project dir)
         and make them relative to run working dir.

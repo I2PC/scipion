@@ -36,13 +36,12 @@ import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
-from pyworkflow.utils import environAdd, moveFile, cleanPath, createLink
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import (createRelionInputParticles
-                   , createClassesFromImages
+from convert import (createClassesFromImages
                    , addRelionLabels
                    , restoreXmippLabels
                    , convertBinaryFiles)
