@@ -225,6 +225,7 @@ class SubclassesTreeProvider(TreeProvider):
         self.selected = selected
         self.protocol = protocol
         self.mapper = protocol.mapper
+        self.maxNum = 200
         
     def _getObjectFromList(self, objects, obj):
         # Returns an object if contained on a list, otherwise None
@@ -251,7 +252,9 @@ class SubclassesTreeProvider(TreeProvider):
                 setObject = obj
             
             # Add each item on the set to the list of objects
-            for item in setObject:
+            for i, item in enumerate(setObject):
+                if i == self.maxNum: # Only load up to NUM particles
+                    break
                 newItem = item.clone()
                 newItem.setObjId(item.getObjId())
                 newItem._parentObject = setObject
