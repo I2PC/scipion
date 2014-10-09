@@ -226,7 +226,8 @@ class SubclassesTreeProvider(TreeProvider):
         self.protocol = protocol
         self.mapper = protocol.mapper
         
-    def _containsObject(self, objects, obj):
+    def _getObjectFromList(self, objects, obj):
+        # Returns an object if contained on a list, otherwise None
         for o in objects:
             if o.getObjId() == obj.getObjId():
                 return o
@@ -240,7 +241,7 @@ class SubclassesTreeProvider(TreeProvider):
         # Retrieve all objects of type SetOf'className'
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
             # If object is not yet on the list add it but dont allow to select it 
-            obj = self._containsObject(objects, setObject)
+            obj = self._getObjectFromList(objects, setObject)
             if  obj is None:
                 objects.append(setObject)
                 setObject._allowSelection = False # Do not allows set to be selected here
