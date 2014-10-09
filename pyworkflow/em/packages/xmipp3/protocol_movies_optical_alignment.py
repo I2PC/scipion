@@ -109,3 +109,29 @@ class ProtOpticalAlignment(ProtProcessMovies):
         else:
             return 'xmipp_optical_alignment_cpu'
     
+  #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        numThreads = self.numberOfThreads;
+        if numThreads>1:
+            if self.doGPU:
+                errors.append("GPU and Parallelization can not be used together")
+        return errors
+
+    def _citations(self):
+
+        return ['Abrishami2014a']
+
+    def _methods(self):
+        """ METHODS TO DO"""
+        pass
+
+    def _summary(self):
+        summary = []
+        summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
+        summary.append('Using a window size of: *%d*' % self.winSize.get())
+
+        if self.doGPU:
+            summary.append('- Used GPU for processing')
+
+        return summary

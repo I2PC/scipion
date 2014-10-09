@@ -42,6 +42,20 @@ url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract},
 journal = {Bioinformatics} 
 }
 
+@article{Abrishami2014a,
+title = "Alignment of Direct Detector Device micrographs using a robust Optical Flow approach",
+journal = "Journal of Structural Biology",
+volume = "None",
+number = "None",
+pages = "None",
+year = "?",
+note = "Submitted",
+issn = "None",
+doi = "None",
+url = "None",
+author = "Abrishami, V. and Vargas, J. and Xueming, L. and Yifan, C. and Marabini, R. and Sorzano, C. O. S. and Carazo, J. M. ",
+keywords = "Direct Detector Devices"
+}
 
 @article{Chen2013,
 title = "Fast and accurate reference-free alignment of subtomograms ",
@@ -98,6 +112,17 @@ doi = "http://dx.doi.org/10.1016/j.ultramic.2005.02.002",
 url = "http://www.sciencedirect.com/science/article/pii/S0304399105000173",
 author = "Jonic, S. and C.O.S. Sorzano and P. Thevenaz and C. El-Bez and S. De Carlo and M. Unser",
 keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
+}
+
+@article{li2013,
+  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
+  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
+  journal="Nature methods",
+  volume="10",
+  number="6",
+  pages="584-590",
+  year="2013",
+  publisher="Nature Publishing Group"
 }
 
 @article{Nogales2013,
