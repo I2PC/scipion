@@ -115,7 +115,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
         numThreads = self.numberOfThreads;
         if numThreads>1:
             if self.doGPU:
-                errors.append("GPU mode can not be used in parallel mode")
+                errors.append("GPU and Parallelization can not be used together")
         return errors
 
     def _citations(self):
