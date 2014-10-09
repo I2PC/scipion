@@ -123,9 +123,11 @@ class ElementGroup(FormElement):
         
         # Patch used to avoid the blanks spaces in the names
         # because the jquery getting elements are not permitted.
-        # JOSE MIGUEL: Replaced the blanks by underscores, becase
+        # JOSE MIGUEL: Replaced the blanks by underscores, because
         # if not, lines with same first word will not be differentiated 
         labelName = lineName.replace(' ', '_')
+        labelName = labelName.replace('(', '_')
+        labelName = labelName.replace(')', '_')
         
         return self.addParam(labelName, Line, form=self._form, 
                              label=lineName, **kwargs)        

@@ -278,6 +278,59 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
     G, chemistry/ultrastructure; Protein Structure, Tertiary}
 }
 
+@article{Sorzano2004b,
+title = "A multiresolution approach to orientation assignment in 3D electron microscopy of single particles ",
+journal = "JSB ",
+volume = "146",
+number = "3",
+pages = "381 - 392",
+year = "2004",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2004.01.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847704000073",
+author = "Sorzano, C.O.S. and S. Jonic and C. El-Bez and J.M. Carazo and S. De Carlo and P. Thevenaz and M. Unser"
+}
+
+@Article{Sorzano2007a,
+  Title                    = {Fast, robust and accurate determination of transmission electron microscopy contrast transfer function},
+  Author                   = {Sorzano, C. O. S. and Jonic, S. and N\'u\~nez-Ram\'irez, R. and Boisset, N. and Carazo, J. M.},
+  Journal                  = {J. Structural Biology},
+  Year                     = {2007},
+  Pages                    = {249--262},
+  Volume                   = {160},
+  doi = {http://dx.doi.org/10.1016/j.jsb.2007.08.013},
+  url = "http://www.sciencedirect.com/science/article/pii/S104784770700202X"
+}
+
+@article{Sorzano2009d,
+title = "Effects of the downsampling scheme on three-dimensional electron microscopy of single particles",
+journal = "Proc. of IEEE Workshop on Intelligent Signal Processing",
+pages = "175-179",
+year = "2009",
+note = "",
+issn = "978-1-4244-5059-6",
+doi = "http://dx.doi.org/10.1109/WISP.2009.5286563",
+url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5286563",
+author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J. M.",
+keywords = "Downsampling, Single Particles, Electron microscopy"
+}
+
+@article{Sorzano2010a,
+title = "A clustering approach to multireference alignment of single-particle projections in electron microscopy ",
+journal = "Journal of Structural Biology ",
+volume = "171",
+number = "2",
+pages = "197 - 206",
+year = "2010",
+note = "",
+issn = "1047-8477",
+doi = "http://dx.doi.org/10.1016/j.jsb.2010.03.011",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847710000882",
+author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo and R. Melero and G. Caffarena-Fern·ndez and M. Li and G. Xu and R. Marabini and J.M. Carazo",
+keywords = "Single-particle analysis, 2D analysis, Multireference analysis, Electron microscopy "
+}
+
 @incollection{Sorzano2013,
 title = "Semiautomatic, High-Throughput, High-Resolution Protocol for Three-Dimensional Reconstruction of Single Particles in Electron Microscopy",
 booktitle = "Nanoimaging",
@@ -291,20 +344,6 @@ publisher = "Humana Press",
 keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
 author = "Sorzano, C.O.S. and de la Rosa-Trev√≠n, J.M. and Ot√≥n, J. and Vega, J.J. and Cuenca, J. and Zald√≠var-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√©Mar√≠a",
 pages = "171-193",
-}
-
-@article{Sorzano2004b,
-title = "A multiresolution approach to orientation assignment in 3D electron microscopy of single particles ",
-journal = "JSB ",
-volume = "146",
-number = "3",
-pages = "381 - 392",
-year = "2004",
-note = "",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2004.01.006",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847704000073",
-author = "Sorzano, C.O.S. and S. Jonic and C. El-Bez and J.M. Carazo and S. De Carlo and P. Thevenaz and M. Unser"
 }
 
 @article{Vargas2013a,
@@ -334,60 +373,6 @@ doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
 author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-TrevÌn and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
-}
-
-@article{Sorzano2010a,
-title = "A clustering approach to multireference alignment of single-particle projections in electron microscopy ",
-journal = "Journal of Structural Biology ",
-volume = "171",
-number = "2",
-pages = "197 - 206",
-year = "2010",
-note = "",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2010.03.011",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847710000882",
-author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo and R. Melero and G. Caffarena-Fern·ndez and M. Li and G. Xu and R. Marabini and J.M. Carazo",
-keywords = "Single-particle analysis, 2D analysis, Multireference analysis, Electron microscopy "
-}
-
-@article{Sorzano2009d,
-title = "Effects of the downsampling scheme on three-dimensional electron microscopy of single particles",
-journal = "Proc. of IEEE Workshop on Intelligent Signal Processing",
-pages = "175-179",
-year = "2009",
-note = "",
-issn = "978-1-4244-5059-6",
-doi = "http://dx.doi.org/10.1109/WISP.2009.5286563",
-url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5286563",
-author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J. M.",
-keywords = "Downsampling, Single Particles, Electron microscopy"
-}
-
-@article{Vargas2013,
-title = "FASTDEF: Fast defocus and astigmatism estimation for high-throughput transmission electron microscopy ",
-journal = "J. Structural Biology",
-volume = "181",
-number = "2",
-pages = "136 - 148",
-year = "2013",
-note = "",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847712003401",
-author = "J. Vargas and J. OtÛn and R. Marabini and S. Jonic and J.M. de la Rosa-TrevÌn and J.M. Carazo and C.O.S. Sorzano",
-keywords = "Contrast transfer function, Power spectrum, Single particle analysis "
-}
-
-@Article{Sorzano2007a,
-  Title                    = {Fast, robust and accurate determination of transmission electron microscopy contrast transfer function},
-  Author                   = {Sorzano, C. O. S. and Jonic, S. and N\'u\~nez-Ram\'irez, R. and Boisset, N. and Carazo, J. M.},
-  Journal                  = {J. Structural Biology},
-  Year                     = {2007},
-  Pages                    = {249--262},
-  Volume                   = {160},
-  doi = {http://dx.doi.org/10.1016/j.jsb.2007.08.013},
-  url = "http://www.sciencedirect.com/science/article/pii/S104784770700202X"
 }
 
 @article{Marabini2014a,
