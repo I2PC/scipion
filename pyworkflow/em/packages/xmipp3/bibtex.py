@@ -31,15 +31,15 @@ Bibtex string file for Xmipp package.
 _bibtexStr = """
 
 @article{Abrishami2013,
-author = "Abrishami, V. and Zaldívar-Peraza, A. and de la Rosa-Trevín, J. M. and Vargas, J. and Otón, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.",
-title = "A pattern matching approach to the automatic selection of particles from low-contrast electron micrographs",
-volume = "29",
-number = "19",
-pages = "2460-2468",
-year = "2013",
-doi = "http://dx.doi.org/10.1093/bioinformatics/btt429",
-url = "http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract",
-journal = "Bioinformatics"
+author = {Abrishami, V. and Zaldívar-Peraza, A. and de la Rosa-Trevín, J. M. and Vargas, J. and Otón, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.},
+title = {A pattern matching approach to the automatic selection of particles from low-contrast electron micrographs},
+volume = {29},
+number = {19},
+pages = {2460-2468},
+year = {2013},
+doi = {http://dx.doi.org/10.1093/bioinformatics/btt429},
+url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract},
+journal = {Bioinformatics}
 }
 
 @article{Abrishami2014a,
