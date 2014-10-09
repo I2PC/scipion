@@ -213,7 +213,7 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
 #         #if Ndim > 0:
 #         self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
 #     
-#     def convertStep(self):
+#     def convertInputStep(self):
 #         """ convert if necessary"""
 #         imgSet = self.inputParticles.get()
 #         imgSet.writeStack(self.outputStk)
