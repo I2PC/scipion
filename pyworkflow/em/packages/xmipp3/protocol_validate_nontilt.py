@@ -105,9 +105,9 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         
     def createOutputStep(self):
         volume = self.inputVolume.get().clone()
-        copyFile(self._getTmpPath('validation.xmd'), self._getExtraPath('validation.xmd'))
-        copyFile(self._getTmpPath('clusteringTendency.xmd'), self._getExtraPath('clusteringTendency.xmd'))
-        md = xmipp.MetaData(self._getExtraPath('validation.xmd'))
+        copyFile(self._getTmpPath('validation.xmd'), self._getPath('validation.xmd'))
+        copyFile(self._getTmpPath('clusteringTendency.xmd'), self._getPath('clusteringTendency.xmd'))
+        md = xmipp.MetaData(self._getPath('validation.xmd'))
         weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
         volume.weight = Float(weight)                
         self._defineOutputs(outputVolume=volume)
@@ -131,26 +131,40 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
         if self.inputVolume.get():
             summary.append("Input volume(s): [%s]" % self.inputVolume.get())
             
-        if self.outputVolume.get():
+        if  (not hasattr(self,'outputVolume')):
             summary.append("Output volumes not ready yet.")
         else:
-            md = xmipp.MetaData(self._getExtraPath('validation.xmd'))
+            md = xmipp.MetaData(self._getPath('validation.xmd'))
             weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
             summary.append("Output volumes: %s" % self.outputVolume.getNameId())
-            summary.append("Quality parameter : %f" %  weight)
-        
+            summary.append("Quality parameter : %f" %  weight)        
         return summary
     
     def _methods(self):
         messages = []
-        if not self.outputVolume.get():
-            md = xmipp.MetaData(self._getExtraPath('validation.xmd'))
+        if (hasattr(self,'outputVolume')):
+            md = xmipp.MetaData(self._getPath('validation.xmd'))
             weight = md.getValue(xmipp.MDL_WEIGHT, md.firstObject())
             messages.append('\n')
-            messages.append('We obtained the volume quality parameter of volume %s' % self.inputVolume.get().getNameId())
-            messages.append('taking projections %s' % self.inputParticles.get().getNameId())
-            messages.append('The obtained volume quality parameter is %f' % weight)
+            messages.append('We obtained the volume quality parameter of volume : %s' % self.inputVolume.get().getNameId())
+            messages.append('taking projections %s. ' % self.inputParticles.get().getNameId())
+            messages.append('The obtained volume quality parameter is of %f, ' % weight)
+            messages.append('when an angularSampling and significant values are of %f and %f' % self.angularSampling.get()), self.alpha.get()
         return messages
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _defineMetadataRootName(self, mdrootname):
+        
+        if mdrootname=='P':
+            return self._getPath('clusteringTendency.xmd')
+        if mdrootname=='Volume':
+            return self._getPath('validation.xmd')
             
+    def _definePName(self):
+        fscFn = self._defineMetadataRootName('P')
+        return fscFn
+    
+    def _defineVolumeName(self):
+        fscFn = self._defineMetadataRootName('Volume')
+        return fscFn
+

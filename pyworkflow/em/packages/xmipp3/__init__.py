@@ -42,6 +42,8 @@ from viewer_nma import XmippNMAViewer
 from viewer_nma_alignment import XmippAlignmentNMAViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
+from viewer_validate_nontilt import XmippValidateNonTiltViewer
+
 from plotter import XmippPlotter
 
 from protocol_align_volume import XmippProtAlignVolume
