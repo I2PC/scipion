@@ -43,36 +43,49 @@ class XmippProcess(EMProtocol):
     def __init__(self):
         self._args = "-i %(inputFn)s"
     
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def convertInputStep(self):
+        """ convert if necessary"""
+        pass
+    
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._defineFilenames()
-        self._insertFunctionStep("convertStep")
+        self._insertFunctionStep("convertInputStep")
         self._insertProcessStep()
         self._insertFunctionStep('createOutputStep')
         
-#     def _insertProcessStep(self):
-#         """ This insertStep will be implemented on the specific protocols
-#  
-#         """
-#         pass
+    def _preprocessOutput(self, output):
+        """ This function should be implemented
+        if some additional modifications needs to be done
+        before population of the output elements.
+        """
+        pass  
+      
+    def _postprocessOutput(self, output):
+        """ This function should be implemented
+        if some additional modifications needs to be done
+        after the population of output elements.
+        """
+        pass
 
 
 class XmippProcessParticles(XmippProcess):
-    """ Class to create a base template for Xmipp protocols that process SetOfParticles """
+    """ Class to create a base template for Xmipp protocols 
+    that process SetOfParticles
+    """
     def __init__(self):
         XmippProcess.__init__(self)
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def convertStep(self):
-        """ convert if necessary"""
-        pass
     
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(inputSet)
+        
+        self._preprocessOutput(imgSet)
         readSetOfParticles(self.outputMd, imgSet)
-        self._processOutput(imgSet)
+        self._postprocessOutput(imgSet)
+        
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(inputSet, imgSet)
     
@@ -81,31 +94,17 @@ class XmippProcessParticles(XmippProcess):
         self.inputFn = createXmippInputImages(self, self.inputParticles.get())
         self.outputMd = self._getExtraPath('output_images.xmd')
         self.outputStk = self._getExtraPath('output_images.stk')
-    
-    def _processOutput(self, outputPcts):
-        """ This function should be implemented
-        if some additional modifications needs to be done
-        on output particles.
-        """
-        pass
+
 
 
 class XmippProcessVolumes(XmippProcess):
-    """ Class to create a base template for Xmipp protocols that process both volume or a SetOfVolumes objects """
+    """ Class to create a base template for Xmipp protocols that process 
+    both volume or a SetOfVolumes objects 
+    """
     def __init__(self):
         XmippProcess.__init__(self)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertStep(self):
-        """ convert if necessary"""
-        pass
-#         volInput = self.inputVolumes.get()
-#         
-#         # Check volInput is a volume or a stack
-#         if isinstance(volInput, Volume):
-#             ImageHandler().convert(volInput, (1, self.outputStk))
-#         else:
-#             volInput.writeStack(self.outputStk)
     
     def createOutputStep(self):
         volInput = self.inputVolumes.get()
@@ -114,13 +113,17 @@ class XmippProcessVolumes(XmippProcess):
             vol = Volume()
             vol.copyInfo(volInput)
             vol.setLocation(1, self.outputStk)
+            self._postprocessOutput(vol)
             self._defineOutputs(outputVol=vol)
         else:
             # ToDo: createSetOfVolumes not work properly when the protocol is resumed.
             volumes = self._createSetOfVolumes()
             volumes.copyInfo(volInput)
             
+            self._preprocessOutput(vol)
             readSetOfVolumes(self.outputMd, volumes)
+            self._postprocessOutput(vol)
+            
             self._defineOutputs(outputVol=volumes)
         
         self._defineTransformRelation(volInput, self.outputVol)
@@ -138,13 +141,4 @@ class XmippProcessVolumes(XmippProcess):
             self.inputFn = createXmippInputVolumes(self, self.inputVolumes.get())
             self.outputStk = self._getExtraPath("output_volumes.stk")
             self.outputMd = self._getExtraPath('output_volumes.xmd')
-#         self.inputFn = self.outputStk
-#         self.outputMd = None
-    
-    def _processOutput(self, outputPcts):
-        """ This function should be implemented
-        if some additional modifications needs to be done
-        on output volumes.
-        """
-        pass
-    
+   

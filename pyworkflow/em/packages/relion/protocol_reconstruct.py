@@ -28,6 +28,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam,
                                         StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume 
 from pyworkflow.em.protocol import ProtReconstruct3D
+from pyworkflow.em.packages.relion.convert import convertBinaryFiles
 
 class ProtRelionReconstruct(ProtReconstruct3D):
     """    
@@ -161,17 +162,20 @@ class ProtRelionReconstruct(ProtReconstruct3D):
         imgStar = self._getFileName('input_particles.star')
 
         from convert import writeSetOfParticles
+        print "Before filesMapping"
+        filesMapping = convertBinaryFiles(imgSet, self._getTmpDir())
         # Pass stack file as None to avoid write the images files
-        #TODO ROB: this does not check binary files
-        print("Be aware that we are not checking binary files format")
-        writeSetOfParticles(imgSet,imgStar,None,
-                            is2D=False, isInverseTransform=True,
+#        writeSetOfParticles(imgSet,imgStar,filesMapping,
+#                            is2D=False, isInverseTransform=True,
+#                            writeAlignment=True)
+        writeSetOfParticles(imgSet,imgStar,filesMapping,
+                            is2D=False, isInverseTransform=False,
                             writeAlignment=True)
 
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         volume = Volume()
-        volume.setFileName(self._getFileName('output_volume.vol'))
+        volume.setFileName(self._getFileName('output_volume'))
         volume.setSamplingRate(imgSet.getSamplingRate())
         
         self._defineOutputs(outputVolume=volume)

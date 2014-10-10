@@ -287,6 +287,12 @@ def micrographToCTFParam(mic, ctfparam):
     
     
 def imageToRow(img, imgRow, imgLabel, **kwargs):
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    preprocessImageRow = kwargs.get('preprocessImageRow', None)
+    if preprocessImageRow:
+        preprocessImageRow(img, imgRow)
+        
     setRowId(imgRow, img) # Set the id in the metadata as MDL_ITEM_ID
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
@@ -303,18 +309,26 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
     
-    
+
     # Write all extra labels to the row    
     objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
+
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    postprocessImageRow = kwargs.get('postprocessImageRow', None)
+    if postprocessImageRow:
+        postprocessImageRow(img, imgRow)
     
         
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     """ Create an Image from a row of a metadata. """
     img = imgClass()
     
-    preprocessRow = kwargs.get('preprocessRow', None)
-    if preprocessRow:
-        preprocessRow(imgRow)
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    preprocessImageRow = kwargs.get('preprocessImageRow', None)
+    if preprocessImageRow:
+        preprocessImageRow(img, imgRow)
     
     # Decompose Xmipp filename
     index, filename = xmippToLocation(imgRow.getValue(imgLabel))
@@ -335,7 +349,13 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     setObjId(img, imgRow)
     # Read some extra labels
     rowToObject(imgRow, img, {}, extraLabels=IMAGE_EXTRA_LABELS)
-    
+
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    postprocessImageRow = kwargs.get('postprocessImageRow', None)
+    if postprocessImageRow:
+        postprocessImageRow(img, imgRow)
+        
     return img
     
     
@@ -485,16 +505,16 @@ def readSetOfMicrographs(filename, micSet, **kwargs):
     readSetOfImages(filename, micSet, rowToMicrograph, **kwargs)
 
 
-def writeSetOfMicrographs(micSet, filename, rowFunc=None, blockName='Micrographs', **kwargs):
-    writeSetOfImages(micSet, filename, micrographToRow, rowFunc, blockName, **kwargs)
+def writeSetOfMicrographs(micSet, filename, blockName='Micrographs', **kwargs):
+    writeSetOfImages(micSet, filename, micrographToRow, blockName, **kwargs)
     
     
 def readSetOfVolumes(filename, volSet, **kwargs):    
     readSetOfImages(filename, volSet, rowToVolume, **kwargs)
 
 
-def writeSetOfVolumes(volSet, filename, rowFunc=None, blockName='Volumes', **kwargs):
-    writeSetOfImages(volSet, filename, volumeToRow, rowFunc, blockName, **kwargs)    
+def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
+    writeSetOfImages(volSet, filename, volumeToRow, blockName, **kwargs)    
     
     
 def readCTFModel(filename, mic):
@@ -518,12 +538,10 @@ def writeSetOfCoordinates(posDir, coordSet):
     posFiles = []
     boxSize = coordSet.getBoxSize() or 100  
     
-    print "writing coordinates to folder: ", posDir
     # Write pos metadatas (one per micrograph)    
     for mic in coordSet.iterMicrographs():
         micName = mic.getFileName()
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
-        print " posFn: ", posFn
         
         md = xmipp.MetaData()
         for coord in coordSet.iterCoordinates(micrograph=mic):
@@ -654,7 +672,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
     imgSet.setHasAlignment(hasAlignment)
         
 
-def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc, **kwargs):
+def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
     """ This function will fill Xmipp metadata from a SetOfMicrographs
     Params:
         imgSet: the set of images to be converted to metadata
@@ -665,10 +683,7 @@ def setOfImagesToMd(imgSet, md, imgToFunc, rowFunc, **kwargs):
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
-        imgToFunc(img, imgRow, **kwargs)#drop ctfFn
-        
-        if rowFunc:
-            rowFunc(img, imgRow)
+        imgToFunc(img, imgRow, **kwargs)
         imgRow.writeToMd(md, objId)
 
 
@@ -686,8 +701,7 @@ def readAnglesFromMicrographs(micFile, anglesSet):
         anglesSet.append(angles)
     
 
-def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc, 
-                     blockName='Images', **kwargs):
+def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
     """ This function will write a SetOfImages as a Xmipp metadata.
     Params:
         imgSet: the set of images to be written (particles, micrographs or volumes)
@@ -696,23 +710,23 @@ def writeSetOfImages(imgSet, filename, imgToFunc, rowFunc,
             adding to metadata.
     """
     md = xmipp.MetaData()
-    setOfImagesToMd(imgSet, md, imgToFunc, rowFunc, **kwargs)
+    setOfImagesToMd(imgSet, md, imgToFunc, **kwargs)
     md.write('%s@%s' % (blockName, filename))
         
         
 def readSetOfParticles(filename, partSet, **kwargs):
     readSetOfImages(filename, partSet, rowToParticle, **kwargs)
 
-def setOfParticlesToMd(imgSet, md, rowFunc=None, **kwargs):
-    setOfImagesToMd(imgSet, md, particleToRow, rowFunc, **kwargs)
+def setOfParticlesToMd(imgSet, md, **kwargs):
+    setOfImagesToMd(imgSet, md, particleToRow, **kwargs)
 
 
-def setOfMicrographsToMd(imgSet, md, rowFunc=None, **kwargs):
-    setOfImagesToMd(imgSet, md, micrographToRow, rowFunc, **kwargs)
+def setOfMicrographsToMd(imgSet, md, **kwargs):
+    setOfImagesToMd(imgSet, md, micrographToRow, **kwargs)
 
 
-def writeSetOfParticles(imgSet, filename, rowFunc=None, blockName='Particles', **kwargs):
-    writeSetOfImages(imgSet, filename, particleToRow, rowFunc, blockName, **kwargs)
+def writeSetOfParticles(imgSet, filename, blockName='Particles', **kwargs):
+    writeSetOfImages(imgSet, filename, particleToRow, blockName, **kwargs)
 
 
 def writeCTFModel(ctfModel, ctfFile):
@@ -939,19 +953,19 @@ def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):
         micrographsMd.write(micrographsFn, xmipp.MD_APPEND)
 
 
-def createXmippInputImages(prot, imgSet, rowFunc=None, imagesFn=None):  
+def createXmippInputImages(prot, imgSet, imagesFn=None):  
     if prot is not None:
         imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
     
-    writeSetOfParticles(imgSet, imgsFn, rowFunc)
+    writeSetOfParticles(imgSet, imgsFn)
     return imgsFn
 
 
-def createXmippInputMicrographs(prot, micSet, rowFunc=None, micsFn=None):    
+def createXmippInputMicrographs(prot, micSet, micsFn=None):    
     if prot is not None:
         micsFn = prot._getPath('input_micrographs.xmd')
 
-    writeSetOfMicrographs(micSet, micsFn, rowFunc)
+    writeSetOfMicrographs(micSet, micsFn)
     return micsFn
 
 
@@ -989,7 +1003,9 @@ def geometryFromMatrix(matrix, isInvTransform):
     if not isInvTransform:
         matrix = numpy.linalg.inv(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-    
+#XMIPP
+    #shift = tran
+    #angles = -rad
     return shifts, angles
 
 

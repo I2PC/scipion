@@ -1146,14 +1146,20 @@ class Protocol(Step):
         return text
     
     def _getCiteText(self, cite, useKeyLabel=False):
-        # Get the first author surname
-        if useKeyLabel:
-            label = cite['id']
-        else:
-            label = cite['author'].split('and')[0].split(',')[0].strip()
-            label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
-        
-        return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+        try:
+            # Get the first author surname
+            if useKeyLabel:
+                label = cite['id']
+            else:
+                label = cite['author'].split('and')[0].split(',')[0].strip()
+                label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
+            
+            return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+        except Exception, ex:
+            print "Error with citation: " + label
+            print ex
+            text = "Error with citation *%s*." % label
+        return text
     
     def __getCitations(self, citations):
         """ From the list of citations keys, obtains the full

@@ -39,6 +39,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     cleanPath(emxDir)
     makePath(emxDir) 
     emxData = emxlib.EmxData()
+    micSet=None
     
     if binaryFile is None:
         binaryFile = xmlFile.replace('.emx', '.mrc')
@@ -156,6 +157,7 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
 def _particleToEmx(emxData, particle, micSet):
     #import pdb
     #pdb.set_trace()
+
     index, filename = particle.getLocation()
     emxParticle = _setupEmxParticle(emxData, particle.getCoordinate(), index, filename, micSet)
     if particle.hasCTF():
@@ -197,6 +199,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
     """
+
     ih = ImageHandler()
 
     for i, particle in enumerate(partSet):
