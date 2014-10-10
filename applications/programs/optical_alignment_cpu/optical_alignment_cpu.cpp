@@ -49,7 +49,6 @@ class ProgOpticalAligment: public XmippProgram
 public:
     String fname;
     String foname;
-    String fAverageName;
     int winSize;
     int gpuDevice;
     int fstFrame;
@@ -61,10 +60,10 @@ public:
         addUsageLine ("Align moviews using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("     [--nst <int=1>]     : first frame used in alignment (0 = first frame in the movie");
+        addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--saveAverage <fileName>]: compute aveage of the whole stack");
+        addParamsLine("     [--saveAverage]: if we want to just compute the simple average");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -78,11 +77,7 @@ public:
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
-        if (checkParam("--saveAverage"))
-        {
-            doAverage=true;
-            fAverageName = getParam("--saveAverage");
-        }
+        doAverage = checkParam("--saveAverage");
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
@@ -303,7 +298,8 @@ public:
         if(doAverage)
         {
             II()=avgCurr;
-            II.write("avgimage.mrc");
+            II.write(foname);
+            return 0;
         }
 
 
