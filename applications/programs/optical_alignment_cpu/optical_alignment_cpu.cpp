@@ -63,7 +63,7 @@ public:
         addParamsLine("     [--nst <int=0>]     : first frame used in alignment (0 = first frame in the movie");
         addParamsLine("     [--ned <int=0>]     : last frame used in alignment (0 = last frame in the movie ");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--saveAverage]: if we want to just compute the simple average");
+        addParamsLine("     [--simpleAverage]: if we want to just compute the simple average");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -77,7 +77,7 @@ public:
         fstFrame  = getIntParam("--nst");
         lstFrame  = getIntParam("--ned");
         winSize   = getIntParam("--winSize");
-        doAverage = checkParam("--saveAverage");
+        doAverage = checkParam("--simpleAverage");
 #ifdef GPU
 
         gpuDevice = getIntParam("--gpu");
