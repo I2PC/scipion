@@ -123,12 +123,12 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
         averageDefocusAngle = {}
         for ctf in self.setOfCTF:
             micFileName = ctf.getMicrograph().getFileName()
-            minimumResolution[micFileName]   = 0
-            maximumResolution[micFileName]   = 0
-            averageResolution[micFileName]   = 0
-            averageDefocusU[micFileName]     = 0
-            averageDefocusV[micFileName]     = 0
-            averageDefocusAngle[micFileName] = 0
+            minimumResolution[micFileName]   = 0.
+            maximumResolution[micFileName]   = 0.
+            averageResolution[micFileName]   = 0.
+            averageDefocusU[micFileName]     = 0.
+            averageDefocusV[micFileName]     = 0.
+            averageDefocusAngle[micFileName] = 0.
         for method1, method2, ctfId in self._freqResol:
             ctf = CTFModel()
             ctf1 = self.inputCTFs[method1].get()[ctfId]
@@ -139,7 +139,7 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
             ctf.setMicrograph(   ctf1.getMicrograph())
             #Same ctf appears many times so I can not keep the ctfId
             #ctf.setObjId(ctfId)
-            resolution = Float(self._freqResol[(method1, method2, ctfId)])
+            resolution = Float(self._freqResol[(method1, method2, ctfId)]).get()
             ctf.resolution = resolution
             ctf.method1 = String(self.methodNames[method1])
             ctf.method2 = String(self.methodNames[method2])
@@ -159,9 +159,9 @@ class XmippProtCTFDiscrepancy(ProtCTFMicrographs):
 
         for ctf in self.setOfCTF:
             micFileName = ctf1.getMicrograph().getFileName()
-            averageDefocusV /= size
-            averageDefocusAngle /= size
-            averageResolution /= size
+#            averageDefocusV /= size
+#            averageDefocusAngle /= size
+#            averageResolution /= size
             ctf.averageDefocusU     = averageDefocusU[micFileName]     / size
             ctf.averageDefocusV     = averageDefocusV[micFileName]     / size
             ctf.averageDefocusAngle = averageDefocusAngle[micFileName] / size
