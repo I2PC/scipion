@@ -91,14 +91,14 @@ class ProtImportImages(ProtImport):
         form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
         form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
-                   label=Message.LABEL_VOLTAGE)
+                   label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
         form.addParam('sphericalAberration', FloatParam, default=2.26,
-                   label=Message.LABEL_SPH_ABERRATION)
+                   label=Message.LABEL_SPH_ABERRATION, help=Message.TEXT_SPH_ABERRATION)
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
         form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE)
+                   label=Message.LABEL_MAGNI_RATE, help=Message.TEXT_MAGNI_RATE)
         
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
@@ -259,10 +259,11 @@ class ProtImportMicBase(ProtImportImages):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label=Message.LABEL_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
+                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
+                   help=Message.TEXT_SAMP_MODE)
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, help=Message.TEXT_SAMP_RATE)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)

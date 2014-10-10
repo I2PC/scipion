@@ -176,7 +176,9 @@ Define the number of processors to be used in the execution.
     LABEL_CHECKSTACK = 'Check stack files?'
     LABEL_COPYFILES = 'Copy files?'
     LABEL_VOLTAGE = 'Microscope voltage (in kV)'
+    TEXT_VOLTAGE = " PUT SOME HELP HERE!!!  "
     LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
+    TEXT_SPH_ABERRATION = "Optical effect that occurs due to the increased refraction of light rays when they strike  EM lens near its edge, in comparison with those that strike nearer the centre. It signifies a deviation of the device from the norm, i.e., it results in an imperfection of the produced image."
     LABEL_AMPLITUDE = 'Amplitude Contrast'
     TEXT_AMPLITUDE = 'It should be a positive number, typically between 0.05 and 0.3.'
     LABEL_PATTERNU = 'Pattern untilted'
@@ -184,10 +186,13 @@ Define the number of processors to be used in the execution.
 
     
     LABEL_SAMP_MODE = 'Sampling rate mode'
+    TEXT_SAMP_MODE = " PUT SOME HELP HERE!!!  "
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
+    TEXT_SAMP_RATE = " PUT SOME HELP HERE!!!  "
     LABEL_MAGNI_RATE = 'Magnification rate'
+    TEXT_MAGNI_RATE = " PUT SOME HELP HERE!!!  "
     LABEL_SCANNED = 'Scanned pixel size'
     
     
