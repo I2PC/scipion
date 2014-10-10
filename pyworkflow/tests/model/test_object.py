@@ -150,7 +150,29 @@ class TestObject(BaseTest):
         Float.setPrecision(0.0000001)
         self.assertFalse(c1.equalAttributes(c2))
 
-    
+    def test_aggregate(self):
+        """test aggregate sql-like functions
+        """
+        fnDefocusGroups=self.getOutputPath("SetOfDefocusGroups.sqlite")
+        setOfDefocus = SetOfDefocusGroup(filename=fnDefocusGroups)
+        df = DefocusGroup()
+        df.setDefocusMin(2000.)
+        df.setDefocusMax(2500.)
+        df.setDefocusAvg(2100.)
+        setOfDefocus.append(df)
+
+        df.cleanObjId()
+        df.setDefocusMin(3000)
+        df.setDefocusMax(5500)
+        df.setDefocusAvg(5000)
+        setOfDefocus.append(df)
+        #setOfDefocus.write()
+
+        operations      = ['min', 'max'] #This should be an enum -> aggregation function
+        operationLabel  = '_defocusMin' #argument of aggregation function
+        groupByLabels   = ['_defocusMin'] # absolute minimum
+        print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
+
 class TestUtils(BaseTest):
     
     @classmethod

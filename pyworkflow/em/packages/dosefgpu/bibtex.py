@@ -31,16 +31,16 @@ developed by Xueming Li at Yifan Cheng lab.
 
 _bibtexStr = """
 
-@article{lix2013,
-  title={Electron counting and beam-induced motion correction enables near atomic resolution single particle cryoEM.},
-  author={Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Chris Michael B. Braunfeld, Sander Gubbens, David A. Agard and Yifan Cheng},
-  journal={Nature Methods},
-  volume={10},
-  number={1},
-  pages={584--590},
-  year={2013},
-  publisher={Nature Publishing Group},
-  doi = {http://dx.doi.org/10.1038/nmeth.2727}
+@article{Li2013,
+  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
+  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
+  journal="Nature methods",
+  volume="10",
+  number="6",
+  pages="584-590",
+  year="2013",
+  publisher="Nature Publishing Group",
+  doi = "http://dx.doi.org/10.1038/nmeth.2727"
 }
 
 """

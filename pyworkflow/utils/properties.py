@@ -175,8 +175,8 @@ Define the number of processors to be used in the execution.
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
     LABEL_COPYFILES = 'Copy files?'
-    LABEL_VOLTAGE = 'Microscope voltage (in kV)'
-    LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
+    LABEL_VOLTAGE = 'Microscope voltage (kV)'
+    LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
     LABEL_AMPLITUDE = 'Amplitude Contrast'
     TEXT_AMPLITUDE = 'It should be a positive number, typically between 0.05 and 0.3.'
     LABEL_PATTERNU = 'Pattern untilted'
@@ -188,7 +188,7 @@ Define the number of processors to be used in the execution.
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
     LABEL_MAGNI_RATE = 'Magnification rate'
-    LABEL_SCANNED = 'Scanned pixel size'
+    LABEL_SCANNED = 'Scanned pixel size (microns/px)'
     
     
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
