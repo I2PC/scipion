@@ -239,6 +239,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         ppicker.setChanged(changed);
         savemi.setEnabled(changed);
         savebt.setEnabled(changed);
+        
     }
 
     public void updateMicrographsModel(boolean all) {
@@ -652,10 +653,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (micindex == index && canvas != null && canvas.getIw().isVisible()) {
             return;
         }
-        if (ppicker.isChanged()) //ppicker.saveData(getMicrograph());// Saving changes when switching
-        {
-            ppicker.saveData();
-        }
+        
 
         SupervisedParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 
@@ -668,7 +666,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 return;
             }
         }
-
+        if (ppicker.isChanged()) //ppicker.saveData(getMicrograph());// Saving changes when switching
+            ppicker.saveData();
         ppicker.getMicrograph().releaseImage();
         ppicker.setMicrograph(next);
         //ppicker.saveConfig();
@@ -695,7 +694,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         int result = 3;
 
         boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
-        if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised) {
+        if (ppicker.isCorrectPending()) {
             String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
             result = XmippDialog.showQuestionYesNoCancel(this, msg);
             if (result == XmippQuestionDialog.YES_OPTION) {
@@ -767,7 +766,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     public void close() {
-        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && ppicker.isChanged()) {
+        if (ppicker.isCorrectPending()) {
             boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
             if (iscorrect) {
                 ppicker.correct(rectangle);
@@ -783,5 +782,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         }
         return msg;
     }
+    
+    
 
 }

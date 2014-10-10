@@ -1182,7 +1182,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		saveData(current);
 		saveData(next);
 		MetaData addedmd = getAddedMetaData(current, correctout);
-		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
+		MetaData automd = new MetaData(getParticlesAutoBlock(current));
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
 		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next)).start();
@@ -1342,9 +1342,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 					igp = particle.getImageGeneric();
 					if (templateindex < getTemplatesNumber())
                                         {
-                                            matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-                                            templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-                                            templateindex ++;
+                                                matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                                templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                                templateindex ++;
                                         }
 					else
 					{
@@ -1380,5 +1380,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 
     }
+    
+        public boolean isCorrectPending()//TO BE COMPLETED
+        {
+            return getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && isChanged();
+        }
 
 }

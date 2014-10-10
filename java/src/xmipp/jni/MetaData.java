@@ -104,8 +104,9 @@ public class MetaData {
 
         	/** Create empty metadata */
 	public MetaData() {
-		DEBUG.printFormat("Java: Creating metadata\n");
-		DEBUG.printStackTrace();
+		System.out.format("Java: Creating metadata\n");
+		//Exception ex = new Exception();
+    		//ex.printStackTrace();
 		create();
 	}
 

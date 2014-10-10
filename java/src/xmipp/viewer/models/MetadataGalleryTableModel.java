@@ -201,7 +201,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		String imageFn = getImageFilename(index, renderLabel);
 		long objId = data.ids[index];
 		ImageItem item = new ImageItem(index);
-		boolean useGeo = data.useGeo && renderLabel == MDLabel.MDL_IMAGE;
+		boolean useGeo = data.useGeo;
 		ImagePlus imp = getImage(objId, imageFn, useGeo, data.wrap);
 		item.setImagePlus(imp);
 		return item;

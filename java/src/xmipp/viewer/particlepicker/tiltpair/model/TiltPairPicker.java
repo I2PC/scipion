@@ -266,9 +266,10 @@ public class TiltPairPicker extends ParticlePicker
 			else
 			{
 				TiltedParticle tp;
-
+                                System.out.format("Java: TiltPairPicker.saveData: creating mdU\n");                                
 				MetaData mdU = new MetaData(); // untilted micrograph particles
-				MetaData mdT = new MetaData(); // tilted micrograph particles
+				System.out.format("Java: TiltPairPicker.saveData: creating mdT\n");
+                                MetaData mdT = new MetaData(); // tilted micrograph particles
 
 				for (UntiltedParticle p : um.getParticles())
 				{
@@ -289,7 +290,9 @@ public class TiltPairPicker extends ParticlePicker
 				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
 				mdT.write(getParticlesBlock(file));
 				
+                                System.out.format("Java: TiltPairPicker.saveData: destroying mdU\n");      
 				mdU.destroy();
+                                System.out.format("Java: TiltPairPicker.saveData: destroying mdT\n");      
 				mdT.destroy();
                                 saveMicrographAngles(um);
 			}
@@ -357,8 +360,9 @@ public class TiltPairPicker extends ParticlePicker
 
 	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty, MetaData uMd, MetaData tMd)
 	{
-		//System.out.printf("importing coords for %s \n", um.getName() );
+                System.out.printf("reading coords for %s \n", um.getName() );
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
+                System.out.printf("reading coords for %s \n", um.getTiltedMicrograph().getName() );
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
 		String result = loadMicrographParticles(um, uMd, tMd);
                 

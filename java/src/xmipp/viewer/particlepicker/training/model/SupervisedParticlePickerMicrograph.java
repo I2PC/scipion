@@ -321,5 +321,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 			if(!p.isDeleted())
 				p.setDeleted(p.getCost() < getThreshold());
 	}
+        
+        
 
 }

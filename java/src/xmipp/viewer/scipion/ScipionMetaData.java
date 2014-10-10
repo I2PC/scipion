@@ -825,7 +825,8 @@ public class ScipionMetaData extends MetaData {
     public boolean containsGeometryInfo() {
 //        if(!self.equals("Class2D") || self.equals("Class3D"))
 //            return false;
-        return getColumnInfo("_alignment._matrix") != null;
+        boolean contains = getColumnInfo("_alignment._matrix") != null;
+        return contains;
     }
     
     

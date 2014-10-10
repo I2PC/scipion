@@ -150,12 +150,13 @@ public abstract class Micrograph {
 
 	/* Load width and height after loaded ImagePlus */
 	public void loadDimensions() {
+                
 		if (imp != null) {
 			width = imp.getWidth();
 			height = imp.getHeight();
 		} else {
 			try {
-                                
+                System.out.println("loading dim from ig");                
 				ImageGeneric img = new ImageGeneric(file); // this reads the header
 				width = img.getXDim();
 				height = img.getYDim();
