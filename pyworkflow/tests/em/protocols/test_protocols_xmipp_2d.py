@@ -107,26 +107,38 @@ class TestXmippCropResizeParticles(TestXmippBase):
     
     def test_cropResizePart(self):
         print "Run crop/resize particles"
+        oldSize = 500.
+        newSize = 128
         protCropResize = self.newProtocol(XmippProtCropResizeParticles, 
-                                         doResize=True, resizeOption=1, resizeDim=128, 
-                                         doWindow=True, windowOperation=1, windowSize=256)
-        protCropResize.inputParticles.set(self.protImport.outputParticles)
+                                         doResize=True, resizeOption=1, resizeDim=newSize, 
+                                         doWindow=True, windowOperation=0)
+        input = self.protImport.outputParticles
+        protCropResize.inputParticles.set(input)
         self.launchProtocol(protCropResize)
         
-        self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
-        self.validateAcquisition(protCropResize.outputParticles)
+        output = protCropResize.outputParticles
+        self.assertIsNotNone(output, "There was a problem with resize/crop the particles")
+        self.validateAcquisition(output)
+        self.assertEquals(newSize, output.getDimensions()[0])#, "Output particles dimension should be equal to %d" % newSize)
+        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*(oldSize/newSize))
     
     def test_cropResizePart2(self):
         print "Run crop/resize particles v2"
         protCropResize = self.newProtocol(XmippProtCropResizeParticles,  
-                                         doResize=True, resizeOption=3, factor=0.5, 
-                                         doWindow=True, windowOperation=1, windowSize=256)
-        protCropResize.inputParticles.set(self.protImport.outputParticles)
+                                         doResize=True, resizeOption=2, resizeLevel=0.5, 
+                                         doWindow=True, windowOperation=1, windowSize=500)
+        input = self.protImport.outputParticles
+        protCropResize.inputParticles.set(input)
         self.launchProtocol(protCropResize)
+        output = protCropResize.outputParticles
         
-        self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop v2 the particles")
-        self.validateAcquisition(protCropResize.outputParticles)
-
+        self.assertIsNotNone(output, "There was a problem with resize/crop v2 the particles")
+        self.validateAcquisition(output)
+        # Since the images where downsampled twice (factor 0.5)
+        # the sampling rate should be the double
+        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*2)
+        # Since we have done windowing operation, the dimensions should be the same
+        self.assertEquals(input.getDim(), output.getDim())
 
 class TestXmippML2D(TestXmippBase):
     """This class check if the protocol to classify with ML2D in Xmipp works properly."""

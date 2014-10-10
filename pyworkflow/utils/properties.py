@@ -175,9 +175,9 @@ Define the number of processors to be used in the execution.
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
     LABEL_COPYFILES = 'Copy files?'
-    LABEL_VOLTAGE = 'Microscope voltage (in kV)'
+    LABEL_VOLTAGE = 'Microscope voltage (kV)'
     TEXT_VOLTAGE = " PUT SOME HELP HERE!!!  "
-    LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
+    LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
     TEXT_SPH_ABERRATION = "Optical effect that occurs due to the increased refraction of light rays when they strike  EM lens near its edge, in comparison with those that strike nearer the centre. It signifies a deviation of the device from the norm, i.e., it results in an imperfection of the produced image."
     LABEL_AMPLITUDE = 'Amplitude Contrast'
     TEXT_AMPLITUDE = 'It should be a positive number, typically between 0.05 and 0.3.'
@@ -193,8 +193,8 @@ Define the number of processors to be used in the execution.
     TEXT_SAMP_RATE = " PUT SOME HELP HERE!!!  "
     LABEL_MAGNI_RATE = 'Magnification rate'
     TEXT_MAGNI_RATE = " PUT SOME HELP HERE!!!  "
-    LABEL_SCANNED = 'Scanned pixel size'
-    
+    LABEL_SCANNED = 'Scanned pixel size (microns/px)'
+
     
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
