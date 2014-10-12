@@ -161,31 +161,26 @@ class TestRelionPreprocess(TestRelionBase):
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
             
-    def test_Normalize(self):
+    def test_NormalizeAndDust(self):
         """ Normalize particles.
         """
         # Test now a normalization after the imported particles   
-        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
-        relionNormalize.inputParticles.set(self.protImport.outputParticles)
-        relionNormalize.doNormalize.set(True)
-        relionNormalize.backRadius.set(40)
-        self.launchProtocol(relionNormalize)
+        protocol = self.newProtocol(ProtRelionPreprocessParticles,
+                                    doNormalize=True, backRadius=40,
+                                    doRemoveDust=True, whiteDust=4, blackDust=8)
+        protocol.setObjLabel('relion: norm-dust')
+        protocol.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protocol)
 
-    def test_MostOptions(self):
+    def test_ScaleAndInvert(self):
         """ Test all options at once.
         """
         # Test now a normalization after the imported particles   
-        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
-        relionNormalize.inputParticles.set(self.protImport.outputParticles)
-        relionNormalize.doNormalize.set(True)
-        relionNormalize.backRadius.set(40)
-        #relionNormalize.doScale.set(True)
-        #relionNormalize.scaleSize.set(24)
-        relionNormalize.doWindow.set(True)
-        relionNormalize.windowSize.set(200)
-        relionNormalize.doInvert.set(True)
-        relionNormalize.doRemoveDust.set(True)
-        relionNormalize.whiteDust.set(4)
-        relionNormalize.blackDust.set(8)
+        protocol = self.newProtocol(ProtRelionPreprocessParticles,
+                                    doNormalize=False,
+                                    doScale=True, scaleSize=50,
+                                    doInvert=True)
+        protocol.setObjLabel('relion: scale-invert')
+        protocol.inputParticles.set(self.protImport.outputParticles)
         
-        self.launchProtocol(relionNormalize)       
+        self.launchProtocol(protocol)       
