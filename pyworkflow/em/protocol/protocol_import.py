@@ -92,13 +92,14 @@ class ProtImportImages(ProtImport):
         form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE)
-        form.addParam('sphericalAberration', FloatParam, default=2.26,
+        form.addParam('sphericalAberration', FloatParam, default=2,
                    label=Message.LABEL_SPH_ABERRATION)
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
         form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE)
+                   label=Message.LABEL_MAGNI_RATE,
+                   help="Magnification is only used by a few programs like ctffind and frealign")
         
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
@@ -259,6 +260,9 @@ class ProtImportMicBase(ProtImportImages):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label=Message.LABEL_SAMP_MODE,
+                   help="You can specify the sampling rate either from the micrograph itself (Tm=A/px)"
+                        " or from the scanner (Ts=microns/px and Magnification=M). The relationship between"
+                        " the two is Tm=Ts/M",
                    choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
