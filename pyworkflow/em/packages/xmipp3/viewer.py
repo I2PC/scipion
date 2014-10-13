@@ -213,7 +213,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
             labels = 'id enabled _index _filename _xmipp_zScore _sampling '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle'
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _alignment._matrix'
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
@@ -246,7 +246,8 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio '\
+                     '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
