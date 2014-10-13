@@ -318,11 +318,19 @@ def convertBinaryFiles(imgSet, outputDir):
     # This approach can be extended when
     # converting from a binary file format that
     # is not read from Relion
-    if imgSet.getFirstItem().getFileName().endswith('.mrc'):
+    ext = imgSet.getFirstItem().getFileName()
+    if ext.endswith('.mrc'):
         uniqueFiles = list(imgSet.getFiles())
         for f in uniqueFiles:
             newFile = os.path.join(outputDir, os.path.basename(f)+'s')
             createLink(f, newFile)
+            filesMapping[f] = newFile
+    elif ext.endswith('.hdf'):#assume eman
+        uniqueFiles = list(imgSet.getFiles())
+        from pyworkflow.em.convert import convertStack
+        for f in uniqueFiles:
+            newFile = os.path.join(outputDir, os.path.basename(f.rsplit( ".", 1 )[ 0 ])+'.spi')
+            convertStack(f, newFile)
             filesMapping[f] = newFile
 
     return filesMapping
