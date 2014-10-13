@@ -66,12 +66,14 @@ void ProgScoreMicrograph::run()
 	FileName fn_micrographBadPxl;
 	fn_micrographBadPxl = fn_micrograph.withoutExtension()+"bp__tmp."+fn_micrograph.getExtension();
 	sprintf(bufferDW, "xmipp_transform_filter -i %s -o %s --bad_pixels outliers 2", fn_micrograph.c_str(), fn_micrographBadPxl.c_str());
-	system(bufferDW);
+	if (!system(bufferDW))
+		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot filter");
 
 	FileName fn_micrographDwn;
 	fn_micrographDwn = fn_micrograph.withoutExtension()+"_tmp."+fn_micrograph.getExtension();
 	sprintf(bufferDW, "xmipp_transform_downsample -i %s -o %s --step 2.0 --method fourier" , 	fn_micrographBadPxl.c_str(), fn_micrographDwn.c_str());
-	system(bufferDW);
+	if (!system(bufferDW))
+		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot downsample");
 
 	prmEstimateCTFFromPSD.defocus_range = defocus_range;
 	prmEstimateCTFFromPSD.downsampleFactor = 2.0;
@@ -106,7 +108,8 @@ void ProgScoreMicrograph::run()
 
 	char buffer[200];
 	sprintf(buffer, "xmipp_ctf_sort_psds -i %s -o %s --downsampling %f", 	prmPSDSort.fn_in.c_str(), prmPSDSort.fn_out.c_str(),2.000000);
-	system(buffer);
+	if (!system(bufferDW))
+		REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot sort psds");
 
 	//Spiral Phase Transform
     MultidimArray<double> im, In, Mod, Part, Ice;

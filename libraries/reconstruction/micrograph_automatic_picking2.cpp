@@ -1097,7 +1097,6 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
 
 int AutoParticlePicking2::getParticlesThreshold()
 {
-
     return 30;
 }
 

@@ -703,7 +703,7 @@ public:
 
 private:
     //Array of MDLabelData pointers
-    static MDLabelData * data[MDL_LAST_LABEL];
+    static MDLabelData * data[MDL_LAST_LABEL+1];
     static std::map<std::string, MDLabel> names;
     static MDLabelStaticInit initialization; //Just for initialization
 

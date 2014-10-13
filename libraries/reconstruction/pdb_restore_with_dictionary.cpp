@@ -75,19 +75,18 @@ void ProgRestoreWithPDBDictionary::run()
     dictionaryLow.read(fnDictionaryRoot+"_low.mrcs");
     dictionaryHigh.read(fnDictionaryRoot+"_high.mrcs");
 	const MultidimArray<double> &mDictionaryLow=dictionaryLow();
-	const MultidimArray<double> &mDictionaryHigh=dictionaryHigh();
 
     Image<double> V, Vhigh;
     MultidimArray<double> weightHigh;
     V.read(fnIn);
 	const MultidimArray<double> &mV=V();
-	double min, max, mean, std;
+	double min, max, mean, std=0;
 	mV.computeStats(mean,std,min,max);
 
     MultidimArray<double> patchLow, patchLowNormalized, patchHigh;
     int patchSize=XSIZE(mDictionaryLow);
     int patchSize_2=patchSize/2;
-	size_t Npatches=0, NcandidatePatches=0, NsuccessfulPatches=0;
+	size_t Npatches=0, NcandidatePatches=0;
 
 	std::vector<size_t> idx;
 	std::vector<double> weight;
@@ -97,16 +96,16 @@ void ProgRestoreWithPDBDictionary::run()
 	Vhigh().initZeros(mV);
 	weightHigh.initZeros(mV);
 	const MultidimArray<double> &mVhigh=Vhigh();
-	for (int k=patchSize_2; k<ZSIZE(mV)-patchSize_2; ++k)
+	for (int k=patchSize_2; k<(int)ZSIZE(mV)-patchSize_2; ++k)
 	{
-		for (int i=patchSize_2; i<ZSIZE(mV)-patchSize_2; ++i)
-			for (int j=patchSize_2; j<ZSIZE(mV)-patchSize_2; ++j)
+		for (int i=patchSize_2; i<(int)ZSIZE(mV)-patchSize_2; ++i)
+			for (int j=patchSize_2; j<(int)ZSIZE(mV)-patchSize_2; ++j)
 			{
 				 ++Npatches;
 				 mV.window(patchLow,k,i,j,k+patchSize-1,i+patchSize-1,j+patchSize-1);
 				 STARTINGX(patchLow)=STARTINGY(patchLow)=STARTINGZ(patchLow)=0;
 
-				double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow;
+				double minPatchLow, maxPatchLow, meanPatchLow, stdPatchLow=0;
 				patchLow.computeStats(meanPatchLow,stdPatchLow,minPatchLow,maxPatchLow);
 				double R2=1;
 				patchHigh.initZeros(patchLow);
