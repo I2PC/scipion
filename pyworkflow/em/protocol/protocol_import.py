@@ -92,7 +92,7 @@ class ProtImportImages(ProtImport):
         form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
-        form.addParam('sphericalAberration', FloatParam, default=2.26,
+        form.addParam('sphericalAberration', FloatParam, default=2,
                    label=Message.LABEL_SPH_ABERRATION, help=Message.TEXT_SPH_ABERRATION)
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,

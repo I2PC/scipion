@@ -186,13 +186,14 @@ Define the number of processors to be used in the execution.
 
     
     LABEL_SAMP_MODE = 'Sampling rate mode'
-    TEXT_SAMP_MODE = " PUT SOME HELP HERE!!!  "
+    TEXT_SAMP_MODE = "You can specify the sampling rate directly from the image (A/pixel, Ts)\n or by specifying the magnification rate (M) "\
+                     "and the scanner\n pixel size (microns/pixel, Tm). The relationship between\n the two is Ts=Tm/M." 
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
     TEXT_SAMP_RATE = " PUT SOME HELP HERE!!!  "
     LABEL_MAGNI_RATE = 'Magnification rate'
-    TEXT_MAGNI_RATE = " PUT SOME HELP HERE!!!  "
+    TEXT_MAGNI_RATE = "This parameter is only used by very few programs like ctffind or frealign"
     LABEL_SCANNED = 'Scanned pixel size (microns/px)'
 
     
@@ -205,7 +206,7 @@ Define the number of processors to be used in the execution.
     LABEL_INPUT_VOLS = 'Input Volumes'
     LABEL_INPUT_MOVS = 'Input Movies'
     LABEL_ALIG_PART = 'Write aligned particles?'
-    TEXT_ALIG_PART = 'If set to *Yes*, the aligment will be applied to \n'+'input particles and a new aligned set will be created.'
+    TEXT_ALIG_PART = 'If set to *Yes*, the alignment will be applied to \n'+'input particles and a new aligned set will be created.'
 
     TEXT_NO_INPUT_MIC = 'No *Input Micrographs* selected.'
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
