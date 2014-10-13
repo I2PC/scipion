@@ -5,7 +5,7 @@ from optparse import OptionParser
 from os import system
 from os.path import exists
 from protlib_filesystem import getXmippPath,xmippExists
-import sys
+import os, sys
 from protlib_xmipp import XmippScript
 from xmipp import *
 
@@ -80,11 +80,21 @@ class ScriptChimeraClient(XmippScript):
         if not port:
             print "ERROR: Port is not available\n"
             sys.exit(1)
+            
+            
+        chimera = which('chimera')
+        
+        if chimera is None:
+            print "ERROR: Chimera is not available\n"
+            sys.exit(1)
+        
         serverfile = getXmippPath('libraries/bindings/chimera/xmipp_chimera_server.py')
         #command = "export XMIPP_CHIMERA_PORT=%d; chimera %s  &" % (port,serverfile)
         command = "chimera --script '%s %s' &" % (serverfile, port)
         
+        
         system(command)
+        
         if isprojector:
 			XmippProjectionExplorer(volfile, port, angulardistfile, spheres_color, spheres_distance, spheres_maxradius, size, padding_factor, max_freq, spline_degree)
 #			print 'created projection explorer'
@@ -106,6 +116,14 @@ class ScriptChimeraClient(XmippScript):
             print e
             return 0
         return port
+        
+    
+def which(file):
+    for path in os.environ["PATH"].split(":"):
+        if os.path.exists(path + "/" + file):
+                return path + "/" + file
+
+    return None
     
 if __name__ == '__main__':
     ScriptChimeraClient().tryRun()
