@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -1668,6 +1669,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					try
 					{
 						String args = data.getSelVolumeFile();
+                                                if(!XmippUtil.isInPath("chimera"))
+                                                {
+                                                    XmippDialog.showError(GalleryJFrame.this, "Chimera is not available");
+                                                    return;
+                                                }
 						// if (Filename.isSpiderVolume(args))
 						// args = "spider:" + args;
 						// // FIXME: Check chimera is installed
