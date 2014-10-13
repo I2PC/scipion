@@ -53,7 +53,7 @@ if not env.GetOption('clean'):
 fftw = env.AddLibrary(
     'fftw',
     tar='fftw-3.3.4.tgz',
-    targets=['lib/libfftw3.so'],
+    targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
     default=False)
 
@@ -61,43 +61,43 @@ tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
-    targets=['lib/libtcl8.6.so'],
+    targets=[File('#software/lib/libtcl8.6.so').abspath],
     flags=['--enable-threads'],
-    clean=['software/tmp/tcl8.6.1'])
+    clean=[Dir('#software/tmp/tcl8.6.1').abspath])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
-    targets=['lib/libtk8.6.so'],
+    targets=[File('#software/lib/libtk8.6.so').abspath],
     flags=['--enable-threads'],
     deps=[tcl],
-    clean=['software/tmp/tk8.6.1'])
+    clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
-    targets=['lib/libz.so'],
+    targets=[File('#software/lib/libz.so').abspath],
     addPath=False)
 
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
-    targets=['lib/libsqlite3.so'],
+    targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    targets=['lib/libpython2.7.so', 'bin/python'],
+    targets=[File('#software/lib/libpython2.7.so').abspath, File('#software/bin/python').abspath],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
-    targets=['bin/parallel'],
+    targets=[File('#software/bin/parallel').abspath],
     deps=[zlib])
 
 boost_headers_only = env.ManualInstall(
@@ -117,7 +117,7 @@ boost_headers_only = env.ManualInstall(
 
 # Helper function to include the python dependency automatically.
 def addModule(*args, **kwargs):
-    kwargs['deps'] = kwargs.get('deps', []) + python
+    kwargs['deps'] = kwargs.get('deps', []) + (python or [])
     return env.AddModule(*args, **kwargs)
 
 
@@ -220,6 +220,7 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='xmipp_scipion.tgz',
+               buildDir='xmipp',
 #               extraActions=[('xmipp.bashrc',
 #                             './install.sh --unattended=true --gui=false -j %s'
 #                              % GetOption('num_jobs'))],

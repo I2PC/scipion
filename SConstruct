@@ -54,6 +54,7 @@ env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
                   tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
+#Export('env')
 # TODO: BUILDERS var added from the tricky creation of a new environment.
 # If not, they lose default builders like "Program", which are needed later
 # (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
@@ -108,8 +109,9 @@ env.EnsureSConsVersion(2,3,2)
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
+
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
-               targets=None, url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
+               targets=None, url=None, flags=[], addPath=True, autoConfigTargets='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -124,29 +126,46 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     Returns the final targets, the ones that Make will create.
 
     """
+    # Determine if a var is an iterable or not
+    def is_sequence(arg):
+        return (not hasattr(arg, "strip") and
+                hasattr(arg, "__getitem__") or
+                hasattr(arg, "__iter__"))
+
     # Use reasonable defaults.
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/external/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     configDir = configDir or buildDir
-    targets = targets or ['lib/lib%s.so' % name]
+    targets = targets or [File('#software/lib/lib%s.so' % name).abspath]
+    if not is_sequence(buildDir):
+        buildDir = [buildDir]
+        configDir = [configDir]
+        flags = [flags]
+        autoConfigTargets = [autoConfigTargets]
+        targets = [targets]
+    if len(buildDir) != len(configDir) != len(flags):
+        return ''
 
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
         valueOld = os.environ.get(var, '')
-        i = 0  # so if flags is empty, we put it at the beginning too
-        for i in range(len(flags)):
-            if flags[i].startswith('%s=' % var):
-                valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
-                break
-        flags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-    if addPath:
-        pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
-        pathAppend('PATH', Dir('#software/bin').abspath)
+        for libflags in flags:
+            i = 0  # so if flags is empty, we put it at the beginning too
+            for i in range(len(libflags)):
+                if libflags[i].startswith('%s=' % var):
+                    valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
+                    break
+            libflags.insert(i, '%s=%s:%s' % (var, value, valueOld))
+        if addPath:
+            pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
+            pathAppend('PATH', Dir('#software/bin').abspath)
+
 
     # Install everything in the appropriate place.
-    flags += ['--prefix=%s' % Dir('#software').abspath,
-              '--libdir=%s' % Dir('#software/lib').abspath]  # not lib64
+    for flag in flags:
+        flag += ['--prefix=%s' % Dir('#software').abspath,
+                 '--libdir=%s' % Dir('#software/lib').abspath]  # not lib64
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the library even if it is not on by default.
@@ -157,39 +176,49 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # Create and concatenate the builders.
     tDownload = Download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, File('#software/tmp/%s/configure' % configDir).abspath, tDownload,
+    tUntar = Untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath, tDownload,
                    cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-    tConfig = env.AutoConfig(
-        source=Dir('#software/tmp/%s' % configDir),
-        AutoConfigTarget=autoConfigTarget,
-        AutoConfigSource='configure',
-        AutoConfigParams=flags,
-        AutoConfigStdOut=File('#software/log/%s_config.log' % name).abspath)
-    SideEffect('dummy', tConfig)  # so it works fine in parallel builds
-    tMake = env.Make(
-        source=tConfig,
-        target=['#software/%s' % t for t in targets],
-        MakePath=Dir('#software/tmp/%s' % buildDir).abspath,
-        MakeEnv=os.environ,
-        MakeTargets='install',
-        MakeStdOut=File('#software/log/%s_make.log' % name).abspath)
-    SideEffect('dummy', tMake)  # so it works fine in parallel builds
+    tConfig = tMake = []
+    toReturn = []
+    for x, folder in enumerate(buildDir):
+        tConfig.append(*env.AutoConfig(
+            source=Dir('#software/tmp/%s' % configDir[x]),
+            AutoConfigTarget=autoConfigTargets[x],
+            AutoConfigSource='configure',
+            AutoConfigParams=flags[x],
+            AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
+        SideEffect('dummy', tConfig[x])  # so it works fine in parallel builds
+        Depends(tConfig[x], tUntar)
 
-    # Clean the special generated files
-    for cFile in clean:
-        Clean(tMake, cFile)
+        make = env.Make(
+            source=tConfig[x],
+            target=targets[x],
+            MakePath=Dir('#software/tmp/%s' % buildDir[x]).abspath,
+            MakeEnv=os.environ,
+            MakeTargets='install',
+            MakeStdOut=File('#software/log/%s_make_%s.log' % (name, x)).abspath)
+        if is_sequence(make):
+            tMake+=make
+        else:
+            tMake.append(make)
+        tMake.append(make)
+        SideEffect('dummy', tMake[x]) # so it works fine in parallel builds
+        for cFile in clean:
+            Clean(tMake[x], cFile)
+        # Clean the special generated files
+        # Add the dependencies.
+        for dep in deps:
+            Depends(tConfig[x], dep)
+        # Make library by default
+        if default or GetOption(name):
+            Default(tMake[x])
+        toReturn += [tMake[x]]
+    return toReturn
 
-    # Add the dependencies.
-    for dep in deps:
-        Depends(tConfig, dep)
 
-    if default or GetOption(name):
-        Default(tMake)
-
-
-def addOwnLibrary(env, name, dir=None, incs=None, libs=None, src=None, default=True):
+def addPackageLibrary(env, name, dir=None, incs=None, libs=None, src=None, prefix=None, default=True):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -200,8 +229,102 @@ def addOwnLibrary(env, name, dir=None, incs=None, libs=None, src=None, default=T
 
     Returns the final targets, the ones that Make will create.
     """
-    lib = lib or 'lib%s' % name
-    #dir = 
+    libs = libs or 'lib%s.so' % name
+    dir = dir or Dir('lib/%s' % name)
+    prefix = 'lib' if prefix is None else 'lib'
+    #basedir = AddLastSlash(basedir)
+    fullname = prefix + name
+    sources = Glob(basedir, sources_pattern, skip_list)
+    binprefix = join(env['prefix'], 'bin')
+    
+    library = envToUse.SharedLibrary(
+            join(basedir, name),
+            sources,
+            CPPPATH=includes + [envToUse['CPPPATH']],
+            LIBPATH=libpath,
+            LIBS=libs,
+            SHLIBPREFIX=shlibprefix,
+            SHLIBSUFFIX=shlibsuffix,
+            **mpiArgs
+            )
+
+    install = env.Install(binprefix, program)
+    alias = env.Alias(fullname, install)
+    env.Default(alias)
+    return alias
+
+
+def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
+    fileToOpen = preserv = stringToSearch = stringToAppend = ''
+    separator = '='
+    exportation = 'export'
+    if shellType == 'bash':
+        fileToOpen = BASHRC
+        separator = '='
+        exportation = 'export'
+    elif shellType == 'csh':
+        fileToOpen = CSH
+        separator = ' '
+        exportation = 'setenv'
+    if os.path.exists(fileToOpen):
+        lines = open(fileToOpen, 'r').readlines()
+        filew = open(fileToOpen, 'w')
+        found = -1
+        if type == 'lib':
+            stringToSearch = 'LD_LIBRARY_PATH'
+            stringToAppend = 'XMIPP_MPI_LIBDIR'
+        elif type == 'bin':
+            stringToSearch = 'PATH'
+            stringToAppend = 'XMIPP_MPI_BINDIR'
+        if replace:
+            stringToSearch = (exportation + ' ' + stringToAppend)
+        else:
+            stringToSearch = (exportation+ ' ' + stringToSearch)
+        for index, line in enumerate(lines):
+            parts = line.strip().split(separator)
+            if len(parts) == 2:
+                if parts[0].strip() == stringToSearch:
+                    found = index
+                    preserv = parts[1].strip()
+            if len(parts) == 3:
+                if (parts[0].strip()+' '+parts[1].strip()) == stringToSearch:
+                    found = index
+                    preserv = parts[2].strip()
+                    break
+        if found != -1:
+            if not replace:
+                lines[found] = (stringToSearch + separator + preserv + ':${' + stringToAppend + '}' + "\n")
+                lines[found] = (exportation + ' ' + stringToAppend + separator + mpiPath + "\n") + lines[found]
+            else:
+                lines[found] = (stringToSearch+separator+mpiPath+"\n")
+            filew.writelines(lines)
+
+
+def AppendIfNotExists(**args):
+    append = True
+    for k, v in args.iteritems():
+        if v in env[k]:
+            append = False
+    if append:
+        env.Append(**args)
+
+
+def Glob(dir, pattern, blacklist):
+    ''' Custom made globbing '''
+    
+    sources = []
+    os.path.walk(dir, AddMatchingFiles, (pattern, blacklist, sources))
+    return sources
+
+
+def AddLastSlash(string):
+    ''' Low trick for correct parsing of paths '''
+    str = string.strip();
+    if len(str) == 0:
+        return "";
+    if not str.endswith('/'):
+        str = str + '/'
+    return str
 
 
 def addModule(env, name, tar=None, buildDir=None, targets=None,
@@ -224,7 +347,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
     url = url or ('%s/python/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     targets = targets or [name]
-    flags += ['--prefix=%s' % abspath('software')]
+    flags += ['--prefix=%s' % Dir('#software').abspath]
 
     # Add the option --with-name, so the user can call SCons with this
     # to activate the module even if it is not on by default.
@@ -245,12 +368,12 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
                '%(root)s/bin/python setup.py install %(flags)s > '
-               '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
+               '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
                                                    'PATH': os.environ['PATH'],
                                                    'flags': ' '.join(flags),
                                                    'name': name},
                'Compiling & installing %s > software/log/%s.log' % (name, name),
-               chdir='software/tmp/%s' % buildDir))
+               chdir=Dir('#software/tmp/%s' % buildDir).abspath))
     SideEffect('dummy', tInstall)  # so it works fine in parallel builds
 
     # Clean the special generated files
@@ -290,7 +413,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     tar = tar or ('%s.tgz' % name)
     url = url or ('%s/em/%s' % (URL_BASE, tar))
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-    confPath = 'software/cfg/%s.cfg' % name
+    confPath = File('#software/cfg/%s.cfg' % name).abspath
+    
 
     # Minimum requirements must be accomplished. To check them, we use
     # the req list, iterating with SConf CheckLib on it
@@ -319,7 +443,11 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         # by default it is as if we did not use --with-<name>
 
     packageHome = GetOption(name) or defaultPackageHome
-
+    
+    if not (default or packageHome):
+        return ''
+    
+    lastTarget = tLink = None
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         #FIXME: only for operating while programming
@@ -331,10 +459,10 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
                 Action('rm -rf %s && ln -v -s %s %s' % (name, packageHome, name),
                        'Linking package %s to software/em/%s' % (name, name),
                        chdir='software/em'))
-
+#    else:
     # If we haven't received a home for the package, we set it automatically to em folder
     #packageHome = 'software/em/%s' % name
-
+    
     # Donload, untar, link to it and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
@@ -343,11 +471,12 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/em/%s' % buildDir)
     if buildDir != name:
+        print "buildir %s name %s" % (buildDir, name)
         # Yep, some packages untar to the same directory as the package
         # name (hello Xmipp), and that is not so great. No link to it.
         tLink = env.Command(
-            'software/em/%s/bin' % name,  # TODO: find smtg better than "/bin"
-            Dir('software/em/%s' % buildDir),
+            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s' % buildDir),
             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
@@ -363,6 +492,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     if not os.path.exists(confPath):
         confPath = 'unset'
     opts = Variables(confPath)
+    opts.Add('PACKAGE_SCRIPT')
     opts.Add('PRIVATE_KEYS')
     opts.Add('BOOL_PRIVATE_KEYS')
     opts.Update(env) 
@@ -375,18 +505,19 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
         opts.Update(env)
         opts.Add(BoolVariable(*env.get(var)))
     opts.Update(env)
+    opts.Save(confPath + "_tmp", env)
+    Help(opts.GenerateHelpText(env, sort=cmp))
 #    print opts.keys()
     scriptPath = env.get('PACKAGE_SCRIPT')
     altScriptPath = join(packageHome, 'SConscript')
     # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
+    env.Replace(lastTarget=lastTarget)
     if scriptPath and os.path.exists(scriptPath):
-        print "Reading config file at %s" % scriptPath
-        Export('env')
-        env.SConscript(scriptPath)
+        print "Reading SCons script file at %s" % scriptPath
+        lastTarget = env.SConscript(scriptPath, exports='env')
     elif os.path.exists(altScriptPath):
         print "Config file not present. Trying SConscript in package home %s" % altScriptPath
-        Export('env')
-        env.SConscript(altScriptPath)
+        lastTarget = env.SConscript(altScriptPath, exports='env')
     else:
         # If we can't find the SConscript, then only extra actions can be done
         for target, command in extraActions:
@@ -401,10 +532,12 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # Add the dependencies. Do it to the "link target" (tLink), so any
     # extra actions (like setup scripts) have everything in place.
     for dep in deps:
-        Depends(tLink, dep)
+        Depends(lastTarget, dep)
 
-    if default or packageHome:
-        Default(lastTarget)
+    if (default or packageHome):
+        for lastT in lastTarget:
+            if lastT is not None:
+                Default(lastT)
 
     return lastTarget
 
@@ -442,7 +575,7 @@ def compilerConfig(env):
     return conf.Finish()
 
 
-def libraryTest(env, name, lang='cxx'):
+def libraryTest(env, name, lang='c'):
     """Check the existence of a concrete C/C++ library."""
     conf = Configure(env)
     conf.CheckLib(name, language=lang)
@@ -547,11 +680,12 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
 
 
 # Add methods so SConscript can call them.
-env.AddMethod(addLibrary, "AddLibrary")
-env.AddMethod(addModule, "AddModule")
-env.AddMethod(addPackage, "AddPackage")
-env.AddMethod(manualInstall, "ManualInstall")
-env.AddMethod(compilerConfig, "CompilerConfig")
+env.AddMethod(addLibrary, 'AddLibrary')
+env.AddMethod(addModule, 'AddModule')
+env.AddMethod(addPackage, 'AddPackage')
+env.AddMethod(manualInstall, 'ManualInstall')
+env.AddMethod(compilerConfig, 'CompilerConfig')
+env.AddMethod(addPackageLibrary, 'AddPackageLibrary')
 
 
 #  ************************************************************************
@@ -561,19 +695,19 @@ env.AddMethod(compilerConfig, "CompilerConfig")
 #  ************************************************************************
 
 
-opts = Variables(None, ARGUMENTS)
+extraOpts = Variables(None, ARGUMENTS)
 
-opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
-opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
-opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
-opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
-opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
-opts.Add('MPI_LIB', 'MPI library', 'mpi')
-opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
+extraOpts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
+extraOpts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
+extraOpts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
+extraOpts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
+extraOpts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
+extraOpts.Add('MPI_LIB', 'MPI library', 'mpi')
+extraOpts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
 
-opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
+extraOpts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
 
-opts.Update(env)
+extraOpts.Update(env)
 
 # TODO: check the code below to see if we can do a nice "purge".
 
@@ -628,7 +762,4 @@ opts.Update(env)
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-
-Export('env')
-
-env.SConscript('SConscript')
+env.SConscript('SConscript', exports='env')
