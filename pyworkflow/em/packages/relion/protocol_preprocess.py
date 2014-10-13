@@ -158,15 +158,18 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(inputSet)
         if self.doScale:
-            oldSampling = inputParticles.getSamplingRate()
-            xdim = inputParticles.getDim()[0]
-            newSampling = oldSampling * xdim/float(self.scaleSize.get())
+            oldSampling = inputSet.getSamplingRate()
+            xdim = inputSet.getDim()[0]
+            scaleFactor = xdim/float(self.scaleSize.get())
+            newSampling = oldSampling * scaleFactor
             imgSet.setSamplingRate(newSampling)
 
         #readSetOfParticles(self._getPath('particles.star'), imgSet,
         #                   preprocessImageRow=self._preprocessImageRow)
         for i, img in enumerate(inputSet):
             img.setLocation(i+1, self._getPath('particles.mrcs'))
+            if self.doScale and inputSet.hasAlignment():
+                img.getAlignment().scale(1/scaleFactor)
             imgSet.append(img)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(inputParticles, imgSet)

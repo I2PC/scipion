@@ -225,6 +225,24 @@ class TestSetOfClasses2D(BaseTest):
         clsSet.clear() # Close db connection and clean data
 
 
+class TestTransform(BaseTest):
+
+    def test_scale(self):
+        """ Check Scale storage in transformation class
+        """
+        t = Transform()
+        m = t.getMatrix()
+        m[0, 3] = 2
+        m[1, 3] = 4
+        t.scale(0.5)
+
+        self.assertAlmostEqual(m[0, 3], 1)
+        self.assertAlmostEqual(m[1, 3], 2)
+        self.assertAlmostEqual(m[3, 3], 1)
+
+        print t.getMatrix()
+
+
 if __name__ == '__main__':
 #    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
 #    unittest.TextTestRunner(verbosity=2).run(suite)
