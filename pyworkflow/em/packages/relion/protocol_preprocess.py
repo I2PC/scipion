@@ -100,6 +100,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         # Create links to binary files and write the relion .star file
         writeSetOfParticles(imgSet, self._getPath('input_particles.star'), 
                             outputDir=self._getExtraPath(),
+                            writeAlignment=False,
                             postprocessImageRow=self._postprocessImageRow)
 
 
@@ -142,10 +143,14 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         moveFile(outputMrcs, self._getPath('particles.mrcs'))
     
     def createOutputStep(self):
+        inputSet = self.inputParticles.get()
         imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        readSetOfParticles(self._getPath('particles.star'), imgSet, 
-                           preprocessImageRow=self._preprocessImageRow)
+        imgSet.copyInfo(inputSet)
+        #readSetOfParticles(self._getPath('particles.star'), imgSet,
+        #                   preprocessImageRow=self._preprocessImageRow)
+        for i, img in enumerate(inputSet):
+            img.setLocation(i+1, self._getPath('particles.mrcs'))
+            imgSet.append(img)
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles.get(), imgSet)
 
