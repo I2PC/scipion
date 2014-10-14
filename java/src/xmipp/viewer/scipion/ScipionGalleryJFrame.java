@@ -57,7 +57,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     
     
-      public ScipionGalleryJFrame(ScipionGalleryData data) {
+    public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
         setScipionImageIcon();
@@ -110,8 +110,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 close();
             }
         });
-        buttonspn.add(closebt);
         
+        buttonspn.add(closebt);
+        if(!XmippWindowUtil.isScipion())
+            return;
+            
         if (type != null) {
             cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 

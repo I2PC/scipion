@@ -27,7 +27,7 @@ public class ScipionParams extends Params {
     
     public ScipionParams(String args[]) {
         super(args);
-        XmippWindowUtil.setIsScipion(true);
+        XmippWindowUtil.setIsScipion(cmdLine.hasOption(SCIPION));
     }
 
     public void defineArgs() {
@@ -41,8 +41,10 @@ public class ScipionParams extends Params {
     @Override
     public void processArgs(String args[]) {
         super.processArgs(args);
-
+        
+        
         if (cmdLine.hasOption(SCIPION)) {
+            
             String[] cmdargs = cmdLine.getOptionValues(SCIPION);
             python = cmdargs[0];
             scripts = cmdargs[1]; 
