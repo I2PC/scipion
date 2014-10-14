@@ -63,9 +63,11 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 # If we don't have a local user installation, create it.
 #
 
+# Default values for configuration files.
 SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
 
+# Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
     value = sys.argv.pop(1)
@@ -77,7 +79,8 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         sys.exit('Unknown argument: %s' % arg)
 
 
-def createConf(fpath, ftemplate=None):
+def createConf(fpath, ftemplate):
+    "Create config file in fpath following the template in ftemplate"
     if not exists(dirname(fpath)):
         os.makedirs(dirname(fpath))
     if exists(fpath):
@@ -85,8 +88,7 @@ def createConf(fpath, ftemplate=None):
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
                          (fpath, backup))
         os.rename(fpath, backup)
-    ftemplate = ftemplate or '%s/settings/%s' % (SCIPION_HOME, basename(fpath))
-    open(fpath, 'w').write(open(ftemplate).read())
+    open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
 
 
 #
