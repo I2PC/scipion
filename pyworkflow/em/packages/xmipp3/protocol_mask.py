@@ -89,8 +89,10 @@ class XmippProtMask():
         
         if self.fillType == MASK_FILL_VALUE:
             fillValue = self.fillValue.get()
+        else:
+            fillValue = self.getEnumText('fillType')
         
-        self._args += " --substitute %(fillValue)f "
+        self._args += " --substitute %(fillValue)s "
         
         if self.source == SOURCE_GEOMETRY:
             self._args += self._getGeometryCommand()
@@ -120,7 +122,40 @@ class XmippProtMask():
         """
         args = " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
         return args
-    
+
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self, geoClass):
+        messages = []      
+        messages.append("*Mask application*")
+        if self.source.get() == SOURCE_GEOMETRY:
+            messages.append(' Used geometrical mask:')
+            messages += geoClass.summary(self)
+        else:
+            messages.append(' Used created mask: %s' % self.inputMask.get().getNameId())
+            
+        if self.fillType.get() == MASK_FILL_VALUE:
+            messages.append(' Filled with %s value' % self.fillValue.get())
+        else:
+            messages.append(' Filled with %s value' % self.getEnumText('fillType'))
+                                 
+        return messages    
+
+    def _methods(self, geoClass):
+        messages = []      
+        messages.append("*Mask application*")
+        
+        if self.source.get() == SOURCE_GEOMETRY:
+            messages.append("We applied a geometrical mask:")
+            messages+=geoClass.methods(self)
+        else:
+            messages.append('We applied a created mask: %s' % self.inputMask.get().getNameId())
+            
+        if self.fillType.get() == MASK_FILL_VALUE:
+            messages.append('filled with %s value' % self.fillValue.get())
+        else:
+            messages.append('filled with %s value' % self.getEnumText('fillType'))
+
+        return messages
         
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
     """ Apply mask to a set of particles """
@@ -146,7 +181,19 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         args = XmippGeometricalMask2D.argsForTransformMask(self, Xdim)
         return args
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        messages = []      
+        messages += XmippProtMask._summary(self, XmippGeometricalMask2D)
 
+        return messages
+
+    def _methods(self):
+        messages = []      
+        messages += XmippProtMask._methods(self, XmippGeometricalMask2D)
+
+        return messages
+    
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
     """ Apply mask to a volume """
     _label = 'apply 3d mask'
@@ -179,3 +226,15 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
         else:
             return XmippProtMask._getExtraMaskArgs(self)
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        messages = []      
+        messages += XmippProtMask._summary(self, XmippGeometricalMask3D)
+
+        return messages
+    
+    def _methods(self):
+        messages = []      
+        messages += XmippProtMask._methods(self, XmippGeometricalMask3D)
+
+        return messages
