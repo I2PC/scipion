@@ -70,6 +70,11 @@ estimate CTF on a set of micrographs using ctffind """
     def _citations(self):
         return ['Mindell2003']
 
+    def _methods(self):
+        str="We calculated the CTF using CtfFind [Midell2003]."
+        if self.methodsInfo.hasValue():
+            str+=" "+self.methodsInfo.get()
+        return [str]
 
 class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     """Estimates CTF on a set of micrographs
@@ -149,7 +154,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
     def _estimateCTF(self, line):
         """ Run ctffind3 with required parameters """
         objId = self._getObjId(line)
-        ctfModel = self.setOfCtf.__getitem__(objId)
+        ctfModel = self.inputCtf.get()[objId]
         
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
@@ -176,48 +181,16 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         if getExt(micFn) != ".mrc":
             cleanPattern(micFnMrc)
     
-    def createOutputStep(self):
-        setOfMics = self.inputCtf.get().getMicrographs()
-        outputMics = self._createSetOfMicrographs("_subset")
-        outputMics.copyInfo(setOfMics)
-        ctfSet = self._createSetOfCTF("_recalculated")
-        defocusList = []
-        for ctfModel in self.setOfCtf:
-            mic = ctfModel.getMicrograph()
-            outputMics.append(mic)
-            for line in self.values:
-                objId = self._getObjId(line)
-                
-                if objId == ctfModel.getObjId():
-                    mic.setObjId(ctfModel.getObjId())
-                    micDir = self._getMicrographDir(mic)
-                    
-                    out = self._getCtfOutPath(micDir)
-                    psdFile = self._getPsdPath(micDir)
-                    result = self._parseOutput(out)
-                    defocusU, defocusV, defocusAngle = result
-                    # save the values of defocus for each micrograph in a list
-                    ctfModel2 = self._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
-                    ctfModel2.setObjId(mic.getObjId())
-                    ctfModel2.setMicrograph(mic)
-                    ctfModel.copy(ctfModel2)
-                    
-                    # save the values of defocus for each micrograph in a list
-                    defocusList.append(ctfModel2.getDefocusU())
-                    defocusList.append(ctfModel2.getDefocusV())
-                    break
-            ctfSet.append(ctfModel)
-        
-        self.setOfCtf.close()
-        ctfSet.setMicrographs(outputMics)
-        
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineOutputs(outputCTF=ctfSet)
-        
-        self._defineTransformRelation(setOfMics, outputMics)
-        self._defineSourceRelation(self.inputCtf.get(), ctfSet)
-        self._defocusMaxMin(defocusList)
-        self._ctfCounter(defocusList)
+    def _createNewCtfModel(self, mic):
+        micDir = self._getMicrographDir(mic)                    
+        out = self._getCtfOutPath(micDir)
+        psdFile = self._getPsdPath(micDir)
+        result = self._parseOutput(out)
+        defocusU, defocusV, defocusAngle = result
+        # save the values of defocus for each micrograph in a list
+        ctfModel2 = self._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+        ctfModel2.setMicrograph(mic)
+        return ctfModel2
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _prepareCommand(self, line):
@@ -225,7 +198,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         self._defineValues(line)
         # get the size and the image of psd
         objId = self._getObjId(line)
-        ctfModel = self.setOfCtf.__getitem__(objId)
+        ctfModel = self.inputCtf.get()[objId]
         imgPsd = ctfModel.getPsdFile()
         imgh = ImageHandler()
         size, _, _, _ = imgh.getDimensions(imgPsd)
