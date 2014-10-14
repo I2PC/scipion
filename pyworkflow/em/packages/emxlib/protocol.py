@@ -118,7 +118,6 @@ class ProtEmxImport(ProtImport):
 
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
-        print "_insertAllSteps_insertAllSteps"
         self._insertFunctionStep('importDataStep', self.inputEMX.get())       
 
     #--------------------------- STEPS functions --------------------------------------------       
@@ -133,9 +132,10 @@ class ProtEmxImport(ProtImport):
         acquisition.setSphericalAberration(self.sphericalAberration.get())
         acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
         from convert import importData
-        emxFile=self._getRelPathExecutionDir(emxFile)
-        importData(self, emxFile, self._getPath(), 
-                   acquisition, self.samplingRate.get(),self.doCopyFiles.get())
+        #emxFile=self._getRelPathExecutionDir(emxFile)
+        importData(self, emxFile, self._getExtraPath(), 
+                   acquisition, self.samplingRate.get(),
+                   self.doCopyFiles.get())
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

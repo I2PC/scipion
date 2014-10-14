@@ -26,10 +26,17 @@
 """
 This module implement the import/export of Micrographs and Particles to EMX
 """
+
 from __future__ import print_function
-#unused import from pyworkflow.em.packages.emxlib.emxlib import emxDataTypes
-from pyworkflow.utils import *
-from pyworkflow.em.data import *
+from os.path import join, dirname, basename, exists
+
+from pyworkflow.utils.path import (copyFile, createLink, makePath, cleanPath, 
+                                   replaceBaseExt)
+from pyworkflow.em.convert import ImageHandler, NO_INDEX
+from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
+                                Coordinate, Alignment,
+                                SetOfMicrographs, SetOfCoordinates, 
+                                SetOfParticles)
 import emxlib
 from collections import OrderedDict
 
@@ -400,19 +407,24 @@ def _particlesFromEmx(protocol
             part = Coordinate()
             particles = False
             
-        ih = ImageHandler()
+        copiedFiles = {} # copied or linked
+        if doCopyFiles:
+            copyOrLink = copyFile
+        else:
+            copyOrLink = createLink
         
         for emxParticle in emxData.iterClasses(emxlib.PARTICLE):
             if particles:
                 _particleFromEmx(emxParticle, part)
                 i, fn = part.getLocation()
                 partFn = join(partDir, fn)
-                if doCopyFiles:
-                    partBase = basename(partFn)
-                    newLoc = (i, join(outputDir, partBase))
-                    ih.convert((i, partFn), newLoc)
-                else:
-                    newLoc = (i, partFn)
+                newFn = join(outputDir, basename(partFn))
+                newLoc = (i, newFn)
+                
+                if not partFn in copiedFiles:
+                    copyOrLink(partFn, newFn)
+                    copiedFiles[partFn] = newFn
+                    
                 part.setLocation(newLoc)
                 
                 if partSet.hasAlignment():
