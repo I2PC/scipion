@@ -172,7 +172,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                 img.getAlignment().scale(1/scaleFactor)
             imgSet.append(img)
         self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(inputParticles, imgSet)
+        self._defineTransformRelation(inputSet, imgSet)
 
 #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
