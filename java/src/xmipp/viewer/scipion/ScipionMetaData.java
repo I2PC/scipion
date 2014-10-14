@@ -800,12 +800,24 @@ public class ScipionMetaData extends MetaData {
 
     @Override
     public String getCTFFile(long id) {
-        return null;//Maybe write ctf info for id in new metadata and return it;
+                String psde = getPSDEnhanced(id);
+                if(psde != null)
+                {
+                    String ctf = psde.replace("_enhanced_psd.xmp", ".ctfparam");
+                    if(new File(ctf).exists())
+                        return ctf;
+                }
+        return null;
     }
     
     @Override
     public String getPSDFile(long id) {
         return (String) getEMObject(id).getValue("_psdFile");
+    }
+    
+    @Override
+    public String getPSDEnhanced(long id) {
+        return (String) getEMObject(id).getValue("_xmipp_enhanced_psd");
     }
     
     public CTFDescription getCTFDescription(long id)

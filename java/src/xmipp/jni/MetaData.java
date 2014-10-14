@@ -103,7 +103,7 @@ public class MetaData {
 
         	/** Create empty metadata */
 	public MetaData() {
-		System.out.format("Java: Creating metadata\n");
+		//System.out.format("Java: Creating metadata\n");
 		//Exception ex = new Exception();
     		//ex.printStackTrace();
 		create();
@@ -607,6 +607,10 @@ public class MetaData {
         
     public String getPSDFile(long id) {
         return getValueString(MDLabel.MDL_PSD, id);
+    }
+    
+    public String getPSDEnhanced(long id) {
+        return getValueString(MDLabel.MDL_PSD_ENHANCED, id);
     }
     
     public CTFDescription getCTFDescription(long id)

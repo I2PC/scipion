@@ -1688,20 +1688,26 @@ public class GalleryData {
         try {
             long id = ids[row];
             
-            String psdFile = md.getPSDFile(id);
-            ImageGeneric img = new ImageGeneric(psdFile);
+            String psd = md.getPSDFile(id);
+            String psden = md.getPSDEnhanced(id);
+            ImageGeneric img;
+            if(psden != null)
+                img = new ImageGeneric(psden);
+            else
+                img = new ImageGeneric(psd);
             ImagePlus imp = XmippImageConverter.readToImagePlus(img);
             
-            EllipseCTF ctfparams = md.getEllipseCTF(id, imp.getWidth());
             
-            
-
             if (profile) {
-                new CTFAnalyzerJFrame(imp, md.getCTFDescription(id), psdFile, md.getEllipseCTF(id).getSamplingRate());
+                if( psden == null)
+                    new CTFAnalyzerJFrame(imp, md.getCTFDescription(id), psd, md.getEllipseCTF(id).getSamplingRate());
+                else
+                    new CTFAnalyzerJFrame(imp, md.getCTFFile(id), psd);
             } else {
-                String sortfn = createSortFile(psdFile, row);
+                EllipseCTF ctfparams = md.getEllipseCTF(id, imp.getWidth());
+                String sortfn = createSortFile(psd, row);
                 XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, imp, psdFile, ctfparams, ctfTasks, row, sortfn);
+                CTFRecalculateImageWindow ctfiw = new CTFRecalculateImageWindow(this, imp, psd, ctfparams, ctfTasks, row, sortfn);
             }
 
         } catch (Exception e) {

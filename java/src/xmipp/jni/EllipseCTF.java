@@ -147,7 +147,7 @@ public class EllipseCTF {
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSU, mddefU, id);
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUSV, mddefV, id);
         md.setValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, defocusAngle, id);
-        md.print();
+        //md.print();
         return md;       
     }
     
