@@ -126,7 +126,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     
     def _getMicName(self, movieId):
         return 'micrograph_%06d.mrc' % movieId
-    
+
+    def _getCorrMovieName(self, movieId, ext='.mrcs'):
+        return 'movie_%06d%s' % (movieId, ext)
     def _processMovie(self, movieId, movieName, movieFolder):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
