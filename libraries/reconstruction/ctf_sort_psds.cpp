@@ -160,11 +160,15 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 
 	evaluation.ctf_envelope_ssnr = fn_in.getDir()+"envelope.xmd";
 
+	int enabled;
+	rowIn.getValue(MDL_ENABLED,enabled);
     rowIn.getValue(MDL_MICROGRAPH, fnMicrograph);
     rowIn.getValue(MDL_PSD,fnPSD);
-
-    if (fnPSD == "NA")
-    	return;
+	if (enabled==-1 || fnPSD == "NA")
+	{
+		rowOut.setValue(MDL_ENABLED,-1);
+		return;
+	}
 
     if (rowIn.containsLabel(MDL_CTF_MODEL))
     {
