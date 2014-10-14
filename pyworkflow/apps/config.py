@@ -276,11 +276,11 @@ def addProtocols(settings):
     # Read menus from users' config file.
     cp = ConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
+    SCIPION_MENU = os.environ['SCIPION_MENU']
     # Also mentioned in /scipion . Maybe we could do better.
 
     try:
-        assert cp.read(MENU_FILE) != [], 'Missing file %s' % MENU_FILE
+        assert cp.read(SCIPION_MENU) != [], 'Missing file %s' % SCIPION_MENU
 
         # Populate the protocol menu from the config file.
         for menuName in cp.options('PROTOCOLS'):
@@ -291,7 +291,7 @@ def addProtocols(settings):
             settings.addProtocolMenu(menu)
     except Exception as e:
         sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, MENU_FILE))
+                 'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
 
 
 def setQueueSystem(host):
@@ -299,11 +299,11 @@ def setQueueSystem(host):
     # Read from users' config file.
     cp = ConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+    SCIPION_CONFIG = os.environ['SCIPION_CONFIG']
     # Also mentioned in /scipion . Maybe we could do better.
 
     try:
-        assert cp.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
+        assert cp.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
 
         # Helper functions (to write less)
         def get(var): return cp.get('HOSTS', var).replace('%_(', '%(')
@@ -326,7 +326,7 @@ def setQueueSystem(host):
         queue.allowThreads.set(isOn(get('ALLOW_THREADS')))
     except Exception as e:
         sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, CONF_FILE))
+                 'To solve it, delete %s and run again.' % (e, SCIPION_CONFIG))
 
     queueSys.queues = List()
     queueSys.queues.append(queue)

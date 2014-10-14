@@ -63,10 +63,21 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 # If we don't have a local user installation, create it.
 #
 
-CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
-MENU_FILE = os.path.expanduser('~/.config/scipion/menu.conf')
+SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
+SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
 
-def createConf(fpath):
+while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
+    arg = sys.argv.pop(1)
+    value = sys.argv.pop(1)
+    if arg == '--config':
+        SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
+    elif arg == '--menu':
+        SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
+    else:
+        sys.exit('Unknown argument: %s' % arg)
+
+
+def createConf(fpath, ftemplate=None):
     if not exists(dirname(fpath)):
         os.makedirs(dirname(fpath))
     if exists(fpath):
@@ -74,7 +85,7 @@ def createConf(fpath):
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
                          (fpath, backup))
         os.rename(fpath, backup)
-    ftemplate = '%s/settings/%s' % (SCIPION_HOME, basename(fpath))
+    ftemplate = ftemplate or '%s/settings/%s' % (SCIPION_HOME, basename(fpath))
     open(fpath, 'w').write(open(ftemplate).read())
 
 
@@ -83,17 +94,17 @@ def createConf(fpath):
 #
 
 try:
-    if not exists(CONF_FILE):
-        sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
-        createConf(CONF_FILE)
+    if not exists(SCIPION_CONFIG):
+        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_CONFIG)
+        createConf(SCIPION_CONFIG, '%s/settings/scipion.conf' % SCIPION_HOME)
 
-    if not exists(MENU_FILE):
-        sys.stdout.write('Creating local configuration file: %s\n' % MENU_FILE)
-        createConf(MENU_FILE)
+    if not exists(SCIPION_MENU):
+        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_MENU)
+        createConf(SCIPION_MENU, '%s/settings/menu.conf' % SCIPION_HOME)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    assert config.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
+    assert config.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
 
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
@@ -112,13 +123,8 @@ try:
 except Exception:
     # This way of catching exceptions works with Python 2 & 3
     sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
-    try:
-        sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
-        createConf(CONF_FILE)  # try to create a working configuration file
-    except Exception:
-        pass  # but don't be upset if we can't :)
     sys.stdout.write('Please check the configuration file %s and try again.\n' %
-                     CONF_FILE)
+                     SCIPION_CONFIG)
     sys.exit(1)
 
 PATH = os.pathsep.join(
@@ -143,6 +149,8 @@ VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
+    'SCIPION_CONFIG': SCIPION_CONFIG,
+    'SCIPION_MENU': SCIPION_MENU,
     'PATH': PATH,
     'PYTHONPATH': PYTHONPATH,
     'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
