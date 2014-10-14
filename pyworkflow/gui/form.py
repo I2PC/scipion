@@ -654,10 +654,12 @@ class ParamWidget():
         entryWidth = 30
 
         if t is HiddenBooleanParam:
-           var=0
+            var = 0
+        
         elif t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
             frame.grid(row=0, column=0, sticky='w')
+        
         elif t is EnumParam:
             var = ComboVar(param)
             if param.display == EnumParam.DISPLAY_COMBO:
@@ -720,6 +722,7 @@ class ParamWidget():
             entry.grid(row=0, column=0, sticky='w')
             
             if issubclass(t, PathParam):
+                self._entryPath = entry
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:
@@ -846,6 +849,9 @@ class ParamWidget():
     def set(self, value):
         if value is not None:
             self.var.set(value)
+            
+        if hasattr(self, '_entryPath'):
+            self._entryPath.xview_moveto(1)
         
     def get(self):
         return self.var.get()
