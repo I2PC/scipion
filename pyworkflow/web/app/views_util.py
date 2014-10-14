@@ -103,7 +103,6 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           'jquery_browser':'jquery/jquery.serverBrowser.js',
           
-          'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
           'graph_utils': 'templates_libs/graph_utils.js',
@@ -126,8 +125,10 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'showj_table_utils': 'showj_libs/showj_table_utils.js',
           'showj_column_utils': 'showj_libs/showj_column_utils.js',
           
-          'messi': 'messi/messi.js',
-          'raphael': 'raphael/raphael.js',
+          #Utils libs
+          'jsplumb': 'jsPlumb.js',
+          'messi': 'messi.js',
+          'raphael': 'raphael.js',
           }
 
 def getResourceIcon(icon):

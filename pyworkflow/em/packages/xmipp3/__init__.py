@@ -54,6 +54,7 @@ from protocol_cltomo import XmippProtCLTomo
 from protocol_convert_pdb import XmippProtConvertPdb
 from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_create_mask3d import XmippProtCreateMask3D
+from protocol_create_mask2d import XmippProtCreateMask2D
 from protocol_crop_resize import XmippProtCropResizeParticles
 from protocol_crop_resize import XmippProtCropResizeVolumes
 from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup

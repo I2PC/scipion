@@ -48,7 +48,20 @@ class ImageHandler(object):
         self._imgClass = xmipp.Image
         self._locationToStr = locationToXmipp
         self._fixVolumeFileName = fixVolumeFileName
-        
+
+    def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
+        """ convert format of stack file. Output/input format is
+        specified by outFormat/inFormat. If outFormat/inFomat=None then
+        there will be inferred from extension
+        """
+        #get input dim
+        (x,y,z,n) = xmipp.getImageSize(inputFn)
+        #Create empty output stack for efficiency
+        xmipp.createEmptyFile(outputFn,x,y,z,n)
+        # handle image formats
+        for i in range(1, n+1):
+            self.convert((i, inputFn), (i, outputFn))
+
     def convert(self, inputLoc, outputLoc):
         """ Convert from one image to another.
         Params:
@@ -91,6 +104,7 @@ class ImageHandler(object):
     def write(self, image, location):
         """ Write an image to disk. """
         image.write(self._locationToStr(*location))
+
         
         
 def paramsToTransform(params):

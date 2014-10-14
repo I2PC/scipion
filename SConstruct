@@ -33,6 +33,7 @@
 import os
 from os.path import join, abspath
 import platform
+import subprocess
 import SCons.Script
 
 
@@ -62,10 +63,49 @@ env = Environment(ENV=os.environ,
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
 env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
+
 def progInPath(env, prog):
     "Is program prog in PATH?"
     return any(os.path.exists('%s/%s' % (base, prog)) for base in
                os.environ.get('PATH', '').split(os.pathsep))
+
+
+def checkConfigLib(target, source, env):
+    "See if we have library <name> from software/log/lib_<name>.log"
+
+    # This is used to create the CheckConfigLib builder.
+
+    # source is ignored and must be ''
+    # target must look like 'software/log/lib_<name>.log'
+
+    for tg in map(str, target):  # "target" is a list of SCons.Node.FS.File
+        name = tg[len('software/log/lib_'):-len('.log')]
+        try:
+            subprocess.check_call(['pkg-config', '--cflags', '--libs', name],
+                                  stdout=open(os.devnull, 'w'),
+                                  stderr=subprocess.STDOUT)
+        except (subprocess.CalledProcessError, OSError) as e:
+            try:
+                subprocess.check_call(['%s-config' % name, '--cflags'])
+            except (subprocess.CalledProcessError, OSError) as e:
+                print """
+  ************************************************************************
+    Warning: %s not found. Please consider installing it first.
+  ************************************************************************
+
+Continue anyway? (y/n)""" % name
+                if raw_input().upper() != 'Y':
+                    Exit(2)
+
+                # If we continue without the lib, we write the target log
+                # so scons knows not to ask again.
+                open(tg, 'w').write('%s off\n' % name)
+        # If we do have it, write the tg so we do not ask again either.
+        open(tg, 'w').write('%s on\n' % name)
+
+
+CheckConfigLib = Builder(action=checkConfigLib)
+
 
 # Add the path to dynamic libraries so the linker can find them.
 if LINUX:
@@ -109,7 +149,7 @@ elif WINDOWS:
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
-def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
+def addLibrary(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
                url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
@@ -158,22 +198,14 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, neededProgs=[],
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate library %s' % name)
 
-    # Check that all needed programs are there.
-    for p in neededProgs:
-        if not progInPath(env, p):
-            print """
-  ************************************************************************
-
-    Warning: Cannot find program "%s" needed by %s
-
-  ************************************************************************
-
-Continue anyway? (y/n)""" % (p, name)
-            if raw_input().upper() != 'Y':
-                Exit(2)
+    # Add all the checks.
+    checksTargets = ['software/log/lib_%s.log' % name for name in libChecks]
+    for tg in checksTargets:
+        CheckConfigLib(env, tg, '')
 
     # Create and concatenate the builders.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = Download(env, 'software/tmp/%s' % tar,
+                         [Value(url)] + checksTargets)
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
     tUntar = Untar(env, 'software/tmp/%s/configure' % buildDir, tDownload,
                    cdir='software/tmp')
@@ -335,9 +367,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         if not progInPath(env, p):
             print """
   ************************************************************************
-
     Warning: Cannot find program "%s" needed by %s
-
   ************************************************************************
 
 Continue anyway? (y/n)""" % (p, name)

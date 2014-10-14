@@ -838,10 +838,10 @@ class Protocol(Step):
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
         if 'env' not in kwargs:
-            self._log.info("calling self._getEnviron...")
+            # self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
                        
-        self._log.info("Using environ for runJob: ", str(kwargs['env']))
+        # self._log.info("Using environ for runJob: ", str(kwargs['env']))
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):

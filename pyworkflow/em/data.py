@@ -1012,7 +1012,11 @@ class Transform(EMObject):
 
     def __str__(self):
         return str(self._matrix)
-    
+
+    def scale(self, factor):
+        m = self.getMatrix()
+        m *= factor
+        m[3, 3] = 1.
     
 class Alignment(Transform):
     """ Transform used for 2D alignment against a reference. """

@@ -66,6 +66,7 @@ tk = env.AddLibrary(
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
     targets=['lib/libtk8.6.so'],
+    libChecks=['xft'],
     flags=['--enable-threads'],
     deps=[tcl],
     clean=['software/tmp/tk8.6.1'])
