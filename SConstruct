@@ -502,6 +502,15 @@ opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
 
 opts.Update(env)
 
+# TODO: we should add the options to the help with something like:
+#   Help(opts.GenerateHelpText(env))
+# but that makes all the other documentation disappear. How nasty!
+#
+# For context and possible solutions, see
+# http://www.scons.org/doc/2.0.1/HTML/scons-user/c1910.html and
+# http://www.scons.org/doc/HTML/scons-user.html
+
+
 # TODO: check the code below to see if we can do a nice "purge".
 
 # def _removeInstallation(env):
