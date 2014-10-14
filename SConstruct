@@ -511,6 +511,51 @@ opts.Update(env)
 # http://www.scons.org/doc/HTML/scons-user.html
 
 
+# Check that we have a working installation of MPI.
+def WorkingMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
+    "Return 1 if a working installation of MPI is found, 0 otherwise"
+
+    context.Message('* Checking for MPI ... ')
+
+    oldValues = dict([(v, context.env.get(v, [])) for v in
+                      ['LIBS', 'LIBPATH', 'CPPPATH', 'CC', 'CXX']])
+
+    context.env.Prepend(LIBS=[mpi_lib], LIBPATH=[mpi_libpath], CPPPATH=[mpi_inc])
+    context.env.Replace(LINK=mpi_link)
+    context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
+
+    # Test only to compile with C++.
+    ret = context.TryLink("""
+    #include <mpi.h>
+    int main(int argc, char** argv)
+    {
+        MPI_Init(0, 0);
+        MPI_Finalize();
+        return 0;
+    }""", '.cpp')  # scons, te odio
+
+    # Put back the old values, we don't want MPI flags for non-MPI programs.
+    context.env.Replace(**oldValues)
+
+    context.Result(ret)
+    return ret
+
+
+if True:  # TODO: put the proper thing here, like if we are compiling with mpi
+    conf = Configure(env, {'WorkingMPI' : WorkingMPI}, 'config.tests', 'config.log')
+
+    if conf.WorkingMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+                       env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'],
+                       env['MPI_LINKERFORPROGRAMS']):
+        print 'MPI seems to work.'
+    else:
+        print 'Warning: MPI seems NOT to work.'
+# If you call "scipion install" it may get some cached result and you
+# get surprising results that don't seem to make sense at all.
+# If you call "scipion install --config=force" you have better
+# chances, but then also other things may be rebuilt. Thanks scons...
+
+
 # TODO: check the code below to see if we can do a nice "purge".
 
 # def _removeInstallation(env):
