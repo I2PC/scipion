@@ -2,6 +2,7 @@
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Vahid Abrishami (vabrisahmi@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -146,21 +147,15 @@ class ProtOpticalAlignment(ProtProcessMovies):
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
         alMethod = self.alignMethod.get()
+
         # For simple average execution
         if alMethod == AL_AVERAGE:
             args = '-i %(movieName)s -o %(micName)s' % locals()
             args += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
             self.runJob(program, args, cwd=movieFolder)
-        # For Optical Flow execution
-        if alMethod == AL_OPTICAL:
-            winSize = self.winSize.get()
-            args = '-i %(movieName)s -o %(micName)s --winSize %(winSize)d' % locals()
-            args += ' --nst %d --ned %d' % (firstFrame, lastFrame)
-            if self.doGPU:
-                args += ' --gpu %d' % gpuId
-            self.runJob(program, args, cwd=movieFolder)
-        # For DosefGPU Execution
-        if alMethod == AL_DOSEFGPU:
+
+        # For DosefGPU Execution (and combination with optical flow)
+        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
             #logFile = self._getLogFile(movieId)
             #gainFile = self.inputMovies.get().getGain()
             args = {'-crx': self.cropOffsetX.get(),
@@ -177,11 +172,31 @@ class ProtOpticalAlignment(ProtProcessMovies):
                     }
             command = '%(movieName)s -fcs %(micName)s ' % locals()
             command += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
+            if alMethod == AL_DOSEFGPUOPTICAL:
+                program = 'dosefgpu_driftcorr'
+                corrMovieName = self._getCorrMovieName(movieId)
+                command += ' ' + '-fct %(corrMovieName)s -ssc 1 ' % locals()
             command += ' ' + self.extraParams.get()
             import pyworkflow.em.packages.dosefgpu as dosefgpu
             self.runJob(program, command, cwd=movieFolder,
                         env=dosefgpu.getEnviron())
+            if alMethod == AL_DOSEFGPUOPTICAL:
+                moveFile(join(movieFolder, micName), self._getExtraPath())
 
+        # For Optical Flow execution (and combination with DosefGPU)
+        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+            winSize = self.winSize.get()
+            if alMethod == AL_DOSEFGPUOPTICAL:
+                program = 'xmipp_optical_alignment_gpu'
+                corrMovieName = self._getCorrMovieName(movieId)
+                args = '-i %(corrMovieName)s ' % locals()
+            else:
+                args = '-i %(movieName)s ' % locals()
+            args += '-o %(micName)s --winSize %(winSize)d' % locals()
+            args += ' --nst %d --ned %d' % (firstFrame, lastFrame)
+            if self.doGPU:
+                args += ' --gpu %d' % gpuId
+            self.runJob(program, args, cwd=movieFolder)
 
         # Move output micrograph to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
