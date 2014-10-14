@@ -309,7 +309,7 @@ def textfileViewer(title, file):
     
     return html
 
-def file_downloader(request):
+def get_log(request):
     "Return a response with the content of the file mentioned in ?path=fname"
     # Got the idea from here:
     # https://stackoverflow.com/questions/8600843
@@ -318,6 +318,38 @@ def file_downloader(request):
     # First some simple security: only allow to serve log files
     if not any(path.endswith(x) for x in ['.log', '.stdout', '.stderr']):
         return HttpResponseForbidden('Forbidden: Sorry, invalid path requested.')
+
+    if not os.path.exists(path):
+        return HttpResponseNotFound('Path not found: %s' % path)
+
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    return response
+
+def get_file(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    path = request.GET.get("path")
+
+    if not os.path.exists(path):
+        return HttpResponseNotFound('Path not found: %s' % path)
+
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    return response
+
+def project_downloader(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    # Got the idea from here:
+    # https://stackoverflow.com/questions/8600843
+    path = request.GET.get("path")
+
+    # First some simple security: only allow to serve log files
+#     if not any(path.endswith(x) for x in ['.log', '.stdout', '.stderr']):
+#         return HttpResponseForbidden('Forbidden: Sorry, invalid path requested.')
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)

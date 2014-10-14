@@ -922,7 +922,7 @@ class Protocol(Step):
             if url.startswith('http://'):
                 self._buffer += '[[%s][%s]]' % (url, txt)
             else:
-                self._buffer += '[[/file_downloader/?path=%s][%s]]' % (url, txt)
+                self._buffer += '[[/get_log/?path=%s][%s]]' % (url, txt)
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 

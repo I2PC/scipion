@@ -78,8 +78,9 @@ function updateListFiles(project_folder){
 		success : function(json) {
 			$.each(json, function(key, value) {
 				var icon = "<td><img src='"+ value.icon +"' /></td>"
-//				var url_file = project_folder + "/" + value.name
-				var name = "<td><a href='#'>"+ value.name +"</a></td>"
+				var url_file = "/get_file/?path="+ project_folder + "/" + value.name +""
+				console.log(url_file)
+				var name = "<td><a href='" + url_file + "'>"+ value.name +"</a></td>"
 				$("tr#listFiles").append("<tr>"+ icon + name + "</tr>")
 			});
 		}

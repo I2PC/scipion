@@ -77,7 +77,7 @@ urlpatterns = patterns('',
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewer_element/$', 'app.em_viewer.viewer_element'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
-    url(r'^file_downloader/$', 'app.views_util.file_downloader'),
+    url(r'^get_log/$', 'app.views_util.get_log'),
     
     #SHOWJ 
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
@@ -88,6 +88,7 @@ urlpatterns = patterns('',
     url(r'^doUpload/', 'app.views_management.doUpload'),
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
+    url(r'^get_file/$', 'app.views_util.get_file'),
     
 
 #===============================================================================
