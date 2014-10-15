@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Roberto Ma:q!rabini (roberto@cnb.csic.es)
-
+# *              Roberto Marabini (roberto@cnb.csic.es)
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -61,8 +61,10 @@ FM_SOFT_THRESHOLDING = 2
 FM_ADAPTIVE_SOFT     = 3
 FM_CENTRAL           = 4
 
+
 class XmippProtFilter():
     """ Some filters operations such as: Fourier or Gaussian. """
+    tmpCTF = "ctf.xmd"
 
     def __init__(self, **args):
         self._program = "xmipp_transform_filter"
@@ -115,17 +117,39 @@ class XmippProtFilter():
                                                                                   FM_DAUB12,
                                                                                   FM_DAUB20))
         #fourier
-        line = form.addLine('Frequency',
-                            condition=fourierCondition,
+
+        form.addParam('freqInAngstrom', BooleanParam, default=True,
+                      condition='filterSpace == %d' % FILTER_SPACE_FOURIER,
+                      label='Provide frequencies in Angstroms?',
+                      help='If *Yes*, the frequencies values for filter\n'
+                           'should be provided in Angstroms. If *No*, the\n'
+                           'values should be in digital frequencies (between 0 and 0.5).')
+        # Frequencies in Angstroms
+        line = form.addLine('Frequency (A)',
+                            condition=fourierCondition + ' and freqInAngstrom',
                             help='Range to apply the filter')
-        line.addParam('lowFreq', DigFreqParam, default=0.02,
+        line.addParam('lowFreqA', FloatParam, default=60,
                       condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
                                                        , FM_HIGH_PASS),
                       label='Lowest')
-        line.addParam('highFreq', DigFreqParam, default=0.35,
+        line.addParam('highFreqA', FloatParam, default=10,
                       condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
                                                        , FM_LOW_PASS),
                       label='Highest')
+        
+        # Digital frequencies
+        line = form.addLine('Frequency (dig)',
+                            condition=fourierCondition + ' and (not freqInAngstrom)',
+                            help='Range to apply the filter')
+        line.addParam('lowFreqDig', DigFreqParam, default=0.02,
+                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
+                                                       , FM_HIGH_PASS),
+                      label='Lowest')
+        line.addParam('highFreqDig', DigFreqParam, default=0.35,
+                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
+                                                       , FM_LOW_PASS),
+                      label='Highest')        
+        
         form.addParam('freqDecay', FloatParam, default=0.02,
                       condition=fourierCondition,
                       label='Frequency decay',
@@ -136,13 +160,6 @@ class XmippProtFilter():
                       label='CTF Object',
                       pointerClass='CTFModel',
                       help='Object with CTF information')
-
-        form.addParam('freqInAngstrom', BooleanParam, default=False,
-                      condition='filterSpace == %d' % FILTER_SPACE_FOURIER,
-                      label='Frequencies provided in Ang.?',
-                      help='If *Yes*, the frequencies values for filter\n'
-                           'should be provided in Angstroms. If *No*, the\n'
-                           'values should be in digital frequencies (between 0 and 0.5).')
 
         #wavelets
         form.addParam('waveLetMode',  EnumParam, choices=['remove_scale',
@@ -166,11 +183,19 @@ class XmippProtFilter():
 
         inputFn = self.inputFn
         ctfModel = self._getTmpPath(self.tmpCTF)
-
+        
         if self.filterSpace == FILTER_SPACE_FOURIER:
-            lowFreq = self.lowFreq.get()
-            highFreq = self.highFreq.get()
+            if self.freqInAngstrom:
+                lowFreq = self.lowFreqA.get()
+                highFreq = self.highFreqA.get()
+                samplingStr = ' --sampling %f' % self.getInputSampling()
+            else:
+                lowFreq = self.lowFreqDig.get()
+                highFreq = self.highFreqDig.get()
+                samplingStr = ''
+                
             filterMode = self.filterModeFourier.get()
+                        
             freqDecay = self.freqDecay.get()
 
             if filterMode == FM_LOW_PASS:
@@ -185,10 +210,7 @@ class XmippProtFilter():
             else:
                 raise Exception("Unknown fourier filter mode: %d" % filterMode)
 
-            if self.filterSpace:
-                filterStr += " --sampling %f " % self.inputParticles.get().getSamplingRate()
-
-            args = (self._args + " --fourier " + filterStr ) % locals()
+            args = (self._args + " --fourier " + filterStr + samplingStr ) % locals()
 
         elif self.filterSpace == FILTER_SPACE_REAL:
             filterMode = self.filterModeReal.get()
@@ -225,11 +247,17 @@ class XmippProtFilter():
         if filterMode == FM_CTF:
             self._insertFunctionStep("convertCTFXmippStep", ctfModel)# save CTF model
         self._insertFunctionStep("filterStep", args)
+        
+    def getInputSampling(self):
+        """ Function to return the sampling rate of input objects. 
+        Should be implemented for filter volumes and particles.
+        """
+        pass
+
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
     """ Apply Fourier filters to a set of particles  """
     _label = 'filter particles'
-    tmpCTF = "ctf.xmd"
 
     def __init__(self, **args):
         ProtFilterParticles.__init__(self, **args)
@@ -260,8 +288,11 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, Xmipp
     def filterStep(self, args):
         args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
         self.runJob("xmipp_transform_filter", args)
-
-
+        
+    def getInputSampling(self):
+        return self.inputParticles.get().getSamplingRate()
+    
+    
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFilter):
     """ Apply Fourier filters to a set of volumes """
     _label = 'filter volumes'    #--------------------------- UTILS functions ---------------------------------------------------
@@ -284,3 +315,5 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes, XmippProtFi
         
         self.runJob("xmipp_transform_filter", args)
 
+    def getInputSampling(self):
+        return self.inputVolumes.get().getSamplingRate()
