@@ -31,7 +31,8 @@
 
 
 import os
-from os.path import join, abspath
+from os.path import join, abspath, splitext, split
+from glob import glob
 import platform
 import SCons.Script
 import SCons.SConf
@@ -110,6 +111,13 @@ env.EnsureSConsVersion(2,3,2)
 # to do one step while the previous one is still running in the background.
 
 
+# Determine if a var is an iterable or not
+def is_sequence(arg):
+    return (not hasattr(arg, "strip") and
+            hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__"))
+
+
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
                targets=None, url=None, flags=[], addPath=True, autoConfigTargets='Makefile',
                deps=[], clean=[], default=True):
@@ -126,11 +134,6 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     Returns the final targets, the ones that Make will create.
 
     """
-    # Determine if a var is an iterable or not
-    def is_sequence(arg):
-        return (not hasattr(arg, "strip") and
-                hasattr(arg, "__getitem__") or
-                hasattr(arg, "__iter__"))
 
     # Use reasonable defaults.
     tar = tar or ('%s.tgz' % name)
@@ -218,7 +221,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     return toReturn
 
 
-def addPackageLibrary(env, name, dir=None, incs=None, libs=None, src=None, prefix=None, default=True):
+def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, incs=None, libs=None, src=None, prefix=None, mpi=False, cuda=False, libpath=[], deps=[], default=True):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -230,28 +233,61 @@ def addPackageLibrary(env, name, dir=None, incs=None, libs=None, src=None, prefi
     Returns the final targets, the ones that Make will create.
     """
     libs = libs or 'lib%s.so' % name
-    dir = dir or Dir('lib/%s' % name)
+    dirs = dirs or Dir('external/%s' % name).abspath
+    untarTargets = untarTargets or 'configure'
+    tars = tars or Dir('external/%s.tgz' % name).abspath
+    incs = incs or Dir('external/%s/include' % name).abspath
     prefix = 'lib' if prefix is None else 'lib'
-    #basedir = AddLastSlash(basedir)
+    basedir = 'lib'
     fullname = prefix + name
-    sources = Glob(basedir, sources_pattern, skip_list)
-    binprefix = join(env['prefix'], 'bin')
+    patterns = src
+    sources = []
+    untars = []
     
-    library = envToUse.SharedLibrary(
-            join(basedir, name),
-            sources,
-            CPPPATH=includes + [envToUse['CPPPATH']],
-            LIBPATH=libpath,
-            LIBS=libs,
-            SHLIBPREFIX=shlibprefix,
-            SHLIBSUFFIX=shlibsuffix,
-            **mpiArgs
-            )
+    for x, tar in enumerate(tars):
+        tarDestination, tarName = splitext(tar)
+        tUntar = Untar(env, File('%s/%s' % (dirs[x], untarTargets[x])).abspath, 
+                       File(tars[x]),
+                       cdir=Dir('external').abspath)
+        Depends(tUntar, deps)
+        untars += tUntar
+    
+    for p in patterns:
+        if not p.startswith(basedir):
+            p = join(basedir, p)
+        sources += [p]
+#        if p.endswith(".cu"):
+#            cudaFiles = True
+    #path = os.environ['PATH']
+    mpiArgs = {}
+    if mpi:
+        libpath.append(env['MPI_LIBDIR'])
+        mpiArgs = {'CC': env['MPI_CC'],
+                   'CXX': env['MPI_CXX']}
+    #    path += os.pathsep + env['MPI_BINDIR']
+    print 'sources %s' % sources
+    
+    sourceZipped = zip(*(split(source) for source in sources))
+    print 'source zipped %s' % sourceZipped
+    
+    library = SharedLibrary(
+              join(basedir, fullname),
+              customGlob(*sourceZipped),
+              CPPPATH=incs + [env['CPPPATH']],
+              LIBPATH=libpath,
+              LIBS=libs,
+#              PATH=path,
+              **mpiArgs
+              )
 
-    install = env.Install(binprefix, program)
-    alias = env.Alias(fullname, install)
-    env.Default(alias)
-    return alias
+    #install = env.Install(prefix, library)
+    #alias = env.Alias(fullname, install)
+    for untarred in untars:
+        Depends(library, untarred)
+    Default(library)
+    print 'making default library: %s' % library
+
+    return library
 
 
 def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
@@ -309,11 +345,15 @@ def AppendIfNotExists(**args):
         env.Append(**args)
 
 
-def Glob(dir, pattern, blacklist):
+def customGlob(dirs, patterns):
     ''' Custom made globbing '''
     
     sources = []
-    os.path.walk(dir, AddMatchingFiles, (pattern, blacklist, sources))
+    for x, dir in enumerate(dirs):
+        print 'dir: %s' % dir
+        sources += Glob(dir, patterns[x])
+        print 'pattern: %s' % patterns[x]
+        print 'sources: %s' % sources
     return sources
 
 
