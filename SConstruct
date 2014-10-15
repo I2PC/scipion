@@ -490,6 +490,8 @@ env.AddMethod(progInPath, "ProgInPath")
 
 opts = Variables(None, ARGUMENTS)
 
+opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
+
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
@@ -498,17 +500,11 @@ opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpi')
 opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
 
-opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
-
 opts.Update(env)
 
-# TODO: we should add the options to the help with something like:
-#   Help(opts.GenerateHelpText(env))
-# but that makes all the other documentation disappear. How nasty!
-#
-# For context and possible solutions, see
-# http://www.scons.org/doc/2.0.1/HTML/scons-user/c1910.html and
-# http://www.scons.org/doc/HTML/scons-user.html
+Help('\nVariables that can be set:\n')
+Help(opts.GenerateHelpText(env))
+Help('\n')
 
 
 # Check that we have a working installation of MPI.
@@ -541,7 +537,11 @@ def WorkingMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link
     return ret
 
 
-if True:  # TODO: put the proper thing here, like if we are compiling with mpi
+# TODO: maybe change and put the proper thing here, like if we are compiling with mpi.
+if not SCons.Script.Main.OptionsParser.values.help:
+    # Ha, see that? "...Main.OptionsParser.values.help" no less.
+    # That's the hack I had to do to see if we called with --help. Ugh scons.
+
     conf = Configure(env, {'WorkingMPI' : WorkingMPI}, 'config.tests', 'config.log')
 
     if conf.WorkingMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
@@ -613,3 +613,10 @@ AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
 Export('env')
 
 env.SConscript('SConscript')
+
+# Add original help (the one that we would have if we didn't use
+# Help() before). But remove the "usage:" part (first line).
+phelp = SCons.Script.Main.OptionsParser.format_help().split('\n')
+Help('\n'.join(phelp[1:]))
+# This is kind of a hack, because the #@!^ scons doesn't give you easy
+# access to the original help message.
