@@ -71,7 +71,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Select the SetOfCoordinates ')
         
         form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other', 'original'], 
-                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
+                      default=0, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
         form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==1',
                       label='Downsampling factor',
