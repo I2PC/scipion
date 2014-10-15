@@ -163,13 +163,10 @@ class ProtRelionReconstruct(ProtReconstruct3D):
 
         from convert import writeSetOfParticles
         print "Before filesMapping"
-        filesMapping = convertBinaryFiles(imgSet, self._getTmpDir())
+        filesMapping = convertBinaryFiles(imgSet, self._getTmpPath())
         # Pass stack file as None to avoid write the images files
-#        writeSetOfParticles(imgSet,imgStar,filesMapping,
-#                            is2D=False, isInverseTransform=True,
-#                            writeAlignment=True)
         writeSetOfParticles(imgSet,imgStar,filesMapping,
-                            is2D=False, isInverseTransform=False,
+                            is2D=False, isInverseTransform=True,
                             writeAlignment=True)
 
     def createOutputStep(self):
