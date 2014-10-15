@@ -431,7 +431,7 @@ class ProtRelionBase(EMProtocol):
         
         if self.IS_3D:
             args['--ref'] = self.referenceVolume.get().getFileName()
-            if self.isMapAbsoluteGreyScale:
+            if not self.isMapAbsoluteGreyScale:
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
