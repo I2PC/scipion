@@ -47,9 +47,6 @@ class ProtAlign2D(Prot2D):
         
         form.addParam('inputParticles', PointerParam, important=True,
                       label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
-        form.addParam('writeAlignedParticles', BooleanParam, default=True,
-                      label=Message.LABEL_ALIG_PART, 
-                      help=Message.TEXT_ALIG_PART)
         # Hook that should be implemented in subclasses
         self._defineAlignParams(form)
         
