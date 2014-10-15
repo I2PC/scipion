@@ -3,6 +3,7 @@
 # * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
 # *              Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Vahid Abrishami (vabrishami@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -129,6 +130,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
+
+    def _getLogFile(self, movieId):
+        return 'micrograph_%06d_Log.txt' % movieId
+
     def _processMovie(self, movieId, movieName, movieFolder):
         """ Process the movie actions, remember to:
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
