@@ -958,6 +958,7 @@ def writeSetOfMovies(moviesSet, filename, moviesBlock='movies'):
 
 
 def createXmippInputImages(prot, imgSet, imagesFn=None):  
+    raise Exception('createXmippInputImages is DEPRECATED!!!')   
     if prot is not None:
         imgsFn = prot._getPath(imagesFn or 'input_images.xmd')
     
@@ -965,7 +966,8 @@ def createXmippInputImages(prot, imgSet, imagesFn=None):
     return imgsFn
 
 
-def createXmippInputMicrographs(prot, micSet, micsFn=None):    
+def createXmippInputMicrographs(prot, micSet, micsFn=None):  
+    raise Exception('createXmippInputMicrographs is DEPRECATED!!!')    
     if prot is not None:
         micsFn = prot._getPath('input_micrographs.xmd')
 
@@ -973,7 +975,8 @@ def createXmippInputMicrographs(prot, micSet, micsFn=None):
     return micsFn
 
 
-def createXmippInputVolumes(prot, volSet, volsFn=None):    
+def createXmippInputVolumes(prot, volSet, volsFn=None): 
+    raise Exception('createXmippInputVolumes is DEPRECATED!!!')   
     if volsFn is None:
         volsFn = prot._getPath('input_volumes.xmd')
     
@@ -982,6 +985,7 @@ def createXmippInputVolumes(prot, volSet, volsFn=None):
 
 
 def createXmippInputClasses2D(prot, classSet, classFn=None):
+    raise Exception('createXmippInputClasses2D is DEPRECATED!!!') 
     if prot is not None and classFn is None:
         classFn = prot._getPath('input_classes.xmd')
     
@@ -990,6 +994,7 @@ def createXmippInputClasses2D(prot, classSet, classFn=None):
     
 
 def createXmippInputCTF(prot, ctfSet, ctfFn=None):
+    raise Exception('createXmippInputCTF is DEPRECATED!!!') 
     ctfMd = getattr(ctfSet, '_xmippMd', None)
     if ctfMd is None:
         if prot is not None:
