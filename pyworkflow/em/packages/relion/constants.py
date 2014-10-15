@@ -72,6 +72,7 @@ XMIPP_RELION_LABELS = {
                        ,xmipp.MDL_LL:                'rlnLogLikeliContribution'
                        ,xmipp.MDL_MAGNIFICATION:     'rlnMagnification'
                        ,xmipp.MDL_MICROGRAPH:        'rlnMicrographName'
+                       ,xmipp.MDL_MICROGRAPH_ID:     'rlnMicrographId'
                        ,xmipp.MDL_REF:               'rlnClassNumber'
                        ,xmipp.MDL_RESOLUTION_FREQREAL:'rlnAngstromResolution'
                        ,xmipp.MDL_RESOLUTION_FRC:     'rlnGoldStandardFsc'
