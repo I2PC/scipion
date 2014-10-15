@@ -517,9 +517,7 @@ def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
     writeSetOfImages(volSet, filename, volumeToRow, blockName, **kwargs)    
     
     
-def readCTFModel(filename, mic):
-    """ Read from Xmipp .ctfparam and create a CTFModel object. """
-    md = xmipp.MetaData(filename)
+def mdToCTFModel(md, mic):    
     ctfRow = rowFromMd(md, md.firstObject())
     ctfObj = rowToCtfModel(ctfRow)
     ctfObj.setObjId(mic.getObjId())
@@ -527,6 +525,12 @@ def readCTFModel(filename, mic):
     
     return ctfObj
 
+
+def readCTFModel(filename, mic):
+    """ Read from Xmipp .ctfparam and create a CTFModel object. """
+    md = xmipp.MetaData(filename)
+    return mdToCTFModel(md, mic)
+        
         
 def writeSetOfCoordinates(posDir, coordSet):
     """ Write a pos file on metadata format for each micrograph 

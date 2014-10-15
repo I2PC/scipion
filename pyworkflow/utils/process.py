@@ -60,6 +60,8 @@ def runCommand(command, env=None, cwd=None):
                            (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
         # This is like "ulimit -u 99999999", so we can create core dumps
 
+    # TODO: maybe have to set PBS_NODEFILE in case it is used by "command"
+    # (useful for example with gnu parallel)
     check_call(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, env=env, cwd=cwd)
     # It would be nice to avoid shell=True and calling buildRunCommand()...
 

@@ -76,8 +76,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         line = form.addLine('Dust sigmas', condition='doRemoveDust',
                             help='Sigma-values above which white/black dust will be removed\n'
                                  '(negative value means no dust removal)')
-        line.addParam('whiteDust', FloatParam, default=-1, label='White')
-        line.addParam('blackDust', FloatParam, default=-1, label='Black')
+        line.addParam('whiteDust', FloatParam, default=-1., label='White')
+        line.addParam('blackDust', FloatParam, default=-1., label='Black')
            
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 

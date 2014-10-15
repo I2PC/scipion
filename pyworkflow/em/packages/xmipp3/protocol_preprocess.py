@@ -359,10 +359,10 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         form.addParam('doSymmetrize', BooleanParam, default=False,
                       label="Symmetrize", 
                       help='Symmetrize the input model.')
-        form.addParam('symmetryGroup', TextParam, default='c1',
+        form.addParam('symmetryGroup', TextParam, default='i1',
                       label="Symmetry group", condition='doSymmetrize',
-                      help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
-                      'for a description of the symmetry groups format, If no symmetry is present, give c1.')
+                      help='See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]] '
+                      'for a description of the symmetry groups format.\nIf no symmetry is present, set the Symmetrize field to not.')
         form.addParam('aggregation', EnumParam, choices=['Average', 'Sum'], 
                       display=EnumParam.DISPLAY_COMBO,
                       default=0, label='Aggregation mode', condition = 'doSymmetrize',
@@ -370,8 +370,8 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         # Adjust gray values
         form.addParam('doAdjust', BooleanParam, default=False,
                       label="Adjust gray values", 
-                      help='Adjust input gray values so that it is compatible with a set of projections.')
-        form.addParam('setOfProjections', PointerParam, pointerClass='SetOfImages',
+                      help='Adjust input gray values so that it is compatible with a set of projections.') 
+        form.addParam('setOfProjections', PointerParam, pointerClass='SetOfParticles',
                       label="Set of projections", condition='doAdjust',
                       help='Set of images to which the model should conform. The set of images should have the'
                       'final pixel size and the final size of the model.')
@@ -390,7 +390,6 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         form.addParam('doNormalize', BooleanParam, default=False,
                       label="Normalize background", 
                       help='Set background to have zero mean and standard deviation 1.')
-        # ToDo: add wizard
         form.addParam('backRadius', FloatParam, default=-1,
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
@@ -422,6 +421,9 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         
         if self.doAdjust:
             args = self._argsAdjust()
+            
+            print "ARGS: ", args
+            
             self._insertFunctionStep("adjustStep", args, changeInserts)
             if self.isFirstStep:
                 self.isFirstStep = False
@@ -526,14 +528,19 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         symmetry = self.symmetryGroup.get()
         symmetryAggregation = self.aggregation.get()
         
-        if symmetry != 'c1':
-            args += " --sym %s"%symmetry
-            if symmetryAggregation == "sum":
-                args += " --sum"
+        # Validation done in the _validate function
+#         if symmetry != 'c1':
+        args += " --sym %s" % symmetry
+        
+        if symmetryAggregation == "sum":
+            args += " --sum"
+                
         return args
     
     def _argsAdjust(self):
-        args = " -m %s" % self.setOfProjections.get()
+        # ToDo Fix
+        projFn = self.setOfProjections.get()
+        args = " -m %s" % projFn
         return args
     
     def _adjustLocalArgs(self, inputVol, outputVol, args):
@@ -621,7 +628,11 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
             
             if self.backRadius.get() > size:
                 validateMsgs.append('Set a valid Background radius less than %d' % size)
-            
+        
+        if self.doSymmetrize.get():
+            if self.symmetryGroup.get() == 'c1':
+                validateMsgs.append('c1 is not a valid symmetry group.\n If you do not want to symmetrize set the field Symmetrize to not.')
+                
         return validateMsgs
     
     def _summary(self):

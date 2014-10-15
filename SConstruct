@@ -490,6 +490,8 @@ env.AddMethod(progInPath, "ProgInPath")
 
 opts = Variables(None, ARGUMENTS)
 
+opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
+
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
 opts.Add('MPI_LINKERFORPROGRAMS', 'MPI Linker for programs', 'mpiCC')
@@ -498,59 +500,61 @@ opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpi')
 opts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
 
-opts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
-
 opts.Update(env)
 
-# TODO: check the code below to see if we can do a nice "purge".
+Help('\nVariables that can be set:\n')
+Help(opts.GenerateHelpText(env))
+Help('\n')
 
-# def _removeInstallation(env):
-#     """
-#     Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
-#     """
-#     # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
-#     UNINSTALL = {'TOCLEAN': [join('software','lib'),
-#                              join('software', 'lib64'),
-#                              join('software', 'bin'),
-#                              join('software', 'man'),
-#                              join('software', 'share'),
-#                              join('software', 'tmp'),
-#                              join('software', 'log')],
-#                  'TOREMOVE': [join('software', 'install', 'scons-2.3.1')]}
-# #    if _ask("Proceeding with Scipion purge process. Everything is going to be removed from the machine. Are you sure?") != 'y':
-# #        return False
-#     for dir in UNINSTALL.get('TOCLEAN'):
-#         print "Cleaning %s" % dir
-#         list = os.listdir(dir)
-#         for thing in list:
-#             path = join(dir, thing)
-#             if thing == '.gitignore':
-#                 continue
-#             if os.path.isfile(path) or os.path.islink(path):
-#                 os.unlink(path)
-#             else:
-#                 shutil.rmtree(path)
-#     for dir in UNINSTALL.get('TOREMOVE'):
-#         print "Deleting %s" % dir
-#         shutil.rmtree(dir)
-#     return True
 
-# ########################
-# # Command-line options #
-# ########################
+# Check that we have a working installation of MPI.
+def WorkingMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
+    "Return 1 if a working installation of MPI is found, 0 otherwise"
 
-# AddOption('--update',
-#           dest='update',
-#           action='store_true',
-#           help='Check for packages or libraries updates')
-# AddOption('--purge',
-#           dest='purge',
-#           action='store_true',
-#           help='Completely clean the installation and its binaries')
-# AddOption('--binary',
-#           dest='binary',
-#           action='store_true',
-#           help='After doing the installation, create and package a binary for distribution')
+    context.Message('* Checking for MPI ... ')
+
+    oldValues = dict([(v, context.env.get(v, [])) for v in
+                      ['LIBS', 'LIBPATH', 'CPPPATH', 'CC', 'CXX']])
+
+    context.env.Prepend(LIBS=[mpi_lib], LIBPATH=[mpi_libpath], CPPPATH=[mpi_inc])
+    context.env.Replace(LINK=mpi_link)
+    context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
+
+    # Test only to compile with C++.
+    ret = context.TryLink("""
+    #include <mpi.h>
+    int main(int argc, char** argv)
+    {
+        MPI_Init(0, 0);
+        MPI_Finalize();
+        return 0;
+    }""", '.cpp')  # scons, te odio
+
+    # Put back the old values, we don't want MPI flags for non-MPI programs.
+    context.env.Replace(**oldValues)
+
+    context.Result(ret)
+    return ret
+
+
+# TODO: maybe change and put the proper thing here, like if we are compiling with mpi.
+if not SCons.Script.Main.OptionsParser.values.help:
+    # Ha, see that? "...Main.OptionsParser.values.help" no less.
+    # That's the hack I had to do to see if we called with --help. Ugh scons.
+
+    conf = Configure(env, {'WorkingMPI' : WorkingMPI}, 'config.tests', 'config.log')
+
+    if conf.WorkingMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+                       env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'],
+                       env['MPI_LINKERFORPROGRAMS']):
+        print 'MPI seems to work.'
+    else:
+        print 'Warning: MPI seems NOT to work.'
+# If you call "scipion install" it may get some cached result and you
+# get surprising results that don't seem to make sense at all.
+# If you call "scipion install --config=force" you have better
+# chances, but then also other things may be rebuilt. Thanks scons...
+
 
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
@@ -559,3 +563,10 @@ AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
 Export('env')
 
 env.SConscript('SConscript')
+
+# Add original help (the one that we would have if we didn't use
+# Help() before). But remove the "usage:" part (first line).
+phelp = SCons.Script.Main.OptionsParser.format_help().split('\n')
+Help('\n'.join(phelp[1:]))
+# This is kind of a hack, because the #@!^ scons doesn't give you easy
+# access to the original help message.

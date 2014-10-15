@@ -126,7 +126,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       label='Background radius',
                       help='Pixels outside this circle are assumed to be noise and their stddev '
                       'is set to 1. Radius for background circle definition (in pix.). '
-                      'If this value is 0, then half the box size is used.', 
+                      'If this value is -1, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         
         form.addParallelSection(threads=4, mpi=1)
@@ -151,8 +151,9 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         self.samplingInput = self.uMics.getSamplingRate()
         
 
-        if self.downsampleType.get() == SAME_AS_PICKING:
-            # If 'same as picking' get sampling rate from input micrographs
+        if self.downsampleType.get() != OTHER:
+            # If 'same as picking' or 'original' get sampling rate from input micrographs
+            #TODO: Review this when downsampling before picking is possible
             self.samplingFinal = self.samplingInput
         else:
             # If 'other' multiply the input sampling rate by the factor provided
@@ -312,7 +313,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                               SAME_AS_PICKING:'Same as picking',
                               OTHER: 'Other downsampling factor'}
         summary = []
-        summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
+        summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
         if self.downsampleType == OTHER:
             summary.append("Downsampling factor: %d" % self.downFactor.get())
             
@@ -327,21 +328,20 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     
     def _methods(self):
         methodsMsgs = []
-        methodsMsgs.append("Particle box size %d" % self.boxSize.get())
-
         if self.methodsInfo.hasValue():
             methodsMsgs.append(self.methodsInfo.get())
+            
+        methodsMsgs.append("with box size %d, " % self.boxSize.get())
         
-        methodsMsgs.append("Automatic Rejection method selected: %s" % (self.rejectionMethod))    
-
-        methodsMsgs.append("Invert contrast performed?: %s" % (self.doInvert.get()))
-        methodsMsgs.append("Normalize performed?: %s" % (self.doNormalize.get()))
+        methodsMsgs.append("%s automatic rejection method, " % (self.getEnumText('rejectionMethod')))    
+        
+        if self.doInvert.get():
+            methodsMsgs.append("invert contrast performed, ")
         if self.doNormalize.get():
-            methodsMsgs.append("Nomalization used: %s" % (self.getEnumText('normType')))
-            methodsMsgs.append("Nomalization used: %s" % (self.backRadius.get()))
-        methodsMsgs.append("Remove dust?: %s" % (self.doRemoveDust.get()))
+            methodsMsgs.append("normalization %s with background radius %s, " % (self.getEnumText('normType'), self.backRadius.get()))
+            
         if self.doRemoveDust.get():
-            methodsMsgs.append("Dust threshold: %s" % (self.thresholdDust.get()))            
+            methodsMsgs.append("and dust removal with dust threshold: %s" % (self.thresholdDust.get()))            
 
         return methodsMsgs
 
