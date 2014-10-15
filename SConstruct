@@ -556,56 +556,6 @@ if not SCons.Script.Main.OptionsParser.values.help:
 # chances, but then also other things may be rebuilt. Thanks scons...
 
 
-# TODO: check the code below to see if we can do a nice "purge".
-
-# def _removeInstallation(env):
-#     """
-#     Function that cleans the folders used by a scipion installation in order to completely remove everything related to that installation
-#     """
-#     # Dictionary to store the folder that need to be emptied (TOCLEAN) or deleted (TOREMOVE)
-#     UNINSTALL = {'TOCLEAN': [join('software','lib'),
-#                              join('software', 'lib64'),
-#                              join('software', 'bin'),
-#                              join('software', 'man'),
-#                              join('software', 'share'),
-#                              join('software', 'tmp'),
-#                              join('software', 'log')],
-#                  'TOREMOVE': [join('software', 'install', 'scons-2.3.1')]}
-# #    if _ask("Proceeding with Scipion purge process. Everything is going to be removed from the machine. Are you sure?") != 'y':
-# #        return False
-#     for dir in UNINSTALL.get('TOCLEAN'):
-#         print "Cleaning %s" % dir
-#         list = os.listdir(dir)
-#         for thing in list:
-#             path = join(dir, thing)
-#             if thing == '.gitignore':
-#                 continue
-#             if os.path.isfile(path) or os.path.islink(path):
-#                 os.unlink(path)
-#             else:
-#                 shutil.rmtree(path)
-#     for dir in UNINSTALL.get('TOREMOVE'):
-#         print "Deleting %s" % dir
-#         shutil.rmtree(dir)
-#     return True
-
-# ########################
-# # Command-line options #
-# ########################
-
-# AddOption('--update',
-#           dest='update',
-#           action='store_true',
-#           help='Check for packages or libraries updates')
-# AddOption('--purge',
-#           dest='purge',
-#           action='store_true',
-#           help='Completely clean the installation and its binaries')
-# AddOption('--binary',
-#           dest='binary',
-#           action='store_true',
-#           help='After doing the installation, create and package a binary for distribution')
-
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
