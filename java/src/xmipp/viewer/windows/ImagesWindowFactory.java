@@ -182,7 +182,7 @@ public class ImagesWindowFactory {
 
 		if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_DEFAULT))
 			parameters.mode = mode;
-		return new GalleryJFrame(filename, md, parameters);
+		return new GalleryJFrame(md, parameters);
 	}
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,

@@ -323,15 +323,16 @@ public class ScipionGalleryData extends GalleryData {
             if (!containsGeometryInfo()) //FIXME: Now not reading any geometry!!!
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-            /*Double shiftx, shifty, psiangle;
+            Double shiftx, shifty, psiangle;
             shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
             shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
             psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
             Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
             return new Geometry(shiftx, shifty, psiangle, flip);
-            */
-            String matrixString = (String)emo.getValue("_alignment._matrix");
-            return new Geometry(matrixString);
+
+
+//            String matrix = (String)emo.getValue("_alignment._matrix");
+//            return new Geometry(matrix);
         }
 
     public int getEnabledCount() {

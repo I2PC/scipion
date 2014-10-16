@@ -89,14 +89,15 @@ public class ScipionMetaData extends MetaData {
 
     }
 
-    public ScipionMetaData(String dbfile, String prefix) {
+    public ScipionMetaData(String dbfile, String preffix) {
 
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        this.preffix = prefix;
-        blocks = new String[]{getBlock()};
+        this.preffix = preffix;
         loadData();
+        blocks = new String[]{getBlock()};
+        
 
     }
 
@@ -112,22 +113,22 @@ public class ScipionMetaData extends MetaData {
 
             name = alias = "enabled";
             labelscount++;
-            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
+            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, true);
             columns.add(enabledci);
 
             name = alias = "id";
             labelscount++;
-            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false);
+            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, false);
             columns.add(idci);
 
             name = alias = "label";
             labelscount++;
-            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
             columns.add(labelci);
 
             name = alias = "comment";
             labelscount++;
-            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false);
+            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
             columns.add(commentci);
 
             c = getConnection();
@@ -182,7 +183,7 @@ public class ScipionMetaData extends MetaData {
 
                 labelscount++;
                 allowRender = isImage(self, name);
-                ci = new ColumnInfo(labelscount, name, alias, type, allowRender);
+                ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
 
@@ -994,6 +995,8 @@ public class ScipionMetaData extends MetaData {
         
         public Boolean getValueBoolean(String column) {
             ColumnInfo ci = getColumnInfo(column);
+            if(column == null)
+                return null;
             Object value = getValue(ci);
             if(value == null)
                 return null;
@@ -1076,6 +1079,18 @@ public class ScipionMetaData extends MetaData {
             file = filename;
         Connection c = DriverManager.getConnection("jdbc:sqlite:" + file);
         return c;
+    }
+    
+    @Override
+    public boolean isCellEditable(int label) {
+        
+        
+        ColumnInfo ci = getColumnInfo(label);
+        if(ci == null)
+            return false;
+        if(ci.equals(enabledci))
+           return true;
+        return false;
     }
    
 }

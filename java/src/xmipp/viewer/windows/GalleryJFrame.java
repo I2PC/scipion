@@ -238,7 +238,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		init(new GalleryData(this, filename, parameters));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Params parameters)
+	public GalleryJFrame(MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, parameters, md));
@@ -258,7 +258,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
             try
             {
-                new GalleryJFrame(null, md, new Params());
+                new GalleryJFrame(md, new Params());
             }
             catch(Exception e)
             {

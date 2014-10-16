@@ -653,6 +653,10 @@ public class MetaData {
         return true;
     }
 
+    public boolean isCellEditable(int label) {
+        return true;
+    }
+
        
        
        

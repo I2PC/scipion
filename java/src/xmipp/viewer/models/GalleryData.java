@@ -116,8 +116,6 @@ public class GalleryData {
     public boolean hasRecalulateCTF() {
         return ctfs != null && !ctfs.isEmpty();
     }
-
-    
     
 
     public enum Mode {

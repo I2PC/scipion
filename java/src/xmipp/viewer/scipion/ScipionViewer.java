@@ -68,7 +68,7 @@ public class ScipionViewer extends Viewer {
                 } else {
                     parameters.mode = Params.OPENING_MODE_GALLERY;
                     md = new MetaData(filename);
-                    new GalleryJFrame(filename, md, parameters);
+                    new GalleryJFrame(md, parameters);
                 }
             } else {
                 ImageGeneric img = new ImageGeneric(filename);

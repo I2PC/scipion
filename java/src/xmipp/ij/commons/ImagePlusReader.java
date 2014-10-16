@@ -24,7 +24,7 @@ public abstract class ImagePlusReader {
     protected boolean wrap;
     protected long modified;
     
-    protected long index = -1, index2 = -1;
+    protected long index = -1;
     protected boolean normalize;
     protected double normalize_min;
     protected double normalize_max;
@@ -74,8 +74,8 @@ public abstract class ImagePlusReader {
 		catch (Exception e)
 		{
 			e.printStackTrace();
+                        throw new IllegalArgumentException(e);
 		}
-		return imp;
 	
     }
     
@@ -87,7 +87,7 @@ public abstract class ImagePlusReader {
                 
                 ImageGeneric tempig = XmippImageConverter.convertToImageGeneric(imp);
                 //tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap);
-                tempig.applyGeoMatrix(geometry.getMatrix(), wrap);
+                //tempig.applyGeoMatrix(geometry.getMatrix(), wrap);
                 imp = XmippImageConverter.convertToImagePlus(tempig);
             } catch (Exception ex) {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
@@ -126,9 +126,8 @@ public abstract class ImagePlusReader {
             }
     }
 
-    void setIndexes(int index, int index2) {
+    void setIndex(int index) {
         this.index = index;
-        this.index2 = index2;
     }
     
     

@@ -41,7 +41,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
         @Override
     	public ImagePlus loadImagePlus()
 	{
-            
                 imp = null;
 		try
 		{
@@ -106,8 +105,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
 
         String name = fileName;
         
-        if(index2 != -1)
-            name = String.format("%d@%s", index2, name);
+        
         if(index != -1)
             name = String.format("%d@%s", index, name);
         return name;
