@@ -1080,6 +1080,19 @@ public class ScipionMetaData extends MetaData {
         try {
             Class.forName("org.sqlite.JDBC");
             Connection c = DriverManager.getConnection("jdbc:sqlite:" + selectedPath);
+            if(parent != null)
+                parent.loadSelection(selectedPath, c);
+            c.close();
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
+    void loadSelection(String selectedPath, Connection c) {
+        
+        try {
+            
             Statement stmt = c.createStatement();
             ResultSet rs;
             EMObject emo;
@@ -1100,6 +1113,15 @@ public class ScipionMetaData extends MetaData {
                     enableds ++;
             }
             
+            rs.close();
+            stmt.close();
+            
+            if (haschilds) {
+                for (EMObject emobject : emobjects) {
+                    if(emobject.childmd != null)
+                        emobject.childmd.loadSelection(selectedPath, c);
+                }
+            }
         } catch (Exception ex) {
             Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
         }
