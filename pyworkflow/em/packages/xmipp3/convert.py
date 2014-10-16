@@ -1082,7 +1082,6 @@ def alignmentToRow(alignment, alignmentRow,
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
-    print "alignmentToRow1******************************************"
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),isInvTransform)
 
     if is2D:
@@ -1092,10 +1091,9 @@ def alignmentToRow(alignment, alignmentRow,
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-    #TODO ROB: flip case
+    #TODO ROB: flip not needed here
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-    print "alignmentToRow2"
     #for paramName, label in ALIGNMENT_DICT.iteritems():
     #    if alignment.hasAttribute(paramName):
     #        alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
