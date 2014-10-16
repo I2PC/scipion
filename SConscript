@@ -254,6 +254,12 @@ env.AddPackage('spider',
                neededProgs=['csh'],
                default=False)
 
+env.AddPackage('motioncorr',
+               tar='motioncorr_v2.1.tgz',
+               default=False)
+# This last one already contains the binary.
+
+
 # TODO: check if we have to use the "purge" option below:
 
 # # Purge option
