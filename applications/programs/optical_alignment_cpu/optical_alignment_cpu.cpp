@@ -49,6 +49,7 @@ class ProgOpticalAligment: public XmippProgram
 public:
     String fname;
     String foname;
+
     int winSize;
     int gpuDevice;
     int fstFrame;
@@ -301,9 +302,8 @@ public:
             II.write(foname);
             return 0;
         }
-
-
         cout<<"Frames "<<fstFrame<<"to "<<lstFrame<<"under processing ..."<<std::endl;
+
         while (div!=1)
         {
             div=int(imagenum/cnt);

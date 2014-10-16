@@ -32,26 +32,10 @@
 
 void ProgValidationNonTilt::readParams()
 {
-
-    fnIn = getParam("-i");
     fnDir = getParam("--odir");
     fnSym = getParam("--sym");
     fnInit = getParam("--volume");
-    alpha0 = getDoubleParam("--alpha0");
-    //alphaF = getDoubleParam("--alphaF");
-    //Niter = getIntParam("--iter");
-    //keepIntermediateVolumes = checkParam("--keepIntermediateVolumes");
-    angularSampling=getDoubleParam("--angularSampling");
     sampling_rate = getDoubleParam("--sampling_rate");
-    //maxShift=getDoubleParam("--maxShift");
-    //tilt0=getDoubleParam("--minTilt");
-    //tiltF=getDoubleParam("--maxTilt");
-    //useImed=checkParam("--useImed");
-    //strict=checkParam("--strictDirection");
-    //angDistance=getDoubleParam("--angDistance");
-    //Nvolumes=getIntParam("--numberOfVolumes");
-    Nvolumes = 1;
-
 }
 
 void ProgValidationNonTilt::defineParams()
@@ -59,24 +43,10 @@ void ProgValidationNonTilt::defineParams()
     //usage
     addUsageLine("Validate a 3D reconstruction from its projections attending to directionality and spread of the angular assignments from a given significant value");
     //params
-    addParamsLine("   -i <md_file>                : Metadata file with input projections");
-    //addParamsLine("  [--numberOfVolumes <N=1>]    : Number of volumes to reconstruct");
     addParamsLine("  [--volume <md_file=\"\">]    : Volume to validate");
     addParamsLine("  [--odir <outputDir=\".\">]   : Output directory");
     addParamsLine("  [--sym <symfile=c1>]         : Enforce symmetry in projections");
-    //addParamsLine("  [--iter <N=10>]              : Number of iterations");
-    addParamsLine("  [--alpha0 <N=0.05>]          : Significance");
-    //addParamsLine("  [--alphaF <N=0.005>]         : Final significance");
-    //addParamsLine("  [--keepIntermediateVolumes]  : Keep the volume of each iteration");
-    addParamsLine("  [--angularSampling <a=5>]    : Angular sampling in degrees for generating the projection gallery");
     addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate in A/px");
-    //addParamsLine("  [--maxShift <s=-1>]          : Maximum shift allowed (+-this amount)");
-    //addParamsLine("  [--minTilt <t=0>]            : Minimum tilt angle");
-    //addParamsLine("  [--maxTilt <t=90>]           : Maximum tilt angle");
-    //addParamsLine("  [--useImed]                  : Use Imed for weighting");
-    //addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
-    //addParamsLine("  [--angDistance <a=10>]       : Angular distance");
-
 }
 
 void ProgValidationNonTilt::run()
@@ -84,8 +54,8 @@ void ProgValidationNonTilt::run()
     //Clustering Tendency and Cluster Validity Stephen D. Scott
     randomize_random_generator();
     char buffer[400];
-    sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
-    system(buffer);
+    //sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
+    //system(buffer);
 
     MetaData md,mdOut,mdOut2,tempMd2,mdWeight;
     FileName fnMd,fnMdProj,fnOut,fnFSC,fnOut2;

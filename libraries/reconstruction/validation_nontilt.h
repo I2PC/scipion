@@ -40,43 +40,7 @@ class ProgValidationNonTilt: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnIn, fnDir, fnSym, fnInit;
-
-    /** First significance */
-    double alpha0;
-
-    /** Last significance */
-    double alphaF;
-
-    /** Total number of iterations */
-    int Niter;
-
-    /** Keep intermediate volumes */
-    bool keepIntermediateVolumes;
-
-    /** Angular sampling */
-    double angularSampling;
-
-    /** Maxshift */
-    double maxShift;
-
-    /** Minimum tilt */
-    double tilt0;
-
-    /** Maximum tilt */
-    double tiltF;
-
-    /** Use imed */
-    bool useImed;
-
-    /** Strict */
-    bool strict;
-
-    /** Neighbourhood in angles */
-    double angDistance;
-
-    /** Number of volumes to reconstruct */
-    int Nvolumes;
+    FileName fnDir, fnSym, fnInit;
 
     /** Sampling rate of the volume and projections */
     double sampling_rate;
