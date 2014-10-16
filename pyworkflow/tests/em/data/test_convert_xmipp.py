@@ -124,7 +124,13 @@ class TestSetConversions(BaseTest):
         # TODO: Implement a better way to compare two metadatas
         #self.assertEqual(mdIn, mdOut)
         
-        
+    def test_metadataToParticleAndBack(self):
+        imgsFn="/home/coss/ScipionUserData/projects/CL2D/input.xmd"
+        outputFn="/home/coss/ScipionUserData/projects/CL2D/output.xmd"
+        alignedSet = SetOfParticles(filename='/home/coss/ScipionUserData/projects/CL2D/metadataWithAlignment.sqlite')
+        readSetOfParticles(imgsFn, alignedSet, is2D=True, isInvTransform=False)
+        alignedSet.write()
+        writeSetOfParticles(alignedSet, outputFn, is2D=True, isInvTransform=False)
         
     def test_micrographsToMd(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """
