@@ -51,8 +51,8 @@ class KendersomBaseClassify(ProtClassify2D):
         form.addParam('useMask', BooleanParam, default=False,
                       label='Use a Mask ?', 
                       help='If you set to *Yes*, you should provide a mask')
-        form.addParam('Mask', StringParam , condition='useMask',
-                      label="Mask",
+        form.addParam('Mask', PointerParam , condition='useMask',
+                      label="Mask", pointerClass='Mask',
                       help='Mask image will serve to enhance the classification')
         
         line = form.addLine('Dimension of the map', 
@@ -84,8 +84,11 @@ class KendersomBaseClassify(ProtClassify2D):
     def _prepareParams(self):
         # Convert input images if necessary
         imgsFn = createXmippInputImages(self, self.inputImages.get())
-        
-        mask = self.Mask.get()
+        if self.useMask:
+            mask = self.Mask.get().getFileName()
+        else:
+            mask = None
+            
         self._params = {'oroot': self._getExtraPath("kerdensom"),
                         'imgsFn': imgsFn,
                         'mask': mask,
@@ -126,16 +129,13 @@ class KendersomBaseClassify(ProtClassify2D):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        mask = self.Mask.get()
         if self.SomReg0 < self.SomReg1:
             errors.append("Regularization must decrease over iterations:")
             errors.append("    Initial regularization must be larger than final")
         if self.useMask:
-            if len(mask) > 0:
-                if not exists(mask):
-                    errors.append("Cannot find the file " + mask)
-            else:
-                errors.append("Please, enter a mask file")
+            mask = self.Mask.get().getFileName()
+            if not exists(mask):
+                errors.append("Cannot find the file " + mask)
         return errors
     
     def _summary(self):
@@ -153,7 +153,7 @@ class KendersomBaseClassify(ProtClassify2D):
             messages.append("Output classification not ready yet.")
         else:    
             messages.append("*Kendersom classification*")
-            messages.append('The particles %s were classified to obtain the classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
+            messages.append('Particles %s were classified to obtain classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
         return messages
 
 
@@ -215,5 +215,11 @@ class XmippProtKerdensom(KendersomBaseClassify):
         md.write(fnClass, xmipp.MD_APPEND)
     
     #--------------------------- INFO functions ----------------------------------------------------
+    def _summary(self):
+        return KendersomBaseClassify._summary(self)
+    
+    def _methods(self):
+        return KendersomBaseClassify._methods(self)
+    
     def _citations(self):
         return ['PascualMontano2001', 'PascualMontano2002']

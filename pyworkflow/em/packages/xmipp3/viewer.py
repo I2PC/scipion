@@ -225,7 +225,7 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn))
+            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
@@ -289,10 +289,10 @@ class XmippViewer(Viewer):
                 self._views.append(xplotter)
     
         elif issubclass(cls, XmippProtRotSpectra):
-            self._visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+            self._visualize(obj.outputClasses, viewParams={'mode': 'rotspectra', 'columns': obj.SomXdim.get()})
         
         elif issubclass(cls, XmippProtKerdensom):
-            self._visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
+            self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get()})
 
         elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
             self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))

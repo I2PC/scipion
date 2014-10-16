@@ -130,4 +130,10 @@ class XmippProtRotSpectra(KendersomBaseClassify):
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
         return ['Pascual2000']
+    
+    def _summary(self):
+        return KendersomBaseClassify._summary(self)
+    
+    def _methods(self):
+        return KendersomBaseClassify._methods(self)
         
