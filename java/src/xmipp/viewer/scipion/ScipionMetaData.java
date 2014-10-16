@@ -1082,6 +1082,8 @@ public class ScipionMetaData extends MetaData {
             Connection c = DriverManager.getConnection("jdbc:sqlite:" + selectedPath);
             if(parent != null)
                 parent.loadSelection(selectedPath, c);
+            else
+                loadSelection(selectedPath, c);
             c.close();
         } catch (Exception ex) {
             Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
