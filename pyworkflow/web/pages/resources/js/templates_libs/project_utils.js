@@ -121,7 +121,8 @@ function createServProject(elm) {
 			
 			var title = "ACCESS CODE"
 			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> generated is the next:</p>" +
-					"<br /><p><h2 id='code'>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</p> to access to the project in the future</p>";
+					"<br /><p><h2 id='code'>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</strong> " +
+							"to access to the project in the future.</p>";
 			var msg = msg +"<input type='hidden' id='code' class='content' value='"+ projName +"'/>";
 			var funcName = "goToProject"
 				
