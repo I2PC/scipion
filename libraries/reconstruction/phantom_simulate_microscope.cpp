@@ -247,6 +247,7 @@ void ProgSimulateMicroscope::updateCtfs()
 /* Produce side information ------------------------------------------------ */
 void ProgSimulateMicroscope::preProcess()
 {
+    randomize_random_generator();
     size_t dum, dum2;
     getImageSize(*pmdIn, Xdim, Ydim, dum, dum2);
 

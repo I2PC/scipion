@@ -34,7 +34,8 @@ public class Params {
     public final static String RENDER_IMAGES = "render";
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
-    public final static String DISPLAY_LABEL = "label";
+    public final static String SORTBY_LABEL = "sortby";
+    public final static String DISPLAY_LABELS = "labels";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -52,6 +53,7 @@ public class Params {
     
     
     
+    
     public String directory;
     public String files[];
     public int port;
@@ -59,10 +61,9 @@ public class Params {
     public String mode = OPENING_MODE_DEFAULT;
     public boolean poll;
     public int zoom = 0;
-    public boolean renderImages = true;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
-    public String displayLabel;
+    public String[] displayLabels;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -82,7 +83,7 @@ public class Params {
     protected CommandLine cmdLine;
     public String[] visibleLabels;
     public String[] orderLabels;
-
+    public String[] sortby;
     
     
     
@@ -118,7 +119,14 @@ public class Params {
         opt = new Option(ORDER_LABELS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
-        options.addOption(DISPLAY_LABEL, true, "");
+        
+        opt = new Option(SORTBY_LABEL, "");
+        opt.setArgs(2);
+        options.addOption(opt);
+        
+        opt = new Option(DISPLAY_LABELS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -147,9 +155,6 @@ public class Params {
     public void processArgs(String args[]) {
 
 
-       
-       
-        
         try {
             BasicParser parser = new BasicParser();
             cmdLine = parser.parse(options, args);
@@ -181,6 +186,7 @@ public class Params {
             if(cmdLine.hasOption(RENDER_IMAGES))
             {
             	renderLabels = cmdLine.getOptionValues(RENDER_IMAGES);
+                
             }
             if(cmdLine.hasOption(VISIBLE_LABELS))
             {
@@ -190,8 +196,14 @@ public class Params {
             {
             	orderLabels = cmdLine.getOptionValues(ORDER_LABELS);
             }
-            if(cmdLine.hasOption(DISPLAY_LABEL))
-            	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
+            if(cmdLine.hasOption(SORTBY_LABEL))
+            {
+                
+            	sortby = cmdLine.getOptionValues(SORTBY_LABEL);
+                
+            }
+            if(cmdLine.hasOption(DISPLAY_LABELS))
+            	displayLabels = cmdLine.getOptionValues(DISPLAY_LABELS);
             
             debug = cmdLine.hasOption(DEBUG);
             mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
@@ -260,7 +272,6 @@ public class Params {
             	else if (view.equals("x_pos"))
             		resliceView = ImageGeneric.X_POS;
             }
-            renderLabel = renderLabels[0];
             
            
         } catch (Exception ex) {
@@ -268,8 +279,15 @@ public class Params {
         }
     }
     
-    public String getDisplayLabel()
+    public String getRenderLabel()
     {
-        return displayLabel;
+        return renderLabels[0];
     }
+    
+    public String[] getDisplayLabels()
+    {
+        return displayLabels;
+    }
+    
+   
 }

@@ -177,7 +177,8 @@ public class Filename {
 	 */
 	public static String findImagePath(String filename, String mdFilename,
 			boolean shouldExist) {
-
+                if(filename == null)
+                    return null;
 		String path = Filename.getFilename(filename); // Remove special chars
 		String foundPath = null;
 		File f = new File(path);

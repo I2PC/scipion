@@ -25,6 +25,7 @@
 
 package xmipp.jni;
 
+import ij.IJ;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,12 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import xmipp.utils.DEBUG;
 
 /**
  * Binding class for accessing C++ MetaData implementation.
@@ -59,7 +58,11 @@ public class MetaData {
 	public static final String FILL_RAND_UNIFORM = "random uniform";
 	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
         
-     
+        protected String[] renderLabels;
+        protected String renderLabel = "first";
+        protected String[] visibleLabels;
+        protected String[] orderLabels;
+
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
 	// private final static int PATHS_FIELDS[] = {
@@ -85,7 +88,7 @@ public class MetaData {
 
 	public static final int MD_OVERWRITE = 0;
 	public static final int MD_APPEND = 1;
-	private String filename;
+	protected String filename;
 	// hold pointer to Image class in C++ space
 	private long peer;
 
@@ -100,8 +103,9 @@ public class MetaData {
 
         	/** Create empty metadata */
 	public MetaData() {
-		//DEBUG.printFormat("Java: Creating metadata\n");
-		//DEBUG.printStackTrace();
+		//System.out.format("Java: Creating metadata\n");
+		//Exception ex = new Exception();
+    		//ex.printStackTrace();
 		create();
 	}
 
@@ -390,7 +394,9 @@ public class MetaData {
 	}
 
 	public boolean getEnabled(long objId) {
-		return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
+            if(!containsLabel(MDLabel.MDL_ENABLED))
+                return true;
+            return getValueInt(MDLabel.MDL_ENABLED, objId) > 0;
 	}
 
 	public native boolean setValueInt(int label, int value, long objId);
@@ -515,37 +521,141 @@ public class MetaData {
 	*/
 	public native double getColumnMin(int column);
 	
+	public native double getColumnMax(int column);
 
-        public native double getColumnMax(int column);
-	
-	
-	public static boolean isPlainPos(String file)
-        {
-            try
-            {
-                InputStream in = new FileInputStream(file);
-                Reader reader = new InputStreamReader(in);
-             // buffer for efficiency
-                BufferedReader buffer = new BufferedReader(reader);
-                String line = buffer.readLine();//dismiss first line
-                if(line == null)
-                    return true;//Empty file
-                int count = 0;//small statistics to detect if pos file
-                while ((line = buffer.readLine()) != null) {
-                    for(char c: line.toCharArray())
-                        if(!(Character.isDigit(c) || Character.isSpaceChar(c)))
-                            return false;
-                        
-                    
-                    if(count == 100)
-                            break;
-                    count ++;
-                }
-            } catch (IOException ex) {
-                return false;
-            }
-            return true;
+    
+	public void setRenderLabels(String[] renderLabels) {
+            this.renderLabels = renderLabels;
         }
+
+        public void setVisibleLabels(String[] visibleLabels) {
+            this.visibleLabels = visibleLabels;
+        }
+
+        public void setOrderLabels(String[] orderLabels) {
+            this.orderLabels = orderLabels;
+        }
+
+        public void setRenderLabel(String renderLabel) {
+            this.renderLabel = renderLabel;
+        }
+        
+        public String getRenderLabel()
+        {
+            return renderLabel;
+        }
+        
+        
+         public String[] getRenderLabels()
+       {
+           return renderLabels;
+       }
+       
+       public String[] getVisibleLabels()
+       {
+           return visibleLabels;
+       }
+       
+       public String[] getOrderLabels()
+       {
+           return orderLabels;
+       }
+       
+
+	
+	public boolean isCTFMd() {
+		try {
+			return containsLabel(MDLabel.MDL_PSD_ENHANCED) && containsLabel(MDLabel.MDL_PSD) && containsLabel(MDLabel.MDL_CTF_MODEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+        
+        public String getCTFFile(long id)
+        {
+            return getValueString(MDLabel.MDL_CTF_MODEL, id);
+        }
+        
+        public EllipseCTF getEllipseCTF(long id) {
+            return getEllipseCTF(id, -1);
+        }
+        
+        public EllipseCTF getEllipseCTF(long id, int D) {
+            MetaData md = new MetaData(getCTFFile(id));
+            try {
+                double Q0, Cs, Ts, kV, downsampleFactor, defU, defV, defAngle;
+
+                Q0 = md.getValueDouble(MDLabel.MDL_CTF_Q0, id);
+                Cs = md.getValueDouble(MDLabel.MDL_CTF_CS, id);
+                downsampleFactor = md.getValueDouble(MDLabel.MDL_CTF_DOWNSAMPLE_PERFORMED, id);
+                Ts = md.getValueDouble(MDLabel.MDL_CTF_SAMPLING_RATE, id) * downsampleFactor;
+                kV = md.getValueDouble(MDLabel.MDL_CTF_VOLTAGE, id);
+
+                defU = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSU, id);
+                defV = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUSV, id);
+                defAngle = md.getValueDouble(MDLabel.MDL_CTF_DEFOCUS_ANGLE, id);
+
+                return new EllipseCTF(id, Q0, Cs, downsampleFactor, Ts, kV, defU, defV, defAngle, D);
+            } catch (Exception ex) {
+                IJ.error(ex.getMessage());
+                throw new IllegalArgumentException(ex);
+            }
+            
+        }
+        
+        
+    public String getPSDFile(long id) {
+        return getValueString(MDLabel.MDL_PSD, id);
+    }
+    
+    public String getPSDEnhanced(long id) {
+        return getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+    }
+    
+    public CTFDescription getCTFDescription(long id)
+     {
+            try {
+                return new CTFDescription(getCTFFile(id));
+            } catch (Exception ex) {
+                Logger.getLogger(MetaData.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IllegalArgumentException(ex);
+            }
+     }
+     
+	
+	
+    public static boolean isPlainPos(String file)
+    {
+        try
+        {
+            InputStream in = new FileInputStream(file);
+            Reader reader = new InputStreamReader(in);
+         // buffer for efficiency
+            BufferedReader buffer = new BufferedReader(reader);
+            String line = buffer.readLine();//dismiss first line
+            if(line == null)
+                return true;//Empty file
+            int count = 0;//small statistics to detect if pos file
+            while ((line = buffer.readLine()) != null) {
+                for(char c: line.toCharArray())
+                    if(!(Character.isDigit(c) || Character.isSpaceChar(c)))
+                        return false;
+
+
+                if(count == 100)
+                        break;
+                count ++;
+            }
+        } catch (IOException ex) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isCellEditable(int label) {
+        return true;
+    }
 
        
        

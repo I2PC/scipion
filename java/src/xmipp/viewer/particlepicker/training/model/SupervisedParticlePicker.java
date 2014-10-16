@@ -3,19 +3,18 @@ package xmipp.viewer.particlepicker.training.model;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
-import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
+import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -82,7 +81,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				radialtemplates.resize(getSize(), getSize(), 1, getTemplatesNumber());
                                 templateindex = (templates.getStatistics()[2] == 0)? 0: getTemplatesNumber();
 			}
-            templates.getRadialAvg(radialtemplates);
+                        templates.getRadialAvg(radialtemplates);
 
 
 			for (SupervisedParticlePickerMicrograph m : micrographs)
@@ -92,21 +91,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 		catch (Exception e)
 		{
 			e.printStackTrace();
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(e);
 		}
 	}
 
-	// public SingleParticlePicker(String selfile, String outputdir,
-	// String reviewfile) {
-	// this(selfile, outputdir, Mode.Review);
-	// if (!new File(reviewfile).exists())
-	// throw new IllegalArgumentException(
-	// XmippMessage.getNoSuchFieldValueMsg("review file",
-	// reviewfile));
-	// this.reviewfile = reviewfile;
-	// importAllParticles(reviewfile);
-	// }
-
+	
 	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
 	{
 		this(selfile, outputdir, Mode.Manual);
@@ -203,7 +192,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
-
 		updateTemplatesStack(num);
                 saveConfig();
 	}
@@ -233,9 +221,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
-        
-        	public synchronized void resetParticleImages()// to update templates with
-													// the right particles
+        // to update templates with the right particles
+        public synchronized void resetParticleImages()
 	{
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
@@ -362,6 +349,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		{
 			MetaData md = new MetaData(getMicrographsSelFile());
 			md.removeDisabled();
+                        
 			int fileLabel;
 
 			if (md.containsLabel(MDLabel.MDL_MICROGRAPH))
@@ -492,6 +480,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	@Override
 	public boolean isValidSize(JFrame parent, int size)
 	{
+
 
              if (size > ParticlePicker.sizemax) {
                  XmippDialog.showInfo(parent, String.format("Max size is %s, %s not allowed", ParticlePicker.sizemax, size));
@@ -637,7 +626,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		saveAllData();
-		updateTemplatesStack();
+		updateTemplatesStack(getTemplatesNumber());
                 
 	}
 
@@ -926,8 +915,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				{
 					String blockName = block + "@" + file;
 					md.read(blockName);
-					width = (int) (m.width / scale);// original width
-					height = (int) (m.height / scale);// original height
+					width = (int) (m.getWidth() / scale);// original width
+					height = (int) (m.getHeigth() / scale);// original height
 					if (invertx)
 						md.operate(String.format("xcoor=%d-xcoor", width));
 					if (inverty)
@@ -1193,7 +1182,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		saveData(current);
 		saveData(next);
 		MetaData addedmd = getAddedMetaData(current, correctout);
-		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
+		MetaData automd = new MetaData(getParticlesAutoBlock(current));
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
 		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next)).start();
@@ -1290,6 +1279,7 @@ public class SupervisedParticlePicker extends ParticlePicker
         return classifier.getParticlesThreshold();
     }
     
+     
     public void updateTemplatesStack()
     {
         updateTemplatesStack(getTemplatesNumber());
@@ -1352,9 +1342,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 					igp = particle.getImageGeneric();
 					if (templateindex < getTemplatesNumber())
                                         {
-                                            matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-                                            templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-                                            templateindex ++;
+                                                matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                                templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                                templateindex ++;
                                         }
 					else
 					{
@@ -1390,5 +1380,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 
     }
+    
+        public boolean isCorrectPending()//TO BE COMPLETED
+        {
+            return getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && isChanged();
+        }
 
 }

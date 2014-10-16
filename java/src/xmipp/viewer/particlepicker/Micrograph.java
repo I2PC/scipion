@@ -23,7 +23,7 @@ public abstract class Micrograph {
 	private ImagePlus imp;
 	private String pos24file;
 	public static final String ext = ".pos";
-	public int width, height;
+	private int width, height;
 	private String posfile;
 	private String ctf, psd;
 	private Icon ctficon;
@@ -55,18 +55,16 @@ public abstract class Micrograph {
                 String path = file;
                 if(Filename.hasPrefix(file))
                     path = Filename.removePrefix(file);
-               
 		 if (!new File(path).exists()) 
-                 {
+                {
                      file = Filename.findImagePath(name, Main.selfile, true);
                      if(file == null)
                         throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
-                    
-                 }
+                }
 		
 		this.name = name;
 		this.posfile = name + ext;
-                loadDimensions(); // ensure width and height get updated
+                //loadDimensions(); // ensure width and height get updated
 
 	}
 
@@ -121,8 +119,8 @@ public abstract class Micrograph {
 			return false;
 
 		int radius = size / 2;
-		if (x - radius < 0 || x + radius > width || y - radius < 0
-				|| y + radius > height)
+		if (x - radius < 0 || x + radius > getWidth() || y - radius < 0
+				|| y + radius > getHeigth())
 			return false;
 		return true;
 	}
@@ -152,12 +150,14 @@ public abstract class Micrograph {
 
 	/* Load width and height after loaded ImagePlus */
 	public void loadDimensions() {
+                
 		if (imp != null) {
 			width = imp.getWidth();
 			height = imp.getHeight();
 		} else {
 			try {
-				ImageGeneric img = new ImageGeneric(file); // this read the header
+                System.out.println("loading dim from ig");                
+				ImageGeneric img = new ImageGeneric(file); // this reads the header
 				width = img.getXDim();
 				height = img.getYDim();
 				img.destroy();
@@ -239,6 +239,20 @@ public abstract class Micrograph {
 	}
 
 	public abstract boolean hasData();
+        
+        public int getWidth()
+        {
+            if(width == 0)
+                loadDimensions();
+            return width;
+        }
+        
+        public int getHeigth()
+        {
+            if(height == 0)
+                loadDimensions();
+            return height;
+        }
         
 
 }

@@ -42,10 +42,11 @@ public abstract class ParticlePicker {
     protected String selfile;
     protected String command;
     protected String configfile;
-    public String python, script, projectid, inputid, protid, protlabel, dbpath;//scipion params
+    public String python, script, protid, projectid;//scipion params
+    protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
+                   "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
 
-    String[] commonfilters = new String[]{"Install...", "Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
-        "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
+    
     static String xmippsmoothfilter = "Xmipp Smooth Filter";
     public static final String particlesAutoBlock = "particles_auto";
 
@@ -271,13 +272,7 @@ public abstract class ParticlePicker {
         Executer.addCommandListener(new CommandListener() {
             public String commandExecuting(String command) {
 
-                if (IJ.getInstance() != null && !Arrays.asList(commonfilters).contains(command) && !isRegisteredFilter(command)) {
-                    String msg = String.format("Would you like to add filter: %s to preprocess micrographs?", command);
-                    int result = JOptionPane.showConfirmDialog(null, msg);
-                    if (result != JOptionPane.YES_OPTION) {
-                        return command;
-                    }
-                }
+                
                 ParticlePicker.this.command = command;
                 return command;
 
@@ -319,7 +314,7 @@ public abstract class ParticlePicker {
                 options = Recorder.getCommandOptions();
             }
 
-            if (!isFilterSelected(command)) {
+            if (!isFilterSelected(command) && Arrays.asList(availableFilters).contains(command)) {
                 addFilter(command, options);
             } else if (!(options == null || options.equals(""))) {
                 for (IJCommand f : filters) {
@@ -478,8 +473,8 @@ public abstract class ParticlePicker {
                 md.clear();
         }
         
-        int width = (int) (m.width / scale);// original width
-        int height = (int) (m.height / scale);// original height
+        int width = (int) (m.getWidth() / scale);// original width
+        int height = (int) (m.getHeigth() / scale);// original height
         if (invertx) {
             md.operate(String.format("xcoor=%d-xcoor", width));
         }
@@ -490,10 +485,11 @@ public abstract class ParticlePicker {
             String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
             md.operate(command);
         }
-        md.print();
+        
     }// function importParticlesFromFile
     
     public void fillParticlesMdFromXmipp301File(String file, Micrograph m, MetaData md) {
+        
          String blockname = getParticlesBlockName(Format.Xmipp301); //only used with Xmipp
                 if (MetaData.containsBlock(file, blockname)) {
                     md.read(getParticlesBlock(Format.Xmipp301, file));
@@ -613,19 +609,11 @@ public abstract class ParticlePicker {
          this.script = script;
      }
      
+    
+     
      public void setProjectId(String projectid)
      {
          this.projectid = projectid;
-     }
-     
-     public void setInputId(String inputid)
-     {
-         this.inputid = inputid;
-     }
-     
-     public void setDbPath(String dbpath)
-     {
-         this.dbpath = dbpath;
      }
      
      public void setProtId(String protid)
@@ -635,18 +623,13 @@ public abstract class ParticlePicker {
      
      public boolean isScipionSave()
      {
-         return script != null;
+         return script != null && mode != Mode.ReadOnly;
      }
 
     public String[] getScipionSaveCommand() {
-        String[] cmd;
-        if(protid == null)
-            cmd = new String[]{python, script, outputdir, projectid, inputid, protlabel};
-        else
-            cmd = new String[]{python, script, outputdir, dbpath, protid};
-        
+        String[] cmd = new String[]{python, script, projectid, protid};
         return cmd;
-       }
+    }
      
     
     public abstract int getParticlesCount();

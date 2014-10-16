@@ -81,6 +81,7 @@ public abstract class XmippMenuCreator implements ActionListener {
                         }
 			item = new JRadioButtonMenuItem();
 			group.add(item);
+                        
 		}
 		else if (name.endsWith("mi"))
                 {
@@ -190,11 +191,12 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String FILE_REFRESH = "File.Refresh_mi";
 	public final String FILE_EXIT = "File.Exit_mi";
 	public final String DISPLAY = "Display";
-	public final String DISPLAY_NORMALIZE = "Display.Normalize_cb";
+
+	
 	public final String DISPLAY_SHOWLABELS = "Display.ShowLabel";
 	public final String DISPLAY_RENDERIMAGES = "Display.RenderImages_cb";
 	
-	public final String DISPLAY_RENDERIMAGECOLUMN = "Display.RenderImagesColumn";
+	public final String DISPLAY_RENDERIMAGE = "Display.RenderImage";
 	
 	
 	public final String DISPLAY_APPLYGEO = "Display.ApplyGeo_cb";
@@ -209,6 +211,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 			"Display.Reslice.XPos_rb"};
 
 	public final String METADATA = "Metadata";
+        public final String DISPLAY_NORMALIZE = "Metadata.Normalize_cb";
 	public final String MD_CLASSES = "Metadata.Classes_mi";
 	public final String MD_EDIT_COLS = "Metadata.EditCols_mi";
 	public final String MD_ADD_OBJECT = "Metadata.AddObject_mi";
@@ -234,7 +237,7 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final static String OPEN = "Open_mi";
 	public final static String OPEN_ASTEXT = "OpenAsText_mi";
 	public final static String CTF_PROFILE = "CTFProfile_mi";
-	public final static String CTF_RECALCULATE = "CTFRecalculate_mi"; 
+	public final static String CTF_RECALCULATE = "CTFRecalculate_cb"; 
 	public final static String SELECT = "Select";
 	public final static String SELECT_ALL = "Select.All_mi";
 	public final static String SELECT_TOHERE = "Select.ToHere_mi";

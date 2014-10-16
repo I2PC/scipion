@@ -18,6 +18,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
  * Business object for Tilt Pair Picker GUI. Inherits from ParticlePicker 
  * @author airen
  *
+ * 
  */
 public class TiltPairPicker extends ParticlePicker
 {
@@ -31,6 +32,7 @@ public class TiltPairPicker extends ParticlePicker
 
 		for (UntiltedMicrograph um : micrographs)
 			loadMicrographParticles(um);
+                
 	}
 
 	public void loadData()
@@ -78,6 +80,7 @@ public class TiltPairPicker extends ParticlePicker
 			md.destroy();
 			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
+                        
 
 		}
 		catch (Exception e)
@@ -139,7 +142,7 @@ public class TiltPairPicker extends ParticlePicker
                 if(!result.isEmpty())
                     result = "Particles at: " + result + "without tilted pairs dismissed";
 
-		um.initAligner();
+		//um.initAligner();
 
 		return result;
 	}// loadMicrographs
@@ -263,9 +266,10 @@ public class TiltPairPicker extends ParticlePicker
 			else
 			{
 				TiltedParticle tp;
-
+                                System.out.format("Java: TiltPairPicker.saveData: creating mdU\n");                                
 				MetaData mdU = new MetaData(); // untilted micrograph particles
-				MetaData mdT = new MetaData(); // tilted micrograph particles
+				System.out.format("Java: TiltPairPicker.saveData: creating mdT\n");
+                                MetaData mdT = new MetaData(); // tilted micrograph particles
 
 				for (UntiltedParticle p : um.getParticles())
 				{
@@ -286,7 +290,9 @@ public class TiltPairPicker extends ParticlePicker
 				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
 				mdT.write(getParticlesBlock(file));
 				
+                                System.out.format("Java: TiltPairPicker.saveData: destroying mdU\n");      
 				mdU.destroy();
+                                System.out.format("Java: TiltPairPicker.saveData: destroying mdT\n");      
 				mdT.destroy();
                                 saveMicrographAngles(um);
 			}
@@ -309,11 +315,12 @@ public class TiltPairPicker extends ParticlePicker
 		if (f == Format.Unknown)
 			throw new IllegalArgumentException("Unable to detect format");
 
-		String uFn = null, tFn = null;
+		String uFn, tFn;
 		String result = "";
                 importSize(path, f, scale);
 
-		
+		MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
                 for(UntiltedMicrograph m: micrographs)
                 {
                     uFn = null; tFn = null;
@@ -326,24 +333,39 @@ public class TiltPairPicker extends ParticlePicker
                     }
                     if(uFn != null && tFn != null)
                     {
-                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty);
+                        uMd.clear();
+                        tMd.clear();
+                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
                         saveData(m);
                     }           
 		}
+                uMd.destroy();
+               tMd.destroy();
                 super.saveData();
+                
+                
 		return result;
 	}// function importParticlesFromFolder
+        
+        public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+        {
+            	MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
+                String result = importParticlesFromFiles(uPath, tPath, f, um, scale, invertx, inverty, uMd, tMd);
+                uMd.destroy();
+                tMd.destroy();
+                return result;
+            
+        }
 
-	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty, MetaData uMd, MetaData tMd)
 	{
-		MetaData uMd = new MetaData();
+                System.out.printf("reading coords for %s \n", um.getName() );
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
-		MetaData tMd = new MetaData();
+                System.out.printf("reading coords for %s \n", um.getTiltedMicrograph().getName() );
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
-
 		String result = loadMicrographParticles(um, uMd, tMd);
-		uMd.destroy();
-		tMd.destroy();
+                
 		return result;
 	}// function importParticlesFromFiles
 

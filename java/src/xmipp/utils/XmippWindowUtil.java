@@ -31,7 +31,9 @@ import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionListener;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,9 +41,20 @@ import javax.swing.JRootPane;
 
 public class XmippWindowUtil
 {
+        private static boolean isScipion;
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
+        
+        public static void setIsScipion(boolean value)
+        {
+            isScipion = value;
+        }
+        
+        public static boolean isScipion()
+        {
+            return isScipion;
+        }
 
 	/**
 	 * This function will be used to place the location of a windows relative to
@@ -109,7 +122,8 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-		btn.setBackground(LIGHT_BLUE);
+                if(!isScipion())
+                    btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
 	}
@@ -190,6 +204,66 @@ public class XmippWindowUtil
 		progressPanel.setVisible(false);
 	}
 
-	
+        public static void executeGUICommand(final String[] command, final JFrame frame, String msg)
+        {
+
+
+            XmippWindowUtil.blockGUI(frame, msg);
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+
+                        String output = executeCommand(command, true);
+                        XmippWindowUtil.releaseGUI(frame.getRootPane());
+
+                        if(output != null && !output.isEmpty())
+                        {
+                            System.out.println(output);
+
+                        }
+
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        }
+        
+        public static String executeCommand(String[] command, boolean wait) throws Exception {
+
+            Process p = Runtime.getRuntime().exec(command);
+            if(wait)
+            {
+                p.waitFor();
+                return readProcessOutput(p);
+            }
+            return null;
+    }
+    
+    
+    
+    public static String readProcessOutput(Process p) throws IOException
+    {
+        StringBuffer output = new StringBuffer();
+        BufferedReader reader
+                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+       
+        String line = "";
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        
+        while ((line = reader.readLine()) != null) {
+            output.append(line + "\n");
+        }
+        return output.toString();
+        
+    }
 
 }

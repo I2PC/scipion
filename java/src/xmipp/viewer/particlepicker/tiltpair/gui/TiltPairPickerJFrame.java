@@ -56,7 +56,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		super(picker);
 		tppicker = picker;
 		initComponents();
-
 		setChanged(false);
 	}
 
@@ -109,7 +108,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		filemn.add(importmi);
 		if (tppicker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
-		importffilesmi = new JMenuItem("import coordinates from files");
+		importffilesmi = new JMenuItem("Import from files...");
 		importffilesmi.addActionListener(new ActionListener() {
 
 			@Override

@@ -3,367 +3,1094 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package xmipp.viewer.scipion;
 
+import ij.IJ;
+import java.io.File;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.SwingUtilities;
-import xmipp.jni.ImageGeneric;
-import xmipp.jni.MDLabel;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.CTFDescription;
+import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
+import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippQuestionDialog;
+import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
  *
  * @author airen
  */
-public class ScipionMetaData extends MetaData{
-    private String dbfile;
-    private ArrayList<ColumnInfo> columns;
-    private String self;
-    private int cellwidth = 100, cellheight = 100;
-    private ArrayList<EMObject> emobjects;
-    private static Map<String, Integer> labels = new HashMap<String, Integer>();
+public class ScipionMetaData extends MetaData {
+
+    private List<ColumnInfo> columns;
+    private String self, selfalias;
+    private List<EMObject> emobjects;
+    private ScipionMetaData parent;
+    private boolean haschilds;
+    private static int labelscount = 0;
+    private ColumnInfo idci, labelci, commentci, enabledci;
+    private String preffix = "";
+    private String[] blocks;
+    private int enableds;
+    Boolean checkTmp;
     
     
-    public ScipionMetaData(String dbfile)
-    {
-        
-        this.dbfile = dbfile;
+
+    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
+        this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
+    }
+
+    public ScipionMetaData(String preffix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
+        this.preffix = preffix;
+        this.self = self;
+        this.selfalias = selfalias;
+        this.columns = columns;
+        this.emobjects = emobjects;
+        blocks = new String[]{getBlock()};
+    }
+
+    public ScipionMetaData(String dbfile) {
+        this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
+        loadData();
+        if (self.equals("Class2D") || self.equals("Class3D")) {
+            String prefix;
+            haschilds = true;
+            List<String> childblocks = new ArrayList<String>();
+            for (EMObject emo : emobjects) {
+                prefix = String.format("Class%03d_", emo.getId());
+                emo.childmd = new ScipionMetaData(dbfile, prefix);
+                emo.childmd.setParent(this);
+                childblocks.add(emo.childmd.getBlock());
+            }
+        
+         
+            blocks = new String[childblocks.size() + 1];
+            blocks[0] = getBlock();
+            for (int i = 0; i < childblocks.size(); i++) {
+                blocks[i + 1] = childblocks.get(i);
+
+            }
+        }
+        else
+            blocks = new String[]{getBlock()};
+
+    }
+
+    public ScipionMetaData(String dbfile, String preffix) {
+
+        this.filename = dbfile;
+        columns = new ArrayList<ColumnInfo>();
+        emobjects = new ArrayList<EMObject>();
+        this.preffix = preffix;
+        loadData();
+        blocks = new String[]{getBlock()};
+        
+
+    }
+
+    public void loadData() {
+        StopWatch.getInstance().printElapsedTime("loading data");
         Connection c = null;
         Statement stmt = null;
         try {
-            String name, alias, clsname; 
+            String name, alias, clsname;
             int type;
             boolean allowRender;
             ColumnInfo ci;
-            int label = 0;
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + dbfile);
+
+            name = alias = "enabled";
+            labelscount++;
+            enabledci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, true);
+            columns.add(enabledci);
+
+            name = alias = "id";
+            labelscount++;
+            idci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_INT, false, false);
+            columns.add(idci);
+
+            name = alias = "label";
+            labelscount++;
+            labelci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
+            columns.add(labelci);
+
+            name = alias = "comment";
+            labelscount++;
+            commentci = new ColumnInfo(labelscount, name, alias, MetaData.LABEL_STRING, false, false);
+            columns.add(commentci);
+
+            c = getConnection();
             stmt = c.createStatement();
             ResultSet rs;
-            rs = stmt.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name like '%Classes';");
-            while ( rs.next() ) 
-                name = rs.getString("name");
+
             
-            rs = stmt.executeQuery( "SELECT * FROM CLASSES;" );
-            while ( rs.next() ) {
-               name = rs.getString("label_property");
-               alias = rs.getString("column_name");
-               clsname = rs.getString("class_name");
-               if(isPointer(clsname))
-               {
-                   if(name.equals("self"))
-                       self = clsname;
-                   continue;
-               }
-               if (clsname.equals("Integer"))
-               {
-                        type = MetaData.LABEL_INT;
-               } 
-               else if (clsname.equals("Float"))
-               {
-                        type = MetaData.LABEL_DOUBLE;
-               }
-               else
-               {
-                        type = MetaData.LABEL_STRING;
-               }
-               
-               labels.put(name, labels.size());
-               label = labels.get(name);
-               allowRender = isImage(self, name);
-               ci = new ColumnInfo(label, name, alias, type, allowRender);
-               columns.add(ci);
-            }
-            
-            Object value = null;
-           
             EMObject emo;
-            int id;
-            ci = getColumnInfo("_index");
-            rs = stmt.executeQuery( "SELECT * FROM OBJECTS;" );
-            while ( rs.next() ) {
-                id = rs.getInt("Id");
-                emo = new EMObject(id);
-                for(ColumnInfo column: columns)
-                {
-                    name = column.labelName;
-                    alias = column.comment;
-                    switch(column.type)
-                    {
-                        
-                        case MetaData.LABEL_INT:
-                            value = rs.getInt(alias);
-                            break;
-                        case MetaData.LABEL_DOUBLE:
-                            value = rs.getFloat(alias);
-                            break;
-                        case MetaData.LABEL_STRING:
-                            value = rs.getString(alias);
-                            if(name.equals("_filename"))
-                            {
-                                
-                                if(column.render && ci != null)
-                                    value = rs.getInt(ci.comment) + "@" + value;
+            
+            String query = String.format("SELECT id, label, comment, enabled FROM %sObjects;", preffix);
+            rs = stmt.executeQuery(query);
+            Object value;
+            int index = 0;
+            while (rs.next()) {
+                emo = new EMObject(index, this);
+                for (ColumnInfo column : columns) {
+                            alias = column.comment;
+                            switch (column.type) {
+
+                                case MetaData.LABEL_INT:
+                                    value = rs.getInt(alias);
+                                    break;
+                                case MetaData.LABEL_DOUBLE:
+                                    value = rs.getFloat(alias);
+                                    break;
+                                default:
+                                    value = rs.getString(alias);
                             }
-                            break;
-                        default:
-                            value = rs.getString(alias);
-                       
-                    }
-                    emo.addValue(value);
-                    
-                }
+                            emo.values.put(column, value);
+                        }
                 emobjects.add(emo);
+                if(emo.isEnabled())
+                    enableds ++;
+                else
+                    emo.changed = true;
+                index ++;
             }
+            
+            query = String.format("SELECT * FROM %sClasses;", preffix);
+            rs = stmt.executeQuery(query);
+            
+            while (rs.next()) {
+                name = rs.getString("label_property");
+                alias = rs.getString("column_name");
+                clsname = rs.getString("class_name");
+                if (name.equals("self")) {
+                    self = clsname;
+                    selfalias = alias;
+                    continue;
+                }
+                type = getTypeMapping(clsname);
+
+                labelscount++;
+                allowRender = isImage(self, name);
+                ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
+                columns.add(ci);
+            }
+
+
             rs.close();
             stmt.close();
             c.close();
-            
-        } 
-        catch ( Exception e ) {
+            StopWatch.getInstance().printElapsedTime("loaded data");
+        } catch (Exception e) {
             e.printStackTrace();
-            
-        }
-      
-    }
-    
-    public static void main( String[] args )
-    {
-        final String dbfile = args[1];
-        
-        SwingUtilities.invokeLater(new Runnable() {
 
-            @Override
-            public void run() {
-                ScipionMetaData md = new ScipionMetaData(dbfile);
-                new ScipionViewerJFrame(md);
-            }
-        });
-        
+        }
     }
+
     
-   
-    public String getDBFile()
-    {
-        return dbfile;
+    
+    public void setParent(ScipionMetaData md) {
+        this.parent = md;
     }
+
+    public String[] getBlocks() {
+        return blocks;
+
+    }
+
+    public String getBlock() {
+        if (preffix == null) {
+            return self + "s";
+        }
+        return preffix + self + "s";
+    }
+
+   
 
     public List<EMObject> getEMObjects() {
         return emobjects;
     }
 
     public EMObject getEMObject(long id) {
-        for(EMObject emo: emobjects)
-            if(emo.id == id)
+        for (EMObject emo : emobjects) {
+            if (emo.getId() == id) {
                 return emo;
+            }
+        }
         return null;
     }
 
-    public String getValueFromLabel(int index, int label) {
+    public synchronized String getValueFromLabel(int index, int label) {
+        if (index >= size()) {
+            return null;
+        }
         EMObject emo = emobjects.get(index);
-        return emo.getValue(getColumnIndex(label)).toString();
-    }
-    
-    
-  
-    public int getColumnIndex(int label)
-    {
-        int index = 0;
-        for(ColumnInfo ci: columns)
-        {
-            if(ci.label == label)
-                return index;
-            index ++;
+        Object value = emo.getValue(getColumnInfo(label));
+        if (value == null) {
+            return null;
         }
-        return -1;
-    }
-
-    public static boolean isPointer(String name) {
-        if(name.equals("Particle") || name.equals("Coordinate") 
-                || name.equals("Micrograph") || name.equals("CTFModel") 
-                || name.equals("Acquisition") || name.equals("Class2D"))
-            return true;
-        return false;
-    }
-
-    private ColumnInfo getColumnInfo(String labelName) {
-        for(ColumnInfo ci: columns)
-            if(ci.labelName.equals(labelName))
-                return ci;
-        return null;
-    }
-    public class EMObject
-    {
-        long id;
-        List<Object> values;
-       
-        boolean isenabled;
-        
-        public EMObject(long id)
-        {
-            this.id = id;
-            this.isenabled = true;
-            values = new ArrayList<Object>();
-        }
-        
-        public void addValue(Object value)
-        {
-            values.add(value);
-        }
-
-        List<Object> getValues() {
-            return values;
-        }    
-
-        Object getValue(int c) {
-            return values.get(c);
-        }
-
-       
-    }
-
-    public int getCellHeight()
-    {
-        return cellheight;
-    }
-    
-    public int getCellWidth()
-    {
-        return cellwidth;
-    }
-    
-    public long[] findObjects()
-    {
-        long[] ids = new long[emobjects.size()];
-        for(int i = 0; i < ids.length; i++)
-            ids[i] = emobjects.get(i).id;
-        return ids;
-            
-       
-    }
-    
-    public int[] getActiveLabels()
-    {
-        int[] labels = new int[columns.size()];
-        for(int i = 0; i < labels.length; i ++)
-            labels[i] = columns.get(i).label;
-        return labels;
-    }
-    
-    public boolean containsLabel(int label)
-    {
-        for(int i = 0; i < columns.size(); i ++)
-            if(columns.get(i).label == label)
-                return true;
-        return false;
-    }
-    
-    public boolean setEnabled(boolean isenabled, long id)
-    {
-        EMObject emo = getEMObject(id);
-        emo.isenabled = isenabled;
-        return true;
-    }
-    
-    public static String getLabelName(int label)
-    {
-        for(Map.Entry<String, Integer> e: labels.entrySet())
-            if( e.getValue().intValue() == label)
-                return e.getKey();
-        return null;
-    }
-    
-    public ArrayList<ColumnInfo> getColumnsInfo()
-    {
-        return columns;
-    }
-    
-    public static boolean isImage(String self, String label)
-    {
-        if(self.equals("Micrograph") || self.equals("Particle"))
-        {
-            if(label.equals("_filename"))
-                return true;
-        }
-        else if (self.equals("CTFModel"))
-        {
-            if(label.equals("_micFile"))
-                return true;
-        }
-        else if (self.equals("Class2D"))
-        {
-            if(label.equals("_representative._filename"))
-                return true;
-        }
-        return false;
-    }
-    
-    public static boolean hasIndex(String self)
-    {
-        if(self.equals("Particle"))
-            return true;
-        return false;
-    }
-    
-    public boolean containsGeometryInfo()
-    {
-        return false;
-    }
-    
-    public boolean isColumnFormat()
-    {
-        return true;
-    }
-    
-    public Object getValueObject(int label, long id)
-    {
-        EMObject emo = getEMObject(id);
-        int c = getColumnIndex(label);
-        if(c != -1)
-            return emo.getValue(c);
-        return null;
-    }
-    
-    public int getValueInt(int label, long id)
-    {
-        Object value = getValueObject(label, id);
-        return (Integer)value;
-    }
-    
-    public double getValueDouble(int label, long id)
-    {
-        Object value = getValueObject(label, id);
-        return (Float)value;
-    }
-    
-    public String getValueString(int label, long id)
-    {
-        Object value = getValueObject(label, id);
-        if(value == null)
-            return "";
         return value.toString();
     }
+
+    public ColumnInfo getColumnInfo(int label) {
+
+        for (ColumnInfo ci : columns) {
+            if (ci.label == label) {
+                return ci;
+            }
+        }
+        return null;
+    }
+
+    public ColumnInfo getColumnInfo(String labelName) {
+        for (ColumnInfo ci : columns) {
+            if (ci.labelName.equals(labelName)) {
+                return ci;
+            }
+        }
+        return null;
+    }
+
+    public ScipionMetaData getMd(List<EMObject> emos) {
+        ScipionMetaData selmd;
+        //either selection of classes or particles main selection will be saved on Classes and Objects table
+        selmd = new ScipionMetaData("", self, selfalias, columns);
+        for (EMObject emo : emos) {
+            selmd.add(emo);
+        }
+
+        return selmd;
+    }
+
+    public void add(EMObject emo) {
+        emobjects.add(emo);
+        if (emo.childmd != null) {
+            haschilds = true;
+        }
+    }
+
+    public ScipionMetaData getStructure(String prefix) {
+        return new ScipionMetaData(prefix, self, selfalias, columns);
+    }
+
     
-    public String getSelf()
-    {
+
+    public long[] findObjects() {
+        long[] ids = new long[emobjects.size()];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = emobjects.get(i).getId();
+        }
+        return ids;
+
+    }
+
+    public int[] getActiveLabels() {
+        int[] labels = new int[columns.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = columns.get(i).label;
+        }
+        return labels;
+    }
+
+    @Override
+    public boolean containsLabel(int label) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns.get(i).label == label) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean setEnabled(boolean isenabled, long id) {
+        EMObject emo = getEMObject(id);
+        emo.setEnabled(isenabled);
+        return true;
+    }
+
+    @Override
+    public boolean getEnabled(long id) {
+        EMObject emo = getEMObject(id);
+        return emo.isEnabled();
+
+    }
+
+    public List<ColumnInfo> getColumnsInfo() {
+        return columns;
+    }
+
+    public boolean isImage(String self, String label) {
+        if(label.contains("_filename"))
+        {
+            String indexLabel = label.replace("_filename", "_index");
+            if(getColumnInfo(indexLabel) != null)
+                return true;
+        }
+        if (self.equals("Micrograph") || self.equals("Particle") || self.equals("Volume")) {
+            if (label.equals("_filename")) {
+                return true;
+            }
+        } else if (self.equals("CTFModel")) {
+            if (label.equals("_micObj._filename") || label.equals("_psdFile") || label.equals("_xmipp_enhanced_psd") 
+                    ||label.equals("_xmipp_ctfmodel_quadrant") ||label.equals("_xmipp_ctfmodel_halfplane")) {
+                return true;
+            }
+        } else if (self.equals("Class2D") || self.equals("Class3D")) {
+            if (label.equals("_representative._filename")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasIndex(String self) {
+        if (self.equals("Particle")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isColumnFormat() {
+        return true;
+    }
+
+    public synchronized Object getValueObject(int label, long id) {
+        EMObject emo = getEMObject(id);
+        ColumnInfo c = getColumnInfo(label);
+        if (c != null) {
+            return emo.getValue(c);
+        }
+        return null;
+    }
+
+    public int getValueInt(int label, long id) {
+        Object value = getValueObject(label, id);
+        if (value != null) {
+            return (Integer) value;
+        }
+        return Integer.MIN_VALUE;
+    }
+
+    public double getValueDouble(int label, long id) {
+        Object value = getValueObject(label, id);
+        if (value != null) {
+            return (Float) value;
+        }
+        return Double.NaN;
+    }
+
+    public String getValueString(int label, long id) {
+        Object value = getValueObject(label, id);
+        if (value == null) 
+            return "";
+        if (value instanceof Float)
+            return String.format("%.2f", value);
+        return value.toString();
+    }
+
+    public String getSelf() {
         return self;
     }
-    
-    public int size()
-    {
+
+    @Override
+    public int size() {
         return emobjects.size();
     }
+
+    @Override
+    public boolean setValueString(int label, String value, long id) {
+        return setValueObject(label, value, id);
+    }
+
+    @Override
+    public boolean setValueDouble(int label, double value, long id) {
+        return setValueObject(label, new Double(value).floatValue(), id);
+    }
+
+    @Override
+    public boolean setValueInt(int label, int value, long id) {
+        return setValueObject(label, value, id);
+    }
+
+    public boolean setValueObject(int label, Object value, long id) {
+        EMObject emo = getEMObject(id);
+        ColumnInfo ci = getColumnInfo(label);
+        emo.setValue(ci, value);
+        return true;
+    }
+
+    @Override
+    public void importObjects(MetaData md, long[] ids) {
+        ScipionMetaData smd = (ScipionMetaData) md;
+        EMObject emo;
+        for (int i = 0; i < ids.length; i++) {
+            emo = smd.getEMObject(ids[i]);
+            add(emo);
+        }
+    }
+
+    public List<EMObject> getChilds(long[] ids) {
+        ArrayList<EMObject> childs = new ArrayList<EMObject>();
+        EMObject emo;
+        for (int i = 0; i < ids.length; i++) {
+            emo = getEMObject(ids[i]);
+            if (emo.childmd != null) {
+                childs.addAll(emo.childmd.getEMObjects());
+            }
+        }
+        return childs;
+    }
+
+    public void unionAll(MetaData md) {
+
+        emobjects.addAll(((ScipionMetaData) md).getEMObjects());
+    }
+
+    public void destroy() {
+    }
+
+    public ScipionMetaData getParent() {
+        return parent;
+    }
+
+    public ScipionMetaData getChild(String block) {
+        if (!haschilds) {
+            return null;
+        }
+        for (EMObject emo : emobjects) {
+            if (emo.childmd != null && emo.childmd.getBlock().equals(block))//from parent to child
+            {
+                return emo.childmd;
+            }
+        }
+        return null;
+
+    }
+
+    public void write(String path) {
+        new File(path).delete();//overwrite file
+        if (path.contains("@")) {
+            writeBlock(path.substring(path.lastIndexOf("@") + 1));
+            return;
+        }
+        if (parent != null) {
+            parent.write(path);//this will write parent and siblings
+            return;
+        }
+        writeBlock(path);
+        if (haschilds) {
+            for (EMObject emo : emobjects) {
+                if (emo.childmd != null) {
+                    emo.childmd.writeBlock(path);
+                }
+            }
+        }
+
+    }
+
+    public String toString() {
+        String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
+                + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "                      label_property      TEXT UNIQUE,\n"
+                + "                      column_name TEXT UNIQUE,\n"
+                + "                      class_name TEXT DEFAULT NULL\n"
+                + "                      )", preffix);
+
+        sql += String.format(";INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
+        String line = ", (%s, \'%s\', \'%s\', \'%s\')";
+        ColumnInfo ci;
+        String createcols = "", cols = "id, label, comment", type;
+        for (int i = 0; i < columns.size(); i++) {
+            ci = columns.get(i);
+            type = getTypeMapping(ci.type);
+            sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+            createcols += String.format(",\n%s %s DEFAULT NULL", ci.comment, type);
+            cols += String.format(", %s", ci.comment);
+        }
+        sql += String.format(";DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
+                + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "                      label      TEXT DEFAULT NULL,\n"
+                + "                      comment TEXT DEFAULT NULL"
+                + "                      %2$s)", preffix, createcols);
+        if (size() == 0) {
+            return sql;
+        }
+        sql += String.format(";INSERT INTO %sObjects(%s) VALUES ", preffix, cols);
+        Object value;
+        for (EMObject emo : emobjects) {
+            sql += String.format("(%s, '', ''", emo.getId());
+            for (ColumnInfo column : columns) {
+                value = emo.getValue(column);
+                if (value != null) {
+                    if (column.type == MetaData.LABEL_STRING) {
+
+                        String str = (String) value;
+                        if (str.contains("@")) {
+                            str = str.substring(str.lastIndexOf("@") + 1);
+                        }
+                        value = str;
+                        sql += String.format(", '%s'", value);
+
+                    } else {
+                        sql += String.format(", %s", value);
+                    }
+                } else {
+                    sql += ", NULL";
+                }
+            }
+            sql += "),";
+        }
+        sql = sql.substring(0, sql.length() - 1);//remove first comma
+        System.out.println(sql);
+        return sql;
+    }
+
+    public void writeBlock(String path) {
+        //Might fail if some fixed column was added
+
+        Connection c = null;
+        Statement stmt = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c.setAutoCommit(false);
+            stmt = c.createStatement();
+
+            String sql = String.format("DROP TABLE IF EXISTS %1$sClasses; CREATE TABLE %1$sClasses(\n"
+                    + "id        INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                    + "                      label_property      TEXT UNIQUE,\n"
+                    + "                      column_name TEXT UNIQUE,\n"
+                    + "                      class_name TEXT DEFAULT NULL\n"
+                    + "                      )", preffix);
+            stmt.executeUpdate(sql);
+
+            sql = String.format("INSERT INTO %sClasses(id, label_property, column_name, class_name) values (1, \'self\', \'%s\', \'%s\')", preffix, selfalias, self);
+            String line = ", (%s, \'%s\', \'%s\', \'%s\')";
+            ColumnInfo ci;
+            String createcols = "", cols = "", type;
+            for (int i = 0; i < columns.size(); i++) {
+                ci = columns.get(i);
+                type = getTypeMapping(ci.type);
+                sql += String.format(line, i + 2, ci.labelName, ci.comment, type);
+                createcols += String.format("%s %s DEFAULT NULL,", ci.comment, type);
+                cols += String.format("%s,", ci.comment);
+            }
+            stmt.executeUpdate(sql);
+            createcols = createcols.substring(0, createcols.length() - 1);
+            cols = cols.substring(0, cols.length() - 1);
+            sql = String.format("DROP TABLE IF EXISTS %1$sObjects; CREATE TABLE %1$sObjects(\n"
+                    + "                      %2$s)", preffix, createcols);
+
+            stmt.executeUpdate(sql);
+            if (size() == 0) {
+                return;
+            }
+            sql = String.format("INSERT INTO %sObjects(%s) VALUES ", preffix, cols);
+            Object value;
+            for (EMObject emo : emobjects) {
+                sql += "(";
+                for (ColumnInfo column : columns) {
+                    value = emo.getValue(column);
+                    if (value != null) {
+                        if (column.type == MetaData.LABEL_STRING) {
+
+                            String str = (String) value;
+                            if (str.contains("@")) {
+                                str = str.substring(str.lastIndexOf("@") + 1);
+                            }
+                            value = str;
+                            sql += String.format("'%s',", value);
+                        } else {
+                            sql += String.format("%s,", value);
+                        }
+                    } else {
+                        sql += "NULL,";
+                    }
+                }
+                sql = sql.substring(0, sql.length() - 1) + "),";
+            }
+            sql = sql.substring(0, sql.length() - 1);
+            stmt.executeUpdate(sql);
+            c.commit();
+            stmt.close();
+            c.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
+    public static String getTypeMapping(int type) {
+        if (type == MetaData.LABEL_INT) {
+            return "Integer";
+        }
+        if (type == MetaData.LABEL_DOUBLE) {
+            return "Float";
+        }
+        return "String";
+    }
+
+    public static int getTypeMapping(String type) {
+        if (type.equals("Integer")) {
+            return MetaData.LABEL_INT;
+        }
+        if (type.equals("Float")) {
+            return MetaData.LABEL_DOUBLE;
+        }
+        if(type.equals("Boolean"))
+            return MetaData.LABEL_INT;
+
+        return MetaData.LABEL_STRING;
+    }
+
+    public String getPreffix() {
+        return preffix;
+    }
+
+    public void print() {
+        System.out.println(toString());
+    }
+
+    public double[] getStatistics(boolean applyGeo) {
+        return null;
+    }
+
+    public void sort(int sortLabel, boolean ascending) {
+        StopWatch.getInstance().printElapsedTime("sorting");
+        ColumnInfo ci = getColumnInfo(sortLabel);
+        try {
+            loadNeighborhoodValues(0, ci, size());
+        } catch (SQLException ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Comparator<EMObject> comparator = new EMObjectComparator(ci);
+        if(!ascending)
+            comparator = Collections.reverseOrder(comparator);
+        Collections.sort(emobjects, comparator);
+        for (int i = 0; i < emobjects.size() - 1; i++) 
+            emobjects.get(i).setIndex(i);
+
+        StopWatch.getInstance().printElapsedTime("sort done");
+    }
     
+    class EMObjectComparator implements Comparator<EMObject> {
+        private final ColumnInfo ci;
+        
+        public EMObjectComparator(ColumnInfo ci)
+        {
+            this.ci = ci;
+        }
 
+        @Override
+        public int compare(EMObject o1, EMObject o2) {
+            Comparable value1 = (Comparable)o1.getValue(ci);
+            Comparable value2 = (Comparable)o2.getValue(ci);
+            return value1.compareTo(value2);
+          }
 
+    }
+
+    public void overwrite(String src, String path) throws SQLException {
+        try {
+            XmippUtil.copyFile(src, path);
+            if (parent != null) {
+                parent.overwrite(src, path);//this will write parent and siblings
+                return;
+            }
+            overwriteBlock(path);
+            if (haschilds) {
+                for (EMObject emo : emobjects) {
+                    if (emo.childmd != null) {
+                        emo.childmd.overwriteBlock(path);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    public void overwriteBlock(String path) throws SQLException {//overwrites enabled column in existing sqlite objects table
+        Connection c = null;
+        PreparedStatement stmt = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c.setAutoCommit(false);
+            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=? WHERE id=?;", preffix, enabledci.labelName));
+
+            for (EMObject emo : emobjects) {
+                if (emo.changed) {
+                    stmt.setInt(1, emo.isEnabled() ? 1 : 0);
+                    stmt.setInt(2, emo.getId().intValue());
+                    stmt.executeUpdate();
+                    
+                }
+            }
+            c.commit();
             
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
+            if (c != null) 
+                try {
+                    System.err.print("Transaction is being rolled back");
+                    c.rollback();
+                } 
+                catch(SQLException excep) {
+                    excep.printStackTrace();
+                }
+
+        }
+        finally {
+            if (stmt != null)
+                stmt.close();
+            
+            c.close();
+        }
+    }
+
+    @Override
+    public boolean isCTFMd() {
+        return getSelf().equals("CTFModel");
+    }
+
+    @Override
+    public EllipseCTF getEllipseCTF(long id, int D) {
+        if (!isCTFMd()) {
+            return null;
+        }
+        try {
+            EMObject emo = getEMObject(id);
+
+            double Q0, Cs = 0, Ts = 0, kV = 0, defU = 0, defV = 0, defAngle;
+
+            Q0 = emo.getValueDouble("_micObj._acquisition._amplitudeContrast");
+            Cs = emo.getValueDouble("_micObj._acquisition._sphericalAberration");
+            Ts = emo.getValueDouble("_micObj._samplingRate");
+            kV = emo.getValueDouble("_micObj._acquisition._voltage");
+
+            defU = emo.getValueDouble("_defocusU");
+            defV = emo.getValueDouble("_defocusV");
+            defAngle = emo.getValueDouble("_defocusAngle");
+                //read params from sqlite
+
+            return new EllipseCTF(id, Q0, Cs, 1, Ts, kV, defU, defV, defAngle, D);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            throw new IllegalArgumentException(ex);
+        }
+
+    }
+
+    @Override
+    public String getCTFFile(long id) {
+                String psde = getPSDEnhanced(id);
+                if(psde != null)
+                {
+                    String ctf = psde.replace("_enhanced_psd.xmp", ".ctfparam");
+                    if(new File(ctf).exists())
+                        return ctf;
+                }
+        return null;
+    }
+    
+    @Override
+    public String getPSDFile(long id) {
+        return (String) getEMObject(id).getValue("_psdFile");
+    }
+    
+    @Override
+    public String getPSDEnhanced(long id) {
+        return (String) getEMObject(id).getValue("_xmipp_enhanced_psd");
+    }
+    
+    public CTFDescription getCTFDescription(long id)
+    {
+        try {
+            MetaData md = getEllipseCTF(id).getCTFMd();
+            String file = "ctf.xmd";
+            md.write(file);
+            return new CTFDescription(file);
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException(ex);
+        }
+    }
+    
+    // Check if the underlying data has geometrical information
+    public boolean containsGeometryInfo() {
+//        if(!self.equals("Class2D") || self.equals("Class3D"))
+//            return false;
+        boolean contains = getColumnInfo("_alignment._matrix") != null;
+        return contains;
+    }
+    
+    
+    public boolean containsMicrographsInfo()
+    {
+        return false;
+    }
+    
+    public int getEnabledCount()
+    {
+        return enableds;
+    }
+    
+    synchronized void loadNeighborhoodValues(int index, ColumnInfo column) throws SQLException
+    {
+        int neighborhood = 25;
+        loadNeighborhoodValues(index, column, neighborhood);
+    }
+    
+    synchronized void loadNeighborhoodValues(int index, ColumnInfo column, int neighborhood) throws SQLException
+        {
+            Connection c = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                String name, alias;
+                Object value;
+                c = getConnection();
+                String columns = column.comment;
+                ColumnInfo indexci = null;
+                if(column.labelName.endsWith("_filename"))
+                {
+                    indexci = getColumnInfo(column.labelName.replace("_filename", "_index"));
+                    if(indexci != null)
+                        columns += ", " + indexci.comment;
+                }
+                stmt = c.prepareStatement(String.format("SELECT %s FROM %sObjects where Id=?;", columns, preffix));
+                EMObject emo;
+                int fnIndex;
+                for(int i = index; i <= index + neighborhood && i < size(); i ++)
+                {
+                    
+                    emo = emobjects.get(i);
+                    if(!emo.values.containsKey(column))
+                    {
+                        StopWatch.getInstance().printElapsedTime("reading " + columns + " from " + emo.getId());
+                        stmt.setInt(1, emo.getId().intValue());
+                        rs = stmt.executeQuery();
+                        name = column.labelName;
+                        alias = column.comment;
+                        switch (column.type) {
+
+                            case MetaData.LABEL_INT:
+                                value = rs.getInt(alias);
+                                break;
+                            case MetaData.LABEL_DOUBLE:
+                                value = rs.getFloat(alias);
+                                break;
+                            case MetaData.LABEL_STRING:
+                                value = rs.getString(alias);
+                                if (indexci != null) {
+                                        fnIndex = rs.getInt(indexci.comment);
+                                        if (fnIndex > 0) 
+                                            value = fnIndex + "@" + value;
+                                    
+                                }
+                                break;
+                            default:
+
+                                value = rs.getString(alias);
+                        }
+                        emo.values.put(column, value);
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            finally {
+                if(rs != null)
+                    rs.close();
+                if (stmt != null)
+                    stmt.close();
+                c.close();
+            }
+        }
+   
+    public boolean isChanged()
+    {
+        
+        for(EMObject emo: emobjects)
+            if(emo.changed)
+                return true;
+        return false;
+    }
+    
+    
+    public class EMObject {
+
+        int index;
+        Map<ColumnInfo, Object> values;
+        boolean changed;
+        ScipionMetaData childmd;
+        ScipionMetaData md;
+        
+
+        public EMObject(int index, ScipionMetaData md) {
+            this.index = index;
+            values = new HashMap<ColumnInfo, Object>();
+            this.md = md;
+            changed = false;
+        }
+
+        Object getValue(String column) {
+            ColumnInfo ci = getColumnInfo(column);
+            return getValue(ci);
+        }
+
+        Object getValue(ColumnInfo c) {
+            if(!values.containsKey(c))
+                try {
+                    loadNeighborhoodValues(index, c);
+            } catch (SQLException ex) {
+                Logger.getLogger(ScipionMetaData.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            Object result = values.get(c);
+
+            return result;
+        }
+        
+        
+
+        
+        Double getValueDouble(String column) {
+            ColumnInfo ci = getColumnInfo(column);
+            return getValueDouble(ci);
+        }
+
+        Double getValueDouble(ColumnInfo c) {
+            Object value = getValue(c);
+            if (value != null) {
+                return ((Float) value).doubleValue();//in sqlite double is float
+            }
+            return null;
+        }
+
+        public void setValue(ColumnInfo ci, Object value) {
+            
+            changed = true;
+            values.put(ci, value);
+            
+        }
+        
+        public Boolean getValueBoolean(String column) {
+            ColumnInfo ci = getColumnInfo(column);
+            if(column == null)
+                return null;
+            Object value = getValue(ci);
+            if(value == null)
+                return null;
+            return (Integer)value == 1;
+        }
+
+        public boolean isEnabled() {
+            if(!values.containsKey(enabledci))
+                return true;
+            Integer value = (Integer) values.get(enabledci);
+            return value == 1;
+        }
+
+        public void setEnabled(boolean isenabled) {
+            int value = isenabled ? 1 : 0;
+            if(isEnabled() && !isenabled)
+                enableds --;
+            else if( !isEnabled() && isenabled)
+                enableds ++;
+            setValue(enabledci, value);
+        }
+
+        public Long getId() {
+            return ((Integer)values.get(idci)).longValue();
+        }
+
+        public String getLabel() {
+            Object value = getValue(labelci);
+            if (value != null) {
+                return ((String) getValue(labelci));
+            }
+            return null;
+        }
+
+        public String getComment() {
+            Object value = getValue(commentci);
+            if (value != null) {
+                return ((String) getValue(commentci));
+            }
+            return null;
+        }
+
+        public void setComment(String comment) {
+            setValue(commentci, comment);
+        }
+
+        String getValueString(ColumnInfo ci) {
+            Object value = getValue(ci);
+            if (value != null) {
+                return ((String) value).toString();//in sqlite double is float
+            }
+            return "";
+        }
+
+        void setIndex(int index) {
+            this.index = index;
+        }
+        
+        
+        
+    }
+    
+    public String getTmpFile() {
+            String ext = XmippStringUtils.getFileExtension(filename);
+            String ext2 = "_selection" + ext;
+            String sqlitefile = filename;
+            if(!filename.endsWith(ext2))
+                sqlitefile = filename.replace(ext, ext2);
+            return sqlitefile;
+    }
+        
+
+    protected Connection getConnection() throws ClassNotFoundException, SQLException
+    {
+        Class.forName("org.sqlite.JDBC");
+        String file = getTmpFile();
+        if(checkTmp == null && new File(file).exists())
+            checkTmp = true;//XmippQuestionDialog.showYesNoQuestion(null, "Temporary save has been detected. Do you wish to import it?");
+        if(checkTmp == null || !checkTmp)
+            file = filename;
+        Connection c = DriverManager.getConnection("jdbc:sqlite:" + file);
+        return c;
+    }
+    
+    @Override
+    public boolean isCellEditable(int label) {
+        
+        
+        ColumnInfo ci = getColumnInfo(label);
+        if(ci == null)
+            return false;
+        if(ci.equals(enabledci))
+           return true;
+        return false;
+    }
+   
 }

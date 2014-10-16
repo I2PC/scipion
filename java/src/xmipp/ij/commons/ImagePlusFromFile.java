@@ -69,10 +69,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                                     imp = XmippImageConverter.convertToImagePlus(ig, ImageGeneric.FIRST_IMAGE, (int)index);//read image slice on volume
                              }
                         }
-                        
                         checkResizeAndGeo();
-                        
-			
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
@@ -93,9 +90,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
 	}
         
 
-
-	
-
 	public String getFileName()
 	{
 		return fileName;
@@ -111,8 +105,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
 
         String name = fileName;
         
-        if(index2 != -1)
-            name = String.format("%d@%s", index2, name);
+        
         if(index != -1)
             name = String.format("%d@%s", index, name);
         return name;

@@ -24,7 +24,7 @@ public abstract class ImagePlusReader {
     protected boolean wrap;
     protected long modified;
     
-    protected long index = -1, index2 = -1;
+    protected long index = -1;
     protected boolean normalize;
     protected double normalize_min;
     protected double normalize_max;
@@ -49,7 +49,7 @@ public abstract class ImagePlusReader {
 			if(ig != null)
                         {
                             
-                             if(index == -1)
+                             if(index == -1 )
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
@@ -61,9 +61,8 @@ public abstract class ImagePlusReader {
                              }
                              
                         }
-                            
+                        
                         checkResizeAndGeo();
-			
 			if(normalize)
 			{
 				imp.getProcessor().setMinAndMax(normalize_min, normalize_max);
@@ -75,8 +74,8 @@ public abstract class ImagePlusReader {
 		catch (Exception e)
 		{
 			e.printStackTrace();
+                        throw new IllegalArgumentException(e);
 		}
-		return imp;
 	
     }
     
@@ -87,13 +86,17 @@ public abstract class ImagePlusReader {
             try {
                 
                 ImageGeneric tempig = XmippImageConverter.convertToImageGeneric(imp);
-                tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap);
+
+                if (geometry.hasMatrix())
+                	tempig.applyGeoMatrix(geometry.getMatrix(), wrap);
+                else
+                	tempig.applyGeo(geometry.shiftx, geometry.shifty, geometry.psiangle, geometry.flip, wrap);
                 imp = XmippImageConverter.convertToImagePlus(tempig);
             } catch (Exception ex) {
                 Logger.getLogger(ImagePlusReader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        if(width != 0  && height != 0)
+        if(width != 0  && height != 0 && imp != null)
         {
             ImageProcessor processor = imp.getProcessor();
             processor.setInterpolate(true);
@@ -114,8 +117,6 @@ public abstract class ImagePlusReader {
     {
             try
             {
-
-
                 if(imp != null)
                     return imp.getStackSize() > 1;
                 loadImagePlus();
@@ -128,9 +129,8 @@ public abstract class ImagePlusReader {
             }
     }
 
-    void setIndexes(int index, int index2) {
+    void setIndex(int index) {
         this.index = index;
-        this.index2 = index2;
     }
     
     

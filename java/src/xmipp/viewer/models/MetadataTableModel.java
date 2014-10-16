@@ -28,12 +28,13 @@ package xmipp.viewer.models;
 import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
@@ -56,7 +57,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		return visibleLabels.get(column).getLabelName();
+		return visibleLabels.get(column).labelName;
 	}
 
 	@Override
@@ -64,10 +65,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		ColumnInfo ci = visibleLabels.get(column);
 		if (ci.render)
 			return ImageItem.class;
-		else if (ci.getLabel() == MDLabel.MDL_ENABLED)
+		else if (ci.isEnable())
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
-			return MetaData.getLabelClass(ci.getLabel());
+			return MetaData.getLabelClass(ci.type);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -98,29 +99,30 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                         
 			ColumnInfo ci = visibleLabels.get(column);
 			if (ci.render) {
-				String key = getItemKey(row, ci.getLabel());
+				String key = getItemKey(row, ci.label);
 				ImageItem item;
 				// If the element is on cache, just return it
 				if (cache.containsKey(key))
 					item = cache.get(key);
 				else {
 					// If not, create the item and store it for future
-					item = createImageItem(row, ci.getLabel());
+					item = createImageItem(row, ci.label);
 					cache.put(key, item);
 				}
 				setupItem(item, row);
 				return item;
 			}
-			int label = ci.getLabel();
+			int label = ci.label;
 			long id = data.ids[row];
-			int type = ci.type;
                         
+			int type = ci.type;
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_INT:
+                            
 				int value = md.getValueInt(label, id);
 				// treat special case of MDL_ENABLED
-				if (label == MDLabel.MDL_ENABLED)
+				if (ci.isEnable())
 					return (value > 0);
 				return value;
 			case MetaData.LABEL_BOOL:
@@ -130,20 +132,38 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_SIZET:
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
-				return md.getValueString(ci.getLabel(), data.ids[row]);
+                                String str = md.getValueString(label, data.ids[row]);
+                                if(ci.labelName.equals("_alignment._matrix"))
+                                    return String.format("<html>%s</html>", formatNumbers(str).replace("],", "]<br>"));
+                                
+				return str;
 			case MetaData.LABEL_VECTOR_DOUBLE:
 			case MetaData.LABEL_VECTOR_SIZET:
-				return md.getValueString(ci.getLabel(), data.ids[row]);
+				return md.getValueString(label, data.ids[row]);
 
 			}
 			return null;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+                    e.printStackTrace();
+                    
 		}
-
-		return null;
+                return null;
 	}// function getValueAt
+        
+        public String formatNumbers(String str)
+        {
+            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
+            Matcher m = p.matcher(str);
+            StringBuffer sb = new StringBuffer(str.length());
+            while(m.find())
+            {
+                String number = m.group(1);
+                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
+            }
+            m.appendTail(sb);
+            return sb.toString();
+        }
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
@@ -151,7 +171,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		ColumnInfo ci = visibleLabels.get(column);
 		if (value == null || value.equals("")) {
 			XmippDialog.showError(null,
-					XmippMessage.getEmptyFieldMsg(ci.getLabelName()));
+					XmippMessage.getEmptyFieldMsg(ci.labelName));
 			return;// empty values are not allowed
 		}
 		try {
@@ -172,15 +192,15 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	protected void setMdValueAt(Object value, int row, int column,
 			ColumnInfo ci, long id) throws Exception {
 		if (!ci.render) {
-			int label = ci.getLabel();
-			int type = MetaData.getLabelType(label);
+			int label = ci.label;
+			int type = ci.type;
 			MetaData md = data.md;
 			switch (type) {
 			case MetaData.LABEL_BOOL:
 				md.setValueBoolean(label, (Boolean) value, id);
 				break;
 			case MetaData.LABEL_INT:
-				if (label == MDLabel.MDL_ENABLED) {
+				if (ci.isEnable()) {
 					md.setEnabled((Boolean) value, id);
 				} else
 					md.setValueInt(label, ((Integer) value).intValue(), id);
@@ -221,12 +241,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			ColumnInfo ci = visibleLabels.get(col);
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-                                openXmippImageWindow(index, ci.getLabel());
+                                openXmippImageWindow(index, ci.label);
 				return true;
 			}
 		} catch (Exception e) {
+                        e.printStackTrace();
                         XmippDialog.showError(null, e.getMessage());
-			//e.printStackTrace();
+			
 		}
 		return false;
 	}// function handleDoubleClick
@@ -241,7 +262,6 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		return false;
 	}
 
-	@Override
 	/** Whether to display the labels */
 	public void setRenderImages(boolean value) {
 		boolean changed = false;
@@ -253,7 +273,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		if (changed) {
 			data.renderImages = value;
 			calculateCellSize();
-			fireTableDataChanged();
+			fireTableStructureChanged();
 		}
 	}
 
@@ -261,7 +281,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	public String getLabel(int row, int col) {
 		try {
 			long objId = data.ids[row];
-			return data.md.getValueString(visibleLabels.get(col).getLabel(),
+			return data.md.getValueString(visibleLabels.get(col).label,
 					objId);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -433,7 +453,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				ascending = !ascending;
 			else
 				sortColumnIndex = modelIndex;
-			data.sortMd(sortColumnIndex, ascending);
+			data.sortMd(data.labels.get(sortColumnIndex).label, ascending);
 			clearSelection();
 			updateTableSelection(table);
 			cache.clear();

@@ -6,8 +6,8 @@
 package xmipp.viewer.scipion;
 
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import xmipp.utils.Params;
+import xmipp.utils.XmippWindowUtil;
 
 
 /**
@@ -18,37 +18,41 @@ public class ScipionParams extends Params {
 
     public final static String SCIPION = "scipion";
     public String python;
-    public String type;
-    public String script;
+    public String scripts;
     public String projectid;
-    public String inputimagesid;
     public String inputid;
-    
+    public String other;
 
+    
+    
     public ScipionParams(String args[]) {
         super(args);
+        XmippWindowUtil.setIsScipion(cmdLine.hasOption(SCIPION));
     }
 
     public void defineArgs() {
         super.defineArgs();
         Option cmdoption = new Option(SCIPION, "");
         
-        cmdoption.setArgs(6);
+        cmdoption.setArgs(5);
         options.addOption(cmdoption);
     }
 
     @Override
     public void processArgs(String args[]) {
         super.processArgs(args);
-
+        
+        
         if (cmdLine.hasOption(SCIPION)) {
+            
             String[] cmdargs = cmdLine.getOptionValues(SCIPION);
-            type = cmdargs[0];
-            python = cmdargs[1];
-            script = cmdargs[2]; 
-            projectid = cmdargs[3];
-            inputid = cmdargs[4];
-            inputimagesid = cmdargs[5];
+            python = cmdargs[0];
+            scripts = cmdargs[1]; 
+            projectid = cmdargs[2];
+            inputid = cmdargs[3];
+            other = (cmdargs.length == 5)? cmdargs[4]: "";
         }
     }
+    
+   
 }

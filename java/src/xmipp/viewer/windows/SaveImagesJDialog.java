@@ -25,37 +25,11 @@
 
 package xmipp.viewer.windows;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-
-import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.ColorEditor;
-import xmipp.utils.ColorRenderer;
-import xmipp.utils.DEBUG;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ImageGalleryTableModel;
 
 public class SaveImagesJDialog extends SaveJDialog {
@@ -79,7 +53,7 @@ public class SaveImagesJDialog extends SaveJDialog {
 	@Override
 	protected void createContent(JPanel panel) {
 		super.createContent(panel);
-		imagesMd = gallery.data.getImagesFromClassSelection();
+		imagesMd = gallery.data.getClassesImages();
 		String text = String.format("<html>You are about to save <font color='red'>%d</font> images from <font color='red'>%d</font> classes.",
 				imagesMd.size(), gallery.data.getSelectionCount());
 		panel.add(new JLabel(text), XmippWindowUtil.getConstraints(gbc, 0, 1, 2));

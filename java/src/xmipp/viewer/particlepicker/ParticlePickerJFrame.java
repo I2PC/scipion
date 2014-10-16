@@ -2,10 +2,11 @@ package xmipp.viewer.particlepicker;
 
 import ij.IJ;
 import ij.WindowManager;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -16,14 +17,16 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
@@ -47,10 +50,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.Filename;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
@@ -108,6 +111,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton saveandexitbt;
 
 	protected JToolBar tb;
+        
         
 
 	public ParticlePickerJFrame(ParticlePicker picker)
@@ -177,12 +181,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                     if(createprot)
                                         msgfields.put("Run name:", "ProtUserCoordinates");
                                     int count = getParticlePicker().getParticlesCount();
-                                    String msg = String.format("<html>Are you sure you want to create a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
-                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg, msgfields);
-                                    int create = dlg.action;
-                                    if(createprot)
-                                        getParticlePicker().protlabel = dlg.getFieldValue("Run name:");
-                                    if (create == ScipionMessageDialog.OK_OPTION)
+                                    String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
+                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
+                                    
+                                    if (dlg.action == ScipionMessageDialog.OK_OPTION)
                                         executeScipionSaveAndExit();
                                        
                                 }
@@ -193,9 +195,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
                 if(picker.isScipionSave())
                 {
-                    savebt.setVisible(false);
-                    saveandexitbt.setText("Create Coordinates");
-                    Color color = Color.decode(ScipionMessageDialog.firebrick); 
+                    saveandexitbt.setText("Coordinates");
+                    Image img = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
+                    saveandexitbt.setIcon(new ImageIcon(img));
+                    saveandexitbt.setToolTipText("Create Coordinates");
+                    Color color = ScipionMessageDialog.firebrick; 
                     saveandexitbt.setBackground(color);
                     saveandexitbt.setForeground(Color.WHITE);
                     
@@ -282,7 +286,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
+		importmi = new JMenuItem("Import from folder...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importmi);
 		if (picker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
@@ -633,6 +637,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
+                usezoombt.setSelected(true);
 		tb.add(usezoombt);
 		initSizePane();
 		tb.add(sizepn);
@@ -653,7 +658,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (zoom == -1. || (zoom != -1. && !usezoombt.isSelected()))
 		{
 			zoom = getCanvas().getMagnification();
-			usezoombt.setText(String.format("%.2f", zoom));
+			usezoombt.setText(String.format(Locale.US, "%.2f", zoom));
 		}
 		else if (usezoombt.isSelected())
 			getCanvas().setZoom(zoom);
@@ -674,7 +679,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void displayZoom()
 	{
 
-		usezoombt.setText(String.format("%.2f", getCanvas().getMagnification()));
+		usezoombt.setText(String.format(Locale.US, "%.2f", getCanvas().getMagnification()));
 		pack();
 	}
 
@@ -870,7 +875,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
                     try {
                         String[] cmd = getParticlePicker().getScipionSaveCommand();
-                        String output = XmippUtil.executeCommand(cmd);
+                        String output = XmippWindowUtil.executeCommand(cmd, true);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);
                         if(output != null && !output.isEmpty())

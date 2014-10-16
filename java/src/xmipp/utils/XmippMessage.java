@@ -85,4 +85,8 @@ public class XmippMessage {
 	{
 		return "Unexpected error";
 	}
+
+        public static String fileNotFound() {
+                return "File not found";
+        }
 }

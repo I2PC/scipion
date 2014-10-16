@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -26,8 +28,10 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
 import xmipp.ij.commons.Tool;
+import xmipp.jni.CTFDescription;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.particlepicker.ColorHelper;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
@@ -170,7 +174,8 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if (psd != null && ctf != null)
-					ImagesWindowFactory.openCTFWindow(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                                    new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                                
 
 			}
 		});

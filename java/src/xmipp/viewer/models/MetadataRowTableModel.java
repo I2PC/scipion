@@ -33,6 +33,7 @@ import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippPopupMenuCreator;
+import xmipp.viewer.windows.GalleryJFrame;
 
 /** This is a data model designed for Row metadatas */
 @SuppressWarnings("serial")
@@ -40,8 +41,8 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	protected long id;
 	
 	/** Constructor using a metadata row */
-	public MetadataRowTableModel(Window window, MetaData md) throws Exception {
-		this(new GalleryData(window, null, new Params(), md));
+	public MetadataRowTableModel(GalleryJFrame window, MetaData md) throws Exception {
+		this(new GalleryData(window, new Params(), md));
 	}
 	
 	public MetadataRowTableModel(GalleryData data) throws Exception {

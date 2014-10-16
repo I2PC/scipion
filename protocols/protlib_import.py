@@ -77,7 +77,8 @@ XMIPP_RELION_LABELS = {
                        ,MDL_CTF_SAMPLING_RATE: 'rlnDetectorPixelSize'
                        ,MDL_CTF_VOLTAGE:       'rlnVoltage'
                        ,MDL_DATATYPE:          'rlnDataType'
-                       ,MDL_DEFGROUP:          'rlnGroupNumber'
+                       ,MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
+                       #,MDL_DEFGROUP:          'rlnGroupNumber'
                        ,MDL_ENABLED:           'rlnEnabled'
                        ,MDL_IMAGE:             'rlnImageName'
                        ,MDL_IMAGE_REF:         'rlnReferenceImage'
@@ -114,8 +115,7 @@ XMIPP_RELION_LABELS = {
 XMIPP_RELION_LABELS_EXTRA = {
                        # Following labels have no correct matching, just to 
                        # pick one with the same datatype
-                       MDL_BLOCK_NUMBER:       'rlnGroupNumber' # just one
-                       ,MDL_COUNT:             'rlnGroupNrParticles' # just one
+                        MDL_COUNT:             'rlnGroupNrParticles' # just one
                        ,MDL_CTF_CRIT_FITTINGSCORE:   'rlnCtfFigureOfMerit' #just one
                        ,MDL_CTF_CRIT_NORMALITY:   'rlnNormCorrection' #just one
                        ,MDL_CTF_CRIT_PSDVARIANCE: 'rlnCtfValue'         #just one

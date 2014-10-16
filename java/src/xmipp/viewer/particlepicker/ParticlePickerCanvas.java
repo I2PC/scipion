@@ -32,6 +32,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public final static BasicStroke continuousst = new BasicStroke(2.0f);
 	public final static BasicStroke activedst = new BasicStroke(3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f);
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
+        
 	
 	protected ImageWindow iw;
 	
@@ -43,13 +44,13 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			iw.updateImage(getImage());
 		}
 		else
-			this.iw = new ImageWindow(getImage(), this);// if you dont provide
-														// iw, I init mine
+			this.iw = new ImageWindow(getImage(), this);
 		// iw.maximize();
 		iw.setTitle(getMicrograph().getName());
-		iw.pack();
+		
 	}
 	
+        
 	public abstract void setMicrograph(Micrograph m);
 	
 

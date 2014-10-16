@@ -70,7 +70,7 @@ public class ClassesJDialog extends XmippDialog {
 		super(parent, "Classes", true);
 		// this.classes = classes;
 		this.gallery = parent.gallery;
-		this.classes = gallery.data.classesArray;
+		this.classes = gallery.data.getClasses();
 		this.btnOkText = "Select";
 		// disposeOnClose = false;
 		initComponents();
@@ -128,7 +128,7 @@ public class ClassesJDialog extends XmippDialog {
 	@Override
 	public boolean showDialog() {
 		gallery.data.updateClassesInfo();
-		this.classes = gallery.data.classesArray;
+		this.classes = gallery.data.getClasses();
 		return super.showDialog();
 	}
 

@@ -47,10 +47,10 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 		gbc.anchor = GridBagConstraints.EAST;
 		panel.add(new JLabel("Format:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 0, 1));
-		panel.add(new JLabel("Untilted Source:"),
+		panel.add(new JLabel("Untilted:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 1, 1));
 		
-		panel.add(new JLabel("Tilted Source:"),
+		panel.add(new JLabel("Tilted:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
 
 		gbc.anchor = GridBagConstraints.WEST;
@@ -111,11 +111,11 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 		path = sourcetf.getText().trim();
 
 		if (path == null || path.equals("") )
-			showError(XmippMessage.getEmptyFieldMsg("Untilted Source"));
+			showError(XmippMessage.getEmptyFieldMsg("Untilted"));
 		path2 = sourcetf2.getText().trim();
 
 		if (path2 == null || path2.equals("") )
-			showError(XmippMessage.getEmptyFieldMsg("Tilted Source"));
+			showError(XmippMessage.getEmptyFieldMsg("Tilted"));
 		return ((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		
 	}

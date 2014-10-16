@@ -47,6 +47,7 @@ import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.models.GalleryData;
 
 import xmipp.viewer.models.MetadataTableModel;
 
@@ -58,7 +59,7 @@ import xmipp.viewer.models.MetadataTableModel;
 public class MDSearchJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
 	protected GalleryJFrame parent;
-	protected MetaData md;
+	protected GalleryData data;
 	protected JTable table;
 	protected long[] ids;
 	protected int selected_index = -1;
@@ -82,14 +83,14 @@ public class MDSearchJDialog extends XmippDialog {
 	 * Constructor to add a new label the labels present in the metadata are
 	 * passed
 	 * */
-	public MDSearchJDialog(JFrame parent, JTable table, MetaData md) {
+	public MDSearchJDialog(JFrame parent, JTable table, GalleryData data) {
 		super(parent, "Find and Replace", true);
 
 		this.parent = (GalleryJFrame) parent;
-		this.md = md;
+		this.data = data;
 		this.table = table;
-		this.ids = md.findObjects();
-		this.labels = md.getActiveLabels();
+		this.ids = data.getIds();
+		this.labels = data.getLabels();
 		this.label = labels[0];
 		btnOkText = "Close";
 		btnCancelDisplay = false;
@@ -225,7 +226,7 @@ public class MDSearchJDialog extends XmippDialog {
 
 	private boolean match(String findStr, int index) {
 		boolean caseSensitive = jchCase.isSelected();
-		String value = md.getValueString(label, ids[index]).trim();
+		String value = data.getValueString(label, ids[index]).trim();
 		String str = findStr.trim();
 		if (!caseSensitive) {
 			value = value.toLowerCase();
@@ -237,10 +238,10 @@ public class MDSearchJDialog extends XmippDialog {
 	private void replace(int index) {
 		String replaceStr = jtReplace.getText().trim();
 		if (index > -1 && replaceStr.length() > 0) {
-			String value = md.getValueString(label, ids[index]);
+			String value = data.getValueString(label, ids[index]);
 			String newValue = value.replace(jtFind.getText().trim(), replaceStr);
 			// table.setValueAt(newValue, index, jcbLabel.getSelectedIndex());
-			md.setValueString(label, newValue, ids[index]);
+			data.setValueString(label, newValue, ids[index]);
 			((MetadataTableModel) table.getModel()).fireTableRowsUpdated(index,
 					index);
 		}

@@ -13,6 +13,8 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -29,6 +31,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import xmipp.jni.CTFDescription;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -66,8 +69,6 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private JPanel thresholdpn;
     private JFormattedTextField thresholdtf;
 
-    private JMenuItem advancedoptionsmi;
-    AdvancedOptionsJDialog optionsdialog;
     private JCheckBox centerparticlebt;
     private JMenuItem exportmi;
     private JCheckBox autopickchb;
@@ -76,6 +77,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private Rectangle rectangle;
     private JMenuItem templatesmi;
     TemplatesJDialog templatesdialog;
+    private JLabel checkpercentlb;
+    private JFormattedTextField autopickpercenttf;
 
     @Override
     public SupervisedParticlePicker getParticlePicker() {
@@ -236,6 +239,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         ppicker.setChanged(changed);
         savemi.setEnabled(changed);
         savebt.setEnabled(changed);
+        
     }
 
     public void updateMicrographsModel(boolean all) {
@@ -274,7 +278,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             setLayout(new GridBagLayout());
 
             initToolBar();
-            centerparticlebt = new JCheckBox("Center Particle", true);
+            centerparticlebt = new JCheckBox("Center", true);
             tb.add(centerparticlebt);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
 
@@ -382,12 +386,48 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             }
         });
         sppickerpn.add(autopickchb);
+        initThresholdPane();
+        sppickerpn.add(thresholdpn);
+        checkpercentlb = new JLabel("Explore (%):");
+        sppickerpn.add(checkpercentlb);
+        autopickpercenttf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        autopickpercenttf.setColumns(3);
+        autopickpercenttf.setValue(ppicker.getAutopickpercent());
+        autopickpercenttf.setEnabled(ppicker.getMode() == Mode.Supervised || ppicker.getMode() == Mode.Manual);
+        autopickpercenttf.addActionListener(new ActionListener()
+        {
+
+                @Override
+                public void actionPerformed(ActionEvent arg0)
+                {
+
+                        setAutopickPercent();
+
+                }
+        });
+
+        sppickerpn.add(autopickpercenttf);
+
         if (ppicker.getMode() == Mode.Supervised) {
             sppickerpn.add(steppn);
         }
-        initThresholdPane();
-        sppickerpn.add(thresholdpn);
+        
 
+    }
+
+    protected void setAutopickPercent()
+    {
+            if (autopickpercenttf.getValue() == null || ((Number)autopickpercenttf.getValue()).intValue() <= 0)
+            {
+                    XmippDialog.showInfo(this, XmippMessage.getEmptyFieldMsg("Check (%)"));
+                    autopickpercenttf.setValue(getMicrograph().getAutopickpercent());
+                    return;
+            }
+
+            int autopickpercent = ((Number) autopickpercenttf.getValue()).intValue();
+            getMicrograph().setAutopickpercent(autopickpercent);
+            ppicker.setAutopickpercent(autopickpercent);
+            ppicker.saveConfig();
     }
 
     protected void enableSupervised(boolean selected) {
@@ -398,9 +438,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         // in sup mode size cannot be changed
         sizetf.setEnabled(!selected);
         importmi.setEnabled(!selected);
-        if (optionsdialog != null && optionsdialog.isVisible()) {
-            optionsdialog.enableOptions();
-        }
+        
         pack();
 
     }
@@ -417,6 +455,13 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             thresholdpn.setEnabled(isenable);
         }
         saveandexitbt.setEnabled(isenable);
+         if(ppicker.isScipionSave())
+        {
+            Color color = isenable? ScipionMessageDialog.firebrick: XmippWindowUtil.LIGHT_BLUE; 
+            Color forecolor = isenable? Color.WHITE: Color.GRAY;
+            saveandexitbt.setBackground(color);
+            saveandexitbt.setForeground(forecolor);
+        }
        
     }
 
@@ -462,18 +507,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         windowmn.add(pmi);
         windowmn.add(ijmi);
 
-        advancedoptionsmi = new JMenuItem("Advanced Options");
-        windowmn.add(advancedoptionsmi);
-
-        // Setting menu item listeners
-        advancedoptionsmi.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadAdvancedOptions();
-
-            }
-        });
+       
         templatesmi = new JMenuItem("Templates");
         templatesmi.addActionListener(new ActionListener() {
 
@@ -486,18 +520,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     }
 
-    public void loadAdvancedOptions() {
-        try {
-            if (optionsdialog == null) {
-                optionsdialog = new AdvancedOptionsJDialog(SupervisedParticlePickerJFrame.this);
-            } else {
-                optionsdialog.setVisible(true);
-                optionsdialog.enableOptions();
-            }
-        } catch (Exception e) {
-            XmippDialog.showError(this, e.getMessage());
-        }
-    }
+   
 
     private void initThresholdPane() {
         thresholdpn = new JPanel();
@@ -588,7 +611,11 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 String psd = getMicrograph().getPSD();
                 String ctf = getMicrograph().getCTF();
                 if (psd != null && ctf != null) {
-                    new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                    try {
+                        new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                    } catch (Exception ex) {
+                        Logger.getLogger(SupervisedParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
             }
@@ -626,10 +653,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (micindex == index && canvas != null && canvas.getIw().isVisible()) {
             return;
         }
-        if (ppicker.isChanged()) //ppicker.saveData(getMicrograph());// Saving changes when switching
-        {
-            ppicker.saveData();
-        }
+        
 
         SupervisedParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
 
@@ -642,7 +666,8 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 return;
             }
         }
-
+        if (ppicker.isChanged()) //ppicker.saveData(getMicrograph());// Saving changes when switching
+            ppicker.saveData();
         ppicker.getMicrograph().releaseImage();
         ppicker.setMicrograph(next);
         //ppicker.saveConfig();
@@ -669,7 +694,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         int result = 3;
 
         boolean isautopick = ppicker.getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
-        if (ppicker.getMode() == Mode.Supervised && current.getState() == MicrographState.Supervised) {
+        if (ppicker.isCorrectPending()) {
             String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
             result = XmippDialog.showQuestionYesNoCancel(this, msg);
             if (result == XmippQuestionDialog.YES_OPTION) {
@@ -741,7 +766,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     public void close() {
-        if (ppicker.getMode() == Mode.Supervised && getMicrograph().getState() == MicrographState.Supervised && ppicker.isChanged()) {
+        if (ppicker.isCorrectPending()) {
             boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
             if (iscorrect) {
                 ppicker.correct(rectangle);
@@ -752,10 +777,12 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
 
     public String getResetMsg() {
         String msg = super.getResetMsg();
-        if (autopickchb.isSelected()) {
+        if (ppicker.getMode() == Mode.Supervised) {
             msg += "\nParticles will be automatically picked again";
         }
         return msg;
     }
+    
+    
 
 }

@@ -55,11 +55,12 @@ public class ScipionViewer extends Viewer {
         try {
             
             MetaData md;
-            if(filename.endsWith(".sqlite"))
+            if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
             {
-                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters, new ScipionMetaData(filename));
+                StopWatch.getInstance().printElapsedTime("reading db");
+                ScipionGalleryData data = new ScipionGalleryData(null, filename, parameters);
                 ScipionGalleryJFrame frame = new ScipionGalleryJFrame(data);
-                data.setWindow(frame);
+                
             }
             else if (Filename.isMetadata(filename)) {
                 if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_IMAGE)) {
@@ -67,7 +68,7 @@ public class ScipionViewer extends Viewer {
                 } else {
                     parameters.mode = Params.OPENING_MODE_GALLERY;
                     md = new MetaData(filename);
-                    new ScipionGalleryJFrame(filename, md, parameters);
+                    new GalleryJFrame(md, parameters);
                 }
             } else {
                 ImageGeneric img = new ImageGeneric(filename);

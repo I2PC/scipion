@@ -34,12 +34,11 @@ import xmipp.utils.XmippWindowUtil;
 public class ScipionMessageDialog extends JDialog implements ActionListener {
     
     private String msg;
-    private JFrame frame;
     private JButton cancelbt;
     private JButton okbt;
     public int action;
-    public static final String firebrick = "#B22222";
-    public static final String lightgrey = "#EAEBEC";
+    public static final Color firebrick = Color.decode("#B22222");
+    public static final Color lightgrey = Color.decode("#EAEBEC");
     public static final int OK_OPTION = 1;
     public static final int CANCEL_OPTION = 0;
     private Map<String, String> fields;
@@ -50,7 +49,6 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     {
         super(parent, true);
         this.msg = msg;
-        this.frame = parent;
         this.fields = fields;
         fieldstfs = new HashMap<String, JTextField>();
         initComponents(title);
@@ -73,16 +71,17 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         add(msgLb, XmippWindowUtil.getConstraints(constraints, 0, 0, GridBagConstraints.HORIZONTAL));
         int index = 1;
         JTextField tf;
-        for(Map.Entry<String, String> e: fields.entrySet())
-        {
-            
-            add(new JLabel(e.getKey()), XmippWindowUtil.getConstraints(constraints, 0, index));
-            tf = new JTextField(e.getValue());
-            tf.setColumns(20);
-            fieldstfs.put(e.getKey(), tf);
-            add(tf, XmippWindowUtil.getConstraints(constraints, 1, index));
-            index ++;
-        }
+        if(fields != null)
+            for(Map.Entry<String, String> e: fields.entrySet())
+            {
+
+                add(new JLabel(e.getKey()), XmippWindowUtil.getConstraints(constraints, 0, index));
+                tf = new JTextField(e.getValue());
+                tf.setColumns(20);
+                fieldstfs.put(e.getKey(), tf);
+                add(tf, XmippWindowUtil.getConstraints(constraints, 1, index));
+                index ++;
+            }
         JPanel buttonspn = new JPanel();
         cancelbt = new JButton("Cancel");
         cancelbt.addActionListener(new ActionListener() {
@@ -100,7 +99,8 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         buttonspn.add(okbt);
         add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, index, GridBagConstraints.HORIZONTAL));
         pack();
-        XmippWindowUtil.setLocation(0.5, 0.5, this);
+        if (getParent() != null)
+            XmippWindowUtil.centerWindows(this, getParent());
         setVisible(true);
         
     }
@@ -110,7 +110,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     public static JButton getScipionButton(String text, boolean isenabled)
     {
         JButton button = new JButton(text);
-        Color color = Color.decode(isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey); 
+        Color color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
         Color forecolor = isenabled? Color.WHITE: Color.GRAY;
         button.setBackground(color);
         button.setForeground(forecolor);

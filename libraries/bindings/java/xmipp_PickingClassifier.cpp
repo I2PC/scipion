@@ -138,4 +138,5 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_PickingClassifier_getParticlesThreshold
 
     }
     XMIPP_JAVA_CATCH;
+    return 30;
 }

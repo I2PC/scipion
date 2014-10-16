@@ -37,7 +37,10 @@ import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
+import xmipp.jni.EllipseCTF;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionGalleryData;
+import xmipp.viewer.scipion.ScipionMetaData;
 
 /**
  * 
@@ -69,7 +72,6 @@ public class ImagesWindowFactory {
 				ImageGeneric img = new ImageGeneric(filename);
 
 				if (img.isSingleImage()) {
-                                        System.out.println("is single image");
 					openFileAsImage(null, filename, parameters);
 				} else if (img.isStackOrVolume()) {
 					if (parameters.mode
@@ -101,7 +103,6 @@ public class ImagesWindowFactory {
 	public static void openFileAsImage(Frame pframe, String filename,
 			Params parameters) {
 		try {
-                    System.out.println("open file as image");
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters.poll);
@@ -181,14 +182,18 @@ public class ImagesWindowFactory {
 
 		if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_DEFAULT))
 			parameters.mode = mode;
-		return new GalleryJFrame(filename, md, parameters);
+		return new GalleryJFrame(md, parameters);
 	}
 
 	public static GalleryJFrame openMetadata(String filename, Params parameters,
 			String mode) throws Exception {
-                
-                MetaData md = new MetaData(filename);
-		return openMetadata(filename, md, parameters, mode);
+                if(filename.endsWith(".sqlite") || filename.endsWith(".db"))
+                {
+                    ScipionGalleryData data = new ScipionGalleryData(null, parameters, new ScipionMetaData(filename));
+                    return new GalleryJFrame(data);
+                }
+                else
+                    return openMetadata(filename, new MetaData(filename), parameters, mode);
 	}
 
 	public static GalleryJFrame openFilesAsGallery(String filenames[],
@@ -238,13 +243,7 @@ public class ImagesWindowFactory {
 		}
 	}
 
-	public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
-			String PSDfilename, TasksEngine tasksEngine,
-			String MicrographFilename, int row, String sortFn) {
-		XmippUtil.showImageJ(Tool.VIEWER);// removed Toolbar.FREEROI
-		return new CTFRecalculateImageWindow(ip, CTFfilename, PSDfilename,
-				tasksEngine, row, sortFn);
-	}
+	
 
 	public static void openFileAsText(String filename, Component parent) {
 		TextfileJFrame frameText = new TextfileJFrame(filename);
@@ -253,14 +252,7 @@ public class ImagesWindowFactory {
 		frameText.setVisible(true);
 	}
 
-	public static void openCTFWindow(ImagePlus imp, String CTFFilename,
-			String PSDFilename) {
-//		CTFProfileWindow ctfView = new CTFProfileWindow(imp, CTFFilename,
-//				PSDFilename);
-//		ctfView.setVisible(true);
-		new CTFAnalyzerJFrame(imp, CTFFilename, PSDFilename);
-	}
-
+	
 	public static String getSortTitle(String title, int width,
 			FontMetrics fontMetrics) {
 		String sort = title;

@@ -34,6 +34,7 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -56,7 +57,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	protected boolean fillMode = false;
 	protected GridBagConstraints gbc = new GridBagConstraints();
 	protected int label;
-	protected ArrayList<ColumnInfo> labels = null;
+	protected List<ColumnInfo> labels = null;
 	protected Hashtable<String, JLabel> dictLabels = new Hashtable<String, JLabel>();
 	protected Hashtable<String, JTextField> dictTexts = new Hashtable<String, JTextField>();
 	protected Hashtable<String, JPanel> dictPanels = new Hashtable<String, JPanel>();
@@ -68,7 +69,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 	 * passed
 	 * */
 	public AddFillLabelsJDialog(GalleryJFrame parent,
-			ArrayList<ColumnInfo> labels) {
+			List<ColumnInfo> labels) {
 		super(parent, "Add new label", true);
 		this.gallery = (MetadataGalleryTableModel) parent.gallery;
 		this.labels = labels;
@@ -111,7 +112,7 @@ public class AddFillLabelsJDialog extends XmippDialog {
 		for (int label = MDLabel.MDL_OBJID + 1; label < MDLabel.MDL_LAST_LABEL; ++label) {
 			found = false;
 			for (ColumnInfo ci : this.labels)
-				if (ci.getLabel() == label) {
+				if (ci.label == label) {
 					found = true;
 					break;
 				}

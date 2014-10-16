@@ -30,6 +30,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -50,7 +51,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	private static final long serialVersionUID = 1L;
 	private JTable tableColumns;
 	private JButton btnAdd, btnDelete, btnFill, btnOpen;
-	private ArrayList<ColumnInfo> rows;
+	private List<ColumnInfo> rows;
 	private ColumnsTableModel model;
 	// This will be used for check for results from the dialog
 	boolean fireEvent = true;
@@ -60,7 +61,7 @@ public class EditLabelsJDialog extends XmippDialog {
 
 	public EditLabelsJDialog(GalleryJFrame parent) {
 		super(parent, "Edit labels", true);
-		this.rows = parent.getData().labels;
+		this.rows = parent.getData().getLabelsInfo();
 		this.gallery = parent.gallery;
 		btnOkText = "Close";
 		btnCancelDisplay = false;
@@ -121,7 +122,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	}// function enableUpDown
 
 	private void rowsChanged() {
-		this.rows = ((GalleryJFrame) parent).getData().labels;
+		this.rows = ((GalleryJFrame) parent).getData().getLabelsInfo();
 		model.fireTableDataChanged();
 	}
 
@@ -161,7 +162,7 @@ public class EditLabelsJDialog extends XmippDialog {
 	}
 
 	public int getSelectedLabel() {
-		return rows.get(getSelectedRow()).getLabel();
+		return rows.get(getSelectedRow()).label;
 	}
 
 	class ColumnsTableModel extends AbstractTableModel {
@@ -204,7 +205,7 @@ public class EditLabelsJDialog extends XmippDialog {
 			ColumnInfo col = rows.get(row);
 			switch (column) {
 			case 0:
-				return col.getLabelRealName();
+				return col.labelName;
 			case 1:
 				return col.getLabelTypeString();
 			}

@@ -25,6 +25,7 @@
 
 package xmipp.viewer.models;
 
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 
 /** This class will store info about how to display label on gallery */
@@ -36,13 +37,13 @@ public class ColumnInfo {
 	public boolean visible; 
 	public boolean render;
 	public boolean allowRender = false;
-	public boolean allowEdit = true;
+	public boolean allowEdit = false;
 	public String comment;
         public int type;
 	
 	/** Constructors */
 	
-	public ColumnInfo(int label, String name, String comment, int type, boolean allowRender, boolean visible, boolean render){
+	public ColumnInfo(int label, String name, String comment, int type, boolean allowRender, boolean visible, boolean render, boolean allowEdit){
 		this.label = label;
 		this.labelName = name;
 		this.visible = visible;
@@ -50,24 +51,25 @@ public class ColumnInfo {
 		this.allowRender = allowRender;
                 this.comment = comment;
                 this.type = type;
-                
+                this.allowEdit = allowEdit;
 	}
+        
 	
-        public ColumnInfo(int label, String name, String comment, int type, boolean allowRender){
-            this(label, name, comment, type, allowRender, true, allowRender);
+        public ColumnInfo(int label, String name, String comment, int type, boolean allowRender,boolean allowEdit){
+            this(label, name, comment, type, allowRender, true, allowRender, allowEdit);
         }
 	
 	public ColumnInfo(int label){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), true, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), true, false, true);
 	}
         
 	
 	public ColumnInfo(int label, boolean visible){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, false);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, false, true);
 	}
 	
 	public ColumnInfo(int label, boolean visible, boolean render){
-		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, render);
+		this(label, MetaData.getLabelName(label), MetaData.getLabelComment(label), MetaData.getLabelType(label), MetaData.isImage(label), visible, render, true);
 	}	
 	
 	/** Update the column information with the provided one
@@ -83,19 +85,6 @@ public class ColumnInfo {
 		return result;
 	}
 	
-	public int getLabel(){
-		return label;
-	}
-	
-	public int getType(){
-		try {
-			return type;
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		return -1;
-	}
-	
 	public String getLabelTypeString(){
 		try {
 			
@@ -105,26 +94,10 @@ public class ColumnInfo {
 		}
 		return null;
 	}
-	
-	/** Return the name of the label */
-	public String getLabelName(){
-		return labelName;
-	}
-	
-	/** Return the real name of the label
-	 * This is read from metadata 
-	 * */
-	public String getLabelRealName(){
-		return MetaData.getLabelName(label);
-	}
-	
-	/** Change display name of the label */
-	public void changeLabelName(String newName){
-		labelName = newName;
-	}
+
 	
 	public ColumnInfo clone(){
-		return new ColumnInfo(label, labelName, comment, type, allowRender, visible, render);
+		return new ColumnInfo(label, labelName, comment, type, allowRender, visible, render, allowEdit);
 	}
 	
 	@Override
@@ -134,6 +107,10 @@ public class ColumnInfo {
 				visible == col.visible && 
 				render == col.render;
 	}
+
+    public boolean isEnable() {
+        return label == MDLabel.MDL_ENABLED || labelName.equals("enabled");
+    }
 	
 	public class ColumnExtraInfo {
 		public String color;
@@ -149,7 +126,8 @@ public class ColumnInfo {
 	
 	public String toString()
 	{
-		return getLabelName();
+		return labelName;
 	}
-	
+        
+        
 }//class ColumnInfo

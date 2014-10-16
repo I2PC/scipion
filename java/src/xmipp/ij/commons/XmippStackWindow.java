@@ -1,10 +1,8 @@
 package xmipp.ij.commons;
 
-import ij.WindowManager;
 import ij.gui.StackWindow;
 
 import java.awt.Window;
-import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;

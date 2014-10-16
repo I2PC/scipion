@@ -98,7 +98,7 @@ public class ExportImagesJDialog extends JDialog{
         
 
         applygeochb = new JCheckBox();
-        applygeochb.setSelected(frame.data.useGeo);
+        applygeochb.setSelected(frame.data.useGeo());
         add(applygeochb, XmippWindowUtil.getConstraints(c, 1, 1));
         add(new JLabel(note1), XmippWindowUtil.getConstraints(c, 0, 2, GridBagConstraints.HORIZONTAL));
         add(new JLabel(note2), XmippWindowUtil.getConstraints(c, 0, 3, GridBagConstraints.HORIZONTAL));
@@ -138,12 +138,12 @@ public class ExportImagesJDialog extends JDialog{
         try {
             path = pathtf.getText();
             File tmpfile = File.createTempFile("temp", ".xmd");
-            frame.saveMd(tmpfile.getAbsolutePath(), false, true, false);//remove disabled on tmpfile to export afterwords
+            frame.saveMd(tmpfile.getAbsolutePath(), false, true);//remove disabled on tmpfile to export afterwords
             String[] command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName};
             if(applygeochb.isSelected())
                 command = new String[]{"xmipp_transform_geometry", tmpfile.getAbsolutePath(), "-o", path, "--label", frame.data.getRenderColumn().labelName, "--apply_transform"};
                        
-            executeCommand(command);
+            XmippWindowUtil.executeGUICommand(command, ExportImagesJDialog.this.frame, "Exporting images ...");
             
         } catch (Exception ex) {
             String msg = ex.getMessage();
@@ -155,35 +155,7 @@ public class ExportImagesJDialog extends JDialog{
         }
     }
     
-    protected void executeCommand(final String[] command)
-    {
-
-
-        XmippWindowUtil.blockGUI(frame, "Exporting images ...");
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-
-                try {
-
-                    String output = XmippUtil.executeCommand(command);
-                    XmippWindowUtil.releaseGUI(ExportImagesJDialog.this.frame.getRootPane());
-
-                    if(output != null && !output.isEmpty())
-                    {
-                        System.out.println(output);
-                        
-                    }
-                    close();
-
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException(ex.getMessage());
-                }
-
-            }
-        }).start();
-    }
+    
 
     
 }

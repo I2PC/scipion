@@ -3,13 +3,17 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import java.awt.Image;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import xmipp.jni.ImageGeneric;
@@ -60,10 +64,10 @@ public class XmippUtil {
 		}
 	}
 	
-	public static Icon getImageIcon(ImagePlus imp, int width, int height)
+	public static Icon getImageIcon(Image imp, int width, int height)
 	{
 
-		Image image = imp.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+		Image image = imp.getScaledInstance(width, height, Image.SCALE_SMOOTH);
 		Icon icon = new ImageIcon(image);
 
 		return icon;
@@ -71,32 +75,54 @@ public class XmippUtil {
         
 
 
-    public static String executeCommand(String[] command) throws Exception {
+    
 
-        
-        StringBuffer output = new StringBuffer();
 
-        Process p;
-
-        p = Runtime.getRuntime().exec(command);
-        p.waitFor();
-        BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-       
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        return output.toString();
+    public static void copyFile(String source, String dest) throws IOException
+    {
+        copyFile(new File(source), new File(dest));
     }
-
-
-
+    
+    public static void copyFile(File source, File dest)
+            throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+        try {
+            input = new FileInputStream(source);
+            output = new FileOutputStream(dest);
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = input.read(buf)) > 0) {
+                output.write(buf, 0, bytesRead);
+            }
+        } finally {
+            if(input != null)
+                input.close();
+            if(output != null)
+                output.close();
+        }
+    }
+    
+    public static boolean isInPath(String executable)
+    {
+        String[] paths = System.getenv("PATH").split(Pattern.quote(File.pathSeparator));
+        String exePath;
+        File file, exeFile;
+        for(String path: paths)
+        {
+            file = new File(path);
+            if(file.isDirectory())
+            {
+                exePath = path + File.separator + executable;
+                exeFile = new File(exePath);
+                if(exeFile.exists())
+                    return true;
+            }
+            else if(file.getName().equals(executable))
+                return true;
+                
+        }
+        return false;
+    }
        
 }

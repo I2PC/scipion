@@ -174,7 +174,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 					cache.put(key, item);
 				}
 				setupItem(item, index);
-                
 				return item;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -388,10 +387,18 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	/** Set enable/disable to selected items */
 	public void setSelectionEnabled(boolean value) {
 		try {
-			for (int i = 0; i < n; ++i)
+                    int from = data.getSelFrom(), to = data.getSelTo();
+			for (int i = from; i <= to; i++)
 				if (data.selection[i])
-					data.setEnabled(i, value);
-			fireTableDataChanged();
+                                    data.setEnabled(i, value);
+                                
+                        if(from != -1)
+                        {
+                            from = getCoords(from)[0];
+                            to = getCoords(to)[0];
+                            fireTableRowsUpdated(from, to);
+                        }
+	            
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -404,18 +411,13 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 	
 	public int getFirstSelectedIndex(){
-		if (data.selectedVolFn.isEmpty()){
-		for (int i = 0; i < n; ++i)
-			if (data.selection[i])
-				return i;
-		}
-		return -1;
+		return data.getSelFrom();
 	}
 
 	/** Select a range of elements given the indexes */
 	public void selectRange(int first_index, int last_index, boolean value) {
 		for (int i = first_index; i <= last_index; ++i)
-			data.selection[i] = value;
+			data.setSelected(i, value);
                 int from = getCoords(first_index)[0];
                 int to = getCoords(last_index)[0];
 		fireTableRowsUpdated(from, to);
@@ -429,14 +431,14 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		int i = Math.min(i1, i2);
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
-			data.selection[i] = value;
+			data.setSelected(i, value);
 		          fireTableRowsUpdated(first_row, last_row);
 	}
 
 	/** Set the class of a given selection of elements. */
 	public void setSelectionClass(int classNumber) {
 		ClassInfo cli = data.getClassInfo(classNumber);
-		for (int i = 0; i < n; ++i)
+		for (int i = data.getSelFrom(); i <= data.getSelTo(); ++i)
 			if (data.selection[i]) {
 				data.setItemClass(i, cli);
 			}
@@ -454,11 +456,22 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void touchItem(int row, int col) {
 		int i = getIndex(row, col);
 		if (isValidIndex(i)) {
-			data.selection[i] = !data.selection[i];
+			data.setSelected(i, !data.isSelected(i));
 			adjustWidth = false;
 			fireTableCellUpdated(row, col);
 		}
 	}
+        
+        /** Set the selection state of an element give row and col */
+	public void touchItem(int row, int col, boolean isselected) {
+		int i = getIndex(row, col);
+		if (isValidIndex(i)) {
+			data.setSelected(i, isselected);
+			adjustWidth = false;
+			fireTableCellUpdated(row, col);
+		}
+	}
+	
 	
 	/**
 	 * Goto and select specified item, if there is a selection it will be
@@ -466,7 +479,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 */
 	public void gotoItem(int i) {
 		clearSelection();
-		data.selection[i] = !data.selection[i];
+		data.setSelected(i, !data.isSelected(i));
 		int[] coords = getCoords(i);
 		fireTableCellUpdated(coords[0], coords[1]);
 	}
@@ -487,10 +500,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 	}
 
-	/** Check normalized state */
-	public boolean getNormalized() {
-		return data.normalize;
-	}
+	
 
 	/** Calculate min and max if needed for normalization */
 	public void calculateMinAndMax() {
@@ -523,13 +533,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void setShowLabels() {
 		
 			calculateCellSize();
-			fireTableDataChanged();
+			fireTableStructureChanged();
 		
 	}
 
-	/** Whether to display the labels */
-	public void setRenderImages(boolean value) {
-	}
+	
 
 	/** Retrieve the mininum and maximum of data */
 	protected abstract double[] getMinAndMax();
@@ -546,6 +554,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * Return a key string using label
 	 */
 	public String getItemKey(int index, int label) throws Exception {
+                
 		String format = data.getValueFromLabel(index, label) + "_i_(%d,%d)";
 		if (data.useGeo)
 			format += "_geo";
@@ -553,7 +562,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			format += "_wrap";
 		// String key = String.format(format, thumb_width, thumb_height);
 		// DEBUG.printMessage(String.format("key: %s", key));
-		return String.format(format, index, thumb_width, thumb_height);
+                String key = String.format(format, index, thumb_width, thumb_height);
+		return key;
 	}
 
 	
@@ -641,7 +651,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 
 		public boolean isSelected() {
-			return data.selection[index];
+			return data.isSelected(index);
 		}
 
 		public boolean isEnabled() {
@@ -710,7 +720,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			for (int col = 0; col < n; ++col) {
 				ci = data.getColumnInfo(col);
 				if (ci.allowRender){
-					key = getItemKey(row, ci.getLabel());
+					key = getItemKey(row, ci.label);
 					DEBUG.printFormat("Removing item: %s from cache", key);
 					cache.remove(key);
 				}
@@ -720,6 +730,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 			e.printStackTrace();
 		}
 	}
+        
+        
         
 
 }

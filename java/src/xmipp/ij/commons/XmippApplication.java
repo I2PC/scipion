@@ -1,6 +1,5 @@
 package xmipp.ij.commons;
 
-import ij.WindowManager;
 
 
 public class XmippApplication
@@ -8,6 +7,7 @@ public class XmippApplication
 	
 	private static short instances = 0;
         private static short ijwindows = 0;
+        
 	
 	public static short getInstances()
 	{
@@ -38,5 +38,7 @@ public class XmippApplication
 			System.exit(0);
 		
 	}
+        
+        
 
 }

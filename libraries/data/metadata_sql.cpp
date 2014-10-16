@@ -110,6 +110,7 @@ MDSql::MDSql(MetaData *md)
 {
     sqlMutex.lock();
     tableId = getUniqueId();
+    //std::cerr << ">>>> creating md with table id: " << tableId << std::endl;
     sqlMutex.unlock();
     myMd = md;
     myCache = new MDCache();
