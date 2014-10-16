@@ -92,7 +92,7 @@ class TestAlignmentConvert(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.dataset = DataSet.getDataSet('mda')
     
     def test_alignment2DToRow(self):
         """ Check that a given alignment object,
@@ -121,8 +121,22 @@ class TestAlignmentConvert(BaseTest):
         row.setValue(xmipp.MDL_FLIP, False)
         
         alignment = rowToAlignment(row)
-        alignment.printAll()       
-
+        alignment.printAll()      
+        
+    def test_readWriteParticles(self):
+        mdFn = self.dataset.getFile('particles/xmipp_particles.xmd') 
+        print "INPUT MD: ", mdFn
+        md = xmipp.MetaData(mdFn)
+        imgSet = SetOfParticles(filename=self.getOutputPath('particles.sqlite'))
+        readSetOfParticles(mdFn, imgSet)
+        
+        outputFn = self.getOutputPath('particles.xmd')
+        print "OUTPUT MD: ", outputFn
+        writeSetOfParticles(imgSet, outputFn)
+        mdOut = xmipp.MetaData(outputFn)
+        
+        
+        
     
 class TestSetConvert(BaseTest):
     
