@@ -139,6 +139,10 @@ DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
                'ctfsGold':'ctfs.sqlite',
               })
 
-               
+DataSet(name='movies',  folder='movies',
+        files={'movie1':'Falcon_2012_06_12-14_33_35_0_movie.mrcs',
+               'movie2':'Falcon_2012_06_12-16_55_40_0_movie.mrcs',
+               'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
+                })             
                
                
