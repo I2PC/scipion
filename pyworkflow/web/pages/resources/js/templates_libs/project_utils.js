@@ -49,11 +49,13 @@
 
  /** METHODS ******************************************************************/
 
-function createProjectForm(title, msg) {
+/*
+ * PROJECTS
+ */
 
+function createProjectForm(title, msg) {
 	var msg = msg +"<input type='text' id='newProjName' class='content'/>";
 	var funcName = 'createProject';
-	
 	warningPopup(title, msg, funcName);
 }
 
@@ -63,14 +65,15 @@ function createProject(elm) {
 		type : "GET",
 		url : "/create_project/?projectName=" + projName,
 		success : function() {
-			window.location.href = "/projects/";
+			var url = "/project_content/?projectName="+projName
+			window.location.href = url;
+//			window.location.href = "/projects/";
 		}
 	});
 }
 
 function deleteProjectForm(projName, title, dialog) {
-
-//	var title = 'Confirm project deletion'
+	var title = 'Confirm project deletion'
 	var msg = "<td class='content' value='"	+ projName +"'>"
 			+ "Project " + projName
 			+ dialog 
@@ -88,6 +91,73 @@ function deleteProject(elm) {
 		url : "/delete_project/?projectName=" + projName,
 		success : function() {
 			window.location.href = "/projects/";
+		}
+	});
+}
+
+/* 
+ * SERVICE PROJECT
+ */ 
+
+function serviceProjForm(){
+	var title = 'Confirm project creation'
+	var dialog = "<p>Your <strong>Project</strong> will be created.</p>" +
+		"<p>This process generates an unique <strong>identification code</strong><p>" +
+		"</p>that you have to save to access to the content in other moment.</p><br />" + 
+		"<p>If you agree, confirm to generate it.</p>"
+		
+	var funcName = 'createServProject';
+	
+	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
+}
+
+function createServProject(elm) {
+	projName = randomString(32, '#aA')
+	$.ajax({
+		type : "GET",
+		url : "/create_project/?projectName=" + projName,
+		async: false,
+		success : function() {
+			
+			var title = "ACCESS CODE"
+			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> generated is the next:</p>" +
+					"<br /><p><h2 id='code'>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</strong> " +
+							"to access to the project in the future.</p>";
+			var msg = msg +"<input type='hidden' id='code' class='content' value='"+ projName +"'/>";
+			var funcName = "goToProject"
+				
+			accessPopup(title, msg, funcName, 'Go to the project', 'Exit');
+		}
+	});
+}
+
+function goToProjectForm() {
+	var title = 'Confirm access code'
+	var dialog = "<p>Give me the <strong>identification code</strong> " +
+			"to access to your <strong>Project</strong>.</p>" +
+			"<p>This code was given to you after the creation of your project.</p>" +
+			"<p>If It was forgotten, please contact with the <a style='color:firebrick;' href='#'>Scipion group</a>.</p><br />"
+	var msg = dialog +"<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
+	var funcName = 'goToProject';
+	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
+}
+
+function goToProject(elm) {
+	var code = elm.val();
+	
+	$.ajax({
+		type : "GET",
+		url : "/check_project_id/?code=" + code,
+		success : function(result) {
+			if(result == 1){
+				var url = "/project_content/?projectName="+code+"&mode=service"
+				window.location.href = url;
+			} else {
+				var title = "Bad Access"
+				var msg = "<p>Wrong <strong>access code</strong> given!</p>"+
+					"<p>If It was forgotten, please contact with the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>"
+				errorPopup(title, msg)
+			}
 		}
 	});
 }
