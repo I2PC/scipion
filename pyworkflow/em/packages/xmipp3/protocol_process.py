@@ -27,14 +27,12 @@
 This sub-package contains classes to use in common processing operations of SetOfParticles, Volume or SetOfVolumes
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils import *  
-import xmipp
-import xmipp3
-from convert import createXmippInputImages, readSetOfParticles, getImageLocation, createXmippInputVolumes, readSetOfVolumes
+from pyworkflow.em.protocol import EMProtocol  
+from pyworkflow.em.data import Volume
+from convert import (writeSetOfParticles, readSetOfParticles, 
+                     writeSetOfVolumes, readSetOfVolumes,
+                     getImageLocation)
 
-from pyworkflow.em.constants import *
-from constants import *
 
 
 class XmippProcess(EMProtocol):
@@ -76,7 +74,12 @@ class XmippProcessParticles(XmippProcess):
     """
     def __init__(self):
         XmippProcess.__init__(self)
-    
+        
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def convertInputStep(self):
+        """ convert if necessary"""
+        writeSetOfParticles(self.inputParticles.get(), self.inputFn)
+
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
         imgSet = self._createSetOfParticles()
@@ -91,7 +94,7 @@ class XmippProcessParticles(XmippProcess):
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _defineFilenames(self):
-        self.inputFn = createXmippInputImages(self, self.inputParticles.get())
+        self.inputFn = self._getTmpPath('input_particles.xmd')
         self.outputMd = self._getExtraPath('output_images.xmd')
         self.outputStk = self._getExtraPath('output_images.stk')
 
@@ -105,7 +108,11 @@ class XmippProcessVolumes(XmippProcess):
         XmippProcess.__init__(self)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    
+    def convertInputStep(self):
+        """ convert if necessary"""
+        if not self._isSingleInput():
+            writeSetOfVolumes(self.inputVolumes.get(), self.inputFn)
+            
     def createOutputStep(self):
         volInput = self.inputVolumes.get()
         
@@ -120,9 +127,9 @@ class XmippProcessVolumes(XmippProcess):
             volumes = self._createSetOfVolumes()
             volumes.copyInfo(volInput)
             
-            self._preprocessOutput(vol)
+            self._preprocessOutput(volumes)
             readSetOfVolumes(self.outputMd, volumes)
-            self._postprocessOutput(vol)
+            self._postprocessOutput(volumes)
             
             self._defineOutputs(outputVol=volumes)
         
@@ -135,10 +142,10 @@ class XmippProcessVolumes(XmippProcess):
     def _defineFilenames(self):
         """ Prepare the files to process """
         if self._isSingleInput():
-            self.inputFn = self.inputVolumes.get().getFileName()
+            self.inputFn = getImageLocation(self.inputVolumes.get())
             self.outputStk = self._getExtraPath("output_volume.vol")
         else:
-            self.inputFn = createXmippInputVolumes(self, self.inputVolumes.get())
+            self.inputFn = self._getTmpPath('input_volumes.xmd')
             self.outputStk = self._getExtraPath("output_volumes.stk")
             self.outputMd = self._getExtraPath('output_volumes.xmd')
    
