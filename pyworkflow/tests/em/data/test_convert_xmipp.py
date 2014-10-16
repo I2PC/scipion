@@ -100,14 +100,18 @@ class TestAlignmentConvert(BaseTest):
         """
         alignment = Alignment()
         m = alignment.getMatrix()
-        m[0, 3] = 10.
-        m[1, 3] = 10.
-        
+        from math import cos, sin, pi
+        a= pi/6# 30 degrees
+        m[0, 0] =  cos(a); m[0, 1] =  sin(a); m[0, 2] = 0. ; m[0, 3] =  20.
+        m[1, 0] = -sin(a); m[1, 1] =  cos(a); m[1, 2] = 0. ; m[1, 3] =  0.
+        m[2, 0] =  0.;     m[2, 1] = 1.;      m[2, 2] = 0. ; m[2, 3] =  0.
+        m[3, 0] =  0.;     m[3, 1] = 0.;      m[3, 2] = 1. ; m[3, 3] =  1.
+
         row = XmippMdRow()
         alignmentToRow(alignment, row)
-        
-        print row
-        
+        self.assertAlmostEqual(row.getValue(MDL_ANGLE_PSI),30.,0)
+        self.assertAlmostEqual(row.getValue(MDL_SHIFT_X),20.,0)
+
     
     def test_rowToAlignment2D(self):
         """ Check that given a row with the alignment
