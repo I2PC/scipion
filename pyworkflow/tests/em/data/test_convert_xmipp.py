@@ -88,7 +88,43 @@ class TestBasic(BaseTest):
         self.assertEquals(filename, img.getFileName())
 
 
-class TestSetConversions(BaseTest):
+class TestAlignmentConvert(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+    
+    def test_alignment2DToRow(self):
+        """ Check that a given alignment object,
+        the Xmipp metadata row is generated properly.
+        """
+        alignment = Alignment()
+        m = alignment.getMatrix()
+        m[0, 3] = 10.
+        m[1, 3] = 10.
+        
+        row = XmippMdRow()
+        alignmentToRow(alignment, row)
+        
+        print row
+        
+    
+    def test_rowToAlignment2D(self):
+        """ Check that given a row with the alignment
+        parameters (shiftx, shifty, rot and flip)
+        the proper alignment matrix is built.
+        """
+        row = XmippMdRow()
+        row.setValue(xmipp.MDL_SHIFT_X, 10.)
+        row.setValue(xmipp.MDL_SHIFT_Y, 10.)
+        row.setValue(xmipp.MDL_ANGLE_ROT, 0.)
+        row.setValue(xmipp.MDL_FLIP, False)
+        
+        alignment = rowToAlignment(row)
+        alignment.printAll()       
+
+    
+class TestSetConvert(BaseTest):
     
     @classmethod
     def setUpClass(cls):
