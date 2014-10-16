@@ -394,4 +394,8 @@ public class ScipionGalleryData extends GalleryData {
             e.printStackTrace();
         }
     }
+
+    public void loadSelection(String selectedPath) {
+        ((ScipionMetaData)md).loadSelection(selectedPath);
+    }
 }
