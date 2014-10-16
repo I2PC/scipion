@@ -217,6 +217,7 @@ def project_content(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
     
     projectName = request.GET.get('projectName', None)
+    mode = request.GET.get('mode', None)
     
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -251,6 +252,7 @@ def project_content(request):
     projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
+               'mode': mode,
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
@@ -334,13 +336,19 @@ def protocol_info(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+#===============================================================================
+# SERVICE PROJECTS
+#===============================================================================
 
 def service_projects(request):
-
+    #Example Projects to be showed
+    exProjects = {'TestXmippWorkflow'}
+    
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    context = {'projects_css': getResourceCss('projects'),
+    context = {'projects': exProjects,
+               'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
                'projectNameHeader': 'Initial Volume Service',
                }
@@ -348,3 +356,18 @@ def service_projects(request):
     context = base_grid(request, context)
     
     return render_to_response('service_projects.html', context)
+
+def check_project_id(request):
+    result = 0
+    projectName = request.GET.get('code', None)
+    
+    try:
+        manager = Manager()
+        project = loadProject(projectName)
+        result = 1
+    except Exception:
+        pass
+    
+    return HttpResponse(result, mimetype='application/javascript')
+ 
+
