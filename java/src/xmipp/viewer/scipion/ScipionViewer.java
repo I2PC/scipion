@@ -5,6 +5,8 @@
  */
 package xmipp.viewer.scipion;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
@@ -13,6 +15,7 @@ import xmipp.utils.Params;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.Viewer;
+import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.windows.GalleryJFrame;
 import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
 
@@ -49,6 +52,8 @@ public class ScipionViewer extends Viewer {
         }
 
     }
+    
+
 
     public static void openFile(String filename, ScipionParams parameters) {
         
