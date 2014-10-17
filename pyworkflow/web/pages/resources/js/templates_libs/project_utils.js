@@ -73,9 +73,9 @@ function createProject(elm) {
 }
 
 function deleteProjectForm(projName, title, dialog) {
-	var title = 'Confirm project deletion'
+	var title = 'Confirm DELETE project ' + projName 
 	var msg = "<td class='content' value='"	+ projName +"'>"
-			+ "Project " + projName
+//			+ "Project <strong>" + projName + "</strong>"
 			+ dialog 
 			+ "</td>";
 			
@@ -118,12 +118,11 @@ function createServProject(elm) {
 		url : "/create_project/?projectName=" + projName,
 		async: false,
 		success : function() {
-			
 			var title = "ACCESS CODE"
 			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> generated is the next:</p>" +
-					"<br /><p><h2 id='code'>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</strong> " +
+					"<br /><p><h2>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</strong> " +
 							"to access to the project in the future.</p>";
-			var msg = msg +"<input type='hidden' id='code' class='content' value='"+ projName +"'/>";
+			var msg = msg +"<input type='hidden' class='content' value='"+ projName +"'/>";
 			var funcName = "goToProject"
 				
 			accessPopup(title, msg, funcName, 'Go to the project', 'Exit');

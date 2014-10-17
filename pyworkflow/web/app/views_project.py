@@ -38,6 +38,11 @@ from django.shortcuts import render_to_response
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
     
+    from django.contrib.sites.models import Site
+    current_site = Site.objects.get_current()
+    print "DOMAIN: ", current_site.domain
+     
+    
     manager = Manager()
     projects = manager.listProjects()
     for p in projects:
