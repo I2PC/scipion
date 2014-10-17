@@ -31,12 +31,13 @@ from views_tree import loadProtTree
 
 from pyworkflow.manager import Manager
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
-
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
+    
+    print "PATH:", request.get_full_path()
     
     manager = Manager()
     projects = manager.listProjects()
