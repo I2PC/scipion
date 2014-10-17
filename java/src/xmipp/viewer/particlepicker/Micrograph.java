@@ -6,6 +6,7 @@ import java.awt.Image;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import xmipp.ij.commons.XmippImageConverter;
@@ -156,7 +157,6 @@ public abstract class Micrograph {
 			height = imp.getHeight();
 		} else {
 			try {
-                System.out.println("loading dim from ig");                
 				ImageGeneric img = new ImageGeneric(file); // this reads the header
 				width = img.getXDim();
 				height = img.getYDim();
@@ -166,6 +166,8 @@ public abstract class Micrograph {
 			}
 		}
 	}
+        
+        
 
 	public ImagePlus getImagePlus() {
 		try {
