@@ -162,9 +162,9 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
                     valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
                     break
             libflags.insert(i, '%s=%s:%s' % (var, value, valueOld))
-        if addPath:
-            pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
-            pathAppend('PATH', Dir('#software/bin').abspath)
+    if addPath:
+        pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
+        pathAppend('PATH', Dir('#software/bin').abspath)
 
 
     # Install everything in the appropriate place.
@@ -262,7 +262,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
     return ret
 
 
-def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, mpi=False, cuda=False, libpath=['lib'], deps=[], default=True):
+def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], mpi=False, cuda=False, default=True):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -275,17 +275,20 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     """
     libs = libs or []
     dirs = dirs or []
+    tars = tars or []
     untarTargets = untarTargets or ['configure']
     lastTarget = deps
-    tars = tars or []
     incs = incs or []
-    prefix = 'lib' if prefix is None else 'lib'
+    prefix = 'lib' if prefix is None else prefix
+    suffix = '.so' if suffix is None else suffix
+#    installDir = installDir or None
     
     basedir = 'lib'
     fullname = prefix + name
     patterns = patterns or []
     sources = []
     untars = []
+    libpath.append(Dir('#software/lib').abspath)
     
     if tars:
         for x, dir in enumerate(dirs):
@@ -325,9 +328,11 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     library = SharedLibrary(
               join(basedir, fullname),
               sources,
-              CPPPATH=incs + [env['CPPPATH']] + ['#software/include'],
+              CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
               LIBPATH=libpath,
               LIBS=libs,
+              SHLIBPREFIX=prefix,
+              SHLIBSUFFIX=suffix,
               **mpiArgs
               )
     SideEffect('dummy', library)
@@ -336,9 +341,18 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     #alias = env.Alias(fullname, install)
     for previous in lastTarget:
         Depends(library, previous)
-    Default(library)
+    
+    if installDir:
+        install = env.Install(installDir, library)
+        alias = env.Alias('install_%s' % name, install)
+        Depends(install, library)
+        lastTarget = install
+        Default(install)
+    else:
+        lastTarget = library
+        Default(library)
 
-    return library
+    return lastTarget
 
 
 def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
