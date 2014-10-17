@@ -37,8 +37,6 @@ from django.shortcuts import render_to_response
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
     
-    print "PATH:", request.get_full_path()
-    
     manager = Manager()
     projects = manager.listProjects()
     for p in projects:
