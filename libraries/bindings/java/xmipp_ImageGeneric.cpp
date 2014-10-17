@@ -1097,7 +1097,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
          dMij(transformM, 0, 2) = values[3]; // shiftx;
          dMij(transformM, 1, 2) = values[7]; // shifty;
 
-         applyGeometry(LINEAR, Iaux, *I, transformM, IS_INV, wrap);
+         applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
          *I=Iaux;
 
          delete matrixStrCopy;
