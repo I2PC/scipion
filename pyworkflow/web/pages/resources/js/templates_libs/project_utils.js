@@ -73,9 +73,9 @@ function createProject(elm) {
 }
 
 function deleteProjectForm(projName, title, dialog) {
-	var title = 'Confirm project deletion'
+	var title = 'Confirm DELETE project ' + projName 
 	var msg = "<td class='content' value='"	+ projName +"'>"
-			+ "Project " + projName
+//			+ "Project <strong>" + projName + "</strong>"
 			+ dialog 
 			+ "</td>";
 			
