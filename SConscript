@@ -43,17 +43,7 @@ CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
 
-# Jpeg
-# not needed anymore since Scipion already has it
-#jpeg = env.AddLibrary(
-#     'jpeg',
-#     tar='jpegsrc.v8c.tgz',
-#     buildDir='jpeg-8c',
-#     targets=[File('#software/lib/libjpeg.so').abspath],
-#     clean=[Dir('#software/tmp/jpeg-8c').abspath],
-#     url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/jpegsrc.v8c.tgz')
-#Depends(jpeg, lastTarget)
-
+# XMIPP ADDITIONAL EXTERNAL LIBRARIES
 # Tiff
 tiff = env.AddLibrary(
      'tiff',
@@ -85,6 +75,7 @@ opencv = env.AddLibrary(
        default=False)
 Depends(opencv, lastTarget)
 
+# XMIPP SHARED LIBRARIES
 # XmippExternal
 xmippExternal = env.AddPackageLibrary(
               'XmippExternal',
@@ -94,28 +85,61 @@ xmippExternal = env.AddPackageLibrary(
               untarTargets=['bilib/configs.h',
                             'condor/Matrix.h',
                             'alglib-3.8.0.cpp/gpl3.txt'],
-              incs=['external/bilib' + s for s in ['', '/headers', '/types']],
-              src=['bilib/sources/*.cc', 
-                   'condor/*.cpp',
-                   'alglib-3.8.0.cpp/src/*.cpp'],
               dirs=['external',
                     'external',
                     'external'],
+              patterns=['bilib/sources/*.cc', 
+                        'condor/*.cpp',
+                        'alglib-3.8.0.cpp/src/*.cpp'],
+              incs=['external/bilib' + s for s in ['', '/headers', '/types']],
               prefix='xmipp',
               deps=tiff + hdf5 + lastTarget)
-lastTarget = xmippExternal
 
 xmippSqliteExt = env.AddPackageLibrary(
                'XmippSqliteExt',
-               lib='XmippSqlite')
+               dirs=['external/sqliteExt'],
+               patterns=['extension-functions.c'],
+               libs=['m'],
+               deps=tiff + hdf5 + lastTarget)
 
 # XmippData
+xmippData = env.AddPackageLibrary(
+          'XmippData',
+          dirs=['libraries/data'],
+          patterns=['*.cpp'],
+          incs=[Dir('.').path, Dir('libraries').path],
+          libs=['XmippExternal'],
+          deps=xmippExternal + xmippSqliteExt)
 
 # XmippClassif
+xmippClassif = env.AddPackageLibrary(
+             'XmippClassif',
+             dirs=['libraries/classification'],
+             patterns=['*.cpp'],
+             incs=[Dir('.').path, Dir('libraries').path],
+             libs=['XmippExternal', 'XmippData'],
+             deps=xmippExternal + xmippSqliteExt + xmippData)
 
 # XmippDimred
+xmippDimred = env.AddPackageLibrary(
+            'XmippDimred',
+            dirs=['libraries/dimred'],
+            incs=[Dir('.').path, Dir('libraries').path],
+            libs=['XmippExternal', 'XmippData'],
+            deps=xmippExternal + xmippSqliteExt + xmippData)
 
 # XmippRecons
+xmippRecons = env.AddPackageLibrary(
+            'XmippRecons',
+            dirs=['libraries/reconstruction'],
+            patterns=['*.cpp'],
+            incs=[Dir('.').path, Dir('libraries').path, Dir('libraries/reconstruction').path, Dir('external').path],
+            libs=['XmippExternal', 'XmippData', 'XmippClassif'],
+            deps=xmippExternal + xmippSqliteExt + xmippData + xmippClassif)
+lastTarget = xmippRecons
 
-Default(xmippExternal)
+# XMIPP PROGRAMS
+# 
+
+Default(lastTarget)
 Return('lastTarget')
