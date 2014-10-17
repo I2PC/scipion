@@ -65,7 +65,7 @@ public class ScipionMetaData extends MetaData {
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
         loadData();
-        if (self.equals("Class2D") || self.equals("Class3D")) {
+        if (isClassificationMd()) {
             String prefix;
             haschilds = true;
             List<String> childblocks = new ArrayList<String>();
@@ -931,6 +931,10 @@ public class ScipionMetaData extends MetaData {
             if(emo.changed)
                 return true;
         return false;
+    }
+
+    boolean isClassificationMd() {
+        return self.equals("Class2D") || self.equals("Class3D");
     }
     
     

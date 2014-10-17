@@ -29,7 +29,6 @@ package xmipp.viewer.models;
 import java.awt.Image;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -41,7 +40,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -64,15 +62,14 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 	public RotSpectraGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		DEBUG.printMessage("creating rotspectra.....");
+                System.out.println("creating rotspectra");
 	}
 
 	// Load initial dimensions
 	@Override
 	protected ImageDimension loadDimension() throws Exception {
-		fnClasses = data.getFileName();
-		fnVectors = fnClasses.replace("classes", "vectors");
-		fnVectorsData = fnVectors.replace(".xmd", ".vec");
-		load(fnClasses, fnVectors, fnVectorsData);
+                GalleryData.RotSpectra rs = data.getRotSpectra();
+		load(rs.fnClasses, rs.fnVectors, rs.fnVectorsData);
 		return new ImageDimension(DEFAULT_DIM, DEFAULT_DIM, data.ids.length);
 	}
 
@@ -80,7 +77,6 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 			String filenameData) throws Exception {
 		MetaData mdClasses = new MetaData(blockKerDenSOM + filenameClasses);
 		MetaData mdVectors = new MetaData(filenameVectors);
-
 		long id = mdClasses.firstObject();
 		cols = (int)mdClasses.getValueLong(MDLabel.MDL_XSIZE, id);
 		rows = (int)mdClasses.getValueLong(MDLabel.MDL_YSIZE, id);

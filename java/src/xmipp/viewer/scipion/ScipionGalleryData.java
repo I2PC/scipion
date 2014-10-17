@@ -6,6 +6,7 @@
 package xmipp.viewer.scipion;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -14,7 +15,10 @@ import java.util.Locale;
 import java.util.Map;
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.Filename;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.models.ClassInfo;
@@ -398,4 +402,46 @@ public class ScipionGalleryData extends GalleryData {
     public void loadSelection(String selectedPath) {
         ((ScipionMetaData)md).loadSelection(selectedPath);
     }
+    
+     /**
+     * Return true if current file is a rotspectra classes
+     */
+    public boolean isRotSpectraMd() {
+        if (filename != null) {
+            GalleryData.RotSpectra rs = getRotSpectra();
+            boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);
+            
+            if (isClassificationMd() && filesExist) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
+    
+    public GalleryData.RotSpectra getRotSpectra()
+    {
+        String dir = getExtraPath();
+        String fnClasses = Filename.join(dir, "kerdensom_classes.xmd");
+        String fnVectors = Filename.join(dir, "kerdensom_vectors.xmd");
+        String fnVectorsData = Filename.join(dir, "kerdensom_vectors.vec");
+        return new RotSpectra(fnClasses, fnVectors, fnVectorsData);
+    }
+    
+    public String getExtraPath()
+    {
+        if(filename == null)
+            return null;
+        String dir = new File(filename).getParent();
+        return Filename.join(dir, "extra");
+    }
+    
+        /**
+     * Return true if current metadata comes from 2d classification
+     */
+    public boolean checkifIsClassificationMd() {
+        return ((ScipionMetaData)md).isClassificationMd();
+    }
+    
 }

@@ -161,6 +161,7 @@ public class GalleryData {
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) {
                 mode = Mode.TABLE_MD;
             } else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) {
+                
                 mode = Mode.GALLERY_ROTSPECTRA;
             }
 
@@ -1039,11 +1040,31 @@ public class GalleryData {
             }
             String fnVectors = filename.replace("classes", "vectors");
             String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+            
             if (isClassificationMd() && Filename.exists(fnVectors) && Filename.exists(fnVectorsData)) {
                 return true;
             }
         }
         return false;
+    }
+    
+    public class RotSpectra
+    {
+        public String fnVectors, fnVectorsData, fnClasses;
+        
+        public RotSpectra(String fnClasses, String fnVectors, String fnVectorsData)
+        {
+            this.fnClasses = fnClasses;
+            this.fnVectors = fnVectors;
+            this.fnVectorsData = fnVectorsData;
+        }
+    }
+    
+    public RotSpectra getRotSpectra()
+    {
+        String fnVectors = filename.replace("classes", "vectors");
+        String fnVectorsData = fnVectors.replace(".xmd", ".vec");
+        return new RotSpectra(filename, fnVectors, fnVectorsData);
     }
 
     /**
