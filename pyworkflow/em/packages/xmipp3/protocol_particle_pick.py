@@ -34,7 +34,7 @@ import xmipp
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import runJavaIJapp
 
-from convert import createXmippInputMicrographs, readSetOfCoordinates
+from convert import writeSetOfMicrographs, readSetOfCoordinates
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
@@ -65,6 +65,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
+        
+        micFn = self._getExtraPath('input_micrographs.xmd')
+        
+        self._insertFunctionStep('convertInputStep', micFn, 
+                                self.inputMics.getObjId())
         # Parameters needed 
         
         
@@ -73,7 +78,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
         # Insert step to create output objects       
@@ -81,12 +86,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     
     #--------------------------- STEPS functions --------------------------------------------
-    def launchParticlePickGUIStep(self):
+    def convertInputStep(self, micFn, inputId):
+        writeSetOfMicrographs(self.inputMics, micFn)
         
-        # Get the converted input micrographs in Xmipp format
-        # if not exists, means the input was already in Xmipp
-        micFn = createXmippInputMicrographs(self, self.inputMics)
-        
+    
+    def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
         scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())

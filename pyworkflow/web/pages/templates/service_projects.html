@@ -46,25 +46,37 @@
 
 <div id="asideMainContainer">
 
-<!-- 	<a href="javascript:createProjectForm('{{msg.TITLE_CREATE_PROJECT}}', '{{msg.TITLE_CREATE_PROJECT_NAME}}');" > -->
+	<a href="javascript:serviceProjForm();" >
 		<button class="btn buttonRed" type="button">
 			Create new project
 		</button>
-<!-- 	</a> -->
+ 	</a>
 		
-		
-<!-- 	<a href="javascript:createProjectForm('{{msg.TITLE_CREATE_PROJECT}}', '{{msg.TITLE_CREATE_PROJECT_NAME}}');" > -->
+ 	<a href="javascript:goToProjectForm();" >
 		<button class="btn buttonGrey" type="button">
 			Go to your project
 		</button>
-<!-- 	</a> -->
+	</a>
 		
 </div>
 
 {% endblock %}
 
 {% block content %}
-
+<div class="projectsList">	
+<h1>Example projects:</h1>
+	<ul>				
+	{% for project in projects %}
+		<li class="projList">
+			<strong>
+				<a href="/project_content/?projectName={{project}}&mode=service" class="projName">
+					{{project}}
+				</a>
+			</strong>
+		</li>
+	{% endfor %}
+	</ul>
+</div>
 
 {% endblock %}
 

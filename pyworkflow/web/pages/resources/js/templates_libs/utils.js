@@ -297,7 +297,7 @@ function infoPopup(title, msgText, autoclose, closeFunc) {
 	}	
 }
 
-function warningPopup(title, msgText, funcName){
+function warningPopup(title, msgText, funcName, icon){
 	/*
 	 * Creates a messi popup with a title and message passed by arguments.
 	 * funcName is the function that will be executed if 'Yes' option is selected
@@ -305,8 +305,9 @@ function warningPopup(title, msgText, funcName){
 	 */
 	
 	// HTML to be used in the warning popup
-	msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
-		+ "</td><td>"+ msgText +"</td></tr></table>"
+	msg = "<table><tr><td>"
+	msg += "<i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
 
 	new Messi(msg, {
 		title : title,
@@ -347,6 +348,30 @@ function errorPopup(title, msgText){
 		} ]
 	});
 }
+
+function accessPopup(title, msgText, funcName, btnYes, btnNo){
+
+	msg = "<table><tr><td>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
+
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : btnYes,
+			val : 'Y',
+			btnClass : 'fa-check',
+			btnFunc : funcName
+		}, {
+			id : 1,
+			label : btnNo,
+			val : 'C',
+			btnClass : 'fa-ban'
+		} ]
+	});
+}
+
 
 function listToString(list){
 	var res = "";
@@ -498,4 +523,19 @@ function getKnownExt(){
 	        'spi', 'mrc', 'map', 'raw', 'inf', 'dm3', '.em', 'pif', 'psd', 
 	        'spe', 'ser', 'img', 'hed', 'vol','stk', 'mrcs', 'st', 'pif',
 	        'png', 'gif', 'jpg', 'jpeg']
+}
+
+function randomString(length, chars) {
+    var mask = '';
+    
+    if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
+    if (chars.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (chars.indexOf('#') > -1) mask += '0123456789';
+    if (chars.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
+    var result = '';
+    for (var i = length; i > 0; --i){
+    	result += mask[Math.round(Math.random() * (mask.length - 1))];
+    }
+    
+    return result;
 }

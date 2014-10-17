@@ -307,7 +307,7 @@ class Project(object):
             m = REGEX_NUMBER_ENDING.match(prevLabel)
             if m and m.groupdict()['number']:
                 numberSuffix = int(m.groupdict()['number']) + 1
-                prevLabel = m.groupdict()['prefix']
+                prevLabel = m.groupdict()['prefix'].strip()
             protLabel =  prevLabel + ' %s' % numberSuffix
         else:
             protLabel = newProt.getClassLabel()

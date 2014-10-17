@@ -754,7 +754,7 @@ class SetOfParticles(SetOfImages):
         return self._coordsPointer.get()
     
     def setCoordinates(self, coordinates):
-        """ Set the SetOfCoordinates associates with 
+        """ Set the SetOfCoordinates associates with
         this set of particles.
          """
         self._coordsPointer.set(coordinates)    
@@ -1000,9 +1000,11 @@ class Transform(EMObject):
     and mirroring.
     """
 
-    def __init__(self, **args):
+    def __init__(self, matrix=None, **args):
         EMObject.__init__(self, **args)
         self._matrix = Matrix()
+        if matrix is not None:
+            self.setMatrix(matrix)
 
     def getMatrix(self):
         return self._matrix.getMatrix()
