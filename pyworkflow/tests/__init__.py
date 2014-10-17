@@ -41,6 +41,7 @@ except ImportError:
 DataSet(name='xmipp_tutorial', folder='xmipp_tutorial', 
         files={
                'aligned_particles': 'gold/aligned_particles.sqlite',
+               'alignRotOnly': 'alignRotOnly.mrcs',
                'allMics': 'micrographs/*.mrc',
                'boxingDir': 'pickingEman',
                'boxingFile': 'pickingEman/info/BPV_1386_info.json',
