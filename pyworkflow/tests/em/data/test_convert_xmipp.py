@@ -178,17 +178,6 @@ class TestAlignmentConvert(BaseTest):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
         """
-        #alignmentList = []
-        #alignment1 = Alignment()
-        #alignment2 = Alignment()
-        #alignment3 = Alignment()
-        #alignment4 = Alignment()
-        #alignment5 = Alignment()
-        #alignmentList.append(alignment1)
-        #alignmentList.append(alignment2)
-        #alignmentList.append(alignment3)
-        #alignmentList.append(alignment4)
-        #alignmentList.append(alignment5)
         mList = []
         m1 =np.array([[ 0.0, 1.0, 0.0, 0.0],
                       [-1.0, 0.0, 0.0, 0.0],
@@ -223,8 +212,48 @@ class TestAlignmentConvert(BaseTest):
         print "output metadata: ", mdFn
         writeSetOfParticles(partSet, mdFn, is2D=True, isInverse=True)
         #TODO_rob: I do not know how to make an assert here
+        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
         #inverse has no effect
-        #t f
+
+    def test_alignment2DToRowImageShift(self):
+        """ Check that a given alignment object,
+        the Xmipp metadata row is generated properly.
+        """
+        mList = []
+        m1 =np.array([[ 1.0, 0.0, 0.0, -32.0],
+                      [ 0.0, 1.0, 0.0, 0.0],
+                      [ 0.0, 0.0, 1.0, 0.0],
+                      [ 0.0, 0.0, 0.0, 1.0]])
+        m2 =np.array([[ 1.0, 0.0, 0.0, 0.0],
+                      [ 0.0, 1.0, 0.0, -32.0],
+                      [ 0.0, 0.0, 1.0, 0.0],
+                      [ 0.0, 0.0, 0.0, 1.0]])
+        m3 =np.array([[ 1.0, 0.0, 0.0, 0.0],
+                      [ 0.0, 1.0, 0.0, 0.0],
+                      [ 0.0, 0.0, 1.0, 0.0],
+                      [ 0.0, 0.0, 0.0, 1.0]])
+        mList.append(m1)
+        mList.append(m2)
+        mList.append(m3)
+        stackFn = self.dataset.getFile('alignShiftOnly')
+        partFn = self.getOutputPath('particles.sqlite')
+        partSet = SetOfParticles(filename=partFn)
+        partSet.setAcquisition(Acquisition(voltage=300,
+                                  sphericalAberration=2,
+                                  amplitudeContrast=0.1,
+                                  magnification=60000))
+        for i, m in enumerate(mList):
+            p = Particle()
+            p.setLocation(i+1, stackFn)
+            p.setAlignment(Alignment(m))
+            partSet.append(p)
+        partSet.write()
+
+        mdFn = self.getOutputPath('particles.xmd')
+        print "binary file: ", stackFn
+        print "output metadata: ", mdFn
+        writeSetOfParticles(partSet, mdFn, is2D=True, isInverse=True)
+        #TODO_rob: I do not know how to make an assert here
 
 
     def test_rowToAlignment2D(self):
