@@ -33,6 +33,8 @@
 import os
 from os.path import join, abspath, splitext, split
 from glob import glob
+import tarfile
+import fnmatch
 import platform
 import SCons.Script
 import SCons.SConf
@@ -221,7 +223,46 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     return toReturn
 
 
-def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, incs=None, libs=None, src=None, prefix=None, mpi=False, cuda=False, libpath=[], deps=[], default=True):
+def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, replace=False):
+    context.Message('* Checking for MPI ... ')
+
+    lastLIBS = context.env['LIBS']
+    lastLIBPATH = context.env['LIBPATH']
+    lastCPPPATH = context.env['CPPPATH']
+    lastCC = context.env['CC']
+    lastCXX = context.env['CXX']
+
+    # TODO Replace() also here?
+    context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
+                       CPPPATH=mpi_inc)
+    context.env.Replace(LINK=mpi_link)
+    context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
+
+    # Test only C++ mpi compiler
+    ret = context.TryLink('''
+    #include <mpi.h>
+    int main(int argc, char** argv)
+    {
+        MPI_Init(0, 0);
+        MPI_Finalize();
+        return 0;
+    }
+    ''', '.cpp')
+
+    # NOTE: We don't want MPI flags for not-mpi programs (always revert)
+    # env['mpi'] remains 1 so those can be enabled again when needed
+    if not replace:
+        context.env.Replace(LIBS=lastLIBS)
+        context.env.Replace(LIBPATH=lastLIBPATH)
+        context.env.Replace(CPPPATH=lastCPPPATH)
+        context.env.Replace(CC=lastCC)
+        context.env.Replace(CXX=lastCXX)
+
+    context.Result(ret)
+    return ret
+
+
+def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, mpi=False, cuda=False, libpath=['lib'], deps=[], default=True):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -232,60 +273,70 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, incs=N
 
     Returns the final targets, the ones that Make will create.
     """
-    libs = libs or 'lib%s.so' % name
-    dirs = dirs or Dir('external/%s' % name).abspath
-    untarTargets = untarTargets or 'configure'
-    tars = tars or Dir('external/%s.tgz' % name).abspath
-    incs = incs or Dir('external/%s/include' % name).abspath
+    libs = libs or []
+    dirs = dirs or []
+    untarTargets = untarTargets or ['configure']
+    lastTarget = deps
+    tars = tars or []
+    incs = incs or []
     prefix = 'lib' if prefix is None else 'lib'
+    
     basedir = 'lib'
     fullname = prefix + name
-    patterns = src
+    patterns = patterns or []
     sources = []
     untars = []
     
-    for x, tar in enumerate(tars):
-        tarDestination, tarName = splitext(tar)
-        tUntar = Untar(env, File('%s/%s' % (dirs[x], untarTargets[x])).abspath, 
-                       File(tars[x]),
-                       cdir=Dir('external').abspath)
-        Depends(tUntar, deps)
-        untars += tUntar
-    
-    for p in patterns:
-        if not p.startswith(basedir):
-            p = join(basedir, p)
-        sources += [p]
+    if tars:
+        for x, dir in enumerate(dirs):
+            tarDestination, tarName = splitext(tars[x])
+            tUntar = Untar(env, File(join(dirs[x], untarTargets[x])).abspath, 
+                           File(tars[x]),
+                           cdir=Dir(dirs[x]).abspath)
+            SideEffect('dummy', tUntar)
+            Depends(tUntar, deps)
+            untars += tUntar
+        lastTarget = untars
+
+    for x, p in enumerate(patterns):
+        sourcesRel = join(dirs[x], p)
+        if not sourcesRel.startswith(basedir):
+            sourcesRel = join(basedir, p)
 #        if p.endswith(".cu"):
 #            cudaFiles = True
-    #path = os.environ['PATH']
+        # select sources inside tarfile but we only get those files that match the pattern
+        if tars: 
+            tarfiles = tarfile.open(tars[x]).getmembers() 
+            sources += [join(dirs[x], tarred.name) for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
+        else:
+            sources += glob(join(dirs[x], patterns[x]))
+
     mpiArgs = {}
     if mpi:
         libpath.append(env['MPI_LIBDIR'])
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
-    #    path += os.pathsep + env['MPI_BINDIR']
-    print 'sources %s' % sources
-    
-    sourceZipped = zip(*(split(source) for source in sources))
-    print 'source zipped %s' % sourceZipped
+        conf = Configure(env, mpi_check={'CheckMPI': CheckMPI})
+        if not conf.CheckMPI(conf, env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], replace=True):
+            Exit(1)
+        conf.Finish()
+        
     
     library = SharedLibrary(
               join(basedir, fullname),
-              customGlob(*sourceZipped),
-              CPPPATH=incs + [env['CPPPATH']],
+              sources,
+              CPPPATH=incs + [env['CPPPATH']] + ['#software/include'],
               LIBPATH=libpath,
               LIBS=libs,
-#              PATH=path,
               **mpiArgs
               )
+    SideEffect('dummy', library)
 
     #install = env.Install(prefix, library)
     #alias = env.Alias(fullname, install)
-    for untarred in untars:
-        Depends(library, untarred)
+    for previous in lastTarget:
+        Depends(library, previous)
     Default(library)
-    print 'making default library: %s' % library
 
     return library
 
@@ -343,18 +394,6 @@ def AppendIfNotExists(**args):
             append = False
     if append:
         env.Append(**args)
-
-
-def customGlob(dirs, patterns):
-    ''' Custom made globbing '''
-    
-    sources = []
-    for x, dir in enumerate(dirs):
-        print 'dir: %s' % dir
-        sources += Glob(dir, patterns[x])
-        print 'pattern: %s' % patterns[x]
-        print 'sources: %s' % sources
-    return sources
 
 
 def AddLastSlash(string):
@@ -623,43 +662,7 @@ def libraryTest(env, name, lang='c'):
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
-def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link):
-    context.Message('* Checking for MPI ... ')
 
-    lastLIBS = context.env['LIBS']
-    lastLIBPATH = context.env['LIBPATH']
-    lastCPPPATH = context.env['CPPPATH']
-    lastCC = context.env['CC']
-    lastCXX = context.env['CXX']
-
-    # TODO Replace() also here?
-    context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
-                       CPPPATH=mpi_inc)
-    context.env.Replace(LINK=mpi_link)
-    context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
-
-    # Test only C++ mpi compiler
-    ret = context.TryLink('''
-    #include <mpi.h>
-    int main(int argc, char** argv)
-    {
-        MPI_Init(0, 0);
-        MPI_Finalize();
-        return 0;
-    }
-    ''', '.cpp')
-
-    # NOTE: We don't want MPI flags for not-mpi programs (always revert)
-    # env['mpi'] remains 1 so those can be enabled again when needed
-
-    context.env.Replace(LIBS=lastLIBS)
-    context.env.Replace(LIBPATH=lastLIBPATH)
-    context.env.Replace(CPPPATH=lastCPPPATH)
-    context.env.Replace(CC=lastCC)
-    context.env.Replace(CXX=lastCXX)
-
-    context.Result(ret)
-    return ret
 
 def manualInstall(env, name, tar=None, buildDir=None, url=None,
                   extraActions=[], deps=[], clean=[], default=True):
