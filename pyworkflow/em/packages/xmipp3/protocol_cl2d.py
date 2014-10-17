@@ -36,7 +36,7 @@ from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
                                         LEVEL_ADVANCED, LEVEL_EXPERT)
 from pyworkflow.em.protocol import ProtClassify2D
 
-from convert import createXmippInputImages, readSetOfClasses2D
+from convert import writeSetOfParticles, readSetOfClasses2D
 
 
 
@@ -120,11 +120,11 @@ class XmippProtCL2D(ProtClassify2D):
         """ Mainly prepare the command line for call cl2d program"""
         
         # Convert input images if necessary
-        #FIXME: this should be done in an step, not in _insert*
-        imgsFn = createXmippInputImages(self, self.inputParticles.get())
+        self.imgsFn = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep')    
         
         # Prepare arguments to call program: xmipp_classify_CL2D
-        self._params = {'imgsFn': imgsFn, 
+        self._params = {'imgsFn': self.imgsFn, 
                         'extraDir': self._getExtraPath(),
                         'nref': self.numberOfReferences.get(), 
                         'nref0': self.numberOfInitialReferences.get(),
@@ -168,6 +168,9 @@ class XmippProtCL2D(ProtClassify2D):
         self._insertFunctionStep('createOutputStep', subset)        
     
     #--------------------------- STEPS functions --------------------------------------------   
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)    
+
     def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
         nproc = self.numberOfMpi.get()
