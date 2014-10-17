@@ -29,6 +29,7 @@ import ij.ImagePlus;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -63,7 +64,7 @@ import xmipp.viewer.windows.SaveJDialog;
 public class GalleryData {
 
 
-    protected HashMap<String, ColumnInfo> displayci;
+    protected HashMap<String, ColumnInfo> displaycis;
     protected MetaData md;
     protected long[] ids;
     protected String[] mdBlocks = null;
@@ -171,7 +172,7 @@ public class GalleryData {
         displayLabels = null;
         mode = Mode.GALLERY_MD;
         
-        displayci = new HashMap<String, ColumnInfo>();
+        displaycis = new HashMap<String, ColumnInfo>();
         
         if(parameters.getBlock() == null)
             parameters.setBlock(selectedBlock);
@@ -269,14 +270,14 @@ public class GalleryData {
     public void setDisplayLabel(String key, boolean selected) {
         if(!selected)
         {
-            displayci.remove(key);
+            displaycis.remove(key);
             return;
         }
         
         for(ColumnInfo ci: labels)
             if(ci.labelName.equals(key))
             {
-                displayci.put(key, ci);
+                displaycis.put(key, ci);
                 break;
             }
     }
@@ -412,7 +413,7 @@ public class GalleryData {
                
     public boolean isDisplayLabel()
     {
-        return displayci != null;
+        return displaycis != null;
     }
 
    
@@ -420,7 +421,8 @@ public class GalleryData {
     public String getDisplayLabel(long id)
     {
         String label = "";
-        for(ColumnInfo ci: displayci.values())
+        
+        for(ColumnInfo ci: displaycis.values())
             label += " " + md.getValueString(ci.label, id);
         return label;
     }
@@ -483,7 +485,6 @@ public class GalleryData {
 
             labels = newLabels;
             orderLabels();
-            
             if(displayLabels != null)
                 for(String label: displayLabels)
                     setDisplayLabel(label, true);

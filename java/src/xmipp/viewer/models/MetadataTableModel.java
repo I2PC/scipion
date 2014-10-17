@@ -277,17 +277,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
 
-	@Override
-	public String getLabel(int row, int col) {
-		try {
-			long objId = data.ids[row];
-			return data.md.getValueString(visibleLabels.get(col).label,
-					objId);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+	
 
 	@Override
 	protected void calculateCellSize() {

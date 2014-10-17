@@ -64,9 +64,6 @@ public class ScipionGalleryData extends GalleryData {
     }
 
     
-
-    
-
     public boolean isColumnFormat() {
         return true;
     }
