@@ -16,9 +16,7 @@ import java.util.Map;
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
-import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
-import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.models.ClassInfo;
@@ -38,8 +36,7 @@ public class ScipionGalleryData extends GalleryData {
     public ScipionGalleryData(ScipionGalleryJFrame window, Params parameters, ScipionMetaData md) {
         super(window, parameters, md);
 
-        mdBlocks = md.getBlocks();
-        selectedBlock = mdBlocks[0];
+        
 
     }
 
@@ -50,6 +47,8 @@ public class ScipionGalleryData extends GalleryData {
             filename = file.substring(sep + 1);
         }
         filename = file;
+        mdBlocks = ((ScipionMetaData)md).getBlocks();
+        selectedBlock = mdBlocks[0];
 
     }
 

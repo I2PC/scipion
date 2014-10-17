@@ -5,8 +5,8 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.MetaData;
 
 
 /**
@@ -84,6 +84,7 @@ public class Params {
     public String[] visibleLabels;
     public String[] orderLabels;
     public String[] sortby;
+    private String block;
     
     
     
@@ -288,6 +289,17 @@ public class Params {
     {
         return displayLabels;
     }
+    
+    public void setBlock(String block)
+    {
+        this.block = block;
+    }
+    
+    public String getBlock()
+    {
+        return block;
+    }
+    
     
    
 }

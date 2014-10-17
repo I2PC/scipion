@@ -142,7 +142,7 @@ public class TiltPairPicker extends ParticlePicker
                 if(!result.isEmpty())
                     result = "Particles at: " + result + "without tilted pairs dismissed";
 
-		//um.initAligner();
+		um.initAligner();
 
 		return result;
 	}// loadMicrographs

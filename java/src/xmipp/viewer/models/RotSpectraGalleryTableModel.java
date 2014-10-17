@@ -62,7 +62,6 @@ public class RotSpectraGalleryTableModel extends MetadataGalleryTableModel {
 	public RotSpectraGalleryTableModel(GalleryData data) throws Exception {
 		super(data);
 		DEBUG.printMessage("creating rotspectra.....");
-                System.out.println("creating rotspectra");
 	}
 
 	// Load initial dimensions

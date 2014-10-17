@@ -105,17 +105,18 @@ public class GalleryData {
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
     protected HashMap<Long, EllipseCTF> ctfs;
-    protected String[] displayLabel;
-    protected String[] renderLabels;
-    protected String renderLabel;
-    protected String[] visibleLabels;
-    protected String[] orderLabels;
+    protected String[] displayLabels;
     protected String[] sortby;
     protected int selfrom = -1, selto = -1;
 
     public boolean hasRecalulateCTF() {
         return ctfs != null && !ctfs.isEmpty();
     }
+    
+    protected String[] renderLabels;
+    protected String renderLabel = "first";
+    protected String[] visibleLabels;
+    protected String[] orderLabels;
     
 
     public enum Mode {
@@ -141,32 +142,15 @@ public class GalleryData {
     public GalleryData(GalleryJFrame window, Params parameters, MetaData md) {
         this.window = window;
         this.parameters = parameters;
-        md.setRenderLabels(parameters.renderLabels);
-        md.setRenderLabel(parameters.getRenderLabel());
-        sortby = parameters.sortby;
-        md.setVisibleLabels(parameters.visibleLabels);
-        md.setOrderLabels(parameters.orderLabels);
+        
         try {
-
             selectedBlock = "";
-
-            zoom = parameters.zoom;
-            this.renderImages = md.getRenderLabels() != null && !md.getRenderLabel().equals("first");
-            mode = Mode.GALLERY_MD;
-            resliceView = parameters.resliceView;
-            useGeo = parameters.useGeo;
-            wrap = parameters.wrap;
-            displayLabel = parameters.getDisplayLabels();
-            displayci = new HashMap<String, ColumnInfo>();
-            if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) {
-                mode = Mode.TABLE_MD;
-            } else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) {
-                
-                mode = Mode.GALLERY_ROTSPECTRA;
-            }
-
-            setFileName(md.getFilename());
             this.md = md;
+            setFileName(md.getFilename());
+            zoom = parameters.zoom;
+            resliceView = parameters.resliceView;
+            
+            readMdParameters();
             loadMd();
 
         } catch (Exception e) {
@@ -175,6 +159,40 @@ public class GalleryData {
         }
 
     }// constructor GalleryData
+    
+    protected void readMdParameters()
+    {
+        renderLabels = null;
+        renderLabel = "first";
+        visibleLabels = null;
+        orderLabels = null;
+        sortby = null;
+        useGeo = wrap = false;
+        displayLabels = null;
+        mode = Mode.GALLERY_MD;
+        
+        displayci = new HashMap<String, ColumnInfo>();
+        
+        if(parameters.getBlock() == null)
+            parameters.setBlock(selectedBlock);
+        if(parameters.getBlock().equals(selectedBlock))
+        {
+        
+            setRenderLabels(parameters.renderLabels);
+            setRenderLabel(parameters.getRenderLabel());
+            this.renderImages = (getRenderLabels() != null && !renderLabel.equals("first"));
+            sortby = parameters.sortby;
+            setVisibleLabels(parameters.visibleLabels);
+            setOrderLabels(parameters.orderLabels);
+            useGeo = parameters.useGeo;
+            wrap = parameters.wrap;
+            displayLabels = parameters.getDisplayLabels();
+            if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+                mode = Mode.TABLE_MD;
+            else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
+                mode = Mode.GALLERY_ROTSPECTRA;
+        }
+    }
 
     public List<ColumnInfo> getColumns() {
         return labels;
@@ -267,6 +285,7 @@ public class GalleryData {
      * Load contents from a metadata already read
      */
     public void loadMd() throws Exception {
+        readMdParameters();
         ids = md.findObjects();
         loadLabels();
         numberOfVols = 0;
@@ -290,7 +309,7 @@ public class GalleryData {
             return;
         }
 
-        if (!md.isColumnFormat()) {
+        if (!md.isColumnFormat() ) {
             mode = Mode.TABLE_MD;
             if (zoom == 0) {
                 zoom = 100;
@@ -421,8 +440,8 @@ public class GalleryData {
             ColumnInfo ciFirstRenderVisible = null;
             int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-            if (!md.getRenderLabel().equalsIgnoreCase("first")) {
-                inputRenderLabel = MetaData.str2Label(md.getRenderLabel());
+            if (renderLabel.equalsIgnoreCase("first")) {
+                inputRenderLabel = MetaData.str2Label(renderLabel);
             }
 
             for (int i = 0; i < labelids.length; ++i) {
@@ -465,8 +484,8 @@ public class GalleryData {
             labels = newLabels;
             orderLabels();
             
-            if(displayLabel != null)
-                for(String label: displayLabel)
+            if(displayLabels != null)
+                for(String label: displayLabels)
                     setDisplayLabel(label, true);
 //////            System.out.printf("render: %s %s \n", ciFirstRender, ciFirstRenderVisible);
         } catch (Exception e) {
@@ -1632,7 +1651,7 @@ public class GalleryData {
     public boolean isRenderLabel(ColumnInfo ci) {
 
         
-        for (String i : md.getRenderLabels()) {
+        for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
                 return true;
             }
@@ -1641,10 +1660,10 @@ public class GalleryData {
     }
 
     public boolean isVisibleLabel(ColumnInfo ci) {
-        if (md.getVisibleLabels() == null) {
+        if (getVisibleLabels() == null) {
             return true;
         }
-        for (String i : md.getVisibleLabels()) {
+        for (String i : getVisibleLabels()) {
             if (i.equals(ci.labelName)) {
                 return true;
             }
@@ -1653,7 +1672,7 @@ public class GalleryData {
     }
 
     public void orderLabels() {
-        String[] orderLabels = md.getOrderLabels();
+        String[] orderLabels = getOrderLabels();
         if (orderLabels == null) {
             return;
         }
@@ -1759,6 +1778,40 @@ public class GalleryData {
             return selto;
         }
         
+            
+	public void setRenderLabels(String[] renderLabels) {
+            this.renderLabels = renderLabels;
+        }
+
+        public void setVisibleLabels(String[] visibleLabels) {
+            this.visibleLabels = visibleLabels;
+        }
+
+        public void setOrderLabels(String[] orderLabels) {
+            this.orderLabels = orderLabels;
+        }
+
+        public void setRenderLabel(String renderLabel) {
+            this.renderLabel = renderLabel;
+        }
+        
+        
+        
+        
+         public String[] getRenderLabels()
+       {
+           return renderLabels;
+       }
+       
+       public String[] getVisibleLabels()
+       {
+           return visibleLabels;
+       }
+       
+       public String[] getOrderLabels()
+       {
+           return orderLabels;
+       }
         
         
 }// class GalleryDaa
