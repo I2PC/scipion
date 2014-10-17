@@ -1018,7 +1018,7 @@ def geometryFromMatrix(matrix, isInvTransform):
     return shifts, angles
 
 
-def matrixFromGeometry(shifts, angles):
+def matrixFromGeometry(shifts, angles, isInvTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
@@ -1029,18 +1029,22 @@ def matrixFromGeometry(shifts, angles):
     
     R = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     T = translation_matrix(shifts)
-    
+        
     M = concatenate_matrices(R, T)
-    
+    if not isInvTransform:
+        M = numpy.linalg.inv(M)
     return M
 
 
 def _setAlignmentParam(alignmentRow, label, alignment, paramName):
     """ Check if the row contains a label and set as an alignment parameter. """
     
-def rowToAlignment(alignmentRow):
-    """ Fill the alignment matrix reading
-    the geometry values from Xmipp metadata row. """
+def rowToAlignment(alignmentRow,is2D=True, isInvTransform=False):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+        """
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Alignment()
         angles = numpy.zeros(3)
@@ -1048,9 +1052,14 @@ def rowToAlignment(alignmentRow):
         angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
         shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
         shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
+        if not is2D:
+            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
+            angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
+            shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
+        #TODO flip
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         
-        M = matrixFromGeometry(shifts, angles)
+        M = matrixFromGeometry(shifts, angles, isInvTransform)
         alignment.setMatrix(M)
         
         #FIXME: now are also storing the alignment parameters since
@@ -1082,6 +1091,7 @@ def alignmentToRow(alignment, alignmentRow,
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
+    #TODO ROB: flip not needed here
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
     #for paramName, label in ALIGNMENT_DICT.iteritems():
