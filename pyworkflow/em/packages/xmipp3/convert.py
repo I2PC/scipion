@@ -303,8 +303,8 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
         
     if kwargs.get('writeAlignment', True) and img.hasAlignment():
         is2D = kwargs.get('is2D', True)
-        isInverseTransform = kwargs.get('isInverseTransform', True)
-        alignmentToRow(img.getAlignment(), imgRow, is2D, isInverseTransform)
+        inverseTransform = kwargs.get('inverseTransform', True)
+        alignmentToRow(img.getAlignment(), imgRow, is2D, inverseTransform)
         
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
@@ -338,7 +338,9 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
         img.setCTF(rowToCtfModel(imgRow))
         
     if kwargs.get('readAlignment', True):
-        img.setAlignment(rowToAlignment(imgRow))
+        is2D = kwargs.get('is2D', True)
+        inverseTransform = kwargs.get('inverseTransform', True)
+        img.setAlignment(rowToAlignment(imgRow, is2D, inverseTransform))
         
     if kwargs.get('readAcquisition', True):
         img.setAcquisition(rowToAcquisition(imgRow))
@@ -1005,12 +1007,13 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
         ctfFn = ctfMd.get()
     return ctfFn
 
-def geometryFromMatrix(matrix, isInvTransform):
+
+def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    shifts = translation_from_matrix(matrix)
-    if not isInvTransform:
+    if not inverseTransform:
         matrix = numpy.linalg.inv(matrix)
+    shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
 #XMIPP
     #shift = tran
@@ -1018,11 +1021,12 @@ def geometryFromMatrix(matrix, isInvTransform):
     return shifts, angles
 
 
-def matrixFromGeometry(shifts, angles, isInvTransform):
+def matrixFromGeometry(shifts, angles, inverseTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
     #TODO: CHECK THIS IS CORRECT
+    print "matrixFromGeometry: inverseTransform=", inverseTransform
     from pyworkflow.em.transformations import translation_matrix, euler_matrix, concatenate_matrices
     from numpy import deg2rad
     radAngles = deg2rad(angles)
@@ -1031,7 +1035,7 @@ def matrixFromGeometry(shifts, angles, isInvTransform):
     T = translation_matrix(shifts)
         
     M = concatenate_matrices(R, T)
-    if not isInvTransform:
+    if not inverseTransform:
         M = numpy.linalg.inv(M)
     return M
 
@@ -1039,7 +1043,7 @@ def matrixFromGeometry(shifts, angles, isInvTransform):
 def _setAlignmentParam(alignmentRow, label, alignment, paramName):
     """ Check if the row contains a label and set as an alignment parameter. """
     
-def rowToAlignment(alignmentRow,is2D=True, isInvTransform=False):
+def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
@@ -1059,7 +1063,7 @@ def rowToAlignment(alignmentRow,is2D=True, isInvTransform=False):
         #TODO flip
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         
-        M = matrixFromGeometry(shifts, angles, isInvTransform)
+        M = matrixFromGeometry(shifts, angles, inverseTransform)
         alignment.setMatrix(M)
         
         #FIXME: now are also storing the alignment parameters since
@@ -1075,14 +1079,14 @@ def rowToAlignment(alignmentRow,is2D=True, isInvTransform=False):
 
 
 def alignmentToRow(alignment, alignmentRow,
-                   is2D=True, isInvTransform=False):
+                   is2D=True, inverseTransform=False):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
-    shifts, angles = geometryFromMatrix(alignment.getMatrix(),isInvTransform)
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
 
     if is2D:
         angle =angles[0] + angles[2]
