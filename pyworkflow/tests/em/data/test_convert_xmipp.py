@@ -319,6 +319,8 @@ class TestAlignmentConvert(BaseTest):
     def test_rotOnly(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
+        mList[0] * (0,32,0,1)' -> (32,0,0,1)'  T -> ref
+        mList[1] * (-32,0,0,1)' -> (32,0,0,1)'
         """
         mList = [[[ 0.0, 1.0, 0.0, 0.0],
                   [-1.0, 0.0, 0.0, 0.0],
@@ -335,9 +337,33 @@ class TestAlignmentConvert(BaseTest):
         
         self.launchAlignmentTest('alignRotOnly', mList, printMatrix=True)
 
+    def test_rotOnly3D(self):
+        """ Check that a given alignment object,
+        the Xmipp metadata row is generated properly.
+           mList[0] * (22.8586, -19.6208, 10.7673)' -> (32,0,0,1); T -> ref
+           mList[1] * (22.8800, 20.2880, -9.4720) ->(32,0,0,1)'; T -> ref
+        """
+        mList = [[[ 0.715,-0.613, 0.337, 0.],
+                  [ 0.634, 0.771, 0.059, 0.],
+                  [-0.296, 0.171, 0.94,  0.],
+                  [ 0.   , 0.   , 0.,    1.]],
+                 [[ 0.71433,   0.63356,  -0.29586,   -0.00000],
+                  [ -0.61315,   0.77151,   0.17140,  -0.00000],
+                  [  0.33648,   0.05916,   0.93949,  -0.00000],
+                  [  0.00000,   0.00000,   0.00000,   1.00000]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchAlignmentTest('alignRotOnly3D', mList, is2D=False, printMatrix=True)
+        #now read result, apply xmipp_transform geometry....<<<<<<<<<<
     def test_shiftOnly(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
+         mList[0] * ( 32,0,0,1)-> (0,0,0,1); T -> ref
+         mList[1] * (  0,32,0,1)-> (0,0,0,1); T -> ref
+
         """
         mList = [[[ 1.0, 0.0, 0.0, -32.0],
                   [ 0.0, 1.0, 0.0, 0.0],
@@ -360,6 +386,8 @@ class TestAlignmentConvert(BaseTest):
         note that when rot and shift are involved
         the correct transformation matrix is
         rot matrix + rot*shift
+        mList[0] * (16,32,0) -> (32,0,0)
+        mList[1] * (-32,16,0) -> (32,0,0)
         """
         mList = []
         m1 =np.array([[ 0.0, 1.0, 0.0, 0.0],
