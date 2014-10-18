@@ -354,7 +354,7 @@ class TestAlignmentConvert(BaseTest):
         
         self.launchAlignmentTest('alignShiftOnly', mList, printMatrix=True)
 
-   def test_alignment2DToRowImageShiftandRot(self):<<<<sin hacer
+    def test_shiftOnlyPlusRot(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
         note that when rot and shift are involved
@@ -362,12 +362,12 @@ class TestAlignmentConvert(BaseTest):
         rot matrix + rot*shift
         """
         mList = []
-        m1 =np.array([[ 1.0, 0.0, 0.0, -32.0],
-                      [ 0.0, 1.0, 0.0, 0.0],
+        m1 =np.array([[ 0.0, 1.0, 0.0, 0.0],
+                      [-1.0, 0.0, 0.0,16.0],
                       [ 0.0, 0.0, 1.0, 0.0],
                       [ 0.0, 0.0, 0.0, 1.0]])
-        m2 =np.array([[ 1.0, 0.0, 0.0, 0.0],
-                      [ 0.0, 1.0, 0.0, -32.0],
+        m2 =np.array([[-1.0, 0.0, 0.0, 0.0],
+                      [ 0.0,-1.0, 0.0,16.0],
                       [ 0.0, 0.0, 1.0, 0.0],
                       [ 0.0, 0.0, 0.0, 1.0]])
         m3 =np.array([[ 1.0, 0.0, 0.0, 0.0],
@@ -377,7 +377,7 @@ class TestAlignmentConvert(BaseTest):
         mList.append(m1)
         mList.append(m2)
         mList.append(m3)
-        stackFn = self.dataset.getFile('alignShiftOnly')
+        stackFn = self.dataset.getFile('alignShiftRot')
         partFn = self.getOutputPath('particles.sqlite')
         partSet = SetOfParticles(filename=partFn)
         partSet.setAcquisition(Acquisition(voltage=300,
