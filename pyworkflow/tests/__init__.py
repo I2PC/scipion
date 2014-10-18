@@ -123,13 +123,15 @@ DataSet(name='emx',  folder='emx',
         files={
                'alignShiftOnly': 'alignment/align_shift_only.mrcs',
                'alignRotOnly': 'alignment/align_rot_only.mrcs',
+               'alignShiftRot': 'alignment/align_shift_rot.mrcs',
+               'alignRotShift': 'alignment/align_rot_shift.mrcs',
                'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',
-                'coordinatesT1': 'coordinates/Test1/coordinates.emx',
-                'defocusParticleT2': 'defocusParticle/particles.emx',
-                'emxMicrographCtf1':'MicrographsCTF/ctfindCTFEstimation.emx',
-                'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
-                'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',##
-                'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
+               'coordinatesT1': 'coordinates/Test1/coordinates.emx',
+               'defocusParticleT2': 'defocusParticle/particles.emx',
+               'emxMicrographCtf1':'MicrographsCTF/ctfindCTFEstimation.emx',
+               'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
+               'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',
+               'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
               })
                
                
