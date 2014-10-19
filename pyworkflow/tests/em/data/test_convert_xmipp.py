@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import os
+from pyworkflow.em.data import SetOfVolumes
 import unittest
 
 import xmipp
@@ -256,11 +257,13 @@ class TestAlignmentConvert(BaseTest):
         #inverse has no effect
         #t f
 
-    def launchAlignmentTest(self, fileKey, mList, is2D=True, inverseTransform=False, **kwargs):
+    def launchAlignmentTest(self, fileKey, mList,
+                            is2D=True, inverseTransform=False,
+                            **kwargs):
         """ Helper function to launch similar alignment tests
         give the EMX transformation matrix.
         Params:
-            fileKey: the gile where to grab the input stack images.
+            fileKey: the file where to grab the input stack images.
             mList: the matrix list of transformations 
                 (should be the same length of the stack of images)
         """
@@ -278,13 +281,17 @@ class TestAlignmentConvert(BaseTest):
         print "  MD: ", mdFn
         print "SET2: ", partFn2  
         
-        partSet = SetOfParticles(filename=partFn1)
+        if is2D:
+            partSet = SetOfParticles(filename=partFn1)
+        else:
+            partSet = SetOfVolumes(filename=partFn1)
         partSet.setAcquisition(Acquisition(voltage=300,
                                   sphericalAberration=2,
                                   amplitudeContrast=0.1,
                                   magnification=60000))
-        # Populate the SetOfParticles with 5 images taken from images.mrc file
-        # and setting the previous alignmment paramenters
+        # Populate the SetOfParticles with  images
+        # taken from images.mrc file
+        # and setting the previous alignment parameters
         aList = [np.array(m) for m in mList]
         for i, a in enumerate(aList):
             p = Particle()
@@ -296,13 +303,16 @@ class TestAlignmentConvert(BaseTest):
 
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
-        writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
-        
+        if is2D:
+            writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+        else:
+            writeSetOfVolumes(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
         # Let's create now another SetOfImages reading back the written
         # Xmipp metadata and check one more time.
         partSet2 = SetOfParticles(filename=partFn2)
         partSet2.copyInfo(partSet)
-        readSetOfParticles(mdFn, partSet2, is2D=is2D, inverseTransform=inverseTransform)
+        readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                           inverseTransform=inverseTransform)
         partSet2.write()         
         #TODO_rob: I do not know how to make an assert here
         #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
@@ -312,6 +322,8 @@ class TestAlignmentConvert(BaseTest):
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
                 m2 = img.getAlignment().getMatrix()
+                print "-"*5
+                print img.getFileName(), img.getIndex()
                 print 'm1:\n', m1
                 print 'm2:\n', m2
                 #self.assertTrue(np.array_equiv(m1, m2))
@@ -335,7 +347,9 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchAlignmentTest('alignRotOnly', mList, printMatrix=True)
+        self.launchAlignmentTest('alignRotOnly', mList,
+                                 is2D=True, inverseTransform=False,
+                                 printMatrix=True)
 
     def test_rotOnly3D(self):
         """ Check that a given alignment object,
@@ -343,6 +357,11 @@ class TestAlignmentConvert(BaseTest):
            mList[0] * (22.8586, -19.6208, 10.7673)' -> (32,0,0,1); T -> ref
            mList[1] * (22.8800, 20.2880, -9.4720) ->(32,0,0,1)'; T -> ref
         """
+        #TODO NOTE: inverseTRansform is true for 3D
+        #but false for 2D in aligment!!!! This should be corrected
+        #angles checked with transform geometry What else can
+        #  I do for checking!!!!!
+        
         mList = [[[ 0.715,-0.613, 0.337, 0.],
                   [ 0.634, 0.771, 0.059, 0.],
                   [-0.296, 0.171, 0.94,  0.],
@@ -356,8 +375,10 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchAlignmentTest('alignRotOnly3D', mList, is2D=False, printMatrix=True)
-        #now read result, apply xmipp_transform geometry....<<<<<<<<<<
+        self.launchAlignmentTest('alignRotOnly3D', mList,
+                                 is2D=False, inverseTransform=True,
+                                 printMatrix=True)
+        #TODO:now read result, apply xmipp_transform geometry....<<<<<<<<<<
     def test_shiftOnly(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
