@@ -198,7 +198,7 @@ class TestAlignmentConvert(BaseTest):
                 print img.getFileName(), img.getIndex()
                 print 'm1:\n', m1
                 print 'm2:\n', m2
-                #self.assertTrue(np.array_equiv(m1, m2))
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
         
     def test_alignment(self):
         mList = [[[ 1.0, 0.0, 0.0, 20.0],                  
