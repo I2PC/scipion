@@ -1032,7 +1032,7 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     radAngles = deg2rad(angles)
     
     R = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
-    T = translation_matrix(shifts)
+    T = translation_matrix(-shifts)
         
     M = concatenate_matrices(R, T)
     if not inverseTransform:
