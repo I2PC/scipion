@@ -266,10 +266,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 
 	}
 
-	public String toString()
-	{
-		return String.format("Micrograph: %s State: %s", getName(), state);
-	}
+	
 
 	@Override
 	public boolean hasData()
