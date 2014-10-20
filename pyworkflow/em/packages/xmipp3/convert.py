@@ -1011,13 +1011,8 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    if not inverseTransform:
-        matrix = numpy.linalg.inv(matrix)
     shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-#XMIPP
-    #shift = tran
-    #angles = -rad
     return shifts, angles
 
 
@@ -1025,18 +1020,13 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
-    #TODO: CHECK THIS IS CORRECT
-    print "matrixFromGeometry: inverseTransform=", inverseTransform
-    from pyworkflow.em.transformations import translation_matrix, euler_matrix, concatenate_matrices
+    from pyworkflow.em.transformations import euler_matrix
     from numpy import deg2rad
-    radAngles = deg2rad(angles)
+    radAngles = -deg2rad(angles)
     
-    R = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
-    T = translation_matrix(-shifts)
-        
-    M = concatenate_matrices(R, T)
-    if not inverseTransform:
-        M = numpy.linalg.inv(M)
+    M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
+    M[:3, 3] = shifts[:3]
+
     return M
 
 
@@ -1069,9 +1059,9 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
         #FIXME: now are also storing the alignment parameters since
         # the conversions to the Transform matrix have not been extensively tested.
         # After this, we should only keep the matrix 
-        for paramName, label in ALIGNMENT_DICT.iteritems():
-            if alignmentRow.hasLabel(label):
-                setattr(alignment, paramName, alignmentRow.getValueAsObject(label))    
+        #for paramName, label in ALIGNMENT_DICT.iteritems():
+        #    if alignmentRow.hasLabel(label):
+        #        setattr(alignment, paramName, alignmentRow.getValueAsObject(label))    
     else:
         alignment = None
     
@@ -1088,19 +1078,17 @@ def alignmentToRow(alignment, alignmentRow,
     """
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
 
+    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+    
     if is2D:
-        angle =angles[0] + angles[2]
+        angle = angles[0] + angles[2]
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
     else:
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-    #TODO ROB: flip not needed here
-    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
-    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
-    #for paramName, label in ALIGNMENT_DICT.iteritems():
-    #    if alignment.hasAttribute(paramName):
-    #        alignmentRow.setValue(label, alignment.getAttributeValue(paramName))
+        alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 

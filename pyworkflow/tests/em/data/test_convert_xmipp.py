@@ -178,8 +178,13 @@ class TestAlignmentConvert(BaseTest):
         # Xmipp metadata and check one more time.
         partSet2 = SetOfParticles(filename=partFn2)
         partSet2.copyInfo(partSet)
-        readSetOfParticles(mdFn, partSet2, is2D=is2D,
-                           inverseTransform=(not inverseTransform))
+        if is2D:
+            readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                               inverseTransform=(not inverseTransform))
+        else:
+            readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                               inverseTransform=not inverseTransform)
+            
         partSet2.write()         
         #TODO_rob: I do not know how to make an assert here
         #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
@@ -221,6 +226,27 @@ class TestAlignmentConvert(BaseTest):
                          is2D=True, inverseTransform=True,
                          printMatrix=True) 
         
+    def test_alignment3D(self):
+        """
+        0.71461016 0.63371837 -0.29619813         15 
+        -0.61309201 0.77128059 0.17101008         25 
+        0.33682409 0.059391174 0.93969262         35 
+                 0          0          0          1
+        """
+        mList = [[[ 0.71461016, 0.63371837, -0.29619813, 15], 
+                  [ -0.61309201, 0.77128059, 0.17101008, 25], 
+                  [ 0.33682409, 0.059391174, 0.93969262, 35], 
+                  [ 0,          0,           0,           1]],
+                 
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchAlignmentTest('alignment3D', mList, 
+                         is2D=False, inverseTransform=True,
+                         printMatrix=True)   
+              
     def test_rotOnly(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
@@ -296,6 +322,31 @@ class TestAlignmentConvert(BaseTest):
                                  is2D=True, inverseTransform=True,
                                  printMatrix=True)
 
+    def test_shiftOnly3D(self):
+        """ Check that a given alignment object,
+        the Xmipp metadata row is generated properly.
+        """
+        mList = [[[ 1.0, 0.0, 0.0, 32.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 16.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 8.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchAlignmentTest('alignShiftOnly3D', mList, 
+                                 is2D=False, inverseTransform=True,
+                                 printMatrix=True)
+        
     def test_shiftRot(self):
         """ Check that a given alignment object,
         the Xmipp metadata row is generated properly.
