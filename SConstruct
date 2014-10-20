@@ -536,12 +536,8 @@ def WorkingMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link
     context.Result(ret)
     return ret
 
-
 # TODO: maybe change and put the proper thing here, like if we are compiling with mpi.
-if not SCons.Script.Main.OptionsParser.values.help:
-    # Ha, see that? "...Main.OptionsParser.values.help" no less.
-    # That's the hack I had to do to see if we called with --help. Ugh scons.
-
+if not GetOption('help'):
     conf = Configure(env, {'WorkingMPI' : WorkingMPI}, 'config.tests', 'config.log')
 
     if conf.WorkingMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
