@@ -5,15 +5,18 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
+import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
@@ -741,7 +744,7 @@ public class SupervisedParticlePicker extends ParticlePicker
         
 
 	/** Return the number of particles imported */
-	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 
 		if (f == Format.Auto)
@@ -759,20 +762,18 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		importSize(path, f, scale);
-                File[] files = getCoordsFiles(path);
-        
-                boolean imported;
+                String file;
+                
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
                     resetMicrograph(m);
-                    imported = false;
-                    for(File fit: files)
-                        if(!imported && fit.getName().contains(m.getName()))
-                        {
-                            result += importParticlesFromFile(fit.getAbsolutePath(), f, m, scale, invertx, inverty);
-                            imported = true;
-                        }
+                    file = Filename.join(path, preffix + m.getName() + suffix);
+                    if(new File(file).exists())
+                        result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
 		}
+                
+                
+                        
 		return result;
 	}// function importParticlesFromFolder
         

@@ -2284,9 +2284,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	public Map<String, String> getKeyAssist()
+	public Map<Object, Object> getKeyAssist()
 	{
-		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 		map.put("Shift + Scroll Up/Ctrl + P", "Zoom in if images displayed");
 		map.put("Shift + Scroll Down/Ctrl + O", "Zoom out if images displayed");
 		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");

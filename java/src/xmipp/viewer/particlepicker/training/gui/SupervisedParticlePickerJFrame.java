@@ -180,12 +180,12 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     @Override
-    public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty) {
+    public String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty) {
         String result = "";
 
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
-            result = ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+            result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);
