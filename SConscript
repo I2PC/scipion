@@ -55,7 +55,7 @@ fftw = env.AddLibrary(
     tar='fftw-3.3.4.tgz',
     targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
-    default=False)
+    clean=[Dir('#software/tmp/fftw-3.3.4')])
 
 tcl = env.AddLibrary(
     'tcl',
@@ -179,18 +179,6 @@ addModule(
 django = addModule(
     'django',
     tar='Django-1.5.5.tgz')
-
-addModule(
-    'grappelli',
-    tar='django-grappelli-2.5.tgz',
-    flags=['--old-and-unmanageable'],
-    deps=[django])
-
-addModule(
-    'filebrowser',
-    tar='django-filebrowser-3.5.8.tgz',
-    flags=['--old-and-unmanageable'],
-    deps=[django])
 
 addModule(
     'paramiko',

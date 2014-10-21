@@ -155,17 +155,17 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
         valueOld = os.environ.get(var, '')
-        for libflags in flags:
-            i = 0  # so if flags is empty, we put it at the beginning too
-            for i in range(len(libflags)):
-                if libflags[i].startswith('%s=' % var):
-                    valueOld = flags.pop(i).split('=', 1)[1] + ':' + valueOld
+        i = 0  # so if flags is empty, we put it at the beginning too
+        for flag in flags:
+            for i in range(len(flag)):
+                if flag[i].startswith('%s=' % var):
+                    valueOld = flag.pop(i).split('=', 1)[1] + ':' + valueOld
                     break
-            libflags.insert(i, '%s=%s:%s' % (var, value, valueOld))
+            flag.insert(i, '%s=%s:%s' % (var, value, valueOld))
+
     if addPath:
         pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
         pathAppend('PATH', Dir('#software/bin').abspath)
-
 
     # Install everything in the appropriate place.
     for flag in flags:
@@ -196,7 +196,6 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
         SideEffect('dummy', tConfig[x])  # so it works fine in parallel builds
         Depends(tConfig[x], tUntar)
-
         make = env.Make(
             source=tConfig[x],
             target=targets[x],
@@ -223,7 +222,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     return toReturn
 
 
-def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, replace=False):
+def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, replace):
     context.Message('* Checking for MPI ... ')
 
     lastLIBS = context.env['LIBS']
@@ -281,7 +280,6 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     incs = incs or []
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
-#    installDir = installDir or None
     
     basedir = 'lib'
     fullname = prefix + name
@@ -319,15 +317,22 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         libpath.append(env['MPI_LIBDIR'])
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
-        conf = Configure(env, mpi_check={'CheckMPI': CheckMPI})
-        if not conf.CheckMPI(conf, env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], replace=True):
+        conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
+        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], True):
+            print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
             Exit(1)
-        conf.Finish()
-        
+        env = conf.Finish()
+        env.PrependENVPath('PATH', env['MPI_BINDIR'])
     
-    library = SharedLibrary(
-              join(basedir, fullname),
-              sources,
+    # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
+    env2 = Environment()
+    env2['ENV']['PATH'] = env['ENV']['PATH']
+
+    
+    #print env2.Dump()
+    library = env2.SharedLibrary(
+              target=join(basedir, fullname),
+              source=sources,
               CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
               LIBPATH=libpath,
               LIBS=libs,
@@ -337,20 +342,18 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
               )
     SideEffect('dummy', library)
 
-    #install = env.Install(prefix, library)
-    #alias = env.Alias(fullname, install)
     for previous in lastTarget:
         Depends(library, previous)
     
     if installDir:
         install = env.Install(installDir, library)
-        alias = env.Alias('install_%s' % name, install)
-        Depends(install, library)
+        SideEffect('dummy', install)
         lastTarget = install
-        Default(install)
     else:
         lastTarget = library
-        Default(library)
+    Default(lastTarget)
+    
+    Depends(lastTarget, deps)
 
     return lastTarget
 
@@ -675,7 +678,6 @@ def libraryTest(env, name, lang='c'):
     conf.Finish()
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
-
 
 
 def manualInstall(env, name, tar=None, buildDir=None, url=None,
