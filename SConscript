@@ -57,9 +57,9 @@ Depends(tiff, lastTarget)
 hdf5 = env.AddLibrary(
      'hdf5',
      tar='hdf5-1.8.10.tgz',
-     buildDir=['hdf5-1.8.10/src', 'hdf5-1.8.10/c++'],
+     buildDir=['hdf5-1.8.10', 'hdf5-1.8.10/c++'],
      configDir=['hdf5-1.8.10', 'hdf5-1.8.10'],
-     flags=[[''], ['--enable-cxx']],
+     flags=[['--enable-cxx'], ['--enable-cxx']],
      autoConfigTargets=['src/Makefile', 'c++/Makefile'],
      targets=[[File('#software/lib/libhdf5.so').abspath], [File('#software/lib/libhdf5_cpp.so').abspath]],
      clean=[Dir('#software/tmp/hdf5-1.8.10').abspath],
@@ -75,8 +75,10 @@ opencv = env.AddLibrary(
        default=False)
 Depends(opencv, lastTarget)
 
+BASIC_LIBS = ['fftw3', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
+
 # XMIPP SHARED LIBRARIES
-# XmippExternal
+# Xmipp External Libraries (bilib, condor, alglib)
 xmippExternal = env.AddPackageLibrary(
               'XmippExternal',
               tars=['external/bilib.tgz', 
@@ -92,7 +94,6 @@ xmippExternal = env.AddPackageLibrary(
                         'condor/*.cpp',
                         'alglib-3.8.0.cpp/src/*.cpp'],
               incs=['external/bilib' + s for s in ['', '/headers', '/types']],
-              prefix='xmipp',
               deps=tiff + hdf5 + lastTarget)
 
 xmippSqliteExt = env.AddPackageLibrary(
@@ -102,42 +103,80 @@ xmippSqliteExt = env.AddPackageLibrary(
                libs=['m'],
                deps=tiff + hdf5 + lastTarget)
 
-# XmippData
+# Data
 xmippData = env.AddPackageLibrary(
           'XmippData',
           dirs=['libraries/data'],
           patterns=['*.cpp'],
           incs=[Dir('.').path, Dir('libraries').path],
-          libs=['XmippExternal'],
+          libs=['XmippExternal'] + BASIC_LIBS,
           deps=xmippExternal + xmippSqliteExt)
 
-# XmippClassif
+# Classification
 xmippClassif = env.AddPackageLibrary(
              'XmippClassif',
              dirs=['libraries/classification'],
              patterns=['*.cpp'],
              incs=[Dir('.').path, Dir('libraries').path],
-             libs=['XmippExternal', 'XmippData'],
+             libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
              deps=xmippExternal + xmippSqliteExt + xmippData)
 
-# XmippDimred
+# Dimred
 xmippDimred = env.AddPackageLibrary(
             'XmippDimred',
             dirs=['libraries/dimred'],
             incs=[Dir('.').path, Dir('libraries').path],
-            libs=['XmippExternal', 'XmippData'],
+            libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
             deps=xmippExternal + xmippSqliteExt + xmippData)
 
-# XmippRecons
+# Reconstruction
 xmippRecons = env.AddPackageLibrary(
             'XmippRecons',
             dirs=['libraries/reconstruction'],
             patterns=['*.cpp'],
             incs=[Dir('.').path, Dir('libraries').path, Dir('libraries/reconstruction').path, Dir('external').path],
-            libs=['XmippExternal', 'XmippData', 'XmippClassif'],
+            libs=['XmippExternal', 'XmippData', 'XmippClassif'] + BASIC_LIBS,
             deps=xmippExternal + xmippSqliteExt + xmippData + xmippClassif)
-lastTarget = xmippRecons
 
+# Interface
+xmippInterface = env.AddPackageLibrary(
+               'XmippInterface',
+               dirs=['libraries/interface'],
+               patterns=['*.cpp'],
+               incs=[Dir('.').path, Dir('libraries').path, Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               libs=['XmippExternal', 'XmippData', 'pthread'],
+               deps=xmippExternal + xmippSqliteExt + xmippData)
+
+# Python binding
+xmippPyBinding = env.AddPackageLibrary(
+               'xmipp',
+               dirs=['libraries/bindings/python'],
+               patterns=['*.cpp'],
+               incs=[Dir('.').path, Dir('libraries').path, Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               libs=['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_LIBS,
+               deps=xmippExternal + xmippSqliteExt + xmippData + xmippRecons,
+               prefix='',
+               installDir=Dir('#software/lib').abspath)
+
+# Parallel
+xmippParallel = env.AddPackageLibrary(
+              'XmippParallel',
+              dirs=['libraries/parallel'],
+              patterns=['*.cpp'],
+              incs=[Dir('.').path, Dir('libraries').path],
+              libs=['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', 'pthread', (env['MPI_LIB'] or '')] + BASIC_LIBS,
+              deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal,
+              mpi=True)
+
+xmippJNI = env.AddPackageLibrary(
+         'XmippJNI',
+         dirs=['libraries/bindings/java'],
+         patterns=['*.cpp'],
+         incs=[Dir('.').path, Dir('libraries').path],
+         libs=['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_LIBS,
+         deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal)
+
+lastTarget = xmippParallel
 # XMIPP PROGRAMS
 # 
 
