@@ -123,6 +123,7 @@ DataSet(name='emx',  folder='emx',
         files={
                'alignment': 'alignment/Test1/images.mrc',
                'alignment3D': 'alignment/align_shift_rot_3d.mrcs',
+               'alignReconst': 'alignment/recons.mrcs',
                'alignRotOnly': 'alignment/align_rot_only.mrcs',
                'alignRotOnly3D': 'alignment/align_rot_only_3d.mrcs',
                'alignRotShift': 'alignment/align_rot_shift.mrcs',

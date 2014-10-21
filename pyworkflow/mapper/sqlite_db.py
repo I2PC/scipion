@@ -59,6 +59,13 @@ class SqliteDb():
             self.executeCommand = self.cursor.execute
         self.commit = self.connection.commit
         
+    @classmethod
+    def closeConnection(cls, dbName):
+        if dbName in cls.OPEN_CONNECTIONS:
+            connection = cls.OPEN_CONNECTIONS[dbName]
+            del cls.OPEN_CONNECTIONS[dbName]
+            connection.close()
+        
     def getDbName(self):
         return self._dbName
     
