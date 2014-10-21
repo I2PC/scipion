@@ -29,7 +29,7 @@ import json
 import shutil
 from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
-from pyworkflow.web.pages import settings
+from pyworkflow.web.pages import settings as django_settings
 from models import Document
 from forms import DocumentForm
 from views_base import base_form
@@ -71,7 +71,7 @@ def doUpload(request):
         newdoc.save()
     
         #Move the file to the new folder
-        src = os.path.join(settings.FILE_UPLOAD_TEMP_DIR, 'uploads', file_new.name)
+        src = os.path.join(django_settings.FILE_UPLOAD_TEMP_DIR, 'uploads', file_new.name)
         path = os.path.join(request.session['projectPath'],'Uploads')
         target = os.path.join(path, file_new.name)
         if os.path.exists(target):

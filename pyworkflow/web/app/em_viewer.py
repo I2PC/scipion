@@ -27,7 +27,7 @@
 import json
 from django.http import HttpResponse
 from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView
-
+from pyworkflow.web.pages import settings as django_settings
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -77,7 +77,7 @@ def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
     
-    return "url::/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
+    return "url::"+django_settings.ABSOLUTE_URL+"form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
@@ -102,12 +102,12 @@ def viewToUrl(request, view):
         
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
-        url = 'showj::' + url
+        url = 'showj::'+django_settings.ABSOLUTE_URL+ url
         
     # TEXT VIEWER
     elif isinstance(view, TextView):
         fn  = view.getFileList()[0]
-        url = "file::/file_viewer/?%s=%s" % (PATH, fn)
+        url = "file::"+django_settings.ABSOLUTE_URL+"file_viewer/?%s=%s" % (PATH, fn)
         
     # MESSAGE
     elif isinstance(view, MessageView):

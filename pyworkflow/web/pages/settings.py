@@ -36,14 +36,14 @@ DATABASES = {
 ALLOWED_HOSTS = []
 
 # Subdomain where Scipion is hosted or working
-ABSOLUTE_URL = 'examples'
+ABSOLUTE_URL = ''
 # ABSOLUTE_URL = '/examples'
 
-URL_REDIRECTS = (
+# URL_REDIRECTS = (
 #         (r'www\.example\.com/hello/$', 'http://hello.example.com/'),
 #         (r'www\.example2\.com/$', 'http://www.example.com/example2/'),
-        (r'asimov.cnb.csic.es/$', 'http://asimov.cnb.csic.es/%s/$' % ABSOLUTE_URL),
-    )
+#         (r'asimov.cnb.csic.es/$', 'http://asimov.cnb.csic.es/%s/$' % ABSOLUTE_URL),
+#     )
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -126,8 +126,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    'pyworkflow.web.app.middleware.UrlRedirectMiddleware',
+#     'pyworkflow.web.app.middleware.UrlRedirectMiddleware',
 )
 
 SESSION_ENGINE = (

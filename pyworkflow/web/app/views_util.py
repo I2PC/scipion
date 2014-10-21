@@ -34,7 +34,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFoun
 from django.core.servers.basehttp import FileWrapper
 
 from pyworkflow.em import emProtocolsDict
-from pyworkflow.web.pages import settings
+from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.utils import *
@@ -132,16 +132,16 @@ jsDict = {'jquery': 'jquery/jquery.js',
           }
 
 def getResourceIcon(icon):
-    return os.path.join(settings.MEDIA_URL, iconDict[icon])
+    return os.path.join(django_settings.MEDIA_URL, iconDict[icon])
 
 def getResourceLogo(logo):
-    return os.path.join(settings.MEDIA_URL, logo)
+    return os.path.join(django_settings.MEDIA_URL, logo)
 
 def getResourceCss(css):
-    return os.path.join(settings.STATIC_URL, "css/", cssDict[css])
+    return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
 
 def getResourceJs(js):
-    return os.path.join(settings.STATIC_URL, "js/", jsDict[js])
+    return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
 
 def loadProject(projectName):
     manager = Manager()
@@ -595,6 +595,6 @@ def savePlot(request, plot):
     name_img = 'image%s.png' % id(plot)
     fn = os.path.join(projectPath,'Tmp', name_img)
     plot.savefig(fn)
-    url_plot = "/get_image_plot/?image=" + fn
+    url_plot = django_settings.ABSOLUTE_URL+"get_image_plot/?image=" + fn
         
     return url_plot

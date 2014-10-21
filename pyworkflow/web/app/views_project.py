@@ -33,6 +33,7 @@ from pyworkflow.manager import Manager
 
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
+from pyworkflow.web.pages import settings as django_settings
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -52,7 +53,7 @@ def projects(request):
     
     context = base_grid(request, context)
     
-    return render_to_response('projects.html', context)
+    return render_to_response(django_settings.ABSOLUTE_URL+'projects.html', context)
 
 def create_project(request):
     manager = Manager()
@@ -136,7 +137,7 @@ def tree_prot_view(request):
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
-    return render_to_response('project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
+    return render_to_response(django_settings.ABSOLUTE_URL+'project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
     
 def run_table_graph(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
@@ -177,7 +178,7 @@ def run_table_graph(request):
                        'graphView': graphView, 
                        'selectedRuns' : selectedRuns}
             
-            return render_to_response('project_content/run_table_graph.html', context)
+            return render_to_response(django_settings.ABSOLUTE_URL+'project_content/run_table_graph.html', context)
         
         elif listNewElm:
             request.session['runs'] = runsNew
@@ -277,7 +278,7 @@ def project_content(request):
     
     context = base_flex(request, context)
     
-    return render_to_response('project_content/project_content.html', context)
+    return render_to_response(django_settings.ABSOLUTE_URL+'project_content/project_content.html', context)
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
@@ -354,7 +355,7 @@ def service_projects(request):
     
     context = base_grid(request, context)
     
-    return render_to_response('service_projects.html', context)
+    return render_to_response(django_settings.ABSOLUTE_URL+'service_projects.html', context)
 
 def check_project_id(request):
     result = 0

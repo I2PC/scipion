@@ -97,7 +97,6 @@ function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
 }
 
-
 function detectWebBrowser(){
 	/*
 	 * Function to detect the web browser used in the navigation.
