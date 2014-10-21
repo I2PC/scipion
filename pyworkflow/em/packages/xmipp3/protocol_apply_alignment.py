@@ -28,7 +28,7 @@ This sub-package contains wrapper around align2d Xmipp program
 """
 
 from pyworkflow.em import *  
-from convert import (createXmippInputImages, readSetOfParticles, locationToXmipp, 
+from convert import (readSetOfParticles, locationToXmipp, 
                      writeSetOfParticles)
 
        
