@@ -58,7 +58,6 @@ urlpatterns = patterns('',
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
     url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
 
-
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
     url(r'^protocol/$', 'app.views_protocol.protocol'),
