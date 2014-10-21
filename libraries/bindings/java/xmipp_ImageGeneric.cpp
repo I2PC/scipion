@@ -1100,6 +1100,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
          applyGeometry(LINEAR, Iaux, *I, transformM, IS_NOT_INV, wrap);
          *I=Iaux;
 
+
          delete matrixStrCopy;
      }
      XMIPP_JAVA_CATCH;
