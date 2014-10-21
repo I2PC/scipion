@@ -32,7 +32,7 @@ from pyworkflow.em import *
 import xmipp
 
 import xmipp3
-from convert import createXmippInputImages, readSetOfClasses2D
+from convert import writeSetOfParticles, readSetOfClasses2D
 from glob import glob
 
 
@@ -83,14 +83,16 @@ class KendersomBaseClassify(ProtClassify2D):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _prepareParams(self):
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputImages.get())
+        self.imgsFn = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep')  
+        
         if self.useMask:
             mask = self.Mask.get().getFileName()
         else:
             mask = None
             
         self._params = {'oroot': self._getExtraPath("kerdensom"),
-                        'imgsFn': imgsFn,
+                        'imgsFn': self.imgsFn,
                         'mask': mask,
                         'SomXdim': self.SomXdim.get(),
                         'SomYdim': self.SomYdim.get(),
@@ -116,6 +118,9 @@ class KendersomBaseClassify(ProtClassify2D):
 #        deleteFiles([self._getExtraPath("vectors.xmd"),self._getExtraPath("vectors.vec")], True)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputImages.get(),self.imgsFn) 
+        
     def createOutputStep(self):
         """ Store the kenserdom object 
         as result of the protocol.
