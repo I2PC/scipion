@@ -58,8 +58,9 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
     addParamsLine("[--scale <factor=1>]                      : Perfom Scaling. Factor 0.5 halves and 2 doubles");
     addParamsLine(" alias -s;");
-    addParamsLine("[--shift <x=0> <y=0> <z=0>]    : Shift by x, y and z");
-    addParamsLine("[--flip]                                : Flip images, only valid for 2D");
+    addParamsLine("[--shift <x=0> <y=0> <z=0>]               : Shift by x, y and z");
+    addParamsLine("[--flip]                                  : Flip images, only valid for 2D");
+    addParamsLine("[--matrix <...>]                 : Apply directly the matrix transformation");
     addParamsLine("== Other options ==");
     addParamsLine(" [--interp <interpolation_type=spline>] : Interpolation type to be used. ");
     addParamsLine("      where <interpolation_type>");
@@ -187,15 +188,48 @@ void ProgTransformGeometry::preProcess()
         A = A.inv();
 }
 
+/**
+ * Get an string representing a 4x4 transform matrix in the numpy repr (list of lists)
+ * [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+ * and fill a transform matrix
+ */
+void parseMatrix2D(Matrix2D<double> &M, const StringVector &values)
+{
+  M.resize(3, 3);
+  dMij(M, 0, 2) = 0;
+  dMij(M, 1, 2) = 0;
+  dMij(M, 2, 0) = 0;
+  dMij(M, 2, 1) = 0;
+  dMij(M, 2, 2) = 1;
+  dMij(M, 0, 0) = textToFloat(values[0]); // cosine
+  dMij(M, 0, 1) = textToFloat(values[1]); // sine
+  dMij(M, 1, 0) = textToFloat(values[4]); // -sine
+  dMij(M, 1, 1) = textToFloat(values[5]); // cosine
+  dMij(M, 0, 2) = textToFloat(values[3]); // shiftx;
+  dMij(M, 1, 2) = textToFloat(values[7]); // shifty;
+
+}
+
 void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
-    B.initIdentity(dim + 1);
+    if (checkParam("--matrix"))
+    {
+      // In this case we are directly reading the transformation matrix
+      // from the arguments passed
+      StringVector sv;
+      getListParam("--matrix", sv);
+      parseMatrix2D(T, sv);
+    }
+    else
+    {
+      B.initIdentity(dim + 1);
 
-    if (apply_geo)
-        geo2TransformationMatrix(rowOut, B);
+      if (apply_geo)
+          geo2TransformationMatrix(rowOut, B);
 
-    T = A * B;
+      T = A * B;
+    }
 
     if (checkParam("--write_matrix"))
         std::cerr << T << std::endl;
