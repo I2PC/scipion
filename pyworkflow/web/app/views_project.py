@@ -53,7 +53,7 @@ def projects(request):
     
     context = base_grid(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'projects.html', context)
+    return render_to_response('projects.html', context)
 
 def create_project(request):
     manager = Manager()
