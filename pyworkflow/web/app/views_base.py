@@ -25,29 +25,15 @@
 # **************************************************************************
 
 from views_util import getResourceCss, getResourceIcon, getResourceJs
-from pyworkflow.web.pages import settings as django_settings
+from pyworkflow.web.pages import settings
 
-def VARS_base(request, context):
+def base(request, context):
     from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
-
+    
     # Properties class
     messages = MessageWeb()
     colors = ColorWeb()
     icons = IconWeb()
-    
-    context_base = {
-                    'abs_url': django_settings.ABSOLUTE_URL, 
-                    #OTHER
-                    'msg': messages,
-                    'color': colors,
-                    'icon': icons
-                    }
-    
-    context.update(context_base)
-    return context
-    
-
-def base(request, context):
     
     context_base = {
                     #ICON
@@ -62,9 +48,12 @@ def base(request, context):
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
                     'utils': getResourceJs('utils'),
+                    #OTHER
+                    'msg': messages,
+                    'color': colors,
+                    'icon': icons
                     }
     
-    context = VARS_base(request, context)
     context.update(context_base)
     return context
 
@@ -165,6 +154,5 @@ def base_wiz(request, context):
                     'loading' : getResourceIcon('loading'),
                     }
     
-    context = VARS_base(request, context)
     context.update(context_base)
     return context

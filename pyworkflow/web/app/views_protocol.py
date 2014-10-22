@@ -168,7 +168,7 @@ def form(request):
     
     context = base_form(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'form/form.html', context)
+    return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
     from pyworkflow.em import Boolean, PointerParam
