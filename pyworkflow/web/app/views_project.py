@@ -90,12 +90,12 @@ def getNodeStateColor(node):
 def update_prot_tree(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    settings.setCurrentProtocolMenu(index)
-    settings.write()
+    project_settings.setCurrentProtocolMenu(index)
+    project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -104,13 +104,13 @@ def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
 
     if status == "True":
-        settings.graphView.set(True)
+        project_settings.graphView.set(True)
     else :
-        settings.graphView.set(False)
-    settings.write()
+        project_settings.graphView.set(False)
+    project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
 
@@ -120,12 +120,12 @@ def save_selection(request):
         
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         
         # Set the selected runs stored in BD    
-        settings.runSelection.set(mark)
+        project_settings.runSelection.set(mark)
         
-        settings.write()
+        project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -145,7 +145,7 @@ def run_table_graph(request):
     try:
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
         runs = request.session['runs']
@@ -168,10 +168,10 @@ def run_table_graph(request):
             request.session['runs'] = runsNew
             
             # Get the selected runs stored in BD    
-            selectedRuns = settings.runSelection
+            selectedRuns = project_settings.runSelection
     
             # Get the mode view (list or graph) stored in BD
-            graphView = settings.graphView.get()
+            graphView = project_settings.graphView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
@@ -227,26 +227,26 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")
     request.session['runs'] = runs
 
     # Get the selected runs stored in BD    
-    selectedRuns = settings.runSelection
+    selectedRuns = project_settings.runSelection
 
     # Get the mode view (list or graph) stored in BD
-    graphView = settings.graphView.get()
+    graphView = project_settings.graphView.get()
     
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in settings.protMenuList]
+    choices = [pm.text.get() for pm in project_settings.protMenuList]
 
     # get the choice current 
-    choiceSelected =  settings.protMenuList.getIndex()
+    choiceSelected =  project_settings.protMenuList.getIndex()
     
     # show the project name in the header.html
     projectNameHeader = 'Project '+ str(projectName)
