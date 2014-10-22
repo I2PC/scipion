@@ -58,7 +58,7 @@ class XmippDownsamplingWeb(XmippDownsampleWizard):
                        'params': params}
     
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_downsampling.html', context)
+            return render_to_response('wizards/wiz_downsampling.html', context)
 
 #===============================================================================
 # CTFS
@@ -81,7 +81,7 @@ class XmippCTFWeb(XmippCTFWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_ctf_downsampling.html', context)
+            return render_to_response('wizards/wiz_ctf_downsampling.html', context)
         
 #===============================================================================
 # MASKS
@@ -113,7 +113,7 @@ class XmippParticleMaskRadiusWeb(XmippParticleMaskRadiusWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_particle_mask_radius.html', context)    
+            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
 
 
 class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
@@ -142,7 +142,7 @@ class XmippParticleMaskRadiiWeb(XmippParticleMaskRadiiWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_particles_mask_radii.html', context)    
+            return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
 
 
 class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
@@ -171,7 +171,7 @@ class XmippVolumeMaskRadiusWeb(XmippVolumeMaskRadiusWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_volume_mask_radius.html', context)    
+            return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
 
 class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
     _environments = [WEB_DJANGO]
@@ -199,7 +199,7 @@ class XmippVolumeMaskRadiiWeb(XmippVolumeRadiiWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_volumes_mask_radii.html', context)    
+            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
 
     
 #===============================================================================
@@ -230,7 +230,7 @@ class XmippFilterParticlesWeb(XmippFilterParticlesWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_filter_particles.html', context)
+            return render_to_response('wizards/wiz_filter_particles.html', context)
 
 
 class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
@@ -257,7 +257,7 @@ class XmippFilterVolumesWeb(XmippFilterVolumesWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_filter_volumes.html', context)            
+            return render_to_response('wizards/wiz_filter_volumes.html', context)            
     
     
 class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
@@ -282,7 +282,7 @@ class XmippGaussianParticlesWeb(XmippGaussianParticlesWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_gaussian_particle.html', context)
+            return render_to_response('wizards/wiz_gaussian_particle.html', context)
     
 
 class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
@@ -307,5 +307,5 @@ class XmippGaussianVolumesWeb(XmippGaussianVolumesWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_gaussian_vol.html', context)     
+            return render_to_response('wizards/wiz_gaussian_vol.html', context)     
 
