@@ -62,10 +62,6 @@ def base(request, context):
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
                     'utils': getResourceJs('utils'),
-                    #OTHER
-                    'msg': messages,
-                    'color': colors,
-                    'icon': icons
                     }
     
     context = VARS_base(request, context)
