@@ -28,7 +28,6 @@ import os
 import json
 from views_util import loadProject, loadProtocolProject, parseText
 from django.http import HttpResponse
-from pyworkflow.web.pages import settings as django_settings
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']

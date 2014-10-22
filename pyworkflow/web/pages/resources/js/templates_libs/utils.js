@@ -133,6 +133,9 @@ function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
+	
+	URL = getSubDomainURL() + URL
+	
 	var popup_width = 600;
 	var popup_height = 500;
 	day = new Date();
@@ -149,6 +152,9 @@ function customPopup(URL, widthValue, heightValue) {
 	 * Launch a popup opening the URL passed by argument. 
 	 * The size of the popup is customized with the width and height chosen.
 	 */
+	
+	URL = getSubDomainURL() + URL
+	
 	day = new Date();
 	id = day.getTime();
 	eval("page"
@@ -537,4 +543,8 @@ function randomString(length, chars) {
     }
     
     return result;
+}
+
+function getSubDomainURL(){
+	return "/examples"
 }
