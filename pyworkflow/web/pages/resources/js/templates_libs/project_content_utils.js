@@ -980,7 +980,7 @@ function refreshRuns(mode){
 	$(function() {
 		var URL = getSubDomainURL() + '/run_table_graph/'
 		$.ajax({
-			url : URL,
+			url : '/run_table_graph/',
 			success : function(data) {
 				
 				if (typeof data == 'string' || data instanceof String){
