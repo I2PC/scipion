@@ -68,6 +68,7 @@ def base(request, context):
                     'icon': icons
                     }
     
+    context = VARS_base(request, context)
     context.update(context_base)
     return context
 
@@ -168,5 +169,6 @@ def base_wiz(request, context):
                     'loading' : getResourceIcon('loading'),
                     }
     
+    context = VARS_base(request, context)
     context.update(context_base)
     return context
