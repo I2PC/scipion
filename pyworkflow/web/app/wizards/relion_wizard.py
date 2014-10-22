@@ -67,7 +67,7 @@ class RelionPartMaskRadiusWeb(RelionPartMaskRadiusWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_particle_mask_radius.html', context)    
 
 
 
@@ -97,7 +97,7 @@ class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_volume_mask_radius.html', context)    
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_volume_mask_radius.html', context)    
 
 
 #===============================================================================
@@ -127,7 +127,7 @@ class RelionBandpassWeb(RelionBandpassWizard):
             
             context = wiz_base(request, context)
             
-            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_relion_bandpass.html', context)
 
 
     

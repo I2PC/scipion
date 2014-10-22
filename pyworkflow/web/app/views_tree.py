@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 
+from pyworkflow.web.pages import settings as django_settings
+
 #===============================================================================
 # PROTOCOL TREE
 #===============================================================================
@@ -96,7 +98,10 @@ def getProtChildrens(tree):
         html += '<li><span class="protocol">'
         if tree.icon != None:
             html += '<img src="/resources/'+ tree.icon +'"/>'
-        function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
+        if len(django_settings.ABSOLUTE_URL) > 0:
+            function = 'javascript:popup("'+django_settings.ABSOLUTE_URL+'form/?protocolClass='+ tree.protClass +'")'
+        else:
+            function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
         html += '<a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
     
@@ -104,7 +109,10 @@ def getProtChildrens(tree):
         html += '<li><span class="protocol_class">'
         if tree.icon != None:
             html += '<img src="/resources/'+ tree.icon +'"/>'
-        function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
+        if len(django_settings.ABSOLUTE_URL) > 0:
+            function = 'javascript:popup("'+ django_settings.ABSOLUTE_URL +'form/?protocolClass='+ tree.protRealClass +'")'
+        else:
+            function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
         html += '<a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
     

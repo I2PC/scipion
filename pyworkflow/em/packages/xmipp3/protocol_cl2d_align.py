@@ -23,15 +23,14 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import xmippToLocation,\
-    writeSetOfParticles, getImageLocation
 """
 This sub-package contains wrapper around align2d Xmipp program
 """
 
 from pyworkflow.em import *  
 
-from convert import createXmippInputImages, readSetOfParticles, locationToXmipp, matrixFromGeometry
+from convert import writeSetOfParticles, readSetOfParticles, getImageLocation, \
+    locationToXmipp, xmippToLocation, matrixFromGeometry
        
         
 class XmippProtCL2DAlign(ProtAlign2D):

@@ -30,6 +30,7 @@ from views_util import loadProject
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
+from pyworkflow.web.pages import settings as django_settings
 
 
 def data_content(request):        
@@ -52,7 +53,7 @@ def data_content(request):
     
     context = base_flex(request, context)
     
-    return render_to_response('data_content/data_content.html', context)
+    return render_to_response(django_settings.ABSOLUTE_URL+'data_content/data_content.html', context)
 
 
 def object_info(request):

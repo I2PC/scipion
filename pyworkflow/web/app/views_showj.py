@@ -28,7 +28,7 @@
 
 import os
 from django.http import HttpResponse
-from pyworkflow.web.pages import settings
+from pyworkflow.web.pages import settings as django_settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from pyworkflow.web.app.views_util import readDimensions, readImageVolume, getResourceJs, getResourceCss
@@ -353,7 +353,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                     sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS],
                     sj.CHANGES: inputParams[sj.CHANGES]})
         
-    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
+    return_page = django_settings.ABSOLUTE_URL+'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page
     
 
@@ -476,7 +476,7 @@ def create_context_astex(request, typeVolume, volPath):
     
     cleanPath(volLinkPath)
     createLink(volPath, volLinkPath)
-    volLink = os.path.join('/', settings.STATIC_ROOT, 'astex', 'tmp', linkName)
+    volLink = os.path.join('/', django_settings.STATIC_ROOT, 'astex', 'tmp', linkName)
     
     return {"volLink":volLink, 
             "jquery_ui_css": getResourceCss("jquery_ui")}

@@ -73,7 +73,7 @@ class SpiderProtMaskWeb(SpiderProtMaskWizard):
                        'params': params }
         
             context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_particle_mask_radius.html', context)    
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_particle_mask_radius.html', context)    
 
 
 class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
@@ -102,7 +102,7 @@ class SpiderParticlesMaskRadiiWeb(SpiderParticlesMaskRadiiWizard):
                        'params': params }
         
             context = base_wiz(request, context)
-            return render_to_response('wizards/wiz_particles_mask_radii.html', context)    
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_particles_mask_radii.html', context)    
 
 
 
@@ -129,7 +129,7 @@ class SpiderCustomMaskWeb(SpiderCustomMaskWizard):
         
             context = base_wiz(request, context)
             
-            return render_to_response('wizards/wiz_custom_mask_spider.html', context)    
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_custom_mask_spider.html', context)    
 
 
 #===============================================================================
@@ -161,7 +161,7 @@ class SpiderFilterParticlesWeb(SpiderFilterParticlesWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response('wizards/wiz_filter_spider.html', context)
+            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_filter_spider.html', context)
 
 
 #===============================================================================

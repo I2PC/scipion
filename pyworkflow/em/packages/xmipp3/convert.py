@@ -297,7 +297,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     index, filename = img.getLocation()
     fn = locationToXmipp(index, filename)
     imgRow.setValue(imgLabel, fn)
-    
+
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
         
@@ -516,7 +516,7 @@ def readSetOfVolumes(filename, volSet, **kwargs):
 
 
 def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
-    writeSetOfImages(volSet, filename, volumeToRow, blockName, **kwargs)    
+    writeSetOfImages(volSet, filename, volumeToRow, blockName, **kwargs)
     
     
 def mdToCTFModel(md, mic):    
@@ -1011,7 +1011,12 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    shifts = translation_from_matrix(matrix)
+    if inverseTransform:
+        from numpy.linalg import inv
+        matrix = inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
     return shifts, angles
 
@@ -1025,7 +1030,12 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     radAngles = -deg2rad(angles)
     
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
-    M[:3, 3] = shifts[:3]
+    if inverseTransform:
+        from numpy.linalg import inv
+        M[:3, 3] = -shifts[:3]
+        M = inv(M)
+    else:
+        M[:3, 3] = shifts[:3]
 
     return M
 
@@ -1085,10 +1095,10 @@ def alignmentToRow(alignment, alignmentRow,
         angle = angles[0] + angles[2]
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
     else:
+        alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-        alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
 
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 

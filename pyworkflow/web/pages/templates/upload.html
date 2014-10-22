@@ -86,7 +86,7 @@
 		<!-- FILE UPLOAD> -->
 			 <div id="tabs-1">
 	 			<div class="box">
-					<form id="uploadForm" action="/doUpload/" method="post" enctype="multipart/form-data">
+					<form id="uploadForm" action="{{abs_url}}/doUpload/" method="post" enctype="multipart/form-data">
 					{% csrf_token %}
 						<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 						<p>

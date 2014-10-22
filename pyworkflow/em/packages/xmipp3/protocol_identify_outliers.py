@@ -25,7 +25,7 @@
 # **************************************************************************
 #from pyworkflow.em.packages.xmipp3.convert import locationToXmipp,\
 #    writeSetOfVolumes
-from pyworkflow.em.packages.xmipp3.convert import locationToXmipp, createXmippInputImages
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp, writeSetOfParticles
 
 """
 This sub-package contains the protocol projection outliers
@@ -63,14 +63,15 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
                       label="Angular sampling",
                       help='In degrees. This sampling defines how fine the projection gallery from the volume is explored.')
          
-        form.addParallelSection(mpi=8)
+        form.addParallelSection(mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         # Projection matching
         self.fnAngles = self._getTmpPath('angles.xmd')
-#        self.images = locationToXmipp(*self.inputImages.get().getLocation())
-        self.images = createXmippInputImages(self, self.inputImages.get())
+        # Convert input images if necessary
+        self.images = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep')    
         
         self._insertFunctionStep("projMatchStep", locationToXmipp(*self.inputVolume.get().getLocation()), self.angularSampling.get(), self.symmetryGroup.get(),\
                                  self.images, self.fnAngles, self.Xdim)        
@@ -102,7 +103,11 @@ class XmippProtIdentifyOutliers(ProtClassify3D, ProjMatcher):
                                (self.fnOutputImages, fnAligned), numberOfMpi=1)
         self._insertRunJobStep("xmipp_metadata_utilities", "-i %s --operate sort zScoreResCov desc" % 
                                self.fnOutputImages, numberOfMpi=1)  
-    
+
+    #--------------------------- STEPS functions --------------------------------------------        
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputImages.get(),self.images)
+            
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []

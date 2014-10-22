@@ -29,7 +29,7 @@ This file implements CTF defocus groups using xmipp 3.1
 """
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
-from convert import createXmippInputImages, writeSetOfDefocusGroups
+from convert import writeSetOfParticles, writeSetOfDefocusGroups
 import xmipp
 from math import pi
 from pyworkflow.protocol.params import GE
@@ -71,20 +71,27 @@ class XmippProtCTFDefocusGroup(ProtProcessParticles):
         """
         #TODO: when aggregation functions are defined in Scipion set
         # this step can be avoid and the protocol can remove Xmipp dependencies
-        imgsFn          = createXmippInputImages(self, self.inputParticles.get())
+        
+        # Convert input images if necessary
+        self.imgsFn = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep') 
+        
         ctfGroupMaxDiff = self.ctfGroupMaxDiff.get()
         
         #verifyFiles = []
         self._insertFunctionStep('createOutputStep', imgsFn, ctfGroupMaxDiff)
     
-    #--------------------------- STEPS functions --------------------------------------------       
-    def createOutputStep(self, imgsFn, ctfGroupMaxDiff):
+    #--------------------------- STEPS functions -------------------------------------------- 
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+              
+    def createOutputStep(self, ctfGroupMaxDiff):
         """ Create defocus groups and generate the output set """
         fnScipion = self._getPath('defocus_groups.sqlite')
         fnXmipp   = self._getPath('defocus_groups.xmd')
         setOfDefocus = SetOfDefocusGroup(filename=fnScipion)
         df = DefocusGroup()
-        mdImages    = xmipp.MetaData(imgsFn)
+        mdImages    = xmipp.MetaData(self.imgsFn)
         if not mdImages.containsLabel(xmipp.MDL_CTF_SAMPLING_RATE):
             mdImages.setValueCol(xmipp.MDL_CTF_SAMPLING_RATE, self.inputParticles.get().getSamplingRate())
         

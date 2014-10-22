@@ -34,8 +34,9 @@ from glob import glob
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
 from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-from convert import createXmippInputImages
+from convert import writeSetOfParticles
 import xmipp
+from pyworkflow.protocol.params import NumericRangeParam
 
 NMA_ALIGNMENT_WAV = 0
 NMA_ALIGNMENT_PROJ = 1    
@@ -99,23 +100,27 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         atomsFn = self.inputPdb.get().getFileName()
         modesFn = self.inputModes.get().getFileName()
         # Convert input images if necessary
-        imgFn = createXmippInputImages(self, self.inputParticles.get())
+        self.imgsFn = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep') 
+        
         localModesFn = self._getBasePath(modesFn)
         
         self._insertFunctionStep('copyFilesStep', atomsFn, modesFn)
         self._insertFunctionStep('selectModesStep', localModesFn)
         
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
-            self._insertFunctionStep("performNmaStep", imgFn,
-                                     self._getBasePath(atomsFn), localModesFn)
-            self._insertFunctionStep("extractDeformationsStep", imgFn)
+            self._insertFunctionStep("performNmaStep", self._getBasePath(atomsFn), localModesFn)
+            self._insertFunctionStep("extractDeformationsStep")
         else:            
             self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
             
         self._insertFunctionStep('createOutputStep')
         
         
-    #--------------------------- STEPS functions --------------------------------------------    
+    #--------------------------- STEPS functions --------------------------------------------   
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+         
     def copyFilesStep(self, atomsFn, modesFn):
         """ Copy the input files to the local working dir. """
         for fn in [modesFn, atomsFn]:
@@ -142,11 +147,12 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     def copyDeformationsStep(self, defFn):
         copyFile(defFn, self._getExtraPath(basename(defFn)))
         
-    def performNmaStep(self, imgFn, atomsFn, modesFn):
+    def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
         discreteAngularSampling = self.discreteAngularSampling.get()
         trustRegionScale = self.trustRegionScale.get()
         odir = self._getTmpPath()
+        imgFn = self.imgsFn
         
         args = "-i %(imgFn)s --pdb %(atomsFn)s --modes %(modesFn)s --sampling_rate %(sampling)f "
         args += "--discrAngStep %(discreteAngularSampling)f --odir %(odir)s --centerPDB "
@@ -162,8 +168,8 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         self.runJob("xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
         cleanPath(self._getPath('nmaTodo.xmd'))
     
-    def extractDeformationsStep(self, imgFn):
-        md = xmipp.MetaData(imgFn)
+    def extractDeformationsStep(self):
+        md = xmipp.MetaData(self.imgsFn)
         deformations = md.getColumnValues(xmipp.MDL_NMA)
         defFn = self._getExtraPath("deformations.txt")
         fhDef = open(defFn, 'w')
