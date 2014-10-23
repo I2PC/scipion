@@ -983,19 +983,18 @@ function refreshRuns(mode){
 		$.ajax({
 			async: true,
 			url : URL,
+			datatype: text,
 			success : function(data) {
 				
 				console.log("data: "+data)
 				
 				if (typeof data == 'string' || data instanceof String){
 					
-					if (data == 'stop' ||
-							data == '<html><body><p>stop</p></body></html>'){
+					if (data == 'stop'){
 						window.clearTimeout(updatetimer);
 						// stop the script
 					}
-					else if(data == 'ok' || 
-							data == '<html><body><p>ok</p></body></html>'){
+					else if(data == 'ok'){
 						// no changes
 					}
 					else {
