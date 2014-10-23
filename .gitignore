@@ -76,3 +76,6 @@ pyworkflow/resources/uploads/
 static/
 software/em/
 data
+
+# Configuration for servers
+pyworkflow/web/resources/js/templates_libs/config.js
