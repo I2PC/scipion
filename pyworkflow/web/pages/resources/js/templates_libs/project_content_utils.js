@@ -977,13 +977,15 @@ function refreshRuns(mode){
 	 * Method to update the run list/graph
 	 */
 	
-	var URL = getSubDomainURL() + '/run_table_graph/'	
+	var URL = getSubDomainURL() + '/run_table_graph/'
 	
 	$(function() {
 		$.ajax({
-			async: false,
+			async: true,
 			url : URL,
 			success : function(data) {
+				
+				console.log("data: "+data)
 				
 				if (typeof data == 'string' || data instanceof String){
 					
@@ -1010,7 +1012,10 @@ function refreshRuns(mode){
 
 					}
 				}
-			}
+			},
+		error: function (){
+			console.log("Error in the refresh")
+		}
 		});
   	});
 	
