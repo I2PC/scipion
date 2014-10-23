@@ -254,7 +254,7 @@ class ProjectDataView(tk.Frame):
 
     def _createDataItem(self, canvas, node, y):
         if node.object is None:
-            nodeText = "None"
+            nodeText = "Project"
         else:
             label = getObjectLabel(node.object, self.project.mapper)
             nodeText = (label[:25]+'...') if len(label) > 25 else label
@@ -278,8 +278,8 @@ class ProjectDataView(tk.Frame):
         self._updateDataGraph()
         
     def _updateDataGraph(self): 
-        self._dataGraph = self.windows.project.getSourceGraph(True)   
         lt = LevelTree(self._dataGraph)
+        self._dataCanvas.clear()
         lt.setCanvas(self._dataCanvas)
         lt.paint(self._createDataItem)
         self._dataCanvas.updateScrollRegion()
@@ -319,8 +319,10 @@ class ProjectDataView(tk.Frame):
              then only case when False is from _automaticRefreshData where the
              refresh time is doubled each time to avoid refreshing too often.
         """        
-        self._updateDataGraph()
+        print "In refreshData"
+        self._dataGraph = self.windows.project.getSourceGraph(True)   
         self._updateDataTree()
+        self._updateDataGraph()
  
         if initRefreshCounter:
             self.__autoRefreshCounter = 3 # start by 3 secs
