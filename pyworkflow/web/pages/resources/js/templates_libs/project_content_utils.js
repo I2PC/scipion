@@ -983,7 +983,7 @@ function refreshRuns(mode){
 		$.ajax({
 			async: true,
 			url : URL,
-			datatype: "text",
+//			datatype: "text",
 			success : function(data) {
 				
 				console.log("data: "+data)
