@@ -977,9 +977,11 @@ function refreshRuns(mode){
 	 * Method to update the run list/graph
 	 */
 	
+	var URL = getSubDomainURL() + '/run_table_graph/'	
+	
 	$(function() {
-		var URL = getSubDomainURL() + '/run_table_graph/'
 		$.ajax({
+			async: false,
 			url : URL,
 			success : function(data) {
 				
