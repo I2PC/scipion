@@ -42,6 +42,7 @@ lastTarget = env.get('lastTarget')
 CYGWIN = env['PLATFORM'] == 'cygwin'
 MACOSX = env['PLATFORM'] == 'darwin'
 MINGW = env['PLATFORM'] == 'win32'
+SCONSCRIPT_PATH = Dir('.').abspath
 
 # XMIPP ADDITIONAL EXTERNAL LIBRARIES
 # Tiff
@@ -158,7 +159,16 @@ xmippPyBinding = env.AddPackageLibrary(
                prefix='',
                installDir=Dir('#software/lib').abspath)
 
-# Parallel
+# Java binding
+xmippJNI = env.AddPackageLibrary(
+         'XmippJNI',
+         dirs=['libraries/bindings/java'],
+         patterns=['*.cpp'],
+         incs=[Dir('.').path, Dir('libraries').path],
+         libs=['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_LIBS,
+         deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal)
+
+# Parallelization
 xmippParallel = env.AddPackageLibrary(
               'XmippParallel',
               dirs=['libraries/parallel'],
@@ -168,17 +178,104 @@ xmippParallel = env.AddPackageLibrary(
               deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal,
               mpi=True)
 
-xmippJNI = env.AddPackageLibrary(
-         'XmippJNI',
-         dirs=['libraries/bindings/java'],
-         patterns=['*.cpp'],
-         incs=[Dir('.').path, Dir('libraries').path],
-         libs=['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_LIBS,
-         deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal)
+# Java libraries
 
-lastTarget = xmippParallel
+######################################
+# VERY UGLY. CHANGE IT WHEN POSSIBLE #
+######################################
+# --- From here...
+javaEnumDict = javaEnumDict = {
+            'ImageWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
+            'CastWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'CW_'],
+            'MDLabel': [File('libraries/data/metadata_label.h').abspath, 'MDL_'],
+            'XmippError': [File('libraries/data/xmipp_error.h').abspath, 'ERR_']
+            }
+
+
+def WriteJavaEnum(class_name, header_file, pattern, log):
+    java_file = File(join(SCONSCRIPT_PATH, 'java/src/xmipp/jni/%s.java' % class_name)).abspath
+    env.Depends(java_file, header_file)
+    f = open(header_file)
+    fOut = open(java_file, 'w+')
+    counter = 0;
+    last_label_pattern = pattern + 'LAST_LABEL'
+    fOut.write('package xmipp.jni; \n')
+    fOut.write('public class ' + class_name + ' {\n')
+
+    for line in f:
+        l = line.strip();
+        if l.startswith(pattern):
+            if '///' in l:
+                l, comment = l.split('///')
+            else:
+                comment = ''
+            if l.startswith(last_label_pattern):
+                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
+            if (l.find("=") == -1):
+                l = l.replace(",", " = %d;" % counter)
+                counter = counter + 1;
+            else:
+                l = l.replace(",", ";")
+
+            fOut.write("   public static final int %s ///%s\n" % (l, comment))
+    fOut.write("}\n")
+    fOut.close()
+    f.close()
+    # Write log file
+    if log:
+        from datetime import datetime
+        d = str(datetime.now())
+        #d = date.today();
+        log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
+
+
+def ExtractEnumFromHeader(source, target, env):
+    log = open(str(target[0]), 'w+')
+    for (class_name, list) in javaEnumDict.iteritems():
+        WriteJavaEnum(class_name, list[0], list[1], log)
+
+    log.close()
+    return None
+
+
+env.Append(JAVACLASSPATH='java/lib')
+env['JAVABUILDPATH'] = 'java/build'
+env['JAVADIR'] = 'java'
+env['ENV']['LANG'] = 'en_GB.UTF-8'
+env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+# Set -g debug options if debugging
+if env['debug'] == True:
+    env['JAVAC'] = 'javac -g'
+
+javaBuild = Execute(Mkdir('java/build'))
+
+# Update enums from c++ headers, if they don't exist, generate it
+javaLog = open(File('java/build/javaLog').abspath, 'w+')
+for (class_name, class_list) in javaEnumDict.iteritems():
+    java_file = "java/src/xmipp/jni/%s.java" % class_name
+    WriteJavaEnum(class_name, class_list[0], class_list[1], javaLog)
+
+javaEnums = env.Alias('javaEnums', 
+                      env.Command('libraries/bindings/java/src/xmipp/jni/enums.changelog',
+                      [File('libraries/data/xmipp_image_base.h').abspath, File('libraries/data/metadata_label.h').abspath],
+                      ExtractEnumFromHeader))
+
+env.SymLink('java/lib/ij.jar', 'external/imagej')
+
+env.Default(javaEnums)
+# --- ...to here
+
+
+
+#xmippUtils = AddJavaLibrary(
+#           'XmippUtils',
+#           dirs=['java/src/xmipp/utils'],
+#           libs=,
+#           )
+
 # XMIPP PROGRAMS
 # 
+lastTarget = xmippParallel
 
 Default(lastTarget)
 Return('lastTarget')
