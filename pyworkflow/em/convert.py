@@ -48,19 +48,6 @@ class ImageHandler(object):
         self._imgClass = xmipp.Image
         self._fixVolumeFileName = fixVolumeFileName
 
-    def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
-        """ convert format of stack file. Output/input format is
-        specified by outFormat/inFormat. If outFormat/inFomat=None then
-        there will be inferred from extension
-        """
-        #get input dim
-        (x,y,z,n) = xmipp.getImageSize(inputFn)
-        #Create empty output stack for efficiency
-        xmipp.createEmptyFile(outputFn,x,y,z,n)
-        # handle image formats
-        for i in range(1, n+1):
-            self.convert((i, inputFn), (i, outputFn))
-
     def _convertToLocation(self, location):
         """ Get a location in a tuple format (index, filename).
         location could be:
@@ -93,6 +80,19 @@ class ImageHandler(object):
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
         
+    def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
+        """ convert format of stack file. Output/input format is
+        specified by outFormat/inFormat. If outFormat/inFomat=None then
+        there will be inferred from extension
+        """
+        #get input dim
+        (x,y,z,n) = xmipp.getImageSize(inputFn)
+        #Create empty output stack for efficiency
+        xmipp.createEmptyFile(outputFn,x,y,z,n)
+        # handle image formats
+        for i in range(1, n+1):
+            self.convert((i, inputFn), (i, outputFn))
+        
     def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
@@ -116,4 +116,11 @@ class ImageHandler(object):
         (outputObj can be tuple, str or Image subclass). """
         location = self._convertToLocation(outputObj)
         image.write(location)
-
+        
+    def compareData(self, locationObj1, locationObj2, tolerance=0.0001):
+        """ Compare if two locations have the same binary data.
+        """
+        loc1 = self._convertToLocation(locationObj1)
+        loc2 = self._convertToLocation(locationObj2)
+        
+        return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)
