@@ -23,13 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for ResMap
-"""
+
 from bibtex import _bibtex # Load bibtex dict with references
 _logo = "resmap_logo.png"
 _references = ['kucukelbir2014']
 
 from protocol_resmap import ProtResMap
 from viewer_resmap import ResMapViewer
+from wizard import ResmapPrewhitenWizard
 

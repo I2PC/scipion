@@ -88,7 +88,7 @@ class ProtRelionBase(EMProtocol):
         myDict = {
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
-                  'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
+                  'data_scipion': self.extraIter + 'data_scipion.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
@@ -566,9 +566,17 @@ class ProtRelionBase(EMProtocol):
         return cites
     
     def _summary(self):
+        self._initialize()
+        iterMsg = 'Iteration %d' % self._lastIter()
+        if self.hasAttribute('numberOfIterations'):
+            iterMsg += '/%d' % self.numberOfIterations.get()
+        summary = [iterMsg]
+        
         if self.doContinue:
-            return self._summaryContinue()
-        return self._summaryNormal()
+            summary += self._summaryContinue()
+        summary += self._summaryNormal()
+        
+        return summary
 
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 
@@ -624,18 +632,18 @@ class ProtRelionBase(EMProtocol):
                                     self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
-    def _getIterSortedData(self, it):
+    def _getIterData(self, it):
         """ Sort the it??.data.star file by the maximum likelihood. """
-        data_sorted = self._getFileName('data_sorted_xmipp', iter=it)
+        data_sqlite = self._getFileName('data_scipion', iter=it)
         
-        if not exists(data_sorted):
+        if not exists(data_sqlite):
             data = self._getFileName('data', iter=it)
             # TODO: convert the sorted data directly to sqlite
             # and just displayed sorted by LL
-            from convert import sortImagesByLL
-            sortImagesByLL(data, data_sorted)
+            from convert import writeSqliteIterData
+            writeSqliteIterData(data, data_sqlite)
         
-        return data_sorted
+        return data_sqlite
     
     def _getIterAngularDist(self, it):
         """ Return the .star file with the classes angular distribution
@@ -644,68 +652,15 @@ class ProtRelionBase(EMProtocol):
         data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
         
         if not exists(data_angularDist):
-            self._writeIterAngularDist(it)
+            from convert import writeIterAngularDist
+            data_star = self._getFileName('data', iter=it)
+            writeIterAngularDist(data_star, data_angularDist, 
+                                 self.numberOfClasses.get(), self.PREFIXES)
  
         return data_angularDist
     
-    def _writeIterAngularDist(self, it):
-        """ Write the angular distribution. Should be overriden in subclasses. """
-        addRelionLabels()
-        
-        data_star = self._getFileName('data', iter=it)
-        md = xmipp.MetaData(data_star)
-        data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
-        
-        refsList = range(1, self.numberOfClasses.get()+1) 
-        print "refsList: ", refsList
-        for ref3d in refsList:
-            for prefix in self.PREFIXES:
-                mdGroup = xmipp.MetaData()
-                mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF, ref3d))
-                mdDist = xmipp.MetaData()
-                mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
-                                          [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
-                                          xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
-                mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
-                blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
-                print "Writing angular distribution to: ", blockName + data_angularDist
-                mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)  
-    
     def _splitInCTFGroups(self, imgStar):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
-        addRelionLabels(replace=True)
-        
-        groups = self.numberOfGroups.get()
-        md = xmipp.MetaData(imgStar)
-        defocus = [md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) for objId in md]
-        
-        minDef = min(defocus)
-        maxDef = max(defocus)
-        
-        increment = (maxDef - minDef) / groups
-        counter = 1
-        part = 1
-        md.sort(xmipp.MDL_CTF_DEFOCUSU)
-        
-        for objId in md:
-            partDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
-            currDef = minDef + increment
-            
-            if partDef <= currDef:
-                part = part + 1
-                md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
-            else:
-                if part < 100:
-                    increment = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) - minDef
-                    part = part + 1
-                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
-                else:
-                    part = 1
-                    minDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
-                    counter = counter + 1
-                    increment = (maxDef - minDef) / (groups - counter)
-                    md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
-        md.write(imgStar)
-        restoreXmippLabels()
-    
-    
+        from convert import splitInCTFGroups
+        splitInCTFGroups(imgStar, self.numberOfGroups.get())
+

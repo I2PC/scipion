@@ -337,6 +337,8 @@ class ProtImportVolumes(ProtImport):
         dst = self._getPath(basename(volumePath))            
         createLink(volumePath, dst)
         vol = Volume()
+        if dst.endswith('.mrc'):
+            dst += ':mrc'
         vol.setFileName(dst)
         vol.setSamplingRate(self.samplingRate.get())
         return vol

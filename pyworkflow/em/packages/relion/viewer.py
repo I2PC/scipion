@@ -23,10 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement the wrappers around xmipp_showj
-visualization program.
-"""
+
 import os
 
 from pyworkflow.utils.path import cleanPath
@@ -39,7 +36,7 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
-from convert import addRelionLabels, addRelionLabelsToEnviron
+from convert import addRelionLabels, addRelionLabelsToEnviron, restoreXmippLabels
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
@@ -57,7 +54,11 @@ CLASSES_SEL = 1
 
     
 class RelionViewer(ProtocolViewer):
-    """ Class to visualize Relion protocols """
+    """ This protocol serve to analyze the results of Relion runs.
+    (for protocols classify 2d/3d and 3d auto-refine)
+    The visualization tools follow the recommendations of Relion 1.3 tutorial:
+    http://www2.mrc-lmb.cam.ac.uk/groups/scheres/relion13_tutorial.pdf
+    """
     _targets = [ProtRelionClassify2D, ProtRelionClassify3D, ProtRelionRefine3D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
@@ -97,31 +98,30 @@ Examples:
                       help="Write the iteration list to visualize.")
 
         changesLabel = 'Changes in Offset and Angles'
+        
+        group = form.addGroup('Particles')
         if self.protocol.IS_CLASSIFY:
-            form.addParam('showImagesInClasses', BooleanParam, default=True,
-                          label='Images assigned to each Class',
+            group.addParam('showImagesInClasses', BooleanParam, default=True,
+                          label='Particles assigned to each Class', important=True,
                           help='Display the classes and the images associated.')
             changesLabel = 'Changes in Offset, Angles and Classes'
+        else:
+            group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
+                           label='Particles angular assignment')
         
-        form.addParam('showLL', BooleanParam, label="Show maximum model probability?", default=False, 
-                      help='Max likelihood per image may be used to delete images with smaller value.'
-                           'The higher, the better. Consider remove particles with low values.')      
-        form.addParam('showPMax', BooleanParam, default=True, 
-                      label="Show average PMax?", 
-                      help='Average (per class) of the maximum value\n of normalized probability function')      
-        form.addParam('showChanges', BooleanParam, default=True,
-                      label=changesLabel,
-                      help='Visualize changes in orientation, offset and\n number images assigned to each class')
-
+#         form.addParam('showLL', BooleanParam, label="Show maximum model probability?", default=False, 
+#                       help='Max likelihood per image may be used to delete images with smaller value.'
+#                            'The higher, the better. Consider remove particles with low values.')
          
         if self.protocol.IS_3D:
-            group = form.addGroup('3D analysis')
+            group = form.addGroup('3D')
             
             if self.protocol.IS_CLASSIFY:
-                group.addParam('showClasses3D', EnumParam, choices=['all', 'selection'], default=CLASSES_ALL,
-                              display=EnumParam.DISPLAY_LIST,
-                              label='CLASS 3D to visualize',
-                              help='')
+                group.addParam('showClasses3D', EnumParam, default=CLASSES_ALL,
+                               choices=['all', 'selection'], 
+                               display=EnumParam.DISPLAY_LIST,
+                               label='CLASS 3D to visualize',
+                               help='')
                 group.addParam('class3DSelection', NumericRangeParam, default='1',
                               condition='showClasses3D == %d' % CLASSES_SEL,
                               label='Classes list',
@@ -132,19 +132,20 @@ Examples:
                               help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-                          display=EnumParam.DISPLAY_LIST, default=VOLUME_SLICES,
+                          default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
                           label='Display volume with',
                           help='*slices*: display volumes as 2D slices along z axis.\n'
                                '*chimera*: display volumes as surface with Chimera.')
             group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-                          display=EnumParam.DISPLAY_LIST, default=ANGDIST_2DPLOT,
+                          default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
                           label='Display angular distribution',
                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                                '*chimera*: display angular distribution using Chimera with red spheres.') 
             group.addParam('spheresScale', IntParam, default=-1, 
                           expertLevel=LEVEL_ADVANCED,
-                          label='',
+                          label='Spheres size',
                           help='')
+            group = form.addGroup('Resolution')
             group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
                           label='Display SSNR plots?',
                           help='Display signal to noise ratio plots (SSNR) ')
@@ -154,7 +155,19 @@ Examples:
             group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
                           expertLevel=LEVEL_ADVANCED,
                           label='Threshold in resolution plots',
-                          help='')                                      
+                          help='')
+            
+        #form.addSection('Star files')
+        
+        
+        form.addSection('Overall')      
+        form.addParam('showPMax', BooleanParam, default=True, 
+                      label="Show average PMax?", 
+                      help='Average (per class) of the maximum value\n of normalized probability function')      
+        form.addParam('showChanges', BooleanParam, default=True,
+                      label=changesLabel,
+                      help='Visualize changes in orientation, offset and\n number images assigned to each class')
+                                              
         
     def _getVisualizeDict(self):
         self._load()
@@ -175,15 +188,15 @@ Examples:
         if self.lastIter is None:
             return ['There are not iterations completed.'] 
     
-    def createDataView(self, filename, extraParams=''):
-        return DataView(filename, env=self._env)
+    def createDataView(self, filename, viewParams={}):
+        return DataView(filename, env=self._env, viewParams=viewParams)
         
-    def createScipionView(self, filename, extraParams=''):
+    def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
         ViewClass = ClassesView if self.protocol.IS_2D else Classes3DView
         return ViewClass(self._project.getName(), 
                           self.protocol.strId(), filename, other=inputParticlesId,
-                          env=self._env)
+                          env=self._env, viewParams=viewParams)
 
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
@@ -246,13 +259,13 @@ Examples:
         a 'classes' block and a 'class00000?_images' block per class.
         If the new metadata was already written, it is just shown.
         """
-        output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
+        #output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
         views = []
         
         for it in self._iterations:
             fn = self.protocol._getIterClasses(it)
             #should provide sqlite instead of metadata
-            v = self.createScipionView(fn, output)
+            v = self.createScipionView(fn)#, output)
             views.append(v)
         
         return views
@@ -265,13 +278,13 @@ Examples:
         addRelionLabels()
         views = []
         for it in self._iterations:
-            fn = self.protocol._getIterSortedData(it)
-            md = xmipp.MetaData(fn)
-            xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-            xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-            xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
-            views.append(xplotter)
-            views.append(self.createDataView(fn))
+            fn = self.protocol._getIterData(it)
+            #md = xmipp.MetaData(fn)
+            #xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
+            #xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
+            #xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
+            #views.append(xplotter)
+            views.append(self.createScipionView(fn))#, viewParams={'sortby': ''}))
             
         return views
 
@@ -519,7 +532,7 @@ Examples:
         gridsize = self._getGridSize(n)
         
         xmipp.activateMathExtensions()
-        addRelionLabels()
+        addRelionLabels(replace=True, extended=True)
         
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
 
@@ -538,7 +551,8 @@ Examples:
                 if threshold < self.maxFrc:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
                 a.grid(True)
-            
+        
+        restoreXmippLabels()
         return [xplotter]
         
 
