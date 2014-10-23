@@ -543,6 +543,3 @@ function randomString(length, chars) {
     return result;
 }
 
-function getSubDomainURL(){
-	return "/examples"
-}

@@ -42,7 +42,7 @@ def VARS_base(request, context):
                     'color': colors,
                     'icon': icons,
                     #JS
-                    'utils': getResourceJs('utils'),
+                    'config': getResourceJs('config'),
                     }
     
     context.update(context_base)
@@ -63,6 +63,8 @@ def base(request, context):
                     #JS
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
+                    #JS
+                    'utils': getResourceJs('utils'),
                     }
     
     context = VARS_base(request, context)
