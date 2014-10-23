@@ -111,8 +111,12 @@ class ProjectDataView(tk.Frame):
         self.settings = windows.getSettings()
         self.showGraph = self.settings.graphView.get()
         self.style = ttk.Style()
+        
+        self.root.bind("<F5>", self.refreshData)
+        self.__autoRefresh = None
+        self.__autoRefreshCounter = 3 # start by 3 secs  
 
-        self._dataGraph = windows.project.getSourceGraph()
+        self._dataGraph = windows.project.getSourceGraph(True)
 
         c = self._createContent()
         
@@ -153,18 +157,22 @@ class ProjectDataView(tk.Frame):
         many object are from each type and the hierarchy.
         """
         self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
-        tree = Tree(parent, show='tree', style='W.Treeview')
-        tree.column('#0', minwidth=300)
-        tree.tag_configure('protocol', image=self.getImage('python_file.gif'))
-        tree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
+        self.dataTree = Tree(parent, show='tree', style='W.Treeview')
+        self.dataTree.column('#0', minwidth=300)
+        self.dataTree.tag_configure('protocol', image=self.getImage('python_file.gif'))
+        self.dataTree.tag_configure('protocol_base', image=self.getImage('class_obj.gif'))
         f = tkFont.Font(family='helvetica', size='10', weight='bold')
-        tree.tag_configure('non-empty', font=f)
-        tree.grid(row=0, column=0, sticky='news')
-        # Populate the tree
-        self.protTreeItems = {}
+        self.dataTree.tag_configure('non-empty', font=f)
+        self.dataTree.grid(row=0, column=0, sticky='news')
+                        
+        # Program automatic refresh
+        self.dataTree.after(3000, self._automaticRefreshData)
         
-        classesGraph = Graph()
+        self._updateDataTree()
         
+        
+    def _updateDataTree(self):
+            
         def createClassNode(classObj):
             """ Add the object class to hierarchy and 
             any needed subclass. """
@@ -185,13 +193,16 @@ class ProjectDataView(tk.Frame):
                 
             return classNode
             
+        classesGraph = Graph()
+        
+        self.dataTree.clear()
         for node in self._dataGraph.getNodes():
             if node.object:
                 classNode = createClassNode(node.object.getClass())
                 classNode.count += 1
         
-        populateTree(tree, classesGraph.getRootNodes())
-        return tree
+        populateTree(self.dataTree, classesGraph.getRootNodes())
+
     
     def _fillRightPane(self, parent):
         """
@@ -258,16 +269,20 @@ class ProjectDataView(tk.Frame):
         """ This will be the upper part of the right panel.
         It will contains the Data Graph with their relations. 
         """
-        canvas = Canvas(parent, width=600, height=500)
-        canvas.grid(row=0, column=0, sticky='nsew')
-        self._dataCanvas = canvas
+        self._dataCanvas = Canvas(parent, width=600, height=500)
+        self._dataCanvas.grid(row=0, column=0, sticky='nsew')
+        self._dataCanvas.onClickCallback = self._onClick
+        self._dataCanvas.onDoubleClickCallback = self._onDoubleClick
+        self._dataCanvas.onRightClickCallback = self._onRightClick
+       
+        self._updateDataGraph()
+        
+    def _updateDataGraph(self): 
+        self._dataGraph = self.windows.project.getSourceGraph(True)   
         lt = LevelTree(self._dataGraph)
-        lt.setCanvas(canvas)
+        lt.setCanvas(self._dataCanvas)
         lt.paint(self._createDataItem)
-        canvas.updateScrollRegion()
-        canvas.onClickCallback = self._onClick
-        canvas.onDoubleClickCallback = self._onDoubleClick
-        canvas.onRightClickCallback = self._onRightClick
+        self._dataCanvas.updateScrollRegion()
         
     def _selectObject(self, obj):
         self._selected = obj
@@ -296,7 +311,32 @@ class ProjectDataView(tk.Frame):
         """Open the Edit GUI Form given an instance"""
         EditObjectDialog(self, Message.TITLE_EDIT_OBJECT, self._selected, self.project.mapper)
 
-
+    def refreshData(self, e=None, initRefreshCounter=True):
+        """ Refresh the status of displayed data.
+         Params:
+            e: Tk event input
+            initRefreshCounter: if True the refresh counter will be set to 3 secs
+             then only case when False is from _automaticRefreshData where the
+             refresh time is doubled each time to avoid refreshing too often.
+        """        
+        self._updateDataGraph()
+        self._updateDataTree()
+ 
+        if initRefreshCounter:
+            self.__autoRefreshCounter = 3 # start by 3 secs
+            if self.__autoRefresh:
+                self.dataTree.after_cancel(self.__autoRefresh)
+                self.__autoRefresh = self.dataTree.after(self.__autoRefreshCounter*1000, self._automaticRefreshData)
+         
+    def _automaticRefreshData(self, e=None):
+        """ Schedule automatic refresh increasing the time between refreshes. """
+        self.refreshData(initRefreshCounter=False)
+        secs = self.__autoRefreshCounter
+        # double the number of seconds up to 30 min
+        self.__autoRefreshCounter = min(2*secs, 1800)
+        self.__autoRefresh = self.dataTree.after(secs*1000, self._automaticRefreshData)
+                
+                
 class DataTextBox(RoundedTextBox):
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         RoundedTextBox.__init__(self, canvas, text, x, y, bgColor, textColor)
