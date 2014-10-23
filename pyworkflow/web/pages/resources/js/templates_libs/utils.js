@@ -544,5 +544,5 @@ function randomString(length, chars) {
 }
 
 function getSubDomainURL(){
-	return "/examples"
+	return ""
 }
