@@ -381,6 +381,254 @@ enum MDLabel
     MDL_ZSCORE_SNR2, ///< Z Score (double)
     MDL_ZSIZE, ///< Z size (int)
 
+    /** RELION labels */
+    RLN_AREA_ID, ///< ID for the area (or field of view). If one does not use (tilt) series, area would be the same as micrograph...
+    RLN_AREA_NAME, ///< Name for the area (or field of view). If one does not use (tilt) series, area would be the same as micrograph...
+    RLN_COMMENT, // The RLN_COMMENT is handled specially as well
+
+    RLN_CTF_BFACTOR, ///< B-factor
+    RLN_CTF_SCALEFACTOR, ///< linear scale-factor
+    RLN_CTF_SAMPLING_RATE, ///< Sampling rate
+    RLN_CTF_VOLTAGE, ///< Microscope voltage (kV)
+    RLN_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
+    RLN_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
+    RLN_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
+    RLN_CTF_CS, ///< Spherical aberration
+    RLN_CTF_CA, ///< Chromatic aberration
+    RLN_CTF_DETECTOR_PIXEL_SIZE, ///< Pixel size for detector as used in CTF-determination
+    RLN_CTF_ENERGY_LOSS, ///< Energy loss
+    RLN_CTF_FOM, ///< ctffind3 FOM (CC) for quality of CTF-fit
+    RLN_CTF_IMAGE, ///< name of an image describing the CTF model
+    RLN_CTF_LENS_STABILITY, ///< Lens stability
+    RLN_CTF_MAGNIFICATION, ///< Magnification used for CTF-determination
+    RLN_CTF_CONVERGENCE_CONE, ///< Convergence cone
+    RLN_CTF_LONGITUDINAL_DISPLACEMENT, ///< Longitudinal displacement
+    RLN_CTF_TRANSVERSAL_DISPLACEMENT, ///< Transversal displacemente
+    RLN_CTF_Q0, ///< Amplitude contrast
+    RLN_CTF_K, ///< CTF gain
+    RLN_CTF_VALUE, ///< CTF value
+
+    RLN_IMAGE_NAME,
+    RLN_IMAGE_RECONSTRUCT_NAME,
+    RLN_IMAGE_ID,
+    RLN_IMAGE_ENABLED,
+    RLN_IMAGE_DATATYPE,
+    RLN_IMAGE_DIMENSIONALITY,
+    RLN_IMAGE_BEAMTILT_X,
+    RLN_IMAGE_BEAMTILT_Y,
+    RLN_IMAGE_BEAMTILT_GROUP,
+    RLN_IMAGE_COORD_X,
+    RLN_IMAGE_COORD_Y,
+    RLN_IMAGE_COORD_Z,
+    RLN_IMAGE_FRAME_NR,
+    RLN_IMAGE_MAGNIFICATION_CORRECTION,
+    RLN_IMAGE_NORM_CORRECTION,
+    RLN_IMAGE_SAMPLINGRATE,
+    RLN_IMAGE_SAMPLINGRATE_X,
+    RLN_IMAGE_SAMPLINGRATE_Y,
+    RLN_IMAGE_SAMPLINGRATE_Z,
+    RLN_IMAGE_SIZE,
+    RLN_IMAGE_SIZEX,
+    RLN_IMAGE_SIZEY,
+    RLN_IMAGE_SIZEZ,
+    RLN_IMAGE_STATS_MIN,
+    RLN_IMAGE_STATS_MAX,
+    RLN_IMAGE_STATS_AVG,
+    RLN_IMAGE_STATS_STDDEV,
+    RLN_IMAGE_STATS_SKEW,
+    RLN_IMAGE_STATS_KURT,
+    RLN_IMAGE_WEIGHT,
+
+    RLN_MATRIX_1_1,
+    RLN_MATRIX_1_2,
+    RLN_MATRIX_1_3,
+    RLN_MATRIX_2_1,
+    RLN_MATRIX_2_2,
+    RLN_MATRIX_2_3,
+    RLN_MATRIX_3_1,
+    RLN_MATRIX_3_2,
+    RLN_MATRIX_3_3,
+
+    RLN_MICROGRAPH_ID,
+    RLN_MICROGRAPH_NAME,
+    RLN_MICROGRAPH_TILT_ANGLE,
+    RLN_MICROGRAPH_TILT_AXIS_DIRECTION,
+    RLN_MICROGRAPH_TILT_AXIS_OUTOFPLANE,
+
+    RLN_MLMODEL_ACCURACY_ROT,
+    RLN_MLMODEL_ACCURACY_TRANS,
+    RLN_MLMODEL_AVE_PMAX,
+    RLN_MLMODEL_CURRENT_RESOLUTION,
+    RLN_MLMODEL_CURRENT_SIZE,
+    RLN_MLMODEL_DATA_VS_PRIOR_REF,
+    RLN_MLMODEL_DIMENSIONALITY,
+    RLN_MLMODEL_DIMENSIONALITY_DATA,
+    RLN_MLMODEL_DIFF2_HALVES_REF,
+    RLN_MLMODEL_FSC_HALVES_REF,
+    RLN_MLMODEL_GROUP_NAME,
+    RLN_MLMODEL_GROUP_NO,
+    RLN_MLMODEL_GROUP_NR_PARTICLES,
+    RLN_MLMODEL_GROUP_SCALE_CORRECTION,
+    RLN_MLMODEL_INTERPOLATOR,
+    RLN_MLMODEL_LL,
+    RLN_MLMODEL_MINIMUM_RADIUS_NN_INTERPOLATION,
+    RLN_MLMODEL_NORM_CORRECTION_AVG,
+    RLN_MLMODEL_NR_CLASSES,
+    RLN_MLMODEL_NR_GROUPS,
+    RLN_MLMODEL_ORIGINAL_SIZE,
+    RLN_MLMODEL_ORIENTABILITY_CONTRIBUTION,
+    RLN_MLMODEL_PADDING_FACTOR,
+    RLN_MLMODEL_PDF_CLASS,
+    RLN_MLMODEL_PRIOR_OFFX_CLASS,
+    RLN_MLMODEL_PRIOR_OFFY_CLASS,
+    RLN_MLMODEL_PDF_ORIENT,
+    RLN_MLMODEL_PIXEL_SIZE,
+    RLN_MLMODEL_POWER_REF,
+    RLN_MLMODEL_PRIOR_MODE,
+    RLN_MLMODEL_SIGMA_OFFSET,
+    RLN_MLMODEL_SIGMA_ROT,
+    RLN_MLMODEL_SIGMA_TILT,
+    RLN_MLMODEL_SIGMA_PSI,
+    RLN_MLMODEL_REF_IMAGE,
+    RLN_MLMODEL_SIGMA2_NOISE,
+    RLN_MLMODEL_SIGMA2_REF,
+    RLN_MLMODEL_SSNR_REF,
+    RLN_MLMODEL_TAU2_FUDGE_FACTOR,
+    RLN_MLMODEL_TAU2_REF,
+
+    RLN_OPTIMISER_ACCURACY_ROT,
+    RLN_OPTIMISER_ACCURACY_TRANS,
+    RLN_OPTIMISER_ADAPTIVE_FRACTION,
+    RLN_OPTIMISER_ADAPTIVE_OVERSAMPLING,
+    RLN_OPTIMISER_AUTO_LOCAL_HP_ORDER,
+    RLN_OPTIMISER_AVAILABLE_MEMORY,
+    RLN_OPTIMISER_BEST_RESOL_THUS_FAR,
+    RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
+    RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
+    RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES,
+    RLN_OPTIMISER_COARSE_SIZE,
+    RLN_OPTIMISER_DATA_ARE_CTF_PHASE_FLIPPED,
+    RLN_OPTIMISER_DATA_STARFILE,
+    RLN_OPTIMISER_DO_AUTO_REFINE,
+    RLN_OPTIMISER_DO_ONLY_FLIP_CTF_PHASES,
+    RLN_OPTIMISER_DO_CORRECT_CTF,
+    RLN_OPTIMISER_DO_CORRECT_MAGNIFICATION,
+    RLN_OPTIMISER_DO_CORRECT_NORM,
+    RLN_OPTIMISER_DO_CORRECT_SCALE,
+    RLN_OPTIMISER_DO_REALIGN_MOVIES,
+    RLN_OPTIMISER_DO_MAP,
+    RLN_OPTIMISER_DO_SOLVENT_FLATTEN,
+    RLN_OPTIMISER_DO_SKIP_ALIGN,
+    RLN_OPTIMISER_DO_SKIP_ROTATE,
+    RLN_OPTIMISER_DO_SPLIT_RANDOM_HALVES,
+    RLN_OPTIMISER_DO_ZERO_MASK,
+    RLN_OPTIMISER_FIX_SIGMA_NOISE,
+    RLN_OPTIMISER_FIX_SIGMA_OFFSET,
+    RLN_OPTIMISER_FIX_TAU,
+    RLN_OPTIMISER_HAS_CONVERGED,
+    RLN_OPTIMISER_HAS_HIGH_FSC_AT_LIMIT,
+    RLN_OPTIMISER_HAS_LARGE_INCR_SIZE_ITER_AGO,
+    RLN_OPTIMISER_HIGHRES_LIMIT_EXP,
+    RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK,
+    RLN_OPTIMISER_INCR_SIZE,
+    RLN_OPTIMISER_ITERATION_NO,
+    RLN_OPTIMISER_LOWRES_JOIN_RANDOM_HALVES,
+    RLN_OPTIMISER_MAGNIFICATION_RANGE,
+    RLN_OPTIMISER_MAGNIFICATION_STEP,
+    RLN_OPTIMISER_MAX_COARSE_SIZE,
+    RLN_OPTIMISER_MAX_NR_POOL,
+    RLN_OPTIMISER_MODEL_STARFILE,
+    RLN_OPTIMISER_MODEL_STARFILE2,
+    RLN_OPTIMISER_NR_ITERATIONS,
+    RLN_OPTIMISER_NR_ITER_WO_RESOL_GAIN,
+    RLN_OPTIMISER_NR_ITER_WO_HIDDEN_VAR_CHANGES,
+    RLN_OPTIMISER_OUTPUT_ROOTNAME,
+    RLN_OPTIMISER_PARTICLE_DIAMETER,
+    RLN_OPTIMISER_RADIUS_MASK_3D_MAP,
+    RLN_OPTIMISER_RADIUS_MASK_EXP_PARTICLES,
+    RLN_OPTIMISER_RANDOM_SEED,
+    RLN_OPTIMISER_REFS_ARE_CTF_CORRECTED,
+    RLN_OPTIMISER_SAMPLING_STARFILE,
+    RLN_OPTIMISER_SMALLEST_CHANGES_OPT_CLASSES,
+    RLN_OPTIMISER_SMALLEST_CHANGES_OPT_OFFSETS,
+    RLN_OPTIMISER_SMALLEST_CHANGES_OPT_ORIENTS,
+    RLN_OPTIMISER_SOLVENT_MASK_NAME,
+    RLN_OPTIMISER_SOLVENT_MASK2_NAME,
+    RLN_OPTIMISER_TAU_SPECTRUM_NAME,
+    RLN_OPTIMISER_USE_TOO_COARSE_SAMPLING,
+    RLN_OPTIMISER_WIDTH_MASK_EDGE,
+
+    RLN_ORIENT_FLIP,
+    RLN_ORIENT_ID,
+    RLN_ORIENT_ORIGIN_X,
+    RLN_ORIENT_ORIGIN_X_PRIOR,
+    RLN_ORIENT_ORIGIN_Y,
+    RLN_ORIENT_ORIGIN_Y_PRIOR,
+    RLN_ORIENT_ORIGIN_Z,
+    RLN_ORIENT_ORIGIN_Z_PRIOR,
+    RLN_ORIENT_ROT,
+    RLN_ORIENT_ROT_PRIOR,
+    RLN_ORIENT_TILT,
+    RLN_ORIENT_TILT_PRIOR,
+    RLN_ORIENT_PSI,
+    RLN_ORIENT_PSI_PRIOR,
+
+    RLN_PARTICLE_AUTOPICK_FOM,
+    RLN_PARTICLE_CLASS,
+    RLN_PARTICLE_DLL,
+    RLN_PARTICLE_ID,
+    RLN_PARTICLE_FOM,
+    RLN_PARTICLE_KL_DIVERGENCE,
+    RLN_PARTICLE_RANDOM_SUBSET,
+    RLN_PARTICLE_NAME,
+    RLN_PARTICLE_ORI_NAME,
+    RLN_PARTICLE_NR_SIGNIFICANT_SAMPLES,
+    RLN_PARTICLE_NR_FRAMES,
+    RLN_PARTICLE_PMAX,
+
+    RLN_POSTPROCESS_BFACTOR,
+    RLN_POSTPROCESS_FINAL_RESOLUTION,
+    RLN_POSTPROCESS_FSC_TRUE,
+    RLN_POSTPROCESS_FSC_MASKED,
+    RLN_POSTPROCESS_FSC_UNMASKED,
+    RLN_POSTPROCESS_FSC_RANDOM_MASKED,
+    RLN_POSTPROCESS_GUINIER_FIT_CORRELATION,
+    RLN_POSTPROCESS_GUINIER_FIT_INTERCEPT,
+    RLN_POSTPROCESS_GUINIER_FIT_SLOPE,
+    RLN_POSTPROCESS_GUINIER_VALUE_IN,
+    RLN_POSTPROCESS_GUINIER_VALUE_INVMTF,
+    RLN_POSTPROCESS_GUINIER_VALUE_WEIGHTED,
+    RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED,
+    RLN_POSTPROCESS_GUINIER_VALUE_INTERCEPT,
+    RLN_POSTPROCESS_GUINIER_RESOL_SQUARED,
+    RLN_POSTPROCESS_MTF_VALUE, ///< Detector MTF value
+
+    RLN_SAMPLING_IS_3D,
+    RLN_SAMPLING_IS_3D_TRANS,
+    RLN_SAMPLING_HEALPIX_ORDER,
+    RLN_SAMPLING_LIMIT_TILT,
+    RLN_SAMPLING_OFFSET_RANGE,
+    RLN_SAMPLING_OFFSET_STEP,
+    RLN_SAMPLING_PERTURB,
+    RLN_SAMPLING_PERTURBATION_FACTOR,
+    RLN_SAMPLING_PRIOR_MODE,
+    RLN_SAMPLING_PSI_STEP,
+    RLN_SAMPLING_SIGMA_ROT,
+    RLN_SAMPLING_SIGMA_TILT,
+    RLN_SAMPLING_SIGMA_PSI,
+    RLN_SAMPLING_SYMMETRY,
+
+    RLN_SELECTED,
+    RLN_SELECT_PARTICLES_ZSCORE,
+    RLN_SORTED_IDX,
+    RLN_PERFRAME_CUMULATIVE_WEIGHT,
+    RLN_PERFRAME_RELATIVE_WEIGHT,
+
+    RLN_RESOLUTION,
+    RLN_RESOLUTION_ANGSTROM,
+    RLN_RESOLUTION_INVPIXEL,
+    RLN_SPECTRAL_IDX,
+
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
 
@@ -1210,6 +1458,249 @@ private:
         MDL::addLabelAlias(MDL_Z, "Z"); //3.0
         MDL::addLabelAlias(MDL_ZSCORE, "Zscore"); //3.0
         MDL::addLabelAlias(MDL_ZSIZE, "Zsize"); //3.0
+
+
+        /*Relion labels */
+        MDL::addLabel(RLN_AREA_ID, LABEL_SIZET, "rlnAreaId");
+        MDL::addLabel(RLN_AREA_NAME, LABEL_STRING, "rlnAreaName");
+
+        MDL::addLabel(RLN_CTF_BFACTOR, LABEL_DOUBLE, "rlnBfactor");
+        MDL::addLabel(RLN_CTF_SCALEFACTOR, LABEL_DOUBLE, "rlnCtfScalefactor");
+        MDL::addLabel(RLN_CTF_VOLTAGE, LABEL_DOUBLE, "rlnVoltage");
+        MDL::addLabel(RLN_CTF_DEFOCUSU, LABEL_DOUBLE, "rlnDefocusU");
+        MDL::addLabel(RLN_CTF_DEFOCUSV, LABEL_DOUBLE, "rlnDefocusV");
+        MDL::addLabel(RLN_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "rlnDefocusAngle");
+        MDL::addLabel(RLN_CTF_CS, LABEL_DOUBLE, "rlnSphericalAberration");
+        MDL::addLabel(RLN_CTF_CA, LABEL_DOUBLE, "rlnChromaticAberration");
+        MDL::addLabel(RLN_CTF_DETECTOR_PIXEL_SIZE, LABEL_DOUBLE, "rlnDetectorPixelSize");
+        MDL::addLabel(RLN_CTF_ENERGY_LOSS, LABEL_DOUBLE, "rlnEnergyLoss");
+        MDL::addLabel(RLN_CTF_FOM, LABEL_DOUBLE, "rlnCtfFigureOfMerit");
+        MDL::addLabel(RLN_CTF_IMAGE, LABEL_STRING, "rlnCtfImage");
+        MDL::addLabel(RLN_CTF_LENS_STABILITY, LABEL_DOUBLE, "rlnLensStability");
+        MDL::addLabel(RLN_CTF_MAGNIFICATION, LABEL_DOUBLE, "rlnMagnification");
+        MDL::addLabel(RLN_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "rlnConvergenceCone");
+        MDL::addLabel(RLN_CTF_LONGITUDINAL_DISPLACEMENT, LABEL_DOUBLE, "rlnLongitudinalDisplacement");
+        MDL::addLabel(RLN_CTF_TRANSVERSAL_DISPLACEMENT, LABEL_DOUBLE, "rlnTransversalDisplacement");
+        MDL::addLabel(RLN_CTF_Q0, LABEL_DOUBLE, "rlnAmplitudeContrast");
+        MDL::addLabel(RLN_CTF_VALUE, LABEL_DOUBLE, "rlnCtfValue");
+
+        MDL::addLabel(RLN_IMAGE_NAME, LABEL_STRING, "rlnImageName");
+        MDL::addLabel(RLN_IMAGE_RECONSTRUCT_NAME, LABEL_STRING, "rlnReconstructImageName");
+        MDL::addLabel(RLN_IMAGE_ID, LABEL_SIZET, "rlnImageId");
+        MDL::addLabel(RLN_IMAGE_ENABLED, LABEL_BOOL, "rlnEnabled");
+        MDL::addLabel(RLN_IMAGE_DATATYPE, LABEL_INT, "rlnDataType");
+        MDL::addLabel(RLN_IMAGE_DIMENSIONALITY, LABEL_INT, "rlnDataDimensionality");
+        MDL::addLabel(RLN_IMAGE_BEAMTILT_X, LABEL_DOUBLE, "rlnBeamTiltX");
+        MDL::addLabel(RLN_IMAGE_BEAMTILT_Y, LABEL_DOUBLE, "rlnBeamTiltY");
+        MDL::addLabel(RLN_IMAGE_BEAMTILT_GROUP, LABEL_STRING, "rlnBeamTiltGroupName");
+        MDL::addLabel(RLN_IMAGE_COORD_X, LABEL_DOUBLE, "rlnCoordinateX");
+        MDL::addLabel(RLN_IMAGE_COORD_Y, LABEL_DOUBLE, "rlnCoordinateY");
+        MDL::addLabel(RLN_IMAGE_COORD_Z, LABEL_DOUBLE, "rlnCoordinateZ");
+        MDL::addLabel(RLN_IMAGE_FRAME_NR, LABEL_INT, "rlnMovieFrameNumber");
+        MDL::addLabel(RLN_IMAGE_NORM_CORRECTION, LABEL_DOUBLE, "rlnNormCorrection");
+        MDL::addLabel(RLN_IMAGE_MAGNIFICATION_CORRECTION, LABEL_DOUBLE, "rlnMagnificationCorrection");
+        MDL::addLabel(RLN_IMAGE_SAMPLINGRATE, LABEL_DOUBLE, "rlnSamplingRate");
+        MDL::addLabel(RLN_IMAGE_SAMPLINGRATE_X, LABEL_DOUBLE, "rlnSamplingRateX");
+        MDL::addLabel(RLN_IMAGE_SAMPLINGRATE_Y, LABEL_DOUBLE, "rlnSamplingRateY");
+        MDL::addLabel(RLN_IMAGE_SAMPLINGRATE_Z, LABEL_DOUBLE, "rlnSamplingRateZ");
+        MDL::addLabel(RLN_IMAGE_SIZE, LABEL_INT, "rlnImageSize");
+        MDL::addLabel(RLN_IMAGE_SIZEX, LABEL_INT, "rlnImageSizeX");
+        MDL::addLabel(RLN_IMAGE_SIZEY, LABEL_INT, "rlnImageSizeY");
+        MDL::addLabel(RLN_IMAGE_SIZEZ, LABEL_INT, "rlnImageSizeZ");
+        MDL::addLabel(RLN_IMAGE_STATS_MIN, LABEL_DOUBLE, "rlnMinimumValue");
+        MDL::addLabel(RLN_IMAGE_STATS_MAX, LABEL_DOUBLE, "rlnMaximumValue");
+        MDL::addLabel(RLN_IMAGE_STATS_AVG, LABEL_DOUBLE, "rlnAverageValue");
+        MDL::addLabel(RLN_IMAGE_STATS_STDDEV, LABEL_DOUBLE, "rlnStandardDeviationValue");
+        MDL::addLabel(RLN_IMAGE_STATS_SKEW, LABEL_DOUBLE, "rlnSkewnessValue");
+        MDL::addLabel(RLN_IMAGE_STATS_KURT, LABEL_DOUBLE, "rlnKurtosisExcessValue");
+        MDL::addLabel(RLN_IMAGE_WEIGHT, LABEL_DOUBLE, "rlnImageWeight");
+
+        MDL::addLabel(RLN_MATRIX_1_1, LABEL_DOUBLE, "rlnMatrix_1_1");
+        MDL::addLabel(RLN_MATRIX_1_2, LABEL_DOUBLE, "rlnMatrix_1_2");
+        MDL::addLabel(RLN_MATRIX_1_3, LABEL_DOUBLE, "rlnMatrix_1_3");
+        MDL::addLabel(RLN_MATRIX_2_1, LABEL_DOUBLE, "rlnMatrix_2_1");
+        MDL::addLabel(RLN_MATRIX_2_2, LABEL_DOUBLE, "rlnMatrix_2_2");
+        MDL::addLabel(RLN_MATRIX_2_3, LABEL_DOUBLE, "rlnMatrix_2_3");
+        MDL::addLabel(RLN_MATRIX_3_1, LABEL_DOUBLE, "rlnMatrix_3_1");
+        MDL::addLabel(RLN_MATRIX_3_2, LABEL_DOUBLE, "rlnMatrix_3_2");
+        MDL::addLabel(RLN_MATRIX_3_3, LABEL_DOUBLE, "rlnMatrix_3_3");
+
+        MDL::addLabel(RLN_MICROGRAPH_ID, LABEL_SIZET, "rlnMicrographId");
+        MDL::addLabel(RLN_MICROGRAPH_NAME, LABEL_STRING, "rlnMicrographName");
+        MDL::addLabel(RLN_MICROGRAPH_TILT_ANGLE, LABEL_DOUBLE, "rlnMicrographTiltAngle");
+        MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_DIRECTION, LABEL_DOUBLE, "rlnMicrographTiltAxisDirection");
+        MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_OUTOFPLANE, LABEL_DOUBLE, "rlnMicrographTiltAxisOutOfPlane");
+
+        MDL::addLabel(RLN_MLMODEL_ACCURACY_ROT, LABEL_DOUBLE, "rlnAccuracyRotations");
+        MDL::addLabel(RLN_MLMODEL_ACCURACY_TRANS, LABEL_DOUBLE, "rlnAccuracyTranslations");
+        MDL::addLabel(RLN_MLMODEL_AVE_PMAX, LABEL_DOUBLE, "rlnAveragePmax");
+        MDL::addLabel(RLN_MLMODEL_CURRENT_RESOLUTION, LABEL_DOUBLE, "rlnCurrentResolution");
+        MDL::addLabel(RLN_MLMODEL_CURRENT_SIZE, LABEL_INT, "rlnCurrentImageSize");
+        MDL::addLabel(RLN_MLMODEL_DATA_VS_PRIOR_REF, LABEL_DOUBLE, "rlnSsnrMap");
+        MDL::addLabel(RLN_MLMODEL_DIMENSIONALITY, LABEL_INT, "rlnReferenceDimensionality");
+        MDL::addLabel(RLN_MLMODEL_DIMENSIONALITY_DATA, LABEL_INT, "rlnDataDimensionality");
+        MDL::addLabel(RLN_MLMODEL_DIFF2_HALVES_REF, LABEL_DOUBLE, "rlnDiff2RandomHalves");
+        MDL::addLabel(RLN_MLMODEL_FSC_HALVES_REF, LABEL_DOUBLE, "rlnGoldStandardFsc");
+        MDL::addLabel(RLN_MLMODEL_GROUP_NAME, LABEL_STRING, "rlnGroupName");
+        MDL::addLabel(RLN_MLMODEL_GROUP_NO, LABEL_SIZET, "rlnGroupNumber");
+        MDL::addLabel(RLN_MLMODEL_GROUP_NR_PARTICLES, LABEL_SIZET, "rlnGroupNrParticles");
+        MDL::addLabel(RLN_MLMODEL_GROUP_SCALE_CORRECTION, LABEL_DOUBLE, "rlnGroupScaleCorrection");
+        MDL::addLabel(RLN_MLMODEL_INTERPOLATOR, LABEL_INT, "rlnFourierSpaceInterpolator");
+        MDL::addLabel(RLN_MLMODEL_LL, LABEL_DOUBLE, "rlnLogLikelihood");
+        MDL::addLabel(RLN_MLMODEL_MINIMUM_RADIUS_NN_INTERPOLATION,  LABEL_INT, "rlnMinRadiusNnInterpolation");
+        MDL::addLabel(RLN_MLMODEL_NORM_CORRECTION_AVG, LABEL_DOUBLE, "rlnNormCorrectionAverage");
+        MDL::addLabel(RLN_MLMODEL_NR_CLASSES, LABEL_INT, "rlnNrClasses");
+        MDL::addLabel(RLN_MLMODEL_NR_GROUPS, LABEL_INT, "rlnNrGroups");
+        MDL::addLabel(RLN_MLMODEL_ORIENTABILITY_CONTRIBUTION, LABEL_DOUBLE, "rlnSpectralOrientabilityContribution");
+        MDL::addLabel(RLN_MLMODEL_ORIGINAL_SIZE, LABEL_INT, "rlnOriginalImageSize");
+        MDL::addLabel(RLN_MLMODEL_PADDING_FACTOR, LABEL_INT, "rlnPaddingFactor");
+        MDL::addLabel(RLN_MLMODEL_PDF_CLASS, LABEL_DOUBLE, "rlnClassDistribution");
+        MDL::addLabel(RLN_MLMODEL_PRIOR_OFFX_CLASS, LABEL_DOUBLE, "rlnClassPriorOffsetX");
+        MDL::addLabel(RLN_MLMODEL_PRIOR_OFFY_CLASS, LABEL_DOUBLE, "rlnClassPriorOffsetY");
+        MDL::addLabel(RLN_MLMODEL_PDF_ORIENT, LABEL_DOUBLE, "rlnOrientationDistribution");
+        MDL::addLabel(RLN_MLMODEL_PIXEL_SIZE, LABEL_DOUBLE, "rlnPixelSize");
+        MDL::addLabel(RLN_MLMODEL_POWER_REF, LABEL_DOUBLE, "rlnReferenceSpectralPower");
+        MDL::addLabel(RLN_MLMODEL_PRIOR_MODE, LABEL_INT, "rlnOrientationalPriorMode");
+        MDL::addLabel(RLN_MLMODEL_REF_IMAGE, LABEL_STRING, "rlnReferenceImage");
+        MDL::addLabel(RLN_MLMODEL_SIGMA_OFFSET, LABEL_DOUBLE, "rlnSigmaOffsets");
+        MDL::addLabel(RLN_MLMODEL_SIGMA2_NOISE, LABEL_DOUBLE, "rlnSigma2Noise");
+        MDL::addLabel(RLN_MLMODEL_SIGMA2_REF, LABEL_DOUBLE, "rlnReferenceSigma2");
+        MDL::addLabel(RLN_MLMODEL_SIGMA_ROT, LABEL_DOUBLE, "rlnSigmaPriorRotAngle");
+        MDL::addLabel(RLN_MLMODEL_SIGMA_TILT, LABEL_DOUBLE, "rlnSigmaPriorTiltAngle");
+        MDL::addLabel(RLN_MLMODEL_SIGMA_PSI, LABEL_DOUBLE, "rlnSigmaPriorPsiAngle");
+        MDL::addLabel(RLN_MLMODEL_SSNR_REF, LABEL_DOUBLE, "rlnSignalToNoiseRatio");
+        MDL::addLabel(RLN_MLMODEL_TAU2_FUDGE_FACTOR, LABEL_DOUBLE, "rlnTau2FudgeFactor");
+        MDL::addLabel(RLN_MLMODEL_TAU2_REF, LABEL_DOUBLE, "rlnReferenceTau2");
+
+        MDL::addLabel(RLN_OPTIMISER_ACCURACY_ROT, LABEL_DOUBLE, "rlnOverallAccuracyRotations");
+        MDL::addLabel(RLN_OPTIMISER_ACCURACY_TRANS, LABEL_DOUBLE, "rlnOverallAccuracyTranslations");
+        MDL::addLabel(RLN_OPTIMISER_ADAPTIVE_FRACTION, LABEL_DOUBLE, "rlnAdaptiveOversampleFraction");
+        MDL::addLabel(RLN_OPTIMISER_ADAPTIVE_OVERSAMPLING, LABEL_INT, "rlnAdaptiveOversampleOrder");
+        MDL::addLabel(RLN_OPTIMISER_AUTO_LOCAL_HP_ORDER, LABEL_INT, "rlnAutoLocalSearchesHealpixOrder");
+        MDL::addLabel(RLN_OPTIMISER_AVAILABLE_MEMORY, LABEL_DOUBLE, "rlnAvailableMemory");
+        MDL::addLabel(RLN_OPTIMISER_BEST_RESOL_THUS_FAR, LABEL_DOUBLE, "rlnBestResolutionThusFar");
+        MDL::addLabel(RLN_OPTIMISER_COARSE_SIZE, LABEL_INT, "rlnCoarseImageSize");
+        MDL::addLabel(RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS, LABEL_DOUBLE, "rlnChangesOptimalOffsets");
+        MDL::addLabel(RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, LABEL_DOUBLE, "rlnChangesOptimalOrientations");
+        MDL::addLabel(RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES, LABEL_DOUBLE, "rlnChangesOptimalClasses");
+        MDL::addLabel(RLN_OPTIMISER_DATA_ARE_CTF_PHASE_FLIPPED, LABEL_BOOL, "rlnCtfDataArePhaseFlipped");
+        MDL::addLabel(RLN_OPTIMISER_DATA_STARFILE, LABEL_STRING, "rlnExperimentalDataStarFile");
+        MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_CTF, LABEL_BOOL, "rlnDoCorrectCtf");
+        MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_MAGNIFICATION, LABEL_BOOL, "rlnDoCorrectMagnification");
+        MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_NORM, LABEL_BOOL, "rlnDoCorrectNorm");
+        MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_SCALE, LABEL_BOOL, "rlnDoCorrectScale");
+        MDL::addLabel(RLN_OPTIMISER_DO_REALIGN_MOVIES, LABEL_BOOL, "rlnDoRealignMovies");
+        MDL::addLabel(RLN_OPTIMISER_DO_MAP, LABEL_BOOL, "rlnDoMapEstimation");
+        MDL::addLabel(RLN_OPTIMISER_DO_AUTO_REFINE, LABEL_BOOL, "rlnDoAutoRefine");
+        MDL::addLabel(RLN_OPTIMISER_DO_ONLY_FLIP_CTF_PHASES, LABEL_BOOL, "rlnDoOnlyFlipCtfPhases");
+        MDL::addLabel(RLN_OPTIMISER_DO_SOLVENT_FLATTEN, LABEL_BOOL, "rlnDoSolventFlattening");
+        MDL::addLabel(RLN_OPTIMISER_DO_SKIP_ALIGN, LABEL_BOOL, "rlnDoSkipAlign");
+        MDL::addLabel(RLN_OPTIMISER_DO_SKIP_ROTATE, LABEL_BOOL, "rlnDoSkipRotate");
+        MDL::addLabel(RLN_OPTIMISER_DO_SPLIT_RANDOM_HALVES, LABEL_BOOL, "rlnDoSplitRandomHalves");
+        MDL::addLabel(RLN_OPTIMISER_DO_ZERO_MASK, LABEL_BOOL, "rlnDoZeroMask");
+        MDL::addLabel(RLN_OPTIMISER_FIX_SIGMA_NOISE, LABEL_BOOL, "rlnFixSigmaNoiseEstimates");
+        MDL::addLabel(RLN_OPTIMISER_FIX_SIGMA_OFFSET ,LABEL_BOOL, "rlnFixSigmaOffsetEstimates");
+        MDL::addLabel(RLN_OPTIMISER_FIX_TAU, LABEL_BOOL, "rlnFixTauEstimates");
+        MDL::addLabel(RLN_OPTIMISER_HAS_CONVERGED, LABEL_BOOL, "rlnHasConverged");
+        MDL::addLabel(RLN_OPTIMISER_HAS_HIGH_FSC_AT_LIMIT, LABEL_BOOL, "rlnHasHighFscAtResolLimit");
+        MDL::addLabel(RLN_OPTIMISER_HAS_LARGE_INCR_SIZE_ITER_AGO, LABEL_INT, "rlnHasLargeSizeIncreaseIterationsAgo");
+        MDL::addLabel(RLN_OPTIMISER_HIGHRES_LIMIT_EXP, LABEL_DOUBLE, "rlnHighresLimitExpectation");
+        MDL::addLabel(RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK, LABEL_BOOL, "rlnDoIgnoreCtfUntilFirstPeak");
+        MDL::addLabel(RLN_OPTIMISER_INCR_SIZE, LABEL_INT, "rlnIncrementImageSize");
+        MDL::addLabel(RLN_OPTIMISER_ITERATION_NO, LABEL_INT, "rlnCurrentIteration");
+        MDL::addLabel(RLN_OPTIMISER_LOWRES_JOIN_RANDOM_HALVES, LABEL_DOUBLE, "rlnJoinHalvesUntilThisResolution");
+        MDL::addLabel(RLN_OPTIMISER_MAGNIFICATION_RANGE, LABEL_DOUBLE, "rlnMagnificationSearchRange");
+        MDL::addLabel(RLN_OPTIMISER_MAGNIFICATION_STEP, LABEL_DOUBLE, "rlnMagnificationSearchStep");
+        MDL::addLabel(RLN_OPTIMISER_MAX_COARSE_SIZE, LABEL_INT, "rlnMaximumCoarseImageSize");
+        MDL::addLabel(RLN_OPTIMISER_MAX_NR_POOL, LABEL_INT, "rlnMaxNumberOfPooledParticles");
+        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE, LABEL_STRING, "rlnModelStarFile");
+        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE2, LABEL_STRING, "rlnModelStarFile2");
+        MDL::addLabel(RLN_OPTIMISER_NR_ITERATIONS, LABEL_INT, "rlnNumberOfIterations");
+        MDL::addLabel(RLN_OPTIMISER_NR_ITER_WO_RESOL_GAIN, LABEL_INT, "rlnNumberOfIterWithoutResolutionGain");
+        MDL::addLabel(RLN_OPTIMISER_NR_ITER_WO_HIDDEN_VAR_CHANGES, LABEL_INT, "rlnNumberOfIterWithoutChangingAssignments");
+        MDL::addLabel(RLN_OPTIMISER_OUTPUT_ROOTNAME, LABEL_STRING, "rlnOutputRootName");
+        MDL::addLabel(RLN_OPTIMISER_PARTICLE_DIAMETER, LABEL_DOUBLE, "rlnParticleDiameter");
+        MDL::addLabel(RLN_OPTIMISER_RADIUS_MASK_3D_MAP, LABEL_INT, "rlnRadiusMaskMap");
+        MDL::addLabel(RLN_OPTIMISER_RADIUS_MASK_EXP_PARTICLES, LABEL_INT, "rlnRadiusMaskExpImages");
+        MDL::addLabel(RLN_OPTIMISER_RANDOM_SEED, LABEL_INT, "rlnRandomSeed");
+        MDL::addLabel(RLN_OPTIMISER_REFS_ARE_CTF_CORRECTED, LABEL_BOOL, "rlnRefsAreCtfCorrected");
+        MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_CLASSES, LABEL_INT, "rlnSmallestChangesClasses");
+        MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_OFFSETS, LABEL_DOUBLE, "rlnSmallestChangesOffsets");
+        MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_ORIENTS, LABEL_DOUBLE, "rlnSmallestChangesOrientations");
+        MDL::addLabel(RLN_OPTIMISER_SAMPLING_STARFILE, LABEL_STRING, "rlnOrientSamplingStarFile");
+        MDL::addLabel(RLN_OPTIMISER_SOLVENT_MASK_NAME, LABEL_STRING, "rlnSolventMaskName");
+        MDL::addLabel(RLN_OPTIMISER_SOLVENT_MASK2_NAME, LABEL_STRING, "rlnSolventMask2Name");
+        MDL::addLabel(RLN_OPTIMISER_TAU_SPECTRUM_NAME, LABEL_STRING, "rlnTauSpectrumName");
+        MDL::addLabel(RLN_OPTIMISER_USE_TOO_COARSE_SAMPLING, LABEL_BOOL, "rlnUseTooCoarseSampling");
+        MDL::addLabel(RLN_OPTIMISER_WIDTH_MASK_EDGE, LABEL_INT, "rlnWidthMaskEdge");
+
+        MDL::addLabel(RLN_ORIENT_FLIP, LABEL_BOOL, "rlnIsFlip");
+        MDL::addLabel(RLN_ORIENT_ID, LABEL_SIZET, "rlnOrientationsID");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_X, LABEL_DOUBLE, "rlnOriginX");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_X_PRIOR, LABEL_DOUBLE, "rlnOriginXPrior");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_Y, LABEL_DOUBLE, "rlnOriginY");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_Y_PRIOR, LABEL_DOUBLE, "rlnOriginYPrior");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_Z, LABEL_DOUBLE, "rlnOriginZ");
+        MDL::addLabel(RLN_ORIENT_ORIGIN_Z_PRIOR, LABEL_DOUBLE, "rlnOriginZPrior");
+        MDL::addLabel(RLN_ORIENT_ROT, LABEL_DOUBLE, "rlnAngleRot");
+        MDL::addLabel(RLN_ORIENT_ROT_PRIOR, LABEL_DOUBLE, "rlnAngleRotPrior");
+        MDL::addLabel(RLN_ORIENT_TILT, LABEL_DOUBLE, "rlnAngleTilt");
+        MDL::addLabel(RLN_ORIENT_TILT_PRIOR, LABEL_DOUBLE, "rlnAngleTiltPrior");
+        MDL::addLabel(RLN_ORIENT_PSI, LABEL_DOUBLE, "rlnAnglePsi");
+        MDL::addLabel(RLN_ORIENT_PSI_PRIOR, LABEL_DOUBLE, "rlnAnglePsiPrior");
+
+        MDL::addLabel(RLN_PARTICLE_AUTOPICK_FOM, LABEL_DOUBLE, "rlnAutopickFigureOfMerit");
+        MDL::addLabel(RLN_PARTICLE_CLASS, LABEL_INT, "rlnClassNumber");
+        MDL::addLabel(RLN_PARTICLE_DLL, LABEL_DOUBLE, "rlnLogLikeliContribution");
+        MDL::addLabel(RLN_PARTICLE_ID, LABEL_SIZET, "rlnParticleId");
+        MDL::addLabel(RLN_PARTICLE_FOM, LABEL_DOUBLE, "rlnParticleFigureOfMerit");
+        MDL::addLabel(RLN_PARTICLE_KL_DIVERGENCE, LABEL_DOUBLE, "rlnKullbackLeibnerDivergence");
+        MDL::addLabel(RLN_PARTICLE_RANDOM_SUBSET, LABEL_INT, "rlnRandomSubset");
+        MDL::addLabel(RLN_PARTICLE_NAME, LABEL_STRING, "rlnParticleName");
+        MDL::addLabel(RLN_PARTICLE_ORI_NAME, LABEL_STRING, "rlnOriginalParticleName");
+        MDL::addLabel(RLN_PARTICLE_NR_SIGNIFICANT_SAMPLES, LABEL_INT, "rlnNrOfSignificantSamples"); /**< particle, Number of orientations contributing to weights*/
+        MDL::addLabel(RLN_PARTICLE_NR_FRAMES, LABEL_INT, "rlnNrOfFrames");
+        MDL::addLabel(RLN_PARTICLE_PMAX, LABEL_DOUBLE, "rlnMaxValueProbDistribution"); /**< particle, Maximum value of probability distribution */
+
+        MDL::addLabel(RLN_POSTPROCESS_FINAL_RESOLUTION, LABEL_DOUBLE, "rlnFinalResolution");
+        MDL::addLabel(RLN_POSTPROCESS_BFACTOR, LABEL_DOUBLE, "rlnBfactorUsedForSharpening");
+        MDL::addLabel(RLN_POSTPROCESS_FSC_TRUE, LABEL_DOUBLE, "rlnFourierShellCorrelationCorrected");
+        MDL::addLabel(RLN_POSTPROCESS_FSC_MASKED, LABEL_DOUBLE, "rlnFourierShellCorrelationMaskedMaps");
+        MDL::addLabel(RLN_POSTPROCESS_FSC_UNMASKED, LABEL_DOUBLE, "rlnFourierShellCorrelationUnmaskedMaps");
+        MDL::addLabel(RLN_POSTPROCESS_FSC_RANDOM_MASKED, LABEL_DOUBLE, "rlnCorrectedFourierShellCorrelationPhaseRandomizedMaskedMaps");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_FIT_INTERCEPT, LABEL_DOUBLE, "rlnFittedInterceptGuinierPlot");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_FIT_SLOPE, LABEL_DOUBLE, "rlnFittedSlopeGuinierPlot");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_FIT_CORRELATION, LABEL_DOUBLE, "rlnCorrelationFitGuinierPlot");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_VALUE_IN, LABEL_DOUBLE, "rlnLogAmplitudesOriginal");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_VALUE_INVMTF, LABEL_DOUBLE, "rlnLogAmplitudesMTFCorrected");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_VALUE_WEIGHTED, LABEL_DOUBLE, "rlnLogAmplitudesWeighted");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED, LABEL_DOUBLE, "rlnLogAmplitudesSharpened");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_VALUE_INTERCEPT, LABEL_DOUBLE, "rlnLogAmplitudesIntercept");
+        MDL::addLabel(RLN_POSTPROCESS_GUINIER_RESOL_SQUARED, LABEL_DOUBLE, "rlnResolutionSquared");
+        MDL::addLabel(RLN_POSTPROCESS_MTF_VALUE, LABEL_DOUBLE, "rlnMtfValue");
+
+        MDL::addLabel(RLN_SAMPLING_IS_3D, LABEL_BOOL, "rlnIs3DSampling");
+        MDL::addLabel(RLN_SAMPLING_IS_3D_TRANS, LABEL_BOOL, "rlnIs3DTranslationalSampling");
+        MDL::addLabel(RLN_SAMPLING_HEALPIX_ORDER, LABEL_INT, "rlnHealpixOrder");
+        MDL::addLabel(RLN_SAMPLING_LIMIT_TILT, LABEL_DOUBLE, "rlnTiltAngleLimit");
+        MDL::addLabel(RLN_SAMPLING_OFFSET_RANGE, LABEL_DOUBLE, "rlnOffsetRange");
+        MDL::addLabel(RLN_SAMPLING_OFFSET_STEP, LABEL_DOUBLE, "rlnOffsetStep");
+        MDL::addLabel(RLN_SAMPLING_PERTURB, LABEL_DOUBLE, "rlnSamplingPerturbInstance");
+        MDL::addLabel(RLN_SAMPLING_PERTURBATION_FACTOR, LABEL_DOUBLE, "rlnSamplingPerturbFactor");
+        MDL::addLabel(RLN_SAMPLING_PSI_STEP, LABEL_DOUBLE, "rlnPsiStep");
+        MDL::addLabel(RLN_SAMPLING_SYMMETRY, LABEL_STRING, "rlnSymmetryGroup");
+
+        MDL::addLabel(RLN_SELECTED, LABEL_BOOL, "rlnSelected");
+        MDL::addLabel(RLN_SELECT_PARTICLES_ZSCORE, LABEL_DOUBLE, "rlnParticleSelectZScore");
+        MDL::addLabel(RLN_SORTED_IDX, LABEL_SIZET, "rlnSortedIndex");
+        MDL::addLabel(RLN_PERFRAME_CUMULATIVE_WEIGHT, LABEL_DOUBLE, "rlnPerFrameCumulativeWeight");
+        MDL::addLabel(RLN_PERFRAME_RELATIVE_WEIGHT, LABEL_DOUBLE, "rlnPerFrameRelativeWeight");
+
+        MDL::addLabel(RLN_RESOLUTION, LABEL_DOUBLE, "rlnResolution");
+        MDL::addLabel(RLN_RESOLUTION_ANGSTROM, LABEL_DOUBLE, "rlnAngstromResolution");
+        MDL::addLabel(RLN_RESOLUTION_INVPIXEL, LABEL_DOUBLE, "rlnResolutionInversePixel");
+        MDL::addLabel(RLN_SPECTRAL_IDX, LABEL_INT, "rlnSpectralIndex");
+
 
         //Create an static empty header for image initialization
         MDL::emptyHeader.resetGeo();
