@@ -148,7 +148,7 @@ function callPaintGraph() {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
-	var URL = getSubDomainURL() + '/project_graph/?list=' + aux,
+	var URL = getSubDomainURL() + '/project_graph/?list=' + aux
 	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
