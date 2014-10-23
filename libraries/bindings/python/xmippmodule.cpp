@@ -400,6 +400,38 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+PyObject *
+xmipp_compareTwoImageTolerance(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename1, *filename2;
+    double tolerance=0.;
+    int index1=0, index2=0;
+
+    if (PyArg_ParseTuple(args, "OO|d", &filename1, &filename2, &tolerance))
+
+    {
+        try
+        {
+            PyObject * pyStr1 = PyObject_Str(filename1);
+            PyObject * pyStr2 = PyObject_Str(filename2);
+            char * str1 = PyString_AsString(pyStr1);
+            char * str2 = PyString_AsString(pyStr2);
+            bool result = compareTwoImageTolerance(str1, str2, tolerance);
+            Py_DECREF(pyStr1);
+            Py_DECREF(pyStr2);
+            if (result)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /***************************************************************/
 /*                   Some specific utility functions           */
 /***************************************************************/
@@ -950,6 +982,8 @@ xmipp_methods[] =
           "return false if the image has repeated pixels at some corner" },
         { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
+        { "compareTwoImageTolerance", (PyCFunction) xmipp_compareTwoImageTolerance, METH_VARARGS,
+          "return true if both images are very similar" },
         { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
           "Read a 1 or two column list of micrographs" },
         { "substituteOriginalImages", (PyCFunction) xmipp_substituteOriginalImages, METH_VARARGS,
