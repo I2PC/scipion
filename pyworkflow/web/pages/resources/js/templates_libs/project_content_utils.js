@@ -977,11 +977,16 @@ function refreshRuns(mode){
 	 * Method to update the run list/graph
 	 */
 	
+	var URL = getSubDomainURL() + '/run_table_graph/'
+	
 	$(function() {
-		var URL = getSubDomainURL() + '/run_table_graph/'
 		$.ajax({
+			async: true,
 			url : URL,
+//			datatype: "text",
 			success : function(data) {
+				
+				console.log("data: "+data)
 				
 				if (typeof data == 'string' || data instanceof String){
 					
@@ -1005,10 +1010,12 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
-
 					}
 				}
-			}
+			},
+		error: function (){
+			console.log("Error in the refresh")
+		}
 		});
   	});
 	

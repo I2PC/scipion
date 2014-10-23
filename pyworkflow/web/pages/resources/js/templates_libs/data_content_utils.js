@@ -55,7 +55,7 @@ function updateObjTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a object selected 
 	 */
-	var URL = getSubDomainURL() + '/object_info/?objectId=' + id,
+	var URL = getSubDomainURL() + '/object_info/?objectId=' + id
 	
 	$.ajax({
 		type : "GET",

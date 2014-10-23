@@ -182,15 +182,19 @@ def run_table_graph(request):
         elif listNewElm:
             request.session['runs'] = runsNew
             jsonStr = json.dumps(listNewElm, ensure_ascii=False)
-            return HttpResponse(jsonStr,mimetype='application/json')
+            return HttpResponse(jsonStr, mimetype='application/json')
         
         else:
+#             jsonStr = json.dumps(["ok"], ensure_ascii=False)
+#             return HttpResponse(jsonStr,mimetype='application/json')
             print "No changes detected"
-            return HttpResponse("ok")
+            return HttpResponse("ok", mimetype='text/plain')
         
     except Exception:
+#         jsonStr = json.dumps(["stop"], ensure_ascii=False)
+#         return HttpResponse(jsonStr,mimetype='application/json')
         print "Stopped script"
-        return HttpResponse("stop")
+        return HttpResponse("stop", mimetype='text/plain')
 
 
 def formatProvider(provider, mode):
