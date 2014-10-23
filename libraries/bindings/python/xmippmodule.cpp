@@ -403,22 +403,40 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 xmipp_compareTwoImageTolerance(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    PyObject *filename1, *filename2;
+    PyObject *input1, *input2;
     double tolerance=0.;
     int index1=0, index2=0;
 
-    if (PyArg_ParseTuple(args, "OO|d", &filename1, &filename2, &tolerance))
+    if (PyArg_ParseTuple(args, "OO|d", &input1, &input2, &tolerance))
 
     {
         try
         {
-            PyObject * pyStr1 = PyObject_Str(filename1);
-            PyObject * pyStr2 = PyObject_Str(filename2);
-            char * str1 = PyString_AsString(pyStr1);
-            char * str2 = PyString_AsString(pyStr2);
-            bool result = compareTwoImageTolerance(str1, str2, tolerance);
-            Py_DECREF(pyStr1);
-            Py_DECREF(pyStr2);
+            size_t index1 = 0;
+            size_t index2 = 0;
+            char * fn1, *fn2;
+
+            // If the inputs objects are tuples, consider it (index, filename)
+            if (PyTuple_Check(input1))
+            {
+              // Get the index and filename from the Python tuple object
+              index1 = PyInt_AsSsize_t(PyTuple_GetItem(input1, 0));
+              fn1 = PyString_AsString(PyObject_Str(PyTuple_GetItem(input1, 1)));
+            }
+            else
+              fn1 = PyString_AsString(PyObject_Str(input1));
+
+            if (PyTuple_Check(input2))
+            {
+              // Get the index and filename from the Python tuple object
+              index2 = PyInt_AsSsize_t(PyTuple_GetItem(input2, 0));
+              fn2 = PyString_AsString(PyObject_Str(PyTuple_GetItem(input2, 1)));
+            }
+            else
+              fn2 = PyString_AsString(PyObject_Str(input2));
+
+            bool result = compareTwoImageTolerance(fn1, fn2, tolerance, index1, index2);
+
             if (result)
                 Py_RETURN_TRUE;
             else

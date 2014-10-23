@@ -227,13 +227,8 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                       size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
                       const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
                       // Now read using both of index and filename
-                      // index == 0 means NO_INDEX for ImageHandler, which is FIRST_IMAGE for xmipp
                       self->image = new ImageGeneric();
-
-                      if (index == 0)
-                        self->image->read(filename);
-                      else
-                        self->image->read(filename, DATA, index);
+                      self->image->read(filename, DATA, index);
 
                     }
                     else if ((pyStr = PyObject_Str(input)) != NULL)
@@ -343,11 +338,7 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
                 size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
                 const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
                 // Now read using both of index and filename
-                // index == 0 means NO_INDEX for ImageHandler, which is FIRST_IMAGE for xmipp
-                if (index == 0)
-                  self->image->write(filename);
-                else
-                  self->image->write(filename, index);
+                self->image->write(filename, index);
                 Py_RETURN_NONE;
               }
               if ((pyStr = PyObject_Str(input)) != NULL)
@@ -393,11 +384,7 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                 size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
                 const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
                 // Now read using both of index and filename
-                // index == 0 means NO_INDEX for ImageHandler, which is FIRST_IMAGE for xmipp
-                if (index == 0)
-                  self->image->read(filename, (DataMode)datamode);
-                else
-                  self->image->read(filename,(DataMode)datamode, index);
+                self->image->read(filename,(DataMode)datamode, index);
                 Py_RETURN_NONE;
               }
               else if ((pyStr = PyObject_Str(input)) != NULL)
