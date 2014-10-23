@@ -187,6 +187,7 @@ function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayou
 
 function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
 	
+	console.log(getSubDomainURL());
 	
 	var content_html = '<span style="display:none">' 
 			+ aData[columnId] + '</span>'
