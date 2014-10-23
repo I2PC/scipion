@@ -1,1 +1,1 @@
-function getSubDomainURL(){return "/examples"}
+function getSubDomainURL(){return ""}
