@@ -132,10 +132,12 @@
 						<script type="text/javascript" language="javascript">
 						
 							$(document).ready(function() {
+								var URL = getSubDomainURL() + '/getPath/'
+								
 							    $('#FButton').serverBrowser({
 							        //Accesing path
 							    	title: 'Select input',
-							        handlerUrl: '{{abs_url}}/getPath/',
+							        handlerUrl: URL,
 							        requestMethod: 'GET',
 							        basePath: '{{project_folder}}',
 							        

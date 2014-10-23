@@ -133,9 +133,10 @@ function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
+	var URL = getSubDomainURL() + URL
 	var popup_width = 600;
 	var popup_height = 500;
-	day = new Date();
+	var day = new Date();
 	id = day.getTime();
 	eval("page"
 			+ id
@@ -149,8 +150,9 @@ function customPopup(URL, widthValue, heightValue) {
 	 * Launch a popup opening the URL passed by argument. 
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var URL = getSubDomainURL() + URL
+	var day = new Date();
+	var id = day.getTime();
 	eval("page"
 			+ id
 			+ " = window.open(URL, '"
@@ -163,13 +165,13 @@ function customPopupFileHTML(html, title, widthValue, heightValue) {
 	 * Launch a popup with the HTML code passed by argument.
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var day = new Date();
+	var id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	
-	style = "background-color:black;color:white;font-family:Monospace;padding:1em;"
-    title = "<title>"+ title + "</title>"
-    body = "<div style="+ style +">" + title + html + "</div>"
+	var style = "background-color:black;color:white;font-family:Monospace;padding:1em;"
+    var title = "<title>"+ title + "</title>"
+    var body = "<div style="+ style +">" + title + html + "</div>"
 
 	popup.document.write(body);
 	popup.document.close();
@@ -180,9 +182,10 @@ function customPopupHTML(html, widthValue, heightValue) {
 	 * Launch a popup with the HTML code passed by argument.
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var day = new Date();
+	var id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
+	
 	popup.document.write(html);
 	popup.document.close();
 }
@@ -476,10 +479,10 @@ function updateLabelComment(){
 			"id=" + id + 
 			"&label=" + value_label + 
 			"&comment=" + value_comment 
-			
+		var URL = getSubDomainURL() + url_param
 		$.ajax({
 			type : "GET",
-			url : encodeURI(url_param),
+			url : encodeURI(URL),
 			async: false,
 			success : function() {
 				// Return the new values to the source form
@@ -505,10 +508,11 @@ function launchViewer(id){
 	/*
 	 * Launch the viewers to analyze the results of the protocol run
 	 */
+	var URL = getSubDomainURL() + "/launch_viewer/?objectId=" + id
 	$.ajax({
 		type : "GET",
 		// Execute the viewer 
-		url : "/launch_viewer/?objectId=" + id,
+		url : URL,
 		dataType : "json",
 		success : function(json) {
 			popUpJSON(json);
@@ -537,4 +541,8 @@ function randomString(length, chars) {
     }
     
     return result;
+}
+
+function getSubDomainURL(){
+	return "/examples"
 }

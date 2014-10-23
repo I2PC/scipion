@@ -148,10 +148,10 @@ function selectList(elm, mode) {
 	}
 
 	// load and set the image
-	var uri = "/get_image/?image=" + path_img + "&dim=250";	
+	var URL = getSubDomainURL() + "/get_image/?image=" + path_img + "&dim=250"
 	
 	if(mode=="raphael"){
-		img.load(putImage(uri, "mic", 250, 250), function() {
+		img.load(putImage(URL, "mic", 250, 250), function() {
 			// hide the load img
 			load_img.hide();
 			// show the new micrograph
@@ -159,7 +159,7 @@ function selectList(elm, mode) {
 		});
 	}
 	else if(mode=="normal"){
-		img.load(img.attr("src", uri), function() {
+		img.load(img.attr("src", URL), function() {
 			// hide the load img
 			load_img.hide();
 			// show the new micrograph
@@ -195,13 +195,13 @@ function selectParticle(elm, mode) {
 	}
 
 	// load and set the image
-	var uri = "/get_image/?image=" + path_img + "&dim=250";
+	var URL = getSubDomainURL() + "/get_image/?image=" + path_img + "&dim=250"
 	
 	if(mode=="raphael"){
-		putImage(uri, "particle", 250, 250);
+		putImage(URL, "particle", 250, 250);
 	}
 	else if(mode=="normal"){
-		$("img#particle").attr("src", uri);
+		$("img#particle").attr("src", URL);
 	}
 }
 
@@ -252,8 +252,9 @@ function previewPsd(){
 	// load and set the image
 	var uri = "/get_image_psd/?image=" + path_img + "&downsample="
 			+ downsampling + "&dim=250"
+	var URL = getSubDomainURL() + uri
 			
-	return [uri, img_load];
+	return [URL, img_load];
 }
 
 // *** Methods Wizard Downsampling *** //
@@ -272,18 +273,18 @@ function previewDownsampling(elm) {
 	}
 	
 	var img = $("img#psd");
-			img.hide();
-			
-			var res = previewPsd();
-			var uri = res[0];
-			var img_load = res[1];
-			
-			img.load(img.attr("src", uri), function() {
-				// hide the load img
-				img_load.hide();
-				// show the new micrograph
-				img.show();
-			});
+	img.hide();
+	
+	var res = previewPsd();
+	var uri = res[0];
+	var img_load = res[1];
+	
+	img.load(img.attr("src", uri), function() {
+		// hide the load img
+		img_load.hide();
+		// show the new micrograph
+		img.show();
+	});
 	
 	
 //	$.when(selectList(elm,"normal")).then(
@@ -380,8 +381,9 @@ function previewBandpassFilter(low, high, decay) {
 	// load and set the image
 	var uri = "/get_image_bandpass/?image=" + path_img + "&lowFreq=" + low
 			+ "&highFreq=" + high + "&decayFreq=" + decay + "&dim=250";
+	var URL = getSubDomainURL() + uri
 	
-	$("img#imgFiltered").attr("src", uri);
+	$("img#imgFiltered").attr("src", URL);
 }
 
 // *** Methods Wizard Gaussian filter *** //
@@ -421,8 +423,9 @@ function previewSigma() {
 
 	// load and set the image
 	var uri = "/get_image_gaussian/?image=" + path_img + "&sigmaFreq=" + sigma + "&dim=250";
-
-	$("img#imgFiltered").attr("src", uri);
+	var URL = getSubDomainURL() + uri
+	
+	$("img#imgFiltered").attr("src", URL);
 }
 
 // *** Methods Wizard Spider Particle filter *** //
@@ -446,22 +449,23 @@ function previewSpiderFilter(filterType, filterMode, usePadding) {
 	
 	// load and set the image
 	var uri = "/get_image_filter_spider/?image=" + path_img + "&filterType=" + filterType + "&dim=250"+ "&filterMode="+filterMode+"&usePadding="+usePadding;
-
+	var URL = getSubDomainURL() + uri
+	
 	// check values
 	if (filterType < 2){
 		var radius = $('input#radius_val').val();
-		uri += "&radius="+radius;
+		URL += "&radius="+radius;
 	} else {
 		var highFreq = $('input#high_val').val();
 		var lowFreq = $('input#low_val').val();
-		uri += "&highFreq="+highFreq+"&lowFreq="+lowFreq;
+		URL += "&highFreq="+highFreq+"&lowFreq="+lowFreq;
 		
 		if (filterType == 2){
 			var temperature = $('input#temp_val').val();
-			uri += "&temperature="+temperature;
+			URL += "&temperature="+temperature;
 		}
 	}
-	putImage(uri, "filteredParticle", 250, 250);
+	putImage(URL, "filteredParticle", 250, 250);
 }
 
 
@@ -477,21 +481,22 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 				"&sdFactor=" + sdFactor + 
 				"&radius2=" + radius2 +
 				"&maskThreshold="+ maskThreshold;
-				
+	var URL = getSubDomainURL() + uri
+	
 	var canvasList = ['image1', 'image2', 'image3', 
 	                  'image4', 'image5', 'image6',
 	                  'image7', 'image8']
 
 	 //	Generate the images               		  
-	 $.ajax({type : "GET", url : uri, async: false});
+	 $.ajax({type : "GET", URL : uri, async: false});
 	
 	// Put the images in his canvas associated
-	var url = "/get_image/?image=" + path + "&dim=100";
-	putImageSrc(url, canvasList[0]);
+	var URL = getSubDomainURL() + "/get_image/?image=" + path + "&dim=100";
+	putImageSrc(URL, canvasList[0]);
 	
 	for (var i=1;i < canvasList.length;i++){
-		url = "/get_image/?image=" + i + "@stkmask.stk&dim=100";
-		putImageSrc(url, canvasList[i]);
+		var URL = getSubDomainURL() + "/get_image/?image=" + i + "@stkmask.stk&dim=100";
+		putImageSrc(URL, canvasList[i]);
 	}
 }
 

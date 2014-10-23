@@ -420,10 +420,10 @@
 //Scipion Mod
 function getImagePath(ext){
 	var res = '';
-	
+	var URL = getSubDomainURL() + "/getExtIcon/?ext=" + ext	
 	$.ajax({
 		type : "GET",
-		url : "/getExtIcon/?ext=" + ext,
+		url : URL,
 		dataType : "text",
 		async: false,
 		success : function(text) {
