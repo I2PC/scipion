@@ -989,11 +989,13 @@ function refreshRuns(mode){
 				
 				if (typeof data == 'string' || data instanceof String){
 					
-					if (data == 'stop'){
+					if (data == 'stop' ||
+							data == '<html><body><p>stop</p></body></html>'){
 						window.clearTimeout(updatetimer);
 						// stop the script
 					}
-					else if(data == 'ok'){
+					else if(data == 'ok' || 
+							data == '<html><body><p>ok</p></body></html>'){
 						// no changes
 					}
 					else {
