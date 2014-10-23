@@ -42,11 +42,10 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be indepent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import locationToXmipp, fixVolumeFileName
+        from packages.xmipp3 import fixVolumeFileName
         
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
-        self._locationToStr = locationToXmipp
         self._fixVolumeFileName = fixVolumeFileName
 
     def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
@@ -110,7 +109,7 @@ class ImageHandler(object):
         (inputObj can be tuple, str or Image subclass). """
         location = self._convertToLocation(inputObj)
         
-        return self._imgClass(self._locationToStr(*location))
+        return self._imgClass(location)
     
     def write(self, image, outputObj):
         """ Write to disk an image from outputObj 
@@ -118,31 +117,3 @@ class ImageHandler(object):
         location = self._convertToLocation(outputObj)
         image.write(location)
 
-        
-        
-def paramsToTransform(params):
-    """ Convert from geometry params (with Spider/Xmipp standard) to
-    the Transform object (transformation matrix)
-    """
-    # TODO: Remove dependency to Xmipp
-    from data import Transform
-    t = Transform()
-    e = xmipp.Euler_angles2matrix(params.angleRot, params.angleTilt, params.anglePsi)
-    m = t._matrix
-    m[:3, :3] = e
-    m[:, 3] = [params.shiftX, params.shiftY, params.shiftZ, 0.]
-    # TODO: Consider mirror and scale
-    return t
-
-       
-def transformToParams(transform):
-    """ Inverse convertion from a Transform to param. """
-    from data import TransformParams
-    p = TransformParams()    
-    m = transform._matrix
-    e = m[:3, :3]
-    p.angleRot, p.angleTilt, p.anglePsi = xmipp.Euler_matrix2angles(e)
-    p.shiftX, p.shiftY, p.shiftZ = m[:, 3]
-    # TODO: Consider mirror and scale
-    return p
-    
