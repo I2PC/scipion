@@ -1,4 +1,1 @@
-function getSubDomainURL(){
-	return ""
-//	return "/examples"
-}
+function getSubDomainURL(){return "/examples"}
