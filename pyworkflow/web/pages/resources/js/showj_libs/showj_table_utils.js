@@ -719,10 +719,12 @@ function multipleSelect(mode) {
 }
 
 function updateSession(label, type, status) {
+	var uri = "/update_session_table/?label=" + label + "&type=" + type
+		+ "&option=" + status,
+	var URL = getSubDomainURL() + uri
 	$.ajax({
 		type : "GET",
-		url : "/update_session_table/?label=" + label + "&type=" + type
-				+ "&option=" + status,
+		url : URL,
 		success : function() {
 //			 alert(jsonTableLayoutConfiguration.columnsLayout[label].renderable);
 		},

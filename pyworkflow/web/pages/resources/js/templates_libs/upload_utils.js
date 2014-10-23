@@ -36,10 +36,10 @@
 $(document).ready(function() {
 	var project_folder = $("#project_folder").val()
 	updateListFiles(project_folder)
-	 
+	var URL = getSubDomainURL() + '/doUpload/'
 	$("#uploadForm").submit(function(e) {
 		$.ajax({
-			url: '/doUpload/',
+			url: URL,
 	        type: 'POST',
 	        data: new FormData( this ),
 	        processData: false,
@@ -69,10 +69,10 @@ function launchSubmitUpload(){
 function updateListFiles(project_folder){
 	var project_folder = project_folder + "/Uploads"
 	$("tr#listFiles").empty();
-		 
+	var URL = getSubDomainURL() + "/getPath/?path="+ project_folder
 	$.ajax({
 		type : "GET",
-		url : "/getPath/?path="+ project_folder,
+		url : URL,
 		dataType : "json",
 		async: false,
 		success : function(json) {
