@@ -80,6 +80,7 @@ elif WINDOWS:
 env.EnsurePythonVersion(2,7)
 env.EnsureSConsVersion(2,3,2)
 
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Pseudobuilders                             *
@@ -150,7 +151,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         autoConfigTargets = [autoConfigTargets]
         targets = [targets]
     if len(buildDir) != len(configDir) != len(flags):
-        return ''
+        print >> sys.stderr, 'ERROR: buildDir, configDir and flags length must be equal. Exiting...'
+        Exit(1)
 
     # Add "software/lib" and "software/bin" to LD_LIBRARY_PATH and PATH.
     def pathAppend(var, value):
@@ -195,7 +197,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             AutoConfigParams=flags[x],
             AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
         SideEffect('dummy', tConfig[x])  # so it works fine in parallel builds
-        Depends(tConfig[x], tUntar)
+        env.Depends(tConfig[x], tUntar)
         make = env.Make(
             source=tConfig[x],
             target=targets[x],
@@ -214,10 +216,10 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         # Clean the special generated files
         # Add the dependencies.
         for dep in deps:
-            Depends(tConfig[x], dep)
+            env.Depends(tConfig[x], dep)
         # Make library by default
         if default or GetOption(name):
-            Default(tMake[x])
+            env.Default(tMake[x])
         toReturn += [tMake[x]]
     return toReturn
 
@@ -295,7 +297,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
                            File(tars[x]),
                            cdir=Dir(dirs[x]).abspath)
             SideEffect('dummy', tUntar)
-            Depends(tUntar, deps)
+            env.Depends(tUntar, deps)
             untars += tUntar
         lastTarget = untars
 
@@ -315,6 +317,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     mpiArgs = {}
     if mpi:
         libpath.append(env['MPI_LIBDIR'])
+        libs.append(env['MPI_LIB'])
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
@@ -343,7 +346,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     SideEffect('dummy', library)
 
     for previous in lastTarget:
-        Depends(library, previous)
+        env.Depends(library, previous)
     
     if installDir:
         install = env.Install(installDir, library)
@@ -351,11 +354,42 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         lastTarget = install
     else:
         lastTarget = library
-    Default(lastTarget)
+    env.Default(lastTarget)
     
-    Depends(lastTarget, deps)
+    env.Depends(lastTarget, deps)
 
     return lastTarget
+
+
+def symLink(env, target, source):
+    #As the link will be in bin/ directory we need to move up
+    if isinstance(target, list):
+        link = str(target[0])
+        source = str(source[0])
+    else:
+        link = target
+    source = os.path.relpath(source, os.path.split(link)[0])
+    if os.path.lexists(link):
+        os.remove(link)
+    os.symlink(source, link)
+    return target
+
+
+def addJavaLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], mpi=False, cuda=False, default=True):
+    """Add self-made and compiled java library to the compilation process
+    
+    This pseudobuilder access given directory, compiles it
+    and installs it. It also tells SCons about it dependencies.
+
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+    """
+    
+        # Update enums from c++ headers, if not exist, generate it
+    return None
+    
 
 
 def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
@@ -478,10 +512,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
 
     # Add the dependencies.
     for dep in deps:
-        Depends(tInstall, dep)
+        env.Depends(tInstall, dep)
 
     if default or GetOption(name):
-        Default(tInstall)
+        env.Default(tInstall)
 
     return tInstall
 
@@ -628,12 +662,12 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
     # Add the dependencies. Do it to the "link target" (tLink), so any
     # extra actions (like setup scripts) have everything in place.
     for dep in deps:
-        Depends(lastTarget, dep)
+        env.Depends(lastTarget, dep)
 
     if (default or packageHome):
         for lastT in lastTarget:
             if lastT is not None:
-                Default(lastT)
+                env.Default(lastT)
 
     return lastTarget
 
@@ -730,10 +764,10 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
 
     # Add the dependencies.
     for dep in deps:
-        Depends(tUntar, dep)
+        env.Depends(tUntar, dep)
 
     if default or GetOption(name):
-        Default(lastTarget)
+        env.Default(lastTarget)
 
     return lastTarget
 
@@ -745,6 +779,7 @@ env.AddMethod(addPackage, 'AddPackage')
 env.AddMethod(manualInstall, 'ManualInstall')
 env.AddMethod(compilerConfig, 'CompilerConfig')
 env.AddMethod(addPackageLibrary, 'AddPackageLibrary')
+env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 
 
 #  ************************************************************************
@@ -763,7 +798,7 @@ extraOpts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 extraOpts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 extraOpts.Add('MPI_LIB', 'MPI library', 'mpi')
 extraOpts.Add('MPI_BINDIR', 'MPI binaries', '/usr/bin')
-
+extraOpts.Add('JAVAC', 'Java compiler', 'javac')
 extraOpts.Add('SCIPION_HOME', 'Scipion base directory', abspath('.'))
 
 extraOpts.Update(env)
