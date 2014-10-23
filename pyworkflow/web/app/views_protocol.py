@@ -28,7 +28,6 @@ import os
 import json
 from views_util import loadProject, loadProtocolProject, parseText
 from django.http import HttpResponse
-from pyworkflow.web.pages import settings as django_settings
 
 SPECIAL_PARAMS = ['numberOfMpi', 'numberOfThreads', 'hostName', 'expertLevel', '_useQueue']
 OBJ_PARAMS =['runName', 'comment']
@@ -168,7 +167,7 @@ def form(request):
     
     context = base_form(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'form/form.html', context)
+    return render_to_response('form/form.html', context)
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
     from pyworkflow.em import Boolean, PointerParam

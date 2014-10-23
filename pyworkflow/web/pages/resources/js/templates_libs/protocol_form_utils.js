@@ -133,13 +133,11 @@ $(document).ready(function() {
 
 		if (mode == 'execute') {
 			/* Execute the protocol */
-			var action = $("#protocolForm").attr("action");
-			
 			// console.log($("#protocolForm").serialize())
-			
+			var action = $("#protocolForm").attr("action");
+			var URL = getSubDomainURL() + action
 			var serialize_form = fixInput($("#protocolForm").serialize());
-			
-			$.post(action, serialize_form, function(json) {
+			$.post(URL, serialize_form, function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
 					errorPopup('Errors found',json.errors);
@@ -150,11 +148,9 @@ $(document).ready(function() {
 
 		} else if (mode == 'save') {
 			/* Save the protocol */
-			var action = "/save_protocol/";
-			
 			var serialize_form = fixInput($("#protocolForm").serialize());
-			
-			$.post(action, serialize_form, function(json) {
+			var URL = getSubDomainURL() + "/save_protocol/"
+			$.post(URL, serialize_form, function(json) {
 				if (json.errors != undefined) {
 					// Show errors in the process to save
 					errorPopup('Errors found',json.errors);
@@ -172,8 +168,8 @@ $(document).ready(function() {
 			
 			/* Execute the wizard */
 			var serialize_form = fixInput($("#protocolForm").serialize());
-			
-			$.post("/wizard/", serialize_form, function(html) {
+			var URL = getSubDomainURL() + "/wizard/"
+			$.post(URL, serialize_form, function(html) {
 				
 				$('.messi').remove();
 				$('.messi-modal').remove();
@@ -196,8 +192,8 @@ $(document).ready(function() {
 			
 			/* Launch the viewers with the options chosen */
 			var serialize_form = fixInput($("#protocolForm").serialize());
-
-			$.post("/viewer_element/", serialize_form, function(json) {
+			var URL = getSubDomainURL() + "/viewer_element/"
+			$.post(URL, serialize_form, function(json) {
 				$('.messi').remove();
 				$('.messi-modal').remove();				
 				popUpJSON(json);
@@ -467,7 +463,7 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 	
 	 var url_param = ""
 	 
-    switch (type_param){
+     switch (type_param){
     
     	case "objClass":
 			url_param = "/browse_objects/?"
@@ -494,10 +490,11 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
     }
 	
 //	console.log("URL:", url_param)
-		
-	$.ajax({
+	
+	 var URL = getSubDomainURL() + url_param
+	 $.ajax({
 		type : "GET",
-		url : url_param,
+		url : URL,
 		dataType : "json",
 		success : function(json) {
 			// specifying a dataType of json makes jQuery pre-eval the response

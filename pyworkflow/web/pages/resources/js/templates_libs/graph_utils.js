@@ -148,11 +148,11 @@ function callPaintGraph() {
 		aux.push(id + "-" + width + "-" + height);
 	});	
 	
-	
+	var URL = getSubDomainURL() + '/project_graph/?list=' + aux
 	// Move and connect the graph nodes
 	$.ajax({
 		type : "GET",
-		url : '/project_graph/?list=' + aux,
+		url : URL,
 		dataType : "json",
 		async: false,
 		success : function(json) {
@@ -168,11 +168,11 @@ function callPaintObjGraph(){
 	 * This function paint the object graph in the template data_content.html
 	 */ 
 	var nodeSource = $("div#graphActiv");
-	
+	var URL = getSubDomainURL() + '/elements_graph/'
 	// Get the objects information for be painted
 	$.ajax({
 		type : "GET",
-		url : '/elements_graph/',
+		url : URL,
 		dataType : "json",
 		async: false,
 		success : function(json) {
@@ -194,9 +194,10 @@ function callPaintObjGraph(){
 			});
 			
 			// Move and connect the graph nodes
+			var URL = getSubDomainURL() + '/object_graph/?list=' + aux
 			$.ajax({
 				type : "GET",
-				url : '/object_graph/?list=' + aux,
+				url : URL,
 				dataType : "json",
 				async: false,
 				success : function(json) {

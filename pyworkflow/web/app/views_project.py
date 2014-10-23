@@ -33,7 +33,6 @@ from pyworkflow.manager import Manager
 
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
-from pyworkflow.web.pages import settings as django_settings
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -53,7 +52,7 @@ def projects(request):
     
     context = base_grid(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'projects.html', context)
+    return render_to_response('projects.html', context)
 
 def create_project(request):
     manager = Manager()
@@ -90,12 +89,12 @@ def getNodeStateColor(node):
 def update_prot_tree(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    settings.setCurrentProtocolMenu(index)
-    settings.write()
+    project_settings.setCurrentProtocolMenu(index)
+    project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -104,13 +103,13 @@ def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
 
     if status == "True":
-        settings.graphView.set(True)
+        project_settings.graphView.set(True)
     else :
-        settings.graphView.set(False)
-    settings.write()
+        project_settings.graphView.set(False)
+    project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
 
@@ -120,12 +119,12 @@ def save_selection(request):
         
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         
         # Set the selected runs stored in BD    
-        settings.runSelection.set(mark)
+        project_settings.runSelection.set(mark)
         
-        settings.write()
+        project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -137,7 +136,7 @@ def tree_prot_view(request):
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
+    return render_to_response('project_content/tree_prot_view.html', {'protTreeHtml': htmlTree})
     
 def run_table_graph(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
@@ -145,7 +144,7 @@ def run_table_graph(request):
     try:
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
         runs = request.session['runs']
@@ -168,30 +167,34 @@ def run_table_graph(request):
             request.session['runs'] = runsNew
             
             # Get the selected runs stored in BD    
-            selectedRuns = settings.runSelection
+            selectedRuns = project_settings.runSelection
     
             # Get the mode view (list or graph) stored in BD
-            graphView = settings.graphView.get()
+            graphView = project_settings.graphView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
                        'graphView': graphView, 
                        'selectedRuns' : selectedRuns}
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'project_content/run_table_graph.html', context)
+            return render_to_response('project_content/run_table_graph.html', context)
         
         elif listNewElm:
             request.session['runs'] = runsNew
             jsonStr = json.dumps(listNewElm, ensure_ascii=False)
-            return HttpResponse(jsonStr,mimetype='application/json')
+            return HttpResponse(jsonStr, mimetype='application/json')
         
         else:
+#             jsonStr = json.dumps(["ok"], ensure_ascii=False)
+#             return HttpResponse(jsonStr,mimetype='application/json')
             print "No changes detected"
-            return HttpResponse("ok")
+            return HttpResponse("ok", mimetype='text/plain')
         
     except Exception:
+#         jsonStr = json.dumps(["stop"], ensure_ascii=False)
+#         return HttpResponse(jsonStr,mimetype='application/json')
         print "Stopped script"
-        return HttpResponse("stop")
+        return HttpResponse("stop", mimetype='text/plain')
 
 
 def formatProvider(provider, mode):
@@ -227,26 +230,26 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")
     request.session['runs'] = runs
 
     # Get the selected runs stored in BD    
-    selectedRuns = settings.runSelection
+    selectedRuns = project_settings.runSelection
 
     # Get the mode view (list or graph) stored in BD
-    graphView = settings.graphView.get()
+    graphView = project_settings.graphView.get()
     
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in settings.protMenuList]
+    choices = [pm.text.get() for pm in project_settings.protMenuList]
 
     # get the choice current 
-    choiceSelected =  settings.protMenuList.getIndex()
+    choiceSelected =  project_settings.protMenuList.getIndex()
     
     # show the project name in the header.html
     projectNameHeader = 'Project '+ str(projectName)
@@ -278,7 +281,7 @@ def project_content(request):
     
     context = base_flex(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'project_content/project_content.html', context)
+    return render_to_response('project_content/project_content.html', context)
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
@@ -355,7 +358,7 @@ def service_projects(request):
     
     context = base_grid(request, context)
     
-    return render_to_response(django_settings.ABSOLUTE_URL+'service_projects.html', context)
+    return render_to_response('service_projects.html', context)
 
 def check_project_id(request):
     result = 0

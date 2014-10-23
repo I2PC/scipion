@@ -187,11 +187,13 @@ function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayou
 
 function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
 	
+	console.log(getSubDomainURL());
+	
 	var content_html = '<span style="display:none">' 
 			+ aData[columnId] + '</span>'
 			+ '<img class=\"tableImages\" id=\"'
 			+ id + '___' + aData[0]
-			+ '\" src=\"/render_column/?renderFunc='
+			+ '\" src='+ getSubDomainURL() +'/render_column/?renderFunc='
 			+ renderFunc;
 			
 	if(extraRenderFunc.length > 0){
@@ -208,7 +210,7 @@ function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
 			+ aData[columnId] + '</span>'
 			+ '<img style="display:none" class=\"tableImages\" id=\"'
 			+ id + '___' + aData[0]
-			+ '\" data-real_src=\"/render_column/?renderFunc='
+			+ '\" data-real_src='+ getSubDomainURL() +'/render_column/?renderFunc='
 			+ renderFunc;
 			
 	if(extraRenderFunc.length > 0){
@@ -719,10 +721,12 @@ function multipleSelect(mode) {
 }
 
 function updateSession(label, type, status) {
+	var uri = "/update_session_table/?label=" + label + "&type=" + type
+		+ "&option=" + status
+	var URL = getSubDomainURL() + uri
 	$.ajax({
 		type : "GET",
-		url : "/update_session_table/?label=" + label + "&type=" + type
-				+ "&option=" + status,
+		url : URL,
 		success : function() {
 //			 alert(jsonTableLayoutConfiguration.columnsLayout[label].renderable);
 		},

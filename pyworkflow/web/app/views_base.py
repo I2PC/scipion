@@ -40,7 +40,9 @@ def VARS_base(request, context):
                     #OTHER
                     'msg': messages,
                     'color': colors,
-                    'icon': icons
+                    'icon': icons,
+                    #JS
+                    'config': getResourceJs('config'),
                     }
     
     context.update(context_base)
@@ -61,6 +63,7 @@ def base(request, context):
                     #JS
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
+                    #JS
                     'utils': getResourceJs('utils'),
                     }
     

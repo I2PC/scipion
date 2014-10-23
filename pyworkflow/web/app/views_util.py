@@ -103,6 +103,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
           'jquery_browser':'jquery/jquery.serverBrowser.js',
           
+          'config': 'templates_libs/config.js',
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
           'graph_utils': 'templates_libs/graph_utils.js',
@@ -595,6 +596,6 @@ def savePlot(request, plot):
     name_img = 'image%s.png' % id(plot)
     fn = os.path.join(projectPath,'Tmp', name_img)
     plot.savefig(fn)
-    url_plot = django_settings.ABSOLUTE_URL+"get_image_plot/?image=" + fn
+    url_plot = "get_image_plot/?image=" + fn
         
     return url_plot

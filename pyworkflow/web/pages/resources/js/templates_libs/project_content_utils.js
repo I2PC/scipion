@@ -365,9 +365,11 @@ function refreshSelectedRuns(list_marked){
 	/*
 	 * Refresh the elements contained into the list.
 	 */
+	var URL = getSubDomainURL() + '/save_selection/?mark=' + listToString(list_marked)
+	
 	$.ajax({
 		type : "GET", 
-		url : '/save_selection/?mark=' + listToString(list_marked),
+		url : URL,
 		async: false
 	});
 }
@@ -474,9 +476,10 @@ function updateTabs(id) {
 	 * Fill the content of the summary tab for a protocol run selected 
 	 * (Data / Summary / Methods / Status)
 	 */
+	var URL = getSubDomainURL() + '/protocol_info/?protocolId=' + id
 	$.ajax({
 		type : "GET",
-		url : '/protocol_info/?protocolId=' + id,
+		url : URL,
 		dataType : "json",
 		success : function(json) {
 			
@@ -820,17 +823,19 @@ function updateGraphView(status) {
 	 * If the graph view was active when you closed the project last time will
 	 * be available directly, in the another case, will be inactive.
 	 */
+	var URL = getSubDomainURL() + "/update_graph_view/?status=" + status
 	$.ajax({
 		type : "GET", 
-		url : "/update_graph_view/?status=" + status,
+		url : URL,
 		async: false
 	});
 }
 
 function editObject(objId){
+	var URL = getSubDomainURL() + '/get_attributes/?objId='+ objId
 	$.ajax({
 		type : "GET",
-		url : '/get_attributes/?objId='+ objId,
+		url : URL,
 		dataType: "text",
 		success : function(text) {
 			var res = text.split("_-_")
@@ -867,10 +872,10 @@ function deleteProtocol(elm) {
 	 * Method to execute a delete for a protocol
 	 */
 	var id = elm.attr('value');
-	
+	var URL = getSubDomainURL() + "/delete_protocol/?id=" + id
 	$.ajax({
 		type : "GET",
-		url : "/delete_protocol/?id=" + id,
+		url : URL,
 		dataType : "json",
 		async :false,
 		success : function(json) {
@@ -893,9 +898,10 @@ function copyProtocol(id){
 	/*
 	 * Method to copy protocol.
 	 */
+	var URL = getSubDomainURL() + "/copy_protocol/?id=" + id
 	$.ajax({
 		type : "GET",
-		url : "/copy_protocol/?id=" + id,
+		url : URL,
 		dataType : "json",
 		async :false,
 		success : function(json) {
@@ -931,10 +937,10 @@ function stopProtocol(elm) {
  * Method to stop the run for a protocol
  */
 	var protId = elm.attr('value');
-	
+	var URL = getSubDomainURL() + "/stop_protocol/?protocolId=" + protId
 	$.ajax({
 		type : "GET",
-		url : "/stop_protocol/?protocolId=" + protId
+		url : URL
 	});
 }
 
@@ -943,15 +949,17 @@ function changeTreeView(){
 	 * Method to update the protocol tree to run in the web left side.
 	 */
 	protIndex = $('#viewsTree').val();
+	var URL = getSubDomainURL() + '/update_prot_tree/?index='+ protIndex
 	
 	$.ajax({
 		type : "GET",
-		url : '/update_prot_tree/?index='+ protIndex,
+		url : URL,
 		dataType:"text",
 		success : function() {
+			var URL2 = getSubDomainURL() + '/tree_prot_view/'
 			$.ajax({
 				type : "GET",
-				url: '/tree_prot_view/',
+				url: URL2,
 				dataType: "html",
 				async: false,
 				success: function(data) {
@@ -969,10 +977,16 @@ function refreshRuns(mode){
 	 * Method to update the run list/graph
 	 */
 	
+	var URL = getSubDomainURL() + '/run_table_graph/'
+	
 	$(function() {
 		$.ajax({
-			url : '/run_table_graph/',
+			async: true,
+			url : URL,
+//			datatype: "text",
 			success : function(data) {
+				
+				console.log("data: "+data)
 				
 				if (typeof data == 'string' || data instanceof String){
 					
@@ -996,10 +1010,12 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
-
 					}
 				}
-			}
+			},
+		error: function (){
+			console.log("Error in the refresh")
+		}
 		});
   	});
 	
