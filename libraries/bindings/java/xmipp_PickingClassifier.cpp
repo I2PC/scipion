@@ -44,34 +44,35 @@ Java_xmipp_jni_PickingClassifier_destroy(JNIEnv *env, jobject jobj)
 }
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
-(JNIEnv *env, jobject jobj, jobject micrographs, jint x, jint y, jint width, jint height)
+(JNIEnv *env, jobject jobj, jobjectArray jtrainList, jint x, jint y, jint width, jint height)
 {
     XMIPP_JAVA_TRY
     {
-        AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-        MetaData * md = GET_INTERNAL_METADATA(micrographs);
-        MetaData md2;
-        FileName micFile,posFile;
-        std::vector<MDRow> vd;
-        MDRow row;
-        int x,y;
-        FOR_ALL_OBJECTS_IN_METADATA((*md))
-        {
-            md->getValue(MDL_MICROGRAPH,micFile, __iter.objId);
-            md->getValue(MDL_MICROGRAPH_PARTICLES,posFile, __iter.objId);
-            md2.read("particles@"+posFile);
+    	   AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
+    	   MetaData md;
+    	   FileName micFile, posFile;
+    	   std::vector<MDRow> vd;
+    	   MDRow row;
+    	   MDRow* trainRow;
+    	   int size = env->GetArrayLength(jtrainList);
+    	   int xcoor, ycoor;
+    	   for(int i = 0; i < size; i++)
+    	   {
+				trainRow = GET_INTERNAL_MDROW(env->GetObjectArrayElement(jtrainList, i));
+				trainRow->getValue(MDL_MICROGRAPH, micFile);
+				trainRow->getValue(MDL_MICROGRAPH_PARTICLES, posFile);
+				md.read("particles@" + posFile);
+				FOR_ALL_OBJECTS_IN_METADATA(md)
+				{
+					row.setValue(MDL_MICROGRAPH, micFile);
+					md.getValue(MDL_XCOOR, xcoor, __iter.objId);
+					row.setValue(MDL_XCOOR, xcoor);
+					md.getValue(MDL_YCOOR, ycoor, __iter.objId);
+					row.setValue(MDL_YCOOR, ycoor);
+					vd.push_back(row);
+				}
+    	   }
 
-            FOR_ALL_OBJECTS_IN_METADATA(md2)
-            {
-                row.setValue(MDL_MICROGRAPH,micFile);
-                md2.getValue(MDL_XCOOR,x, __iter.objId);
-                row.setValue(MDL_XCOOR,x);
-                md2.getValue(MDL_YCOOR,y, __iter.objId);
-                row.setValue(MDL_YCOOR,y);
-                vd.push_back(row);
-            }
-        }
-//        md->metadataToVec(vd);
         picker->train(vd, false, x, y, width, height);
     }
     XMIPP_JAVA_CATCH;
