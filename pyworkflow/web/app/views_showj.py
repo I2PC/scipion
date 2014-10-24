@@ -353,7 +353,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
                     sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS],
                     sj.CHANGES: inputParams[sj.CHANGES]})
         
-    return_page = 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
+    return_page =  django_settings.ABSOLUTE_URL + 'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page
     
 
