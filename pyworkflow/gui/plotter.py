@@ -54,14 +54,12 @@ class Plotter(View):
         """
         self.fontsize = fontsize
         if self.plt is None:
-            import matplotlib
-
             if self.interactive:
                 self.backend = 'TkAgg'
             else:
                 self.backend = 'Agg'
-            matplotlib.use(self.backend)
             import matplotlib.pyplot as plt
+            plt.switch_backend(self.backend)
             self.plt = plt
             if self.interactive:
                 plt.ion()
