@@ -76,7 +76,7 @@ def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
     
-    return "url::form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
+    return "url::/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############

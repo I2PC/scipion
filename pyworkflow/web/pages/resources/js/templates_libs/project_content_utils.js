@@ -642,10 +642,10 @@ function fillUL(type, list, ulId, icon) {
 		
 		ul.append('<li>' + 
 				visualize_html + 
-				download_html + 
 				edit_html +
 				"&nbsp;&nbsp;&nbsp;" +
 				list[i].info + 
+				download_html + 
 				'</li>');
 		
 	}
