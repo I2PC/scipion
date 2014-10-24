@@ -284,7 +284,7 @@ class TestAlignmentConvert(BaseTest):
             retval = p.wait()
 
 
-    def test_alignShitRot(self):
+    def test_alignShiftRot(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.
         Goal: 2D alignment
@@ -322,7 +322,91 @@ class TestAlignmentConvert(BaseTest):
                          is2D=True, inverseTransform=False,
                          printMatrix=True, commandLine=commandLine)
 
-    def test_alignShitRot3D(self):
+    def test_alignShiftRotflip(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: angles, shifts
+        """
+        mList = [[[ -1.0, 0.0, 0.0, 20.0],
+                  [ 0.0, 1.0, 0.0,  0.0],
+                  [ 0.0, 0.0, 1.0,  0.0],
+                  [ 0.0, 0.0, 0.0,  1.0]],
+                 [[-0.86602539, -0.5, 0.0, 20.0],
+                  [ -0.5,0.86602539, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0.86602539, 0.5, 0.0, 27.706396],
+                  [ -0.5,0.86602539, 0.0,0.331312],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0.5, 0.86602539, 0.0, 3.239186],
+                  [ -0.86602539, 0.5, 0.0,20.310715],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 0.0, 1.0, 0.0, 10.010269],
+                  [ -1.0, 0.0, 0.0, 3.6349521],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        fileKey='alignShiftRotflip'
+        stackFn = self.dataset.getFile(fileKey)
+        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
+        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
+        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
+
+        partSet = SetOfParticles(filename=partFn1)
+        partSet.setAcquisition(Acquisition(voltage=300,
+                                  sphericalAberration=2,
+                                  amplitudeContrast=0.1,
+                                  magnification=60000))
+        # Populate the SetOfParticles with  images
+        # taken from images.mrc file
+        # and setting the previous alignment parameters
+        aList = [np.array(m) for m in mList]
+        for i, a in enumerate(aList):
+            p = Particle()
+            p.setLocation(i+1, stackFn)
+            p.setAlignment(Alignment(a))
+            partSet.append(p)
+        # Write out the .sqlite file and check that are correctly aligned
+        partSet.write()
+
+        # Convert to a Xmipp metadata and also check that the images are
+        # aligned correctly
+        print ("mdFn: ", mdFn)
+        writeSetOfParticles(partSet, mdFn, is2D=True, inverseTransform=False)
+
+        # Let's create now another SetOfImages reading back the written
+        # Xmipp metadata and check one more time.
+        partSet2 = SetOfParticles(filename=partFn2)
+        partSet2.copyInfo(partSet)
+        readSetOfParticles(mdFn, partSet2, is2D=True,
+                               inverseTransform=False)
+
+        ##partSet2.write()
+        #TODO_rob: I do not know how to make an assert here
+        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
+        #inverse has no effect
+
+        if self.view:
+            for i, img in enumerate(partSet2):
+                m1 = aList[i]
+                m2 = img.getAlignment().getMatrix()
+                print "-"*5
+                print img.getFileName(), img.getIndex()
+                print  >> sys.stderr, 'm1:\n', m1
+                print  >> sys.stderr, 'm2:\n', m2
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+#        if commandLine is not None:
+#            import subprocess
+#            print ("Computing: ", commandLine%locals())
+#            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#            for line in p.stdout.readlines():
+#                print line,
+#            retval = p.wait()
+
+        
+    def test_alignShiftRot3D(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.
         Goal: 3D alignment
