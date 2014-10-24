@@ -2,9 +2,9 @@
 	<div id="headerMainContainer">
 		
 		{% if mode == 'service' %}
-		<a href="/service_projects/" id="headerLogoContainer">
+		<a href="{{abs_url}}/service_projects/" id="headerLogoContainer">
 		{% else %}
-		<a href="/projects/" id="headerLogoContainer">
+		<a href="{{abs_url}}/projects/" id="headerLogoContainer">
 		{% endif %}
 			<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
 		</a>
@@ -22,11 +22,11 @@
 <!-- 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a> -->
 			{% else %}
 				{% if projectName != None and projectName != ''%}
-				<a href="/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
+				<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
 				<span id="tube">|</span>
-				<a href="/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
+				<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
 				<span id="tube">|</span>
-				<a href="/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
+				<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
 				<span id="tube">|</span>
 				<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
 				<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
