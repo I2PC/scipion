@@ -140,7 +140,7 @@ $(document).ready(function() {
 			$.post(URL, serialize_form, function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
-					errorPopup('Errors found',json.errors);
+					errorPopup('Errors found', json.errors);
 				} else {
 					infoPopup('Success', "The protocol was launched successfuly",1);
 				}
@@ -157,7 +157,7 @@ $(document).ready(function() {
 				} else {
 					// No errors in the process to save
 					protId = json.success;
-					infoPopup('Success', "The protocol was saved successfuly",1,'window.opener.popup(\'/form/?protocolId='+protId+'\')');
+					infoPopup('Success', "The protocol was saved successfuly", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
 				}
 			},"json");
 		} else if (mode == 'wiz') {

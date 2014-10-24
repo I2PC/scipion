@@ -215,9 +215,7 @@ function popUpJSON(json){
 		value = array[1]
 		//alert("item=" + item + " key=" + key + " value="+value)
 
-		if (key=="url_form"){
-			popup(value);
-		} else if(key=="urls"){
+		if(key=="urls"){
 			for(var x=0;x<value.length;x++){
 				customPopup(value[x],1000,900);
 			}
