@@ -185,14 +185,10 @@ def run_table_graph(request):
             return HttpResponse(jsonStr, mimetype='application/json')
         
         else:
-#             jsonStr = json.dumps(["ok"], ensure_ascii=False)
-#             return HttpResponse(jsonStr,mimetype='application/json')
             print "No changes detected"
             return HttpResponse("ok", mimetype='text/plain')
         
     except Exception:
-#         jsonStr = json.dumps(["stop"], ensure_ascii=False)
-#         return HttpResponse(jsonStr,mimetype='application/json')
         print "Stopped script"
         return HttpResponse("stop", mimetype='text/plain')
 
