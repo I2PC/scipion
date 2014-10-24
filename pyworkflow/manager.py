@@ -77,15 +77,14 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName):
-        """Create a new project """
-        from pyworkflow.apps.config import loadSettings
-        defaultSettings = loadSettings(pw.SETTINGS)
-        proj = Project(self.getProjectPath(projectName))
-        proj.create(defaultSettings)
-        # Copy default settings
-        #copyFile(pw.SETTINGS, proj.settingsPath)
-        return proj
+    def createProject(self, projectName, confs={}):
+        """Create a new project.
+        confs dict can contains customs .conf files 
+        for: menus, protocols, or hosts
+        """
+        project = Project(self.getProjectPath(projectName))
+        project.create(confs)
+        return project
     
     def loadProject(self, projId):
         """ Retrieve a project object, given its id. """

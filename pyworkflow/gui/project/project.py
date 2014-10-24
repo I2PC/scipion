@@ -36,7 +36,7 @@ from os.path import basename
 
 import pyworkflow as pw
 from pyworkflow.manager import Manager
-from pyworkflow.apps.config import loadSettings
+from pyworkflow.config import * # We need this to retrieve object from mapper
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.plotter import Plotter
@@ -94,7 +94,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
     def __init__(self, **args):
         # Load global configuration
-        settings = loadSettings(pw.SETTINGS)
+        settings = ProjectSettings()
         self.menuCfg = settings.getCurrentMenu()
         self.generalCfg = settings.getConfig()
         
