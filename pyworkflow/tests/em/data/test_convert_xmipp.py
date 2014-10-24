@@ -310,7 +310,6 @@ class TestAlignment(BaseTest):
 
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
-        print ("mdFn: ", mdFn)
         writeSetOfParticles(partSet, mdFn, is2D=True, inverseTransform=False)
 
         # Let's create now another SetOfImages reading back the written
@@ -325,7 +324,7 @@ class TestAlignment(BaseTest):
         #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
         #inverse has no effect
 
-        if self.view:
+        if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
                 m2 = img.getAlignment().getMatrix()
