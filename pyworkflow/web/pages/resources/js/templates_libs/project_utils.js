@@ -92,7 +92,8 @@ function deleteProject(elm) {
 		type : "GET",
 		url : URL,
 		success : function() {
-			window.location.href = "/projects/";
+			var URL2 = getSubDomainURL() + "/projects/"
+			window.location.href = URL2;
 		}
 	});
 }

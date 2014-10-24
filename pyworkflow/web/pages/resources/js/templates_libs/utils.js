@@ -191,9 +191,10 @@ function customPopupHTML(html, widthValue, heightValue) {
 }
 
 function customPopUpFile(url){
+	var URL = getSubDomainURL() + url
 	$.ajax({
 		type : "GET",
-		url : url,
+		url : URL,
 		dataType : "html",
 		success : function(html) {
 			customPopupHTML(html,600,500);
@@ -212,7 +213,8 @@ function popUpJSON(json){
 	$.each(json, function(i, item) {
 		array = item.split('::')
 		key = array[0]
-		value = "/"+array[1]
+//		value = "/"+array[1]
+		value = array[1]
 		//alert("item=" + item + " key=" + key + " value="+value)
 
 		if(key=="urls"){

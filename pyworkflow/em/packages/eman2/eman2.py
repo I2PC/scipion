@@ -37,9 +37,12 @@ def loadEnvironment():
     """ Load the environment variables needed for use EMAN2 tools. """
     # TODO: Read EMAN2DIR from the host config.
     EMAN2DIR = os.environ['EMAN2DIR']
-    os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ['PATH']
+    if 'EMAN_LD_LIBRARY_PATH' in os.environ:
+        # Add this variable to $HOME/.config/scipion/scipion.conf
+        os.environ['LD_LIBRARY_PATH'] = os.environ['EMAN_LD_LIBRARY_PATH'] + os.pathsep + os.environ.get('LD_LIBRARY_PATH','')
+    os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ.get('PATH','')
     pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
-    os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ['PYTHONPATH']
+    os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH','')
     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
     # Undo the xmipp_python additions to LD_LIBRARY_PATH
     if 'OLD_LD_LIBRARY_PATH' in os.environ:
