@@ -98,18 +98,35 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
 
 
 JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_correct
-(JNIEnv *env, jobject jobj, jobject jmanualmd, jobject jautomaticmd, jdouble threshold)
+(JNIEnv *env, jobject jobj, jobjectArray jmanualRows, jobjectArray jautoRows)
 {
     XMIPP_JAVA_TRY
     {
+    	  int size = env->GetArrayLength(jmanualRows);
+    	  MDRow row;
+    	  std::vector<MDRow> manualRows;
+    	  for(int i = 0; i < size; i++)
+    	  {
+    		  	 row = *GET_INTERNAL_MDROW(env->GetObjectArrayElement(jmanualRows, i));
+    	         manualRows.push_back(row);
+    	  }
 
-        std::vector<MDRow> vManualMd, vAutomaticMd;
-        MetaData * manualmd = GET_INTERNAL_METADATA(jmanualmd);
-        MetaData * automaticmd = GET_INTERNAL_METADATA(jautomaticmd);
+    	  size = env->GetArrayLength(jautoRows);
+		  std::vector<MDRow> autoRows;
+		  for(int i = 0; i < size; i++)
+		  {
+				 row = *GET_INTERNAL_MDROW(env->GetObjectArrayElement(jautoRows, i));
+				 autoRows.push_back(row);
+		  }
+
+
+//        std::vector<MDRow> vManualMd, vAutomaticMd;
+//        MetaData * manualmd = GET_INTERNAL_METADATA(jmanualmd);
+//        MetaData * automaticmd = GET_INTERNAL_METADATA(jautomaticmd);
         AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-        manualmd->metadataToVec(vManualMd);
-        automaticmd->metadataToVec(vAutomaticMd);
-        picker->correction(vManualMd, vAutomaticMd);
+        //manualmd->metadataToVec(vManualMd);
+//        automaticmd->metadataToVec(vAutomaticMd);
+        picker->correction(manualRows, autoRows);
     }
     XMIPP_JAVA_CATCH;
 
