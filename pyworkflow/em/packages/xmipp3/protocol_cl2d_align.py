@@ -64,7 +64,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('images.xmd') 
-        self._insertFunctionStep('convertInputStep')        
+        self._insertFunctionStep('convertInputStep')
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': self.imgsFn, 
