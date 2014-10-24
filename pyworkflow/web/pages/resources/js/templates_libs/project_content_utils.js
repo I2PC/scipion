@@ -619,19 +619,34 @@ function fillUL(type, list, ulId, icon) {
 		// Visualize Object
 		var visualize_html = '<a href="javascript:launchViewer(' + list[i].id
 		+ ');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'+ list[i].name
-
+		
+		var download_html = "";
+		
 		if(type=="input"){
 			visualize_html += ' (from ' + list[i].nameId +')</a>'
 		}
 		else if(type=="output"){
 			visualize_html += '</a>'
+
+			//Download File Object
+//			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
+//			'<i class="fa fa-save" style="margin-left:0px;"></i></a>'
+			
+			download_html = '<a href="#"><i class="fa fa-save" style="margin-left:0px;"></i></a>'
+			
 		}
 		
 		// Edit Object
 		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
 		'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
 		
-		ul.append('<li>' + visualize_html + edit_html +"&nbsp;&nbsp;&nbsp;" +list[i].info+ '</li>');
+		ul.append('<li>' + 
+				visualize_html + 
+				download_html + 
+				edit_html +
+				"&nbsp;&nbsp;&nbsp;" +
+				list[i].info + 
+				'</li>');
 		
 	}
 }
