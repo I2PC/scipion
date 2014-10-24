@@ -95,6 +95,7 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
+        self.endTime.set(dt.datetime.now())
         self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
