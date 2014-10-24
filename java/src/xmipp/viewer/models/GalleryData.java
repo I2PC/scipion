@@ -423,7 +423,9 @@ public class GalleryData {
         String label = "";
         
         for(ColumnInfo ci: displaycis.values())
-            label += " " + md.getValueString(ci.label, id);
+            label += md.getValueString(ci.label, id) + ", ";
+        if(!label.isEmpty())
+            label = label.substring(0, label.length() - 2);
         return label;
     }
 
