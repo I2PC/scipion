@@ -92,7 +92,7 @@ def viewToUrl(request, view):
     
     # SHOWJ
     elif isinstance(view, DataView):
-        url = "showj/?%s=%s" % (PATH, view.getPath())
+        url = "/showj/?%s=%s" % (PATH, view.getPath())
         showjParams = view.getShowJWebParams()
         
         if showjParams:
@@ -106,7 +106,7 @@ def viewToUrl(request, view):
     # TEXT VIEWER
     elif isinstance(view, TextView):
         fn  = view.getFileList()[0]
-        url = "file::file_viewer/?%s=%s" % (PATH, fn)
+        url = "file::/file_viewer/?%s=%s" % (PATH, fn)
         
     # MESSAGE
     elif isinstance(view, MessageView):
