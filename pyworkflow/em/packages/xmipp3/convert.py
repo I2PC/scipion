@@ -810,10 +810,10 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
         imgRow = XmippMdRow()
-        
-        for img in class2D:
-            particleToRow(img, imgRow)
-            imgRow.writeToMd(imagesMd, imagesMd.addObject())
+        if class2D.getSize() > 0:
+            for img in class2D:
+                particleToRow(img, imgRow)
+                imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
