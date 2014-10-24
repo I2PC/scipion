@@ -34,7 +34,7 @@ import xmipp
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
-
+import subprocess
 
 
 class TestBasic(BaseTest):
@@ -95,8 +95,20 @@ class AlignmentList(list):
         list.append(self, Alignment(np.array(matrixList)))
 
 
-class TestAlignmentConvert(BaseTest):
-    view=True
+
+SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+
+CLEAN_IMAGES = True # Remove the output temporaly files
+
+PRINT_MATRIX = False#True#False
+
+
+def runXmippProgram(cmd):
+    p = subprocess.Popen(cmd, shell=True, env=xmipp3.getEnviron())
+    return p.wait()   
+
+    
+class TestAlignment(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -125,9 +137,8 @@ class TestAlignmentConvert(BaseTest):
                   [0.0, 0.0, 0.0, 1.0]])    
 
 
-    def launchAlignmentTest(self, fileKey, mList,
-                            is2D=True, inverseTransform=False, commandLine = None,
-                            **kwargs):
+    def launchTest(self, fileKey, mList,
+                            is2D=True, inverseTransform=False, **kwargs):
         """ Helper function to launch similar alignment tests
         give the EMX transformation matrix.
         Params:
@@ -144,10 +155,14 @@ class TestAlignmentConvert(BaseTest):
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
         mdFn = self.getOutputPath(fileKey + "_particles.xmd")
         partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
+        stackFn2 = self.getOutputPath(fileKey + "_output.mrcs")
+        goldFn = self.dataset.getFile(fileKey + 'Gold')
         print "BINARY DATA: ", stackFn
         print "SET1: ", partFn1
         print "  MD: ", mdFn
         print "SET2: ", partFn2  
+        print "OUTPUT :", stackFn2
+        print "GOLD: ", goldFn
         
         if is2D:
             partSet = SetOfParticles(filename=partFn1)
@@ -187,11 +202,8 @@ class TestAlignmentConvert(BaseTest):
                                inverseTransform= inverseTransform)
             
         partSet2.write()         
-        #TODO_rob: I do not know how to make an assert here
-        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
-        #inverse has no effect
 
-        if kwargs.get('printMatrix', False):
+        if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
                 m2 = img.getAlignment().getMatrix()
@@ -201,87 +213,20 @@ class TestAlignmentConvert(BaseTest):
                 print 'm2:\n', m2
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
         
-        if commandLine is not None:
-            import subprocess
-            print ("Computing: ", commandLine%locals())
-            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            for line in p.stdout.readlines():
-                print line,
-            retval = p.wait()
-
-    def launchAlignmentTestProj(self, fileKey, mList,
-                            is2D=True, inverseTransform=False, commandLine=None,
-                            **kwargs):
-        """ Helper function to launch similar alignment tests
-        give the EMX transformation matrix.
-        Params:
-            fileKey: the file where to grab the input stack images.
-            mList: the matrix list of transformations
-                (should be the same length of the stack of images)
-        """
-        print "\n"
-        print "*" * 80
-        print "* Launching test: ", fileKey
-        print "*" * 80
-
-        stackFn = self.dataset.getFile(fileKey)
-        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
-        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
-        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
-        print "BINARY DATA: ", stackFn
-        print "SET1: ", partFn1
-        print "  MD: ", mdFn
-        print "SET2: ", partFn2
-
-        partSet = SetOfParticles(filename=partFn1)
-        partSet.setAcquisition(Acquisition(voltage=300,
-                                  sphericalAberration=2,
-                                  amplitudeContrast=0.1,
-                                  magnification=60000))
-        # Populate the SetOfParticles with  images
-        # taken from images.mrc file
-        # and setting the previous alignment parameters
-        aList = [np.array(m) for m in mList]
-        for i, a in enumerate(aList):
-            p = Particle()
-            p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
-            partSet.append(p)
-        # Write out the .sqlite file and check that are correctly aligned
-        partSet.write()
-
-        # Convert to a Xmipp metadata and also check that the images are
-        # aligned correctly
-        writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
-
-        # Let's create now another SetOfImages reading back the written
-        # Xmipp metadata and check one more time.
-        partSet2 = SetOfParticles(filename=partFn2)
-        partSet2.copyInfo(partSet)
-        readSetOfParticles(mdFn, partSet2, is2D=is2D,
-                               inverseTransform=(inverseTransform))
-
-        partSet2.write()
-        #TODO_rob: I do not know how to make an assert here
-        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
-        #inverse has no effect
-
-        if kwargs.get('printMatrix', False):
-            for i, img in enumerate(partSet2):
-                m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
-                print "-"*5
-                print img.getFileName(), img.getIndex()
-                print  >> sys.stderr, 'm1:\n', m1
-                print  >> sys.stderr, 'm2:\n', m2
-                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
-        if commandLine is not None:
-            import subprocess
-            print ("Computing: ", commandLine%locals())
-            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            for line in p.stdout.readlines():
-                print line,
-            retval = p.wait()
+        # Launch apply transformation and check result images
+        cmd = "xmipp_transform_geometry  -i %(mdFn)s -o %(stackFn2)s --apply_transform" % locals()
+        runXmippProgram(cmd)
+        
+        if SHOW_IMAGES:
+            runXmippProgram('xmipp_showj -i %(stackFn2)s' % locals())
+            
+        if os.path.exists(goldFn):
+            self.assertTrue(ImageHandler().compareData(goldFn, stackFn2, tolerance=0.001))
+        else:
+            print "WARNING: Gold file '%s' missing!!!" % goldFn
+        
+        if CLEAN_IMAGES:
+            cleanPath(stackFn2)
 
 
     def test_alignShiftRot(self):
@@ -311,16 +256,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        if self.view:
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignment', mList,
-                         is2D=True, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignShiftRot', mList,
+                         is2D=True, inverseTransform=False)
 
     def test_alignShiftRotflip(self):
         """ Check that for a given alignment object,
@@ -426,17 +363,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        if self.view:
-            #TODO, alignment can not be applied to volume stack fix it
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.xmd"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignShiftRot3D', mList,
-                         is2D=False, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignShiftRot3D', mList,
+                         is2D=False, inverseTransform=False)
 
     def test_alignRotOnly(self):
         """ Check that for a given alignment object,
@@ -459,16 +387,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        if self.view:
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignRotOnly', mList,
-                         is2D=True, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignRotOnly', mList,
+                         is2D=True, inverseTransform=False)
 
     def test_alignRotOnly3D(self):
         """ Check that for a given alignment object,
@@ -492,17 +412,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        if self.view:
-            #TODO, alignment can not be applied to volume stack fix it
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignRotOnly3D', mList,
-                         is2D=False, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignRotOnly3D', mList,
+                         is2D=False, inverseTransform=False)
 
 
     def test_alignShiftOnly(self):
@@ -527,17 +438,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        if self.view:
-            #TODO, alignment can not be applied to volume stack fix it
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignShiftOnly', mList,
-                         is2D=True, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignShiftOnly', mList,
+                         is2D=True, inverseTransform=False)
 
     def test_alignShiftOnly3D(self):
         """ Check that for a given alignment object,
@@ -566,17 +468,8 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        if self.view:
-            #TODO, alignment can not be applied to volume stack fix it
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
-
-        self.launchAlignmentTest('alignShiftOnly3D', mList,
-                         is2D=False, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
+        self.launchTest('alignShiftOnly3D', mList,
+                         is2D=False, inverseTransform=False)
         
     def test_alignShiftRot(self):
         """ Check that for a given alignment object,
@@ -603,17 +496,90 @@ class TestAlignmentConvert(BaseTest):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        if self.view:
-            commandLine="""xmipp_transform_geometry  -i %(mdFn)s -o /tmp/kk.xmd --apply_transform;
-            xmipp_showj -i /tmp/kk.xmd;
-            rm /tmp/kk.???"""
-        else:
-            commandLine=None
+        self.launchTest('alignShiftRot', mList,
+                         is2D=True, inverseTransform=False)
 
-        self.launchAlignmentTest('alignShiftRot', mList,
-                         is2D=True, inverseTransform=False,
-                         printMatrix=True, commandLine=commandLine)
 
+class TestConvertReconstruct(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('emx')
+
+    def launchTest(self, fileKey, mList,
+                            is2D=True, inverseTransform=False, commandLine=None,
+                            **kwargs):
+        """ Helper function to launch similar alignment tests
+        give the EMX transformation matrix.
+        Params:
+            fileKey: the file where to grab the input stack images.
+            mList: the matrix list of transformations
+                (should be the same length of the stack of images)
+        """
+        print "\n"
+        print "*" * 80
+        print "* Launching test: ", fileKey
+        print "*" * 80
+
+        stackFn = self.dataset.getFile(fileKey)
+        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
+        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
+        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
+        print "BINARY DATA: ", stackFn
+        print "SET1: ", partFn1
+        print "  MD: ", mdFn
+        print "SET2: ", partFn2
+
+        partSet = SetOfParticles(filename=partFn1)
+        partSet.setAcquisition(Acquisition(voltage=300,
+                                  sphericalAberration=2,
+                                  amplitudeContrast=0.1,
+                                  magnification=60000))
+        # Populate the SetOfParticles with  images
+        # taken from images.mrc file
+        # and setting the previous alignment parameters
+        aList = [np.array(m) for m in mList]
+        for i, a in enumerate(aList):
+            p = Particle()
+            p.setLocation(i+1, stackFn)
+            p.setAlignment(Alignment(a))
+            partSet.append(p)
+        # Write out the .sqlite file and check that are correctly aligned
+        partSet.write()
+
+        # Convert to a Xmipp metadata and also check that the images are
+        # aligned correctly
+        writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+
+        # Let's create now another SetOfImages reading back the written
+        # Xmipp metadata and check one more time.
+        partSet2 = SetOfParticles(filename=partFn2)
+        partSet2.copyInfo(partSet)
+        readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                               inverseTransform=(inverseTransform))
+
+        partSet2.write()
+        #TODO_rob: I do not know how to make an assert here
+        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
+        #inverse has no effect
+
+        if kwargs.get('printMatrix', False):
+            for i, img in enumerate(partSet2):
+                m1 = aList[i]
+                m2 = img.getAlignment().getMatrix()
+                print "-"*5
+                print img.getFileName(), img.getIndex()
+                print  >> sys.stderr, 'm1:\n', m1
+                print  >> sys.stderr, 'm2:\n', m2
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+        if commandLine is not None:
+            
+            print "Computing: ", commandLine%locals()
+            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            for line in p.stdout.readlines():
+                print line,
+            retval = p.wait() 
+                   
     def test_reconstRotOnly(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.
@@ -664,7 +630,7 @@ class TestAlignmentConvert(BaseTest):
         else:
             commandLine=None
 
-        self.launchAlignmentTestProj('alignReconstShift', mList,
+        self.launchTest('alignReconstShift', mList,
                      is2D=False, inverseTransform=True,
                      printMatrix=True,
                      commandLine=commandLine)
@@ -719,7 +685,7 @@ class TestAlignmentConvert(BaseTest):
         else:
             commandLine=None
 
-        self.launchAlignmentTestProj('alignReconstShift', mList,
+        self.launchTest('alignReconstShift', mList,
                      is2D=False, inverseTransform=True,
                      printMatrix=True,
                      commandLine=commandLine)

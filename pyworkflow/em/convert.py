@@ -42,13 +42,44 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be indepent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import locationToXmipp, fixVolumeFileName
+        from packages.xmipp3 import fixVolumeFileName
         
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
-        self._locationToStr = locationToXmipp
         self._fixVolumeFileName = fixVolumeFileName
 
+    def _convertToLocation(self, location):
+        """ Get a location in a tuple format (index, filename).
+        location could be:
+            tuple -> (index, filename)
+            string -> (NO_INDEX, filename)
+            image -> (image.getIndex(), image.getFileName())
+        """
+        if isinstance(location, tuple):
+            outLocation = location
+        
+        elif isinstance(location, str):
+            outLocation = (NO_INDEX, location)
+            
+        elif hasattr(location, 'getLocation'): #this include Image and subclasses
+            # In this case inputLoc should be a subclass of Image
+            outLocation = (location.getIndex(), self._fixVolumeFileName(location))
+            
+        else:
+            raise Exception('Can not convert object %s to (index, location)' % type(location))
+        
+        return outLocation
+        
+    def convert(self, inputObj, outputObj):
+        """ Convert from one image to another.
+        inputObj and outputObj can be: tuple, string, or Image subclass 
+        (see self._convertToLocation)
+        """
+        # Read from input
+        self._img.read(self._convertToLocation(inputObj))
+        # Write to output
+        self._img.write(self._convertToLocation(outputObj))
+        
     def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
         """ convert format of stack file. Output/input format is
         specified by outFormat/inFormat. If outFormat/inFomat=None then
@@ -61,75 +92,35 @@ class ImageHandler(object):
         # handle image formats
         for i in range(1, n+1):
             self.convert((i, inputFn), (i, outputFn))
-
-    def convert(self, inputLoc, outputLoc):
-        """ Convert from one image to another.
-        Params:
-            inputLoc: input location (index and filename)
-            outputLoc: output location (index and filename)
-        """
-        if isinstance(inputLoc, str):
-            inputLoc = (NO_INDEX, inputLoc)
-        elif hasattr(inputLoc, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            inputLoc = (inputLoc.getIndex(), 
-                        self._fixVolumeFileName(inputLoc))
-            
-        if isinstance(outputLoc, str):
-            outputLoc = (NO_INDEX, outputLoc)
-            
-        # Read from input
-        inputStr = self._locationToStr(*inputLoc)
-        self._img.read(inputStr)
-        # Write to output
-        outputStr = self._locationToStr(*outputLoc)
-        self._img.write(outputStr)
         
-    def getDimensions(self, location):
+    def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if stack.
         """
-        if isinstance(location, str):
-            location = (NO_INDEX, location)
-        self._img.read(self._locationToStr(*location), xmipp.HEADER)
+        location = self._convertToLocation(locationObj)
+        self._img.read(location, xmipp.HEADER)
         
         return self._img.getDimensions()
     
-    def read(self, location):
-        """ Read an image from a location. """
-        return self._imgClass(self._locationToStr(*location))
-    
-    def write(self, image, location):
-        """ Write an image to disk. """
-        image.write(self._locationToStr(*location))
-
+    def read(self, inputObj):
+        """ Create a new Image class from inputObj 
+        (inputObj can be tuple, str or Image subclass). """
+        location = self._convertToLocation(inputObj)
         
-        
-def paramsToTransform(params):
-    """ Convert from geometry params (with Spider/Xmipp standard) to
-    the Transform object (transformation matrix)
-    """
-    # TODO: Remove dependency to Xmipp
-    from data import Transform
-    t = Transform()
-    e = xmipp.Euler_angles2matrix(params.angleRot, params.angleTilt, params.anglePsi)
-    m = t._matrix
-    m[:3, :3] = e
-    m[:, 3] = [params.shiftX, params.shiftY, params.shiftZ, 0.]
-    # TODO: Consider mirror and scale
-    return t
-
-       
-def transformToParams(transform):
-    """ Inverse convertion from a Transform to param. """
-    from data import TransformParams
-    p = TransformParams()    
-    m = transform._matrix
-    e = m[:3, :3]
-    p.angleRot, p.angleTilt, p.anglePsi = xmipp.Euler_matrix2angles(e)
-    p.shiftX, p.shiftY, p.shiftZ = m[:, 3]
-    # TODO: Consider mirror and scale
-    return p
+        return self._imgClass(location)
     
+    def write(self, image, outputObj):
+        """ Write to disk an image from outputObj 
+        (outputObj can be tuple, str or Image subclass). """
+        location = self._convertToLocation(outputObj)
+        image.write(location)
+        
+    def compareData(self, locationObj1, locationObj2, tolerance=0.0001):
+        """ Compare if two locations have the same binary data.
+        """
+        loc1 = self._convertToLocation(locationObj1)
+        loc2 = self._convertToLocation(locationObj2)
+        
+        return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)

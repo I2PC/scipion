@@ -32,11 +32,10 @@ This module contains converter functions that will serve to:
 
 import os
 from os.path import join
-from pyworkflow.object import String
 from pyworkflow.utils import Environ
-from pyworkflow.utils.path import createLink
+from pyworkflow.utils.path import createLink, cleanPath
 from pyworkflow.em import ImageHandler
-from pyworkflow.em.data import Class2D, SetOfClasses2D, SetOfClasses3D
+from pyworkflow.em.data import SetOfClasses2D, SetOfClasses3D, SetOfParticles
 from constants import *
 # Since Relion share several conventions with Xmipp, we will reuse 
 # the xmipp3 tools implemented for Scipion here
@@ -154,6 +153,7 @@ def addRelionLabels(replace=False, extended=False):
     for k, v in XMIPP_RELION_LABELS.iteritems():
         _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
         xmipp.addLabelAlias(k, v, replace)
+    return
     if extended:
         for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():    
             _xmippLabelsDict[k] = xmipp.label2Str(k) # store original label string
@@ -167,6 +167,7 @@ def addRelionLabelsToEnviron(env):
     pairs = []
     for k, v in XMIPP_RELION_LABELS.iteritems():
         pairs.append('%s=%s' % (xmipp.label2Str(k), v))
+    return 
     for k, v in XMIPP_RELION_LABELS_EXTRA.iteritems():
         pairs.append('%s=%s' % (xmipp.label2Str(k), v))        
     varStr = ';'.join(pairs)
@@ -236,19 +237,81 @@ def readSetOfClasses3D(classes3DSet, filename, **args):
     classes3DSet.appendFromClasses(clsSet)
     
 
-def sortImagesByLL(imgStar, imgSortedStar):
-    """ Given a Relion images star file, sort by LogLikelihood 
-    and save a new file. 
+def writeSqliteIterData(imgStar, imgSqlite):
+    """ Given a Relion images star file (from some iteration)
+    create the corresponding SetOfParticles (sqlite file)
+    for this iteration. This file can be visualized sorted
+    by the LogLikelihood.
     """
     addRelionLabels(replace=True, extended=True)
-    print "Sorting particles by likelihood, input: ", imgStar
-    fn = 'images@'+ imgStar
-    md = xmipp.MetaData(fn)
-    md.sort(xmipp.MDL_LL, False)
-    md.write('images_sorted@' + imgSortedStar)   
+    cleanPath(imgSqlite)
+    imgSet = SetOfParticles(filename=imgSqlite)
+    readSetOfParticles(imgStar, imgSet)
+    imgSet.write()
     restoreXmippLabels()
     
     
+def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, prefixes):
+    """ Write the angular distribution. Should be overriden in subclasses. """
+    addRelionLabels(replace=True, extended=True)
+    
+    md = xmipp.MetaData(inDataStar)
+    
+    refsList = range(1, numberOfClasses+1) 
+    print "refsList: ", refsList
+    for ref3d in refsList:
+        for prefix in prefixes:
+            mdGroup = xmipp.MetaData()
+            mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF, ref3d))
+            mdDist = xmipp.MetaData()
+            mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
+                                      [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
+                                      xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
+            mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
+            blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
+            print "Writing angular distribution to: ", blockName + data_angularDist
+            mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND) 
+            
+    restoreXmippLabels()
+    
+    
+def splitInCTFGroups(self, imgStar, groups):
+    """ Add a new colunm in the image star to separate the particles into ctf groups """
+    addRelionLabels(replace=True)
+    
+    md = xmipp.MetaData(imgStar)
+    defocus = [md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) for objId in md]
+    
+    minDef = min(defocus)
+    maxDef = max(defocus)
+    
+    increment = (maxDef - minDef) / groups
+    counter = 1
+    part = 1
+    md.sort(xmipp.MDL_CTF_DEFOCUSU)
+    
+    for objId in md:
+        partDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+        currDef = minDef + increment
+        
+        if partDef <= currDef:
+            part = part + 1
+            md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+        else:
+            if part < 100:
+                increment = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId) - minDef
+                part = part + 1
+                md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+            else:
+                part = 1
+                minDef = md.getValue(xmipp.MDL_CTF_DEFOCUSU, objId)
+                counter = counter + 1
+                increment = (maxDef - minDef) / (groups - counter)
+                md.setValue(xmipp.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+    md.write(imgStar)
+    restoreXmippLabels()
+    
+        
 def getMdFirstRow(starfile):
     addRelionLabels(replace=True, extended=True)
     from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
