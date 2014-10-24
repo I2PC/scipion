@@ -76,7 +76,7 @@ def viewerForm(project, protocol, viewer):
     protId = protocol.getObjId()
     viewerClassName = viewer.getClassName()
     
-    return "url::/form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
+    return "url::form/?protocolClass=%s&protRunIdViewer=%s&action=visualize" % (viewerClassName, protId)
     
 
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
@@ -88,11 +88,11 @@ def viewToUrl(request, view):
 
     # PLOT
     if isinstance(view, Plotter):
-        url = 'url::/' + savePlot(request, view)
+        url = 'url::' + savePlot(request, view)
     
     # SHOWJ
     elif isinstance(view, DataView):
-        url = "/showj/?%s=%s" % (PATH, view.getPath())
+        url = "showj/?%s=%s" % (PATH, view.getPath())
         showjParams = view.getShowJWebParams()
         
         if showjParams:
@@ -106,7 +106,7 @@ def viewToUrl(request, view):
     # TEXT VIEWER
     elif isinstance(view, TextView):
         fn  = view.getFileList()[0]
-        url = "file::/file_viewer/?%s=%s" % (PATH, fn)
+        url = "file::file_viewer/?%s=%s" % (PATH, fn)
         
     # MESSAGE
     elif isinstance(view, MessageView):
