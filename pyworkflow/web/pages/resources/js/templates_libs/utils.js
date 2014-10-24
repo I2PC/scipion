@@ -212,7 +212,7 @@ function popUpJSON(json){
 	$.each(json, function(i, item) {
 		array = item.split('::')
 		key = array[0]
-		value = array[1]
+		value = "/"+array[1]
 		//alert("item=" + item + " key=" + key + " value="+value)
 
 		if(key=="urls"){
