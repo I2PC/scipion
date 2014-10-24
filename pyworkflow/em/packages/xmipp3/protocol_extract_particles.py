@@ -430,10 +430,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     #--------------------------- UTILS functions --------------------------------------------
     def getInputMicrographs(self):
-        """ Return the micrographs associated to the SetOfCoordinates. """
-        if self.inputCoordinates.get() is None:
-            return None
-        return self.inputCoordinates.get().getMicrographs()
+        """ Return the micrographs associated to the SetOfCoordinates or to the 
+        Selected micrographs if Same as Picking not chosen. """
+        if self.downsampleType == SAME_AS_PICKING:
+            return self.inputCoordinates.get().getMicrographs()
+        else:
+            return self.inputMicrographs.get()
     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
