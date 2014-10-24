@@ -1105,7 +1105,6 @@ def alignmentToRow(alignment, alignmentRow,
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-    print ("flip type", type(flip) )
     alignmentRow.setValue(xmipp.MDL_FLIP, flip)
     #alignmentRow.setValue(xmipp.MDL_FLIP, True)
 
