@@ -121,16 +121,31 @@ DataSet(name='rct',  folder='rct',
 
 DataSet(name='emx',  folder='emx', 
         files={
-               'alignment': 'alignment/Test1/images.mrc',
-               'alignShiftRot3D': 'alignment/align_shift_rot_3d.mrcs',
+               'alignShiftRotExp': 'alignment/Test1/images.mrc',
+               'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
+               
                'alignReconst': 'alignment/recons.mrcs',
                'alignReconstShift': 'alignment/recons_sh.mrcs',
+               
                'alignRotOnly': 'alignment/align_rot_only.mrcs',
+               'alignRotOnlyGold': 'alignment/gold/align_rot_only_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
                'alignRotOnly3D': 'alignment/align_rot_only_3d.mrcs',
-               'alignRotShift': 'alignment/align_rot_shift.mrcs',
+               
+               #'alignRotShift': 'alignment/align_rot_shift.mrcs',
                'alignShiftOnly': 'alignment/align_shift_only.mrcs',
+               'alignShiftOnlyGold': 'alignment/gold/align_shift_only_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
                'alignShiftOnly3D': 'alignment/align_shift_only_3d.mrcs',
+               
                'alignShiftRot': 'alignment/align_shift_rot.mrcs',
+               'alignShiftRotGold': 'alignment/gold/align_shift_rot_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
+               'alignShiftRot3D': 'alignment/align_shift_rot_3d.mrcs',
+               
                'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',
                'coordinatesT1': 'coordinates/Test1/coordinates.emx',
                'defocusParticleT2': 'defocusParticle/particles.emx',

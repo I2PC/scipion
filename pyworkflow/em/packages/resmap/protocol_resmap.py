@@ -47,10 +47,12 @@ class ProtResMap(ProtAnalysis3D):
     """
     _label = 'local resolution'
              
+    #--------------------------- DEFINE param functions --------------------------------------------   
+    
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVolume', PointerParam, label="Input volume", important=True, 
-                      pointerClass='Volume',
+        form.addParam('inputVolume', PointerParam, pointerClass='Volume',  
+                      label="Input volume", important=True,
                       help='Select the input volume.')
         form.addParam('useSplitVolume', BooleanParam, default=False,
                       label="Use split volume?", 
@@ -62,33 +64,46 @@ class ProtResMap(ProtAnalysis3D):
                       label="Mask input volume?", 
                       help='If set to <No> ResMap will automatically compute a mask.')                
         form.addParam('maskVolume', PointerParam, label="Mask volume",  
-                      pointerClass='Volume', condition="applyMask",
-                      help='Select a volume to apply as a mask.')               
+                      pointerClass='VolumeMask', condition="applyMask",
+                      help='Select a volume to apply as a mask.')
         
-        form.addSection(label='Optional')
-        form.addParam('stepRes', FloatParam, default=1,
+        line = form.addLine('Pre-whitening')
+        line.addParam('prewhitenAng', FloatParam, label="Angstroms")
+        line.addParam('prewhitenRamp', FloatParam, label='Ramp')                      
+        
+        group = form.addGroup('Extra parameters')
+        #form.addSection(label='Optional')
+        group.addParam('stepRes', FloatParam, default=1,
                       label='Step size (Ang):',
                       help='in Angstroms (min 0.25, default 1.0)')
-        line = form.addLine('Resolution Range (A)', 
+        line = group.addLine('Resolution Range (A)', 
                             help='Default: algorithm will start a just above 2*voxelSize')
         line.addParam('minRes', FloatParam, default=0, label='Min')
         line.addParam('maxRes', FloatParam, default=0, label='Max')
-        form.addParam('pVal', FloatParam, default=0.05,
+        group.addParam('pVal', FloatParam, default=0.05,
                       label='Confidence level:',
                       help='usually between [0.01, 0.05]')   
                      
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         # Insert processing steps
         inputs = [self.inputVolume.get().getLocation()]
         if self.useSplitVolume:
             inputs.append(self.splitVolume.get().getLocation())
             
-        self._insertFunctionStep('convertInput', *inputs)
-        self._insertFunctionStep('estimateResolution', self.pVal.get(), 
-                                 self.minRes.get(), self.maxRes.get(), self.stepRes.get())
-        self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('convertInputStep', *inputs)
+        self._insertFunctionStep('estimateResolutionStep', 
+                                 self.pVal.get(), 
+                                 self.minRes.get(), 
+                                 self.maxRes.get(), 
+                                 self.stepRes.get(),
+                                 self.prewhitenAng.get(),
+                                 self.prewhitenRamp.get())
 
-    def convertInput(self, volLocation1, volLocation2=None):
+    #--------------------------- STEPS functions --------------------------------------------       
+    
+    def convertInputStep(self, volLocation1, volLocation2=None):
         """ Convert input volume to .mrc as expected by ResMap. 
         Params:
             volLocation1: a tuple containing index and filename of the input volume.
@@ -100,9 +115,36 @@ class ProtResMap(ProtAnalysis3D):
             ih.convert(volLocation2, self._getPath('volume2.map')) 
             
 
-    def estimateResolution(self, pValue, minRes, maxRes, stepRes):
+    def estimateResolutionStep(self, pValue, minRes, maxRes, stepRes, ang, rampWeight):
         """ Call ResMap.py with the appropiate parameters. """
-        self._enterWorkingDir()
+        results = self.runResmap(self._getPath())
+        
+        from cPickle import dumps
+        self.histogramData = String(dumps(results['resHisto']))
+        self._store(self.histogramData)
+        
+    #--------------------------- INFO functions -------------------------------------------- 
+    
+    def _summary(self):
+        summary = []
+        return summary
+    
+    def _validate(self):
+        errors = []
+                
+        return errors
+    
+    #--------------------------- UTILS functions --------------------------------------------
+ 
+    def runResmap(self, workingDir, wizardMode=False):
+        """ Prepare the args dictionary to be used
+        and call the ResMap algorithm.
+        Params:
+            workingDir: where to run ResMap
+            wizardMode: some custom params to be used by the wizard
+                to display the pre-whitening GUI and only that.
+        with the  """
+        self._enterDir(workingDir)
         
         volumes = ['volume1.map', 'volume2.map']
         
@@ -114,13 +156,22 @@ class ProtResMap(ProtAnalysis3D):
         # Always read the first volume as mrc data
         data1 = MRC_Data(volumes[0],'ccp4')
         
+        prewhitenArgs = {'display': wizardMode,
+                         'force-stop': wizardMode                         
+                         }
+        if (self.prewhitenAng.hasValue() and 
+            self.prewhitenRamp.hasValue()):
+            prewhitenArgs['newElbowAngstrom'] = self.prewhitenAng.get()
+            prewhitenArgs['newRampWeight'] = self.prewhitenRamp.get()
+            
         args = {'vxSize': self.inputVolume.get().getSamplingRate(),
-                'pValue': pValue,
-                'minRes': minRes,
-                'maxRes': maxRes,
-                'stepRes': stepRes,
-                'chimeraLaunch': False,
-                'graphicalOutput': False, #FIXME: change to False and move t
+                'pValue': self.pVal.get(),
+                'minRes': self.minRes.get(), 
+                'maxRes': self.maxRes.get(),
+                'stepRes': self.stepRes.get(),
+                'chimeraLaunch': False, # prevent ResMap to launch some graphical analysis
+                'graphicalOutput': False, 
+                'scipionPrewhitenParams': prewhitenArgs
                 }
         
         if self.useSplitVolume:
@@ -136,27 +187,10 @@ class ProtResMap(ProtAnalysis3D):
                          'data': data1,
                          })   
             
-             
         results = ResMap_algorithm(**args)  
+        self._leaveDir()
         
-        from cPickle import dumps
-        self.histogramData = String(dumps(results['resHisto']))
-        #  
-                    
-        self._leaveWorkingDir()
-        
-    def createOutput(self):
-        """ Register the output (the alignment and the aligned particles.)
-        """
-        pass
-        
-    def _summary(self):
-        summary = []
-        return summary
+        return results   
     
-    def _validate(self):
-        errors = []
-                
-        return errors
-    
+     
 

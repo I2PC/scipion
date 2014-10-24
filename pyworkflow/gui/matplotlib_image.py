@@ -37,6 +37,28 @@ import matplotlib.cm as cm
 from matplotlib.patches import Wedge
 
 
+class FigureFrame(tk.Frame):
+    """ Create a Tk Frame that will contains a 
+    Matplotlib Figure. 
+    **kwargs arguments will be passed to Figure constructor.
+    Valid options are:
+        figsize = (xdim, ydim)
+        dpi = value
+        frameon = (True|False)
+    """
+    def __init__(self, parent, **kwargs):
+        tk.Frame.__init__(self, parent)
+        self.figure = Figure(**kwargs)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self)
+        self.canvas.get_tk_widget().grid(column=0, row=0)
+
+    def getFigure(self):
+        return self.figure
+    
+    def getCanvas(self):
+        return self.canvas
+    
+    
 class Preview(tk.Frame):
     #def __init__(self, parent, dim, dpi=36, label=None):
     def __init__(self, parent, dim, dpi=36, label=None, col=0, row=0):
@@ -61,6 +83,7 @@ class Preview(tk.Frame):
     
     def _update(self):
         """ Should be implemented in subclasses. """
+        pass
     
     def clear(self):
         self._update(self.bg)
