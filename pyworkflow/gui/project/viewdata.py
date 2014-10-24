@@ -109,7 +109,7 @@ class ProjectDataView(tk.Frame):
         self.protCfg = windows.protCfg
         self.icon = windows.icon
         self.settings = windows.getSettings()
-        self.showGraph = self.settings.graphView.get()
+        self.showGraph = self.settings.getGraphView()
         self.style = ttk.Style()
         
         self.root.bind("<F5>", self.refreshData)

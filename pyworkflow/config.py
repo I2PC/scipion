@@ -117,6 +117,12 @@ class ProjectSettings(OrderedObject):
             if host.label == hostLabel:
                 return host
         return None
+    
+    def getGraphView(self):
+        return self.graphView.get()
+    
+    def setGraphView(self, value):
+        self.graphView.set(value)
 
     def saveHost(self, host, commit=False):
         """ Save a host for project settings.
