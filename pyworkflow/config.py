@@ -95,7 +95,6 @@ class ProjectSettings(OrderedObject):
         """
         # Load configuration
         self.addMenus(confs.get('menus', None))
-        print "protocols config: ", confs.get('protocols', None)
         self.addProtocols(confs.get('protocols', None))
         self.addHosts(confs.get('hosts', None))
 

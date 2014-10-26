@@ -95,6 +95,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def __init__(self, **args):
         # Load global configuration
         settings = ProjectSettings()
+        settings.loadConfig()
         self.menuCfg = settings.getCurrentMenu()
         self.generalCfg = settings.getConfig()
         
