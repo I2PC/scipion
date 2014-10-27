@@ -1109,7 +1109,7 @@ def alignmentToRow(alignment, alignmentRow,
     #alignmentRow.setValue(xmipp.MDL_FLIP, True)
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessRow=None):
+                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1152,9 +1152,7 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
         imgRow = rowFromMd(md, objId)
-        if preprocessRow:
-            preprocessRow(imgRow)
-        img = rowToParticle(imgRow)
+        img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
         
         classItem.append(img)
         

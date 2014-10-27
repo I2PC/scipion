@@ -33,7 +33,7 @@ This module contains converter functions that will serve to:
 import os
 from os.path import join
 from pyworkflow.utils import Environ
-from pyworkflow.utils.path import createLink, cleanPath
+from pyworkflow.utils.path import createLink, cleanPath, copyFile
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import SetOfClasses2D, SetOfClasses3D, SetOfParticles
 from constants import *
@@ -204,7 +204,7 @@ def writeSetOfParticles(imgSet, starFile,
 
 
 def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessRow=None):
+                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
     """ From an intermediate dataXXX.star file produced by relion, create
     the set of classes in which those images are classified.
     Params:
@@ -221,7 +221,7 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
     xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                                   classLabel, classFnTemplate, iter, preprocessRow)
+                                   classLabel, classFnTemplate, iter, preprocessImageRow)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):
@@ -328,7 +328,7 @@ def findImagesPath(starFile):
     
     while absPath is not None and absPath != '/':
         if os.path.exists(os.path.join(absPath, imgFile)):
-            return os.path.relpath(absPath)
+            return absPath #os.path.relpath(absPath)
         absPath = os.path.dirname(absPath)
         
     return None
@@ -347,7 +347,20 @@ def relativeFromFileName(imgRow, prefixPath):
     imgPath = os.path.relpath(imgPath, prefixPath)
     newLoc = locationToRelion(index, imgPath)
     imgRow.setValue(xmipp.MDL_IMAGE, newLoc)
-
+    
+    
+def copyOrLinkFileName(imgRow, prefixDir, outputDir, copyFiles=False):
+    index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+    baseName = os.path.basename(imgPath)
+    newName = os.path.join(outputDir, baseName)
+    if not os.path.exists(newName):
+        if copyFiles:
+            copyFile(os.path.join(prefixDir, imgPath), newName)
+        else:
+            createLink(os.path.join(prefixDir, imgPath), newName)
+            
+    imgRow.setValue(xmipp.MDL_IMAGE, locationToRelion(index, newName))
+    
 
 def setupCTF(imgRow, sampling):
     """ Do some validations and set some values
