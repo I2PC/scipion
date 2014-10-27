@@ -669,7 +669,7 @@ size_t MDSql::previousRow(size_t currentRow)
 int MDSql::columnMaxLength(MDLabel column)
 {
     std::stringstream ss;
-    ss << "SELECT MAX(COALESCE(LENGTH("<< MDL::label2Str(column)
+    ss << "SELECT MAX(COALESCE(LENGTH("<< MDL::label2StrSql(column)
     <<"), -1)) AS MDSQL_STRING_LENGTH FROM "
     << tableName(tableId) << ";";
     return execSingleIntStmt(ss);
