@@ -1,84 +1,98 @@
-{% extends 'base_grid.html'%}
-
-{% block title %} - Service {% endblock %}
-
-{% block content_head %}
-<!-- CSS -->
-<link href="{{projects_css}}" rel="stylesheet" type="text/css">
-
-<!-- JS -->
-<script src="{{project_utils_js}}" type="text/javascript"></script>
-<script type="text/javascript">
-
-	jQuery(function($) {
-		// Just call the inner layout once to initialize it. This
-		// must happen before the outer layout is initialized. It
-		// will be automatically resized when the outer layout is
-		// resized.
-	/* 	var outerContainer = $('.layout-outer');
-
-		function layout() {
-			outerContainer.layout({resize: false});
-		}
-		layout();
-
-		$(window).resize(layout); */
+<!DOCTYPE html>
+<html lang='es'>
+	<head>
+		<title>
+			Scipion - Initial Volume
+		</title>
+		<meta charset='utf-8'>
+		<link rel="icon" type="image/png" href="{{favicon}}" />
 		
-		var outerContainer = $('.layout-outer');
-
-		function layout() {
-			outerContainer.layout({resize: false});
-		}
-		layout();
-
-		$(window).resize(layout);
-
-	});
+		<!-- CSS -->
+		<link href="{{general_css}}" rel="stylesheet"	type="text/css"> 
+		<link href="{{service_css}}" rel="stylesheet"	type="text/css"> 
+		<link href="{{messi_css}}" rel="stylesheet" type="text/css"/>
+		<link href="{{font_awesome}}" rel="stylesheet" type="text/css">
+		<link href="{{projects_css}}" rel="stylesheet" type="text/css">
+		
+		<style type="text/css">
+			body{
+				background-color:#fafafa;
+			}
+			div#bodyStyle {
+				background-color: white;
+				margin-left: auto;
+			    margin-right: auto;
+			    width: 70%;
+			    padding: 2em;
+				border: 2px solid firebrick;
+				border-radius: 7px;
+			}
+			header {
+				height: 7em;
+			}
+		 </style>
+		
+		<!-- JS -->
+		<script type="text/javascript" src="{{jquery}}"></script>
+		<script type="text/javascript" src="{{messi_js}}"></script>
+		<script type="text/javascript" src="{{utils}}"></script>
+		<script type="text/javascript" src="{{config}}"></script>
+		<script src="{{project_utils_js}}" type="text/javascript"></script>
+		
+	</head>
+	<body>
+		<div id="bodyStyle">
+			<header data-layout='{"type": "border", "hgap": 1, "vgap": 1}' class="north">
+				<div id="headerMainContainer">
+					<a href="{{abs_url}}/service_projects/" id="headerLogoContainer">
+						<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
+					</a>
+					<span id="projectName">
+						Initial Volume Service
+					</span>
+					<div style="float:right;">
+						<a href="http://i2pc.cnb.csic.es/LoadHome.htm">
+							<img src="/resources/logo_i2pc_with_title.png" style="height:3.2em;"/>
+						</a>
+						<a href="http://www.structuralbiology.eu/">
+							<img src="/resources/logoInstruct.png" style="height:3.2em;"/>
+						</a>
+						<a href="http://www.cnb.csic.es/">
+							<img src="/resources/logo_cnb_without_title.gif" style="height:3.2em;"/>
+						</a>
+					</div>
+				</div>
+				<div id="headerLine"></div>
+			</header>		
 	
-
-	
-</script>
-{% endblock %}
-
-{% block content_header %}	{% include "header.html"%} {% endblock %}
-
-{% block menu %}
-
-<div id="asideMainContainer">
-
-	<a href="javascript:serviceProjForm();" >
-		<button class="btn buttonRed" type="button">
-			Create new project
-		</button>
- 	</a>
-		
- 	<a href="javascript:goToProjectForm();" >
-		<button class="btn buttonGrey" type="button">
-			Go to your project
-		</button>
-	</a>
-		
-</div>
-
-{% endblock %}
-
-{% block content %}
-<div class="projectsList">	
-<h1>Example projects:</h1>
-	<ul>				
-	{% for project in projects %}
-		<li class="projList">
-			<strong>
-				<a href="/project_content/?projectName={{project}}&mode=service" class="projName">
-					{{project}}
+			<div>
+			
+				<a href="javascript:serviceProjForm();" >
+					<button class="btn buttonRed" type="button">
+						Create new project
+					</button>
+			 	</a>
+					
+			 	<a href="javascript:goToProjectForm();" >
+					<button class="btn buttonGrey" type="button">
+						Go to your project
+					</button>
 				</a>
-			</strong>
-		</li>
-	{% endfor %}
-	</ul>
-</div>
-
-{% endblock %}
-
-
-
+				
+				<a href="/project_content/?projectName=TestXmippWorkflow&mode=service" class="projName">
+					<button class="btn buttonGrey" type="button">
+						Example Project
+					</button>
+				</a>
+				
+			</div>
+		
+			<div style="float:right;font-size:0.8em;">
+				<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+					© 2014  · Scipion is licenced under the Creative Commons Attribution-NonCommercial-NoDerivs
+					<img src="https://i.creativecommons.org/l/by-nc-nd/3.0/80x15.png" />
+				</a>
+			</div>
+		</div>
+	</body>
+</html>
