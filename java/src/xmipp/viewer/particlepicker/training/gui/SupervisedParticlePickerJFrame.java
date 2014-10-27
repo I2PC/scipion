@@ -89,7 +89,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         try {
             this.ppicker = picker;
             initComponents();
-
+            setChanged(false);
         } catch (IllegalArgumentException ex) {
             close();
             throw ex;
@@ -348,6 +348,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                     if (isautopick) {
 
                         ppicker.setMode(Mode.Supervised);
+                        
                         ppicker.trainAndAutopick(SupervisedParticlePickerJFrame.this);
                         setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 
@@ -665,7 +666,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 return;
             }
         }
-        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) //Otherwise save is done on threads
+        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) 
         {
             ppicker.saveData(current);
             setChanged(false);
@@ -708,8 +709,6 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         if (isautopick)// if not done before
         {
             current.resetParticlesRectangle();
-            ppicker.saveData(current);
-            setChanged(false);
             ppicker.autopick(this, next);
         }
         
@@ -757,11 +756,27 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 }
             index --;
         } 
-        
         if(index < 0)
         {
+            index = micrographstb.getSelectedRow() + 1;
+            while (index < ppicker.getMicrographs().size()) 
+            {
+                    rectmic = ppicker.getMicrographs().get(index);
+                    if (rectmic.hasManualParticles()) 
+                    {
+                        rectmic.initParticlesRectangle(ppicker);
+                        isvalidrect = rectmic.isValid(ppicker);
+                        if(isvalidrect)
+                            break;
+                    }
+                index ++;
+            }
+        }
+        
+        if(index < 0 || index == ppicker.getMicrographs().size())
+        {
             canvas.repaint();
-            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Non particles area too small.");
+            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Particles might be too close or too few.");
             rectmic.resetParticlesRectangle();
             canvas.repaint();
             return false;
@@ -769,6 +784,11 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         trainmsg = "";
         if(!rectmic.equals(getMicrograph()))
         {
+            if(ppicker.isChanged())
+            {
+                ppicker.saveData(getMicrograph());
+                setChanged(false);
+            }
             trainmsg = String.format("Micrograph %s was selected for training.\n", rectmic.getName());
             micrographstb.getSelectionModel().setSelectionInterval(index, index);
         }

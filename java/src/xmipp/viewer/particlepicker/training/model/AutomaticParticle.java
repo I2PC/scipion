@@ -24,11 +24,7 @@ public class AutomaticParticle extends ManualParticle {
 		return deleted;
 	}
 
-	public void setCost(double cost)
-	{
-		this.cost = cost;
-		
-	}
+	
 	
 
 

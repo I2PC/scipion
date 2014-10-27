@@ -16,13 +16,9 @@ public class ManualParticle extends PickerParticle{
 	
 	protected ParticlePicker picker;
 	protected ImagePlus img;
-	protected double cost = 2;
+	
 
 	protected double[] lastalign;
-
-	
-	
-	
 
 	public double[] getLastalign()
 	{
@@ -44,15 +40,11 @@ public class ManualParticle extends PickerParticle{
 		super(x, y, micrograph);
 		
 		this.picker = picker;
-		this.cost = cost;
+		
 	}
 	
 	
-	public double getCost()
-	{
-		return cost;
-	}
-
+	
 
 	public ParticlePicker getParticlePicker()
 	{

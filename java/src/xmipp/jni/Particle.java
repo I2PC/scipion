@@ -1,23 +1,25 @@
 package xmipp.jni;
 
-import ij.ImagePlus;
 import java.awt.Point;
-import ij.process.ImageProcessor;
-
-import java.awt.Rectangle;
-import java.util.List;
 
 
 
 public class Particle implements Comparable<Particle> {
 	protected int x;
 	protected int y;
-	
+	protected double cost = 2;
 	
 	public Particle(int x, int y)
 	{
 		this.x = x;
 		this.y = y;
+	}
+        
+        public Particle(int x, int y, double cost)
+	{
+		this.x = x;
+		this.y = y;
+                this.cost = cost;
 	}
 	
 	
@@ -36,6 +38,18 @@ public class Particle implements Comparable<Particle> {
 	public void setY(int y) {
 		this.y = y;
 	}
+        
+        public double getCost()
+	{
+		return cost;
+	}
+        
+        public void setCost(double cost)
+	{
+		this.cost = cost;
+		
+	}
+
 	
 		
 	public boolean contains(int x2, int y2, int size )
