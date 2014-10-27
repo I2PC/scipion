@@ -393,7 +393,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void saveData(Micrograph m)
 	{
-                //System.out.println("saving data");
+                System.out.println("saving data");
 		SupervisedParticlePickerMicrograph tm = (SupervisedParticlePickerMicrograph) m;
 		long id;
 		try
@@ -425,7 +425,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			md.destroy();
 			saveAutomaticParticles(tm);
                         saveTemplates();
-                //System.out.println("saved");
+                System.out.println("saved");
 		}
 		catch (Exception e)
 		{
@@ -1159,6 +1159,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			micrograph.setAutopickpercent(getAutopickpercent());
 			autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 			loadParticles(micrograph, autopickRows);
+                        saveData(micrograph);
+                        frame.setChanged(false);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
@@ -1178,7 +1180,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		MDRow[] addedRows = getAddedRows(current);
 		MDRow[] autoRows = getAutomaticRows(current);
 		frame.getCanvas().setEnabled(false);
-                boolean isautopick = getMode() == Mode.Supervised && next.getState() == MicrographState.Supervised;
+                boolean isautopick = getMode() == Mode.Supervised && next.getState() == MicrographState.Available;
                 if(isautopick)
                     XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
                 else
@@ -1259,6 +1261,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				next.setAutopickpercent(autopickpercent);
 				autopickRows = classifier.autopick(next.getFile(), next.getAutopickpercent());
 				loadParticles(next, autopickRows);
+                                saveData(next);
+                                frame.setChanged(false);
 			}
                         micrograph.resetParticlesRectangle();//after correct there is no need to keep this information for mic
 			frame.getCanvas().repaint();

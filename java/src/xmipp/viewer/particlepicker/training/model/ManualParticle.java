@@ -37,21 +37,15 @@ public class ManualParticle extends PickerParticle{
 	
 	public ManualParticle(int x, int y, ParticlePicker picker, Micrograph micrograph, double cost)
 	{
-		super(x, y, micrograph);
-		
+		super(x, y, micrograph, cost);
 		this.picker = picker;
-		
 	}
-	
-	
 	
 
 	public ParticlePicker getParticlePicker()
 	{
 		return picker;
 	}
-
-
 
 	
 	public int getX0()

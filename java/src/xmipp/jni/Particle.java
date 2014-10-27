@@ -7,7 +7,7 @@ import java.awt.Point;
 public class Particle implements Comparable<Particle> {
 	protected int x;
 	protected int y;
-	protected double cost = 2;
+	protected double cost;
 	
 	public Particle(int x, int y)
 	{
@@ -77,7 +77,7 @@ public class Particle implements Comparable<Particle> {
 	
 	public String toString()
 	{
-		return String.format("x = %s; y = %s", x, y); 
+		return String.format("x = %s; y = %s cost = %.2f", x, y, cost); 
 	}
 	
 
