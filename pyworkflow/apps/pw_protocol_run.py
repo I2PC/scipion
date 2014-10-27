@@ -29,7 +29,7 @@ This module is responsible for launching protocol executions.
 """
 import sys
 from pyworkflow.em import *
-from pyworkflow.apps.config import *
+from pyworkflow.config import *
 
 # Add callback for remote debugging if available.
 try:
