@@ -337,7 +337,7 @@ def main():
   ************************************************************************
 
 """)
-            runApp('config.py')
+            runApp('pw_config.py')
             # FIXME: I am not sure this is a good idea. To begin with,
             # right now it expects xmipp to be installed.
         sys.exit(ret)
