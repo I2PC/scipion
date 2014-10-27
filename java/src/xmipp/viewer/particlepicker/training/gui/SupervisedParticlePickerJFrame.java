@@ -6,7 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -31,7 +30,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import xmipp.jni.CTFDescription;
 import xmipp.utils.ColorIcon;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -74,7 +72,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private JCheckBox autopickchb;
     private JPanel sppickerpn;
     private JLabel autopicklb;
-    private Rectangle rectangle;
+    
     private JMenuItem templatesmi;
     TemplatesJDialog templatesdialog;
     private JLabel checkpercentlb;
@@ -180,12 +178,12 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     }
 
     @Override
-    public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty) {
+    public String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty) {
         String result = "";
 
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
-            result = ppicker.importParticlesFromFolder(dir, format, scale, invertx, inverty);
+            result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);
@@ -350,7 +348,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                     if (isautopick) {
 
                         ppicker.setMode(Mode.Supervised);
-                        ppicker.trainAndAutopick(SupervisedParticlePickerJFrame.this, rectangle);
+                        ppicker.trainAndAutopick(SupervisedParticlePickerJFrame.this);
                         setTitle("Xmipp Particle Picker - " + ppicker.getMode());
 
                     } else if (autopickchb.isSelected()) {
@@ -363,7 +361,6 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                             resetbt.setEnabled(true);
                             ppicker.saveAllData();
                             updateMicrographsModel();
-                            rectangle = null;
                             if (autopickchb.isSelected()) {
                                 autopickchb.setSelected(false);
                             }
@@ -649,6 +646,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             return;// Probably from fireTableDataChanged raised
         }		// is same micrograph??
         int micindex = ppicker.getMicrographIndex();
+        
         int index = micrographstb.getSelectedRow();
         if (micindex == index && canvas != null && canvas.getIw().isVisible()) {
             return;
@@ -656,37 +654,40 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
         
 
         SupervisedParticlePickerMicrograph next = ppicker.getMicrographs().get(index);
-
-        if (!getMicrograph().equals(next))// app just started
+        SupervisedParticlePickerMicrograph current = getMicrograph();
+        
+        if (!current.equals(next))// app just started
         {
-            int result = tryCorrectAndAutopick(getMicrograph(), next);
+            int result = tryCorrectAndAutopick(current, next);
 
             if (result == XmippQuestionDialog.CANCEL_OPTION) {
                 micrographstb.setRowSelectionInterval(micindex, micindex);
                 return;
             }
         }
-        if (ppicker.isChanged()) //ppicker.saveData(getMicrograph());// Saving changes when switching
-            ppicker.saveData();
-        ppicker.getMicrograph().releaseImage();
+        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) //Otherwise save is done on threads
+        {
+            ppicker.saveData(current);
+            setChanged(false);
+        }
+        current.releaseImage();
         ppicker.setMicrograph(next);
-        //ppicker.saveConfig();
+        ppicker.saveConfig();
         initializeCanvas();
         if (ppicker.getMode() == Mode.Supervised) {
-            resetbt.setEnabled(getMicrograph().getState() != MicrographState.Manual);
-            thresholdsl.setValue((int) (getMicrograph().getThreshold() * 100));
-            thresholdtf.setValue(getMicrograph().getThreshold());
+            resetbt.setEnabled(next.getState() != MicrographState.Manual);
+            thresholdsl.setValue((int) (next.getThreshold() * 100));
+            thresholdtf.setValue(next.getThreshold());
         }
-        setChanged(false);
 
-        iconbt.setIcon(ppicker.getMicrograph().getCTFIcon());
+
+        iconbt.setIcon(next.getCTFIcon());
 
         pack();
 
         if (particlesdialog != null) {
             loadParticles();
         }
-        rectangle = null;
 
     }
 
@@ -698,20 +699,24 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             String msg = String.format("Would you like to correct training with added and deleted particles from micrograph %s?", current.getName());
             result = XmippDialog.showQuestionYesNoCancel(this, msg);
             if (result == XmippQuestionDialog.YES_OPTION) {
-                ppicker.correctAndAutopick(this, current, next, rectangle);
+                ppicker.correctAndAutopick(this, current, next);
                 isautopick = false;
             }
             if (result == XmippQuestionDialog.CANCEL_OPTION)
                 isautopick = false;
         }
         if (isautopick)// if not done before
+        {
+            current.resetParticlesRectangle();
+            ppicker.saveData(current);
+            setChanged(false);
             ppicker.autopick(this, next);
+        }
         
         return result;
     }
 
     protected void resetMicrograph() {
-        rectangle = null;
         ppicker.resetMicrograph(getMicrograph());
         canvas.refreshActive(null);
         updateMicrographsModel();
@@ -737,39 +742,56 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                     .format("You should have at least %s particles to go to %s mode", ppicker.getParticlesThreshold(), Mode.Supervised));
             return false;
         }
-        if (!getMicrograph().hasManualParticles()) {
-            int index = micrographstb.getSelectedRow() - 1;
-
-            while (index >= 0) {
-                if (ppicker.getMicrographs().get(index).hasManualParticles()) {
-                    rectangle = ppicker.getMicrographs().get(index).getParticlesRectangle(ppicker);
-                    trainmsg = "Classifier training for autopick requires that the previous micrographs to be fully picked. "
-                            + "Are you sure you want to continue?";
-                    break;
+        boolean isvalidrect = false;
+        int index = micrographstb.getSelectedRow();
+        SupervisedParticlePickerMicrograph rectmic = null;
+        while (index >= 0) 
+        {
+                rectmic = ppicker.getMicrographs().get(index);
+                if (rectmic.hasManualParticles()) 
+                {
+                    rectmic.initParticlesRectangle(ppicker);
+                    isvalidrect = rectmic.isValid(ppicker);
+                    if(isvalidrect)
+                        break;
                 }
-            }
-        } else {
-            rectangle = getMicrograph().getParticlesRectangle(ppicker);
+            index --;
+        } 
+        
+        if(index < 0)
+        {
+            canvas.repaint();
+            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Non particles area too small.");
+            rectmic.resetParticlesRectangle();
+            canvas.repaint();
+            return false;
         }
-        canvas.repaint();
+        trainmsg = "";
+        if(!rectmic.equals(getMicrograph()))
+        {
+            trainmsg = String.format("Micrograph %s was selected for training.\n", rectmic.getName());
+            micrographstb.getSelectionModel().setSelectionInterval(index, index);
+        }
+        else
+            canvas.repaint();
+        trainmsg += "Classifier requires that the previously picked micrographs to be fully picked. "
+                            + "Are you sure you want to continue?";
         int result = XmippDialog
                 .showQuestionYesNoCancel(this, trainmsg);
         if (result == XmippQuestionDialog.CANCEL_OPTION) {
-            rectangle = null;
             canvas.repaint();
+            rectmic.resetParticlesRectangle();
         }
         return result == XmippQuestionDialog.YES_OPTION;
     }
 
-    public Rectangle getParticlesRectangle() {
-        return rectangle;
-    }
+    
 
     public void close() {
         if (ppicker.isCorrectPending()) {
             boolean iscorrect = XmippDialog.showQuestion(this, "Would you like to correct training with added and deleted particles?");
             if (iscorrect) {
-                ppicker.correct(rectangle);
+                ppicker.correct();
             }
         }
         super.close();

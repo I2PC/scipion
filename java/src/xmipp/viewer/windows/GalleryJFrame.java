@@ -67,6 +67,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -141,8 +142,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private boolean isUpdating;
 	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
-	private GalleryMenu menu;
-	private XmippFileChooser fc;
+	protected GalleryMenu menu;
+	protected XmippFileChooser fc;
 	private SaveJDialog dlgSave = null;
 	private boolean saved = false;
 	private ClassesJDialog dlgClasses = null;
@@ -238,7 +239,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		init(new GalleryData(this, filename, parameters));
 	}
 
-	public GalleryJFrame(String filename, MetaData md, Params parameters)
+	public GalleryJFrame(MetaData md, Params parameters)
 	{
 		super();
 		init(new GalleryData(this, parameters, md));
@@ -258,7 +259,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
             try
             {
-                new GalleryJFrame(null, md, new Params());
+                new GalleryJFrame(md, new Params());
             }
             catch(Exception e)
             {
@@ -390,7 +391,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		container.add(buttonspn, XmippWindowUtil.getConstraints(c, 0, 3, 1, 1, GridBagConstraints.HORIZONTAL));
 						
 		// Create the menu for table
-		menu = new GalleryMenu();
+		initGalleryMenu();
 		setJMenuBar(menu.getMenuBar());
 		jpopUpMenuTable = new GalleryPopupMenu();
 		menu.update();
@@ -488,6 +489,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
         public void fireTableRowsUpdated(int from, int to) {
             gallery.fireTableRowsUpdated(from, to);
+        }
+
+    
+
+        protected void initGalleryMenu() {
+            menu = new GalleryMenu();
+                    
         }
 
 	/** Some tweaks over traditional JTable */
@@ -1483,10 +1491,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		reloadTableData();
 	}
 
-	class GalleryMenu extends XmippMenuBarCreator
+	protected class GalleryMenu extends XmippMenuBarCreator
 	{
 
-		private QuickHelpJDialog quickhelpdlg;
+		protected QuickHelpJDialog quickhelpdlg;
 
 		@Override
 		protected void createItems() throws Exception
@@ -1496,14 +1504,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(FILE_OPEN, "Open ...", null, "control released O");
 			addItem(FILE_OPENWITH_IJ, "Open with ImageJ", "ij.gif", "control released J");
 			addItem(FILE_OPENWITH_CHIMERA, "Open with Chimera", "chimera.gif", "control released H");
-			addItem(FILE_OPENMICROGRAPHS, "Open Particle Micrographs");
+			addItem(FILE_OPENMICROGRAPHS, "Open particle micrographs");
 			addItem(FILE_INFO, "File info ...");
 
 			addSeparator(FILE);
 			addItem(FILE_SAVE, "Save", "save.gif", "control released S");
 			addItem(FILE_SAVEAS, "Save as", "save_as.gif");
 
-                        addItem(FILE_EXPORTIMAGES, "Export Images ...", "export_wiz.gif");
+                        addItem(FILE_EXPORTIMAGES, "Export images ...", "export_wiz.gif");
 			addItem(FILE_REFRESH, "Refresh", "refresh.gif", "released F5");
 			addSeparator(FILE);
 			addItem(FILE_EXIT, "Exit", null, "control released Q");
@@ -1546,7 +1554,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
-			addItem(KEY_ASSIST, "Key Assist...");
+			addItem(KEY_ASSIST, "Key assist...");
 		}// function createItems
 
 		public void update()
@@ -1668,6 +1676,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					try
 					{
 						String args = data.getSelVolumeFile();
+                                                if(!XmippUtil.isInPath("chimera"))
+                                                {
+                                                    XmippDialog.showError(GalleryJFrame.this, "Chimera is not available");
+                                                    return;
+                                                }
 						// if (Filename.isSpiderVolume(args))
 						// args = "spider:" + args;
 						// // FIXME: Check chimera is installed
@@ -1782,7 +1795,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{                  
                         JMenuItem mi = getItem(DISPLAY_RENDERIMAGE);
                         if(mi == null)
-                            mi = addItem(DISPLAY_RENDERIMAGE, "Render Image");
+                            mi = addItem(DISPLAY_RENDERIMAGE, "Render image");
                         else
                             mi.removeAll();
 			boolean rendercolumn = false;
@@ -1810,7 +1823,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{                  
                         JMenuItem mi = getItem(DISPLAY_SHOWLABELS);
 			if(mi == null)
-                            mi = addItem(DISPLAY_SHOWLABELS, "DisplayLabel");
+                            mi = addItem(DISPLAY_SHOWLABELS, "Display label");
                         else
                             mi.removeAll();
 			
@@ -2271,9 +2284,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	}
 
-	public Map<String, String> getKeyAssist()
+	public Map<Object, Object> getKeyAssist()
 	{
-		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 		map.put("Shift + Scroll Up/Ctrl + P", "Zoom in if images displayed");
 		map.put("Shift + Scroll Down/Ctrl + O", "Zoom out if images displayed");
 		map.put("Left click", "Selects a cell in gallery mode and a row in table mode");

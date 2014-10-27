@@ -220,7 +220,7 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
 			drawShape(g2, active, true, activest);
 		}
-		Rectangle autopickout = frame.getParticlesRectangle();
+		Rectangle autopickout = micrograph.getRectangle();
 		if (autopickout != null && micrograph.hasManualParticles())
 		{
 			g2.setColor(Color.yellow);

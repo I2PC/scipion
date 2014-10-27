@@ -12,8 +12,10 @@ package xmipp.ij.commons;
  */
  public class Geometry
         {
-            public Double shiftx, shifty, psiangle;
-            Boolean flip;
+            public double shiftx, shifty, psiangle;
+            public boolean flip;
+            
+            private String matrixString;
             
             public Geometry(double shiftx, double shifty, double psiangle, boolean flip)
             {
@@ -21,6 +23,23 @@ package xmipp.ij.commons;
                 this.shifty = shifty;
                 this.psiangle = psiangle;
                 this.flip = flip;
+                this.matrixString = null;
+            }
+            
+            public Geometry(String matrixString)
+            {
+            	this.matrixString = matrixString;
+            }
+            
+            public String getMatrix()
+            {
+            	return this.matrixString;
+            }
+            
+            public boolean hasMatrix()
+            {
+            	return this.matrixString != null;
             }
         }
+
         

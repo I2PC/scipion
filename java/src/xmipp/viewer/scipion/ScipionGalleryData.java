@@ -6,6 +6,7 @@
 package xmipp.viewer.scipion;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
@@ -34,8 +36,7 @@ public class ScipionGalleryData extends GalleryData {
     public ScipionGalleryData(ScipionGalleryJFrame window, Params parameters, ScipionMetaData md) {
         super(window, parameters, md);
 
-        mdBlocks = md.getBlocks();
-        selectedBlock = mdBlocks[0];
+        
 
     }
 
@@ -46,6 +47,8 @@ public class ScipionGalleryData extends GalleryData {
             filename = file.substring(sep + 1);
         }
         filename = file;
+        mdBlocks = ((ScipionMetaData)md).getBlocks();
+        selectedBlock = mdBlocks[0];
 
     }
 
@@ -61,9 +64,6 @@ public class ScipionGalleryData extends GalleryData {
     }
 
     
-
-    
-
     public boolean isColumnFormat() {
         return true;
     }
@@ -323,12 +323,16 @@ public class ScipionGalleryData extends GalleryData {
             if (!containsGeometryInfo()) //FIXME: Now not reading any geometry!!!
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-            Double shiftx, shifty, psiangle;
-            shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
-            shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
-            psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
-            Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
-            return new Geometry(shiftx, shifty, psiangle, flip);
+//            Double shiftx, shifty, psiangle;
+//            shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
+//            shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
+//            psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
+//            Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
+//            return new Geometry(shiftx, shifty, psiangle, flip);
+
+
+            String matrix = (String)emo.getValue("_alignment._matrix");
+            return new Geometry(matrix);
         }
 
     public int getEnabledCount() {
@@ -390,4 +394,50 @@ public class ScipionGalleryData extends GalleryData {
             e.printStackTrace();
         }
     }
+
+    public void loadSelection(String selectedPath) {
+        ((ScipionMetaData)md).loadSelection(selectedPath);
+    }
+    
+     /**
+     * Return true if current file is a rotspectra classes
+     */
+    public boolean isRotSpectraMd() {
+        if (filename != null) {
+            GalleryData.RotSpectra rs = getRotSpectra();
+            boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);
+            
+            if (isClassificationMd() && filesExist) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    
+    
+    public GalleryData.RotSpectra getRotSpectra()
+    {
+        String dir = getExtraPath();
+        String fnClasses = Filename.join(dir, "kerdensom_classes.xmd");
+        String fnVectors = Filename.join(dir, "kerdensom_vectors.xmd");
+        String fnVectorsData = Filename.join(dir, "kerdensom_vectors.vec");
+        return new RotSpectra(fnClasses, fnVectors, fnVectorsData);
+    }
+    
+    public String getExtraPath()
+    {
+        if(filename == null)
+            return null;
+        String dir = new File(filename).getParent();
+        return Filename.join(dir, "extra");
+    }
+    
+        /**
+     * Return true if current metadata comes from 2d classification
+     */
+    public boolean checkifIsClassificationMd() {
+        return ((ScipionMetaData)md).isClassificationMd();
+    }
+    
 }

@@ -27,6 +27,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
@@ -51,13 +52,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton representativesbt;
     private ScipionMessageDialog dlg;
     private String tmpdir;
-    private Timer timer;
     
    
 
     
     
-      public ScipionGalleryJFrame(ScipionGalleryData data) {
+    public ScipionGalleryJFrame(ScipionGalleryData data) {
         super(data);
         readScipionParams((ScipionParams)data.parameters);
         setScipionImageIcon();
@@ -110,8 +110,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 close();
             }
         });
-        buttonspn.add(closebt);
         
+        buttonspn.add(closebt);
+        if(!XmippWindowUtil.isScipion())
+            return;
+            
         if (type != null) {
             cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
@@ -191,8 +194,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                                 return;
                                         
                             }
-                            timer.cancel();
-                            timer.purge();
+                            
                             String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
                             ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
                             ((ScipionGalleryData)data).overwrite(sqlitefile);
@@ -243,9 +245,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 }
             });
         }
-        timer = new Timer();
-        long time = 5000;//ten seconds
-        timer.scheduleAtFixedRate(new Saver(), time, time);
+        
     }
     
     public boolean confirmCreate(String output, int size)
@@ -309,16 +309,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
   
     public boolean proceedWithChanges()
     {
-        boolean proceed = true;
-        if (data.hasMdChanges())
-        {       String question = String.format("File has pending changes. Do you wish to save them?", sqlitefile);
-                int option = XmippDialog.showQuestionYesNoCancel(ScipionGalleryJFrame.this, question);
-                if(option == XmippQuestionDialog.NO_OPTION)
-                    new File(sqlitefile).delete();
-                proceed = option != XmippQuestionDialog.CANCEL_OPTION;
-        }
-                        
-        return proceed;
+        return true;
     }
     
    protected void createSubset(final String[] command, String msg) 
@@ -328,8 +319,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
             @Override
             public void run() {
-                timer.cancel();
-                timer.purge();
                 try {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
                     String output = XmippWindowUtil.executeCommand(command, true);
@@ -370,25 +359,65 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     
-    public class Saver extends TimerTask
+    
+    
+    protected void initGalleryMenu() {
+            menu = new ScipionGalleryMenu();
+                    
+    }
+    
+    protected class ScipionGalleryMenu extends GalleryMenu//To customize showj menu for scipion
     {
+        @Override
+        protected void createItems() throws Exception
+        {
+            super.createItems();
+            addItem(FILE_LOAD_SEL, "Load selection ...");
+            addItem(FILE_SAVE_SEL, "Save selection as ...", "save_as.gif");
+        }
 
         @Override
-        public void run() {
-            if(data.hasMdChanges())
-                try {
-
-                    ((ScipionGalleryData)data).overwrite(sqlitefile);
-                    StopWatch.getInstance().printElapsedTime("saving temporary copy");
-                } catch (SQLException ex) {
-                    Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, "temporary save failed");
-                    Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                }
-        }
+        protected void handleActionPerformed(ActionEvent evt)
+        {
+            super.handleActionPerformed(evt);
+            String cmd = evt.getActionCommand();
+            try
+            {
+                    if (cmd.equals(FILE_LOAD_SEL))
+                    {
+                        if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
+                            loadSelection(fc.getSelectedPath());
+                    }
+                    if (cmd.equals(FILE_SAVE_SEL))
+                    {
+                        fc.setSelectedFile(new File(sqlitefile));
+                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
+                            saveSelection(fc.getSelectedPath());
+                    }
+                
+                
             
+            }
+            catch (Exception e)
+            {
+                    showException(e);
+            }
+        }
 
+        protected void loadSelection(String path) {
+            
+                ((ScipionGalleryData)data).loadSelection(path);
+                reloadTableData();
+            
+        }
 
-
+        protected void saveSelection(String path) {
+            try {
+                ((ScipionGalleryData)data).overwrite(path);
+            } catch (SQLException ex) {
+                Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
         
         

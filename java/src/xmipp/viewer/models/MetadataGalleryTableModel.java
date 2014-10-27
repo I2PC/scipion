@@ -32,7 +32,6 @@ import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.MDLabel;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
@@ -327,6 +326,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
 	
-
+        
 
 }

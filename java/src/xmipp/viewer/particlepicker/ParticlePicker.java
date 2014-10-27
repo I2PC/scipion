@@ -135,8 +135,8 @@ public abstract class ParticlePicker {
             color = getNextColor();
             size = getDefaultSize();
             setMicrograph(getMicrographs().get(0));
-
             filters.add(new IJCommand("Gaussian Blur...", "sigma=2"));
+            saveConfig();
             return;
         }
 
@@ -194,6 +194,7 @@ public abstract class ParticlePicker {
             }
             md.writeBlock("filters@" + file);
             md.destroy();
+            
 
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, e.getMessage(), e);

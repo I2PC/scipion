@@ -3,7 +3,6 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import java.awt.Image;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,11 +10,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import xmipp.jni.ImageGeneric;
@@ -103,6 +101,28 @@ public class XmippUtil {
             if(output != null)
                 output.close();
         }
-}
+    }
+    
+    public static boolean isInPath(String executable)
+    {
+        String[] paths = System.getenv("PATH").split(Pattern.quote(File.pathSeparator));
+        String exePath;
+        File file, exeFile;
+        for(String path: paths)
+        {
+            file = new File(path);
+            if(file.isDirectory())
+            {
+                exePath = path + File.separator + executable;
+                exeFile = new File(exePath);
+                if(exeFile.exists())
+                    return true;
+            }
+            else if(file.getName().equals(executable))
+                return true;
+                
+        }
+        return false;
+    }
        
 }

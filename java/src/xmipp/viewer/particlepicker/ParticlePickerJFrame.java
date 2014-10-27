@@ -286,7 +286,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 		filemn.add(savemi);
-		importmi = new JMenuItem("Import from folder...", XmippResource.getIcon("import_wiz.gif"));
+		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
 		filemn.add(importmi);
 		if (picker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
@@ -844,11 +844,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	public abstract String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty);
+	public abstract String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty);
 
-	public Map<String, String> getKeyAssist()
+	public Map<Object, Object> getKeyAssist()
 	{
-		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 		map.put("Shift + Scroll Up", "Zoom in");
 		map.put("Shift + Scroll Down", "Zoom out");
 		map.put("Right click + Mouse move", "Moves image previously expanded");

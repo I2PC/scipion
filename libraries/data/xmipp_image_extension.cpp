@@ -163,3 +163,23 @@ bool checkImageCorners(const FileName &name)
 
     return true;
 }
+
+bool compareTwoImageTolerance(const FileName &fn1, const FileName &fn2, double tolerance, size_t index1, size_t index2)
+{
+    double min_val, max_val, avg, stddev;
+    Image<double> img1;
+    Image<double> img2;
+    if (index1)
+        img1.read(fn1, DATA, index1);
+    else
+        img1.read(fn1);
+    if (index2)
+        img2.read(fn2, DATA, index2);
+    else
+        img2.read(fn2);
+    img1() -= img2();
+    img1().computeStats(avg, stddev, min_val, max_val);
+    //return true if equal, false if different
+    return !(abs(max_val - avg) > tolerance || abs(avg - min_val) > tolerance);
+}
+

@@ -9,12 +9,13 @@ import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JFrame;
 import javax.swing.SwingWorker;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
-import xmipp.utils.StopWatch;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -392,7 +393,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void saveData(Micrograph m)
 	{
-
 		SupervisedParticlePickerMicrograph tm = (SupervisedParticlePickerMicrograph) m;
 		long id;
 		try
@@ -521,7 +521,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 	public void loadConfig()
 	{
 		super.loadConfig();
-                autopickpercent = 50;
 		String file = configfile;
 		if (!new File(file).exists())
 			return;
@@ -588,6 +587,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public int getAutopickpercent()
 	{
+                if(autopickpercent == 0)
+                    autopickpercent = 50;
 		return autopickpercent;
 	}
 
@@ -741,7 +742,7 @@ public class SupervisedParticlePicker extends ParticlePicker
         
 
 	/** Return the number of particles imported */
-	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 
 		if (f == Format.Auto)
@@ -759,20 +760,18 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		importSize(path, f, scale);
-                File[] files = getCoordsFiles(path);
-        
-                boolean imported;
+                String file;
+                
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
                     resetMicrograph(m);
-                    imported = false;
-                    for(File fit: files)
-                        if(!imported && fit.getName().contains(m.getName()))
-                        {
-                            result += importParticlesFromFile(fit.getAbsolutePath(), f, m, scale, invertx, inverty);
-                            imported = true;
-                        }
+                    file = Filename.join(path, preffix + m.getName() + suffix);
+                    if(new File(file).exists())
+                        result += importParticlesFromFile(file, f, m, scale, invertx, inverty);
 		}
+                
+                
+                        
 		return result;
 	}// function importParticlesFromFolder
         
@@ -1027,37 +1026,38 @@ public class SupervisedParticlePicker extends ParticlePicker
 	 * @param frame
 	 * @param autopickout
 	 */
-	public void trainAndAutopick(SupervisedParticlePickerJFrame frame, Rectangle rectangle)
+	public void trainAndAutopick(SupervisedParticlePickerJFrame frame)
 	{
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Training and Autopicking...");
-		MetaData trainmd = new MetaData();
 		// Change the state of the micrograph and save changes
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
 		// Create the metadata with each micrograph and its .pos file
 		// Add all micrographs with manual particles except the current
 		// micrograph
+                ArrayList<MDRow> trainRows = new ArrayList<MDRow>();
 		for (SupervisedParticlePickerMicrograph m : micrographs)
 		{
 			if (m.hasManualParticles() && !m.equals(micrograph))
-				addMicrographPos(trainmd, m);
+				addMicrographPos(trainRows, m);
 		}
 		// Add the current micrograph as the last one
 		if (micrograph.hasManualParticles())
-			addMicrographPos(trainmd, micrograph);
-
-		new Thread(new TrainRunnable(frame, trainmd, rectangle)).start();
-		// new TrainRunnable(frame, trainmd, outputmd).run();
+			addMicrographPos(trainRows, micrograph);
+                
+		new Thread(new TrainRunnable(frame, trainRows.toArray(new MDRow[]{}))).start();
+		// new TrainRunnable(frame, trainInput, outputmd).run();
 	}
 
 	/** Helper function to add a micrograph and its .pos file */
-	private void addMicrographPos(MetaData md, SupervisedParticlePickerMicrograph micrograph)
+	private void addMicrographPos(List<MDRow> trainRows, SupervisedParticlePickerMicrograph micrograph)
 	{
 		String posfile = getOutputPath(micrograph.getPosFile());
-		long id = md.addObject();
-		md.setValueString(MDLabel.MDL_MICROGRAPH, micrograph.getFile(), id);
-		md.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile, id);
+                MDRow row = new MDRow();
+		row.setValueString(MDLabel.MDL_MICROGRAPH, micrograph.getFile());
+		row.setValueString(MDLabel.MDL_MICROGRAPH_PARTICLES, posfile);
+                trainRows.add(row);
 
 	}
 
@@ -1072,24 +1072,25 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 		private SupervisedParticlePickerJFrame frame;
-		private MetaData trainmd;
+		private MDRow[] trainInput;
 		private MetaData outputmd;
-		private Rectangle rectangle;
+                private Rectangle rectangle;
 
-		public TrainRunnable(SupervisedParticlePickerJFrame frame, MetaData trainmd, Rectangle rectangle)
+		public TrainRunnable(SupervisedParticlePickerJFrame frame, MDRow[] trainInput)
 		{
 			this.frame = frame;
-			this.trainmd = trainmd;
+			this.trainInput = trainInput;
 			this.outputmd = new MetaData();
-			this.rectangle = rectangle;
+                        rectangle = micrograph.getRectangle();
 		}
 
 		public void run()
 		{
 			try
 			{
-				classifier.train(trainmd, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
-				micrograph.setAutopickpercent(autopickpercent);
+				classifier.train(trainInput, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
+				micrograph.setAutopickpercent(getAutopickpercent());
+                                
 				classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 				addParticles();
 
@@ -1097,14 +1098,12 @@ public class SupervisedParticlePicker extends ParticlePicker
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();
 				frame.updateMicrographsModel();
-
-				trainmd.destroy();
 				outputmd.destroy();
 			}
 			catch (Exception e)
 			{
 				ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-				throw new IllegalArgumentException(e.getMessage());
+                                XmippDialog.showError(frame, "Classifier error");
 			}
 		}
 
@@ -1149,6 +1148,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		private SupervisedParticlePickerJFrame frame;
 		private MetaData outputmd;
 		private SupervisedParticlePickerMicrograph micrograph;
+                
 		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph micrograph)
 		{
 			this.frame = frame;
@@ -1159,82 +1159,102 @@ public class SupervisedParticlePicker extends ParticlePicker
 		public void run()
 		{
 			micrograph.getAutomaticParticles().clear();
-			micrograph.setAutopickpercent(autopickpercent);
+			micrograph.setAutopickpercent(getAutopickpercent());
 			classifier.autopick(micrograph.getFile(), outputmd, micrograph.getAutopickpercent());
 			loadAutomaticParticles(micrograph, outputmd);
 			String path = getParticlesAutoBlock(micrograph);
 			outputmd.writeBlock(path);
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
-			frame.updateMicrographsModel();
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
+                        frame.updateMicrographsModel();
 			outputmd.destroy();
 		}
 
 	}
 
-	public void correctAndAutopick(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph current, SupervisedParticlePickerMicrograph next,
-			Rectangle correctout)
+	public void correctAndAutopick(SupervisedParticlePickerJFrame frame, SupervisedParticlePickerMicrograph current, SupervisedParticlePickerMicrograph next)
 	{
 		current.setState(MicrographState.Corrected);
 		if (getMode() == Mode.Supervised && next.getState() == MicrographState.Available)
 			next.setState(MicrographState.Supervised);
 		saveData(current);
 		saveData(next);
-		MetaData addedmd = getAddedMetaData(current, correctout);
-		MetaData automd = new MetaData(getParticlesAutoBlock(current));
+                
+		MDRow[] addedRows = getAddedRows(current);
+		MDRow[] autoRows = getAutomaticRows(current);
 		frame.getCanvas().setEnabled(false);
 		XmippWindowUtil.blockGUI(frame, "Correcting and Autopicking...");
-		new Thread(new CorrectAndAutopickRunnable(frame, addedmd, automd, next)).start();
+		new Thread(new CorrectAndAutopickRunnable(frame, addedRows, autoRows, next)).start();
 
 	}
 
-	private MetaData getAddedMetaData(SupervisedParticlePickerMicrograph m, Rectangle correctout)
+	private MDRow[] getAddedRows(SupervisedParticlePickerMicrograph m)
 	{
-		MetaData addedmd = null;
-		if (correctout == null)
-			addedmd = new MetaData(getParticlesBlock(micrograph));
-		else
+                Rectangle correctout = m.getRectangle();
+                ArrayList<MDRow> rows = new ArrayList<MDRow>();
+                MDRow row;
+                for (ManualParticle p : m.getManualParticles())
+                        if (correctout == null || !correctout.contains(new Point(p.getX(), p.getY())))
+                        {
+                                row = new MDRow();
+                                row.setValueInt(MDLabel.MDL_XCOOR, p.getX());
+                                row.setValueInt(MDLabel.MDL_YCOOR, p.getY());
+                                rows.add(row);
+                        }
+		return rows.toArray(new MDRow[]{});
+	}
+        
+        private MDRow[] getAutomaticRows(SupervisedParticlePickerMicrograph m)
+	{
+                ArrayList<MDRow> rows = new ArrayList<MDRow>();
+                MDRow row;
+		try
 		{
-			long id;
-			addedmd = new MetaData();
-			for (ManualParticle p : m.getManualParticles())
-				if (!correctout.contains(new Point(p.getX(), p.getY())))
-				{
-					id = addedmd.addObject();
-					addedmd.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-					addedmd.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-				}
+
+			for (AutomaticParticle p : m.getAutomaticParticles())
+			{
+                                row = new MDRow();
+				row.setValueInt(MDLabel.MDL_XCOOR, p.getX());
+				row.setValueInt(MDLabel.MDL_YCOOR, p.getY());
+				row.setValueDouble(MDLabel.MDL_COST, p.getCost());
+				row.setValueInt(MDLabel.MDL_ENABLED, p.isDeleted()? -1: 1);
+				rows.add(row);
+			}
 		}
-		return addedmd;
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+		return rows.toArray(new MDRow[]{});
 	}
 
 	public class CorrectAndAutopickRunnable implements Runnable
 	{
 
-		private MetaData manualmd;
-		private MetaData automaticmd;
+		private final MDRow[] manualRows;
+		private final MDRow[] automaticRows;
 
 		private SupervisedParticlePickerMicrograph next;
 		private SupervisedParticlePickerJFrame frame;
-		private MetaData outputmd;
+		private final MetaData outputmd;
 
-		public CorrectAndAutopickRunnable(SupervisedParticlePickerJFrame frame, MetaData manualmd, MetaData automaticmd,
+		public CorrectAndAutopickRunnable(SupervisedParticlePickerJFrame frame, MDRow[] manualRows, MDRow[] automaticRows,
 				SupervisedParticlePickerMicrograph next)
 		{
 			this.frame = frame;
-			this.manualmd = manualmd;
-			this.automaticmd = automaticmd;
+			this.manualRows = manualRows;
+			this.automaticRows = automaticRows;
 			this.next = next;
 			this.outputmd = new MetaData();
 		}
 
 		public void run()
 		{
-
-			classifier.correct(manualmd, automaticmd, micrograph.getThreshold());
-			manualmd.destroy();
-			automaticmd.destroy();
+                    try
+                    {
+			classifier.correct(manualRows, automaticRows);
 
 			if (getMode() == Mode.Supervised && next.getState() == MicrographState.Supervised)
 			{
@@ -1245,12 +1265,18 @@ public class SupervisedParticlePicker extends ParticlePicker
 				String path = getParticlesAutoBlock(next);
 				outputmd.writeBlock(path);
 			}
+                        micrograph.resetParticlesRectangle();//after correct there is no need to keep this information for mic
 			outputmd.destroy();
 			frame.getCanvas().repaint();
 			frame.getCanvas().setEnabled(true);
-			frame.updateMicrographsModel(true);
 			XmippWindowUtil.releaseGUI(frame.getRootPane());
-
+                        frame.updateMicrographsModel(true);
+                    }
+                    catch(Exception e)
+                    {
+                        ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
+                        XmippDialog.showError(frame, "Classifier error");
+                    }
 		}
 	}
 
@@ -1264,15 +1290,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	}
 
-	public void correct(Rectangle correctout)
+	public void correct()
 	{
 		micrograph.setState(MicrographState.Corrected);
 		saveData(micrograph);
-		MetaData addedmd = getAddedMetaData(micrograph, correctout);
-		MetaData automd = new MetaData(getParticlesAutoBlock(micrograph));
-		classifier.correct(addedmd, automd, micrograph.getThreshold());
-		addedmd.destroy();
-		automd.destroy();
+		MDRow[] manualRows = getAddedRows(micrograph);
+		MDRow[] autoRows = getAutomaticRows(micrograph);
+		classifier.correct(manualRows, autoRows);
 	}
         
     public int getParticlesThreshold() {

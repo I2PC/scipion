@@ -220,18 +220,26 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
                 try
                 {
                     PyObject *pyStr;
-                    if ((pyStr = PyObject_Str(input)) != NULL)
+                    // If the input object is a tuple, consider it (index, filename)
+                    if (PyTuple_Check(input))
                     {
-                        //                    if (PyString_Check(input))
+                      // Get the index and filename from the Python tuple object
+                      size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
+                      const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
+                      // Now read using both of index and filename
+                      self->image = new ImageGeneric();
+                      self->image->read(filename, DATA, index);
+
+                    }
+                    else if ((pyStr = PyObject_Str(input)) != NULL)
+                    {
                         self->image = new ImageGeneric(PyString_AsString(pyStr));
-                        //                    else if (FileName_Check(input))
-                        //                        self->image = new ImageGeneric(FileName_Value(input));
                         //todo: add copy constructor
                     }
                     else
                     {
                         PyErr_SetString(PyExc_TypeError,
-                                        "Image_new: Expected string or FileName as first argument");
+                                        "Image_new: Expected string, FileName or tuple as first argument");
                         return NULL;
                     }
                 }
@@ -323,6 +331,16 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
             try
             {
               PyObject *pyStr;
+              // If the input object is a tuple, consider it (index, filename)
+              if (PyTuple_Check(input))
+              {
+                // Get the index and filename from the Python tuple object
+                size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
+                const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
+                // Now read using both of index and filename
+                self->image->write(filename, index);
+                Py_RETURN_NONE;
+              }
               if ((pyStr = PyObject_Str(input)) != NULL)
               {
                   self->image->write(PyString_AsString(input));
@@ -359,7 +377,17 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
             try
             {
               PyObject *pyStr;
-              if ((pyStr = PyObject_Str(input)) != NULL)
+              // If the input object is a tuple, consider it (index, filename)
+              if (PyTuple_Check(input))
+              {
+                // Get the index and filename from the Python tuple object
+                size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
+                const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
+                // Now read using both of index and filename
+                self->image->read(filename,(DataMode)datamode, index);
+                Py_RETURN_NONE;
+              }
+              else if ((pyStr = PyObject_Str(input)) != NULL)
               {
                   self->image->read(PyString_AsString(pyStr),(DataMode)datamode);
                   Py_RETURN_NONE;

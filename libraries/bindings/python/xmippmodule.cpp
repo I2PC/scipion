@@ -400,6 +400,56 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+PyObject *
+xmipp_compareTwoImageTolerance(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *input1, *input2;
+    double tolerance=0.;
+    int index1=0, index2=0;
+
+    if (PyArg_ParseTuple(args, "OO|d", &input1, &input2, &tolerance))
+
+    {
+        try
+        {
+            size_t index1 = 0;
+            size_t index2 = 0;
+            char * fn1, *fn2;
+
+            // If the inputs objects are tuples, consider it (index, filename)
+            if (PyTuple_Check(input1))
+            {
+              // Get the index and filename from the Python tuple object
+              index1 = PyInt_AsSsize_t(PyTuple_GetItem(input1, 0));
+              fn1 = PyString_AsString(PyObject_Str(PyTuple_GetItem(input1, 1)));
+            }
+            else
+              fn1 = PyString_AsString(PyObject_Str(input1));
+
+            if (PyTuple_Check(input2))
+            {
+              // Get the index and filename from the Python tuple object
+              index2 = PyInt_AsSsize_t(PyTuple_GetItem(input2, 0));
+              fn2 = PyString_AsString(PyObject_Str(PyTuple_GetItem(input2, 1)));
+            }
+            else
+              fn2 = PyString_AsString(PyObject_Str(input2));
+
+            bool result = compareTwoImageTolerance(fn1, fn2, tolerance, index1, index2);
+
+            if (result)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /***************************************************************/
 /*                   Some specific utility functions           */
 /***************************************************************/
@@ -950,6 +1000,8 @@ xmipp_methods[] =
           "return false if the image has repeated pixels at some corner" },
         { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
+        { "compareTwoImageTolerance", (PyCFunction) xmipp_compareTwoImageTolerance, METH_VARARGS,
+          "return true if both images are very similar" },
         { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
           "Read a 1 or two column list of micrographs" },
         { "substituteOriginalImages", (PyCFunction) xmipp_substituteOriginalImages, METH_VARARGS,

@@ -336,7 +336,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	
 
 	@Override
-	public String importParticles(Format format, String dir, float scale, boolean invertx, boolean inverty)
+	public String importParticles(Format format, String dir, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 		throw new UnsupportedOperationException();
 

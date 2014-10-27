@@ -108,7 +108,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		filemn.add(importmi);
 		if (tppicker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
-		importffilesmi = new JMenuItem("Import from files...");
+		importffilesmi = new JMenuItem("Import coordinates from files...");
 		importffilesmi.addActionListener(new ActionListener() {
 
 			@Override
@@ -281,9 +281,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		tiltedcanvas.repaint();
 	}
 
-	public String importParticlesFromFolder(Format format, String dir,
+	public String importParticlesFromFolder(Format format, String dir, String preffix, String suffix,
 			float scale, boolean invertx, boolean inverty) {
-		String result = tppicker.importParticlesFromFolder(dir, format, scale,
+		String result = tppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale,
 				invertx, inverty);
 		sizetf.setValue(tppicker.getSize());
 		getCanvas().repaint();
@@ -360,9 +360,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	@Override
-	public String importParticles(Format format, String dir, float scale,
+	public String importParticles(Format format, String dir, String preffix, String suffix,float scale, 
 			boolean invertx, boolean inverty) {
-		return importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		return importParticlesFromFolder(format, dir,preffix, suffix,  scale, invertx, inverty);
 
 	}
 

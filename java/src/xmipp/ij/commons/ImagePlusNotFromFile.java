@@ -9,6 +9,7 @@ package xmipp.ij.commons;
 import ij.ImagePlus;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippMessage;
 
 /**
  *
@@ -18,7 +19,9 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
 
 
     public ImagePlusNotFromFile(ImagePlus imp, ImageGeneric ig) {
-
+        System.out.println("image plus not from file");
+        if(imp == null && ig == null)
+            throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("image") );
         this.imp = imp;
         this.ig = ig;
     }
@@ -38,8 +41,7 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
         if(imp == null && ig == null)
             return null;
         String name = (ig != null)? ig.getFilename(): imp.getTitle();
-        if(index2 != -1)
-            name = String.format("%d@%s", index2, name);
+        
         if(index != -1)
             name = String.format("%d@%s", index, name);
         return name;
