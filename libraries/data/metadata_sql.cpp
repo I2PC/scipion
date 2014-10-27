@@ -156,11 +156,17 @@ size_t MDSql::addRow()
         std::stringstream ss;
         ss << "INSERT INTO " << tableName(tableId) << " DEFAULT VALUES;";
         rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "DEBUG_JM: addRow: " << ss.str() <<std::endl;
+#endif
+#undef DEBUG
     }
     rc = sqlite3_reset(stmt);
     size_t id = BAD_OBJID;
     if (execSingleStmt(stmt))
         id = sqlite3_last_insert_rowid(db);
+
 
     //sqlite3_finalize(stmt);
     return id;
@@ -296,6 +302,12 @@ bool MDSql::setObjectValue(const int objId, const MDObject &value)
         std::string sep = (MDL::isString(column) || MDL::isVector(column)) ? "'" : "";
         ss << "UPDATE " << tableName(tableId)
         << " SET " << MDL::label2StrSql(column) << "=? WHERE objID=?;";
+//#define DEBUG
+#ifdef DEBUG
+        std::cerr << "DEBUG_JM: setObjectValue: " << ss.str() << std::endl;
+
+#endif
+
         rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     }
     rc = sqlite3_reset(stmt);
@@ -602,7 +614,7 @@ void MDSql::indexModify(const std::vector<MDLabel> columns, bool create)
     for (size_t i = 0; i < columns.size(); i++)
     {
         index_name << sep1 << tableName(tableId) << "_"
-        << MDL::label2StrSql(columns.at(i));
+        << MDL::label2Str(columns.at(i));
         sep1 = "_";
         index_column << sep2 << MDL::label2StrSql(columns.at(i));
         sep2 = ", ";
@@ -1158,7 +1170,8 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 
     sqlite3_stmt * stmt;
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
-    //#define DEBUG
+
+//#define DEBUG
 #ifdef DEBUG
 
     std::cerr << "execSingleStmt, stmt: '" << ss.str() << "'" <<std::endl;
@@ -1172,6 +1185,7 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 
 bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
 {
+
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
         REPORT_ERROR(ERR_MD_SQL,formatString("Error code: %d message: %s\n  Sqlite query: %s",rc,sqlite3_errmsg(db), ss->str().c_str()));
@@ -1224,6 +1238,8 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
   if (valueIn.failed)
   {
     // If a value was wronly parsed, set NULL in their sqlite entry
+    std::cerr << "WARNING!!! valueIn.failed = True, binding NULL" << std::endl;
+
     return sqlite3_bind_null(stmt, position);
   }
   else
