@@ -346,15 +346,49 @@ def service_projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    context = {'projects': exProjects,
-               'projects_css': getResourceCss('projects'),
+    context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
-               'projectNameHeader': 'Initial Volume Service',
                }
     
     context = base_grid(request, context)
-    
     return render_to_response('service_projects.html', context)
+
+
+def create_service_project(request):
+    if request.is_ajax():
+        import sys
+        from pyworkflow.manager import Manager
+        from pyworkflow.gui.project import ProjectWindow
+        from pyworkflow.em.protocol import *
+        from pyworkflow.em.packages.xmipp3 import *
+        from pyworkflow.em.packages.eman2 import *
+        
+        # Create a new project
+        manager = Manager()
+        projectName = request.GET.get('projectName')
+        customMenu = '/home/josegutab/menu_initvolume.conf'
+        confs = {'protocols': customMenu}
+        project = manager.createProject(projectName, confs, graphView=True)   
+        
+        # 1. Import averages
+        protImport = project.newProtocol(ProtImportParticles,
+                                         objLabel='import averages')
+        project.saveProtocol(protImport)
+        
+        # 2a. Ransac 
+        protRansac = project.newProtocol(XmippProtRansac)
+        protRansac.inputClasses.set(protImport)
+        protRansac.inputClasses.setExtendedAttribute('outputParticles')
+        project.saveProtocol(protRansac)
+        
+        # 2b. Eman 
+        protEmanInitVol = project.newProtocol(EmanProtInitModel)
+        protEmanInitVol.inputClasses.set(protImport)
+        protEmanInitVol.inputClasses.setExtendedAttribute('outputParticles')
+        project.saveProtocol(protEmanInitVol)
+        
+        
+    return HttpResponse(mimetype='application/javascript')
 
 def check_project_id(request):
     result = 0
