@@ -332,6 +332,8 @@ def get_log(request):
 def get_file(request):
     "Return a response with the content of the file mentioned in ?path=fname"
     path = request.GET.get("path")
+    filename = request.GET.get("filename", path)
+    
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)
@@ -339,9 +341,34 @@ def get_file(request):
     response = HttpResponse(FileWrapper(open(path)),
                             content_type=mimetypes.guess_type(path)[0])
     response['Content-Length'] = os.path.getsize(path)
-    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
     return response
 
+
+def download_output(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        
+        obj = project.getProtocol(int(objId))
+        if obj is None:
+            obj = project.getProtocol(int(objId)).get()
+            
+        files = obj.getFiles()
+        
+        import zipfile
+        z = zipfile.ZipFile("output.zip", "w")
+        
+        for f in files:
+            z.write(f, arcname=os.path.basename(f))
+        z.close()
+        
+        pathFile = os.path.join(request.session['projectPath'], "output.zip")
+        
+        return HttpResponse(pathFile, mimetype='application/javascript')
+    
+    
 def render_column(request):
     
     renderFunction = request.GET.get("renderFunc")
