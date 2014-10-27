@@ -117,17 +117,10 @@ String  MDL::label2Str(const MDLabel label)
     return  (isValidLabel(label)) ? data[(int)label]->str : "";
 }//close function label2Str
 
-String MDL::label2StrSql(const MDLabel label)
-{
-  String labelSqlite = "\"" + label2Str(label) + "\"";
-  return labelSqlite;
-}
-
 String MDL::label2SqlColumn(const MDLabel label)
 {
     std::stringstream ss;
-    ss << MDL::label2StrSql(label);
-
+    ss << MDL::label2Str(label) << " ";
     switch (MDL::labelType(label))
     {
     case LABEL_BOOL: //bools are int in sqlite3
@@ -282,7 +275,6 @@ bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel
 void MDObject::copy(const MDObject &obj)
 {
     label = obj.label;
-    failed = obj.failed;
     type = obj.type;
     chr = obj.chr;
     if (type == LABEL_STRING)
@@ -333,7 +325,6 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 MDObject::MDObject(MDLabel label)
 {
     this->label = label;
-    failed = false;
     chr = _SPACE;
     if (label != MDL_UNDEFINED)
     {

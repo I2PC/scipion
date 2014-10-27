@@ -866,10 +866,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
     object.fromStream(is);
     if (is.fail())
     {
-       String errorMsg = formatString("MetaData: Error parsing column '%s' value.", MDL::label2Str(object.label).c_str());
-       object.failed = true;
-       std::cerr << "WARNING: " << errorMsg << std::endl;
-       //REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
+        REPORT_ERROR(ERR_MD_BADLABEL, (String)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
     }
     else
         if (object.label != MDL_UNDEFINED)
