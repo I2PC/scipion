@@ -64,7 +64,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('images.xmd') 
-        self._insertFunctionStep('convertInputStep')        
+        self._insertFunctionStep('convertInputStep')
         
         # Prepare arguments to call program: xmipp_classify_CL2D
         self._params = {'imgsFn': self.imgsFn, 
@@ -75,7 +75,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         args = '-i %(imgsFn)s --odir %(extraDir)s --nref 1 --iter %(iter)d --maxShift %(maxshift)d'
         
         if self.useReferenceImage:
-            args += " --ref0 " + getImageLocation(self.refenceImage.get())
+            args += " --ref0 " + getImageLocation(self.referenceImage.get())
         else:
             args += " --nref0 1"
         self._insertRunJobStep("xmipp_classify_CL2D", args % self._params)
@@ -109,13 +109,15 @@ class XmippProtCL2DAlign(ProtAlign2D):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        refImage = self.referenceImage.get()
         if self.useReferenceImage:
-            if len(refImage) > 0:
-                if not exists(refImage):
-                    errors.append("Cannot find the file " + refImage)
+            if self.referenceImage.hasValue():
+                refImage = self.referenceImage.get()
+                [x1,y1,z1]=refImage.getDim()
+                [x2,y2,z2]=self.inputParticles.get().getDim()
+                if x1!=x2 or y1!=y2 or z1!=z2:
+                    errors.append('The input images and the reference image have different sizes') 
             else:
-                errors.append("Please, enter an Image file")
+                errors.append("Please, enter a reference image")
         return errors
         
     def _summary(self):

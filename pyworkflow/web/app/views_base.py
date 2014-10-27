@@ -36,11 +36,13 @@ def VARS_base(request, context):
     icons = IconWeb()
     
     context_base = {
+                    #ABSOLUTE PATH URL CONFIG
                     'abs_url': django_settings.ABSOLUTE_URL, 
+                    'config': getResourceJs('config'),
                     #OTHER
                     'msg': messages,
                     'color': colors,
-                    'icon': icons
+                    'icon': icons,
                     }
     
     context.update(context_base)
@@ -61,6 +63,7 @@ def base(request, context):
                     #JS
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
+                    #JS
                     'utils': getResourceJs('utils'),
                     }
     

@@ -28,7 +28,7 @@ from pyworkflow.object import *
 
 class Mapper():
     """This class will serves as a Data Mapper pattern.
-    It will store/retrieve objects from some storage enviroment.
+    It will store/retrieve objects from some storage environment.
     (like SQL, XML or others)
     The mapper should have access to class dictionary
     in order to build any give class by name"""

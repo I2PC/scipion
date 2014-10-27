@@ -286,9 +286,8 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        i, fn = self.getLocation()
-        if exists(fn.replace(':mrc', '')):
-            x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+        if exists(self.getFileName()):
+            x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
     
@@ -393,7 +392,11 @@ class Image(EMObject):
         else:
             dimStr = 'No-Dim'
         return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
-
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """

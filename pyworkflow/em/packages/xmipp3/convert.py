@@ -810,10 +810,10 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
         imagesFn = 'class%06d_images@%s' % (ref, filename)
         imagesMd = xmipp.MetaData()
         imgRow = XmippMdRow()
-        
-        for img in class2D:
-            particleToRow(img, imgRow)
-            imgRow.writeToMd(imagesMd, imagesMd.addObject())
+        if class2D.getSize() > 0:
+            for img in class2D:
+                particleToRow(img, imgRow)
+                imgRow.writeToMd(imagesMd, imagesMd.addObject())
         imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
@@ -1021,7 +1021,7 @@ def geometryFromMatrix(matrix, inverseTransform):
     return shifts, angles
 
 
-def matrixFromGeometry(shifts, angles, inverseTransform):
+def matrixFromGeometry(shifts, angles, flip, inverseTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
@@ -1036,7 +1036,9 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
         M = inv(M)
     else:
         M[:3, 3] = shifts[:3]
-
+    
+    if flip:
+        M[0,:4]*=-1.
     return M
 
 
@@ -1063,7 +1065,7 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
         #TODO flip
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         
-        M = matrixFromGeometry(shifts, angles, inverseTransform)
+        M = matrixFromGeometry(shifts, angles, flip, inverseTransform)
         alignment.setMatrix(M)
         
         #FIXME: now are also storing the alignment parameters since
@@ -1086,6 +1088,10 @@ def alignmentToRow(alignment, alignmentRow,
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
+    matrix = alignment.getMatrix()
+    flip = bool(np.linalg.det(matrix)<0)
+    if flip:
+        matrix[0,:4] *= -1.
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
 
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
@@ -1099,10 +1105,11 @@ def alignmentToRow(alignment, alignmentRow,
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
-
+    alignmentRow.setValue(xmipp.MDL_FLIP, flip)
+    #alignmentRow.setValue(xmipp.MDL_FLIP, True)
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessRow=None):
+                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1145,9 +1152,7 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
         imgRow = rowFromMd(md, objId)
-        if preprocessRow:
-            preprocessRow(imgRow)
-        img = rowToParticle(imgRow)
+        img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
         
         classItem.append(img)
         

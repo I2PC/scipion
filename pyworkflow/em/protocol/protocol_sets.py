@@ -32,7 +32,7 @@ This module contains protocols related to Set operations such us:
 """
 import os
 from protocol import EMProtocol
-from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
+from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
                                 SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
@@ -361,13 +361,18 @@ class ProtSplitSet(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputSet', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfImages', 
-                      help='Select the set of images that you want to split. '
-                           )
-        form.addParam('numberOfSets', IntParam, label="Number of subsets", default=2,
-                      help='Select how many subsets do you want to create. '
-                           )    
+        form.addParam('inputSet', PointerParam, pointerClass='EMSet',
+                      label="Input images", important=True,
+                      help='Select the set of images that you want to split.'
+                      )
+        form.addParam('numberOfSets', IntParam, default=2,
+                      label="Number of subsets",
+                      help='Select how many subsets do you want to create.'
+                      )
+        form.addParam('randomize', BooleanParam, default=False,
+                      label="Randomize elements",
+                      help='Put the elements at random in the different subsets.'
+                      )
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -381,9 +386,13 @@ class ProtSplitSet(ProtSets):
         
         # Create as many subsets as requested by the user
         subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
-        # Iterate over the images in the input set and assign
-        # diffent subsets
-        for i, img in enumerate(self.inputSet.get()):
+        # Iterate over the elements in the input set and assign
+        # to different subsets.
+        elements = self.inputSet.get()
+        if self.randomize:
+            from random import shuffle
+            shuffle(elements)
+        for i, img in enumerate(elements):
             subsets[i % n].append(img)
             
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
@@ -426,7 +435,7 @@ class ProtIntersectSet(ProtSets):
                       help='Even if the intersection can be applied to two subsets,\n'
                            'the most common use-case is to retrieve a subset of  \n'
                            'elements from an original full set.\n' 
-                           '*Note*: the images of the result set will be the same \n'
+                           '*Note*: the elements of the resulting set will be the same \n'
                            'ones of this input set.'
                            )
         form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 

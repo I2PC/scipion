@@ -17,10 +17,12 @@ function renderElements(nRow, aData){
 	   		if (columnIdReal!=null){ 
 		   		if (columnLayoutConfiguration.typeOfColumn == 'image'){
 			   		 if (columnLayoutConfiguration.columnLayoutProperties.renderable){
-			   			 $('td:eq('+columnIdReal+')', nRow).html( '<span style="display:none">'+aData[columnId]+'</span><img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/get_image/?image='+aData[columnId]+'\"/>' );
+			   			 $('td:eq('+columnIdReal+')', nRow).html( '<span style="display:none">'+aData[columnId]+'</span><img class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" 
+			   					 src= getSubDomainURL() +"/get_image/?image='+aData[columnId]+'\"/>' );
 			   		 }
 			   		 else{
-			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span><img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" src=\"/get_image/?image='+aData[columnId]+'\"/>' );
+			   			$('td:eq('+columnIdReal+')', nRow).html( '<span>'+aData[columnId]+'</span><img style="display:none" class=\"tableImages\" id=\"'+i+'___'+aData[0]+'\" 
+			   					src= getSubDomainURL() +"/get_image/?image='+aData[columnId]+'\"/>' );
 			   		 }
 		   		 }
 		   		 else if (columnLayoutConfiguration.typeOfColumn == 'checkbox'){

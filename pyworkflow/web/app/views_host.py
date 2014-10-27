@@ -6,10 +6,10 @@ from pyworkflow.web.app.views_util import *
 from django.http import HttpResponseRedirect
 
 ######    Hosts template    #####
-def getScipionHosts():
-    from pyworkflow.apps.config import getSettingsPath
-    defaultHosts = getSettingsPath()
-    return HostMapper(defaultHosts).selectAll()
+# def getScipionHosts():
+#     from pyworkflow.config import getSettingsPath
+#     defaultHosts = getSettingsPath()
+#     return HostMapper(defaultHosts).selectAll()
 
 def viewHosts(request):      
     projectName = request.session['projectName']    

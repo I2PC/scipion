@@ -95,6 +95,7 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
+        self.endTime.set(dt.datetime.now())
         self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
@@ -1335,7 +1336,7 @@ def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
      
 def getProtocolFromDb(dbPath, protId):
     import pyworkflow.em as em
-    import pyworkflow.apps.config as config
+    import pyworkflow.config as config
     classDict = dict(em.__dict__)
     classDict.update(config.__dict__)
     from pyworkflow.mapper import SqliteMapper

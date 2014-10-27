@@ -36,7 +36,6 @@ from pyworkflow.em.packages.brandeis.wizard import *
 from pyworkflow.web.app.em_wizard import *
 from tools import *
 from pyworkflow.web.app.views_base import base_wiz
-from pyworkflow.web.pages import settings as django_settings
 
 
 
@@ -61,7 +60,7 @@ class BrandeisCTFWeb(BrandeisCTFWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_ctf.html', context)
+            return render_to_response('wizards/wiz_ctf.html', context)
 
 
 #===============================================================================
@@ -94,7 +93,7 @@ class FrealignVolRadiiWeb(FrealignVolRadiiWizard):
                        'params': params}
         
             context = base_wiz(request, context)
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_volumes_mask_radii.html', context)    
+            return render_to_response('wizards/wiz_volumes_mask_radii.html', context)    
 
 #===============================================================================
 # FILTERS
@@ -125,7 +124,7 @@ class FrealignBandpassWeb(FrealignBandpassWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_filter_particles.html', context)
+            return render_to_response('wizards/wiz_filter_particles.html', context)
 
 
 class FrealignVolBandpassWeb(FrealignVolBandpassWizard):
@@ -152,7 +151,7 @@ class FrealignVolBandpassWeb(FrealignVolBandpassWizard):
             
             context = base_wiz(request, context)
             
-            return render_to_response(django_settings.ABSOLUTE_URL+'wizards/wiz_filter_volumes.html', context)            
+            return render_to_response('wizards/wiz_filter_volumes.html', context)            
     
     
     

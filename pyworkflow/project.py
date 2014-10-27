@@ -32,7 +32,7 @@ import re
 from os.path import abspath
 
 from pyworkflow.em import *
-from pyworkflow.apps.config import *
+from pyworkflow.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile, timeit
@@ -107,8 +107,8 @@ class Project(object):
             
     def load(self):
         """Load project data and settings
-        from the project dir."""
-        
+        from the project dir.
+        """        
         if not exists(self.path):
             raise Exception("Cannot load project, path doesn't exist: %s" % self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
@@ -116,14 +116,14 @@ class Project(object):
             raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.settings = loadSettings(self.settingsPath)
-        #self.hostsMapper = HostMapper(self.settingsPath)
         
-    def create(self, defaultSettings):
+    def create(self, confs={}, graphView=False):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
         """
-        #cleanPath(self.settingsPath)
+        if isReadOnly():
+            raise Exception("Could not create new projects in READ-ONLY mode!!!")
         # Create project path if not exists
         makePath(self.path)
         os.chdir(self.path) #Before doing nothing go to project dir
@@ -132,19 +132,17 @@ class Project(object):
         # Create db throught the mapper
         self.mapper = SqliteMapper(self.dbPath, globals())
         self.mapper.commit()
-        # Write settings to disk
-        self.settings = defaultSettings
-        
-        # Read only mode
-        if not isReadOnly():
-            
-            self.settings.write(self.settingsPath)
-            # Create other paths inside project
-            for p in self.pathList:
-                if '.' in p:
-                    makeFilePath(p)
-                else:
-                    makePath(p)
+        # Load settings from .conf files and write .sqlite
+        self.settings = ProjectSettings(confs)
+        self.settings.loadConfig(confs)
+        self.settings.setGraphView(graphView)
+        self.settings.write(self.settingsPath)
+        # Create other paths inside project
+        for p in self.pathList:
+            if '.' in p:
+                makeFilePath(p)
+            else:
+                makePath(p)
         
     def _cleanData(self):
         """Clean all project data"""

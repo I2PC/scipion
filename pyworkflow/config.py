@@ -35,11 +35,10 @@ import time
 from ConfigParser import ConfigParser
 import json
 
-from pyworkflow.utils.path import getHomePath
 import pyworkflow as pw
 from pyworkflow.object import Boolean, Integer, String, List, OrderedObject, CsvList
-from pyworkflow.hosts import QueueConfig, QueueSystemConfig, HostConfig
-from pyworkflow.mapper import SqliteMapper, XmlMapper
+from pyworkflow.hosts import HostConfig, QueueConfig, QueueSystemConfig # we need this to be retrieved by mapper
+from pyworkflow.mapper import SqliteMapper
 
 PATH = os.path.dirname(__file__)
 
@@ -80,8 +79,8 @@ class SettingList(List):
 
 class ProjectSettings(OrderedObject):
     """ This class will store settings related to a project. """
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
+    def __init__(self, confs={}, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
         self.hostList = SettingList() # List to store different hosts configurations
         self.menuList = SettingList() # Store different menus
@@ -89,6 +88,15 @@ class ProjectSettings(OrderedObject):
         self.mapper = None # This should be set when load, or write
         self.graphView = Boolean(False)
         self.runSelection = CsvList(int) # Store selected runs
+        
+    def loadConfig(self, confs={}):
+        """ Load values from configuration files.
+        confs can contains the files for configuration .conf files. 
+        """
+        # Load configuration
+        self.addMenus(confs.get('menus', None))
+        self.addProtocols(confs.get('protocols', None))
+        self.addHosts(confs.get('hosts', None))
 
     def commit(self):
         """ Commit changes made. """
@@ -108,6 +116,12 @@ class ProjectSettings(OrderedObject):
             if host.label == hostLabel:
                 return host
         return None
+    
+    def getGraphView(self):
+        return self.graphView.get()
+    
+    def setGraphView(self, value):
+        self.graphView.set(value)
 
     def saveHost(self, host, commit=False):
         """ Save a host for project settings.
@@ -135,9 +149,6 @@ class ProjectSettings(OrderedObject):
 
     def addMenu(self, menuConfig):
         self.menuList.append(menuConfig)
-
-    def addProtocolMenu(self, protMenuConfig):
-        self.protMenuList.append(protMenuConfig)
 
     def getConfig(self):
         return self.config
@@ -169,6 +180,80 @@ class ProjectSettings(OrderedObject):
         self.mapper.deleteAll()
         self.mapper.insert(self)
         self.mapper.commit()
+        
+    def addProtocolMenu(self, protMenuConfig):
+        self.protMenuList.append(protMenuConfig)
+        
+    def addProtocols(self, protocolsConf=None):
+        """ Read the protocol configuration from a .conf
+        file similar of the one in ~/.config/scipion/menu.conf,
+        which is the default one when no file is passed.
+        """
+    
+        # Helper function to recursively add items to a menu.
+        def add(menu, item):
+            "Add item (a dictionary that can contain more dictionaries) to menu"
+            children = item.pop('children', [])
+            subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
+            for child in children:
+                add(subMenu, child)  # add recursively to sub-menu
+    
+        # Read menus from users' config file.
+        cp = ConfigParser()
+        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+        SCIPION_MENU = protocolsConf or os.environ['SCIPION_MENU']
+        # Also mentioned in /scipion . Maybe we could do better.
+    
+        try:
+            assert cp.read(SCIPION_MENU) != [], 'Missing file %s' % SCIPION_MENU
+    
+            # Populate the protocol menu from the config file.
+            for menuName in cp.options('PROTOCOLS'):
+                menu = ProtocolConfig(menuName)
+                children = json.loads(cp.get('PROTOCOLS', menuName))
+                for child in children:
+                    add(menu, child)
+                self.addProtocolMenu(menu)
+        except Exception as e:
+            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                     'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
+
+    def addHosts(self, hostConf=None):
+        #TODO: parse several hosts and include in the settings
+        host = HostConfig()
+        host.label.set('localhost')
+        host.hostName.set('localhost')
+        host.hostPath.set(pw.SCIPION_USER_DATA)
+        #TODO: parse the host conf specific for each host
+        host.addQueueSystem(hostConf)
+        self.addHost(host)
+        
+    def addMenus(self, menusConf=None):
+        """ Add the menu to project windows. """
+        #TODO: read this from a .conf file
+        menu = MenuConfig()
+        projMenu = menu.addSubMenu('Project')
+        projMenu.addSubMenu('Browse files', 'browse', icon='folderopen.gif')
+        projMenu.addSubMenu('Remove temporary files', 'delete', icon='delete.gif')
+        projMenu.addSubMenu('Clean project', 'clean')
+        projMenu.addSubMenu('Exit', 'exit')
+    
+        helpMenu = menu.addSubMenu('Help')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='online_help.gif')
+        helpMenu.addSubMenu('About', 'about')
+    
+        #writeConfig(menu, 'menu_default.xml')
+        self.addMenu(menu)
+    
+        # Write another test menu
+        menu = MenuConfig()
+        m1 = menu.addSubMenu('Test')
+        m1.addSubMenu('KK', icon='tree.gif')
+        m1.addSubMenu('PP', icon='folderopen.gif')
+    
+        #writeConfig(menu, 'menu_test.xml')
+        self.addMenu(menu)
+
 
 
 class ProjectConfig(OrderedObject):
@@ -234,156 +319,3 @@ class ProtocolConfig(MenuConfig):
                 args['icon'] = 'class_obj.gif'
         return MenuConfig.addSubMenu(self, text, value, **args)
 
-
-def addMenus(settings):
-    """Write default configuration files"""
-    # Write menu configuration
-    menu = MenuConfig()
-    projMenu = menu.addSubMenu('Project')
-    projMenu.addSubMenu('Browse files', 'browse', icon='folderopen.gif')
-    projMenu.addSubMenu('Remove temporary files', 'delete', icon='delete.gif')
-    projMenu.addSubMenu('Clean project', 'clean')
-    projMenu.addSubMenu('Exit', 'exit')
-
-    helpMenu = menu.addSubMenu('Help')
-    helpMenu.addSubMenu('Online help', 'online_help', icon='online_help.gif')
-    helpMenu.addSubMenu('About', 'about')
-
-    #writeConfig(menu, 'menu_default.xml')
-    settings.addMenu(menu)
-
-    # Write another test menu
-    menu = MenuConfig()
-    m1 = menu.addSubMenu('Test')
-    m1.addSubMenu('KK', icon='tree.gif')
-    m1.addSubMenu('PP', icon='folderopen.gif')
-
-    #writeConfig(menu, 'menu_test.xml')
-    settings.addMenu(menu)
-
-
-def addProtocols(settings):
-    """ Write protocols configuration. """
-
-    # Helper function to recursively add items to a menu.
-    def add(menu, item):
-        "Add item (a dictionary that can contain more dictionaries) to menu"
-        children = item.pop('children', [])
-        subMenu = menu.addSubMenu(**item)  # we expect item={'text': ...}
-        for child in children:
-            add(subMenu, child)  # add recursively to sub-menu
-
-    # Read menus from users' config file.
-    cp = ConfigParser()
-    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    SCIPION_MENU = os.environ['SCIPION_MENU']
-    # Also mentioned in /scipion . Maybe we could do better.
-
-    try:
-        assert cp.read(SCIPION_MENU) != [], 'Missing file %s' % SCIPION_MENU
-
-        # Populate the protocol menu from the config file.
-        for menuName in cp.options('PROTOCOLS'):
-            menu = ProtocolConfig(menuName)
-            children = json.loads(cp.get('PROTOCOLS', menuName))
-            for child in children:
-                add(menu, child)
-            settings.addProtocolMenu(menu)
-    except Exception as e:
-        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, SCIPION_MENU))
-
-
-def setQueueSystem(host):
-
-    # Read from users' config file.
-    cp = ConfigParser()
-    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    SCIPION_CONFIG = os.environ['SCIPION_CONFIG']
-    # Also mentioned in /scipion . Maybe we could do better.
-
-    try:
-        assert cp.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
-
-        # Helper functions (to write less)
-        def get(var): return cp.get('HOSTS', var).replace('%_(', '%(')
-        def isOn(var): return var.lower() in ['true', 'yes', '1']
-
-        host.mpiCommand.set(get('PARALLEL_COMMAND'))
-        host.queueSystem = QueueSystemConfig()
-        queueSys = host.queueSystem
-        #queueSys = QueueSystemConfig()
-        queueSys.name.set(get('NAME'))
-        queueSys.mandatory.set(isOn(get('MANDATORY')))
-        queueSys.submitCommand.set(get('SUBMIT_COMMAND'))
-        queueSys.submitTemplate.set(get('SUBMIT_TEMPLATE'))
-        queueSys.cancelCommand.set(get('CANCEL_COMMAND'))
-        queueSys.checkCommand.set(get('CHECK_COMMAND'))
-
-        queue = QueueConfig()
-        queue.maxCores.set(get('MAX_CORES'))
-        queue.allowMPI.set(isOn(get('ALLOW_MPI')))
-        queue.allowThreads.set(isOn(get('ALLOW_THREADS')))
-    except Exception as e:
-        sys.exit('Failed to read settings. The reported error was:\n  %s\n'
-                 'To solve it, delete %s and run again.' % (e, SCIPION_CONFIG))
-
-    queueSys.queues = List()
-    queueSys.queues.append(queue)
-
-
-
-
-def addHosts(settings):
-    host = HostConfig()
-    host.label.set('localhost')
-    host.hostName.set('localhost')
-    host.hostPath.set(pw.SCIPION_USER_DATA)
-    setQueueSystem(host)
-
-    #writeConfig(host, dbPath, mapperClass=HostMapper, clean=True)
-    settings.addHost(host)
-
-
-def writeDefaults():
-    settings = ProjectSettings()
-    addMenus(settings)
-    addProtocols(settings)
-    addHosts(settings)
-
-    #writeHosts(join(getHomePath(), SCIPION_PATH, SETTINGS_PATH) )
-
-
-    #writeConfig(config, 'configuration.xml')
-    dbPath = pw.SETTINGS
-    print "Writing default settings to: ", dbPath
-    if exists(dbPath):
-        dbPathBackup = '%s.%d' % (dbPath, int(time.time()))
-        print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
-        os.rename(dbPath, dbPathBackup)
-    settings.write(dbPath)
-
-
-def updateSettings():
-    """ Write the settings.sqlite default configuration
-    and also update each project settings.
-    """
-    writeDefaults()
-    # Update the settings to all existing projects
-    from pyworkflow.manager import Manager
-    from pyworkflow.utils.path import copyFile
-
-    manager = Manager()
-    projects = manager.listProjects()
-
-    for p in projects:
-        proj = manager.loadProject(p.getName())
-        projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
-        copyFile(pw.SETTINGS, projSettings)
-
-
-
-if __name__ == '__main__':
-    #Write default configurations
-    updateSettings()

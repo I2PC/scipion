@@ -27,88 +27,14 @@
 This modules contains classes to store information about
 execution hosts.
 """
+
+import os
+from ConfigParser import ConfigParser
+
 from pyworkflow.object import *
 from pyworkflow.mapper import SqliteMapper, XmlMapper
 
 
-# class ExecutionHostConfig(OrderedObject):
-#     """ Main store the configuration for execution hosts. """
-#     
-#     def __init__(self, **args):
-#         OrderedObject.__init__(self, **args)
-#         self.label = String()
-#         self.hostName = String()
-#         self.userName = String()
-#         self.password = String()
-#         self.hostPath = String()
-#         self.mpiCommand = String()
-#         self.queueSystem = QueueSystemConfig()
-#     
-#     def getLabel(self):
-#         return self.label.get()
-#     
-#     def getHostName(self):
-#         return self.hostName.get()
-#     
-#     def getUserName(self):
-#         return self.userName.get()
-#     
-#     def getPassword(self):
-#         return self.password.get()
-#     
-#     def getHostPath(self):
-#         return self.hostPath.get()
-#     
-#     def getSubmitCommand(self):
-#         return self.queueSystem.submitCommand.get()
-#     
-#     def isQueueMandatory(self):
-#         return self.queueSystem.mandatory.get()
-#     
-#     def setLabel(self, label):
-#         return self.label.set(label)
-#     
-#     def setHostName(self, hostName):
-#         return self.hostName.set(hostName)
-#     
-#     def setUserName(self, userName):
-#         return self.userName.set(userName)
-#     
-#     def setPassword(self, password):
-#         return self.password.set(password)
-#     
-#     def setHostPath(self, hostPath):
-#         return self.hostPath.set(hostPath)
-
-        
-
-        
-    
-# class ExecutionHostMapper(XmlMapper):
-#     def __init__(self, filename, dictClasses=None, **args):
-#         if dictClasses is None:
-#             dictClasses = globals()
-#         XmlMapper.__init__(self, filename, dictClasses, **args)
-#         #self.setClassTag('ExecutionHostConfig.QueueSystemConfig', 'class_name')
-#         self.setClassTag('ExecutionHostConfig.String', 'attribute')
-#         self.setClassTag('ExecutionHostConfig.hostName', 'name_only')
-#         self.setClassTag('ExecutionHostConfig.userName', 'name_only')
-#         self.setClassTag('ExecutionHostConfig.password', 'name_only')
-#         self.setClassTag('ExecutionHostConfig.hostPath', 'name_only')
-#         self.setClassTag('ExecutionHostConfig.mpiCommand', 'name_only')
-#         self.setClassTag('QueueSystemConfig.name', 'attribute')
-#         self.setClassTag('QueueSystemConfig.mandatory', 'attribute')  
-#         self.setClassTag('QueueConfig.ALL', 'attribute')   
-#         self.setClassTag('List.QueueConfig', 'class_only')           
-#         #self.setClassTag('ProtocolConfig.ProtocolConfig', 'class_only')
-#     
-#     def selectByLabel(self, objLabel):
-#         hostsList = self.selectAll()
-#         for host in hostsList:
-#             if host.label == objLabel:
-#                 return host
-#         return None
-    
 class HostMapper(SqliteMapper):
     def __init__(self, filename, dictClasses=None):
         if dictClasses is None:
@@ -188,7 +114,42 @@ class HostConfig(OrderedObject):
         
     def setQueueSystem(self, queueSystem):
         self.queueSystem = queueSystem    
-        
+  
+    def addQueueSystem(self, queueConf=None):
+        # Read from users' config file.
+        cp = ConfigParser()
+        cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+        SCIPION_CONFIG = queueConf or os.environ['SCIPION_CONFIG']
+        # Also mentioned in /scipion . Maybe we could do better.
+    
+        try:
+            assert cp.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
+    
+            # Helper functions (to write less)
+            def get(var): return cp.get('HOSTS', var).replace('%_(', '%(')
+            def isOn(var): return var.lower() in ['true', 'yes', '1']
+    
+            self.mpiCommand.set(get('PARALLEL_COMMAND'))
+            self.queueSystem = QueueSystemConfig()
+            queueSys = self.queueSystem
+            #queueSys = QueueSystemConfig()
+            queueSys.name.set(get('NAME'))
+            queueSys.mandatory.set(isOn(get('MANDATORY')))
+            queueSys.submitCommand.set(get('SUBMIT_COMMAND'))
+            queueSys.submitTemplate.set(get('SUBMIT_TEMPLATE'))
+            queueSys.cancelCommand.set(get('CANCEL_COMMAND'))
+            queueSys.checkCommand.set(get('CHECK_COMMAND'))
+    
+            queue = QueueConfig()
+            queue.maxCores.set(get('MAX_CORES'))
+            queue.allowMPI.set(isOn(get('ALLOW_MPI')))
+            queue.allowThreads.set(isOn(get('ALLOW_THREADS')))
+        except Exception as e:
+            sys.exit('Failed to read settings. The reported error was:\n  %s\n'
+                     'To solve it, delete %s and run again.' % (e, SCIPION_CONFIG))
+    
+        queueSys.queues = List()
+        queueSys.queues.append(queue)      
         
 class QueueSystemConfig(OrderedObject):
     def __init__(self, **args):

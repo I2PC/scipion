@@ -61,12 +61,13 @@ function createProjectForm(title, msg) {
 
 function createProject(elm) {
 	var projName = elm.val();
+	var URL = getSubDomainURL() + "/create_project/?projectName=" + projName
 	$.ajax({
 		type : "GET",
-		url : "/create_project/?projectName=" + projName,
+		url : URL,
 		success : function() {
-			var url = "/project_content/?projectName="+projName
-			window.location.href = url;
+			var URL2 = getSubDomainURL() + "/project_content/?projectName="+projName
+			window.location.href = URL2;
 //			window.location.href = "/projects/";
 		}
 	});
@@ -86,11 +87,13 @@ function deleteProjectForm(projName, title, dialog) {
 
 function deleteProject(elm) {
 	var projName = elm.attr('value');
+	var URL = getSubDomainURL() + "/delete_project/?projectName=" + projName
 	$.ajax({
 		type : "GET",
-		url : "/delete_project/?projectName=" + projName,
+		url : URL,
 		success : function() {
-			window.location.href = "/projects/";
+			var URL2 = getSubDomainURL() + "/projects/"
+			window.location.href = URL2;
 		}
 	});
 }
@@ -113,9 +116,10 @@ function serviceProjForm(){
 
 function createServProject(elm) {
 	projName = randomString(32, '#aA')
+	var URL = getSubDomainURL() + "/create_project/?projectName=" + projName
 	$.ajax({
 		type : "GET",
-		url : "/create_project/?projectName=" + projName,
+		url : URL,
 		async: false,
 		success : function() {
 			var title = "ACCESS CODE"
@@ -143,14 +147,14 @@ function goToProjectForm() {
 
 function goToProject(elm) {
 	var code = elm.val();
-	
+	var URL = getSubDomainURL() + "/check_project_id/?code=" + code
 	$.ajax({
 		type : "GET",
-		url : "/check_project_id/?code=" + code,
+		url : URL,
 		success : function(result) {
 			if(result == 1){
-				var url = "/project_content/?projectName="+code+"&mode=service"
-				window.location.href = url;
+				var URL2 = getSubDomainURL() + "/project_content/?projectName="+code+"&mode=service"
+				window.location.href = URL2;
 			} else {
 				var title = "Bad Access"
 				var msg = "<p>Wrong <strong>access code</strong> given!</p>"+

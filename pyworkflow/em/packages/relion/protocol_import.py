@@ -93,7 +93,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         # Create the set of particles
         partSet = self._createSetOfParticles()
         self._findImagesPath(dataFile)
-        readSetOfParticles(dataFile, partSet, preprocessRow=self._preprocessRow, magnification=self.magnification.get())
+        readSetOfParticles(dataFile, partSet, 
+                           preprocessImageRow=self._preprocessImageRow, 
+                           magnification=self.magnification.get())
         particle = partSet.getFirstItem()
         
         # Copy acquisition from first element
@@ -118,7 +120,7 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         self.info('  Using classes template: %s' % classTemplate)
         createClassesFromImages(partSet, dataFile, classesSqlite, 
                                 self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 
-                                0, preprocessRow=self._preprocessRow)      
+                                0, preprocessImageRow=self._preprocessImageRow)      
         # FIXME: Check whether create classes 2D or 3D
         classes = self._createSetOfClasses3D(partSet)
         readSetOfClasses3D(classes, classesSqlite)
@@ -157,6 +159,13 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         f.close()
         return opts
     
+    def copyOfLinkReferences(self, refPattern):
+        foundRef = True
+        ref = 0
+        while foundRef:
+            refPath = refPattern % ref
+            foundRef = os.path.exists(refPath)
+        
     def _findImagesPath(self, starFile):
         from convert import findImagesPath
         self._imagesPath = findImagesPath(starFile)
@@ -165,10 +174,17 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
             self.info('Images path found in: %s' % self._imagesPath)
         else:
             self.warning('Images binaries not found!!!')
-        
-    def _preprocessRow(self, imgRow):
-        from convert import setupCTF, prependToFileName
+            
+    def _preprocessImageRow(self, img, imgRow):
+        from convert import setupCTF, copyOrLinkFileName
         if self._imagesPath is not None:
-            prependToFileName(imgRow, self._imagesPath)
-        
+            copyOrLinkFileName(imgRow, self._imagesPath, self._getExtraPath())
         setupCTF(imgRow, self.samplingRate.get())
+                
+#     def _preprocessRow(self, img, imgRow):
+#         from convert import setupCTF, prependToFileName
+#         if self._imagesPath is not None:
+#             prependToFileName(imgRow, self._imagesPath)
+#         
+#         setupCTF(imgRow, self.samplingRate.get())
+        
