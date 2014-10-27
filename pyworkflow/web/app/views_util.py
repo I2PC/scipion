@@ -361,8 +361,7 @@ def download_output(request):
         z = zipfile.ZipFile("output.zip", "w")
         
         for f in files:
-            file_output = open(f)
-            z.write(f, arcname=os.path.basename(file_output.name))
+            z.write(f, arcname=os.path.basename(f))
         z.close()
         
         pathFile = os.path.join(request.session['projectPath'], "output.zip")
