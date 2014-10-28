@@ -91,12 +91,9 @@ class TestBasic(BaseTest):
 
 
 SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
-
-CLEAN_IMAGES = True # Remove the output temporary files
-
-PRINT_MATRIX = False#True#False
-
-PRINT_FILES = False
+CLEAN_IMAGES = False#True # Remove the output temporary files
+PRINT_MATRIX = False
+PRINT_FILES = True#False
 
 
 def runXmippProgram(cmd):
@@ -104,38 +101,20 @@ def runXmippProgram(cmd):
     p = subprocess.Popen(cmd, shell=True, env=xmipp3.getEnviron())
     return p.wait()   
 
-    
-class TestAlignment(BaseTest):
+
+class TestConvertBase(BaseTest):
+    """ Base class to launch both Alignment and Reconstruction tests."""
+    IS_ALIGNMENT = None
+    CMD = None
+        
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('emx')
-    
-    def test_isInverse(self):
-        def _testInv(matrixList):
-            a = Alignment(matrixList)
-            
-            row = XmippMdRow()
-            alignmentToRow(a, row, is2D=True, inverseTransform=False)
-            print "isInv=False, row", row      
-            
-            row2 = XmippMdRow()
-            alignmentToRow(a, row2, is2D=True, inverseTransform=True)
-            print "isInv=True, row2", row2
-          
-        _testInv([[1.0, 0.0, 0.0, 20.0],
-                  [0.0, 1.0, 0.0, 0.0],
-                  [0.0, 0.0, 1.0, 0.0],
-                  [0.0, 0.0, 0.0, 1.0]])
-          
-        _testInv([[0.93969, 0.34202, 0.0, -6.8404],
-                  [-0.34202, 0.93969, 0.0, 18.7939],
-                  [0.0, 0.0, 1.0, 0.0],
-                  [0.0, 0.0, 0.0, 1.0]])    
 
 
     def launchTest(self, fileKey, mList,
-                            is2D=True, inverseTransform=False, **kwargs):
+                   is2D=True, inverseTransform=False, **kwargs):
         """ Helper function to launch similar alignment tests
         give the EMX transformation matrix.
         Params:
@@ -152,14 +131,19 @@ class TestAlignment(BaseTest):
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
         mdFn = self.getOutputPath(fileKey + "_particles.xmd")
         partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
-        stackFn2 = self.getOutputPath(fileKey + "_output.mrcs")
+        
+        if self.IS_ALIGNMENT:
+            outputFn = self.getOutputPath(fileKey + "_output.mrcs")
+        else:
+            outputFn = self.getOutputPath(fileKey + "_output.vol")
+            
         goldFn = self.dataset.getFile(fileKey + 'Gold')
         if PRINT_FILES:
             print "BINARY DATA: ", stackFn
             print "SET1: ", partFn1
             print "  MD: ", mdFn
             print "SET2: ", partFn2  
-            print "OUTPUT :", stackFn2
+            print "OUTPUT :", outputFn
             print "GOLD: ", goldFn
         
         if is2D:
@@ -212,19 +196,45 @@ class TestAlignment(BaseTest):
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
         
         # Launch apply transformation and check result images
-        cmd = "xmipp_transform_geometry  -i %(mdFn)s -o %(stackFn2)s --apply_transform" % locals()
-        runXmippProgram(cmd)
+        runXmippProgram(self.CMD % locals())
         
         if SHOW_IMAGES:
-            runXmippProgram('xmipp_showj -i %(stackFn2)s' % locals())
+            runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
             
         if os.path.exists(goldFn):
-            self.assertTrue(ImageHandler().compareData(goldFn, stackFn2, tolerance=0.001))
+            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
         else:
             print "WARNING: Gold file '%s' missing!!!" % goldFn
         
         if CLEAN_IMAGES:
-            cleanPath(stackFn2)
+            cleanPath(outputFn)
+                
+    
+class TestAlignment(TestConvertBase):
+    IS_ALIGNMENT = True
+    CMD = "xmipp_transform_geometry  -i %(mdFn)s -o %(outputFn)s --apply_transform"
+    
+    def test_isInverse(self):
+        def _testInv(matrixList):
+            a = Alignment(matrixList)
+            
+            row = XmippMdRow()
+            alignmentToRow(a, row, is2D=True, inverseTransform=False)
+            print "isInv=False, row", row      
+            
+            row2 = XmippMdRow()
+            alignmentToRow(a, row2, is2D=True, inverseTransform=True)
+            print "isInv=True, row2", row2
+          
+        _testInv([[1.0, 0.0, 0.0, 20.0],
+                  [0.0, 1.0, 0.0, 0.0],
+                  [0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 0.0, 1.0]])
+          
+        _testInv([[0.93969, 0.34202, 0.0, -6.8404],
+                  [-0.34202, 0.93969, 0.0, 18.7939],
+                  [0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 0.0, 1.0]])    
 
 
     def test_alignShiftRotExp(self):
@@ -497,87 +507,10 @@ class TestAlignment(BaseTest):
                          is2D=True, inverseTransform=False)
 
 
-#FIXME: Restore this set
-class TestReconstruct(BaseTest):
-    @classmethod
-    def setUpClass(cls):
-        setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('emx')
-
-    def launchTest(self, fileKey, mList,
-                            is2D=True, inverseTransform=False, commandLine=None,
-                            **kwargs):
-        """ Helper function to launch similar alignment tests
-        give the EMX transformation matrix.
-        Params:
-            fileKey: the file where to grab the input stack images.
-            mList: the matrix list of transformations
-                (should be the same length of the stack of images)
-        """
-        print "\n"
-        print "*" * 80
-        print "* Launching test: ", fileKey
-        print "*" * 80
-
-        stackFn = self.dataset.getFile(fileKey)
-        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
-        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
-        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
-        print "BINARY DATA: ", stackFn
-        print "SET1: ", partFn1
-        print "  MD: ", mdFn
-        print "SET2: ", partFn2
-
-        partSet = SetOfParticles(filename=partFn1)
-        partSet.setAcquisition(Acquisition(voltage=300,
-                                  sphericalAberration=2,
-                                  amplitudeContrast=0.1,
-                                  magnification=60000))
-        # Populate the SetOfParticles with  images
-        # taken from images.mrc file
-        # and setting the previous alignment parameters
-        aList = [np.array(m) for m in mList]
-        for i, a in enumerate(aList):
-            p = Particle()
-            p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
-            partSet.append(p)
-        # Write out the .sqlite file and check that are correctly aligned
-        partSet.write()
-
-        # Convert to a Xmipp metadata and also check that the images are
-        # aligned correctly
-        writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
-
-        # Let's create now another SetOfImages reading back the written
-        # Xmipp metadata and check one more time.
-        partSet2 = SetOfParticles(filename=partFn2)
-        partSet2.copyInfo(partSet)
-        readSetOfParticles(mdFn, partSet2, is2D=is2D,
-                               inverseTransform=(inverseTransform))
-
-        partSet2.write()
-        #TODO_rob: I do not know how to make an assert here
-        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
-        #inverse has no effect
-
-        if kwargs.get('printMatrix', False):
-            for i, img in enumerate(partSet2):
-                m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
-                print "-"*5
-                print img.getFileName(), img.getIndex()
-                print  >> sys.stderr, 'm1:\n', m1
-                print  >> sys.stderr, 'm2:\n', m2
-                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
-        if commandLine is not None:
-            
-            print "Computing: ", commandLine%locals()
-            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            for line in p.stdout.readlines():
-                print line,
-            retval = p.wait() 
-                   
+class TestReconstruct(TestConvertBase):
+    IS_ALIGNMENT = False
+    CMD = "xmipp_reconstruct_art -i %(mdFn)s -o %(outputFn)s"
+    
     def test_reconstRotOnly(self):
         """ Check that for a given alignment object,
         the corresponding Xmipp metadata row is generated properly.
@@ -623,15 +556,8 @@ class TestReconstruct(BaseTest):
                   [0., 0., 0., 1.]]
                 ]
 
-        if SHOW_IMAGES:
-            commandLine="xmipp_reconstruct_art -i %(mdFn)s -o /tmp/sh.vol; xmipp_showj /tmp/sh.vol"
-        else:
-            commandLine=None
-
         self.launchTest('reconstRotOnly', mList,
-                     is2D=False, inverseTransform=True,
-                     printMatrix=True,
-                     commandLine=commandLine)
+                     is2D=False, inverseTransform=True)
 
     def test_reconstRotandShift(self):
         """ Check that for a given alignment object,
@@ -678,45 +604,9 @@ class TestReconstruct(BaseTest):
                   [0., 0., 0., 1.]]
                 ]
 
-        if SHOW_IMAGES:
-            commandLine="xmipp_reconstruct_art -i %(mdFn)s -o /tmp/sh.vol; xmipp_showj /tmp/sh.vol"
-        else:
-            commandLine=None
-
         self.launchTest('reconstRotandShift', mList,
-                     is2D=False, inverseTransform=True,
-                     printMatrix=True,
-                     commandLine=commandLine)
+                     is2D=False, inverseTransform=True)
 
-    def test_rowToAlignment2D(self):
-        """ Check that given a row with the alignment
-        parameters (shiftx, shifty, rot and flip)
-        the proper alignment matrix is built.
-        """
-        row = XmippMdRow()
-        row.setValue(xmipp.MDL_SHIFT_X, 10.)
-        row.setValue(xmipp.MDL_SHIFT_Y, 10.)
-        row.setValue(xmipp.MDL_ANGLE_ROT, 0.)
-        row.setValue(xmipp.MDL_FLIP, False)
-        
-        alignment = rowToAlignment(row)
-        alignment.printAll()      
-        
-    def aaatest_readWriteParticles(self):
-        mdFn = self.dataset.getFile('particles/xmipp_particles.xmd') 
-        print "INPUT MD: ", mdFn
-        md = xmipp.MetaData(mdFn)
-        imgFn = self.getOutputPath('particles.sqlite')
-        imgSet = SetOfParticles(filename=imgFn)
-        readSetOfParticles(mdFn, imgSet)
-        
-        outputFn = self.getOutputPath('particles.xmd')
-        print "OUTPUT MD: ", outputFn
-        writeSetOfParticles(imgSet, outputFn)
-        mdOut = xmipp.MetaData(outputFn)
-        
-        
-        
     
 class TestSetConvert(BaseTest):
     

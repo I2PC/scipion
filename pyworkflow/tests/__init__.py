@@ -153,6 +153,12 @@ DataSet(name='emx',  folder='emx',
                'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
                'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',
                'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
+               
+               'reconstRotOnly': 'reconstruction/reconstRotOnly.mrcs',
+               'reconstRotOnlyGold': 'reconstruction/gold/reconstRotOnly_output.vol',
+               
+               'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
+               'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
               })
                
                
