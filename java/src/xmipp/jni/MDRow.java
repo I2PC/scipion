@@ -41,7 +41,9 @@ public class MDRow {
 	// private static native void storeIds();
 	// functions to create images
 	private native void create();
-
+        private native void createRef(long id);
+        
+        
 	// destructor
 	public synchronized native void destroy();
 	
@@ -90,6 +92,11 @@ public class MDRow {
 	/** Create empty metadata */
 	public MDRow() {
 		create();
+	}
+        
+        public MDRow(long peer) {
+		createRef(peer);
+                
 	}
 
 	/**

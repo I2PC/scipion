@@ -661,7 +661,7 @@ enum MDLabel
     BSOFT_MAP_BACK_RWEIGHT,
     BSOFT_MAP_MODEL,
     BSOFT_MAP_SYMMETRY,
-    BSOFT_MICROGRAPH,
+    //BSOFT_MICROGRAPH,
     BSOFT_MICROGRAPH_FILE,
     BSOFT_MICROGRAPH_PARTICLE_FILE,
     BSOFT_MICROGRAPH_FILAMENT_FILE,
@@ -1981,7 +1981,8 @@ private:
         MDL::addLabel(BSOFT_MAP_BACK_RWEIGHT, LABEL_STRING, "map.back_projection.rweight");
         MDL::addLabel(BSOFT_MAP_MODEL, LABEL_STRING, "map.model");
         MDL::addLabel(BSOFT_MAP_SYMMETRY, LABEL_STRING, "map.symmetry");
-        MDL::addLabel(BSOFT_MICROGRAPH, LABEL_STRING, "micrograph");
+        // "micrograph" label is already in xmipp.
+        //MDL::addLabel(BSOFT_MICROGRAPH, LABEL_STRING, "micrograph");
         MDL::addLabel(BSOFT_MICROGRAPH_FILE, LABEL_STRING, "micrograph.file_name");
         MDL::addLabel(BSOFT_MICROGRAPH_PARTICLE_FILE, LABEL_STRING, "micrograph_particle.file_name");
         MDL::addLabel(BSOFT_MICROGRAPH_FILAMENT_FILE, LABEL_STRING, "micrograph_filament.file_name");

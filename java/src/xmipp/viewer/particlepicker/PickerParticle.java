@@ -7,10 +7,17 @@ public class PickerParticle extends Particle
 
 	private ParticleCanvas canvas;
 	protected Micrograph micrograph;
+        
+        public PickerParticle(int x, int y, Micrograph m)
+        {
+            super(x, y);
+            this.micrograph = m;
+		// TODO Auto-generated constructor stub
+        }
 	
-	public PickerParticle(int x, int y, Micrograph m)
+	public PickerParticle(int x, int y, Micrograph m, double cost)
 	{
-		super(x, y);
+		super(x, y, cost);
 		this.micrograph = m;
 		// TODO Auto-generated constructor stub
 	}

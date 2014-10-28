@@ -21,7 +21,7 @@ public class PickingClassifier
 	
 	public native void destroy();
 
-	public synchronized native void autopick(String micrograph, MetaData outputmd, int percent);
+	public synchronized native Particle[] autopick(String micrograph, int percent);
 	
 	public synchronized native void correct(MDRow[] manualRows, MDRow[] automaticRows);
 
