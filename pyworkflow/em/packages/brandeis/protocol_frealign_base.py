@@ -584,6 +584,7 @@ class ProtFrealignBase(EMProtocol):
             f = self.__openParamFile(block, paramsRefine)
             
             # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+
             for i, img in enumerate(imgSet):
                 film = img.getMicId()
                 ctf = img.getCTF()
@@ -1122,18 +1123,21 @@ eot
         objId = img.getMicId()
         
         # get alignment parameters for each particle
-        align = img.getAlignment()
-        
-        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
-        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
-        psi = float(str(align._xmipp_anglePsi))
-        theta = float(str(align._xmipp_angleTilt))
-        phi = float(str(align._xmipp_angleRot))
+        from convert import geometryFromMatrix
+        shifts, angles = geometryFromMatrix(img.getAlignment())
+        #TODO: check if can use shiftZ
+        shiftX, shiftY, shiftZ = shifts * img.getSamplingRate()
+        psi, theta, phi = angles
+#        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
+#        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
+#        psi   = float(str(align._xmipp_anglePsi))
+#        theta = float(str(align._xmipp_angleTilt))
+#        phi   = float(str(align._xmipp_angleRot))
                     
         # get ctfModel for each particle
         ctfModel = img.getCTF()
-        defU = float(str(ctfModel.getDefocusU()))
-        defV = float(str(ctfModel.getDefocusV()))
+        defU     = float(str(ctfModel.getDefocusU()))
+        defV     = float(str(ctfModel.getDefocusV()))
         defAngle = float(str(ctfModel.getDefocusAngle()))
         
         # get the adquisition info
