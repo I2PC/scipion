@@ -61,6 +61,7 @@ iconDict = {
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
             'loading' : 'loading.gif',
+            'error_page' : 'error_page.jpg',
             
             #Extensions file
             'folder': 'fa-folder-open.png',
@@ -631,3 +632,15 @@ def savePlot(request, plot):
     url_plot = "get_image_plot/?image=" + fn
         
     return url_plot
+
+#===============================================================================
+# ERROR PAGE
+#===============================================================================
+
+def error(request):
+    from views_base import base_grid
+    context = {"logoScipionTransparent": getResourceIcon("logo_scipion_transparent"),
+               "logoErrorPage":getResourceIcon("error_page"),
+               }
+    context = base_grid(request, context)
+    return render_to_response('error.html', context)
