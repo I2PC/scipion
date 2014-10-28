@@ -1090,7 +1090,7 @@ def alignmentToRow(alignment, alignmentRow,
                           -> for xmipp implies alignment
     """
     matrix = alignment.getMatrix()
-    flip = bool(matrix[3,3]<0)
+    flip = bool(matrix[3][3]<0)
     if flip:
         matrix[0,:4] *= -1.
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
