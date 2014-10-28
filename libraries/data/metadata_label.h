@@ -1738,7 +1738,9 @@ private:
         MDL::addLabel(RLN_IMAGE_ID, LABEL_SIZET, "rlnImageId");
         MDL::addLabel(RLN_IMAGE_ENABLED, LABEL_BOOL, "rlnEnabled");
         MDL::addLabel(RLN_IMAGE_DATATYPE, LABEL_INT, "rlnDataType");
-        MDL::addLabel(RLN_IMAGE_DIMENSIONALITY, LABEL_INT, "rlnDataDimensionality");
+        // Label rlnImageDimensionality is originally rlnDataDimensionality, which is
+        // duplicated for other label. A relion bug???
+        MDL::addLabel(RLN_IMAGE_DIMENSIONALITY, LABEL_INT, "rlnImageDimensionality");
         MDL::addLabel(RLN_IMAGE_BEAMTILT_X, LABEL_DOUBLE, "rlnBeamTiltX");
         MDL::addLabel(RLN_IMAGE_BEAMTILT_Y, LABEL_DOUBLE, "rlnBeamTiltY");
         MDL::addLabel(RLN_IMAGE_BEAMTILT_GROUP, LABEL_STRING, "rlnBeamTiltGroupName");

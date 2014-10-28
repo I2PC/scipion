@@ -1014,7 +1014,7 @@ void MetaData::_readRowsStar(mdBlock &block, std::vector<MDObject*> & columnValu
         line.assign(iter, newline - iter);
         trim(line);
 
-        if (!line.empty())
+        if (!line.empty() && line[0] != '#')
         {
             //_maxRows would be > 0 if we only want to read some
             // rows from the md for performance reasons...

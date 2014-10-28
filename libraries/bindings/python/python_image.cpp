@@ -338,7 +338,10 @@ Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
                 size_t index = PyInt_AsSsize_t(PyTuple_GetItem(input, 0));
                 const char * filename = PyString_AsString(PyTuple_GetItem(input, 1));
                 // Now read using both of index and filename
-                self->image->write(filename, index);
+                bool isStack = (index > 0);
+                WriteMode writeMode = isStack ? WRITE_REPLACE : WRITE_OVERWRITE;
+                self->image->write(filename, index, isStack, writeMode);
+
                 Py_RETURN_NONE;
               }
               if ((pyStr = PyObject_Str(input)) != NULL)
