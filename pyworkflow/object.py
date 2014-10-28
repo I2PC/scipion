@@ -856,9 +856,9 @@ class Set(OrderedObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def _iterItems(self):        
-        return self._mapper.selectAll()#has flat mapper, iterate is true
-    
+    def _iterItems(self, random=False):
+        return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
+
     def getFirstItem(self):
         """ Return the first item in the Set. """
         return self._mapper.selectFirst()

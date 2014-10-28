@@ -629,10 +629,10 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None):        
+    def selectAll(self, iterate=True, objectFilter=None, random=False):
         if self._objTemplate is None:
             self.__loadObjDict()
-        objRows = self.db.selectAll()
+        objRows = self.db.selectAll(random=random)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -845,8 +845,12 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd("id=?"), (objId,))
         return self.cursor.fetchone()
 
-    def selectAll(self, iterate=True):
-        self.executeCommand(self.selectCmd('1'))
+    def selectAll(self, iterate=True, random=False):
+        if not random:
+            cmd = self.selectCmd('1')
+        else:
+            cmd = self.selectCmd('1', orderByStr=' ORDER BY RANDOM()')
+        self.executeCommand(cmd)
         return self._results(iterate)
 
     def aggregate(self, operations, operationLabel, groupByLabels=None):

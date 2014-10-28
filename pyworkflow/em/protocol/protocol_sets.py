@@ -31,6 +31,7 @@ This module contains protocols related to Set operations such us:
 ... etc
 """
 import os
+import math
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
@@ -389,12 +390,10 @@ class ProtSplitSet(ProtSets):
         # Iterate over the elements in the input set and assign
         # to different subsets.
         elements = self.inputSet.get()
-        if self.randomize:
-            from random import shuffle
-            shuffle(elements)
-        for i, img in enumerate(elements):
-            subsets[i % n].append(img)
-            
+        nPerSet = int(math.ceil(len(elements) / float(n)))  # elements per set
+        for i, img in enumerate(elements.__iter__(random=self.randomize)):
+            subsets[i // nPerSet].append(img)
+
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
         for i in range(1, n+1):
             subset = subsets[i-1]
