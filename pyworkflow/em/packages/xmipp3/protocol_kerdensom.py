@@ -220,6 +220,9 @@ class XmippProtKerdensom(KendersomBaseClassify):
         md.write(fnClass, xmipp.MD_APPEND)
     
     #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        return KendersomBaseClassify._validate(self)
+    
     def _summary(self):
         return KendersomBaseClassify._summary(self)
     
