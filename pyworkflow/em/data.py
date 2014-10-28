@@ -770,6 +770,13 @@ class SetOfParticles(SetOfImages):
         self.setHasCTF(other.hasCTF())    
 
 
+class SetOfAverages(SetOfParticles):
+    """Represents a set of Averages.
+    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    def __init__(self, **args):
+        SetOfParticles.__init__(self, **args)
+
+
 class SetOfVolumes(SetOfImages):
     """Represents a set of Volumes"""
     ITEM_TYPE = Volume
