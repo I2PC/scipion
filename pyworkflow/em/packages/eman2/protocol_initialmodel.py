@@ -46,7 +46,7 @@ class EmanProtInitModel(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D, SetOfParticles',# pointerCondition='hasRepresentatives',
+                      pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')
         form.addParam('numberOfIterations', IntParam, default=8,

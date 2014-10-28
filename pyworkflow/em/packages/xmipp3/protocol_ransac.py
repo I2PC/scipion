@@ -34,8 +34,9 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
                                         STEPS_PARALLEL, LEVEL_EXPERT)
 from pyworkflow.em.protocol import ProtInitialVolume
+from pyworkflow.em.data import SetOfClasses2D
 
-from convert import writeSetOfClasses2D, readSetOfVolumes
+from convert import writeSetOfClasses2D, readSetOfVolumes, writeSetOfParticles
 from utils import isMdEmpty
 
 
@@ -52,12 +53,11 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
-        form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
-                      help='Select the input classes from the project.'
-                           'It should be a SetOfClasses2D class')    
-        
+         
+        form.addParam('inputParticles', PointerParam, label="Input classes", important=True, 
+                      pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
+                      help='Select the input images from the project.'
+                           'It should be a SetOfClasses2D class')  
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
@@ -176,14 +176,14 @@ class XmippProtRansac(ProtInitialVolume):
         self.imgsFn = self._getExtraPath('input_classes.xmd')
         self._insertFunctionStep('convertClassesStep', self.imgsFn)
         
-        self.Xdim=self.inputClasses.get().getDimensions()[0]
+        self.Xdim=self.inputParticles.get().getDimensions()[0]
         
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")
         fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
     
         # Low pass filter and resize        
         maxFreq = self.maxFreq.get()
-        ts = self.inputClasses.get().getSamplingRate()
+        ts = self.inputParticles.get().getSamplingRate()
         K = 0.25*(maxFreq/ts)
         if K<1:
             K=1
@@ -208,7 +208,10 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- STEPS functions --------------------------------------------
 
     def convertClassesStep(self, classesFn):
-        writeSetOfClasses2D(self.inputClasses.get(), classesFn)
+        if isinstance(self.inputParticles.get(), SetOfClasses2D):
+            writeSetOfClasses2D(self.inputParticles.get(), classesFn)
+        else:
+            writeSetOfParticles(self.inputParticles.get(), classesFn)
         
     def simulatedAnnealingStep(self, fnRoot):
         self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
@@ -419,7 +422,7 @@ class XmippProtRansac(ProtInitialVolume):
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
    
     def createOutputStep(self):
-        classes2DSet = self.inputClasses.get()
+        classes2DSet = self.inputParticles.get()
         fn = self._getPath('proposedVolumes.xmd')
         md = xmipp.MetaData(fn)
         md.addItemId()
@@ -436,6 +439,9 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if isinstance(self.inputParticles.get(), SetOfClasses2D):
+            if not self.inputParticles.get().hasRepresentatives():
+                errors.append("The input classes should have representatives.")
         return errors
     
     def _summary(self):

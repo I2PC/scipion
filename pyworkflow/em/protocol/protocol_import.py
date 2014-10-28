@@ -313,6 +313,11 @@ class ProtImportParticles(ProtImportImages):
         imgSet.setSamplingRate(self.samplingRate.get())
     
 
+class ProtImportAverages(ProtImportParticles):
+    """Protocol to import a set of averages to the project"""
+    _label = 'import averages'
+    _outputClassName = 'SetOfAverages'    
+    
 
 class ProtImportVolumes(ProtImport):
     """Protocol to import a set of volumes to the project"""
