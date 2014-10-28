@@ -59,9 +59,9 @@ def updateSettings():
     projects = manager.listProjects()
 
     for p in projects:
-        proj = manager.loadProject(p.getName())
-        projSettings = proj.settingsPath
-        print "Copying settings to: ", join(p.getName(), projSettings)
+        projPath = manager.getProjectPath(p.getName())
+        projSettings = join(projPath, 'settings.sqlite')
+        print "Copying settings to: ", projSettings
         copyFile(pw.SETTINGS, projSettings)
         
     cleanPath(pw.SETTINGS) # we dont need to store the settings.sqlite 
