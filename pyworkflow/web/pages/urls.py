@@ -110,3 +110,6 @@ urlpatterns = patterns('',
 #    url(r'^host_form/$', 'app.views_host.hostForm'),
 
 )
+
+handler404 = "app.views_util.error"
+handler500 = "app.views_util.error"
