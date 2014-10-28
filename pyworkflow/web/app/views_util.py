@@ -644,3 +644,7 @@ def error(request):
                }
     context = base_grid(request, context)
     return render_to_response('error.html', context)
+
+
+def error404(request):
+    return error(request)
