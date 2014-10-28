@@ -474,7 +474,11 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     return context
         
 def create_context_jsmol(request, volPath):
-    return {"volLink":volPath}
+    
+    return {"volLink":volPath,
+            'jsmol':getResourceJs('jsmol'),
+            "jsmolFolder": getResourceJs('jsmolFolder'),
+            }
 
 
 def create_context_astex(request, typeVolume, volPath):
