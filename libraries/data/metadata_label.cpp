@@ -754,8 +754,8 @@ void MDRow::resetGeo(bool addLabels)
     setValue(MDL_SHIFT_X,   0., addLabels);
     setValue(MDL_SHIFT_Y,   0., addLabels);
     setValue(MDL_SHIFT_Z,   0., addLabels);
-//    setValue(MDL_ANGLE_ROT, 0., addLabels);
-//    setValue(MDL_ANGLE_TILT,0., addLabels);
+    setValue(MDL_ANGLE_ROT, 0., addLabels);
+    setValue(MDL_ANGLE_TILT,0., addLabels);
     setValue(MDL_ANGLE_PSI, 0., addLabels);
     setValue(MDL_WEIGHT,   1., addLabels);
     setValue(MDL_FLIP,     false, addLabels);
