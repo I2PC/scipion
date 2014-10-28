@@ -116,7 +116,7 @@ function serviceProjForm(){
 
 function createServProject(elm) {
 	projName = randomString(32, '#aA')
-	var URL = getSubDomainURL() + "/create_project/?projectName=" + projName
+	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
 	$.ajax({
 		type : "GET",
 		url : URL,

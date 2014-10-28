@@ -177,7 +177,7 @@ def setRenderingOptions(request, dataset, table, inputParams):
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
-            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA
+            is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
             #Setting the _convert 
             _convert = isVol and (inputParams[sj.MODE]==sj.MODE_GALLERY or is3D)
             #Setting the _reslice 
@@ -342,7 +342,7 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
 
     context = createContext(dataset, table, inputParams[sj.COLS_CONFIG], request, showjForm, inputParams)
 
-    if inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA:
+    if inputParams[sj.MODE]==sj.MODE_VOL_ASTEX or inputParams[sj.MODE]==sj.MODE_VOL_CHIMERA or inputParams[sj.MODE]==sj.MODE_VOL_JSMOL:
         context.update(create_context_volume(request, inputParams, volPath, paramStats))
                
     elif inputParams[sj.MODE]==sj.MODE_GALLERY or inputParams[sj.MODE]==sj.MODE_TABLE or inputParams[sj.MODE]=='column':
@@ -466,8 +466,16 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:   
         context.update(create_context_chimera(volPath))
         
+    elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
+        context.update(create_context_jsmol(request, volPath))
+
+#   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
+        
     return context
         
+def create_context_jsmol(request, volPath):
+    return {"volLink":volPath}
+
 
 def create_context_astex(request, typeVolume, volPath):
 
