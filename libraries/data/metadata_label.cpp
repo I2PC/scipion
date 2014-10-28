@@ -37,6 +37,9 @@ MDLabelStaticInit MDL::initialization; //Just for initialization
 
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags)
 {
+  if (names.find(name) != names.end())
+    REPORT_ERROR(ERR_ARG_INCORRECT, formatString("MDL::addLabel, label '%s' already exists.", name.c_str()));
+
     data[(int)label] = new MDLabelData(type, name, tags);
     names[name] = label;
 }//close function addLabel
