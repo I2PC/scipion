@@ -36,6 +36,7 @@ void ProgTransformGeometry::defineParams()
     save_metadata_stack = true;
     keep_input_columns = true;
     allow_apply_geo = true;
+    mdVol = false;
     XmippMetadataProgram::defineParams();
     //usage
     addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale a group of images/volumes.");
@@ -166,6 +167,8 @@ void ProgTransformGeometry::preProcess()
     {
         if (checkParam("--rotate_volume"))
             calculateRotationMatrix();
+        else
+        	mdVol = true;
         rowGeo.setValue(MDL_SHIFT_Z, getDoubleParam("--shift", 2));
 
     }
@@ -192,7 +195,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
 
     B.initIdentity(dim + 1);
 
-    if (apply_geo)
+    if (apply_geo || mdVol)
         geo2TransformationMatrix(rowOut, B);
 
     T = A * B;
