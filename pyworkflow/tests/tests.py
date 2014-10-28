@@ -136,6 +136,7 @@ def setupTestProject(cls):
     if len(hosts) <= 0:
         raise Exception("Project: %s can't load host configuration." % projName)
     
+    cls.outputPath = proj.path
     cls.projName = projName
     cls.proj = proj
         
