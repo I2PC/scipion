@@ -665,6 +665,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                 micrographstb.setRowSelectionInterval(micindex, micindex);
                 return;
             }
+            current.resetParticlesRectangle();//to dismiss a possible rectangle
         }
         if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) 
         {

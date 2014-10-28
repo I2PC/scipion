@@ -24,7 +24,7 @@ public abstract class ImagePlusReader {
     protected boolean wrap;
     protected long modified;
     
-    protected long index = -1;
+    protected long index = -2;
     protected boolean normalize;
     protected double normalize_min;
     protected double normalize_max;
@@ -49,7 +49,7 @@ public abstract class ImagePlusReader {
 			if(ig != null)
                         {
                             
-                             if(index == -1 )
+                             if(!hasIndex() )
                                 imp = XmippImageConverter.convertToImagePlus(ig);
                             else 
                              {
@@ -129,10 +129,14 @@ public abstract class ImagePlusReader {
     }
 
     void setIndex(int index) {
+        
         this.index = index;
     }
     
-    
+    public boolean hasIndex()
+    {
+        return index != -2;
+    }
 
     public abstract String getName() ;
 

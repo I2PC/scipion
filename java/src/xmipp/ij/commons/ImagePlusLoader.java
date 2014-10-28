@@ -41,25 +41,25 @@ public class ImagePlusLoader {
     }
 
     public ImagePlusLoader(ImagePlus imp) {
-        this(getFile(imp), imp, null, false, -1);
+        this(getFile(imp), imp, null, false, false, -2);
 
     }
 
     public ImagePlusLoader(int index, ImageGeneric ig) {
-        this(getFile(ig), null, ig, false, index);
+        this(getFile(ig), null, ig, false, false, index);
 
     }
 
     public ImagePlusLoader(String fileName) {
-        this(fileName, null, null, false, -1);
+        this(fileName, null, null, false, false, -2);
     }
 
     public ImagePlusLoader(String fileName, boolean useGeometry, boolean wrap) {
-        this(fileName, null, null, useGeometry, -1);
-        setWrap(wrap);
+        this(fileName, null, null, useGeometry, wrap, -2);
+        
     }
 
-    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, int index) {
+    public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, int index) {
 
         if (fileName != null) {
             String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
@@ -72,6 +72,7 @@ public class ImagePlusLoader {
 //        
         impreader.setIndex(index);
         impreader.setUseGeometry(useGeo);
+        setWrap(wrap);
     }
 
     public ImagePlusLoader(ImageGeneric ig) {

@@ -349,10 +349,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 		try
 		{
 			MetaData md = new MetaData(getMicrographsSelFile());
+                        
 			md.removeDisabled();
                         
 			int fileLabel;
-
 			if (md.containsLabel(MDLabel.MDL_MICROGRAPH))
 				fileLabel = MDLabel.MDL_MICROGRAPH;
 			else if (md.containsLabel(MDLabel.MDL_IMAGE))
