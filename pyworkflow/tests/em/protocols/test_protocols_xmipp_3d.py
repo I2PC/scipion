@@ -297,18 +297,22 @@ class TestXmippRansac(TestXmippBase):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('mda')
-        cls.particlesFn = cls.dataset.getFile('particles')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
+        cls.averages = cls.dataset.getFile('averages')
 
     def test_ransac(self):
+        #Import a set of averages
+        print "Import Set of averages"
+        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=3.5)
+        self.launchProtocol(protImportAvg)
+        self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
+        
         print "Run Ransac"
         protRansac = self.newProtocol(XmippProtRansac,
                                       symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
                                       dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)
-        protRansac.inputClasses.set(self.Class2D.outputClasses)
+        protRansac.inputParticles.set(protImportAvg.outputAverages)
         self.launchProtocol(protRansac)
-        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with simulating annealing protocol")
+        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with ransac protocol")
 
 
 class TestXmippProjMatching(TestXmippBase):

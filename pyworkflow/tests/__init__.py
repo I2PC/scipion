@@ -71,7 +71,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
 DataSet(name='mda', folder='hemoglobin_mda', 
         files={
                'particles': 'particles/*.spi',
-               'volumes': 'volumes/*.spi'})
+               'volumes': 'volumes/*.spi',
+               'averages':'averages/averages.stk'})
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
