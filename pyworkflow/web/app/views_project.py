@@ -366,7 +366,8 @@ def create_service_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
-        customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
+        customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
         
@@ -377,14 +378,14 @@ def create_service_project(request):
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)
-        protRansac.inputClasses.set(protImport)
-        protRansac.inputClasses.setExtendedAttribute('outputParticles')
+        protRansac.inputSet.set(protImport)
+        protRansac.inputSet.setExtendedAttribute('outputParticles')
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
         protEmanInitVol = project.newProtocol(EmanProtInitModel)
-        protEmanInitVol.inputClasses.set(protImport)
-        protEmanInitVol.inputClasses.setExtendedAttribute('outputParticles')
+        protEmanInitVol.inputSet.set(protImport)
+        protEmanInitVol.inputSet.setExtendedAttribute('outputParticles')
         project.saveProtocol(protEmanInitVol)
         
         
