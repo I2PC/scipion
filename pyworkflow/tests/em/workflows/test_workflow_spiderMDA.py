@@ -24,15 +24,58 @@
 # *
 # **************************************************************************
 
+import os
+
 from pyworkflow.em import (SpiderProtFilter, SpiderProtAlignAPSR, SpiderProtAlignPairwise,
                            SpiderProtCustomMask, SpiderProtCAPCA, SpiderProtClassifyWard, 
                            SpiderProtClassifyKmeans, SpiderProtClassifyDiday, ProtImportParticles,
                            )
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.packages.spider.convert import writeSetOfImages
 
-from pyworkflow.tests import setupTestProject, DataSet, unittest
+from pyworkflow.tests import setupTestProject, DataSet, unittest, BaseTest
 from test_workflow import TestWorkflow
+from pyworkflow.em.packages.xmipp3.convert import locationToXmipp
+  
    
-   
+class TestSpiderConvert(TestWorkflow):
+    """ Check the images are converted properly to spider format. """
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('mda')
+        cls.particlesFn = cls.dataset.getFile('particles')
+    
+    def test_convert(self):
+        """ Run an Import particles protocol. """
+        protImport = self.newProtocol(ProtImportParticles, pattern=self.particlesFn, samplingRate=3.5)
+        self.launchProtocol(protImport)
+        # check that input images have been imported (a better way to do this?)
+        if protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % self.particlesFn)
+        
+        ih = ImageHandler()
+        stackFn = self.getOutputPath('stack.stk')
+        selFn = self.getOutputPath('stack_sel.stk')
+        print "stackFn: ", stackFn
+        
+        writeSetOfImages(protImport.outputParticles, stackFn, selFn)
+        
+        #for i, img in enumerate(protImport.outputParticles):
+        #    newLoc = (i+1, stackFn)
+            #if i > 10:
+            #    break
+            #print img.getLocation(), 
+            #inputXmipp = locationToXmipp(*img.getLocation())
+            #outputXmipp = locationToXmipp(*newLoc)
+            #cmd = 'source ~/xmipp/.xmipp.bashrc; xmipp_image_convert -i %s -o %s' % (inputXmipp, outputXmipp)
+            #print cmd
+            #os.system(cmd)  
+        #   ih.convert(img, newLoc)
+            
+       
        
 class TestSpiderWorkflow(TestWorkflow):
     @classmethod
