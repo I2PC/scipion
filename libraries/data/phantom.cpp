@@ -1109,7 +1109,7 @@ void Feature::draw_in(MultidimArray<double> &V, int colour_mode, double colour)
             if (add)
                 Vr += drawing_colour;
             else
-                Vr  = XMIPP_MAX(drawing_colour, Vr);
+                Vr  = drawing_colour; // It does not select the maximum between Vr and drawing_colour anymore -> it fails when adding less dense features
 #ifdef DEBUG
 
             if (condition)
