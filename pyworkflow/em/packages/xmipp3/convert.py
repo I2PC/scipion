@@ -1036,9 +1036,10 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
         M = inv(M)
     else:
         M[:3, 3] = shifts[:3]
-    
+
     if flip:
         M[0,:4]*=-1.
+        M[3,:3]*=-1.
     return M
 
 
@@ -1062,7 +1063,7 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
-        #TODO flip
+
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
         
         M = matrixFromGeometry(shifts, angles, flip, inverseTransform)
@@ -1089,7 +1090,7 @@ def alignmentToRow(alignment, alignmentRow,
                           -> for xmipp implies alignment
     """
     matrix = alignment.getMatrix()
-    flip = bool(np.linalg.det(matrix)<0)
+    flip = bool(matrix[3,3]<0)
     if flip:
         matrix[0,:4] *= -1.
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
