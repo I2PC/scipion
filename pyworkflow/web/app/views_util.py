@@ -130,7 +130,11 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jsplumb': 'jsPlumb.js',
           'messi': 'messi.js',
           'raphael': 'raphael.js',
-          'jsmol': 'JSmol.min.js'
+          
+          #JSmol
+          'jsmol': 'jsmol/JSmol.min.js',
+          'jsmolFolder': 'jsmol/j2s',
+          
           }
 
 def getResourceIcon(icon):

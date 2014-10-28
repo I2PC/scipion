@@ -2,45 +2,41 @@
 {% block head %}
 <!-- JS --> 
 <script type="text/javascript" src="{{jsmol}}"></script>
-
-<script type="text/javascript">
-	Jmol.getApplet("myJmol")
-	Jmol.getApplet("myJmol", Info)
-	
-	var Info = {
-		color: "#FFFFFF", // white background (note this changes legacy default which was black)
-		height: 300,      // pixels (but it may be in percent, like "100%")
-		width: 300,
-		use: "HTML5",     // "HTML5" or "Java" (case-insensitive)
-		j2sPath: "j2s",          // only used in the HTML5 modality
-		jarPath: "java",               // only used in the Java modality
-		jarFile: "JmolApplet0.jar",    // only used in the Java modality
-		isSigned: false,               // only used in the Java modality
-		serverURL: "php/jsmol.php",  // this is not applied by default; you should set this value explicitly
-		src: null,          // file to load
-		script: "load {{volLink}};",       // script to run
-		defaultModel: "",   // name or id of a model to be retrieved from a database
-		addSelectionOptions: false,  // to interface with databases
-		debug: false
-	};
-
-
-</script>
-
 <!-- <script type="text/javascript" src="{{jquery_ui}}"></script> -->
 <!-- <link rel="stylesheet" href="{{jquery_ui_css}}">  -->
 
-
-
-
 {% endblock %}
-
 
 {% block content_menu %}{% endblock %}
 			
-			
 {% block content_view %}
 
+<script type="text/javascript">
+	console.log("FOLDER: {{jsmolFolder}}")
+	console.log("VOL: {{volLink}}")
+
+	var Info = {
+		color: "#FFFFFF", // white background (note this changes legacy default which was black)
+		height: 500,      // pixels (but it may be in percent, like "100%")
+		width: 500,
+		use: "HTML5",     // "HTML5" or "Java" (case-insensitive)
+		j2sPath: "{{jsmolFolder}}",          // only used in the HTML5 modality
+// 		jarPath: "java",               // only used in the Java modality
+// 		jarFile: "JmolApplet0.jar",    // only used in the Java modality
+// 		isSigned: false,               // only used in the Java modality
+		serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",  // this is not applied by default; you should set this value explicitly
+		src: "{{volLink}}",          // file to load
+		script: null,       // script to run
+		defaultModel: "",   // name or id of a model to be retrieved from a database
+		addSelectionOptions: false,  // to interface with databases
+		debug: true
+	};
+
+// 	Jmol.getApplet("myJmol")
+	Jmol.getApplet("myJmol", Info)
+	
+
+</script>
 
 			
 {% endblock %}
