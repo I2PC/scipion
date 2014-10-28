@@ -92,7 +92,7 @@ class TestBasic(BaseTest):
 
 SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
 
-CLEAN_IMAGES = True # Remove the output temporaly files
+CLEAN_IMAGES = True # Remove the output temporary files
 
 PRINT_MATRIX = False#True#False
 
@@ -498,7 +498,7 @@ class TestAlignment(BaseTest):
 
 
 #FIXME: Restore this set
-class TestConvertReconstruct():
+class TestReconstruct(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -628,7 +628,7 @@ class TestConvertReconstruct():
         else:
             commandLine=None
 
-        self.launchTest('alignReconstShift', mList,
+        self.launchTest('reconstRotOnly', mList,
                      is2D=False, inverseTransform=True,
                      printMatrix=True,
                      commandLine=commandLine)
@@ -683,7 +683,7 @@ class TestConvertReconstruct():
         else:
             commandLine=None
 
-        self.launchTest('alignReconstShift', mList,
+        self.launchTest('reconstRotandShift', mList,
                      is2D=False, inverseTransform=True,
                      printMatrix=True,
                      commandLine=commandLine)
