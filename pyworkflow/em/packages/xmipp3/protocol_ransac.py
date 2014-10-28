@@ -34,8 +34,9 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
                                         STEPS_PARALLEL, LEVEL_EXPERT)
 from pyworkflow.em.protocol import ProtInitialVolume
+from pyworkflow.em.data import SetOfClasses2D
 
-from convert import writeSetOfClasses2D, readSetOfVolumes
+from convert import writeSetOfClasses2D, readSetOfVolumes, writeSetOfParticles
 from utils import isMdEmpty
 
 
@@ -207,7 +208,10 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- STEPS functions --------------------------------------------
 
     def convertClassesStep(self, classesFn):
-        writeSetOfClasses2D(self.inputParticles.get(), classesFn)
+        if isinstance(self.inputParticles.get(), SetOfClasses2D):
+            writeSetOfClasses2D(self.inputParticles.get(), classesFn)
+        else:
+            writeSetOfParticles(self.inputParticles.get(), classesFn)
         
     def simulatedAnnealingStep(self, fnRoot):
         self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
