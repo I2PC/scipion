@@ -366,7 +366,7 @@ def create_service_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
-        customMenu = '/home/josegutab/menu_initvolume.conf'
+        customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
         

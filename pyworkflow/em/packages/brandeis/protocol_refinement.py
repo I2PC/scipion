@@ -56,6 +56,7 @@ reconstructions.
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputParticles.get(), vol)
         self._defineSourceRelation(self.input3DReference.get(), vol)
+        print "SAVE ALIGNMENT INFORMATION"
 
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):

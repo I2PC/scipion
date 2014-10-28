@@ -297,9 +297,6 @@ class Image(EMObject):
     def setIndex(self, index):
         self._index.set(index)
 
-    def lableIndex(self):
-        return 'index'
-        
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
         return self._filename.get()
