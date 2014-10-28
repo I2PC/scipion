@@ -36,12 +36,9 @@ import javax.swing.border.Border;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
-
-import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
-
 import xmipp.utils.Cache;
 import xmipp.utils.DEBUG;
 import xmipp.utils.XmippPopupMenuCreator;

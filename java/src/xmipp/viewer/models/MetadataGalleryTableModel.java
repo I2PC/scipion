@@ -108,7 +108,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			try
 			{
-                            ImagePlusLoader loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
+                            ImagePlusLoader loader;
+                            if(Filename.isVolume(imagepath))
+                                loader = new ImagePlusLoader(imagepath, null, null, data.useGeo, data.wrap, ImageGeneric.MID_SLICE);
+                            else
+                                loader = new ImagePlusLoader(imagepath, data.useGeo, data.wrap);
                             loader.setGeometry(data.getGeometry(id));
                             loader.setDimension(thumb_width, thumb_height);
                             return loader.getImagePlus();
@@ -202,6 +206,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		ImageItem item = new ImageItem(index);
 		boolean useGeo = data.useGeo;
 		ImagePlus imp = getImage(objId, imageFn, useGeo, data.wrap);
+                
 		item.setImagePlus(imp);
 		return item;
 	}

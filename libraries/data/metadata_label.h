@@ -630,7 +630,7 @@ enum MDLabel
     RLN_SPECTRAL_IDX,
 
     /** BSOFT labels */
-    BSOFT_COMMENT,
+    //BSOFT_COMMENT,
     BSOFT_ID,
     BSOFT_PROJECT,
     BSOFT_FIELD,
@@ -1952,7 +1952,8 @@ private:
         MDL::addLabel(RLN_RESOLUTION_INVPIXEL, LABEL_DOUBLE, "rlnResolutionInversePixel");
         MDL::addLabel(RLN_SPECTRAL_IDX, LABEL_INT, "rlnSpectralIndex");
 
-        MDL::addLabel(BSOFT_COMMENT, LABEL_STRING, "comment");
+        // "comment" already exists in xmipp
+        // MDL::addLabel(BSOFT_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(BSOFT_ID, LABEL_STRING, "id");
         MDL::addLabel(BSOFT_PROJECT, LABEL_STRING, "project");
         MDL::addLabel(BSOFT_FIELD, LABEL_STRING, "field");
