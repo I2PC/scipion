@@ -66,7 +66,7 @@ def writeSetOfImages(imgSet, stackFn, selFn):
     doc = SpiderDocFile(selFn, 'w+')
     
     for i, img in enumerate(imgSet):
-        ih.convert(img.getLocation(), (i+1, stackFn))
+        ih.convert(img, (i+1, stackFn))
         doc.writeValues(i+1)
         
     doc.close()
