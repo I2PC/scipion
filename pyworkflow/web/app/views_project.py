@@ -363,7 +363,7 @@ def writeCustomMenu(customMenu):
 
 Initial_Volume = [
     {"tag": "section", "text": "1. Upload and Import", "children": [
-        {"tag": "protocol", "value": "ProtImportAverages", "text": "Upload files", "icon": "bookmark.png"},
+        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
         {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
         {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
