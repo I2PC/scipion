@@ -82,7 +82,7 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 MEDIA_URL = '/resources/'
 
 # Temporary folder where store the files after do a upload
-FILE_UPLOAD_TEMP_DIR = ABSOLUTE_URL + MEDIA_ROOT
+FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
