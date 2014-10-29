@@ -157,6 +157,40 @@ class TestSqliteMapper(BaseTest):
         relations = mapper2.getRelationsByCreator(creator)
         for row in relations:
             print row
+            
+    def test_StorePointers(self):
+        """ Check that pointers are correctly stored. """
+        fn = self.getOutputPath("pointers.sqlite")
+        
+        print ">>> Using db: ", fn
+
+        mapper = SqliteMapper(fn)
+        # Insert a Complex
+        c = Complex.createComplex() # real = 1, imag = 1
+        mapper.insert(c)
+        # Insert an Integer
+        p1 = Pointer()
+        p1.set(c)
+        p1.setExtendedAttribute('real')
+        
+        mapper.store(c)
+        mapper.store(p1)
+        
+        self.assertAlmostEqual(c.real.get(), p1.get().get())
+        
+        p1.set(None) # Reset value and check that is stored properly
+        
+        self.assertIsNone(p1._extended.get())
+        mapper.store(p1)
+        mapper.commit()
+        
+        mapper2 = SqliteMapper(fn, globals())
+        p2 = mapper2.selectByClass('Pointer')[0]
+        
+        #Check the mapper was properly stored when
+        # set to None and the _extended property cleanned
+        self.assertIsNone(p2.get())
+        
         
         
 class TestSqliteFlatMapper(BaseTest):
