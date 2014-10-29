@@ -45,6 +45,7 @@ from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
             'logo_scipion_small': 'scipion_logo.png',
+            'logo_scipion_normal': 'scipion_logo_normal.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'favicon.png',
             'help': 'system_help24.png',
@@ -639,12 +640,9 @@ def savePlot(request, plot):
 
 def error(request):
     from views_base import base_grid
-    context = {"logoScipionTransparent": getResourceIcon("logo_scipion_transparent"),
+    context = {"logoScipionNormal": getResourceIcon("logo_scipion_normal"),
                "logoErrorPage":getResourceIcon("error_page"),
                }
     context = base_grid(request, context)
     return render_to_response('error.html', context)
 
-
-def error404(request):
-    return error(request)
