@@ -627,7 +627,9 @@ class Pointer(Object):
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
-            return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
+            className = self.getObjValue().getClassName()
+            strId = self.getObjValue().strId()
+            return '-> %s (%s)' % (className, strId)
         return '-> None'
 
     def hasValue(self):
