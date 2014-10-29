@@ -22,16 +22,27 @@
 <!-- 				<a id="backToProject" href="/project_content/?projectName={{projectName}}">Back to project</a> -->
 			{% else %}
 				{% if projectName != None and projectName != ''%}
-				<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
-				<span id="tube">|</span>
-				<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
-				<span id="tube">|</span>
-				<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
-				<span id="tube">|</span>
-				<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
-				<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
-				<span id="tube">|</span>
-				<a href='javascript:popup("/upload/")' class="headerLink">{{msg.VIEW_UPLOAD}}</a>
+					{% if mode != 'service' %}
+					<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
+					<span id="tube">|</span>
+					
+					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
+					<span id="tube">|</span>
+					
+					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
+					<span id="tube">|</span>
+					
+					<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
+					<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
+					<span id="tube">|</span>
+					
+					<a href='javascript:popup("/upload/")' class="headerLink">{{msg.VIEW_UPLOAD}}</a>
+					{% else %}
+					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
+					<span id="tube">|</span>
+					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
+				
+					{% endif %}
 				{% endif %}
 			{% endif %}
 		</div>
