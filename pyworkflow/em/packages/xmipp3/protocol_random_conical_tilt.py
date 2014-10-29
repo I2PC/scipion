@@ -37,7 +37,7 @@ from pyworkflow.protocol.params import (PointerParam, IntParam, StringParam,
 from pyworkflow.em.protocol import ProtInitialVolume
 from pyworkflow.em.data import Volume, SetOfParticles
 
-from convert import getImageLocation
+from convert import getImageLocation, alignmentToRow
 from xmipp3 import XmippMdRow
 
 
@@ -160,12 +160,15 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
             pairRow.setValue(xmipp.MDL_REF, 1)
 
-            pairRow.setValue(xmipp.MDL_FLIP, False)
             alignment = img.getAlignment()
-            pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)
-            pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get()*scaleFactor)
-            pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
             
+#             pairRow.setValue(xmipp.MDL_FLIP, False)
+#             pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)
+#             pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get()*scaleFactor)
+#             pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
+
+            alignmentToRow(alignment, pairRow, is2D=True, inverseTransform=False)
+                               
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]
             pairRow.setValue(xmipp.MDL_MICROGRAPH_TILTED, tMic.getFileName())
