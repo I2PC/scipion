@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+from os.path import exists
 import json
 from views_base import base_grid, base_flex
 from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
@@ -354,6 +355,22 @@ def service_projects(request):
     return render_to_response('service_projects.html', context)
 
 
+def writeCustomMenu(customMenu):
+    if not exists(customMenu):
+        f = open(customMenu, 'w')
+        f.write('''
+[PROTOCOLS]
+
+Initial_Volume = [
+    {"tag": "section", "text": "1. Upload and Import", "children": [
+        {"tag": "protocol", "value": "ProtImportAverages", "text": "Upload files", "icon": "bookmark.png"},
+        {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "2. Create a 3D volume", "children": [
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+    {"tag": "section", "text": "3. Download good volumes."}]
+''')
+        
 def create_service_project(request):
     if request.is_ajax():
         import sys
@@ -367,6 +384,7 @@ def create_service_project(request):
         manager = Manager()
         projectName = request.GET.get('projectName')
         customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        writeCustomMenu(customMenu)
         #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
