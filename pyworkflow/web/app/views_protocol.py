@@ -34,9 +34,10 @@ OBJ_PARAMS =['runName', 'comment']
 
 def getPointerHtml(protVar):
     if protVar.hasValue():
-        if protVar.get() is None:
-            raise Exception("protVar.hasValue...and .get() is None")
-        return protVar.get().getNameId(), protVar.get().getObjId()
+        #if protVar.get() is None:
+        #    raise Exception("protVar.hasValue...and .get() is None")
+        #TODO: CHECK THIS LATER to display better when _extended attribute
+        return protVar.getObjValue().getNameId(), protVar.getObjValue().getObjId()
     return '',''
 
         

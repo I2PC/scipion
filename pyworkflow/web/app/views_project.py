@@ -372,20 +372,20 @@ def create_service_project(request):
         project = manager.createProject(projectName, confs, graphView=True)   
         
         # 1. Import averages
-        protImport = project.newProtocol(ProtImportParticles,
+        protImport = project.newProtocol(ProtImportAverages,
                                          objLabel='import averages')
         project.saveProtocol(protImport)
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)
         protRansac.inputSet.set(protImport)
-        protRansac.inputSet.setExtendedAttribute('outputParticles')
+        protRansac.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
         protEmanInitVol = project.newProtocol(EmanProtInitModel)
         protEmanInitVol.inputSet.set(protImport)
-        protEmanInitVol.inputSet.setExtendedAttribute('outputParticles')
+        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protEmanInitVol)
         
         
