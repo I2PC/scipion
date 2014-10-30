@@ -262,6 +262,11 @@ enum MDLabel
     MDL_ORIGIN_Y, ///< Origin for the image in the Y axis (double)
     MDL_ORIGIN_Z, ///< Origin for the image in the Z axis (double)
 
+    MDL_OPTICALFLOW_MEANX, ///<Mean of the movement in x direction of the motion map> (double)
+    MDL_OPTICALFLOW_MEANY, ///<Mean of the movement in y direction of the motion map> (double)
+    MDL_OPTICALFLOW_STDX, ///<Standatd deviation of the movement in x direction of the motion map> (double)
+    MDL_OPTICALFLOW_STDY, ///<Standard deviation of the movement in y direction of the motion map> (double)
+
     MDL_PARTICLE_ID, ///< Particle unique identifier for reference. (The MDL_ITEM_ID should be used when particle list)
     MDL_PHANTOM_BGDENSITY, ///< Phantom background density (double)
     MDL_PHANTOM_FEATURE_CENTER, ///< Center of the feature (vector double)
@@ -1057,6 +1062,14 @@ private:
         MDL::addLabel(MDL_PHANTOM_FEATURE_OPERATION, LABEL_STRING, "featureOperation");
         MDL::addLabel(MDL_PHANTOM_FEATURE_SPECIFIC, LABEL_VECTOR_DOUBLE, "featureSpecificVector");
         MDL::addLabel(MDL_PHANTOM_FEATURE_TYPE, LABEL_STRING, "featureType");
+        MDL::addLabel(MDL_PHANTOM_SCALE, LABEL_DOUBLE, "phantomScale");
+
+        MDL::addLabel(MDL_OPTICALFLOW_MEANX, LABEL_DOUBLE, "opticalMeanX");
+        MDL::addLabel(MDL_OPTICALFLOW_MEANY, LABEL_DOUBLE, "opticalMeanY");
+        MDL::addLabel(MDL_OPTICALFLOW_STDX, LABEL_DOUBLE, "opticalStdX");
+        MDL::addLabel(MDL_OPTICALFLOW_STDY, LABEL_DOUBLE, "opticalStdY");
+
+
         MDL::addLabel(MDL_PICKING_STATE, LABEL_STRING, "pickingState");
         MDL::addLabelAlias(MDL_PICKING_STATE, "picking_state");//3.0
         MDL::addLabel(MDL_PICKING_MICROGRAPH_STATE, LABEL_STRING, "pickingMicrographState");
