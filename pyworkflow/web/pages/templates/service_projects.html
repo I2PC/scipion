@@ -39,19 +39,12 @@
 <link href="{{projects_css}}" rel="stylesheet" type="text/css">
 
 <style type="text/css">
-body {
-/* 	background-color:#fafafa;  */
-	
-}
-
 div#bodyStyle {
-/* 	background-color: white;  */
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 0.5em;
 	width: 65%;
 	padding: 2em;
-	/* 				border: 2px solid firebrick; */
 	border-radius: 7px;
 }
 
@@ -70,24 +63,24 @@ div#box {
 	text-align: center;
 	margin-top: 1em ;
 	margin-bottom: 1em ;
-/* 	margin:1.5em; */
 }
 
 div#minibox {
 	width: 10em;
 	height: 5em; 
 	padding: 1em; 
-/* 	margin-left: auto; */
-/* 	margin-right: auto; */
 	background-color: white;
 	border: 1px solid black;
 	border-radius: 5px;
 	font-size: 0.7em;
 	display: inline-table;
-/* 	text-align: center; */
 	margin: 1em ;
-/* 	margin-bottom: 1em ; */
-/* 	margin:1.5em; */
+}
+
+div#minibox:hover{
+    background-color:firebrick;
+    color: white;
+    border: 1px solid white;
 }
 
 h1 {
@@ -98,6 +91,12 @@ h1, h2, h3 {
 	padding: 5px;
 	font-weight: 500;
 	line-height: 1.1;
+}
+
+img.ico{
+    background-color:white;
+    padding:0.5em;
+    border-radius:50%;
 }
 </style>
 
@@ -138,27 +137,26 @@ h1, h2, h3 {
 			
 			<br /><br />
 		    <div id="minibox">
-		    	<img src="/resources/fa-folder-open.png"/><br />		
+		    	<img class="ico" src="/resources/fa-folder-open.png"/><br />
 		    	1. Create a new project (or go to a previous one)
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-upload.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-upload.png"/><br /><br />
 		    	2. Upload binary image stack file.
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-sign-in.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-sign-in.png"/><br /><br />
 		    	3. Import averages into the Project.</div>
 		    <div id="minibox">
-		    	<img src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
+		    	<img class="ico" src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
 		    	4. Run different initial volumes methods.
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-download.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-download.png"/><br /><br />
 		    	5. Rank volumes and download results.
 		    </div>
              
 			<br />
-			 
 			</h3>
             
 			<br /> 
