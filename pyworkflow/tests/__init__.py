@@ -122,6 +122,8 @@ DataSet(name='rct',  folder='rct',
 
 DataSet(name='emx',  folder='emx', 
         files={
+
+               'alignFlip':'alignment/alignFlip.mrcs',
                'alignShiftRotExp': 'alignment/Test1/images.mrc',
                'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
                
