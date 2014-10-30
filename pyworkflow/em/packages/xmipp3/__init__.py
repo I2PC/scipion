@@ -43,6 +43,7 @@ from viewer_nma_alignment import XmippAlignmentNMAViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
+from viewer_movie_alignment import XmippMovieAlignViewer
 
 from plotter import XmippPlotter
 
@@ -71,7 +72,7 @@ from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes
 from protocol_micrographs_import import ProtXmippMicsImport
 from protocol_ml2d import XmippProtML2D
-from protocol_movies_optical_alignment import ProtOpticalAlignment
+from protocol_movie_alignment import ProtMovieAlignment
 from protocol_nma_alignment import XmippProtAlignmentNMA
 #from protocol_nma_choose import XmippProtNMAChoose
 from protocol_nma import XmippProtNMA

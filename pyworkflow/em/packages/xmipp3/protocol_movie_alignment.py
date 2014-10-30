@@ -31,6 +31,7 @@ In this module are protocol base classes related to EM Micrographs
 
 from os.path import join
 
+from pyworkflow.object import String
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_EXPERT, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
 from pyworkflow.em.data import Micrograph
@@ -42,10 +43,10 @@ AL_DOSEFGPU = 1
 AL_DOSEFGPUOPTICAL = 2
 AL_AVERAGE = 3
 
-class ProtOpticalAlignment(ProtProcessMovies):
+class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
-    _label = 'movie optical alignment'
+    _label = 'movie alignment'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -63,7 +64,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
         line = group.addLine('Used in alignment',
                             help='First and last frames used in alignment.\n'
                                   'The first frame in the stack is *0*.' )
-        line.addParam('alignFrame0', IntParam, default=0, label='Fisrt')
+        line.addParam('alignFrame0', IntParam, default=0, label='First')
         line.addParam('alignFrameN', IntParam, default=0, label='Last',
                       help='If *0*, use maximum value')
         group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
@@ -116,17 +117,22 @@ class ProtOpticalAlignment(ProtProcessMovies):
         inputMovies = self.inputMovies.get()
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
+        # Also create a Set of Movies with the alignment parameters
+        movieSet = self._createSetOfMovies()
+        movieSet.copyInfo(inputMovies)
         alMethod = self.alignMethod.get()
-        if alMethod == AL_DOSEFGPU:
-            # Also create a Set of Movies with the alignment parameters
-            movieSet = self._createSetOfMovies()
-            movieSet.copyInfo(inputMovies)
         for movie in self.inputMovies.get():
             micName = self._getMicName(movie.getObjId())
+            metadataName = self._getMetadataName(movie.getObjId())
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
             micSet.append(mic)
+            # Parse the alignment parameters and store the log files
+            alignedMovie = movie.clone()
+            alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
+            movieSet.append(alignedMovie)
+
             # TODO: Methods for dosefgpu should be transferred to here
             """
             if alMethod == AL_DOSEFGPU:
@@ -139,6 +145,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
+        self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -158,6 +165,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
         program = self._getProgram()
         # Prepare the arguments
         micName = self._getMicName(movieId)
+        metadataName = self._getMetadataName(movieId)
         # Read common parameters
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
@@ -212,8 +220,9 @@ class ProtOpticalAlignment(ProtProcessMovies):
                 args += ' --gpu %d' % gpuId
             self.runJob(program, args, cwd=movieFolder)
 
-        # Move output micrograph to 'extra' folder
+        # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
+        moveFile(join(movieFolder, metadataName), self._getExtraPath())
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())

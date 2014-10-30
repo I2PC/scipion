@@ -292,7 +292,8 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase._defineParams(self, form)    
         form.addParam('gainFile', FileParam,  
                       label='Gain image', 
-                      help='')
+                      help='A gain reference related to a set of movies'
+                           ' for gain correction')
         
     def _setSampling(self, movieSet):
         ProtImportMicBase._setSampling(self, movieSet)

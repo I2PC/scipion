@@ -63,7 +63,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
-                      help='')
+                      help='Select a set of previously imported movies.')
         form.addParam('cleanMovieData', BooleanParam, default=True,
                       expertLevel=LEVEL_EXPERT,
                       label='Clean movie data?',
@@ -128,6 +128,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getMicName(self, movieId):
         return 'micrograph_%06d.mrc' % movieId
 
+    def _getMetadataName(self, movieId):
+        return 'micrograph_%06d.xmd' % movieId
+
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
 
@@ -140,58 +143,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
         """
         pass
-    
-    
-class ProtAverageMovies(ProtProcessMovies):
-    """ Simple protocol to just average all frames
-    in a movie and produce a micrograph per movie.
-    """
-    _label = 'movie average'
-    
-    def _processMovie(self, movieId, movieName, movieFolder):
-        import xmipp
-        movieImg = xmipp.Image()
-        movieImg.read(movieName, xmipp.HEADER)
-    
-        x, y, z, n = movieImg.getDimensions()
-    
-        # Store all the particles
-        img = xmipp.Image()
-        sumImg = xmipp.Image()
-        
-        for i in range(n):
-            img.read('%d@%s' % (i+1, movieName))
-            if i:
-                sumImg += img
-            else:
-                sumImg = img
-        #sumImg *= (1./n)
-        sumImg.write(self._getMicName(movieId))
-        
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMovies)
-        
-        # Create a folder to store the resulting micrographs
-        micsFolder = self._getPath('micrographs')
-        makePath(micsFolder)
-        
-        for movie in self.inputMovies.get():
-            movieId = movie.getObjId()
-            micName = self._getMicName(movieId)
-            # Move the resulting micrograph before delete of movies folder
-            micNameSrc = join(self._getMovieFolder(movieId), micName)
-            micNameDst = join(micsFolder, micName)
-            moveFile(micNameSrc, micNameDst)
-            
-            mic = micSet.ITEM_TYPE()
-            mic.setFileName(micNameDst)
-            micSet.append(mic)
-            
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineTransformRelation(inputMovies, micSet)
-            
     
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
