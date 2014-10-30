@@ -28,7 +28,7 @@
 -->
 <html lang='es'>
 <head>
-<title>Scipion - Initial Volume</title>
+<title>Scipion - My First Map</title>
 <meta charset='utf-8'>
 <link rel="icon" type="image/png" href="{{favicon}}" />
 
@@ -39,19 +39,12 @@
 <link href="{{projects_css}}" rel="stylesheet" type="text/css">
 
 <style type="text/css">
-body {
-/* 	background-color:#fafafa;  */
-	
-}
-
 div#bodyStyle {
-/* 	background-color: white;  */
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 0.5em;
 	width: 65%;
 	padding: 2em;
-	/* 				border: 2px solid firebrick; */
 	border-radius: 7px;
 }
 
@@ -70,24 +63,24 @@ div#box {
 	text-align: center;
 	margin-top: 1em ;
 	margin-bottom: 1em ;
-/* 	margin:1.5em; */
 }
 
 div#minibox {
 	width: 10em;
 	height: 5em; 
 	padding: 1em; 
-/* 	margin-left: auto; */
-/* 	margin-right: auto; */
 	background-color: white;
 	border: 1px solid black;
 	border-radius: 5px;
 	font-size: 0.7em;
 	display: inline-table;
-/* 	text-align: center; */
 	margin: 1em ;
-/* 	margin-bottom: 1em ; */
-/* 	margin:1.5em; */
+}
+
+div#minibox:hover{
+    background-color:firebrick;
+    color: white;
+    border: 1px solid white;
 }
 
 h1 {
@@ -98,6 +91,12 @@ h1, h2, h3 {
 	padding: 5px;
 	font-weight: 500;
 	line-height: 1.1;
+}
+
+img.ico{
+    background-color:white;
+    padding:0.5em;
+    border-radius:50%;
 }
 </style>
 
@@ -115,7 +114,7 @@ h1, h2, h3 {
 			<div id="headerMainContainer">
 				<a href="{{abs_url}}/service_projects/" id="headerLogoContainer">
 					<img class="logo" src="{{logo_scipion}}" alt="Scipion logo">
-				</a> <span id="projectName"> Initial Volume Service </span>
+				</a> <span id="projectName">My First Map </span>
 				<div style="float: right;">
 					<a href="http://i2pc.cnb.csic.es/LoadHome.htm"> <img
 						src="/resources/logo_i2pc_with_title.png" style="height: 3.2em;" />
@@ -125,40 +124,39 @@ h1, h2, h3 {
 						src="/resources/logo_cnb_without_title.gif" style="height: 3.2em;" />
 					</a>
 				</div>
-			</div>
-			<div id="headerLine"></div>
-		</header>
+            </div>
+            <div id="headerLine"></div>
+        </header>
 		<div id="box">
 			<h1>Create your initial volume </h1>
             <br /> 
 			<h3>This webpage will allow you to create an initial 3D map
-			from your averages images. 
+			from your average images.
 			Several methods of different packages are available (Xmipp3, Eman2, ...).
 			At the end, you can rank the output volumes and download the desired ones.  
 			
 			<br /><br />
 		    <div id="minibox">
-		    	<img src="/resources/fa-folder-open.png"/><br />		
+		    	<img class="ico" src="/resources/fa-folder-open.png"/><br />
 		    	1. Create a new project (or go to a previous one)
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-upload.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-upload.png"/><br /><br />
 		    	2. Upload binary image stack file.
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-sign-in.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-sign-in.png"/><br /><br />
 		    	3. Import averages into the Project.</div>
 		    <div id="minibox">
-		    	<img src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
+		    	<img class="ico" src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
 		    	4. Run different initial volumes methods.
 		    </div>
 		    <div id="minibox">
-		    	<img src="/resources/fa-download.png"/><br /><br />
+		    	<img class="ico" src="/resources/fa-download.png"/><br /><br />
 		    	5. Rank volumes and download results.
 		    </div>
              
 			<br />
-			 
 			</h3>
             
 			<br /> 
@@ -173,13 +171,13 @@ h1, h2, h3 {
 					project</button>
 			</a>
 			<!-- EXAMPLE PROJECT -->
-			<a href="javascript:goWithSubDomainURL('/project_content/?projectName=TestXmippWorkflow&mode=service');"
+			<a href="javascript:goWithSubDomainURL('/project_content/?projectName=#&mode=service');"
 				class="projName">
 				<button class="btn buttonGrey" type="button">Example
 					Project</button>
 			</a>
 		</div>
-		<div style="float: right; font-size: 0.8em;">
+		<div style="text-align:center; font-size: 0.8em;">
 			<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/"> ©
 				2014 · Scipion is licenced under the Creative Commons
 				Attribution-NonCommercial-NoDerivs <img
