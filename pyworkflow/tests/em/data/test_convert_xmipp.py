@@ -90,10 +90,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES = True#True # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = True#True # Remove the output temporary files
+SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+CLEAN_IMAGES = False#True # Remove the output temporary files
 PRINT_MATRIX = True
-PRINT_FILES = True#False
+PRINT_FILES = False#False
 
 
 def runXmippProgram(cmd):
