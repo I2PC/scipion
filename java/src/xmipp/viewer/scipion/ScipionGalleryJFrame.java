@@ -39,6 +39,7 @@ import xmipp.viewer.windows.GalleryJFrame;
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
+    private String self;
     private String scripts, script, ctfscript;
     private String projectid;
     private JButton cmdbutton;
@@ -52,6 +53,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private JButton representativesbt;
     private ScipionMessageDialog dlg;
     private String tmpdir;
+    private JButton createvolbt;
     
    
 
@@ -77,6 +79,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void readScipionParams(ScipionParams parameters)
     {
         try {
+            self = ((ScipionGalleryData)data).getSelf();
             type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
             scripts = parameters.scripts;
@@ -97,9 +100,12 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         }
     }
     
+    protected boolean isClass2D()
+    {
+        return self.equals("Class2D");
+    }
     
-    
-    private void initComponents() {
+    protected void initComponents() {
         Icon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
 						+ "fa-times.png")));
         JButton closebt = new JButton("Close", icon);
@@ -120,21 +126,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    int size = 0;
-                    
-                    if(data.hasClasses())
-                    {
-                        for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEMObjects())
-                            if(emo.isEnabled() && emo.childmd != null)
-                                size += emo.childmd.getEnabledCount();
-                    }
-                    else
-                        size = ((ScipionGalleryData)data).getEnabledCount();
-                    if (confirmCreate(type, size)) 
-                    {
-                        String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
-                        createSubset(command, "Creating set ...");
-                    }
+                    createSimpleSubset();
                 }
             });
             if(data.hasClasses())
@@ -143,80 +135,34 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        int size = ((ScipionGalleryData)data).getEnabledCount();
-                       
-                        if (confirmCreate("Classes", size)) {
-                            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
-                            
-                            createSubset(command, "Creating set ...");
-                            
-                        }
+                        createSubsetFromClasses();
 
                     }
                 });
-                final boolean isClass2D = ((ScipionGalleryData)data).getSelf().equals("Class2D");
-                String repText = isClass2D ? "Create Averages": "Create Volumes";
+                
+                String repText = isClass2D() ? "Create Averages": "Create Volumes";
                 representativesbt = getScipionButton(repText, new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        int size = ((ScipionGalleryData)data).getEnabledCount();
-                        
-                        if (confirmCreate("Representatives", size)) {
-                            String output = isClass2D? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
-                            createSubset(command, "Creating set ...");
-                            
-                        }
+                        createRepresentativesSubset();
 
                     }
                 });
                 
                 buttonspn.add(representativesbt);
                 buttonspn.add(classcmdbutton);
-                
             }
             
             buttonspn.add(cmdbutton);
             if(data.isCTFMd())
             {
-                icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
-						+ "fa-cogs.png")));
+                icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-cogs.png")));
                 JButton recalculatectfbt = getScipionButton("Recalculate CTFs", new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        try {
-                            if(!data.hasRecalulateCTF())
-                            {
-                                XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
-                                return;
-                                        
-                            }
-                            
-                            String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
-                            ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
-                            ((ScipionGalleryData)data).overwrite(sqlitefile);
-                            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile, recalculatefile};
-                            new Thread(new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    try {
-
-                                        String output = XmippWindowUtil.executeCommand(command, false);
-                                    } catch (Exception ex) {
-                                        throw new IllegalArgumentException(ex.getMessage());
-                                    }
-
-                                }
-                            }).start();
-                        close(false);                          
-                        } catch (Exception ex) {
-                            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        createCTFsSubset();
                     }
                 }, icon);
                 
@@ -235,6 +181,19 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(ctfsubsetbt);
                 buttonspn.add(recalculatectfbt);
             }
+            if(self.equals("Volume") || self.equals("Class3D"))
+            {
+                createvolbt = getScipionButton("Create Volume", new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        createVolume();
+                    }
+                });
+                buttonspn.add(createvolbt);
+                cmdbutton.setVisible(data.isTableMode());
+                createvolbt.setVisible(!data.isTableMode());
+            }
             pack();
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
@@ -248,11 +207,109 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         
     }
     
+    
+    
+    protected void createVolume()
+    {
+        msgfields.put(runNameKey, "ProtRegisterVolume");
+        boolean register = confirmCreate("Are you sure you want to register volume in scipion?");
+        if(register)
+        {
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), data.getSelVolumeFile()};
+            createSubset(command, "Creating set ...");
+        }
+    }
+    
+    protected void createSimpleSubset()
+    {
+        int size = 0;
+                    
+        if(data.hasClasses())
+        {
+            for(ScipionMetaData.EMObject emo: ((ScipionGalleryData)data).getEMObjects())
+                if(emo.isEnabled() && emo.childmd != null)
+                    size += emo.childmd.getEnabledCount();
+        }
+        else
+            size = ((ScipionGalleryData)data).getEnabledCount();
+        if (confirmCreate(type, size)) 
+        {
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
+            createSubset(command, "Creating set ...");
+        }
+    }
+    
+    
+    protected void createSubsetFromClasses()
+    {
+        int size = ((ScipionGalleryData)data).getEnabledCount();
+                       
+        if (confirmCreate("Classes", size)) {
+            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+
+            createSubset(command, "Creating set ...");
+
+        }
+    }
+    
+    protected void createRepresentativesSubset()
+    {
+        int size = ((ScipionGalleryData)data).getEnabledCount();
+                        
+        if (confirmCreate("Representatives", size)) {
+            String output = isClass2D()? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+            createSubset(command, "Creating set ...");
+
+        }
+    }
+    
+    protected void createCTFsSubset()
+    {
+        try {
+            if(!data.hasRecalulateCTF())
+            {
+                XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
+                return;
+
+            }
+
+            String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
+            ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
+            ((ScipionGalleryData)data).overwrite(sqlitefile);
+            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile, recalculatefile};
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+
+                        String output = XmippWindowUtil.executeCommand(command, false);
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
+
+                }
+            }).start();
+        close(false);                          
+        } catch (Exception ex) {
+            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public boolean confirmCreate(String output, int size)
     {
         String msg = String.format("<html>Are you sure you want to create a new set of %s with <font color=red>%s</font> %s?", output, size, (size > 1)?"elements":"element");
         if( ((ScipionGalleryData)data).getEnabledCount() == data.size())
             msg += "<br><font color=red>Note:</font> There are no disabled items to dismiss";
+        return confirmCreate(msg);
+    }
+    
+    public boolean confirmCreate(String msg)
+    {
+       
         dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
                         int create = dlg.action;
         return (create == ScipionMessageDialog.OK_OPTION);
@@ -288,6 +345,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         if(cmdbutton != null)
         {
+            
             cmdbutton.setEnabled(isenabled);
             cmdbutton.setBackground(color);
             cmdbutton.setForeground(forecolor);
@@ -305,7 +363,20 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             representativesbt.setForeground(forecolor);
         }
     }
+    
 
+    @Override
+    protected void changeView()
+    {
+        super.changeView();
+        
+        if(self.equals("Volume") || self.equals("Class3D"))
+        {
+            cmdbutton.setVisible(data.isTableMode());
+            createvolbt.setVisible(!data.isTableMode());
+        }
+
+    }
   
     public boolean proceedWithChanges()
     {
