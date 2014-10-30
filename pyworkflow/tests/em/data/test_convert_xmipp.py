@@ -90,10 +90,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+SHOW_IMAGES = True#True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = True#True # Remove the output temporary files
 PRINT_MATRIX = True
-PRINT_FILES = False#False
+PRINT_FILES = True#False
 
 
 def runXmippProgram(cmd):
@@ -276,11 +276,11 @@ class TestAlignment(TestConvertBase):
         mList = [[[ -1.0, 0.0, 0.0, 20.0],
                   [ 0.0, 1.0, 0.0,  0.0],
                   [ 0.0, 0.0, 1.0,  0.0],
-                  [ 0.0, 0.0, 0.0,  1.0]],
+                  [ 0.0, 0.0, 0.0,  -1.0]],
                  [[-0.86602539, -0.5, 0.0, 20.0],
                   [ -0.5,0.86602539, 0.0, 0.0],
                   [ 0.0, 0.0, 1.0, 0.0],
-                  [ 0.0, 0.0, 0.0, 1.0]],
+                  [ 0.0, 0.0, 0.0, -1.0]],
                  [[0.86602539, 0.5, 0.0, 27.706396],
                   [ -0.5,0.86602539, 0.0,0.331312],
                   [ 0.0, 0.0, 1.0, 0.0],
