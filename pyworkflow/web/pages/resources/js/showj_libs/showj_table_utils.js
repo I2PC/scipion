@@ -186,14 +186,11 @@ function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayou
 
 
 function colRenderable(id, aData, columnId, renderFunc, extraRenderFunc){
-	
-	console.log(getSubDomainURL());
-	
 	var content_html = '<span style="display:none">' 
 			+ aData[columnId] + '</span>'
 			+ '<img class=\"tableImages\" id=\"'
 			+ id + '___' + aData[0]
-			+ '\" src='+ getSubDomainURL() +'/render_column/?renderFunc='
+			+ '\" src=\"' + getSubDomainURL() + '/render_column/?renderFunc='
 			+ renderFunc;
 			
 	if(extraRenderFunc.length > 0){
@@ -210,7 +207,7 @@ function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
 			+ aData[columnId] + '</span>'
 			+ '<img style="display:none" class=\"tableImages\" id=\"'
 			+ id + '___' + aData[0]
-			+ '\" data-real_src='+ getSubDomainURL() +'/render_column/?renderFunc='
+			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
 			+ renderFunc;
 			
 	if(extraRenderFunc.length > 0){

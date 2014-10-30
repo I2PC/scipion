@@ -10,6 +10,7 @@ DIRECTORY_PROJECT = dirname(realpath(__file__))
 DB_PATH = join(pw.HOME, 'web', 'scipion_web.db')
 
 DEBUG = True
+# DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -34,6 +35,7 @@ DATABASES = {
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['localhost']
 
 # Subdomain where Scipion is hosted or working
 ABSOLUTE_URL = ''
@@ -76,6 +78,7 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
+# MEDIA_URL = ABSOLUTE_URL+'/resources/'
 MEDIA_URL = '/resources/'
 
 # Temporary folder where store the files after do a upload
@@ -90,7 +93,7 @@ STATIC_ROOT = 'static'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
+STATIC_URL = ABSOLUTE_URL+'/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

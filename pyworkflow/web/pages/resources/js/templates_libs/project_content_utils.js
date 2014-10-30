@@ -629,11 +629,8 @@ function fillUL(type, list, ulId, icon) {
 			visualize_html += '</a>'
 
 			//Download File Object
-//			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
-//			'<i class="fa fa-save" style="margin-left:0px;"></i></a>'
-			
-			download_html = '<a href="#"><i class="fa fa-save" style="margin-left:0px;"></i></a>'
-			
+			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
+			'<i class="fa fa-save" style="margin-left:0px;"></i></a>'
 		}
 		
 		// Edit Object
@@ -642,10 +639,10 @@ function fillUL(type, list, ulId, icon) {
 		
 		ul.append('<li>' + 
 				visualize_html + 
-				download_html + 
 				edit_html +
 				"&nbsp;&nbsp;&nbsp;" +
 				list[i].info + 
+				download_html + 
 				'</li>');
 		
 	}
@@ -857,6 +854,19 @@ function editObject(objId){
 			label = res[0]
 			comment = res[1]
 			editObjParam(objId, "Label", label, "Comment", comment, "Describe your run here...","object")
+		}
+	});
+}
+
+function downloadOutput(objId){
+	var URL = getSubDomainURL() + '/download_output/?objId='+ objId
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType: "text",
+		success : function(text) {
+			var URL = getSubDomainURL() + '/get_file/?path='+ text+'&filename=output.zip'
+			window.location.href = URL;
 		}
 	});
 }

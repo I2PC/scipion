@@ -34,7 +34,10 @@ OBJ_PARAMS =['runName', 'comment']
 
 def getPointerHtml(protVar):
     if protVar.hasValue():
-        return protVar.get().getNameId(), protVar.get().getObjId()
+        #if protVar.get() is None:
+        #    raise Exception("protVar.hasValue...and .get() is None")
+        #TODO: CHECK THIS LATER to display better when _extended attribute
+        return protVar.getObjValue().getNameId(), protVar.getObjValue().getObjId()
     return '',''
 
         
@@ -173,59 +176,63 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
     from pyworkflow.em import Boolean, PointerParam
     from pyworkflow.protocol.params import MultiPointerParam, RelationParam
     
-    if isinstance(param, MultiPointerParam):
-        htmlValueList = []
-        htmlIdValueList = []
-        
-        for pointer in protVar:
-            htmlValue, htmlIdValue = getPointerHtml(pointer)
-            htmlValueList.append(htmlValue)
-            htmlIdValueList.append(htmlIdValue)
+    try:
+        if isinstance(param, MultiPointerParam):
+            htmlValueList = []
+            htmlIdValueList = []
             
-        param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)
-        
-    elif isinstance(param, PointerParam):
-        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-        
-    elif isinstance(param, RelationParam):
-        param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-        param.relationName = param.getName()
-        param.attributeName = param.getAttributeName()
-        param.direction = param.getDirection()
-        
-    else:
-        param.htmlValue = protVar.get(param.default.get(""))
-        if isinstance(protVar, Boolean):
-            if param.htmlValue:
-                param.htmlValue = 'true'
-            else:
-                param.htmlValue = 'false'
-    
-    if paramName in wizards:
-        param.hasWizard = True
-        param.wizardClassName = wizards[paramName].__name__
-#       print "param: ", paramName, " has wizard", " view: "
-    
-    if visualize == 1:
-        if paramName in viewerDict:
-            param.hasViewer = True
-    #       print "param: ", paramName, " has viewer"
-    
-    param.htmlCond = param.condition.get()
-    param.htmlDepend = ','.join(param._dependants)
-    param.htmlCondParams = ','.join(param._conditionParams)
-    
-    if not param.help.empty():
-        param.htmlHelp = parseText(param.help.get())
-    #   param.htmlExpertLevel = param.expertLevel.get()   
-    
-    """ Workflow Addon """
-    valueURL = request.GET.get(paramName, None) 
-    if valueURL is not None:
-        if valueURL is not param.htmlValue:
-            param.htmlValue = valueURL
+            for pointer in protVar:
+                htmlValue, htmlIdValue = getPointerHtml(pointer)
+                htmlValueList.append(htmlValue)
+                htmlIdValueList.append(htmlIdValue)
+                
+            param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)
             
-    return param
+        elif isinstance(param, PointerParam):
+            param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+            
+        elif isinstance(param, RelationParam):
+            param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
+            param.relationName = param.getName()
+            param.attributeName = param.getAttributeName()
+            param.direction = param.getDirection()
+            
+        else:
+            param.htmlValue = protVar.get(param.default.get(""))
+            if isinstance(protVar, Boolean):
+                if param.htmlValue:
+                    param.htmlValue = 'true'
+                else:
+                    param.htmlValue = 'false'
+        
+        if paramName in wizards:
+            param.hasWizard = True
+            param.wizardClassName = wizards[paramName].__name__
+    #       print "param: ", paramName, " has wizard", " view: "
+        
+        if visualize == 1:
+            if paramName in viewerDict:
+                param.hasViewer = True
+        #       print "param: ", paramName, " has viewer"
+        
+        param.htmlCond = param.condition.get()
+        param.htmlDepend = ','.join(param._dependants)
+        param.htmlCondParams = ','.join(param._conditionParams)
+        
+        if not param.help.empty():
+            param.htmlHelp = parseText(param.help.get())
+        #   param.htmlExpertLevel = param.expertLevel.get()   
+        
+        """ Workflow Addon """
+        valueURL = request.GET.get(paramName, None) 
+        if valueURL is not None:
+            if valueURL is not param.htmlValue:
+                param.htmlValue = valueURL
+                
+        return param
+    except Exception, ex:
+        print "ERROR with param: ", paramName
+        raise ex
     
 # Method to launch a protocol #
 def protocol(request):

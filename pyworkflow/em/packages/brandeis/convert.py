@@ -80,3 +80,34 @@ def parseCtffindOutput(filename):
             break
     f.close()
     return result
+
+def geometryFromMatrix(matrix, inverseTransform):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
+    flip = bool(matrix[3,3]<0)
+    if flip:
+        matrix[0,:4] *= -1.
+    if inverseTransform:
+        from numpy.linalg import inv
+        matrix = inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
+    angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    return shifts, angles
+
+def geometryFromAligment(alignment):
+    matrix = alignment.getMatrix()
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
+
+    return shifts, angles
+
+
+    alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
+    alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
+
+    alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
+    alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
+    alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
+    alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
+    alignmentRow.setValue(xmipp.MDL_FLIP, flip)

@@ -200,8 +200,7 @@ class ProtImportMicrographsTiltPairs(ProtImport):
         methods = []
         output = self._getOutput()
         if output:
-            methods.append("%d " % output.getTilted().getSize() + self._className + "s tilted has been imported")
-            methods.append("%d " % output.getUntilted().getSize() + self._className + "s untilted has been imported")
+            methods.append("%d " % output.getTilted().getSize() + self._className + "s tilted pairs has been imported")
             methods.append("with a sampling rate : %0.2f A/px" % self.samplingRate.get())
             
         return methods

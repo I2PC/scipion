@@ -34,7 +34,8 @@ from glob import glob
 from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
-                                        EnumParam, IntParam, StringParam, PointerParam)
+                                        EnumParam, IntParam, StringParam, PointerParam,
+                                        LEVEL_EXPERT)
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -77,6 +78,9 @@ class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
     # This label should be set in subclasses
     _label = 'None'
+    # Allow the flexibility to each sub-classes to set default
+    # value to check stack 
+    CHECKSTACK_DEFAULT = True
     # The following class property should be set in each import subclass
     # for example, if set to SetOfParticles, this will the output classes
     # It is also assumed that a function with the name _createSetOfParticles
@@ -88,8 +92,10 @@ class ProtImportImages(ProtImport):
         form.addSection(label='Input')
         form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
                       help=Message.TEXT_PATTERN)
-        form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
-        form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
+        form.addParam('checkStack', BooleanParam, expertLevel=LEVEL_EXPERT,
+                      label=Message.LABEL_CHECKSTACK, default=self.CHECKSTACK_DEFAULT)
+        form.addParam('copyToProj', BooleanParam, expertLevel=LEVEL_EXPERT, 
+                      label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
         form.addParam('sphericalAberration', FloatParam, default=2,
@@ -256,6 +262,8 @@ class ProtImportMicBase(ProtImportImages):
     """ Just to have a base class to both 
     ProtImportMicrographs and ProtImportMovies
     """
+    CHECKSTACK_DEFAULT = False
+    
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
@@ -314,6 +322,11 @@ class ProtImportParticles(ProtImportImages):
         imgSet.setSamplingRate(self.samplingRate.get())
     
 
+class ProtImportAverages(ProtImportParticles):
+    """Protocol to import a set of averages to the project"""
+    _label = 'import averages'
+    _outputClassName = 'SetOfAverages'    
+    
 
 class ProtImportVolumes(ProtImport):
     """Protocol to import a set of volumes to the project"""

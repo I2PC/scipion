@@ -415,7 +415,7 @@ class ProtocolsView(tk.Frame):
         self.protCfg = windows.protCfg
         self.icon = windows.icon
         self.settings = windows.getSettings()
-        self.showGraph = self.settings.graphView.get()
+        self.showGraph = self.settings.getGraphView()
         
         self._loadSelection()        
         self._items = {}
@@ -778,7 +778,7 @@ class ProtocolsView(tk.Frame):
         self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
-        self.settings.graphView.set(self.showGraph)
+        self.settings.setGraphView(self.showGraph)
     
     def _protocolItemClick(self, e=None):
         # Get the tree widget that originated the event

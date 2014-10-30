@@ -10,8 +10,13 @@ header,section,footer,aside,nav,article,hgroup {
 	display: block;
 } /* For html5 unsupported browsers */
 
-html, body, #mainContainer { height: 100%; }
-#mainContainer{height: auto; min-height: 100%; }
+html, body, #mainContainer { 
+/* 	height: 100%;  */
+	}
+#mainContainer{
+	height: auto; 
+	min-height: 100%; 
+	}
 /* .layout-outer {padding-bottom: 110px;} */
 	
 /* body > #mainContainer { height: auto; min-height: 100%; } */

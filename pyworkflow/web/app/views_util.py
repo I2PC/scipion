@@ -45,6 +45,7 @@ from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
             'logo_scipion_small': 'scipion_logo.png',
+            'logo_scipion_normal': 'scipion_logo_normal.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'favicon.png',
             'help': 'system_help24.png',
@@ -61,6 +62,7 @@ iconDict = {
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
             'loading' : 'loading.gif',
+            'error_page' : 'error_page.jpg',
             
             #Extensions file
             'folder': 'fa-folder-open.png',
@@ -130,6 +132,11 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jsplumb': 'jsPlumb.js',
           'messi': 'messi.js',
           'raphael': 'raphael.js',
+          
+          #JSmol
+          'jsmol': 'jsmol/JSmol.min.js',
+          'jsmolFolder': 'jsmol/j2s',
+          
           }
 
 def getResourceIcon(icon):
@@ -332,6 +339,8 @@ def get_log(request):
 def get_file(request):
     "Return a response with the content of the file mentioned in ?path=fname"
     path = request.GET.get("path")
+    filename = request.GET.get("filename", path)
+    
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)
@@ -339,9 +348,34 @@ def get_file(request):
     response = HttpResponse(FileWrapper(open(path)),
                             content_type=mimetypes.guess_type(path)[0])
     response['Content-Length'] = os.path.getsize(path)
-    response['Content-Disposition'] = 'attachment; filename=%s' % path
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
     return response
 
+
+def download_output(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        
+        obj = project.getProtocol(int(objId))
+        if obj is None:
+            obj = project.getProtocol(int(objId)).get()
+            
+        files = obj.getFiles()
+        
+        import zipfile
+        z = zipfile.ZipFile("output.zip", "w")
+        
+        for f in files:
+            z.write(f, arcname=os.path.basename(f))
+        z.close()
+        
+        pathFile = os.path.join(request.session['projectPath'], "output.zip")
+        
+        return HttpResponse(pathFile, mimetype='application/javascript')
+    
+    
 def render_column(request):
     
     renderFunction = request.GET.get("renderFunc")
@@ -599,3 +633,16 @@ def savePlot(request, plot):
     url_plot = "get_image_plot/?image=" + fn
         
     return url_plot
+
+#===============================================================================
+# ERROR PAGE
+#===============================================================================
+
+def error(request):
+    from views_base import base_grid
+    context = {"logoScipionNormal": getResourceIcon("logo_scipion_normal"),
+               "logoErrorPage":getResourceIcon("error_page"),
+               }
+    context = base_grid(request, context)
+    return render_to_response('error.html', context)
+

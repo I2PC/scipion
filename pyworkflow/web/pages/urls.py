@@ -28,6 +28,7 @@ urlpatterns = patterns('',
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
+    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
@@ -48,6 +49,7 @@ urlpatterns = patterns('',
     url(r'^object_tree/$', 'app.views_data.object_tree'),
     
     #UTILS
+    url(r'^error/', 'app.views_util.error'), # Launch error page
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
     url(r'^get_image_plot/', 'app.views_util.get_image_plot'), # Load plots images dynamically
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
@@ -57,6 +59,7 @@ urlpatterns = patterns('',
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
     url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
+    url(r'^download_output/$', 'app.views_util.download_output'), # Download output files
 
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
@@ -107,3 +110,6 @@ urlpatterns = patterns('',
 #    url(r'^host_form/$', 'app.views_host.hostForm'),
 
 )
+
+handler404 = "app.views_util.error"
+handler500 = "app.views_util.error"

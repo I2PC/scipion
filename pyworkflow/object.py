@@ -620,14 +620,16 @@ class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
         Object.__init__(self, value, objIsPointer=True, **args)
-        # this will be used to point to attributes of a pointed object
+        # The _extended attribute will be used to point to attributes of a pointed object
         # or the id of an item inside a set
-        self._extended = None
+        self._extended = String() 
        
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
-            return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
+            className = self.getObjValue().getClassName()
+            strId = self.getObjValue().strId()
+            return '-> %s (%s)' % (className, strId)
         return '-> None'
 
     def hasValue(self):
@@ -638,40 +640,40 @@ class Pointer(Object):
         If the _extended property is set, then the extended attribute or item id
         will be retrieved by the call to get().
         """
-        if self._extended is not None:
-            if isinstance(self._extended, String):
-                value = getattr(self._objValue, self._extended.get(), default)
-            elif isinstance(self._extended, Integer):
-                value = self._objValue[self._extended.get()]
+        extended = self._extended.get()
+        if extended:
+            if extended.startswith('__attribute__'):
+                attribute = extended.split('__')[-1]
+                value = getattr(self._objValue, attribute, default)
+            elif extended.startswith('__itemid__'):
+                itemId = int(extended.split('__')[-1])
+                value = self._objValue[itemId]
                 value._parentObject = self._objValue
             else:
-                raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))
+                raise Exception("Invalid value '%s' for pointer._extended property." % extended)
         else:
             value = self._objValue
             
         return value
     
     def set(self, other):
-        """ Set the pointer value but cleanning the extendend property.
-        """
+        """ Set the pointer value but cleanning the extendend property. """
         Object.set(self, other)
-        self._extended = None
+        # This check is needed because set is call from the Object constructor
+        # when this attribute is not setup yet (a dirty patch, I know)
+        if hasattr(self, '_extended'):
+            self._extended.set(None)
         
     def setExtendedAttribute(self, attributeName):
         """ Point to an attribute of the pointed object. """
-        if not self._extended:
-            self._extended = String()
-        self._extended.set(attributeName)
+        self._extended.set('__attribute__' + attributeName)
         
     def setExtendedItemId(self, itemId):
         """ Point to an specific item of a pointed Set. """
-        if not self._extended:
-            self._extended = Integer()
-        self._extended.set(itemId)
+        self._extended.set('__itemid__%d' % itemId)
         
     def getAttributes(self):
-        if self._extended:
-            yield ('_extended', getattr(self, '_extended'))
+        yield ('_extended', getattr(self, '_extended'))
     
 
 class List(Object, list):
@@ -856,9 +858,9 @@ class Set(OrderedObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def _iterItems(self):        
-        return self._mapper.selectAll()#has flat mapper, iterate is true
-    
+    def _iterItems(self, random=False):
+        return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
+
     def getFirstItem(self):
         """ Return the first item in the Set. """
         return self._mapper.selectFirst()

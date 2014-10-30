@@ -191,18 +191,18 @@ def runApp(app, args='', chdir=True):
 #
 # If this is the first time that the user runs scipion...
 #
-if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
-    os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
-    os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
-    try:
-        from pyworkflow.apps.config import writeDefaults
-        writeDefaults()
-    except Exception:  # we expect a ImportError due to no psutil
-        if len(sys.argv) < 2 or sys.argv[1] != 'install':
-            sys.exit('%s\nDid you already run "%s install" ?' %
-                     (sys.exc_info()[1], sys.argv[0]))
-        else:
-            pass  # go ahead, install it!
+# if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
+#     os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
+#     os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
+#     try:
+#         from pyworkflow.apps.config import writeDefaults
+#         writeDefaults()
+#     except Exception:  # we expect a ImportError due to no psutil
+#         if len(sys.argv) < 2 or sys.argv[1] != 'install':
+#             sys.exit('%s\nDid you already run "%s install" ?' %
+#                      (sys.exc_info()[1], sys.argv[0]))
+#         else:
+#             pass  # go ahead, install it!
 
 
 #
@@ -337,13 +337,13 @@ def main():
   ************************************************************************
 
 """)
-            runApp('config.py')
+            runApp('pw_config.py')
             # FIXME: I am not sure this is a good idea. To begin with,
             # right now it expects xmipp to be installed.
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
-        runApp('config.py')
+        runApp('pw_config.py')
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')

@@ -71,7 +71,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
 DataSet(name='mda', folder='hemoglobin_mda', 
         files={
                'particles': 'particles/*.spi',
-               'volumes': 'volumes/*.spi'})
+               'volumes': 'volumes/*.spi',
+               'averages':'averages/averages.stk'})
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
@@ -121,6 +122,9 @@ DataSet(name='rct',  folder='rct',
 
 DataSet(name='emx',  folder='emx', 
         files={
+
+               'alignFlip':'alignment/alignFlip.mrcs',
+               'alignFlip2':'alignment/alignFlip2.mrcs',
                'alignShiftRotExp': 'alignment/Test1/images.mrc',
                'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
                
@@ -153,6 +157,12 @@ DataSet(name='emx',  folder='emx',
                'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
                'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',
                'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
+               
+               'reconstRotOnly': 'reconstruction/reconstRotOnly.mrcs',
+               'reconstRotOnlyGold': 'reconstruction/gold/reconstRotOnly_output.vol',
+               
+               'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
+               'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
               })
                
                

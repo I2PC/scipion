@@ -286,9 +286,8 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        i, fn = self.getLocation()
-        if exists(fn.replace(':mrc', '')):
-            x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+        if exists(self.getFileName().replace(':mrc', '')):
+            x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
     
@@ -298,9 +297,6 @@ class Image(EMObject):
     def setIndex(self, index):
         self._index.set(index)
 
-    def lableIndex(self):
-        return 'index'
-        
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
         return self._filename.get()
@@ -396,7 +392,11 @@ class Image(EMObject):
         else:
             dimStr = 'No-Dim'
         return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
-
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -667,16 +667,16 @@ class SetOfImages(EMSet):
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
-    def __iter__(self):
+    def __iter__(self, random=False):
         """ Redefine iteration to set the acquisition to images. """
-        for img in self._iterItems():
+        for img in self._iterItems(random=random):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # dont want to override with the set acquistion for this case
             if not img.hasAcquisition():
                 img.setAcquisition(self.getAcquisition())
             yield img
-            
+
     def appendFromImages(self, imagesSet):
         """ Iterate over the images and append 
         every image that is enabled. 
@@ -765,6 +765,13 @@ class SetOfParticles(SetOfImages):
         """
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())    
+
+
+class SetOfAverages(SetOfParticles):
+    """Represents a set of Averages.
+    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    def __init__(self, **args):
+        SetOfParticles.__init__(self, **args)
 
 
 class SetOfVolumes(SetOfImages):

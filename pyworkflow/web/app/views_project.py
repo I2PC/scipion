@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+from os.path import exists
 import json
 from views_base import base_grid, base_flex
 from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
@@ -346,15 +347,67 @@ def service_projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
-    context = {'projects': exProjects,
-               'projects_css': getResourceCss('projects'),
+    context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
-               'projectNameHeader': 'Initial Volume Service',
                }
     
     context = base_grid(request, context)
-    
     return render_to_response('service_projects.html', context)
+
+
+def writeCustomMenu(customMenu):
+    if not exists(customMenu):
+        f = open(customMenu, 'w')
+        f.write('''
+[PROTOCOLS]
+
+Initial_Volume = [
+    {"tag": "section", "text": "1. Upload and Import", "children": [
+        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
+        {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "2. Create a 3D volume", "children": [
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+    {"tag": "section", "text": "3. Download good volumes."}]
+''')
+        
+def create_service_project(request):
+    if request.is_ajax():
+        import sys
+        from pyworkflow.manager import Manager
+        from pyworkflow.gui.project import ProjectWindow
+        from pyworkflow.em.protocol import *
+        from pyworkflow.em.packages.xmipp3 import *
+        from pyworkflow.em.packages.eman2 import *
+        
+        # Create a new project
+        manager = Manager()
+        projectName = request.GET.get('projectName')
+        customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        writeCustomMenu(customMenu)
+        #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
+        confs = {'protocols': customMenu}
+        project = manager.createProject(projectName, confs, graphView=True)   
+        
+        # 1. Import averages
+        protImport = project.newProtocol(ProtImportAverages,
+                                         objLabel='import averages')
+        project.saveProtocol(protImport)
+        
+        # 2a. Ransac 
+        protRansac = project.newProtocol(XmippProtRansac)
+        protRansac.inputSet.set(protImport)
+        protRansac.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protRansac)
+        
+        # 2b. Eman 
+        protEmanInitVol = project.newProtocol(EmanProtInitModel)
+        protEmanInitVol.inputSet.set(protImport)
+        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protEmanInitVol)
+        
+        
+    return HttpResponse(mimetype='application/javascript')
 
 def check_project_id(request):
     result = 0

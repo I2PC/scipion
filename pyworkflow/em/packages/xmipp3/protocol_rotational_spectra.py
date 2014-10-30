@@ -128,6 +128,9 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         return [outputSpectra]
     
     #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        return KendersomBaseClassify._validate(self)
+    
     def _citations(self):
         return ['Pascual2000']
     

@@ -42,10 +42,10 @@ class TestEmanBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
             
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -59,6 +59,27 @@ class TestEmanBase(BaseTest):
         """ Run an Import micrograph protocol. """
         return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
 
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         pattern=pattern, samplingRate=samplingRate,
+                                         checkStack=checkStack)
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return cls.protImport
+
+    @classmethod
+    def runClassify(cls, particles):
+        cls.ProtClassify = cls.newProtocol(XmippProtML2D,
+                                           numberOfReferences=8, maxIters=4, doMlf=False,
+                                           numberOfMpi=2, numberOfThreads=2)
+        cls.ProtClassify.inputParticles.set(particles)
+        cls.launchProtocol(cls.ProtClassify)
+        return cls.ProtClassify
+    
 
 class TestEmanBoxing(TestEmanBase):
     @classmethod
@@ -74,6 +95,27 @@ class TestEmanBoxing(TestEmanBase):
         protPP.boxSize.set(550)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+
+class TestEmanInitialModel(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('mda')
+        cls.averages = cls.dataset.getFile('averages')
+
+    def test_initialmodel(self):
+        #Import a set of averages
+        print "Import Set of averages"
+        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=3.5)
+        self.launchProtocol(protImportAvg)
+        self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
+
+        print "Run Initial model"
+        protIniModel = self.newProtocol(EmanProtInitModel,
+                                      symmetry='d6', numberOfIterations=5, numberOfModels=2, numberOfThreads=4)
+        protIniModel.inputClasses.set(protImportAvg.outputAverages)
+        self.launchProtocol(protIniModel)
+        self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with eman initial model protocol")
 
 
 if __name__ == "__main__":

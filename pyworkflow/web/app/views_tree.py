@@ -99,7 +99,7 @@ def getProtChildrens(tree):
         if tree.icon != None:
             html += '<img src="/resources/'+ tree.icon +'"/>'
         function = 'javascript:popup("/form/?protocolClass='+ tree.protClass +'")'
-        html += '<a href=' + function + '>'+ tree.name +'</a>'
+        html += ' <a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
     
     elif tree.tag == 'protocol_class':
@@ -107,7 +107,7 @@ def getProtChildrens(tree):
         if tree.icon != None:
             html += '<img src="/resources/'+ tree.icon +'"/>'
         function = 'javascript:popup("/form/?protocolClass='+ tree.protRealClass +'")'
-        html += '<a href=' + function + '>'+ tree.name +'</a>'
+        html += ' <a href=' + function + '>'+ tree.name +'</a>'
         html += '</span></li>'
     
     elif tree.tag == 'protocol_base':
@@ -124,6 +124,15 @@ def getProtChildrens(tree):
         for child in childrens:
             html += getProtChildrens(child)
         html += '</ul>'
+    
+    elif tree.tag == 'url':
+        html += '<li><span class="protocol">'
+        if tree.icon != None:
+            html += '<img src="/resources/'+ tree.icon +'"/>'
+        function = 'javascript:popup("'+ tree.protClass +'")'
+        html += ' <a href=' + function + '>'+ tree.name +'</a>'
+        html += '</span></li>'
+    
     
     return html
 
