@@ -80,19 +80,35 @@ JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_train
 }
 
 
-JNIEXPORT void JNICALL Java_xmipp_jni_PickingClassifier_autopick
-(JNIEnv *env, jobject jobj, jstring filename, jobject joutputmd, jint percent)
+JNIEXPORT jobjectArray JNICALL Java_xmipp_jni_PickingClassifier_autopick
+(JNIEnv *env, jobject jobj, jstring filename, jint percent)
 {
     XMIPP_JAVA_TRY
     {
         AutoParticlePicking2 *picker = GET_INTERNAL_AUTOPARTICLEPICKING2(jobj);
-        MetaData * outputmd = GET_INTERNAL_METADATA(joutputmd);
         std::vector<MDRow> vd;
         jboolean aux=false;
         const FileName micrograph = env->GetStringUTFChars(filename, &aux);
         picker->automaticallySelectParticles(micrograph, percent, vd);
-        outputmd->vecToMetadata(vd);
-        //     md.write(env->GetStringUTFChars(jautoposfile, false));
+
+        jclass pclass = env->FindClass("xmipp/jni/Particle");
+        jmethodID constructor = env->GetMethodID(pclass, "<init>", "(IID)V");
+        jobject particle;
+		jobjectArray rows = env->NewObjectArray(vd.size(), pclass, 0);
+
+		MDRow* row;
+		int x, y;
+		double cost;
+		for (int i = 0; i < vd.size(); i++) {
+			row = &vd[i];
+			row->getValue(MDL_XCOOR, x);
+			row->getValue(MDL_YCOOR, y);
+			row->getValue(MDL_COST, cost);
+			particle = env->NewObject(pclass, constructor, x, y, cost);
+
+			env->SetObjectArrayElement(rows, i, particle);
+		}
+		return rows;
     }
     XMIPP_JAVA_CATCH;
 }

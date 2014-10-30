@@ -238,7 +238,6 @@ public class TiltPairPicker extends ParticlePicker
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y,  m.getUntiltedAngle(), micId);
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, m.getTiltedAngle(), micId);
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, m.getTiltAngle(), micId);
-			
 			anglesmd.writeBlock(selfile);
 			
 		}
@@ -290,7 +289,6 @@ public class TiltPairPicker extends ParticlePicker
 				
 				mdU.destroy();
 				mdT.destroy();
-                                saveMicrographAngles(um);
 			}
                         saveMicrographAngles(um);
 		}

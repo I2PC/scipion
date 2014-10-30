@@ -37,6 +37,9 @@ MDLabelStaticInit MDL::initialization; //Just for initialization
 
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, int tags)
 {
+  if (names.find(name) != names.end())
+    REPORT_ERROR(ERR_ARG_INCORRECT, formatString("MDL::addLabel, label '%s' already exists.", name.c_str()));
+
     data[(int)label] = new MDLabelData(type, name, tags);
     names[name] = label;
 }//close function addLabel
@@ -117,10 +120,18 @@ String  MDL::label2Str(const MDLabel label)
     return  (isValidLabel(label)) ? data[(int)label]->str : "";
 }//close function label2Str
 
+String MDL::label2StrSql(const MDLabel label)
+{
+  String labelSqlite = "\"" + label2Str(label) + "\"";
+  return labelSqlite;
+  //return label2Str(label);
+}
+
 String MDL::label2SqlColumn(const MDLabel label)
 {
     std::stringstream ss;
-    ss << MDL::label2Str(label) << " ";
+    ss << MDL::label2StrSql(label) << " ";
+
     switch (MDL::labelType(label))
     {
     case LABEL_BOOL: //bools are int in sqlite3
@@ -275,6 +286,7 @@ bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel
 void MDObject::copy(const MDObject &obj)
 {
     label = obj.label;
+    failed = obj.failed;
     type = obj.type;
     chr = obj.chr;
     if (type == LABEL_STRING)
@@ -325,6 +337,7 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 MDObject::MDObject(MDLabel label)
 {
     this->label = label;
+    failed = false;
     chr = _SPACE;
     if (label != MDL_UNDEFINED)
     {
@@ -339,54 +352,51 @@ MDObject::MDObject(MDLabel label)
     else
         type = LABEL_NOTYPE;
 }
+
+/// Macro to do some basic initialization
+#define MDOBJECT_INIT() this->label = label; this->type = MDL::labelType(label); this->failed = false; this->chr = _SPACE;
+
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
 MDObject::MDObject(MDLabel label, const int &intValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_INT);
     this->data.intValue = intValue;
 }
 MDObject::MDObject(MDLabel label, const double &doubleValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_DOUBLE);
     this->data.doubleValue = doubleValue;
 }
 MDObject::MDObject(MDLabel label, const bool &boolValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_BOOL);
     this->data.boolValue = boolValue;
 }
 MDObject::MDObject(MDLabel label, const String &stringValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_STRING);
     this->data.stringValue = new String(stringValue);
 }
 MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_VECTOR_DOUBLE);
     this->data.vectorValue = new std::vector<double>(vectorValue);
 }
 MDObject::MDObject(MDLabel label, const std::vector<size_t> &vectorValueLong)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_VECTOR_SIZET);
     this->data.vectorValueLong = new std::vector<size_t>(vectorValueLong);
 }
 MDObject::MDObject(MDLabel label, const size_t &longintValue)
 {
-    this->label = label;
-    this->type = MDL::labelType(label);
+    MDOBJECT_INIT();
     labelTypeCheck(LABEL_SIZET);
     this->data.longintValue = longintValue;
 
@@ -744,8 +754,8 @@ void MDRow::resetGeo(bool addLabels)
     setValue(MDL_SHIFT_X,   0., addLabels);
     setValue(MDL_SHIFT_Y,   0., addLabels);
     setValue(MDL_SHIFT_Z,   0., addLabels);
-//    setValue(MDL_ANGLE_ROT, 0., addLabels);
-//    setValue(MDL_ANGLE_TILT,0., addLabels);
+    setValue(MDL_ANGLE_ROT, 0., addLabels);
+    setValue(MDL_ANGLE_TILT,0., addLabels);
     setValue(MDL_ANGLE_PSI, 0., addLabels);
     setValue(MDL_WEIGHT,   1., addLabels);
     setValue(MDL_FLIP,     false, addLabels);

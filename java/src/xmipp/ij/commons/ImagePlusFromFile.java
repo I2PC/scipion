@@ -34,6 +34,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
             this(fileName);
             this.imp = imp;
             this.ig = ig;
+            
+            
         }
         
        
@@ -47,8 +49,10 @@ public class ImagePlusFromFile extends ImagePlusReader{
 			if (ig == null || hasChanged())
                         {
                             ig = new ImageGeneric(fileName);//to read again file
-                            if(index == -1)
+                            if(!hasIndex())
+                            {
                                 imp = XmippImageConverter.readToImagePlus(ig);
+                            }
                             else 
                             {
                                 if(ig.isStack())
