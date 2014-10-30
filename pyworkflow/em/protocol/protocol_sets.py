@@ -32,13 +32,15 @@ This module contains protocols related to Set operations such us:
 """
 import os
 import math
+from os.path import basename
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
                                 SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
+from pyworkflow.utils.path import createLink
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -58,7 +60,7 @@ class ProtUserSubSet(ProtSets):
         
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
-        form.addHidden('otherObject', PointerParam, pointerClass='EMObject', allowsNull=True)
+        form.addHidden('other', StringParam, allowsNull=True)
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
         
@@ -76,7 +78,23 @@ class ProtUserSubSet(ProtSets):
         # Register outputs
         self._defineOutput(className, output)
         self._defineSourceRelation(inputImages, output)
-        
+
+    def _createVolumeFromSet(self, volfile):
+        src = volfile
+        if ':' in src:
+            src = src.split(':')[0]
+        dest = self._getPath(basename(src))
+        createLink(src, dest)
+        vol = Volume()
+        vol.setFileName(dest)
+        inputObject = self.inputObject.get()
+        samplingRate = inputObject.getSamplingRate()
+        vol.setSamplingRate(samplingRate)
+        self._defineOutputs(outputVolume=vol)
+        self._defineTransformRelation(inputObject, vol)
+
+
+
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
         
@@ -207,9 +225,17 @@ class ProtUserSubSet(ProtSets):
         inputObj = self.inputObject.get()
         
         self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
-        
-        if isinstance(inputObj, SetOfImages):
-            self._createSubSetFromImages(inputObj)
+
+
+        if (isinstance(inputObj, SetOfVolumes) or isinstance(inputObj, SetOfClasses3D)) \
+                and '.' in self.other.get():#is volume file, not id
+                print 'other ' + self.other.get()
+                volfile = self.other.get()
+                self._createVolumeFromSet(volfile)
+
+        elif isinstance(inputObj, SetOfImages):
+
+                self._createSubSetFromImages(inputObj)
             
         elif isinstance(inputObj, SetOfClasses):
             self._createSubSetFromClasses(inputObj)
@@ -226,7 +252,8 @@ class ProtUserSubSet(ProtSets):
         
         elif isinstance(inputObj, EMProtocol):
             setObj = self.getSetObject()
-            otherObj = self.otherObject.get()
+            otherObj = self.getProject().mapper.selectById(int(self.other.get()))
+
             
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
@@ -236,8 +263,7 @@ class ProtUserSubSet(ProtSets):
                 setObj.copyInfo(otherObj) # copy info from original images
                 self._createSubSetFromImages(setObj)
                 
-            # Clean the pointer to other, to avoid dependency in the graph
-            self.otherObject.set(None)
+
     
     def getSetObject(self):            
         from pyworkflow.mapper.sqlite import SqliteFlatDb
@@ -274,12 +300,15 @@ class ProtUserSubSet(ProtSets):
         os.rename(_dbName, self._dbName)
 
         if self._dbPrefix.endswith('_'):
-            self._dbPrefix = self._dbPrefix[:-1] 
+            self._dbPrefix = self._dbPrefix[:-1]
+
+
+
             
 
 class ProtJoinSets(ProtSets):
     """ Protocol to join two or more sets of images.
-    This protocol allows to select two or more set of images 
+    This protocol allows to select two or more set of images
     and will produce another set joining all elements of the 
     selected sets. It will validate that all sets are of the
     same type of elements (Micrographs, Particles or Volumes) 
