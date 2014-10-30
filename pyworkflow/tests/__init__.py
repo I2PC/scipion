@@ -124,6 +124,7 @@ DataSet(name='emx',  folder='emx',
         files={
 
                'alignFlip':'alignment/alignFlip.mrcs',
+               'alignFlip2':'alignment/alignFlip2.mrcs',
                'alignShiftRotExp': 'alignment/Test1/images.mrc',
                'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
                
