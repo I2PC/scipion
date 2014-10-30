@@ -1011,6 +1011,10 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
+    flip = bool(matrix[3][3]<0)
+    if flip:
+        matrix[3][3] *= -1.#redundant?
+        matrix[0,:3] *= -1.
     if inverseTransform:
         from numpy.linalg import inv
         matrix = inv(matrix)
@@ -1018,7 +1022,7 @@ def geometryFromMatrix(matrix, inverseTransform):
     else:
         shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-    return shifts, angles
+    return shifts, angles, flip
 
 
 def matrixFromGeometry(shifts, angles, flip, inverseTransform):
@@ -1091,11 +1095,7 @@ def alignmentToRow(alignment, alignmentRow,
                           -> for xmipp implies alignment
     """
     matrix = alignment.getMatrix()
-    flip = bool(matrix[3][3]<0)
-    if flip:
-        #matrix[0,:4] *= -1.
-        matrix[0,:3] *= -1.
-    shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
+    shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
 
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
