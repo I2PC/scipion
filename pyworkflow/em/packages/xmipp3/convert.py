@@ -1038,7 +1038,8 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
         M[:3, 3] = shifts[:3]
 
     if flip:
-        M[0,:4]*=-1.
+        #M[0,:4]*=-1.
+        M[0,:3]*=-1.
         M[3][3]*=-1.
     return M
 
@@ -1092,7 +1093,8 @@ def alignmentToRow(alignment, alignmentRow,
     matrix = alignment.getMatrix()
     flip = bool(matrix[3][3]<0)
     if flip:
-        matrix[0,:4] *= -1.
+        #matrix[0,:4] *= -1.
+        matrix[0,:3] *= -1.
     shifts, angles = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
 
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
