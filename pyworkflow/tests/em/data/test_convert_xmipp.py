@@ -90,10 +90,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+SHOW_IMAGES = True#True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = True#True # Remove the output temporary files
-PRINT_MATRIX = False
-PRINT_FILES = False#False
+PRINT_MATRIX = True
+PRINT_FILES = True#False
 
 
 def runXmippProgram(cmd):
@@ -356,17 +356,37 @@ class TestAlignment(TestConvertBase):
         Goal: 2D alignment
         Misalignment: flip
         """
-        mList = [[[ -1., -0., -0., -5.],
+        mList = [[[ -1., -0., -0.,  0.],
                   [  0.,  1.,  0.,  0.],
                   [  0.,  0.,  1.,  0.],
                   [  0,   0.,  0., -1.]],
                  
-                 [[ 1.0, 0.0, 0.0, 4.0],
+                 [[ 1.0, 0.0, 0.0, 0.0],
                   [ 0.0, 1.0, 0.0, 0.0],
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
         self.launchTest('alignFlip', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignFlip2(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: flip
+        motive out of x axis
+        """
+        mList = [[[-0.86603,-0.50000,  0.00000, -17.32051],
+                  [-0.50000, 0.86603, -0.00000, -10.00000],
+                  [ 0.00000, 0.00000,  1.00000,  -0.00000],
+                  [ 0.00000, 0.00000,  0.00000,  -1.00000]],
+
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchTest('alignFlip2', mList,
                          is2D=True, inverseTransform=False)
 
     def test_alignShiftRot3D(self):
