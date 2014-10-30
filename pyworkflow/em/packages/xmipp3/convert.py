@@ -1039,7 +1039,7 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
 
     if flip:
         M[0,:4]*=-1.
-        M[3,:3]*=-1.
+        M[3][3]*=-1.
     return M
 
 
