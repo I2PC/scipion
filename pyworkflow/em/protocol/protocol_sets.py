@@ -360,8 +360,8 @@ class ProtSplitSet(ProtSets):
         form.addSection(label='Input')
         
         form.addParam('inputSet', PointerParam, pointerClass='EMSet',
-                      label="Input images", important=True,
-                      help='Select the set of images that you want to split.'
+                      label="Input set", important=True,
+                      help='Select the set of elements (images, etc) that you want to split.'
                       )
         form.addParam('numberOfSets', IntParam, default=2,
                       label="Number of subsets",
@@ -414,61 +414,59 @@ class ProtSplitSet(ProtSets):
         return errors   
     
     
-class ProtIntersectSet(ProtSets):
+class ProtSubSet(ProtSets):
     """    
-    Create a set with the intersection (common elements) 
-    from two different sets.
+    Create a set with the elements of an original set that are also
+    referenced in another set.
     
-    Usually, there is a bigger set with all elements...
-    and a smaller one (obtained from classification, cleanning...). 
-    In that case, the desired result is the elements from the 
-    original set that are present in the smaller set. 
+    Usually there is a bigger set with all the elements, and a smaller
+    one obtained from classification, cleaning, etc. The desired result
+    is a set with the elements from the original set that are also present
+    somehow in the smaller set (in the smaller set they may be downsampled
+    or processed in some other way).
     
-    Both set should be of the same type of elements 
-    (micrographs, particles, volumes)
+    Both sets should be of the same kind (micrographs, particles, volumes)
+    or related (micrographs and CTFs for example).
     """
-    _label = 'intersect sets'
+    _label = 'subset'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputFullSet', PointerParam, label="Full set of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='Even if the intersection can be applied to two subsets,\n'
-                           'the most common use-case is to retrieve a subset of  \n'
+        form.addParam('inputFullSet', PointerParam, label="Full set of items",
+                      important=True, pointerClass='EMSet',
+                      help='Even if the operation can be applied to two arbitrary sets,\n'
+                           'the most common use-case is to retrieve a subset of\n'
                            'elements from an original full set.\n' 
-                           '*Note*: the elements of the resulting set will be the same \n'
-                           'ones of this input set.'
-                           )
-        form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='The elements that are in this (normally smaller) set and \n'
-                           'in the full set will be included in the result set'
-                           )
-        
+                           '*Note*: the elements of the resulting set will be the same\n'
+                           'ones as this input set.')
+        form.addParam('inputSubSet', PointerParam, label="Subset of items",
+                      important=True, pointerClass='EMSet',
+                      help='The elements that are in this (normally smaller) set and\n'
+                           'in the full set will be included in the resulting set.')
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
         inputSubSet = self.inputSubSet.get()
-        
+
         inputClassName = inputFullSet.getClassName()
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
 
         outputSet = outputSetFunction()
         outputSet.copyInfo(inputFullSet)    
-        # Iterate over the images in the smaller set
+        # Iterate over the elements in the smaller set
         # and take the info from the full set
-        for img in inputSubSet:
-            #TODO: this can be improved if you perform an
-            # intersection directly in sqlite
-            origImg = inputFullSet[img.getObjId()]
-            if origImg is not None:
-                outputSet.append(origImg)
+        for elem in inputSubSet:
+            # TODO: this can be improved if we perform intersection directly in sqlite
+            origElem = inputFullSet[elem.getObjId()]
+            if origElem is not None:
+                outputSet.append(origElem)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
