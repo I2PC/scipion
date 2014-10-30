@@ -475,10 +475,31 @@ class ProtSubSet(ProtSets):
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        errors = []
-#         if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
-#             errors.append("Both the full set and the subset should be of the same")
-#             errors.append("type of elements (micrographs, particles, volumes).")
-        return errors   
+        "Make sure the input data make sense."
 
-    
+        # self.inputFullSet and self.inputSubSet .get().getClassName() can be SetOf...
+        #   Alignment
+        #   Angles
+        #   Averages
+        #   Classes
+        #   ClassesVol
+        #   Coordinates
+        #   CTF
+        #   Micrographs
+        #   MovieParticles
+        #   Movies
+        #   Particles
+        #   Volumes
+
+        c1 = self.inputFullSet.get().getClassName()
+        c2 = self.inputSubSet.get().getClassName()
+
+        if c1 == c2:
+            return []
+
+        errors = []
+        if c1 == 'SetOfAlignment' and c2 == 'SetOfMicrographs':
+            # TODO: check for cases where the subset doesn't make sense.
+            errors.append("Both the full set and the subset should be of the same")
+            errors.append("type of elements (micrographs, particles, volumes).")
+        return errors
