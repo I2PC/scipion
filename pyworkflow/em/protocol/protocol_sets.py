@@ -276,14 +276,13 @@ class ProtUserSubSet(ProtSets):
             self._dbPrefix = self._dbPrefix[:-1] 
             
 
-class ProtJoinSets(ProtSets):
+class ProtUnionSet(ProtSets):
     """ Protocol to join two or more sets of images.
-    This protocol allows to select two or more set of images 
-    and will produce another set joining all elements of the 
-    selected sets. It will validate that all sets are of the
-    same type of elements (Micrographs, Particles or Volumes) 
+    From two or more set of images it produces another set joining all
+    the elements of the original sets.
+
+    All sets must be of the same type of elements (micrographs, particles, etc).
     """
-    #TODO  ROB: join or union
     _label = 'union sets'
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -292,11 +291,10 @@ class ProtJoinSets(ProtSets):
         
         form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
                       pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more set of images (micrographs, particles o volumes) to be united.'
-                           'If you select 3 sets with 100, 200, 200 images, the final set should contans a '
-                           'total of 500 images. All sets should have the same sampling rate.'
-                           )
-    
+                      help='Select two or more sets of images (micrographs, particles o volumes) to be united.'
+                           'If you select 3 sets with 100, 200, 200 images, the final set will contain a '
+                           'total of 500 images. All sets should have the same sampling rate.')
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
