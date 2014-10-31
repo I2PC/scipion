@@ -161,12 +161,12 @@ class ProtMovieAlignment(ProtProcessMovies):
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
         """
-        # Get the program (either with gpu or not)
+
         program = self._getProgram()
-        # Prepare the arguments
+
+        # Read the parameters
         micName = self._getMicName(movieId)
         metadataName = self._getMetadataName(movieId)
-        # Read common parameters
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
@@ -174,9 +174,9 @@ class ProtMovieAlignment(ProtProcessMovies):
 
         # For simple average execution
         if alMethod == AL_AVERAGE:
-            args = '-i %(movieName)s -o %(micName)s' % locals()
-            args += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            self.runJob(program, args, cwd=movieFolder)
+            command = '-i %(movieName)s -o %(micName)s' % locals()
+            command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
+            self.runJob(program, command, cwd=movieFolder)
 
         # For DosefGPU Execution (and combination with optical flow)
         if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
@@ -211,14 +211,17 @@ class ProtMovieAlignment(ProtProcessMovies):
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
-                args = '-i %(corrMovieName)s ' % locals()
+                command = '-i %(corrMovieName)s ' % locals()
+                # Set to Zero for Optical Flow (output movie of dosefgpu)
+                firstFrame = 0
+                lastFrame = 0
             else:
-                args = '-i %(movieName)s ' % locals()
-            args += '-o %(micName)s --winSize %(winSize)d' % locals()
-            args += ' --nst %d --ned %d' % (firstFrame, lastFrame)
+                command = '-i %(movieName)s ' % locals()
+            command += '-o %(micName)s --winSize %(winSize)d' % locals()
+            command += ' --nst %d --ned %d' % (firstFrame, lastFrame)
             if self.doGPU:
-                args += ' --gpu %d' % gpuId
-            self.runJob(program, args, cwd=movieFolder)
+                command += ' --gpu %d' % gpuId
+            self.runJob(program, command, cwd=movieFolder)
 
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
@@ -258,30 +261,31 @@ class ProtMovieAlignment(ProtProcessMovies):
             return ['Abrishami2014a', 'Li2013']
 
     def _methods(self):
-        """ METHODS TO DO"""
-        pass
+        methods = []
+        alMethod = self.alignMethod.get()
+        gpuId = self.GPUCore.get()
+        if alMethod == AL_AVERAGE:
+            methods.append('Aligning method: Simple average')
+        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
+            methods.append('Aligning method: DosefGPU')
+
+        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+            methods.append('Aligning method: Optical Flow')
+            methods.append('- Used a window size of: *%d*' % self.winSize.get())
+            methods.append('- Used a pyramid size of: *6*')
+            if self.doGPU:
+                methods.append('- Used GPU *%d* for processing' % gpuId)
+
+        return methods
 
     def _summary(self):
-        alMethod = self.alignMethod.get()
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
-        gpuId = self.GPUCore.get()
         summary = []
         summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
         if lastFrame == 0:
             summary.append('Frames used in alignment: *%d* to *%s*' % (firstFrame+1,'Last Frame'))
         else:
             summary.append('Frames used in alignment: *%d* to *%d*' % (firstFrame+1,lastFrame+1))
-        if alMethod == AL_AVERAGE:
-            summary.append('Aligning method: Simple average')
-        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
-            summary.append('Aligning method: DosefGPU')
-
-        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
-            summary.append('Aligning method: Optical Flow')
-            summary.append('- Used a window size of: *%d*' % self.winSize.get())
-            summary.append('- Used a pyramid size of: *6*')
-            if self.doGPU:
-                summary.append('- Used GPU *%d* for processing' % gpuId)
 
         return summary

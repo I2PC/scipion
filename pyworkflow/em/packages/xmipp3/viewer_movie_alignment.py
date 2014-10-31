@@ -149,6 +149,4 @@ class XmippMovieAlignViewer(ProtocolViewer):
             c.set_alpha(0.75)
             ax.plot(np.asarray(meanX), np.asarray(meanY), '-^')
 
-        #plt.tight_layout()
-        #plt.show()
         return [plotter]
