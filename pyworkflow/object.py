@@ -749,7 +749,23 @@ class PointerList(List):
                 self.append(Pointer(value=obj))
         else:
             raise Exception("Could not set a PointerList value to: %s" % value)
-      
+
+    def append(self, value):
+        """ Append Pointer of objects to the list.
+         If value is a Pointer, just add it to the list.
+         If is another subclass of Object, create
+         a Pointer first and append the pointer.
+        """
+        if isinstance(value, Pointer):
+            pointer = value
+        elif isinstance(value, Object):
+            pointer = Pointer()
+            pointer.set(value)
+        else:
+            raise Exception("Only subclasses of Object can be added to PointerList")
+
+        List.append(self, pointer)
+
             
 class CsvList(Scalar, list):
     """This class will store a list of objects
