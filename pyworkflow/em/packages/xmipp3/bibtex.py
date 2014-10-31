@@ -375,6 +375,21 @@ author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín 
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
 }
 
+@article{Vargas2014a,
+title = "A general validation approach for cryoEM ",
+journal = "Nature Methods",
+volume = "",
+number = "",
+pages = "",
+year = "",
+note = "submitted",
+issn = "",
+doi = "",
+url = "",
+author = "Vargas",
+keywords = "Validation"
+}
+
 @article{Marabini2014a,
 title = "CTF Challenge... ",
 journal = "JSB",

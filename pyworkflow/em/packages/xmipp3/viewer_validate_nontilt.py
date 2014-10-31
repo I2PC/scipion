@@ -47,10 +47,13 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Show Results Validate NonTilt')
+
+        form.addParam('volForCurve', StringParam, default=1, 
+                      label="Show info for volume")
         form.addParam('doShowVolume', BooleanParam, default=True, 
                       label="Display the volume with quality parameter?")
         form.addParam('doShowP', BooleanParam, default=True, 
-                      label="Display the cluster tendency curve?")
+                      label="Display the clustering tendency curve?")
         
     def _getVisualizeDict(self):
         return {'doShowVolume': self._viewVolume,
@@ -58,14 +61,26 @@ class XmippValidateNonTiltViewer(ProtocolViewer):
                 }        
         
     def _viewVolume(self, e=None):
-        pFn = self.protocol._defineVolumeName()
+        
+        volId = int(self.volForCurve.get())
+        vol = self.protocol.outputVolumes[volId]
+        
+        if vol is None: # Wrong volume selection
+            return [self.errorMessage("Invalid volume id *%d*" % volId)]
+        
+        pFn = self.protocol._defineVolumeName(volId)
         cm = DataView(pFn, viewParams={RENDER: 'image'})
         return [cm]
 
         
     def _viewP(self, e=None):
-        pFn = self.protocol._definePName()        
-        md = MetaData(pFn)
+        volId = int(self.volForCurve.get())
+        vol = self.protocol.outputVolumes[volId]
+        
+        if vol is None: # Wrong volume selection
+            return [self.errorMessage("Invalid volume id *%d*" % volId)]
+        
+        md = MetaData(vol.clusterMd.get())
         return [self._viewPlot("Cluster tendency parameter for each image", IMAGE_INDEX, P_INDEX, 
                        md, MDL_IMAGE_IDX, MDL_WEIGHT, color='b'),
                                 DataView(pFn)]

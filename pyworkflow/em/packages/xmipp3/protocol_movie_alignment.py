@@ -31,6 +31,7 @@ In this module are protocol base classes related to EM Micrographs
 
 from os.path import join
 
+from pyworkflow.object import String
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_EXPERT, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
 from pyworkflow.em.data import Micrograph
@@ -42,10 +43,10 @@ AL_DOSEFGPU = 1
 AL_DOSEFGPUOPTICAL = 2
 AL_AVERAGE = 3
 
-class ProtOpticalAlignment(ProtProcessMovies):
+class ProtMovieAlignment(ProtProcessMovies):
     """ Aligns movies, from direct detectors cameras, into micrographs.
     """
-    _label = 'movie optical alignment'
+    _label = 'movie alignment'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -63,7 +64,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
         line = group.addLine('Used in alignment',
                             help='First and last frames used in alignment.\n'
                                   'The first frame in the stack is *0*.' )
-        line.addParam('alignFrame0', IntParam, default=0, label='Fisrt')
+        line.addParam('alignFrame0', IntParam, default=0, label='First')
         line.addParam('alignFrameN', IntParam, default=0, label='Last',
                       help='If *0*, use maximum value')
         group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
@@ -116,17 +117,22 @@ class ProtOpticalAlignment(ProtProcessMovies):
         inputMovies = self.inputMovies.get()
         micSet = self._createSetOfMicrographs()
         micSet.copyInfo(inputMovies)
+        # Also create a Set of Movies with the alignment parameters
+        movieSet = self._createSetOfMovies()
+        movieSet.copyInfo(inputMovies)
         alMethod = self.alignMethod.get()
-        if alMethod == AL_DOSEFGPU:
-            # Also create a Set of Movies with the alignment parameters
-            movieSet = self._createSetOfMovies()
-            movieSet.copyInfo(inputMovies)
         for movie in self.inputMovies.get():
             micName = self._getMicName(movie.getObjId())
+            metadataName = self._getMetadataName(movie.getObjId())
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
             micSet.append(mic)
+            # Parse the alignment parameters and store the log files
+            alignedMovie = movie.clone()
+            alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
+            movieSet.append(alignedMovie)
+
             # TODO: Methods for dosefgpu should be transferred to here
             """
             if alMethod == AL_DOSEFGPU:
@@ -139,6 +145,7 @@ class ProtOpticalAlignment(ProtProcessMovies):
                 movieSet.append(alignedMovie)
             """
         self._defineOutputs(outputMicrographs=micSet)
+        self._defineOutputs(outputMovies=movieSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
@@ -154,11 +161,12 @@ class ProtOpticalAlignment(ProtProcessMovies):
         1) Generate all output files inside movieFolder (usually with cwd in runJob)
         2) Copy the important result files after processing (movieFolder will be deleted!!!)
         """
-        # Get the program (either with gpu or not)
+
         program = self._getProgram()
-        # Prepare the arguments
+
+        # Read the parameters
         micName = self._getMicName(movieId)
-        # Read common parameters
+        metadataName = self._getMetadataName(movieId)
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get()
@@ -166,9 +174,9 @@ class ProtOpticalAlignment(ProtProcessMovies):
 
         # For simple average execution
         if alMethod == AL_AVERAGE:
-            args = '-i %(movieName)s -o %(micName)s' % locals()
-            args += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            self.runJob(program, args, cwd=movieFolder)
+            command = '-i %(movieName)s -o %(micName)s' % locals()
+            command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
+            self.runJob(program, command, cwd=movieFolder)
 
         # For DosefGPU Execution (and combination with optical flow)
         if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
@@ -203,17 +211,21 @@ class ProtOpticalAlignment(ProtProcessMovies):
             if alMethod == AL_DOSEFGPUOPTICAL:
                 program = 'xmipp_optical_alignment_gpu'
                 corrMovieName = self._getCorrMovieName(movieId)
-                args = '-i %(corrMovieName)s ' % locals()
+                command = '-i %(corrMovieName)s ' % locals()
+                # Set to Zero for Optical Flow (output movie of dosefgpu)
+                firstFrame = 0
+                lastFrame = 0
             else:
-                args = '-i %(movieName)s ' % locals()
-            args += '-o %(micName)s --winSize %(winSize)d' % locals()
-            args += ' --nst %d --ned %d' % (firstFrame, lastFrame)
+                command = '-i %(movieName)s ' % locals()
+            command += '-o %(micName)s --winSize %(winSize)d' % locals()
+            command += ' --nst %d --ned %d' % (firstFrame, lastFrame)
             if self.doGPU:
-                args += ' --gpu %d' % gpuId
-            self.runJob(program, args, cwd=movieFolder)
+                command += ' --gpu %d' % gpuId
+            self.runJob(program, command, cwd=movieFolder)
 
-        # Move output micrograph to 'extra' folder
+        # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
+        moveFile(join(movieFolder, metadataName), self._getExtraPath())
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())
@@ -249,30 +261,31 @@ class ProtOpticalAlignment(ProtProcessMovies):
             return ['Abrishami2014a', 'Li2013']
 
     def _methods(self):
-        """ METHODS TO DO"""
-        pass
+        methods = []
+        alMethod = self.alignMethod.get()
+        gpuId = self.GPUCore.get()
+        if alMethod == AL_AVERAGE:
+            methods.append('Aligning method: Simple average')
+        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
+            methods.append('Aligning method: DosefGPU')
+
+        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
+            methods.append('Aligning method: Optical Flow')
+            methods.append('- Used a window size of: *%d*' % self.winSize.get())
+            methods.append('- Used a pyramid size of: *6*')
+            if self.doGPU:
+                methods.append('- Used GPU *%d* for processing' % gpuId)
+
+        return methods
 
     def _summary(self):
-        alMethod = self.alignMethod.get()
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
-        gpuId = self.GPUCore.get()
         summary = []
         summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
         if lastFrame == 0:
             summary.append('Frames used in alignment: *%d* to *%s*' % (firstFrame+1,'Last Frame'))
         else:
             summary.append('Frames used in alignment: *%d* to *%d*' % (firstFrame+1,lastFrame+1))
-        if alMethod == AL_AVERAGE:
-            summary.append('Aligning method: Simple average')
-        if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
-            summary.append('Aligning method: DosefGPU')
-
-        if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
-            summary.append('Aligning method: Optical Flow')
-            summary.append('- Used a window size of: *%d*' % self.winSize.get())
-            summary.append('- Used a pyramid size of: *6*')
-            if self.doGPU:
-                summary.append('- Used GPU *%d* for processing' % gpuId)
 
         return summary
