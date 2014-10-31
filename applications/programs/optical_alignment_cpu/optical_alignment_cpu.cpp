@@ -364,7 +364,7 @@ public:
                 // Save the flows if we are in the last step
                 if (div==1)
                 {
-                    if (cnt > 0)
+                    if (i > 0)
                     {
                         flowxInBet = flowx - flowxPre;
                         flowyInBet = flowy - flowyPre;
