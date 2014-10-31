@@ -326,11 +326,12 @@ class ProtUnionSet(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
-                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more sets of images (micrographs, particles o volumes) to be united.'
-                           'If you select 3 sets with 100, 200, 200 images, the final set will contain a '
-                           'total of 500 images. All sets should have the same sampling rate.')
+        form.addParam('inputSets', MultiPointerParam, label="Input set", important=True,
+                      pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
+                      help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
+                           'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
+                           'total of 500 elements.')
+        # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
