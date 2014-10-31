@@ -31,7 +31,6 @@ This module contains protocols related to Set operations such us:
 ... etc
 """
 import os
-import math
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
@@ -277,14 +276,13 @@ class ProtUserSubSet(ProtSets):
             self._dbPrefix = self._dbPrefix[:-1] 
             
 
-class ProtJoinSets(ProtSets):
+class ProtUnionSet(ProtSets):
     """ Protocol to join two or more sets of images.
-    This protocol allows to select two or more set of images 
-    and will produce another set joining all elements of the 
-    selected sets. It will validate that all sets are of the
-    same type of elements (Micrographs, Particles or Volumes) 
+    From two or more set of images it produces another set joining all
+    the elements of the original sets.
+
+    All sets must be of the same type of elements (micrographs, particles, etc).
     """
-    #TODO  ROB: join or union
     _label = 'union sets'
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -293,11 +291,10 @@ class ProtJoinSets(ProtSets):
         
         form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
                       pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more set of images (micrographs, particles o volumes) to be united.'
-                           'If you select 3 sets with 100, 200, 200 images, the final set should contans a '
-                           'total of 500 images. All sets should have the same sampling rate.'
-                           )
-    
+                      help='Select two or more sets of images (micrographs, particles o volumes) to be united.'
+                           'If you select 3 sets with 100, 200, 200 images, the final set will contain a '
+                           'total of 500 images. All sets should have the same sampling rate.')
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -363,8 +360,8 @@ class ProtSplitSet(ProtSets):
         form.addSection(label='Input')
         
         form.addParam('inputSet', PointerParam, pointerClass='EMSet',
-                      label="Input images", important=True,
-                      help='Select the set of images that you want to split.'
+                      label="Input set", important=True,
+                      help='Select the set of elements (images, etc) that you want to split.'
                       )
         form.addParam('numberOfSets', IntParam, default=2,
                       label="Number of subsets",
@@ -387,12 +384,19 @@ class ProtSplitSet(ProtSets):
         
         # Create as many subsets as requested by the user
         subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
+
         # Iterate over the elements in the input set and assign
         # to different subsets.
         elements = self.inputSet.get()
-        nPerSet = int(math.ceil(len(elements) / float(n)))  # elements per set
-        for i, img in enumerate(elements.__iter__(random=self.randomize)):
-            subsets[i // nPerSet].append(img)
+
+        ns = [len(elements) // n + (1 if i < len(elements) % n else 0) for i in range(n)]
+        pos, i = 0, 0  # index of current bucket and index of position inside it
+        for elem in elements.__iter__(random=self.randomize):
+            if i >= ns[pos]:
+                pos += 1
+                i = 0
+            subsets[pos].append(elem)
+            i += 1
 
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
         for i in range(1, n+1):
@@ -410,61 +414,59 @@ class ProtSplitSet(ProtSets):
         return errors   
     
     
-class ProtIntersectSet(ProtSets):
+class ProtSubSet(ProtSets):
     """    
-    Create a set with the intersection (common elements) 
-    from two different sets.
+    Create a set with the elements of an original set that are also
+    referenced in another set.
     
-    Usually, there is a bigger set with all elements...
-    and a smaller one (obtained from classification, cleanning...). 
-    In that case, the desired result is the elements from the 
-    original set that are present in the smaller set. 
+    Usually there is a bigger set with all the elements, and a smaller
+    one obtained from classification, cleaning, etc. The desired result
+    is a set with the elements from the original set that are also present
+    somehow in the smaller set (in the smaller set they may be downsampled
+    or processed in some other way).
     
-    Both set should be of the same type of elements 
-    (micrographs, particles, volumes)
+    Both sets should be of the same kind (micrographs, particles, volumes)
+    or related (micrographs and CTFs for example).
     """
-    _label = 'intersect sets'
+    _label = 'subset'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputFullSet', PointerParam, label="Full set of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='Even if the intersection can be applied to two subsets,\n'
-                           'the most common use-case is to retrieve a subset of  \n'
+        form.addParam('inputFullSet', PointerParam, label="Full set of items",
+                      important=True, pointerClass='EMSet',
+                      help='Even if the operation can be applied to two arbitrary sets,\n'
+                           'the most common use-case is to retrieve a subset of\n'
                            'elements from an original full set.\n' 
-                           '*Note*: the elements of the resulting set will be the same \n'
-                           'ones of this input set.'
-                           )
-        form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='The elements that are in this (normally smaller) set and \n'
-                           'in the full set will be included in the result set'
-                           )
-        
+                           '*Note*: the elements of the resulting set will be the same\n'
+                           'ones as this input set.')
+        form.addParam('inputSubSet', PointerParam, label="Subset of items",
+                      important=True, pointerClass='EMSet',
+                      help='The elements that are in this (normally smaller) set and\n'
+                           'in the full set will be included in the resulting set.')
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
         inputSubSet = self.inputSubSet.get()
-        
+
         inputClassName = inputFullSet.getClassName()
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
 
         outputSet = outputSetFunction()
         outputSet.copyInfo(inputFullSet)    
-        # Iterate over the images in the smaller set
+        # Iterate over the elements in the smaller set
         # and take the info from the full set
-        for img in inputSubSet:
-            #TODO: this can be improved if you perform an
-            # intersection directly in sqlite
-            origImg = inputFullSet[img.getObjId()]
-            if origImg is not None:
-                outputSet.append(origImg)
+        for elem in inputSubSet:
+            # TODO: this can be improved if we perform intersection directly in sqlite
+            origElem = inputFullSet[elem.getObjId()]
+            if origElem is not None:
+                outputSet.append(origElem)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
@@ -473,10 +475,31 @@ class ProtIntersectSet(ProtSets):
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        errors = []
-#         if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
-#             errors.append("Both the full set and the subset should be of the same")
-#             errors.append("type of elements (micrographs, particles, volumes).")
-        return errors   
+        "Make sure the input data make sense."
 
-    
+        # self.inputFullSet and self.inputSubSet .get().getClassName() can be SetOf...
+        #   Alignment
+        #   Angles
+        #   Averages
+        #   Classes
+        #   ClassesVol
+        #   Coordinates
+        #   CTF
+        #   Micrographs
+        #   MovieParticles
+        #   Movies
+        #   Particles
+        #   Volumes
+
+        c1 = self.inputFullSet.get().getClassName()
+        c2 = self.inputSubSet.get().getClassName()
+
+        if c1 == c2:
+            return []
+
+        errors = []
+        if c1 == 'SetOfAlignment' and c2 == 'SetOfMicrographs':
+            # TODO: check for cases where the subset doesn't make sense.
+            errors.append("Both the full set and the subset should be of the same")
+            errors.append("type of elements (micrographs, particles, volumes).")
+        return errors
