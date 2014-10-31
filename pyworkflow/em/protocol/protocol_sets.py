@@ -513,7 +513,7 @@ class ProtSubSet(ProtSets):
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        "Make sure the input data make sense."
+        """Make sure the input data make sense."""
 
         # self.inputFullSet and self.inputSubSet .get().getClassName() can be SetOf...
         #   Alignment
@@ -535,9 +535,14 @@ class ProtSubSet(ProtSets):
         if c1 == c2:
             return []
 
-        errors = []
-        if c1 == 'SetOfAlignment' and c2 == 'SetOfMicrographs':
-            # TODO: check for cases where the subset doesn't make sense.
-            errors.append("Both the full set and the subset should be of the same")
-            errors.append("type of elements (micrographs, particles, volumes).")
-        return errors
+        # Avoid combinations that make no sense.
+        for classA, classesIncompatible in [
+            ('SetOfParticles', {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfCoordinates', {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfVolumes', {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
+            if ((c1 == classA and c2 in classesIncompatible) or
+                (c2 == classA and c1 in classesIncompatible)):
+                return ["The full set and the subset are of incompatible classes",
+                        "%s and %s." % (c1, c2)]
+
+        return []  # no errors
