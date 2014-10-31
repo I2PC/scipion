@@ -47,8 +47,8 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    String fname;
-    String foname;
+    FileName fname;
+    FileName foname;
 
     int winSize;
     int gpuDevice;
@@ -179,21 +179,21 @@ public:
     // Converts a XMIPP MultidimArray to OpenCV matrix
     void xmipp2Opencv(const MultidimArray<double> &xmippArray, Mat &opencvMat)
     {
-        int h=YSIZE(xmippArray);
-        int w=XSIZE(xmippArray);
-        opencvMat=cv::Mat::zeros(h, w,CV_32FC1);
+        int h = YSIZE(xmippArray);
+        int w = XSIZE(xmippArray);
+        opencvMat = cv::Mat::zeros(h, w,CV_32FC1);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xmippArray)
-        opencvMat.at<float>(i,j)=DIRECT_A2D_ELEM(xmippArray,i,j);
+        opencvMat.at<float>(i,j) = DIRECT_A2D_ELEM(xmippArray,i,j);
     }
 
     // Converts an OpenCV matrix to XMIPP MultidimArray
     void opencv2Xmipp(const Mat &opencvMat, MultidimArray<double> &xmippArray)
     {
-        int h=opencvMat.rows;
-        int w=opencvMat.cols;
+        int h = opencvMat.rows;
+        int w = opencvMat.cols;
         xmippArray.initZeros(h, w);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xmippArray)
-        DIRECT_A2D_ELEM(xmippArray,i,j)=opencvMat.at<float>(i,j);
+        DIRECT_A2D_ELEM(xmippArray,i,j) = opencvMat.at<float>(i,j);
     }
 
     // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
@@ -201,7 +201,7 @@ public:
     {
         Point minLoc,maxLoc;
         double min,max;
-        cv::minMaxLoc(opencvDoubleMat,&min,&max,&minLoc,&maxLoc,noArray());
+        cv::minMaxLoc(opencvDoubleMat, &min, &max, &minLoc, &maxLoc, noArray());
         opencvDoubleMat.convertTo(opencvUintMat, CV_8U, 255.0/(max - min), -min * 255.0/(max - min));
     }
 
@@ -209,7 +209,7 @@ public:
     void computeAvg(const FileName &movieFile, int begin, int end, MultidimArray<double> &avgImg)
     {
 
-        int N=(end-begin)+1;
+        int N = (end-begin)+1;
         ImageGeneric movieStack;
         MultidimArray<double> imgNormal, sumImg;
 
@@ -221,9 +221,9 @@ public:
         {
             movieStack.readMapped(movieFile,i+1);
             movieStack().getImage(imgNormal);
-            sumImg+=imgNormal;
+            sumImg += imgNormal;
         }
-        avgImg=sumImg/double(N);
+        avgImg = sumImg/double(N);
     }
 
     int main2()
@@ -232,16 +232,11 @@ public:
         MultidimArray<double> preImg, avgCurr, avgStep, mappedImg;
         ImageGeneric movieStack, movieStackNormalize;
         Image<double> II;
-        FileName movieFile = fname, normalizeFile;
+        MetaData MD; // To save plot information
+        FileName motionInfFile;
         ArrayDim aDim;
 
-        // String for generating the file names
-        std::string theNumberString;
-        std::ostringstream ostr;
-        string fn;
-        ofstream fx, fy;
-
-        // For measuring times
+        // For measuring times (both for whole process and for each level of the pyramid)
         clock_t tStart, tStart2;
 
 #ifdef GPU
@@ -252,18 +247,21 @@ public:
 
         // Matrix required by Opencv
         Mat flowx, flowy, mapx, mapy, flow,dest;
+        Mat flowxPre, flowyPre, flowxInBet, flowyInBet;// Using for computing the plot information
         Mat avgcurr, avgstep, preimg, preimg8, avgcurr8;
         Mat planes[] = {flowx, flowy};
+        Scalar meanx, meany;
+        Scalar stddevx, stddevy;
 
-        int imagenum, cnt=2, div=0, stackcnt=0;
-        int h, w, idx, levelNum, levelCounter=1;
+        int imagenum, cnt = 2, div = 0;
+        int h, w, idx, levelNum, levelCounter = 1;
 
-        normalizeFile = "normalized-"+fname;
-        movieStack.read(movieFile,HEADER);
+        motionInfFile = foname.replaceExtension("xmd");
+        movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
-        imagenum=aDim.ndim;
-        h=aDim.ydim;
-        w=aDim.xdim;
+        imagenum = aDim.ndim;
+        h = aDim.ydim;
+        w = aDim.xdim;
 
 
 #ifdef GPU
@@ -292,51 +290,52 @@ public:
         fstFrame++; // Just to adapt to Li algorithm
         lstFrame++; // Just to adapt to Li algorithm
         if (lstFrame>=imagenum || lstFrame==1)
-            lstFrame=imagenum;
-        imagenum-=(imagenum-lstFrame) + (fstFrame-1);
-        levelNum=sqrt(double(imagenum));
-        computeAvg(movieFile, fstFrame, lstFrame, avgCurr);
+            lstFrame = imagenum;
+        imagenum -= (imagenum-lstFrame) + (fstFrame-1);
+        levelNum = sqrt(double(imagenum));
+        computeAvg(fname, fstFrame, lstFrame, avgCurr);
         if(doAverage)
         {
-            II()=avgCurr;
+            II() = avgCurr;
             II.write(foname);
             return 0;
         }
-        cout<<"Frames "<<fstFrame<<"to "<<lstFrame<<"under processing ..."<<std::endl;
+        cout<<"Frames "<<fstFrame<<" to "<<lstFrame<<" under processing ..."<<std::endl;
 
         while (div!=1)
         {
-            div=int(imagenum/cnt);
+            div = int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
             avgStep.initZeros(h, w);
             cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
-            tStart=clock();
+            // Compute time for each level
+            tStart = clock();
             idx = 0;
 
             // Check if we are in the final step
             if (div==1)
-                cnt=imagenum;
+                cnt = imagenum;
 
             for (int i=0;i<cnt;i++)
             {
-
-                //If we are in the last level, just read the images and do not compute the averages
+                //Just compute the average in the last step
                 if (div==1)
                 {
-                    movieStack.readMapped(movieFile,i+1);
+                    movieStack.readMapped(fname,i+1);
                     movieStack().getImage(preImg);
                 }
                 else
                 {
                     if (i==cnt-1)
-                        computeAvg(movieFile, i*div+fstFrame, lstFrame, preImg);
+                        computeAvg(fname, i*div+fstFrame, lstFrame, preImg);
                     else
-                        computeAvg(movieFile, i*div+fstFrame, (i+1)*div+fstFrame-1, preImg);
+                        computeAvg(fname, i*div+fstFrame, (i+1)*div+fstFrame-1, preImg);
                 }
 
                 xmipp2Opencv(avgCurr, avgcurr);
                 xmipp2Opencv(preImg, preimg);
 
+                // Note: we should use the OpenCV conversion to use it in optical flow
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
 #ifdef GPU
@@ -359,6 +358,26 @@ public:
                 flowx = planes[0];
                 flowy = planes[1];
 #endif
+
+                // Save the flows if we are in the last step
+                if (div==1)
+                {
+                    if (cnt > 0)
+                    {
+                        flowxInBet = flowx - flowxPre;
+                        flowyInBet = flowy - flowyPre;
+                        cv::meanStdDev(flowxInBet,meanx,stddevx);
+                        cv::meanStdDev(flowyInBet,meany,stddevy);
+                        size_t id=MD.addObject();
+                        MD.setValue(MDL_OPTICALFLOW_MEANX, double(meanx.val[0]), id);
+                        MD.setValue(MDL_OPTICALFLOW_MEANY, double(meany.val[0]), id);
+                        MD.setValue(MDL_OPTICALFLOW_STDX, double(stddevx.val[0]), id);
+                        MD.setValue(MDL_OPTICALFLOW_STDY, double(stddevy.val[0]), id);
+                        MD.write(motionInfFile, MD_APPEND);
+                    }
+                    flowxPre = flowx.clone();
+                    flowyPre = flowy.clone();
+                }
 
                 flowx.convertTo(mapx, CV_32FC1);
                 flowy.convertTo(mapy, CV_32FC1);
@@ -389,16 +408,16 @@ public:
 #endif
 
                 opencv2Xmipp(dest, mappedImg);
-                avgStep+=mappedImg;
+                avgStep += mappedImg;
             }
             avgCurr =  avgStep/cnt;
 
             cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has been finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
             cnt = cnt * 2;
-            levelCounter++;
+            levelCounter ++;
         }
-        II()=avgCurr;
+        II() = avgCurr;
         II.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
         return 0;
