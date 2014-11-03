@@ -68,7 +68,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(5, 5, 5, 5);
         JLabel msgLb = new JLabel(msg);
-        add(msgLb, XmippWindowUtil.getConstraints(constraints, 0, 0, GridBagConstraints.HORIZONTAL));
+        add(msgLb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2));
         int index = 1;
         JTextField tf;
         if(fields != null)

@@ -1068,6 +1068,15 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/***
 	 * Function to create the main toolbar
 	 */
+        
+        protected void changeView()
+        {
+            			data.changeMode();
+				reloadTableData();
+				makeVisible(gallery.getFirstSelectedIndex());
+	
+        }
+        
 	protected void createToolbar()
 	{
 		// Create Main TOOLBAR
@@ -1083,9 +1092,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				data.changeMode();
-				reloadTableData();
-				makeVisible(gallery.getFirstSelectedIndex());
+				changeView();
 			}
 		});
 

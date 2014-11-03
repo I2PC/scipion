@@ -393,7 +393,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public void saveData(Micrograph m)
 	{
-                System.out.println("saving data");
+                //System.out.println("saving data");
 		SupervisedParticlePickerMicrograph tm = (SupervisedParticlePickerMicrograph) m;
 		long id;
 		try
@@ -425,7 +425,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			md.destroy();
 			saveAutomaticParticles(tm);
                         saveTemplates();
-                System.out.println("saved");
+                //System.out.println("saved");
 		}
 		catch (Exception e)
 		{
@@ -1091,6 +1091,7 @@ public class SupervisedParticlePicker extends ParticlePicker
                                 System.out.println("Training");
 				classifier.train(trainInput, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
 				micrograph.setAutopickpercent(getAutopickpercent());
+                                System.out.println("Autopicking");
 				autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 				loadParticles(micrograph, autopickRows);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
