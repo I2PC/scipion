@@ -874,7 +874,7 @@ class Set(OrderedObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def __contains__(self, item):
+    def __contains__(self, itemId):
         """ element in Set """
         return self._mapper.selectById(itemId) != None
 
