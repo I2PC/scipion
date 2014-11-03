@@ -307,18 +307,12 @@ class ProtUserSubSet(ProtSets):
             
 
 class ProtUnionSet(ProtSets):
-    """ Protocol to join two or more sets of images.
-<<<<<<< HEAD
-    This protocol allows to select two or more set of images
-    and will produce another set joining all elements of the 
-    selected sets. It will validate that all sets are of the
-    same type of elements (Micrographs, Particles or Volumes) 
-=======
-    From two or more set of images it produces another set joining all
-    the elements of the original sets.
+    """ Protocol to merge two or more sets.
+
+    From two or more sets it produces another set joining all the elements
+    of the original sets.
 
     All sets must be of the same type of elements (micrographs, particles, etc).
->>>>>>> df2fee9ec17cc8602e63ff6125cb3564f832387c
     """
     _label = 'union sets'
 
@@ -339,54 +333,70 @@ class ProtUnionSet(ProtSets):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        self.inputType = str(self.inputSets[0].get().getClassName())
-        outputSetFunction = getattr(self, "_create%s" % self.inputType)
-        outputSet = outputSetFunction()
-        
-        #Copy info from input (sampling rate, etc)
-        outputSet.copyInfo(self.inputSets[0].get())
-       
+        set1 = self.inputSets[0].get()  # 1st set (we use it many times)
+
+        # Read ClassName and create the corresponding EMSet (SetOfParticles...)
+        outputSet = getattr(self, "_create%s" % set1.getClassName())()
+
+        # Copy info from input sets (sampling rate, etc).
+        outputSet.copyInfo(set1)  # all sets must have the same info as set1!
+
+        # Keep original ids until we find a conflict. From then on, use new ids.
+        usedIds = []  # to keep track of the object ids we have already seen
+        cleanIds = False
         for itemSet in self.inputSets:
-            for itemObj in itemSet.get():
-                print "itemObj", itemObj
-                itemObj.cleanObjId()
-                outputSet.append(itemObj)
-        
-        self._defineOutputs(outputImages=outputSet)
-        
+            for obj in itemSet.get():
+                objId = obj.getObjId()
+                if cleanIds:
+                    obj.cleanObjId()  # so it will be assigned automatically
+                elif objId in usedIds:  # duplicated id!
+                    # Note that we cannot use  "objId in outputSet"
+                    # because outputSet has not been saved to the sqlite
+                    # file yet, and it would fail :(
+                    obj.cleanObjId()
+                    cleanIds = True  # from now on, always clean the ids
+                else:
+                    usedIds.append(objId)
+                outputSet.append(obj)
+
+        self._defineOutputs(outputSet=outputSet)
+
+    def getObjDict(self, includeClass=False):
+        return super(ProtUnionSet, self).getObjDict(includeClass)
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        classList = []
-        #inputSets = [self.inputSet1, self.inputSet2]
-        for itemSet in self.inputSets:
-            itemClassName = itemSet.get().getClassName()
-            if len(classList) == 0 or itemClassName not in classList:
-                classList.append(itemClassName)
-            
-        errors = []
-        if len(classList) > 1:
-            errors.append("Object should have same type")
-            errors.append("Types of objects found: " + ", ".join(classList))
-        return errors   
+        # Are all inputSets from the same class?
+        classes = {x.get().getClassName() for x in self.inputSets}
+        if len(classes) > 1:
+            return ["All objects should have the same type.",
+                    "Types of objects found: %s" % ", ".join(classes)]
+
+        # Do all inputSets contain elements with the same attributes defined?
+        def attrNames(s):  # get attribute names of the first element of set s
+            return sorted(iter(s.get()).next().getObjDict().keys())
+        attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+        if len(attrs) > 1:
+            return ["All elements must have the same attributes.",
+                    "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+
+        return []  # no errors
 
     def _summary(self):
         summary = []
-
-        if not hasattr(self, 'outputImages'):
+        if not hasattr(self, 'outputSet'):
             summary.append("Protocol has not finished yet.")
         else:
-            m = "We have unioned the following sets: "
+            m = "We have merged the following sets: "
             #inputSets = [self.inputSet1, self.inputSet2]
             for itemSet in self.inputSets:
                 m += "%s, " % itemSet.get().getNameId()
             summary.append(m[:-2])
-        
         return summary
-        
+
     def _methods(self):
         return self._summary()
-            
+
 
 class ProtSplitSet(ProtSets):
     """ Protocol to split a set in two or more subsets. 
