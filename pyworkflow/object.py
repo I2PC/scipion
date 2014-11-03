@@ -483,7 +483,7 @@ class FakedObject(Object):
             else:
                 return attr
         return None
-    
+
     def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
@@ -873,6 +873,10 @@ class Set(OrderedObject):
     def __getitem__(self, itemId):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
+
+    def __contains__(self, item):
+        """ element in Set """
+        return self._mapper.selectById(itemId) != None
 
     def _iterItems(self, random=False):
         return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
