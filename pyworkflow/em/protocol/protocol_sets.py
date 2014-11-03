@@ -150,6 +150,7 @@ class ProtUserSubSet(ProtSets):
                 
          # Register outputs
         self._defineOutput(self.outputClassName.get(), setOfCtf)
+        self._defineSourceRelation(inputCtf, setOfCtf)
         
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
