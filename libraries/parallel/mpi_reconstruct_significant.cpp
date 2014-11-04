@@ -25,6 +25,16 @@
 
 #include "mpi_reconstruct_significant.h"
 
+MpiProgReconstructSignificant::MpiProgReconstructSignificant()
+{
+	node=NULL;
+}
+
+MpiProgReconstructSignificant::~MpiProgReconstructSignificant()
+{
+	delete node;
+}
+
 void MpiProgReconstructSignificant::read(int argc, char** argv)
 {
     node = new MpiNode(argc, argv);
@@ -91,5 +101,7 @@ void MpiProgReconstructSignificant::gatherAlignment()
 			}
 		}
 	}
+
+	std::cout << "synchronize" << std::endl;
 	synchronize();
 }
