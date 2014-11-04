@@ -650,7 +650,16 @@ class Pointer(Object):
                 value = self._objValue[itemId]
                 value._parentObject = self._objValue
             else:
-                raise Exception("Invalid value '%s' for pointer._extended property." % extended)
+                # This is now only for compatibility reasons
+                try:
+                    itemId = int(extended)
+                    value = self._objValue[itemId]
+                    value._parentObject = self._objValue
+                except Exception:
+                    attribute = str(extended)
+                    value = getattr(self._objValue, attribute, default)
+                    
+                #raise Exception("Invalid value '%s' for pointer._extended property." % extended)
         else:
             value = self._objValue
             
