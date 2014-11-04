@@ -50,6 +50,22 @@ def findFile(filename, *paths):
                 return fn
     return None
 
+def findRootFrom(referenceFile, searchFile):
+    """ This method will find a path (root) from 'referenceFile'
+    from which the 'searchFile' exists. 
+    A practical example of 'referenceFile' is a metadata file
+    and 'searchFile' is an image to be found from the metadata.
+    Return None if the path is not found.
+    """
+    absPath = os.path.dirname(os.path.abspath(referenceFile))
+    
+    while absPath is not None and absPath != '/':
+        if os.path.exists(os.path.join(absPath, searchFile)):
+            return absPath #os.path.relpath(absPath)
+        absPath = os.path.dirname(absPath)
+        
+    return None   
+
 def findResource(filename):
     """ This function will search for a give
     resource filename in the paths specified
