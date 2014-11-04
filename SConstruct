@@ -371,11 +371,12 @@ def symLink(env, target, source):
     source = os.path.relpath(source, os.path.split(link)[0])
     if os.path.lexists(link):
         os.remove(link)
+    print 'Linking from %s to %s' % (source, link)
     os.symlink(source, link)
     return target
 
 
-def addJavaLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], mpi=False, cuda=False, default=True):
+def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
     """Add self-made and compiled java library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -386,10 +387,77 @@ def addJavaLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=
 
     Returns the final targets, the ones that Make will create.
     """
+    jar = jar or '%s.jar' % name
+    dirs = dirs or ['java/src']
+    patterns = patterns or 'unset'
+    buildDir = buildDir or 'java/build'
+    installDir = installDir or 'java/lib'
+    classDir = classDir or 'java/build'
+    sourcePath = sourcePath or 'java/src'
+#    env['JARCHDIR'] = buildDir
+    sources = []
+    if patterns == 'unset':
+        patterns = []
+        for x in range(len(dirs)):
+            patterns += ['*.java']
+
     
-        # Update enums from c++ headers, if not exist, generate it
-    return None
+    if not default:
+        return None
     
+    if name != 'XmippJNI':
+        deps.append('XmippJNI')
+    deps = [join(installDir, '%s.jar' % name) for name in deps]
+    for x, source in enumerate(dirs):
+        sources += glob(join(dirs[x], patterns[x]))
+    
+    env2 = Environment()
+    env2['ENV']['PATH'] = env['ENV']['PATH']
+    env2['ENV']['JAVA_ROOT'] = env['ENV']['JAVA_ROOT']
+    env2['ENV']['JAVA_HOME'] = env['ENV']['JAVA_HOME']
+    env2['ENV']['JAVA_HOME'] = env['ENV']['JAVA_BINDIR']
+    env2['ENV']['JRE_HOME'] = env['ENV']['JRE_HOME']
+    env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
+    env2.AppendUnique(JAVASOURCEPATH=Dir(sourcePath).abspath)
+#    env2['JAVAC'] = "javac -cp " + ":".join(glob(join(Dir(installDir).abspath,'*.jar')))
+#    env2['JARCHDIR'] = buildDir
+
+    jarCreation = env2.Jar(target=join(buildDir, jar), source=sources)
+    SideEffect('dummy', jarCreation)
+    lastTarget = jarCreation
+    env.Default(jarCreation)
+#    
+    for dep in deps:
+        env.Depends(jarCreation, File(dep).abspath)
+    
+    install = env.Install(installDir, jarCreation)
+    SideEffect('dummy', install)
+    lastTarget = install
+
+    env.Default(lastTarget)
+    
+    return lastTarget
+    
+
+
+def addJavaTest(env, name, installDir=None, default=True):
+    """Add java test to the compilation process
+    
+    This pseudobuilder executes a java test using the Command builder.
+
+    If default=False, the test will not be done unless the option
+    --with-java-tests is used.
+
+    Returns the final targets, the ones that Command returns.
+    """
+    if not default and not GetOption('run_java_tests'):
+        return ''
+    installDir = installDir or 'java/lib'
+    classPath = ":".join(glob(join(Dir(installDir).abspath,'*.jar')))
+    cmd = '%s -cp %s org.junit.runner.JUnitCore xmipp.test.%s' % (join(env['JAVA_BINDIR'], 'java'), classPath, name)
+    runTest = env.Command(name, join(installDir, 'XmippTest.jar'), cmd)
+    env.Alias('run_java_tests', runTest)
+    Default(runTest)
 
 
 def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
@@ -518,6 +586,107 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         env.Default(tInstall)
 
     return tInstall
+
+
+def compilerConfig(env):
+    """Check the good state of the C and C++ compilers and return the proper env."""
+
+    conf = Configure(env)
+    # ---- check for environment variables
+    if 'CC' in os.environ:
+        conf.env.Replace(CC=os.environ['CC'])
+    else:
+        conf.env.Replace(CC='gcc')
+    print(">> Using C compiler: " + conf.env.get('CC'))
+
+    if 'CFLAGS' in os.environ:
+        conf.env.Replace(CFLAGS=os.environ['CFLAGS'])
+        print(">> Using custom C build flags")
+
+    if 'CXX' in os.environ:
+        conf.env.Replace(CXX=os.environ['CXX'])
+    else:
+        conf.env.Replace(CXX='g++')
+    print(">> Using C++ compiler: " + conf.env.get('CXX'))
+
+    if 'CXXFLAGS' in os.environ:
+        conf.env.Append(CPPFLAGS=os.environ['CXXFLAGS'])
+        print(">> Appending custom C++ build flags : " + os.environ['CXXFLAGS'])
+
+    if 'LDFLAGS' in os.environ:
+        conf.env.Append(LINKFLAGS=os.environ['LDFLAGS'])
+        print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
+
+    conf.CheckCC()
+    conf.CheckCXX()
+    return conf.Finish()
+
+
+def libraryTest(env, name, lang='c'):
+    """Check the existence of a concrete C/C++ library."""
+    conf = Configure(env)
+    conf.CheckLib(name, language=lang)
+    conf.Finish()
+    # conf.Finish() returns the environment it used, and we may want to use it,
+    # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
+
+
+def manualInstall(env, name, tar=None, buildDir=None, url=None,
+                  extraActions=[], deps=[], clean=[], default=True):
+    """Just download and run extraActions.
+
+    This pseudobuilder downloads the given url, untars the resulting
+    tar file and runs extraActions on it. It also tells SCons about
+    the proper dependencies (deps).
+
+    extraActions is a list of (target, command) that should be
+    executed after the package is properly installed.
+
+    If default=False, the package will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final target in extraActions.
+
+    """
+    # Use reasonable defaults.
+    tar = tar or ('%s.tgz' % name)
+    url = url or ('%s/external/%s' % (URL_BASE, tar))
+    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
+
+    # Add the option --with-name, so the user can call SCons with this
+    # to activate it even if it is not on by default.
+    if not default:
+        AddOption('--with-%s' % name, dest=name, action='store_true',
+                  help='Activate %s' % name)
+
+    # Donload, untar, and execute any extra actions.
+    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
+    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
+                   cdir='software/tmp')
+    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
+    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    lastTarget = tUntar
+
+    for target, command in extraActions:
+        lastTarget = env.Command(
+            target,
+            lastTarget,
+            Action(command, chdir='software/tmp/%s' % buildDir))
+        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+
+    # Clean the special generated files.
+    for cFile in clean:
+        Clean(lastTarget, cFile)
+
+    # Add the dependencies.
+    for dep in deps:
+        env.Depends(tUntar, dep)
+
+    if default or GetOption(name):
+        env.Default(lastTarget)
+
+    return lastTarget
 
 
 def addPackage(env, name, tar=None, buildDir=None, url=None,
@@ -671,106 +840,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None,
 
     return lastTarget
 
-def compilerConfig(env):
-    """Check the good state of the C and C++ compilers and return the proper env."""
-
-    conf = Configure(env)
-    # ---- check for environment variables
-    if 'CC' in os.environ:
-        conf.env.Replace(CC=os.environ['CC'])
-    else:
-        conf.env.Replace(CC='gcc')
-    print(">> Using C compiler: " + conf.env.get('CC'))
-
-    if 'CFLAGS' in os.environ:
-        conf.env.Replace(CFLAGS=os.environ['CFLAGS'])
-        print(">> Using custom C build flags")
-
-    if 'CXX' in os.environ:
-        conf.env.Replace(CXX=os.environ['CXX'])
-    else:
-        conf.env.Replace(CXX='g++')
-    print(">> Using C++ compiler: " + conf.env.get('CXX'))
-
-    if 'CXXFLAGS' in os.environ:
-        conf.env.Append(CPPFLAGS=os.environ['CXXFLAGS'])
-        print(">> Appending custom C++ build flags : " + os.environ['CXXFLAGS'])
-
-    if 'LDFLAGS' in os.environ:
-        conf.env.Append(LINKFLAGS=os.environ['LDFLAGS'])
-        print(">> Appending custom link flags : " + os.environ['LDFLAGS'])
-
-    conf.CheckCC()
-    conf.CheckCXX()
-    return conf.Finish()
-
-
-def libraryTest(env, name, lang='c'):
-    """Check the existence of a concrete C/C++ library."""
-    conf = Configure(env)
-    conf.CheckLib(name, language=lang)
-    conf.Finish()
-    # conf.Finish() returns the environment it used, and we may want to use it,
-    # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
-
-
-def manualInstall(env, name, tar=None, buildDir=None, url=None,
-                  extraActions=[], deps=[], clean=[], default=True):
-    """Just download and run extraActions.
-
-    This pseudobuilder downloads the given url, untars the resulting
-    tar file and runs extraActions on it. It also tells SCons about
-    the proper dependencies (deps).
-
-    extraActions is a list of (target, command) that should be
-    executed after the package is properly installed.
-
-    If default=False, the package will not be built unless the option
-    --with-<name> is used.
-
-    Returns the final target in extraActions.
-
-    """
-    # Use reasonable defaults.
-    tar = tar or ('%s.tgz' % name)
-    url = url or ('%s/external/%s' % (URL_BASE, tar))
-    buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
-
-    # Add the option --with-name, so the user can call SCons with this
-    # to activate it even if it is not on by default.
-    if not default:
-        AddOption('--with-%s' % name, dest=name, action='store_true',
-                  help='Activate %s' % name)
-
-    # Donload, untar, and execute any extra actions.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
-    SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
-                   cdir='software/tmp')
-    SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/tmp/%s' % buildDir)
-    lastTarget = tUntar
-
-    for target, command in extraActions:
-        lastTarget = env.Command(
-            target,
-            lastTarget,
-            Action(command, chdir='software/tmp/%s' % buildDir))
-        SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
-
-    # Clean the special generated files.
-    for cFile in clean:
-        Clean(lastTarget, cFile)
-
-    # Add the dependencies.
-    for dep in deps:
-        env.Depends(tUntar, dep)
-
-    if default or GetOption(name):
-        env.Default(lastTarget)
-
-    return lastTarget
-
 
 # Add methods so SConscript can call them.
 env.AddMethod(addLibrary, 'AddLibrary')
@@ -780,7 +849,8 @@ env.AddMethod(manualInstall, 'ManualInstall')
 env.AddMethod(compilerConfig, 'CompilerConfig')
 env.AddMethod(addPackageLibrary, 'AddPackageLibrary')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
-
+env.AddMethod(symLink, 'SymLink')
+env.AddMethod(addJavaTest, 'AddJavaTest')
 
 #  ************************************************************************
 #  *                                                                      *
