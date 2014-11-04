@@ -259,19 +259,58 @@ javaEnums = env.Alias('javaEnums',
                       env.Command('libraries/bindings/java/src/xmipp/jni/enums.changelog',
                       [File('libraries/data/xmipp_image_base.h').abspath, File('libraries/data/metadata_label.h').abspath],
                       ExtractEnumFromHeader))
-
-env.SymLink('java/lib/ij.jar', 'external/imagej')
-
 env.Default(javaEnums)
+
+ijLink = env.SymLink('java/lib/ij.jar', 'external/imagej/ij.jar')
+env.Default(ijLink)
 # --- ...to here
 
+xmippJavaJNI = env.AddJavaLibrary(
+             'XmippJNI',
+             #dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons', 'java/src/xmipp/ij/plugins/maskstoolbar'],
+             dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons'],
+             deps=['ij'],
+             )
 
+xmippUtils = env.AddJavaLibrary(
+           'XmippUtils',
+           dirs=['java/src/xmipp/utils', 'java/src/xmipp/jni/'],
+           deps=['ij', 'commons-cli-1.1'],
+           )
 
-#xmippUtils = AddJavaLibrary(
-#           'XmippUtils',
-#           dirs=['java/src/xmipp/utils'],
-#           libs=,
-#           )
+xmippIJ = env.AddJavaLibrary(
+        'XmippIJ',
+        dirs=['java/src/xmipp/ij/commons'],
+        deps=['XmippUtils'],
+        )
+
+xmippViewer = env.AddJavaLibrary(
+            'XmippViewer',
+            dirs=['java/src/xmipp/viewer'],
+            deps=['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'],
+            )
+
+xmippTest = env.AddJavaLibrary(
+          'XmippTest',
+          dirs=['java/src/xmipp/test'],
+          deps=['XmippViewer', 'junit4-4.8.2', 'core-1.1']
+          )
+
+xmippIJPlugin = env.AddJavaLibrary(
+          'XmippIJPlugin_MaskToolbar',
+          dirs=['java/src/xmipp/ij/plugins/maskstoolbar']
+          )
+print str(xmippIJPlugin[0])
+pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MaskToolbar.jar', str(xmippIJPlugin[0]))
+env.Default(pluginLink)
+
+# Java tests
+AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
+          help='Run all Java tests (not only default ones)')
+
+env.AddJavaTest('FilenameTest', default=False)
+env.AddJavaTest('ImageGenericTest', default=False)
+env.AddJavaTest('MetadataTest', default=False)
 
 # XMIPP PROGRAMS
 # 
