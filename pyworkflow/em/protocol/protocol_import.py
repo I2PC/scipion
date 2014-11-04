@@ -28,8 +28,9 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 import sys
-from os.path import exists, basename
+from os.path import exists, basename, join
 from glob import glob
+import re
 
 from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
@@ -39,95 +40,199 @@ from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, Fil
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import Volume, PdbFile, Coordinate
+from pyworkflow.em.data import Volume, PdbFile, Coordinate, Acquisition
 
 from protocol import EMProtocol
 from protocol_particles import ProtParticlePicking
 
 
 
+
+
 class ProtImport(EMProtocol):
-    """ Base class for other Import protocols. """
+    """ Base class for other Import protocols. 
+    All imports protocols will have:
+    1) Several options to import from (_getImportOptions function)
+    2) First option will always be "from files". (for this option 
+      files with a given pattern will be retrieved  and the ### will 
+      be used to mark an ID part from the filename.
+      - For each file a function to process it will be called (_importFile(fileName, fileId))
+    """
+    IMPORT_FROM_FILES = 0
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        self._defineBasicParams(form)
+        
+    def _defineBasicParams(self, form):
+        importChoices = ['files'] + self._getImportChoices()
+        filesCondition = self._getFilesCondition()
+        
+        form.addSection(label='Import')
+        form.addParam('importFrom', EnumParam, 
+                      choices=importChoices, default=self.IMPORT_FROM_FILES,
+                      label='Import from',
+                      help='Select the type of import.')
+        form.addParam('filesPath', PathParam, 
+                      condition=filesCondition,
+                      label="Files path",
+                      help="Select the files path from where do you want to import\n"
+                           "the files. The path can also contains wildcards to select\n"
+                           "files from different folders.\n"
+                           "Examples:\n"
+                           "data/day??_micrographs/ \n"
+                           "~/Particles/")
+        form.addParam('filesPattern', StringParam,
+                      label='Pattern', 
+                      condition=filesCondition,
+                      help="Select the pattern of the files to be imported.\n"
+                           "The pattern can contains standard wildcards such as:\n"
+                           "*, ?, etc ... or special ones as ### to mark some\n"
+                           "digits in the filename to be used as ID. ")
+        
+        form.addParam('copyFiles', BooleanParam, default=False, 
+                      expertLevel=LEVEL_EXPERT, 
+                      label="Copy files?",
+                      help="By default the files are not copied into\n"
+                           "the project to avoid data duplication and to save\n"
+                           "disk space. Instead of copying, symbolic links are\n"
+                           "created pointing to original files. This approach\n"
+                           "has the drawback that if the project is moved to\n"
+                           "another computer, the links needs to be restored.\n")
+        
+    #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        errors = []
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            if not self.getPattern():
+                errors.append("The path and pattern can not be both empty!!!")
+            else:
+                # Just check the number of files matching the pattern
+                self.getMatchFiles()
+                if self.numberOfFiles == 0:
+                    errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
+
+        return errors
+    
+    #--------------------------- BASE methods to be overriden ------------------
+    def _getImportChoices(self):
+        """ Return a list of possible choices
+        from which the import can be done.
+        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        """
+        return []
+    
+    def _getFilesCondition(self):
+        """ Return an string representing the condition
+        when to display the files path and pattern to grab
+        files.
+        """
+        return '(importFrom == %d)' % self.IMPORT_FROM_FILES
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
         and also replacing special character # by digit matching.
         """
-        import re
         self._idRegex = None
-        pattern = expandPattern(self.pattern.get())
+        fullPattern = join(self.filesPath.get(''), self.filesPattern.get(''))
+        pattern = expandPattern(fullPattern)
         match = re.match('[^#]*(#+)[^#]*', pattern)
+        
         if match is not None:
             g = match.group(1)
             n = len(g)
             self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
             pattern = pattern.replace(g, '[0-9]'*n)
-        else:
-            raise Exception("Importing ctf will required match micrographs ids.")
+        
         return pattern   
     
-    def _getFilePaths(self, pattern):
-        """ Return a sorted list with the paths of files"""
+    def getMatchFiles(self, pattern=None):
+        """ Return a sorted list with the paths of files that matched the pattern"""
+        if pattern is None:
+            pattern = self.getPattern()
         filePaths = glob(pattern)
         filePaths.sort()
+        self.numberOfFiles = len(filePaths)
         
         return filePaths
+    
+    def iterFiles(self):
+        """ Iterate throught the files matched with the pattern.
+        Provide the fileName and fileId.
+        """
+        filePaths = self.getMatchFiles()
+        # Set a function to copyFile or createLink
+        # depending in the user selected option 
+        if self.copyFiles:
+            self.copyOrLink = copyFile
+        else:
+            self.copyOrLink = createLink
+        
+        for fileName in filePaths:
+            if self._idRegex:
+                # Try to match the file id from filename
+                # this is set by the user by using #### format in the pattern
+                match = self._idRegex.match(fileName)
+                if match is None:
+                    raise Exception("File '%s' doesn't match the pattern '%s'" % (fileName, self.getPattern()))
+                fileId = int(match.group(1))
+            else:
+                fileId = None
+                
+            yield fileName, fileId            
 
 
 class ProtImportImages(ProtImport):
-    """Common protocol to import a set of images in the project"""
+    """Common protocol to import a set of images into the project"""
     # This label should be set in subclasses
     _label = 'None'
-    # Allow the flexibility to each sub-classes to set default
-    # value to check stack 
-    CHECKSTACK_DEFAULT = True
     # The following class property should be set in each import subclass
     # for example, if set to SetOfParticles, this will the output classes
     # It is also assumed that a function with the name _createSetOfParticles
     # exists in the EMProtocol base class
     _outputClassName = 'None'  
+    # If set to True, each binary file will be inspected to
+    # see if it is a binary stack containing more items
+    _checkStacks = True
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
-                      help=Message.TEXT_PATTERN)
-        form.addParam('checkStack', BooleanParam, expertLevel=LEVEL_EXPERT,
-                      label=Message.LABEL_CHECKSTACK, default=self.CHECKSTACK_DEFAULT)
-        form.addParam('copyToProj', BooleanParam, expertLevel=LEVEL_EXPERT, 
-                      label=Message.LABEL_COPYFILES, default=False)
-        form.addParam('voltage', FloatParam, default=200,
-                   label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
-        form.addParam('sphericalAberration', FloatParam, default=2,
-                   label=Message.LABEL_SPH_ABERRATION, help=Message.TEXT_SPH_ABERRATION)
-        form.addParam('ampContrast', FloatParam, default=0.1,
+        ProtImport._defineParams(self, form)
+        
+        group = form.addGroup('Acquisition info')
+        group.addParam('voltage', FloatParam, default=200,
+                   label=Message.LABEL_VOLTAGE, 
+                   help=Message.TEXT_VOLTAGE)
+        group.addParam('sphericalAberration', FloatParam, default=2,
+                   label=Message.LABEL_SPH_ABERRATION, 
+                   help=Message.TEXT_SPH_ABERRATION)
+        group.addParam('amplitudeContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE, help=Message.TEXT_MAGNI_RATE)
+        group.addParam('magnification', IntParam, default=50000,
+                   label=Message.LABEL_MAGNI_RATE, 
+                   help=Message.TEXT_MAGNI_RATE)
+        self.acquisitionGroup = group
         
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importImagesStep', self.getPattern(), self.checkStack.get(), 
+        self._insertFunctionStep('importImagesStep', self.getPattern(), 
                                  self.voltage.get(), self.sphericalAberration.get(), 
-                                 self.ampContrast.get(), self.magnification.get()) #, self.samplingRate.get(),
+                                 self.amplitudeContrast.get(), self.magnification.get()) #, self.samplingRate.get(),
         
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importImagesStep(self, pattern, checkStack, voltage, sphericalAberration, amplitudeContrast, magnification):
+    def importImagesStep(self, pattern, voltage, sphericalAberration, amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
         self.info("Using pattern: '%s'" % pattern)
-        filePaths = glob(pattern)
         
         createSetFunc = getattr(self, '_create' + self._outputClassName)
         imgSet = createSetFunc()
         acquisition = imgSet.getAcquisition()
+        self._fillAcquistion(acquisition)
         # Setting Acquisition properties
-        acquisition.setVoltage(voltage)
-        acquisition.setSphericalAberration(sphericalAberration)
-        acquisition.setAmplitudeContrast(amplitudeContrast)
-        acquisition.setMagnification(magnification)
+
         
         # Call a function that should be implemented by each subclass
         self._setSampling(imgSet)
@@ -137,45 +242,28 @@ class ProtImportImages(ProtImport):
         img = imgSet.ITEM_TYPE()
         img.setAcquisition(acquisition)
         n = 1
-        size = len(filePaths)
         
-        filePaths.sort()
-        
-        for i, fn in enumerate(filePaths):
-#             ext = os.path.splitext(basename(f))[1]
-            dst = self._getExtraPath(basename(fn))
-            if self.copyToProj:
-                copyFile(fn, dst)
-            else:
-                createLink(fn, dst)
+        for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            dst = self._getExtraPath(basename(fileName))
+            self.copyOrLink(fileName, dst)
             
-            if checkStack:
+            if self._checkStacks:
                 _, _, _, n = imgh.getDimensions(dst)
-            
-            if self._idRegex:
-                # Try to match the micrograph id from filename
-                # this is set by the user by using #### format in the pattern
-                match = self._idRegex.match(fn)
-                if match is None:
-                    raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
-                micId = int(match.group(1))
-            else:
-                micId = None
                 
             if n > 1:
                 for index in range(1, n+1):
                     img.cleanObjId()
-                    img.setMicId(micId)
+                    img.setMicId(fileId)
                     img.setFileName(dst)
                     img.setIndex(index)
                     imgSet.append(img)
             else:
-                img.setObjId(micId)
+                img.setObjId(fileId)
                 img.setFileName(dst)
                 imgSet.append(img)
             outFiles.append(dst)
             
-            sys.stdout.write("\rImported %d/%d" % (i+1, size))
+            sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
             
         print "\n"
@@ -188,43 +276,18 @@ class ProtImportImages(ProtImport):
         return outFiles
     
     #--------------------------- INFO functions ----------------------------------------------------
-    def getPattern(self):
-        """ Expand the pattern using environ vars or username
-        and also replacing special character # by digit matching.
-        """
-        import re
-        self._idRegex = None
-        pattern = expandPattern(self.pattern.get())
-        match = re.match('[^#]*(#+)[^#]*', pattern)
-        if match is not None:
-            g = match.group(1)
-            n = len(g)
-            self._idRegex = re.compile(pattern.replace(g, '(%s)' % ('\d'*n)))
-            pattern = pattern.replace(g, '[0-9]'*n)
-        return pattern   
-        
-    def _validate(self):
-        errors = []
-        if not self.getPattern():
-            errors.append(Message.ERROR_PATTERN_EMPTY)
-        else:
-            print "Validating pattern '%s'" % self.getPattern()
-            filePaths = glob(self.getPattern())
-        
-            if len(filePaths) == 0:
-                errors.append(Message.ERROR_PATTERN_FILES + " %s" % self.getPattern())
-
-        return errors
     
     def _summary(self):
         summary = []
         outputSet = self._getOutputSet()
         if outputSet is None:
             summary.append("Output " + self._outputClassName + " not ready yet.") 
-            if self.copyToProj:
-                summary.append("*Warning*: Import step could be take a long time due to the images are copying in the project.")
+            if self.copyFiles:
+                summary.append("*Warning*: You select to copy files into your project.\n"
+                               "This will make another copy of your data and may take \n"
+                               "more time to import. ")
         else:
-            summary.append("Import of *%d* %s from %s" % (outputSet.getSize(), self._getOutputItemName(), self.pattern.get()))
+            summary.append("Import of *%d* %s from %s" % (outputSet.getSize(), self._getOutputItemName(), self.getPattern()))
             summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
         
         return summary
@@ -256,26 +319,44 @@ class ProtImportImages(ProtImport):
     
     def _getOutputSet(self):
         return getattr(self, self._getOutputName(), None)
+    
+    def _fillAcquistion(self, acquisition):
+        """ Fill the acquition object with protocol params. """
+        acquisition.setVoltage(self.voltage.get())
+        acquisition.setSphericalAberration(self.sphericalAberration.get())
+        acquisition.setAmplitudeContrast(self.amplitudeContrast.get())
+        acquisition.setMagnification(self.magnification.get())
+        
+    def getAcquisition(self):
+        """ Build and fill an acquisition object. """
+        acquisition = Acquisition()
+        self._fillAcquistion(acquisition)
+        
+        return acquisition    
 
 
 class ProtImportMicBase(ProtImportImages):
     """ Just to have a base class to both 
     ProtImportMicrographs and ProtImportMovies
     """
-    CHECKSTACK_DEFAULT = False
+    _checkStacks = False
     
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
-        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label=Message.LABEL_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
-                   help=Message.TEXT_SAMP_MODE)
-        form.addParam('samplingRate', FloatParam, default=1, 
-                   label=Message.LABEL_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, help=Message.TEXT_SAMP_RATE)
-        form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label=Message.LABEL_SCANNED,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        group = self.acquisitionGroup
+        group.addParam('samplingRateMode', EnumParam, 
+                       choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
+                       default=SAMPLING_FROM_IMAGE,
+                       label=Message.LABEL_SAMP_MODE,
+                       help=Message.TEXT_SAMP_MODE)
+        group.addParam('samplingRate', FloatParam,  allowsNull=True,
+                       condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, 
+                       label=Message.LABEL_SAMP_RATE,
+                       help=Message.TEXT_SAMP_RATE)
+        group.addParam('scannedPixelSize', FloatParam, default=7.0,
+                       condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER,
+                       label=Message.LABEL_SCANNED,
+                       help='')
         
     def _setSampling(self, micSet):
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
@@ -288,8 +369,60 @@ class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
     _label = 'import micrographs'
     _outputClassName = 'SetOfMicrographs' 
-    pass
+    
+    IMPORT_FROM_XMIPP3 = 1
+    IMPORT_FROM_EMX = 2
 
+    def _getImportChoices(self):
+        """ Return a list of possible choices
+        from which the import can be done.
+        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        """
+        return ['xmipp3', 'emx']
+    
+    def _defineBasicParams(self, form):
+        ProtImportMicBase._defineBasicParams(self, form)
+        form.addParam('micrographsMd', PathParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      label='Micrographs metadata file',
+                      help="Select the micrographs Xmipp metadata file.\n"
+                           "It is usually a _micrograph.xmd_ file result\n"
+                           "from import, preprocess or downsample protocols.")
+        form.addParam('acquisitionFromXmd', BooleanParam, default=True,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      label='Read acquisition from Metadatas?', 
+                      help='If you set to _Yes_, some acquistion parameters\n'
+                           'will try to be recovered from the _microscope.xmd_\n'
+                           'and _acquisition_info.xmd_\n')
+        
+        form.addParam('micrographsEMX', PathParam,
+              condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+              label='Input EMX file',
+              help="Select the EMX file containing micrographs information.\n"
+                   "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
+        form.addParam('acquisitionFromEmx', BooleanParam, default=True,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      label='Read acquisition from EMX?', 
+                      help='If you set to _Yes_, the acquistion parameters\n'
+                           'will be recovered from the EMX file.')
+
+    def _insertAllSteps(self):
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            ProtImportMicBase._insertAllSteps(self)
+        elif self.importFrom == self.IMPORT_FROM_EMX:
+            self._insertFunctionStep('importFromEmxStep', self.micrographsEMX.get())
+            
+    def importFromEmxStep(self, emxFile):
+        from pyworkflow.em.packages.emxlib import EmxImport
+        emx = EmxImport()
+        emx.importData(self, emxFile)
+        
+    def importFromXmippStep(self, micrographsMd):
+        from pyworkflow.em.packages.xmipp3.convert import XmippImport
+        xi = XmippImport(self)
+        xi.importMicrographs(micrographsMd)
+        
+        
 
 class ProtImportMovies(ProtImportMicBase):
     """Protocol to import a set of movies (from direct detector cameras) to the project"""
@@ -315,7 +448,8 @@ class ProtImportParticles(ProtImportImages):
         
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
-        form.addParam('samplingRate', FloatParam,
+        group = self.acquisitionGroup
+        group.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
         
     def _setSampling(self, imgSet):
@@ -427,16 +561,6 @@ class ProtImportVolumes(ProtImport):
         
         return summary
     
-    def _validate(self):
-        errors = []
-        if not self.getPattern():
-            errors.append(Message.ERROR_PATTERN_EMPTY)
-        
-        if self._getNumberFilePaths(self.pattern.get()) == 0:
-                errors.append(Message.ERROR_PATTERN_FILES)
-
-        return errors
-
 
 class ProtImportPdb(ProtImport):
     """Protocol to import a set of pdb volumes to the project"""
