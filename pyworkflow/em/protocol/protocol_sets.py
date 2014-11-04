@@ -342,7 +342,7 @@ class ProtUnionSet(ProtSets):
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
 
         # Keep original ids until we find a conflict. From then on, use new ids.
-        usedIds = []  # to keep track of the object ids we have already seen
+        usedIds = set()  # to keep track of the object ids we have already seen
         cleanIds = False
         for itemSet in self.inputSets:
             for obj in itemSet.get():
@@ -356,7 +356,7 @@ class ProtUnionSet(ProtSets):
                     obj.cleanObjId()
                     cleanIds = True  # from now on, always clean the ids
                 else:
-                    usedIds.append(objId)
+                    usedIds.add(objId)
                 outputSet.append(obj)
 
         self._defineOutputs(outputSet=outputSet)
