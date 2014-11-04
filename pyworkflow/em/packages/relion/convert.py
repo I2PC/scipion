@@ -33,7 +33,7 @@ This module contains converter functions that will serve to:
 import os
 from os.path import join
 from pyworkflow.utils import Environ
-from pyworkflow.utils.path import createLink, cleanPath, copyFile
+from pyworkflow.utils.path import createLink, cleanPath, copyFile, findRootFrom
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.data import SetOfClasses2D, SetOfClasses3D, SetOfParticles
 from constants import *
@@ -322,17 +322,11 @@ def getMdFirstRow(starfile):
 
 def findImagesPath(starFile):
     """ Find the path of the images relative to some star file. """
-    absPath = os.path.dirname(os.path.abspath(starFile))
     row = getMdFirstRow(starFile)
     _, imgFile = relionToLocation(row.getValue(xmipp.MDL_IMAGE))
     
-    while absPath is not None and absPath != '/':
-        if os.path.exists(os.path.join(absPath, imgFile)):
-            return absPath #os.path.relpath(absPath)
-        absPath = os.path.dirname(absPath)
-        
-    return None
-
+    return findRootFrom(starFile, imgFile)
+    
 
 def prependToFileName(imgRow, prefixPath):
     """ Prepend some root name to imageRow filename. """
