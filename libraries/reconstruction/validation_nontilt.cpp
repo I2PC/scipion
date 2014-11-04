@@ -57,10 +57,11 @@ void ProgValidationNonTilt::run()
     //sprintf(buffer, "xmipp_reconstruct_significant -i %s  --initvolumes %s --odir %s --sym  %s --iter 1 --alpha0 %f --angularSampling %f",fnIn.c_str(), fnInit.c_str(),fnDir.c_str(),fnSym.c_str(),alpha0,angularSampling);
     //system(buffer);
 
-    MetaData md,mdOut,mdOut2,tempMd2,mdWeight;
-    FileName fnMd,fnMdProj,fnOut,fnFSC,fnOut2;
+    MetaData md,mdOut,mdOut2,tempMd2,mdProjMatch;
+    FileName fnMd,fnMdProj,fnMdProj2,fnOut,fnFSC,fnOut2;
     fnMd = fnDir+"/angles_iter01_00.xmd";
     fnMdProj = fnDir+"/images_iter01_00.xmd";
+    fnMdProj2 = fnDir+"/images_iter01_filtered.xmd";
     fnOut = fnDir+"/clusteringTendency.xmd";
     fnOut2 = fnDir+"/validation.xmd";
     fnFSC = fnDir+"/fsc.xmd";
@@ -70,6 +71,8 @@ void ProgValidationNonTilt::run()
     size_t maxNImg;
     size_t sz = md.size();
     md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+
+    mdProjMatch.read(fnMdProj);
 
     String expression;
     MDRow row,row2;
@@ -84,10 +87,13 @@ void ProgValidationNonTilt::run()
     double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
     double validation = 0;
 
+    mdProjMatch.addLabel(MDL_ENABLED,0);
+
     init_progress_bar(maxNImg);
+	MDIterator __iter(mdProjMatch);
+
     for (size_t i=0; i<=maxNImg;i++)
     {
-
     	MetaData tempMd;
         std::vector<double> sum_u(nSamplesRandom);
         std::vector<double> sum_w(nSamplesRandom);
@@ -117,6 +123,8 @@ void ProgValidationNonTilt::run()
 
         if ( P > 1)
         	validation++;
+        else
+        	mdProjMatch.setValue(MDL_ENABLED,0,__iter.objId);
 
         sum_u.clear();
 		sum_w.clear();
@@ -124,16 +132,20 @@ void ProgValidationNonTilt::run()
 		H.clear();
 		tempMd.clear();
         progress_bar(i+1);
+        __iter.moveNext();
     }
 
-    validation /= maxNImg;
+    validation /= (maxNImg+1);
     row2.setValue(MDL_IMAGE,fnInit);
     row2.setValue(MDL_WEIGHT,validation);
     mdOut2.addRow(row2);
 
     mdOut.write(fnOut);
     mdOut2.write(fnOut2);
+    mdProjMatch.removeDisabled();
+    mdProjMatch.write(fnMdProj2);
 
+    ////////
     FileName fnVolume=fnDir+"/volume_projMatch.vol";
     String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnMdProj.c_str(),fnVolume.c_str(),fnSym.c_str());
     String cmd=(String)"xmipp_reconstruct_fourier "+args;
@@ -148,9 +160,23 @@ void ProgValidationNonTilt::run()
     cmd=(String)"xmipp_transform_mask "+args;
     if (system(cmd.c_str())==-1)
         REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+    /////////
+    /////////
+    FileName fnVolumefilt=fnDir+"/volume_projMatch_filtered.vol";
+    args=formatString("-i %s -o %s --sym %s --weight -v 0",fnMdProj2.c_str(),fnVolumefilt.c_str(),fnSym.c_str());
+    cmd=(String)"xmipp_reconstruct_fourier "+args;
 
-    FileName fnVolumeSig=fnDir+"/volume_iter01_00.vol";
-    sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumeSig.c_str(),sampling_rate,fnFSC.c_str());
+    if (system(cmd.c_str())==-1)
+       REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+    getImageSize(fnVolumefilt,Xdim,Ydim,Zdim,Ndim);
+    args=formatString("-i %s --mask circular %d -v 0",fnVolumefilt.c_str(),-Xdim/2);
+    cmd=(String)"xmipp_transform_mask "+args;
+    if (system(cmd.c_str())==-1)
+        REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+    //////////
+
+    sprintf(buffer, "xmipp_resolution_fsc --ref %s -i %s -s %f -o %s",fnVolume.c_str(),fnVolumefilt.c_str(),sampling_rate,fnFSC.c_str());
     system(buffer);
 
     FileName fnVolumekk1=fnDir+"/kk1.vol";
@@ -158,7 +184,7 @@ void ProgValidationNonTilt::run()
     system(buffer);
 
     FileName fnVolumekk2=fnDir+"/kk2.vol";
-    sprintf(buffer, "xmipp_transform_filter -i %s -o %s --fourier low_pass %f",fnVolumeSig.c_str(),fnVolumekk2.c_str(),0.05);
+    sprintf(buffer, "xmipp_transform_filter -i %s -o %s --fourier low_pass %f",fnVolumefilt.c_str(),fnVolumekk2.c_str(),0.05);
     system(buffer);
 
     FileName fnVolumeDiff=fnDir+"/diffVolume.vol";
