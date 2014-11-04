@@ -38,7 +38,9 @@ import numpy
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt
+from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt,\
+    findRootFrom
+from utils import getMdFirstRow
 
 
 # This dictionary will be used to map
@@ -1164,3 +1166,57 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         
     clsSet.write()
     
+    
+class XmippImport():
+    """ Class used to import different kind of objects
+    from Xmipp projects into Scipion.
+    """
+    def __init__(self, protocol):
+        self.protocol = protocol
+    
+    def importMicrographs(self, micsMd):
+        """ Import a SetOfMicrographs from a given micrograph metadata.
+        (usually the result "micrographs.xmd" from Xmipp protocols)
+        If the CTF is found, a SetOfCTF will be also created.
+        Params:
+            protocol: the protocol that will be used to register
+                the outputs.
+            micsMd: the metadata with micrographs.
+        """
+        self._findPathAndCtf(micsMd)
+        micSet = self.protocol._createSetOfMicrographs()
+        # Read the micrographs from the 'micsMd' metadata
+        # but fixing the filenames with new ones (linked or copy to extraDir)
+        readSetOfMicrographs(micsMd, micSet, 
+                           preprocessImageRow=self._preprocessImageRow, 
+                           magnification=self.magnification.get())
+        self.protocol._defineOutputs(outputMicrographs=micSet)
+        
+    def _findPathAndCtf(self, micsMd):
+        """ Find the relative path from which the micrographs exists
+        repect to the metadata location. Also check if it contains
+        CTF information and their relative root.
+        """
+        row = getMdFirstRow(micsMd)
+        self._micsPath = findRootFrom(micsMd, row.getValue(xmipp.MDL_MICROGRAPH))
+        if self._micsPath is None:
+            self.protocol.warning("Micrographs binary data was not found from metadata: %s" % micsMd)
+        self._hasCtf = row.containsLabel(xmipp.MDL_CTF_MODEL)
+    
+        
+    def _preprocessImageRow(self, img, imgRow):
+        if self._micsPath:
+            # Create a link or copy files to extraPath
+            # and update the Row properly
+            micFile = imgRow.getValue(xmipp.MDL_MICROGRAPH)
+            micBase = basename(micFile)
+            micDst = self.protocol._getExtraPath(micBase)
+            self.protocol.copyOrLink(join(self._micsPath, micFile), micDst)
+            imgRow.setValue(xmipp.MDL_MICROGRAPH, micDst)
+    
+    def _postprocessImageRow(self, img, imgRow):
+        """ Since relion_preprocess will runs in its working directory
+        we need to modify the default image path (from project dir)
+        and make them relative to run working dir.
+        """
+        pass  
