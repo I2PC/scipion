@@ -106,24 +106,22 @@ class ProjectManagerWindow(ProjectBaseWindow):
         
         self.switchView(VIEW_PROJECTS)
 
+    #
+    # The next functions are callbacks from the menu options.
+    # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+    #
     def on_browse_files(self):
-        # This function is called when "Project->Browse Files" is
-        # selected in the menu.
-        # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
-
+        # Project -> Browse Files
+        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
         # I'd like to do something like
         #   from pyworkflow.gui.browser import FileBrowserWindow
         #   FileBrowserWindow("Browsing: " + path, path=path).show()
         # but it doesn't work because the images are not shared by the
         # Tk() instance or something like that.
-        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
 
     def on_remove_temporary_files(self):
-        # This function is called when "Project->Remove Temporary Files" is
-        # selected in the menu.
-        # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
-
+        # Project -> Remove Temporary Files
         tmpPath = os.environ['SCIPION_TMP']
         n = 0
         try:
@@ -132,7 +130,11 @@ class ProjectManagerWindow(ProjectBaseWindow):
                 if os.path.isfile(fpath):
                     os.remove(fpath)
                     n += 1
-
+                # TODO: think what to do with directories. Delete? Report?
             self.showInfo('Deleted content of %s -- %d file(s).' % (tmpPath, n))
         except Exception as e:
             self.showError(str(e))
+
+    def on_exit(self):
+        # Project -> Exit
+        self.close()
