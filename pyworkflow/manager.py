@@ -91,16 +91,16 @@ class Manager(object):
         proj = Project(self.getProjectPath(projId))
         proj.load()
         return proj
-        
+
     def deleteProject(self, projectName):
         cleanPath(self.getProjectPath(projectName))
-        
+
+    def renameProject(self, oldName, newName):
+        os.rename(self.getProjectPath(oldName), self.getProjectPath(newName))
+
     def hasProject(self, projectName):
         """Return True if exists a project with projectName"""
         for projInfo in self.listProjects():
             if projectName == projInfo.projName:
                 return True
         return False
-    
-        
-        
