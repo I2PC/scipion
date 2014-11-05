@@ -340,13 +340,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
 
     protected void enableActions() {
-        boolean isenabled = data.allowGallery();
+        boolean isenabled = true;
         Color color = isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey;
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         if(cmdbutton != null)
         {
             
-            cmdbutton.setEnabled(isenabled);
+            cmdbutton.setVisible(isenabled);
             cmdbutton.setBackground(color);
             cmdbutton.setForeground(forecolor);
         }
@@ -355,10 +355,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             isenabled = data.hasClasses() && !data.isVolumeMode();
             color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
-            classcmdbutton.setEnabled( isenabled);
+            classcmdbutton.setVisible( isenabled);
             classcmdbutton.setBackground(color);
             classcmdbutton.setForeground(forecolor);
-            representativesbt.setEnabled( isenabled);
+            representativesbt.setVisible( isenabled);
             representativesbt.setBackground(color);
             representativesbt.setForeground(forecolor);
         }

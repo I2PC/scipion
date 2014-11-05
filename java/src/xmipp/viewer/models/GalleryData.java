@@ -467,9 +467,9 @@ public class GalleryData {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender)// favor mdl_image over mdl_micrograph
+                if (ciFirstRender == null && ci.allowRender)
                     ciFirstRender = ci;
-                if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender && ci.visible) 
+                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible) 
                     ciFirstRenderVisible = ci;
             }
             if (ciFirstRenderVisible != null) {
