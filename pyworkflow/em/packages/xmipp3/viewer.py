@@ -296,7 +296,7 @@ class XmippViewer(Viewer):
             self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
 
         elif issubclass(cls, XmippProtConvertToPseudoAtoms):
-            self._views.append(CommandView(obj._getPath('chimera.cmd')))
+            self._views.append(ChimeraView(obj.outputPdb._chimeraScript))
             
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
