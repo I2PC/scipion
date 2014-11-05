@@ -32,7 +32,9 @@ It is composed by three panels:
 3. Summary/Details
 """
 
+import os
 from os.path import basename
+import subprocess
 
 import pyworkflow as pw
 from pyworkflow.manager import Manager
@@ -42,9 +44,9 @@ from pyworkflow.gui import Message
 from pyworkflow.gui.plotter import Plotter
 
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-   
-   
-   
+
+
+
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
     def __init__(self, path, master=None):
@@ -104,3 +106,11 @@ class ProjectManagerWindow(ProjectBaseWindow):
         
         self.switchView(VIEW_PROJECTS)
 
+    def on_browse_files(self):
+        # I'd like to do something like
+        #   from pyworkflow.gui.browser import FileBrowserWindow
+        #   FileBrowserWindow("Browsing: " + path, path=path).show()
+        # but it doesn't work because the images are not shared by the
+        # Tk() instance or something like that.
+        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
