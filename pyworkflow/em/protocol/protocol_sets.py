@@ -383,16 +383,11 @@ class ProtUnionSet(ProtSets):
         return []  # no errors
 
     def _summary(self):
-        summary = []
         if not hasattr(self, 'outputSet'):
-            summary.append("Protocol has not finished yet.")
+            return ["Protocol has not finished yet."]
         else:
-            m = "We have merged the following sets: "
-            #inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in self.inputSets:
-                m += "%s, " % itemSet.get().getNameId()
-            summary.append(m[:-2])
-        return summary
+            return ["We have merged the following sets:",
+                    ", ".join(x.get().getNameId() for x in self.inputSets)]
 
     def _methods(self):
         return self._summary()
@@ -437,8 +432,9 @@ class ProtSplitSet(ProtSets):
         # to different subsets.
         elements = self.inputSet.get()
 
-        ns = [len(elements) // n + (1 if i < len(elements) % n else 0) for i in range(n)]
-        pos, i = 0, 0  # index of current bucket and index of position inside it
+        ns = [len(elements) // n + (1 if i < len(elements) % n else 0)
+              for i in range(n)]  # number of elements in each subset
+        pos, i = 0, 0  # index of current subset and index of position inside it
         for elem in elements.__iter__(random=self.randomize):
             if i >= ns[pos]:
                 pos += 1
@@ -460,8 +456,15 @@ class ProtSplitSet(ProtSets):
             errors.append("The number of subsets requested is greater than")
             errors.append("the number of elements in the input set.")
         return errors   
-    
-    
+
+    def _summary(self):
+        if not any(x.startswith('output') for x in dir(self)):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["We have split the set %s in %d sets." %
+                    (self.inputSet.getName(), self.numberOfSets.get())]
+
+
 class ProtSubSet(ProtSets):
     """    
     Create a set with the elements of an original set that are also
@@ -520,7 +523,7 @@ class ProtSubSet(ProtSets):
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
         self._defineSourceRelation(inputSubSet, outputSet)
-        
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
@@ -556,3 +559,12 @@ class ProtSubSet(ProtSets):
                         "%s and %s." % (c1, c2)]
 
         return []  # no errors
+
+    def _summary(self):
+        key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
+        if not hasattr(self, key):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["The elements of %s that also are referenced in %s" %
+                    (self.inputFullSet.getName(), self.inputSubSet.getName()),
+                    "are now in %s" % getattr(self, key).getName()]
