@@ -36,6 +36,7 @@ import time
 from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.utils import redStr, greenStr
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -703,7 +704,8 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info("STARTED: %s, step %d" % (step.funcName.get(), step._index))
+        self.info(redStr("STARTED") + ": %s, step %d" %
+                  (step.funcName.get(), step._index))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -715,7 +717,7 @@ class Protocol(Step):
             doContinue = False
         elif step.isFailed():
             doContinue = False
-            errorMsg = "Protocol failed: " + step.getErrorMessage()
+            errorMsg = redStr("Protocol failed: " + step.getErrorMessage())
             self.setFailed(errorMsg)
             self.error(errorMsg)
         self.lastStatus = step.getStatus()
@@ -724,8 +726,9 @@ class Protocol(Step):
         self._stepsDone.increment()
         self._store(self._stepsDone)
         
-        self.info("%s: %s, step %d" % (step.getStatus().upper(), step.funcName.get(), step._index))
-        
+        self.info(redStr(step.getStatus().upper()) + ": %s, step %d" %
+                  (step.funcName.get(), step._index))
+
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
@@ -851,7 +854,7 @@ class Protocol(Step):
         """
         self.__initLogs()
         
-        self.info('RUNNING PROTOCOL -----------------')
+        self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
@@ -866,7 +869,8 @@ class Protocol(Step):
     def _endRun(self):
         """ Print some ending message and close some files. """   
         self._store()
-        self.info('------------------- PROTOCOL ' + self.getStatusMessage().upper())
+        self.info(greenStr('------------------- PROTOCOL ' +
+                           self.getStatusMessage().upper()))
         self.__closeLogs()
         
     def __initLogs(self):

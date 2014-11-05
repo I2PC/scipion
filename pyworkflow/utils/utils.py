@@ -302,7 +302,7 @@ def getColorStr(text, color, bold=False):
      color: red or green
      bold: bold the text
     """
-    if not sys.stdout.isatty():
+    if envVarOn('SCIPION_SAFE_COLORS') and not sys.stdout.isatty():
         return text
     
     colors = {'gray': 30, 'red': 31, 'green': 32, 'yellow': 33, 'blue': 34, 'magenta': 35, 'cyan': 36}

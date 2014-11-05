@@ -49,6 +49,8 @@ class Message():
     MESSAGE_CREATE_PROJECT = 'Are you sure to *DELETE* the project and all its *DATA*?'
     LABEL_DELETE_PROJECT = 'Delete Project'
     TITLE_DELETE_PROJECT = 'Confirm project deletion'
+    LABEL_RENAME_PROJECT = 'Rename Project'
+    TITLE_RENAME_PROJECT = 'Confirm project renaming'
     LABEL_MODIFIED = 'Modified: '
     
     # Project Content Template
