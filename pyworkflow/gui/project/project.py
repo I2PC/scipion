@@ -118,3 +118,21 @@ class ProjectManagerWindow(ProjectBaseWindow):
         # Tk() instance or something like that.
         subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
                           'browser', 'dir', os.environ['SCIPION_USER_DATA']])
+
+    def on_remove_temporary_files(self):
+        # This function is called when "Project->Remove Temporary Files" is
+        # selected in the menu.
+        # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+
+        tmpPath = os.environ['SCIPION_TMP']
+        n = 0
+        try:
+            for fname in os.listdir(tmpPath):
+                fpath = "%s/%s" % (tmpPath, fname)
+                if os.path.isfile(fpath):
+                    os.remove(fpath)
+                    n += 1
+
+            self.showInfo('Deleted content of %s -- %d file(s).' % (tmpPath, n))
+        except Exception as e:
+            self.showError(str(e))
