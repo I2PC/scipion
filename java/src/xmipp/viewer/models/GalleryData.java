@@ -444,7 +444,7 @@ public class GalleryData {
             ColumnInfo ciFirstRenderVisible = null;
             int inputRenderLabel = MDLabel.MDL_UNDEFINED;
 
-            if (renderLabel.equalsIgnoreCase("first")) {
+            if (!renderLabel.equalsIgnoreCase("first")) {
                 inputRenderLabel = MetaData.str2Label(renderLabel);
             }
 
