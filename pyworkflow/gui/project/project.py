@@ -107,6 +107,10 @@ class ProjectManagerWindow(ProjectBaseWindow):
         self.switchView(VIEW_PROJECTS)
 
     def on_browse_files(self):
+        # This function is called when "Project->Browse Files" is
+        # selected in the menu.
+        # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+
         # I'd like to do something like
         #   from pyworkflow.gui.browser import FileBrowserWindow
         #   FileBrowserWindow("Browsing: " + path, path=path).show()
