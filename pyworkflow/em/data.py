@@ -1215,14 +1215,48 @@ class SetOfClassesVol(SetOfClasses3D):
     pass
     
 
-class NormalModes(EMObject):
-    """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **kwargs):
+class NormalMode(EMObject):
+    """ Store normal mode information. """
+    def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
-        self._filename = String(filename)
+        self._modeFile = String(kwargs.get('modeFile', None))
+        self._collectivity = Float(kwargs.get('collectivity', None))
+        self._score = Float(kwargs.get('score', None))
         
-    def getFileName(self):
-        return self._filename.get()
+    def getModeFile(self):
+        return self._modeFile.get()
+    
+    def setModeFile(self, value):
+        self._modeFile.set(value)
+        
+    def getCollectivity(self):
+        return self._collectivity.get()
+    
+    def setCollectivity(self, value):
+        self._collectivity.set(value)
+        
+    def getScore(self):
+        return self._score.get()
+    
+    def setScore(self, value):
+        self._score.set(value)
+        
+    
+class SetOfNormalModes(EMSet):
+    """ Set containing NormalMode items. """
+    ITEM_TYPE = NormalMode
+    
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
+        # Store a pointer to the PdbFile object
+        # from which this normal modes where computed.
+        self._pdbPointer = Pointer()
+        
+    def setPdb(self, pdbFile):
+        self._pdbPointer.set(pdbFile)
+        
+    def getPdb(self):
+        return self._pdbPointer.get()
 
 
 class Movie(Micrograph):
