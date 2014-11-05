@@ -154,6 +154,10 @@ class ProjectBaseWindow(Window):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
+    def on_exit(self):
+        # Project -> Exit
+        self.close()
+
     def on_online_help(self):
         # Help -> Online help
         webbrowser.open_new("http://scipionwiki.cnb.csic.es/")

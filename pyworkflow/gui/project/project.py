@@ -90,8 +90,37 @@ class ProjectWindow(ProjectBaseWindow):
         self.generalCfg = self.settings.getConfig()
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
-        
-        
+
+    #
+    # The next functions are callbacks from the menu options.
+    # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+    #
+    def on_browse_files(self):
+        # Project -> Browse files
+        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                          'browser', 'dir', self.project.path])
+        # I'd like to do something like
+        #   from pyworkflow.gui.browser import FileBrowserWindow
+        #   FileBrowserWindow("Browsing: " + path, path=path).show()
+        # but it doesn't work because the images are not shared by the
+        # Tk() instance or something like that.
+
+    def on_remove_temporary_files(self):
+        # Project -> Remove temporary files
+        tmpPath = os.path.join(self.project.path, self.project.tmpPath)
+        n = 0
+        try:
+            for fname in os.listdir(tmpPath):
+                fpath = "%s/%s" % (tmpPath, fname)
+                if os.path.isfile(fpath):
+                    os.remove(fpath)
+                    n += 1
+                # TODO: think what to do with directories. Delete? Report?
+            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
+        except Exception as e:
+            self.showError(str(e))
+
+
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
     def __init__(self, **args):
@@ -140,7 +169,3 @@ class ProjectManagerWindow(ProjectBaseWindow):
         self.showInfo("I did nothing, because I don't know what I'm supposed "
                       "to do here.")
         # TODO: well, something, clearly.
-
-    def on_exit(self):
-        # Project -> Exit
-        self.close()
