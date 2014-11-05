@@ -195,7 +195,7 @@ class ChimeraView(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
         CommandView.__init__(self, 'chimera "%s" &' % inputFile,
-                             env=getChimeraEnviron())
+                             env=getChimeraEnviron(), **kwargs)
         
         
 class ChimeraViewer(Viewer):
@@ -244,7 +244,7 @@ class VmdView(CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
         CommandView.__init__(self, 'vmd "%s"' % inputFile,
-                             env=getVmdEnviron())
+                             env=getVmdEnviron(), **kwargs)
             
     def show(self):
         runJob(None, '', self._cmd, env=getVmdEnviron())
