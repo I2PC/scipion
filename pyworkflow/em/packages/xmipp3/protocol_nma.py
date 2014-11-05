@@ -246,5 +246,7 @@ class XmippProtNMA(XmippProtNMABase):
                             collectivity=md.getValue(xmipp.MDL_NMA_COLLECTIVITY, objId),
                             score=md.getValue(xmipp.MDL_NMA_SCORE, objId))
             nmSet.append(nm)
+        inputPdb = self.inputStructure.get()
+        nmSet.setPdb(inputPdb)
         self._defineOutputs(outputModes=nmSet)
-        self._defineSourceRelation(self.inputStructure.get(), nmSet)
+        self._defineSourceRelation(inputPdb, nmSet)
