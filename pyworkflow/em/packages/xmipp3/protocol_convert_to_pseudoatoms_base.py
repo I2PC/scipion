@@ -70,13 +70,13 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
                            'more pseudoatoms.')        
              
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertMaskStep(self,fnVol,prefix=''):
+    def _insertMaskStep(self, fnVol, prefix=''):
         """ Check the mask selected and insert the necessary steps.
         Return the mask filename if needed.
         """
         fnMask = ''
         if self.maskMode == NMA_MASK_THRE:
-            fnMask = self._getExtraPath('mask%s.vol'%prefix)
+            fnMask = self._getExtraPath('mask%s.vol' % prefix)
             maskParams = '-i %s -o %s --select below %f --substitute binarize' % (fnVol, fnMask, self.maskThreshold.get())
             self._insertRunJobStep('xmipp_transform_threshold', maskParams)
         elif self.maskMode == NMA_MASK_FILE:
@@ -85,10 +85,9 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
         
         
     #--------------------------- STEPS functions --------------------------------------------
-    def convertToPseudoAtomsStep(self, inputFn, fnMask, prefix=''):
+    def convertToPseudoAtomsStep(self, inputFn, fnMask, sampling, prefix=''):
         pseudoatoms = 'pseudoatoms%s'%prefix
         outputFn = self._getPath(pseudoatoms)
-        sampling = self.sampling
         sigma = sampling * self.pseudoAtomRadius.get() 
         targetErr = self.pseudoAtomTarget.get()
         nthreads = self.numberOfThreads.get()
@@ -102,13 +101,22 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
             moveFile(self._getPath(pseudoatoms+suffix), self._getExtraPath(pseudoatoms+suffix))
         cleanPattern(self._getPath(pseudoatoms+'_*'))
         
-    def createChimeraScriptStep(self,inputVolume,fnIn,prefix=''):
-        pseudoatoms = 'pseudoatoms%s'%prefix
-        radius = self.sampling * self.pseudoAtomRadius.get() 
+    def createChimeraScript(self, volume, pdb):
+        """ Create a chimera script to visualize a pseudoatoms pdb
+        obteined from a given EM 3d volume.
+        A property will be set in the pdb object to 
+        store the location of the script.
+        """
+        pseudoatoms = pdb.getFileName()
+        scriptFile = pseudoatoms + '_chimera.cmd'
+        pdb._chimeraScript = String(scriptFile)
+        sampling = volume.getSamplingRate()
+        radius = sampling * self.pseudoAtomRadius.get() 
+        fnIn = volume.getFileName()
         localInputFn = self._getBasePath(fnIn)
         createLink(fnIn, localInputFn)
-        fhCmd = open(self._getPath("chimera%s.cmd"%prefix),'w')
-        fhCmd.write("open %s.pdb\n"%pseudoatoms)
+        fhCmd = open(scriptFile, 'w')
+        fhCmd.write("open %s\n" % basename(pseudoatoms))
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
         fhCmd.write("setattr a radius %f\n" % radius)
         fhCmd.write("represent sphere\n")
@@ -117,8 +125,8 @@ class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
             self.maskThreshold.get()
-        xdim = inputVolume.getDim()[0]
+        xdim = volume.getDim()[0]
         origin = xdim / 2
-        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, self.sampling, origin))
+        fhCmd.write("volume #1 level %f transparency 0.5 voxelSize %f originIndex %d\n" % (threshold, sampling, origin))
         fhCmd.close()
      
