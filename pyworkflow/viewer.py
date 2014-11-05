@@ -63,7 +63,6 @@ class CommandView(View):
         
     def show(self):
         from subprocess import call
-        print "using self._cwd: ", self._cwd
         call(self._cmd, shell=True, env=self._env, cwd=self._cwd)
         
 
