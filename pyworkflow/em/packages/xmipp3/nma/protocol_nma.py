@@ -29,6 +29,8 @@
 
 from protocol_nma_base import *
         
+        
+        
 class XmippProtNMA(XmippProtNMABase):
     """ Flexible angular alignment using normal modes """
     _label = 'nma analysis'

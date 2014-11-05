@@ -34,12 +34,12 @@ _references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
 from convert import *
+from nma import *
+
 from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
-from viewer_nma import XmippNMAViewer
-from viewer_nma_alignment import XmippAlignmentNMAViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
@@ -73,9 +73,7 @@ from protocol_mask import XmippProtMaskVolumes
 from protocol_micrographs_import import ProtXmippMicsImport
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_alignment import ProtMovieAlignment
-from protocol_nma_alignment import XmippProtAlignmentNMA
-#from protocol_nma_choose import XmippProtNMAChoose
-from protocol_nma import XmippProtNMA
+
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick import XmippProtParticlePicking 
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs

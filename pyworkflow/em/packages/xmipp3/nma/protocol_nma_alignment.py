@@ -34,9 +34,9 @@ from glob import glob
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
 from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-from convert import writeSetOfParticles
-import xmipp
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.protocol.params import NumericRangeParam
+import xmipp 
 
 NMA_ALIGNMENT_WAV = 0
 NMA_ALIGNMENT_PROJ = 1    

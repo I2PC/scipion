@@ -59,10 +59,12 @@ class CommandView(View):
         View.__init__(self)
         self._cmd = cmd
         self._env = kwargs.get('env', None)
+        self._cwd = kwargs.get('cwd', None)
         
     def show(self):
         from subprocess import call
-        call(self._cmd, shell=True, env=self._env)
+        print "using self._cwd: ", self._cwd
+        call(self._cmd, shell=True, env=self._env, cwd=self._cwd)
         
 
 MSG_INFO = 0
