@@ -297,12 +297,18 @@ xmippTest = env.AddJavaLibrary(
           )
 
 xmippIJPlugin = env.AddJavaLibrary(
-          'XmippIJPlugin_MaskToolbar',
+          'XmippIJPlugin_MasksToolbar',
           dirs=['java/src/xmipp/ij/plugins/maskstoolbar']
           )
-print str(xmippIJPlugin[0])
-pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MaskToolbar.jar', str(xmippIJPlugin[0]))
+
+pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', str(xmippIJPlugin[0]))
 env.Default(pluginLink)
+
+env2 = Environment()
+env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('java/lib').abspath,'*.jar'))))
+javaExtraFileTypes = env2.Java('java/build/HandleExtraFileTypes.class', 'java/src/HandleExtraFileTypes.java')
+env2.Depends(javaExtraFileTypes, 'java/lib/XmippViewer.jar')
+env2.Default(javaExtraFileTypes)
 
 # Java tests
 AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
