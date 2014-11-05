@@ -131,9 +131,15 @@ class ProjectManagerWindow(ProjectBaseWindow):
                     os.remove(fpath)
                     n += 1
                 # TODO: think what to do with directories. Delete? Report?
-            self.showInfo('Deleted content of %s -- %d file(s).' % (tmpPath, n))
+            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
         except Exception as e:
             self.showError(str(e))
+
+    def on_clean_project(self):
+        # Project -> Clean Project
+        self.showInfo("I did nothing, because I don't know what I'm supposed "
+                      "to do here.")
+        # TODO: well, something, clearly.
 
     def on_exit(self):
         # Project -> Exit
