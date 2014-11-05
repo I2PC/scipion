@@ -355,7 +355,7 @@ class Window():
                 def callback(name):
                     """Return a callback function named "on_<name>"."""
                     funcName = "on_%s" % name.lower().replace(" ", "_")
-                    return lambda: getattr(self, funcName)
+                    return lambda: getattr(self, funcName)()
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))
