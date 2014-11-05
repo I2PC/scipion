@@ -28,16 +28,13 @@ This module implement the wrappers around Xmipp NMA protocol
 visualization program.
 """
 
+from pyworkflow.protocol.params import BooleanParam, IntParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.em.viewer import ChimeraView, VmdView, DataView 
 from plotter import XmippPlotter
-from pyworkflow.em import *
 from protocol_nma import XmippProtNMA
-import glob
+import xmipp
 
-
-CLASSES = 0
-CLASS_CORES = 1
-CLASS_STABLE_CORES = 2
 
         
 class XmippNMAViewer(ProtocolViewer):
@@ -50,8 +47,8 @@ class XmippNMAViewer(ProtocolViewer):
 
     def setProtocol(self, protocol):
         ProtocolViewer.setProtocol(self, protocol)
-        isEm = not isinstance(protocol.inputStructure.get(), PdbFile)
-        self.isEm.set(isEm)
+        inputPdb = protocol.inputStructure.get()
+        self.isEm.set(inputPdb.getPseudoAtoms())
         
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -85,12 +82,13 @@ class XmippNMAViewer(ProtocolViewer):
     def _viewParam(self, paramName):
         views = []
         if paramName == 'displayPseudoAtom':
-            views.append(CommandView('chimera ' + self.protocol._getPath("chimera.cmd")))
+            views.append(ChimeraView(self.protocol._getPath("chimera.cmd")))
         elif paramName == 'displayPseudoAtomAproximation':
             views.append(DataView(self.protocol.inputStructure.get().getFirstItem().getFileName()))
             views.append(DataView(self.protocol._getExtraPath('pseudoatoms_approximation.vol')))
         elif paramName == 'displayModes':
-            views.append(self.protocol._getPath('modes.xmd'))
+            fn = self.protocol._getPath('modes.xmd')
+            views.append(DataView(fn))
         elif paramName == 'displayMaxDistanceProfile':
             fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
             views.append(self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift"))
@@ -101,7 +99,8 @@ class XmippNMAViewer(ProtocolViewer):
         elif paramName == 'singleMode':
             if self.singleMode.hasValue():
                 vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % self.singleMode.get())
-                views.append(CommandView("vmd -e %s" % vmdFile))
+                views.append(VmdView(vmdFile))
+        return views
     
     def _createShiftPlot(self, mdFn, title, ylabel):
         plotter = XmippPlotter()

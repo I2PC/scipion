@@ -67,31 +67,31 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [  
-                  CoordinatesTiltPair 
-                , Image
-                , MicrographsTiltPair
-                , NormalModes
-                , ParticlesTiltPair
-                , ProtExtractParticles
-                , SetOfClasses2D
-                , SetOfClasses3D
-                , SetOfCoordinates
-                , SetOfCTF
-                , SetOfImages
-                , SetOfMovies
-                , XmippParticlePickingAutomatic
-                , XmippProtConvertToPseudoAtoms
-                , XmippProtExtractParticlesPairs
-                , XmippProtIdentifyOutliers
-                , XmippProtKerdensom
-                , XmippProtParticlePicking
-                , XmippProtParticlePickingPairs
-                , XmippProtRotSpectra
-                , XmippProtScreenClasses
-                , XmippProtScreenParticles
-                , XmippProtCTFMicrographs
-                , XmippProtRecalculateCTF
+    _targets = [                  
+                CoordinatesTiltPair, 
+                Image, 
+                MicrographsTiltPair, 
+                ParticlesTiltPair, 
+                ProtExtractParticles, 
+                SetOfClasses2D, 
+                SetOfClasses3D, 
+                SetOfCoordinates, 
+                SetOfCTF, 
+                SetOfImages, 
+                SetOfMovies, 
+                SetOfNormalModes, 
+                XmippParticlePickingAutomatic, 
+                XmippProtConvertToPseudoAtoms, 
+                XmippProtExtractParticlesPairs, 
+                XmippProtIdentifyOutliers, 
+                XmippProtKerdensom, 
+                XmippProtParticlePicking, 
+                XmippProtParticlePickingPairs, 
+                XmippProtRotSpectra, 
+                XmippProtScreenClasses, 
+                XmippProtScreenParticles, 
+                XmippProtCTFMicrographs, 
+                XmippProtRecalculateCTF
                 ]
     
     def __init__(self, **args):
@@ -148,19 +148,17 @@ class XmippViewer(Viewer):
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            if fn.endswith('.mrc'):
-                fn += ":mrc"
             self._views.append(DataView(fn, viewParams={RENDER: 'image'}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
             self._views.append(DataView(fn))
             
-        elif issubclass(cls, NormalModes):
-            self._views.append(DataView(fn))
+        elif issubclass(cls, SetOfNormalModes):
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
               
-        elif issubclass(cls, SetOfMicrographs):
-            
+        elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: MODE_MD}, **args))
             
