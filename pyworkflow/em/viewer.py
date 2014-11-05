@@ -212,15 +212,8 @@ class ChimeraViewer(Viewer):
         if issubclass(cls, PdbFile):
             fn = obj.getFileName()
             if obj.getPseudoAtoms():
-                # Write an script for this case to use colored spheres
-                pdb = os.path.basename(fn)
-                fn += '_tmp_chimera.cmd'
-                f = open(fn, 'w')
-                f.write("open %s\n" % pdb)
-                f.write("rangecol bfactor,a 0 white 1 red \n")
-                f.write("setattr a radius 1 \n")
-                f.write("represent sphere \n")
-                f.close()
+                if hasattr(obj, '_chimeraScript'):
+                    fn = obj._chimeraScript.get()
             ChimeraView(fn).show()
             #FIXME: there is an asymetry between ProtocolViewer and Viewer
             # for the first, the visualize method return a list of View's (that are shown)
@@ -248,6 +241,7 @@ class VmdView(CommandView):
             
     def show(self):
         runJob(None, '', self._cmd, env=getVmdEnviron())
+        
         
 class VmdViewer(Viewer):
     """ Wrapper to visualize PDB objects with VMD viewer. """
