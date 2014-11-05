@@ -65,7 +65,7 @@ class ProtUserSubSet(ProtSets):
         form.addHidden('outputClassName', StringParam)
         
     def _insertAllSteps(self):
-        self._insertFunctionStep('createSetOfImagesStep')
+        self._insertFunctionStep('createSetStep')
     
     def _createSubSetFromImages(self, inputImages):
         className = inputImages.getClassName()
@@ -212,7 +212,7 @@ class ProtUserSubSet(ProtSets):
             untilted = micPairI.getUntilted()
             tilted = micPairI.getTilted()
             if micPairI.isEnabled():
-                print "is enabled"
+
                 micPairO = TiltPair()
                 micPairO.setUntilted(untilted)
                 micPairO.setTilted(tilted)
@@ -221,7 +221,7 @@ class ProtUserSubSet(ProtSets):
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict) 
         
-    def createSetOfImagesStep(self):
+    def createSetStep(self):
         inputObj = self.inputObject.get()
         
         self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
@@ -262,6 +262,18 @@ class ProtUserSubSet(ProtSets):
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 self._createSubSetFromImages(setObj)
+        else:
+            className = inputObj.getClassName()
+            createFunc = getattr(self, '_create' + className)
+            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+
+            output = createFunc()
+            for item in modifiedSet:
+                if item.isEnabled():
+                    output.append(item)
+            # Register outputs
+            self._defineOutput(className, output)
+            self._defineSourceRelation(inputObj, output)
                 
 
     
