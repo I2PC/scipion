@@ -235,8 +235,8 @@ def getVmdEnviron():
        
 class VmdView(CommandView):
     """ View for calling an external command. """
-    def __init__(self, inputFile, **kwargs):
-        CommandView.__init__(self, 'vmd "%s"' % inputFile,
+    def __init__(self, vmdCommand, **kwargs):
+        CommandView.__init__(self, 'vmd %s' % vmdCommand,
                              env=getVmdEnviron(), **kwargs)
             
     def show(self):
