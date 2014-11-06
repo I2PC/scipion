@@ -50,6 +50,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
@@ -109,6 +110,7 @@ public class GalleryData {
     protected String[] displayLabels;
     protected String[] sortby;
     protected int selfrom = -1, selto = -1;
+    
 
     public boolean hasRecalulateCTF() {
         return ctfs != null && !ctfs.isEmpty();
@@ -118,6 +120,22 @@ public class GalleryData {
     protected String renderLabel = "first";
     protected String[] visibleLabels;
     protected String[] orderLabels;
+
+    public boolean isObjectCmd(String cmd) {
+        for(String objCmd: parameters.objectCommands)
+            if(objCmd.equals(cmd))
+                return true;
+        return false;
+    }
+
+    public void runObjectCommand(int index, String objectCommand) {
+        try {
+            String[] cmd = new String[]{objectCommand};
+            System.out.println(Arrays.toString(cmd));
+        } catch (Exception ex) {
+            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     
 
     public enum Mode {

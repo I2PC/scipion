@@ -1,12 +1,10 @@
 package xmipp.utils;
 
-import java.util.Arrays;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.MetaData;
 
 
 /**
@@ -50,6 +48,7 @@ public class Params {
     public final static String VIEW = "view";
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
+    public final static String OBJECT_CMDS = "object_commands";
     
     
     
@@ -85,6 +84,8 @@ public class Params {
     public String[] orderLabels;
     public String[] sortby;
     private String block;
+    public String[] objectCommands;
+    
     
     
     
@@ -149,6 +150,10 @@ public class Params {
         options.addOption(VIEW, true, "z");
         options.addOption(NO_GEO, false, "");
         options.addOption(NO_WRAP, false, "");
+        opt = new Option(OBJECT_CMDS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        
 
     }
     
@@ -274,6 +279,9 @@ public class Params {
             		resliceView = ImageGeneric.X_POS;
             }
             
+            if(cmdLine.hasOption(OBJECT_CMDS))
+            	objectCommands = cmdLine.getOptionValues(OBJECT_CMDS);
+           
            
         } catch (Exception ex) {
         	ex.printStackTrace();

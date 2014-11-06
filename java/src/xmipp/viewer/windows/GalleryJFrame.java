@@ -1913,6 +1913,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
                         addItem(INVERT_SELECT, "Invert selection");
+                        if(data.parameters.objectCommands != null)
+                            for(String cmd: data.parameters.objectCommands)
+                                addItem(cmd + "_mi", cmd);
 			initItems();
 		}// function createItems
 
@@ -2053,6 +2056,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				SaveImagesJDialog dialog = new SaveImagesJDialog(GalleryJFrame.this, f.getParent() + "/images_selection.xmd");
 				dialog.showDialog();					
 			}
+                        
+                        else 
+                        {
+                            String objectCommand = cmd.replace("_mi", "");
+                            if (data.isObjectCmd(objectCommand))
+                            {
+                                int index = gallery.getIndex(row, col);
+                                data.runObjectCommand(index, objectCommand);
+                            }
+                        }
 			initItems();
 
 		}

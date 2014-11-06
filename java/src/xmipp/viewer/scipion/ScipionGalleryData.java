@@ -9,16 +9,20 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
@@ -438,6 +442,16 @@ public class ScipionGalleryData extends GalleryData {
      */
     public boolean checkifIsClassificationMd() {
         return ((ScipionMetaData)md).isClassificationMd();
+    }
+    
+    public void runObjectCommand(int index, String objectCommand) {
+        try {
+            ScipionParams params = (ScipionParams)parameters;
+            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), objectCommand, params.projectid, String.valueOf(getId(index))};
+            System.out.println(XmippWindowUtil.executeCommand(cmd, true));
+        } catch (Exception ex) {
+            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }
     
 }
