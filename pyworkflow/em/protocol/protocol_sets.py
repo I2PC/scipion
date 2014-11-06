@@ -37,7 +37,7 @@ from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
 from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
-                                SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
+                                SetOfClasses2D, SetOfClasses3D, SetOfNormalModes) #we need to import this to be used dynamically
 
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
 from pyworkflow.utils.path import createLink
@@ -255,6 +255,8 @@ class ProtUserSubSet(ProtSets):
             for item in modifiedSet:
                 if item.isEnabled():
                     output.append(item)
+            if hasattr(modifiedSet, 'copyInfo'):
+                modifiedSet.copyInfo(output)
             # Register outputs
             self._defineOutput(className, output)
             self._defineSourceRelation(inputObj, output)
