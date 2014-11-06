@@ -49,7 +49,12 @@ def runSubsetProtocol(projectId, inputId, sqliteFile,
     prot.setObjLabel(protocolLabel)
     prot.sqliteFile.set(sqliteFile)
     prot.outputClassName.set(outputType)
-    prot.other.set(other)
+    if ',Volume' in other:
+        volId = int(other.split(',')[0])
+        prot.volId.set(volId)
+    elif other.isdigit():
+        otherObj = project.mapper.selectById(int(other))
+        prot.otherObj.set(otherObj)
     
 
         
