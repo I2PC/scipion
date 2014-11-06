@@ -54,7 +54,7 @@ void ProgPSDSort::readParams()
     decay_width = getDoubleParam("-decay");
     mask_w1 = getDoubleParam("-m1");
     mask_w2 = getDoubleParam("-m2");
-    downsampling = getDoubleParam("--downsampling");
+    // COSS downsampling = getDoubleParam("--downsampling");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -133,7 +133,7 @@ void ProgPSDSort::defineParams()
     addParamsLine("  [-decay <freq_decay=0.02>] : Decay for the transition bands");
     addParamsLine("  [-m1 <mfreq_low=0.01>]     : Low freq. for mask, max 0.5");
     addParamsLine("  [-m2 <mfreq_high=0.45>]    : High freq. for mask, max 0.5");
-    addParamsLine("  [--downsampling <K=1>]     : Downsampling factor used");
+    // COSS addParamsLine("  [--downsampling <K=1>]     : Downsampling factor used");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -147,8 +147,8 @@ void ProgPSDSort::show()
     << "Filter w2:    " << filter_w2 << std::endl
     << "Filter decay: " << decay_width << std::endl
     << "Mask w1:      " << mask_w1 << std::endl
-    << "Mask w2:      " << mask_w2 << std::endl
-    << "Downsampling: " << downsampling << std::endl;
+    << "Mask w2:      " << mask_w2 << std::endl ;
+    // COSS << "Downsampling: " << downsampling << std::endl;
 }
 
 /* Compute Correlation ----------------------------------------------------- */
@@ -278,7 +278,7 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 
     CTF1.precomputeValues(0.0,0.0);
 	double idamping0=1.0/CTF1.getValueDampingAt();
-	double f2pixel=CTF1.Tm*downsampling*XSIZE(PSD());
+	double f2pixel=CTF1.Tm*XSIZE(PSD()); // COSS *downsampling
 	if (rowIn.containsLabel(MDL_CTF_DOWNSAMPLE_PERFORMED))
 	{
 		double aux;
@@ -303,9 +303,10 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	evaluation.firstZeroAvg+=moduleZero;
 
     	// Get the first minimum (it is at higher frequency than the zero)
+    	CTF1.lookFor(1, u, freqMin1, -1);
+
     	pixelZero1=freqZero1*f2pixel;
     	pixelMin1=freqMin1*f2pixel;
-    	CTF1.lookFor(1, u, freqMin1, -1);
     	double psdZero=PSD().interpolatedElement2D(XX(pixelZero1),YY(pixelZero1),0.0);
     	double psdMin=PSD().interpolatedElement2D(XX(pixelMin1),YY(pixelMin1),0.0);
     	firstMinAvgPSD+=psdMin;
