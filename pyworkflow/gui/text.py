@@ -130,7 +130,7 @@ class Text(tk.Text, Scrollable):
         # create a popup menu
         self.menu = tk.Menu(master, tearoff=0, postcommand=self.updateMenu)
         self.menu.add_command(label="Copy to clipboard", command=self.copyToClipboard)
-        #self.menu.add_command(label="Open", command=self.openFile)
+        self.menu.add_command(label="Open path", command=self.openFile)
         # Associate with right click
         self.bind("<Button-1>", self.onClick)
         self.bind("<Button-3>", self.onRightClick)
@@ -198,6 +198,16 @@ class Text(tk.Text, Scrollable):
         self.clipboard_clear()
         self.clipboard_append(self.selection)
 
+    def openFile(self):
+        fpath = (self.selection if os.path.isabs(self.selection)
+                 else os.path.join(os.getcwd(), self.selection))
+        dpath = fpath if os.path.isdir(fpath) else os.path.dirname(fpath)
+        if not os.path.exists(fpath):
+            print "Can't find %s" % fpath
+        else:
+            subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                              'browser', 'dir', dpath])
+
     def updateMenu(self, e=None):
         state = 'normal'
         #if not xmippExists(self.selection):
@@ -258,8 +268,10 @@ class TaggedText(Text):
         self.hm = HyperlinkManager(self)
 
     def getDefaults(self):
-        return {'bg': "white", 'bd':0, 'font': gui.fontNormal}
-    
+        return {'bg': "white", 'bd':0}
+        # It used to have also 'font': gui.fontNormal  but that stops
+        # this file from running. Apparently there is no fontNormal in gui.
+
     def configureTags(self):
         self.tag_config('normal', justify=tk.LEFT)
         self.tag_config(HYPER_BOLD, justify=tk.LEFT, font=gui.fontBold)
@@ -313,8 +325,10 @@ class OutputText(Text):
         self.doRefresh()
 
     def getDefaults(self):
-        return {'bg': "black", 'fg':'white', 'bd':0, 'font': gui.fontNormal, 
+        return {'bg': "black", 'fg':'white', 'bd':0,
                 'height':30,  'width':100}
+        # It used to have also  'font': gui.fontNormal  but that stops this
+        # file from running. Apparently there is no fontNormal in gui.
         
     def configureTags(self):
         if self.colors:
@@ -582,13 +596,13 @@ def showTextFileViewer(title, filelist, parent=None, main=False):
     gui.configureWeigths(w.root)
     w.show()
 
-    
+
 if __name__ == '__main__':
     root = tk.Tk()
     root.withdraw()
     root.title("View files")
-    l = TextFileViewer(root, filelist=sys.argv[1:])
+    l = TextFileViewer(root, fileList=sys.argv[1:])
     l.pack(side=tk.TOP, fill=tk.BOTH)
     gui.centerWindows(root)
     root.deiconify()
-    root.mainloop()               
+    root.mainloop()
