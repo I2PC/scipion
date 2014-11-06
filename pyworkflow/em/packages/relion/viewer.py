@@ -29,7 +29,9 @@ import os
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
     MessageView
+
 from pyworkflow.em.viewer import DataView, ObjectView, ClassesView, Classes3DView
+
 from pyworkflow.em.data import Volume, SetOfVolumes
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
@@ -394,6 +396,7 @@ Examples:
                     volSet.append(vol)
         volSet.write()
         return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
+
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """

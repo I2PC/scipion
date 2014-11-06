@@ -95,7 +95,7 @@ class ProjectWindow(ProjectBaseWindow):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
-    def on_browse_files(self):
+    def onBrowseFiles(self):
         # Project -> Browse files
         subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
                           'browser', 'dir', self.project.path])
@@ -105,7 +105,7 @@ class ProjectWindow(ProjectBaseWindow):
         # but it doesn't work because the images are not shared by the
         # Tk() instance or something like that.
 
-    def on_remove_temporary_files(self):
+    def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
         tmpPath = os.path.join(self.project.path, self.project.tmpPath)
         n = 0
@@ -139,7 +139,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
-    def on_browse_files(self):
+    def onBrowseFiles(self):
         # Project -> Browse files
         subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
                           'browser', 'dir', os.environ['SCIPION_USER_DATA']])
@@ -149,7 +149,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         # but it doesn't work because the images are not shared by the
         # Tk() instance or something like that.
 
-    def on_remove_temporary_files(self):
+    def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
         tmpPath = os.environ['SCIPION_TMP']
         n = 0
@@ -164,7 +164,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         except Exception as e:
             self.showError(str(e))
 
-    def on_clean_project(self):
+    def onCleanProject(self):
         # Project -> Clean project
         self.showInfo("I did nothing, because I don't know what I'm supposed "
                       "to do here.")

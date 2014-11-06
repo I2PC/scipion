@@ -154,15 +154,15 @@ class ProjectBaseWindow(Window):
     # The next functions are callbacks from the menu options.
     # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
     #
-    def on_exit(self):
+    def onExit(self):
         # Project -> Exit
         self.close()
 
-    def on_online_help(self):
+    def onOnlineHelp(self):
         # Help -> Online help
         webbrowser.open_new("http://scipionwiki.cnb.csic.es/")
 
-    def on_about(self):
+    def onAbout(self):
         # Help -> About
         self.showInfo("""
 [[http://scipionwiki.cnb.csic.es/][Scipion]] is an image processing framework to obtain 3D models of macromolecular complexes using Electron Microscopy.

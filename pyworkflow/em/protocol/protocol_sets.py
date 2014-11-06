@@ -39,6 +39,7 @@ from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, Bo
 from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
                                 SetOfClasses2D, SetOfClasses3D, SetOfNormalModes) #we need to import this to be used dynamically
 
+
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
 from pyworkflow.utils.path import createLink
 
@@ -209,6 +210,8 @@ class ProtUserSubSet(ProtSets):
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict) 
         
+
+
     def createSetStep(self):
 
         setObj = self.createSetObject()
@@ -222,27 +225,27 @@ class ProtUserSubSet(ProtSets):
 
         elif isinstance(inputObj, SetOfImages):
                 self._createSubSetFromImages(inputObj)
-            
+
         elif isinstance(inputObj, SetOfClasses):
             self._createSubSetFromClasses(inputObj)
-           
+
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 self._createMicsSubSetFromCTF(inputObj)
             else:
                 self._createSubSetOfCTF(inputObj)
-                
+
         elif isinstance(inputObj, MicrographsTiltPair):
             self._createSubSetFromMicrographsTiltPair(inputObj)
-        
+
         elif isinstance(inputObj, EMProtocol):
             otherObj = self.otherObj.get()
 
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 self._createSubSetFromClasses(setObj)
-                
+
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 self._createSubSetFromImages(setObj)
@@ -255,6 +258,7 @@ class ProtUserSubSet(ProtSets):
             for item in modifiedSet:
                 if item.isEnabled():
                     output.append(item)
+
             if hasattr(modifiedSet, 'copyInfo'):
                 modifiedSet.copyInfo(output)
             # Register outputs
@@ -271,17 +275,13 @@ class ProtUserSubSet(ProtSets):
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1]
 
+
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
         setClassName = db.getProperty('self') # get the set class name
         setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
         return setObj
 
-            
-#     def defineOutputSet(self, outputset):
-#         outputs = {'output' + self.getOutputType(): outputset}
-#         self._defineOutputs(**outputs)
-#         self._defineSourceRelation(self.getInput(), outputset)
     
     def _summary(self):
         summary = []
@@ -301,10 +301,6 @@ class ProtUserSubSet(ProtSets):
 
         
 
-
-
-
-            
 
 class ProtUnionSet(ProtSets):
     """ Protocol to merge two or more sets.

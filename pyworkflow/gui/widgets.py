@@ -38,7 +38,9 @@ class Button(tk.Button):
     _images = {}
     
     def __init__(self, master, text, imagePath=None, tooltip=None, **opts):
-        defaults = {'font': gui.fontButton}
+        defaults = {}
+        # Used to be {'font': gui.fontButton} but there is no such
+        # definition in pyworkflow/gui.
         defaults.update(opts)
         
         if 'bg' in defaults and defaults['bg'] is None:
@@ -243,7 +245,3 @@ class GradientFrame(tk.Canvas):
             self.create_line(i,0,i,height, tags=("gradient",), fill=color)
             self.create_line(width-i,0,width-i,height, tags=("gradient",), fill=color)
         self.lower("gradient")
-        
-            
-        
-                

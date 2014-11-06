@@ -350,12 +350,12 @@ class Window():
                 menu.add_cascade(label=sub.text.get(), menu=submenu)
                 self._addMenuChilds(submenu, sub)  # recursive filling
             else:  # menu option
-                # If there is an entry called "Exit", when clicked it will
-                # call the method on_exit() (it has to be defined!)
+                # If there is an entry called "Browse files", when clicked it
+                # will call the method onBrowseFiles() (it has to be defined!)
                 def callback(name):
-                    """Return a callback function named "on_<name>"."""
-                    funcName = "on_%s" % name.lower().replace(" ", "_")
-                    return lambda: getattr(self, funcName)()
+                    """Return a callback function named "on<Name>"."""
+                    f = "on%s" % "".join(x.capitalize() for x in name.split())
+                    return lambda: getattr(self, f)()
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))
