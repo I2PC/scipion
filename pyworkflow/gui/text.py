@@ -39,7 +39,7 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn)
 from pyworkflow.utils.properties import Message, Color, Icon
-
+from pyworkflow.em.viewer import DataView
 
 
 # Define a function to open files cleanly in a system-dependent way
@@ -199,14 +199,24 @@ class Text(tk.Text, Scrollable):
         self.clipboard_append(self.selection)
 
     def openFile(self):
-        fpath = (self.selection if os.path.isabs(self.selection)
-                 else os.path.join(os.getcwd(), self.selection))
-        dpath = fpath if os.path.isdir(fpath) else os.path.dirname(fpath)
-        if not os.path.exists(fpath):
-            print "Can't find %s" % fpath
-        else:
+        if os.path.isdir(self.selection):
+            dpath = (self.selection if os.path.isabs(self.selection)
+                     else os.path.join(os.getcwd(), self.selection))
             subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
                               'browser', 'dir', dpath])
+            return
+
+        dirname = os.path.dirname(self.selection)
+        fname = os.path.basename(self.selection)
+        if '@' in fname:
+            path = os.path.join(dirname, fname.split('@', 1)[-1])
+        else:
+            path = os.path.join(dirname, fname)
+
+        if not os.path.exists(path):
+            print "Can't find %s" % path
+        else:
+            DataView(path).show()
 
     def updateMenu(self, e=None):
         state = 'normal'
