@@ -30,7 +30,7 @@ visualization program.
 
 from pyworkflow.protocol.params import BooleanParam, IntParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import ChimeraView, VmdView, DataView 
+from pyworkflow.em.viewer import ObjectView, VmdView
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from protocol_nma import XmippProtNMA
 import xmipp
@@ -45,62 +45,58 @@ class XmippNMAViewer(ProtocolViewer):
     _targets = [XmippProtNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-    def setProtocol(self, protocol):
-        ProtocolViewer.setProtocol(self, protocol)
-        inputPdb = protocol.inputStructure.get()
-        self.isEm.set(inputPdb.getPseudoAtoms())
+#     def setProtocol(self, protocol):
+#         ProtocolViewer.setProtocol(self, protocol)
+#         inputPdb = protocol.inputStructure.get()
+#         self.isEm.set(inputPdb.getPseudoAtoms())
         
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        #TODO: Just trying a trick to have hidden params
-        form.addParam('isEm', BooleanParam, default=False, 
-                      condition='False')
-        form.addParam('displayPseudoAtom', BooleanParam, default=False, 
-                      condition='isEm',
-                      label="Display pseudoatoms representation?")
-        form.addParam('displayPseudoAtomAproximation', BooleanParam, default=False,
-                      condition='isEm',
-                      label="Display pseudoatoms aproximation?")     
+  
         form.addParam('displayModes', BooleanParam, default=False, 
-                      label="Open list of modes?")
+                      label="Display output Normal Modes?", important=True)
         form.addParam('displayMaxDistanceProfile', BooleanParam, default=False, 
-                      label="Plot max distance profile?")     
-        form.addParam('displayDistanceProfile', BooleanParam, default=False, 
-                      label="Plot distance profile?")
-        form.addParam('singleMode', IntParam, default=7,
-              label='Open specific mode', condition='True')   
+                      label="Plot max distance profile?",
+                      help="TODO: ADD HELP ABOUT MAX DISTANCE") 
+        
+        group = form.addGroup('Single mode')  
+        group.addParam('modeNumber', IntParam, default=7,
+              label='Mode number')
+        group.addParam('displayVmd', BooleanParam, default=False,
+                       label='Display mode animation with VMD?') 
+        group.addParam('displayDistanceProfile', BooleanParam, default=False, 
+                      label="Plot mode distance profile?")
         
     def _getVisualizeDict(self):
-        return {'displayPseudoAtom': self._viewParam,
-                'displayPseudoAtomAproximation': self._viewParam,
-                'displayModes': self._viewParam,
+        return {'displayModes': self._viewParam,
                 'displayMaxDistanceProfile': self._viewParam,
-                'displayDistanceProfile': self._viewParam,
-                'singleMode': self._viewParam,
+                'displayVmd': self._viewSingleMode,
+                'displayDistanceProfile': self._viewSingleMode,
                 } 
                         
     def _viewParam(self, paramName):
-        views = []
-        if paramName == 'displayPseudoAtom':
-            views.append(ChimeraView('chimera.cmd', cwd=self.protocol._getPath()))
-        elif paramName == 'displayPseudoAtomAproximation':
-            views.append(DataView(self.protocol.inputStructure.get().getFileName()))
-            views.append(DataView(self.protocol._getExtraPath('pseudoatoms_approximation.vol')))
-        elif paramName == 'displayModes':
-            fn = self.protocol._getPath('modes.xmd')
-            views.append(DataView(fn))
+        if paramName == 'displayModes':
+            modes =  self.protocol.outputModes
+            return [ObjectView(self._project.getName(), modes.strId(), modes.getFileName())]
         elif paramName == 'displayMaxDistanceProfile':
             fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
-            views.append(self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift"))
+            return [self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift")]
+    
+    def _viewSingleMode(self, paramName):
+        """ visualization for a selected mode. """
+        modes =  self.protocol.outputModes
+        modeNumber = self.modeNumber.get()
+        mode = modes[modeNumber]
+        
+        if mode is None:
+            return [self.errorMessage("Invalid mode number *%d*\nDisplay the output Normal Modes to see the availables ones." % modeNumber, 
+                                      title="Invalid input")]
+        elif paramName == 'displayVmd':
+            vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % modeNumber)
+            return [VmdView(vmdFile)]
         elif paramName == 'displayDistanceProfile':
-            mode = self.singleMode.get()
-            fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % mode)
-            views.append(self._createShiftPlot(fn, "Atom shifts for mode %d" % mode, "shift"))
-        elif paramName == 'singleMode':
-            if self.singleMode.hasValue():
-                vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % self.singleMode.get())
-                views.append(VmdView(vmdFile))
-        return views
+            fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % modeNumber)
+            return [self._createShiftPlot(fn, "Atom shifts for mode %d" % modeNumber, "shift")]
     
     def _createShiftPlot(self, mdFn, title, ylabel):
         plotter = XmippPlotter()
