@@ -27,8 +27,19 @@
 # *
 # **************************************************************************
 
-from protocol_nma_base import *
-        
+import os
+import math
+from os.path import basename, exists, join
+
+from pyworkflow.utils import redStr
+from pyworkflow.utils.path import copyFile, createLink, makePath, cleanPath, moveFile
+from pyworkflow.protocol.params import (PointerParam, IntParam, FloatParam, 
+                                        LEVEL_ADVANCED)
+from pyworkflow.em.data import SetOfNormalModes
+from pyworkflow.em.packages.xmipp3 import XmippMdRow
+import xmipp
+from protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
+from convert import rowToMode
         
         
 class XmippProtNMA(XmippProtNMABase):
@@ -242,12 +253,11 @@ class XmippProtNMA(XmippProtNMABase):
         nmSet = SetOfNormalModes(filename=fnSqlite)
 
         md = xmipp.MetaData(self._getPath('modes.xmd'))
+        row = XmippMdRow()
+        
         for objId in md:
-            nm = NormalMode(objId=md.getValue(xmipp.MDL_ORDER, objId),
-                            modeFile=md.getValue(xmipp.MDL_NMA_MODEFILE, objId),
-                            collectivity=md.getValue(xmipp.MDL_NMA_COLLECTIVITY, objId),
-                            score=md.getValue(xmipp.MDL_NMA_SCORE, objId))
-            nmSet.append(nm)
+            row.readFromMd(md, objId)
+            nmSet.append(rowToMode(row))
         inputPdb = self.inputStructure.get()
         nmSet.setPdb(inputPdb)
         self._defineOutputs(outputModes=nmSet)
