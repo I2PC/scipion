@@ -60,7 +60,6 @@ def runSubsetProtocol(projectId, inputId, sqliteFile,
         prot.otherObj.set(otherObj)
 
 
-
     # Launch the protocol
     project.launchProtocol(prot, wait=True)
 
