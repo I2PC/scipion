@@ -29,7 +29,8 @@ import os
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
     MessageView
-from pyworkflow.em.viewer import DataView, ClassesView, Classes3DView
+from pyworkflow.em.viewer import DataView, ObjectView, ClassesView, Classes3DView
+from pyworkflow.em.data import Volume, SetOfVolumes
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
@@ -373,6 +374,26 @@ Examples:
                     md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
             md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
         return [self.createDataView(mdPath)]
+
+    def _createVolumesSqlite(self):
+        """ Write an sqlite with all volumes selected for visualization. """
+
+        prefixes = self._getPrefixes()
+
+        path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
+        cleanPath(path)
+        volSet = SetOfVolumes(filename=path)
+        volSet.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+
+        for it in self._iterations:
+            for ref3d in self._refsList:
+                for prefix in prefixes:
+                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
+                    vol = Volume()
+                    vol.setFileName(volFn)
+                    volSet.append(vol)
+        volSet.write()
+        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
@@ -408,7 +429,7 @@ Examples:
             return self._showVolumesChimera()
         
         elif self.displayVol == VOLUME_SLICES:
-            return self._createVolumesMd()
+            return self._createVolumesSqlite()#self._createVolumesMd()
             
 #===============================================================================
 # showAngularDistribution
