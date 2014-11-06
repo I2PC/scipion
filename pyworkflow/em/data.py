@@ -1257,6 +1257,9 @@ class SetOfNormalModes(EMSet):
         
     def getPdb(self):
         return self._pdbPointer.get()
+    
+    def copyInfo(self, other):
+        self._pdbPointer.copy(other._pdbPointer, copyId=False)
 
 
 class Movie(Micrograph):
