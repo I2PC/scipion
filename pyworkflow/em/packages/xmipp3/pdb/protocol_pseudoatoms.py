@@ -27,7 +27,12 @@
 # *
 # **************************************************************************
 
-from protocol_convert_to_pseudoatoms_base import *
+from pyworkflow.protocol.params import PointerParam
+from pyworkflow.em.data import PdbFile
+from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+from protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
+
+
 
 class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
     """ Converts an EM volume into pseudoatoms """
@@ -49,7 +54,6 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         self._insertFunctionStep('convertToPseudoAtomsStep', fnIn, fnMask, inputVol.getSamplingRate())
         self._insertFunctionStep('createOutputStep')
         
-        
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputVol = self.inputStructure.get()
@@ -57,7 +61,6 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         self.createChimeraScript(inputVol, pdb)
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(inputVol, pdb)
-
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

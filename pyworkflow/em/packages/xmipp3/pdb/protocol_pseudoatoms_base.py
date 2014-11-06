@@ -27,13 +27,13 @@
 # *
 # **************************************************************************
 
-import math
-from glob import glob
+from os.path import basename
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-import xmipp
+from pyworkflow.object import String
+from pyworkflow.utils.path import cleanPattern, createLink, moveFile
+from pyworkflow.protocol.params import EnumParam, PointerParam, FloatParam
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.em.protocol import Prot3D
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 
 #from xmipp3 import XmippProtocol
@@ -41,8 +41,9 @@ NMA_MASK_NONE = 0
 NMA_MASK_THRE = 1
 NMA_MASK_FILE = 2
 
-# TODO: Move to 3D Tools
-class XmippProtConvertToPseudoAtomsBase(ProtPreprocessVolumes):
+
+
+class XmippProtConvertToPseudoAtomsBase(Prot3D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addParam('maskMode', EnumParam, choices=['none', 'threshold', 'file'], 
