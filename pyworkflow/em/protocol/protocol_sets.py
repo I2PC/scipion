@@ -36,7 +36,7 @@ from os.path import basename
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
+from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
                                 SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
@@ -60,12 +60,13 @@ class ProtUserSubSet(ProtSets):
         
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
-        form.addHidden('other', StringParam, allowsNull=True)
+        form.addHidden('otherObj', PointerParam, pointerClass='EMObject', allowsNull=True)
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
+        form.addHidden('volId', IntParam, allowsNull=True)
         
     def _insertAllSteps(self):
-        self._insertFunctionStep('createSetOfImagesStep')
+        self._insertFunctionStep('createSetStep')
     
     def _createSubSetFromImages(self, inputImages):
         className = inputImages.getClassName()
@@ -78,20 +79,6 @@ class ProtUserSubSet(ProtSets):
         # Register outputs
         self._defineOutput(className, output)
         self._defineSourceRelation(inputImages, output)
-
-    def _createVolumeFromSet(self, volfile):
-        src = volfile
-        if ':' in src:
-            src = src.split(':')[0]
-        dest = self._getPath(basename(src))
-        createLink(src, dest)
-        vol = Volume()
-        vol.setFileName(dest)
-        inputObject = self.inputObject.get()
-        samplingRate = inputObject.getSamplingRate()
-        vol.setSamplingRate(samplingRate)
-        self._defineOutputs(outputVolume=vol)
-        self._defineTransformRelation(inputObject, vol)
 
 
 
@@ -221,61 +208,72 @@ class ProtUserSubSet(ProtSets):
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict) 
         
-    def createSetOfImagesStep(self):
+
+    def createSetStep(self):
+
+        setObj = self.createSetObject()
         inputObj = self.inputObject.get()
-        
-        self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
 
-
-        if (isinstance(inputObj, SetOfVolumes) or isinstance(inputObj, SetOfClasses3D)) \
-                and '.' in self.other.get():#is volume file, not id
-                print 'other ' + self.other.get()
-                volfile = self.other.get()
-                self._createVolumeFromSet(volfile)
+        if self.volId.get():
+            volSet = SetOfVolumes(filename=self._dbName)
+            vol = volSet[self.volId.get()]
+            self._defineOutputs(outputVolume=vol)
+            self._defineSourceRelation(inputObj, vol)
 
         elif isinstance(inputObj, SetOfImages):
-
                 self._createSubSetFromImages(inputObj)
-            
+
         elif isinstance(inputObj, SetOfClasses):
             self._createSubSetFromClasses(inputObj)
-           
+
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 self._createMicsSubSetFromCTF(inputObj)
             else:
                 self._createSubSetOfCTF(inputObj)
-                
+
         elif isinstance(inputObj, MicrographsTiltPair):
             self._createSubSetFromMicrographsTiltPair(inputObj)
-        
-        elif isinstance(inputObj, EMProtocol):
-            setObj = self.getSetObject()
-            otherObj = self.getProject().mapper.selectById(int(self.other.get()))
 
-            
+        elif isinstance(inputObj, EMProtocol):
+            otherObj = self.otherObj.get()
+
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 self._createSubSetFromClasses(setObj)
-                
+
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 self._createSubSetFromImages(setObj)
-                
+        else:
+            className = inputObj.getClassName()
+            createFunc = getattr(self, '_create' + className)
+            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
 
-    
-    def getSetObject(self):            
+            output = createFunc()
+            for item in modifiedSet:
+                if item.isEnabled():
+                    output.append(item)
+            # Register outputs
+            self._defineOutput(className, output)
+            self._defineSourceRelation(inputObj, output)
+
+
+
+    def createSetObject(self):
+        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+        self._dbName = self._getPath('subset.sqlite')
+        os.rename(_dbName, self._dbName)
+
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1]
+
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
         setClassName = db.getProperty('self') # get the set class name
         setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
-        return setObj    
-            
-#     def defineOutputSet(self, outputset):
-#         outputs = {'output' + self.getOutputType(): outputset}
-#         self._defineOutputs(**outputs)
-#         self._defineSourceRelation(self.getInput(), outputset)
+        return setObj
     
     def _summary(self):
         summary = []
