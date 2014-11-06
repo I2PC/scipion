@@ -34,7 +34,10 @@ _references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
 from convert import *
+
+# some sub-packages
 from nma import *
+from pdb import *
 
 from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
@@ -52,8 +55,7 @@ from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
+
 from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_create_mask2d import XmippProtCreateMask2D
 from protocol_crop_resize import XmippProtCropResizeParticles
