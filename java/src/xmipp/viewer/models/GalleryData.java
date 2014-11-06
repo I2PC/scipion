@@ -1816,5 +1816,18 @@ public class GalleryData {
            return orderLabels;
        }
         
+       public Long getSelVolId()
+       {
+           if(selectedVolFn == null || selectedVolFn.isEmpty())
+               return null;
+           String vol;
+           for(Long id: ids)
+           {
+               vol = md.getValueString(ciFirstRender.label, id);
+               if(vol.equals(selectedVolFn))
+                   return id;
+           }
+           return null;
+       }
         
 }// class GalleryDaa

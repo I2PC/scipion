@@ -191,7 +191,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                 });
                 buttonspn.add(createvolbt);
-                cmdbutton.setVisible(data.isTableMode());
                 createvolbt.setVisible(!data.isTableMode());
             }
             pack();
@@ -215,7 +214,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         boolean register = confirmCreate("Are you sure you want to register volume in scipion?");
         if(register)
         {
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), data.getSelVolumeFile()};
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), data.getSelVolId().toString() + ",Volume"};
             createSubset(command, "Creating set ...");
         }
     }
@@ -340,7 +339,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     
 
     protected void enableActions() {
-        boolean isenabled = true;
+        boolean isenabled = !data.isVolumeMode();
         Color color = isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey;
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         if(cmdbutton != null)
