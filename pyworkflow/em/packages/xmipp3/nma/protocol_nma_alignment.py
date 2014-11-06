@@ -28,15 +28,22 @@
 # *
 # **************************************************************************
 
-import math
-from glob import glob
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
+from os.path import basename
+
+from pyworkflow.utils import isPower2, getListFromRangeString
+from pyworkflow.utils.path import copyFile, cleanPath 
+from pyworkflow.protocol.params import (PointerParam, StringParam, IntParam, EnumParam,
+                                        FloatParam,
+                                        LEVEL_EXPERT, LEVEL_ADVANCED)
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.protocol.params import NumericRangeParam
 import xmipp 
+
+from convert import modeToRow
+
 
 NMA_ALIGNMENT_WAV = 0
 NMA_ALIGNMENT_PROJ = 1    
@@ -49,7 +56,11 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('modeList', NumericRangeParam, label="Modes selection",
+        form.addParam('inputModes', PointerParam, pointerClass='SetOfNormalModes',
+                      label="Normal modes",                        
+                      help='Set of normal modes to explore.')
+        form.addParam('modeList', NumericRangeParam, expertLevel=LEVEL_EXPERT,
+                      label="Modes selection",
                       help='Select which modes do you want to use from all of them.\n'
                            'If you leave the field empty, all modes will be used.\n'
                            'You have several ways to specify selected modes.\n'
@@ -60,18 +71,12 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         form.addParam('inputParticles', PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
-        form.addParam('inputPdb', PointerParam, label="Input PDB",  
-                      pointerClass='PdbFile',
-                      help='Atomic or pseudo-atomic structure to apply the normal modes.')
-        form.addParam('inputModes', PointerParam, label="Normal modes",  
-                      pointerClass='NormalModes',
-                      help='Set of normal modes to explore.')
-        
+
         form.addParam('copyDeformations', StringParam,
                       expertLevel=LEVEL_EXPERT,
                       label='Copy deformations(only for debug)')
         
-        form.addSection(label='Angular assignment and mode detection')
+        form.addSection(label='Angular assignment')
         form.addParam('trustRegionScale', IntParam, default=1,
                       expertLevel=LEVEL_ADVANCED,
                       label='Trust region scale',
@@ -97,19 +102,18 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        atomsFn = self.inputPdb.get().getFileName()
-        modesFn = self.inputModes.get().getFileName()
-        # Convert input images if necessary
+        atomsFn = self.inputModes.get().getPdb().getFileName()
+        # Define some outputs filenames
         self.imgsFn = self._getExtraPath('images.xmd') 
-        self._insertFunctionStep('convertInputStep') 
+        self.atomsFn = self._getExtraPath(basename(atomsFn))
+        self.modesFn = self._getExtraPath('modes.xmd')
         
-        localModesFn = self._getBasePath(modesFn)
+        self._insertFunctionStep('convertInputStep', atomsFn) 
         
-        self._insertFunctionStep('copyFilesStep', atomsFn, modesFn)
-        self._insertFunctionStep('selectModesStep', localModesFn)
-        
+        return
+    
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
-            self._insertFunctionStep("performNmaStep", self._getBasePath(atomsFn), localModesFn)
+            self._insertFunctionStep("performNmaStep", self.atomsFn, self.modesFn)
             self._insertFunctionStep("extractDeformationsStep")
         else:            
             self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
@@ -118,31 +122,39 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         
         
     #--------------------------- STEPS functions --------------------------------------------   
-    def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
-         
-    def copyFilesStep(self, atomsFn, modesFn):
-        """ Copy the input files to the local working dir. """
-        for fn in [modesFn, atomsFn]:
-            copyFile(fn, self._getBasePath(fn))
+    def convertInputStep(self, atomsFn):
+        # Write the modes metadata taking into account the selection
+        self.writeModesMetaData()
+        # Write a metadata with the normal modes information
+        # to launch the nma alignment programs
+        writeSetOfParticles(self.inputParticles.get(), self.imgsFn)
+        # Copy the atoms file to current working dir
+        copyFile(atomsFn, self.atomsFn)
             
-    def selectModesStep(self, modesFn):
-        """ Read the modes metadata and keep only those modes selected
-        by the user in the protocol. 
+    def writeModesMetaData(self):
+        """ Iterate over the input SetOfNormalModes and write
+        the proper Xmipp metadata.
+        Take into account a possible selection of modes.
+        This option is just a shortcut for testing. The recommended
+        way is just create a subset from the GUI and use that as input.
         """
-        if not self.modeList.empty():
-            modeList = getListFromRangeString(self.modeList.get())
-            md = xmipp.MetaData(modesFn)
+        modeSelection = []
+        if self.modeList.empty():
+            modeSelection = []
+        else:
+            modeSelection = getListFromRangeString(self.modeList.get())
             
-            for objId in md:
-                order = md.getValue(xmipp.MDL_ORDER, objId)
-                if order in modeList:
-                    enable = 1
-                else:
-                    enable = 0
-                md.setValue(xmipp.MDL_ENABLED, enable, objId)
-            
-            md.write(modesFn)
+        md = xmipp.MetaData()
+        
+        inputModes = self.inputModes.get()
+        for mode in inputModes:
+            # If there is a mode selection, only
+            # take into account those selected
+            if not modeSelection or mode.getObjId() in modeSelection:
+                row = XmippMdRow()
+                modeToRow(mode, row)
+                row.writeToMd(md, md.addObject())
+        md.write(self.modesFn)
             
     def copyDeformationsStep(self, defFn):
         copyFile(defFn, self._getExtraPath(basename(defFn)))
@@ -181,8 +193,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         return defFn
     
     def createOutputStep(self):
-        modes = NormalModes(filename=self._getLocalModesFn())
-        self._defineOutputs(selectedModes=modes)
+        pass
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
