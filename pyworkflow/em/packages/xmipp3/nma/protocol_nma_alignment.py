@@ -101,8 +101,12 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     
     
     #--------------------------- INSERT steps functions --------------------------------------------
+    def getInputPdb(self):
+        """ Return the Pdb object associated with the normal modes. """
+        return self.inputModes.get().getPdb()
+    
     def _insertAllSteps(self):
-        atomsFn = self.inputModes.get().getPdb().getFileName()
+        atomsFn = self.getInputPdb().getFileName()
         # Define some outputs filenames
         self.imgsFn = self._getExtraPath('images.xmd') 
         self.atomsFn = self._getExtraPath(basename(atomsFn))
@@ -110,8 +114,6 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         
         self._insertFunctionStep('convertInputStep', atomsFn) 
         
-        return
-    
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
             self._insertFunctionStep("performNmaStep", self.atomsFn, self.modesFn)
             self._insertFunctionStep("extractDeformationsStep")
@@ -170,14 +172,14 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         args += "--discrAngStep %(discreteAngularSampling)f --odir %(odir)s --centerPDB "
         args += "--trustradius_scale %(trustRegionScale)d --resume "
         
-        if self.inputPdb.get().getPseudoAtoms():
+        if self.getInputPdb().getPseudoAtoms():
             args += "--fixed_Gaussian "
         
         if self.alignmentMethod == NMA_ALIGNMENT_PROJ:
             args += "--projMatch "
     
-        print "self.numberOfMpi", self.numberOfMpi
-        self.runJob("xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
+        self.runJob("xmipp_nma_alignment", args % locals())
+        
         cleanPath(self._getPath('nmaTodo.xmd'))
     
     def extractDeformationsStep(self):
