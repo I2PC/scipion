@@ -44,7 +44,6 @@ import xmipp
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -81,7 +80,6 @@ class XmippViewer(Viewer):
                 SetOfMovies, 
                 SetOfNormalModes, 
                 XmippParticlePickingAutomatic, 
-                XmippProtConvertToPseudoAtoms, 
                 XmippProtExtractParticlesPairs, 
                 XmippProtIdentifyOutliers, 
                 XmippProtKerdensom, 
@@ -295,9 +293,6 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
             self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
 
-        elif issubclass(cls, XmippProtConvertToPseudoAtoms):
-            self._views.append(ChimeraView(obj.outputPdb._chimeraScript))
-            
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
