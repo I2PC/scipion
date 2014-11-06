@@ -467,9 +467,9 @@ public class GalleryData {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                if ((ciFirstRender == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender)// favor mdl_image over mdl_micrograph
+                if (ciFirstRender == null && ci.allowRender)
                     ciFirstRender = ci;
-                if ((ciFirstRenderVisible == null || ci.label == MDLabel.MDL_IMAGE) && ci.allowRender && ci.visible) 
+                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible) 
                     ciFirstRenderVisible = ci;
             }
             if (ciFirstRenderVisible != null) {
@@ -1816,5 +1816,18 @@ public class GalleryData {
            return orderLabels;
        }
         
+       public Long getSelVolId()
+       {
+           if(selectedVolFn == null || selectedVolFn.isEmpty())
+               return null;
+           String vol;
+           for(Long id: ids)
+           {
+               vol = md.getValueString(ciFirstRender.label, id);
+               if(vol.equals(selectedVolFn))
+                   return id;
+           }
+           return null;
+       }
         
 }// class GalleryDaa
