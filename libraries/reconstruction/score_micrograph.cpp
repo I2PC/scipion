@@ -104,7 +104,7 @@ void ProgScoreMicrograph::run()
 	//prmPSDSort.downsampling =
 	prmPSDSort.fn_in = "auxiliaryFile.xmd";
 	prmPSDSort.fn_out = "kkauxiliaryFile.xmd";
-	prmPSDSort.downsampling = 2.000000;
+	// COSS prmPSDSort.downsampling = 2.000000; // this parameter must be written in the metadata
 
 	char buffer[200];
 	sprintf(buffer, "xmipp_ctf_sort_psds -i %s -o %s --downsampling %f", 	prmPSDSort.fn_in.c_str(), prmPSDSort.fn_out.c_str(),2.000000);

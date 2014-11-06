@@ -80,7 +80,7 @@ public:
     double mask_w2;
 
     /// Downsampling factor used for the PSDs
-    double downsampling;
+    // COSS: double downsampling; // This is already in the CTF file
 public:
     /** Empty constructor */
     ProgPSDSort();
