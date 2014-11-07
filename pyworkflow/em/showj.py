@@ -59,6 +59,9 @@ ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
+OBJ_CMDS = 'object_commands'
+OBJ_CMDA = 'A'
+
 
 GOTO = 'goto'
 ROWS = 'rows'
@@ -237,6 +240,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
 def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
-    
+
     args = getJavaIJappArguments(memory, appName, args)
+    print args
     subprocess.Popen('java ' + args, shell=True, env=env)
