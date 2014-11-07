@@ -26,6 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JTable;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -67,7 +68,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
     private JPanel thresholdpn;
     private JFormattedTextField thresholdtf;
 
-    private JCheckBox centerparticlebt;
+    private JToggleButton centerparticlebt;
     private JMenuItem exportmi;
     private JCheckBox autopickchb;
     private JPanel sppickerpn;
@@ -276,8 +277,9 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
             setLayout(new GridBagLayout());
 
             initToolBar();
-            centerparticlebt = new JCheckBox("Center", true);
-            tb.add(centerparticlebt);
+            centerparticlebt = new JToggleButton("Center", XmippResource.getIcon("center.png"));
+            centerparticlebt.setSelected(true);
+            tb.add(centerparticlebt, 0);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.HORIZONTAL));
 
             add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 1));
