@@ -201,6 +201,8 @@ class FunctionStep(Step):
     def _run(self):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
+        if isinstance(resultFiles, basestring):
+            resultFiles = [resultFiles]
         if resultFiles and len(resultFiles):
             missingFiles = missingPaths(*resultFiles)
             if len(missingFiles):
