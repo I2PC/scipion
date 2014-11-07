@@ -53,6 +53,8 @@ class Plotter(View):
             windowTitle: title for the whole windows.
         """
         self.fontsize = fontsize
+        self.tightLayoutOn = True
+        
         if self.plt is None:
             if self.interactive:
                 self.backend = 'TkAgg'
@@ -152,18 +154,21 @@ class Plotter(View):
         a.set_axis_off()
         self.figure.set_facecolor('white')
         return a
+    
+    def tightLayout(self):
+        if self.tightLayoutOn:
+            self.plt.tight_layout()            
         
     def show(self, interactive=True):
         self.setInteractive(interactive)
-        self.plt.tight_layout()
+        self.tightLayout()
         self.plt.show()
 
     def draw(self):
-        #self.activate()
-        self.plt.tight_layout()
+        self.tightLayout()
         self.plt.draw()
         
     def savefig(self, *args, **kwargs):
-        self.plt.tight_layout()
+        self.tightLayout()
         self.figure.savefig(*args, **kwargs)
         
