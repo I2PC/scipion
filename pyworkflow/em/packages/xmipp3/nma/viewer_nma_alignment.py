@@ -76,8 +76,7 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         
     def _viewRawDeformation(self, paramName):
         components = self.displayRawDeformation.get()
-        plotter = self._doViewRawDeformation(components)
-        return [plotter]
+        return self._doViewRawDeformation(components)
         
     def _doViewRawDeformation(self, components):
 #        components = map(int, self.displayRawDeformation.get().split())
@@ -88,23 +87,24 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         if dim > 0:
             modeList = []
             modeNameList = []
-            # Get modes
-            md = xmipp.MetaData(self.protocol.inputModes.get().getFileName())
-            md.removeDisabled()
+            missingList = []
             
-            for mode in components:
-                if mode > md.size():
-                    views.append
-                    showWarning('Warning', "You don't have so many modes",parent=self.master)
-                else:
-                    mode -= 1
-                    modeName = ""
-                    for i, objId in enumerate(md):
-                        modeName = md.getValue(xmipp.MDL_NMA_MODEFILE, objId)
-                        if i == mode:
-                            break
-                    modeNameList.append(modeName)
-                    modeList.append(mode)
+            for modeNumber in components:
+                found = False
+                md = xmipp.MetaData(self.protocol._getExtraPath('modes.xmd'))
+                for i, objId in enumerate(md):
+                    modeId = md.getValue(xmipp.MDL_ORDER, objId)
+                    if modeNumber == modeId:
+                        modeNameList.append('Mode %d' % modeNumber)
+                        modeList.append(i)
+                        found = True
+                        break
+                if not found:
+                    missingList.append(str(modeNumber))
+                    
+            if missingList:
+                return [self.errorMessage("Invalid mode(s) *%s*\n." % (', '.join(missingList)), 
+                              title="Invalid input")]
             
             defFn = self.protocol._getExtraPath('deformations.txt')
             
@@ -113,13 +113,13 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
-                plotter.plotArray1D("Histogram for mode: %s" % baseList[0], modeList[0], 
+                plotter.plotArray1D("Histogram for %s" % baseList[0], modeList[0], 
                                     "Deformation value", "Number of images")
             elif dim == 2:
-                plotter.plotArray2D("Mode %s vs %s" % tuple(baseList), 
+                plotter.plotArray2D("%s vs %s" % tuple(baseList), 
                                     modeList[0], modeList[1], *baseList)
             elif dim == 3:
-                plotter.plotArray3D("Modes %s %s %s" % tuple(baseList), 
+                plotter.plotArray3D("%s %s %s" % tuple(baseList), 
                                     modeList[0], modeList[1], modeList[2], *baseList)
             views.append(plotter)
             
@@ -159,10 +159,11 @@ class XmippNmaPlotter(XmippPlotter):
         # function to build a compound path
         XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
         
+        import matplotlib.patches as patches
+        import matplotlib.path as path
         # get the Path object
         barpath = path.Path.make_compound_path_from_polys(XY)
         
-        import matplotlib.patches as patches
         # make a patch out of it
         patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
         ax.add_patch(patch)
@@ -184,5 +185,7 @@ class XmippNmaPlotter(XmippPlotter):
         ax.set_zlabel(zlabel)
         a = self._data
         ax.scatter3D(a[:,colX], a[:,colY], a[:,colZ])
+        # Disable tight_layout that is not available for 3D 
+        self.tightLayoutOn = False
         
 
