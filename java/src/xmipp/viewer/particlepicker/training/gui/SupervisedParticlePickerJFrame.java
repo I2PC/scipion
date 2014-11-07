@@ -365,6 +365,7 @@ public class SupervisedParticlePickerJFrame extends ParticlePickerJFrame {
                             if (autopickchb.isSelected()) {
                                 autopickchb.setSelected(false);
                             }
+                            getMicrograph().resetParticlesRectangle();
                             canvas.refreshActive(null);
                             setTitle("Xmipp Particle Picker - " + ppicker.getMode());
                         } else {

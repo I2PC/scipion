@@ -19,6 +19,7 @@ import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.JMetaDataIO;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -394,44 +395,45 @@ public class SupervisedParticlePicker extends ParticlePicker
 	public void saveData(Micrograph m)
 	{
                 //System.out.println("saving data");
-		SupervisedParticlePickerMicrograph tm = (SupervisedParticlePickerMicrograph) m;
-		long id;
-		try
-		{
-			MetaData md = new MetaData();
-			String file;
-			file = getOutputPath(m.getPosFile());
-			if (!m.hasData())
-				new File(file).delete();
-			else
-			{
-				id = md.addObject();
-				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, tm.getState().toString(), id);
-				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
-				md.setValueDouble(MDLabel.MDL_COST, tm.getThreshold(), id);
-				md.write("header@" + file); // using md.write will remove other
-											// existing blocks
-				md.clear();
-
-				for (ManualParticle p : tm.getManualParticles())
-				{
-					id = md.addObject();
-					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
-					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
-
-				}
-				md.writeBlock(getParticlesBlock(file));// to replace/append
-			}
-			md.destroy();
-			saveAutomaticParticles(tm);
+//		SupervisedParticlePickerMicrograph tm = (SupervisedParticlePickerMicrograph) m;
+//		long id;
+//		try
+//		{
+//			MetaData md = new MetaData();
+//			String file;
+//			file = getOutputPath(m.getPosFile());
+//			if (!m.hasData())
+//				new File(file).delete();
+//			else
+//			{
+//				id = md.addObject();
+//				md.setValueString(MDLabel.MDL_PICKING_MICROGRAPH_STATE, tm.getState().toString(), id);
+//				md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
+//				md.setValueDouble(MDLabel.MDL_COST, tm.getThreshold(), id);
+//				md.write("header@" + file); // using md.write will remove other
+//											// existing blocks
+//				md.clear();
+//
+//				for (ManualParticle p : tm.getManualParticles())
+//				{
+//					id = md.addObject();
+//					md.setValueInt(MDLabel.MDL_XCOOR, p.getX(), id);
+//					md.setValueInt(MDLabel.MDL_YCOOR, p.getY(), id);
+//
+//				}
+//				md.writeBlock(getParticlesBlock(file));// to replace/append
+//			}
+//			md.destroy();
+//			saveAutomaticParticles(tm);
+                        JMetaDataIO.saveData((SupervisedParticlePickerMicrograph) m, getOutputPath(m.getPosFile()));
                         saveTemplates();
                 //System.out.println("saved");
-		}
-		catch (Exception e)
-		{
-			getLogger().log(Level.SEVERE, e.getMessage(), e);
-			throw new IllegalArgumentException(e.getMessage());
-		}
+//		}
+//		catch (Exception e)
+//		{
+//			getLogger().log(Level.SEVERE, e.getMessage(), e);
+//			throw new IllegalArgumentException(e.getMessage());
+//		}
 
 	}
 
@@ -734,6 +736,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo:																						// exists
 		{
 			MetaData md = new MetaData(getParticlesAutoBlock(file));
+                        md.print();
 			loadAutomaticParticles(m, md);
 			md.destroy();
 		}
@@ -1035,6 +1038,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		// Change the state of the micrograph and save changes
 		micrograph.setState(MicrographState.Supervised);
 		saveData(micrograph);
+                setChanged(false);
 		// Create the metadata with each micrograph and its .pos file
 		// Add all micrographs with manual particles except the current
 		// micrograph
@@ -1089,11 +1093,13 @@ public class SupervisedParticlePicker extends ParticlePicker
 			try
 			{
                                 System.out.println("Training");
+                                System.out.println(rectangle);
 				classifier.train(trainInput, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
 				micrograph.setAutopickpercent(getAutopickpercent());
                                 System.out.println("Autopicking");
 				autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 				loadParticles(micrograph, autopickRows);
+                                saveData(micrograph);
 				XmippWindowUtil.releaseGUI(frame.getRootPane());
 				frame.getCanvas().setEnabled(true);
 				frame.getCanvas().repaint();

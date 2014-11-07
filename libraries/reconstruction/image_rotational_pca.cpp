@@ -254,7 +254,7 @@ void threadApplyT(ThreadArgument &thArg)
   size_t first, last;
   if (IS_MASTER && thArg.thread_id==0)
   {
-    std::cerr << "Applying T ...\n";
+    std::cout << "Applying T ...\n";
     init_progress_bar(objId.size());
   }
   while (taskDistributor->getTasks(first, last))
@@ -369,7 +369,7 @@ void threadApplyTt(ThreadArgument &thArg)
   size_t first, last;
   if (IS_MASTER && thArg.thread_id==0)
   {
-    std::cerr << "Applying Tt ...\n";
+    std::cout << "Applying Tt ...\n";
     init_progress_bar(objId.size());
   }
   while (taskDistributor->getTasks(first, last))
@@ -524,7 +524,7 @@ void ProgImageRotationalPCA::copyHtoF(int block)
 
 void ProgImageRotationalPCA::comunicateQrDim(int &qrDim)
 {
-    std::cerr << "Performing QR decomposition ..." << std::endl;
+    std::cout << "Performing QR decomposition ..." << std::endl;
     qrDim = QR();
 }
 
@@ -539,7 +539,7 @@ void ProgImageRotationalPCA::mapMatrix(int qrDim)
 void ProgImageRotationalPCA::applySVD()
 {
   // Apply SVD and extract the basis
-    std::cerr << "Performing SVD decomposition ..." << std::endl;
+    std::cout << "Performing SVD decomposition ..." << std::endl;
     // SVD of W
     Matrix2D<double> U,V;
     Matrix1D<double> S;

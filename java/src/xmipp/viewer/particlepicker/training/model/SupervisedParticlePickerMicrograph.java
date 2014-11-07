@@ -325,7 +325,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
                 if(count <= 3)
                     return false;
                 double particlesArea = Math.pow(picker.getSize(), 2) * count;
-                boolean isvalid = rectangle.width * rectangle.height - particlesArea > particlesArea;
+                boolean isvalid = rectangle.width * rectangle.height - particlesArea > particlesArea/2;
                 return isvalid;
         
         }
