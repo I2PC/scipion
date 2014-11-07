@@ -220,7 +220,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
                     md.setValue(xmipp.MDL_ENABLED,-1,mdid)
                 else:
                     md.setValue(xmipp.MDL_ENABLED,1,mdid)
-            md.write(self._getPath("ctfs_selection.xmd"))
+        md.write(self._getPath("ctfs_selection.xmd"))
         cleanPath(fnRejected)
         
     def createOutputStep(self):
