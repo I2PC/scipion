@@ -51,7 +51,7 @@ NMA_ALIGNMENT_PROJ = 1
         
 class XmippProtAlignmentNMA(ProtAnalysis3D):
     """ Protocol for flexible angular alignment. """
-    _label = 'nma analysis'
+    _label = 'nma alignment'
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -136,9 +136,9 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     def writeModesMetaData(self):
         """ Iterate over the input SetOfNormalModes and write
         the proper Xmipp metadata.
-        Take into account a possible selection of modes.
-        This option is just a shortcut for testing. The recommended
-        way is just create a subset from the GUI and use that as input.
+        Take into account a possible selection of modes (This option is 
+        just a shortcut for testing. The recommended
+        way is just create a subset from the GUI and use that as input)
         """
         modeSelection = []
         if self.modeList.empty():
