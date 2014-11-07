@@ -53,16 +53,13 @@ class EmanProtBoxing(ProtParticlePicking):
         form.addParam('inputMicrographs', PointerParam, label="Micrographs",
                       pointerClass='SetOfMicrographs',
                       help='Select the SetOfMicrograph ')
-        form.addParam('boxSize', IntParam, label='Box size',
-                      validators=[Positive])
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self.inputMics = self.inputMicrographs.get()
         micList = [os.path.relpath(mic.getFileName(), self.workingDir.get()) for mic in self.inputMics]
 
-        self._params = {'inputMics': ' '.join(micList), 
-                        'boxSize': self.boxSize.get()}      
+        self._params = {'inputMics': ' '.join(micList)}
         # Launch Boxing GUI
         if not self.importFolder.hasValue():
             self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
@@ -75,11 +72,11 @@ class EmanProtBoxing(ProtParticlePicking):
         #path.makePath("runs")
         # Program to execute and it arguments
         program = eman2.getEmanProgram("e2boxer.py")
-        arguments = "%(inputMics)s --boxsize=%(boxSize)i"
+        arguments = "%(inputMics)s"
         # Run the command with formatted parameters
         self._log.info('Launching: ' + program + ' ' + arguments % self._params)
         self.runJob(program, arguments % self._params)
-        
+
         # Open dialog to request confirmation to create output
         if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
             self._createOutput()
@@ -126,3 +123,6 @@ class EmanProtBoxing(ProtParticlePicking):
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
+
+    def _methods(self):
+        return ProtParticlePicking._methods(self)
