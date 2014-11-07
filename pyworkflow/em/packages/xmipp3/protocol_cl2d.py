@@ -51,6 +51,9 @@ CL_ROBUST = 1
 CLASSES = ''
 CLASSES_CORE = '_core'
 CLASSES_STABLE_CORE = '_stable_core'
+
+# Suggested number of images per class
+IMAGES_PER_CLASS = 200
         
 class XmippProtCL2D(ProtClassify2D):
     """ Classifies a set of images using a clustering algorithm 
