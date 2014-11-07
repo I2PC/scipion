@@ -26,7 +26,7 @@ public class JMetaDataIO {
     
     public static void saveData(SupervisedParticlePickerMicrograph m, String path)
 	{
-                System.out.println("saving data on JMetaDataIO");
+                //System.out.println("saving data on JMetaDataIO");
 		long id;
 		try
 		{

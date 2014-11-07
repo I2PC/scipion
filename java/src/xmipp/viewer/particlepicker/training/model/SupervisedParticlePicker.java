@@ -736,7 +736,6 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (new File(file).exists() && MetaData.containsBlock(file, particlesAutoBlock))// todo:																						// exists
 		{
 			MetaData md = new MetaData(getParticlesAutoBlock(file));
-                        md.print();
 			loadAutomaticParticles(m, md);
 			md.destroy();
 		}
