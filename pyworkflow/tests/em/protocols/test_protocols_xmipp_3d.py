@@ -292,28 +292,52 @@ class TestXmippSimAnnealing(TestXmippBase):
         self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
 
 
-class TestXmippRansac(TestXmippBase):
+class TestXmippRansacMda(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('mda')
         cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 3.5
+        cls.symmetryGroup = 'd6'
+        cls.angularSampling = 15
+        cls.nRansac = 25
+        cls.numSamples = 5
+        cls.dimRed = False
+        cls.numVolumes = 2
+        cls.maxFreq = 30
 
     def test_ransac(self):
         #Import a set of averages
         print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=3.5)
+        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True,
+                                         samplingRate=self.samplingRate)
         self.launchProtocol(protImportAvg)
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
         
         print "Run Ransac"
         protRansac = self.newProtocol(XmippProtRansac,
-                                      symmetryGroup='d6', angularSampling=15, nRansac=25, numSamples=5,
-                                      dimRed=False, numVolumes=2, maxFreq=30, useAll=True, numberOfThreads=4)
-        protRansac.inputParticles.set(protImportAvg.outputAverages)
+                                      symmetryGroup=self.symmetryGroup, angularSampling=self.angularSampling,
+                                      nRansac=self.nRansac, numSamples=self.numSamples, dimRed=self.dimRed,
+                                      numVolumes=self.numVolumes, maxFreq=self.maxFreq, useAll=True, numberOfThreads=4)
+        protRansac.inputSet.set(protImportAvg.outputAverages)
         self.launchProtocol(protRansac)
         self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with ransac protocol")
 
+class TestXmippRansacGroel(TestXmippRansacMda):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('groel')
+        cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 2.1
+        cls.symmetryGroup = 'd7'
+        cls.angularSampling = 7
+        cls.nRansac = 2350
+        cls.numSamples = 10
+        cls.dimRed = True
+        cls.numVolumes = 10
+        cls.maxFreq = 12
 
 class TestXmippProjMatching(TestXmippBase):
 

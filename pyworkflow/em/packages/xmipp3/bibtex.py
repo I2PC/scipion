@@ -342,8 +342,17 @@ editor = "Sousa, Alioscka A. and Kruhlak, Michael J.",
 doi = "http://dx.doi.org/10.1007/978-1-62703-137-0_11",
 publisher = "Humana Press",
 keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
-author = "Sorzano, C.O.S. and de la Rosa-Trev√≠n, J.M. and Ot√≥n, J. and Vega, J.J. and Cuenca, J. and Zald√≠var-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√©Mar√≠a",
+author = "Sorzano, C.O.S. and de la Rosa-Trevin, J.M. and Oton, J. and Vega, J.J. and Cuenca, J. and Zaldivar-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√©Mar√≠a",
 pages = "171-193",
+}
+
+@InProceedings{Sorzano2014,
+  title                    = {Outlier detection for single particle analysis in Electron Microscopy},
+  author                   = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-TrevÌn, J. M. and ZaldÌvar-Peraza, A. and OtÛn, J. and Abrishami, V. and Foche, I. and Marabini, R. and Caffarena, G. and Carazo, J. M.},
+  journal                  = {Proc. Intl. Work-Conference on Bioinformatics and Biomedical Engineering, IWBBIO},
+  year                     = {2014},
+  pages                    = {950},
+  doi                      = "http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf"
 }
 
 @article{Vargas2013a,
@@ -351,7 +360,7 @@ author = {Vargas, J. and OtÛn, J. and Marabini, R. and Jonic, S. and {de la
   Rosa-TrevÌn}, J. M. and et.al.},
 title = {{FASTDEF}: Fast defocus and astigmatism estimation for high-throughput
   transmission electron microscopy.},
-journal = "JSB",
+journal = "J. Structural Biology",
 doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
 year = {2013},
 volume = {181},
@@ -362,7 +371,7 @@ month = {Feb},
 
 @article{Vargas2013b,
 title = "Particle quality assessment and sorting for automatic and semiautomatic particle-picking techniques ",
-journal = "JSB",
+journal = "J. Structural Biology",
 volume = "183",
 number = "3",
 pages = "342 - 353",
@@ -392,7 +401,7 @@ keywords = "Validation"
 
 @article{Marabini2014a,
 title = "CTF Challenge... ",
-journal = "JSB",
+journal = "J. Structural Biology",
 volume = "",
 number = "",
 pages = "",
