@@ -52,7 +52,6 @@ class TestMixedBPV(TestWorkflow):
         print "Running Eman fake particle picking..."
         protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir, runMode=1) 
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
-        protPP.boxSize.set(110)
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 #         self.protDict['protPP'] = protPP
