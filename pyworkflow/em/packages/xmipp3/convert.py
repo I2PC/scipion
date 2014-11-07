@@ -792,7 +792,7 @@ def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
     defocusGroupSet._xmippMd = String(fnDefocusGroup)
 
 
-def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):    
+def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeOnlyRepresentatives=False):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
         classes2DSet: the SetOfClasses2D instance.
@@ -806,15 +806,16 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes'):
     for class2D in classes2DSet:        
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
-        ref = class2D.getObjId()
-        imagesFn = 'class%06d_images@%s' % (ref, filename)
-        imagesMd = xmipp.MetaData()
-        imgRow = XmippMdRow()
-        if class2D.getSize() > 0:
-            for img in class2D:
-                particleToRow(img, imgRow)
-                imgRow.writeToMd(imagesMd, imagesMd.addObject())
-        imagesMd.write(imagesFn, xmipp.MD_APPEND)
+        if not writeOnlyRepresentatives:
+            ref = class2D.getObjId()
+            imagesFn = 'class%06d_images@%s' % (ref, filename)
+            imagesMd = xmipp.MetaData()
+            imgRow = XmippMdRow()
+            if class2D.getSize() > 0:
+                for img in class2D:
+                    particleToRow(img, imgRow)
+                    imgRow.writeToMd(imagesMd, imagesMd.addObject())
+            imagesMd.write(imagesFn, xmipp.MD_APPEND)
     
     classMd.write(classFn, xmipp.MD_APPEND) # Empty write to ensure the classes is the first block
 

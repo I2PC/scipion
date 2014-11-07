@@ -33,12 +33,11 @@ from glob import glob
 import xmipp
 from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam, 
                                         StringParam, FloatParam, 
-                                        LEVEL_ADVANCED, LEVEL_EXPERT)
+                                        LEVEL_ADVANCED, LEVEL_EXPERT,
+    BooleanParam)
 from pyworkflow.em.protocol import ProtClassify2D
 
-from convert import writeSetOfParticles, readSetOfClasses2D
-
-
+from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
 
 # Comparison methods enum
 CMP_CORRELATION = 0
@@ -52,7 +51,6 @@ CL_ROBUST = 1
 CLASSES = ''
 CLASSES_CORE = '_core'
 CLASSES_STABLE_CORE = '_stable_core'
-
         
 class XmippProtCL2D(ProtClassify2D):
     """ Classifies a set of images using a clustering algorithm 
@@ -75,43 +73,56 @@ class XmippProtCL2D(ProtClassify2D):
         form.addParam('numberOfReferences', IntParam, default=64,
                       label='Number of references:',
                       help='Number of references (or classes) to be generated.')
+        form.addParam('randomInitialization', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+                      label='Random initialization of references:',
+                      help="Initialize randomly the first references. If you don't initialize randomly, you must supply a set of initial classes")
+        form.addParam('initialClasses', PointerParam, label="Initial classes", condition="not randomInitialization",
+                      pointerClass='SetOfClasses',
+                      help='Set of initial classes to start the classification')        
         form.addParam('numberOfInitialReferences', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
-                      label='Number of initial references:',
+                      label='Number of initial references:', condition="randomInitialization",
                       help='Initial number of references used in the first level.')
-        form.addParam('numberOfIterations', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations within each level.')         
         form.addParam('comparisonMethod', EnumParam, choices=['correlation', 'correntropy'],
-                      label="Comparison method", default=CMP_CORRELATION,
+                      label="Comparison method", default=CMP_CORRELATION, expertLevel=LEVEL_ADVANCED,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Use correlation or correntropy')
         form.addParam('clusteringMethod', EnumParam, choices=['classical', 'robust'],
-                      label="Clustering method", default=CL_CLASSICAL,
+                      label="Clustering method", default=CL_CLASSICAL, expertLevel=LEVEL_ADVANCED,
                       display=EnumParam.DISPLAY_COMBO,
                       help='Use the classical clustering criterion or the robust')
         form.addParam('extraParams', StringParam, expertLevel=LEVEL_EXPERT,
               label='Additional parameters',
               help='Additional parameters for classify_CL2D: \n  --verbose, --corrSplit, ...')   
         
-        form.addSection(label='Core analysis')        
-        form.addParam('thZscore', FloatParam, default=3,
+        form.addSection(label='Core analysis')
+        form.addParam('doCore', BooleanParam, default=True,
+                      label='Perform core analysis',
+                      help='An image belongs to the core if it is close (see Junk Zscore and PCA Zscore) to the class center')        
+        form.addParam('thZscore', FloatParam, default=3, expertLevel=LEVEL_EXPERT,
                       label='Junk Zscore',
                       help='Which is the average Z-score to be considered as junk. Typical values'
                            'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
                            'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.')
-        form.addParam('thPCAZscore', FloatParam, default=3,
+                           'accept more images.', condition='doCore')
+        form.addParam('thPCAZscore', FloatParam, default=3, expertLevel=LEVEL_EXPERT,
                       label='PCA Zscore',
                       help='Which is the PCA Z-score to be considered as junk. Typical values'
                            'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
                            'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.')        
+                           'accept more images.', condition='doCore')        
+        form.addParam('doStableCore', BooleanParam, default=True,
+                      label='Perform stable core analysis',
+                      help='Two images belong to the stable core if they have been essentially together along the classification process',
+                      condition='doCore')        
         form.addParam('tolerance', IntParam, default=1,
                       label='Tolerance',
                       help='An image belongs to the stable core if it has been with other images in the same class'
                            'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
                            'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
-                           'the core.')          
+                           'the core.', expertLevel=LEVEL_EXPERT, condition='doCore and doStableCore')          
         
         form.addParallelSection(threads=0, mpi=4)
         
@@ -121,6 +132,7 @@ class XmippProtCL2D(ProtClassify2D):
         
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('images.xmd') 
+        self.initialClassesFn = self._getExtraPath('initialClasses.xmd') 
         self._insertFunctionStep('convertInputStep')    
         
         # Prepare arguments to call program: xmipp_classify_CL2D
@@ -132,26 +144,31 @@ class XmippProtCL2D(ProtClassify2D):
                         'extraParams': self.extraParams.get(''),
                         'thZscore': self.thZscore.get(),
                         'thPCAZscore': self.thPCAZscore.get(),
-                        'tolerance': self.tolerance.get()
+                        'tolerance': self.tolerance.get(),
+                        'initialClassesFn': self.initialClassesFn
                       }
         args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
         if self.comparisonMethod == CMP_CORRELATION:
             args += ' --distance correlation'
         if self.clusteringMethod == CL_CLASSICAL:
             args += ' --classicalMultiref'
-        if not self.extraParams.hasValue() or not '--ref0' in self.extraParams.get():
+        if self.randomInitialization:
             args += ' --nref0 %(nref0)d'
+        else:
+            args += ' --ref0 %(initialClassesFn)s'
+        if self.extraParams.hasValue():
+            args += ' %(extraParams)s'
     
         self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
         
         # Analyze cores and stable cores
-        if self.numberOfReferences > self.numberOfInitialReferences:
+        if self.numberOfReferences > self.numberOfInitialReferences and self.doCore:
             program = "xmipp_classify_CL2D_core_analysis"
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
             
-            if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()): # Number of levels should be > 2
+            if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()) and self.doStableCore: # Number of levels should be > 2
                 # stable core analysis
                 self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
             
@@ -169,7 +186,9 @@ class XmippProtCL2D(ProtClassify2D):
     
     #--------------------------- STEPS functions --------------------------------------------   
     def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)    
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+        if not self.randomInitialization:
+            writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeOnlyRepresentatives=True)
 
     def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
@@ -185,7 +204,6 @@ class XmippProtCL2D(ProtClassify2D):
             md = xmipp.MetaData(mdFnOut)
             md.addItemId()
             md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
-            #deleteFile(log,fnRoot+".xmd")
         
     def evaluateClassesStep(self, subset=''):
         """ Calculate the FRC and output the hierarchy for 
@@ -219,13 +237,17 @@ class XmippProtCL2D(ProtClassify2D):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
-        # Some prepocessing option need to be marked
         if self.numberOfMpi <= 1:
             validateMsgs.append('Mpi needs to be greater than 1.')
+        if self.numberOfInitialReferences > self.numberOfReferences:
+            validateMsgs.append('The number of final references cannot be smaller than the number of initial references')
         return validateMsgs
     
     def _citations(self):
-        return ['Sorzano2010a']
+        citations=['Sorzano2010a']
+        if self.doCore:
+            citations.append('Sorzano2014')
+        return citations
     
     def _summaryLevelFiles(self, summary, levelFiles, subset):
         if levelFiles:
@@ -248,13 +270,18 @@ class XmippProtCL2D(ProtClassify2D):
         return summary
     
     def _methods(self):
-        methods = []
+        strline=''
         if hasattr(self, 'outputClasses'):
-            methods.append("The SetOfParticles with *%d* particles" % self.inputParticles.get().getSize())
-            methods.append("has been classified in *%d* classes." % self.numberOfReferences.get())
-            methods.append("The method used to compare was *%s*" % self.getEnumText('comparisonMethod'))
-            methods.append("and to clustering was *%s*" % self.getEnumText('clusteringMethod'))
-        return methods
+            strline+='We classified %d particles from the %s set of particles into %d classes using CL2D [Sorzano2010a]. '%\
+                           (self.inputParticles.get().getSize(),self.inputParticles.get().getNameId(),self.numberOfReferences.get())
+            strline+='We used the the %s method to compare images and %s clustering criterion. '%\
+                           (self.getEnumText('comparisonMethod'),self.getEnumText('clusteringMethod'))
+            if self.doCore:
+                strline+='We calculated the class cores'
+                if self.doStableCore:
+                    strline+=' and the class stable cores'
+                strline+=' [Sorzano2014].'
+        return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getLevelMdFiles(self, subset=''):
