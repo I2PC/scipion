@@ -33,8 +33,8 @@
  * 
  * function renderElements(nRow, aData)
  * -> Render elements on table (Image and checkbox). This method is called from datatable script
- * 	  nRow is the row to be displayed
- *    aData the row content
+ * 	  + nRow is the row to be displayed
+ *    + aData the row content
  *     
  * function initializeColumnHeader()
  * -> Initialize icons in column header (render image, disable column and set column editable)
@@ -115,14 +115,15 @@ var COL_RENDER_ID = 1;
 var COL_RENDER_TEXT = 2;
 var COL_RENDER_IMAGE = 3;
 var COL_RENDER_CHECKBOX = 4;
+var COL_RENDER_SLICE = 5;
 
 /** METHODS ***************************************************************** */
 
 function renderElements(nRow, aData) {
 	var columnId = 0;
 	var invisibleColumns = 0;
-
-	for ( var i in jsonTableLayoutConfiguration.columnsLayout) {
+	
+	for (var i in jsonTableLayoutConfiguration.columnsLayout) {
 		var columnLayoutConfiguration = jsonTableLayoutConfiguration.columnsLayout[i]
 
 		if (columnLayoutConfiguration.visible) {
@@ -134,15 +135,29 @@ function renderElements(nRow, aData) {
 			}
 
 			if (columnIdReal != null) {
-
+				
+				// columnType = 4 
 				if (columnLayoutConfiguration.columnType == COL_RENDER_CHECKBOX) {
+//					console.log("id:"+columnIdReal+" checkbox!")
 					colRenderCheckbox(i, nRow, aData, columnId, columnIdReal);
 				
 				} else if (columnLayoutConfiguration.renderable) {
+//					console.log("id:"+columnIdReal+" renderable!")
 					colRenderImg('colRenderable', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
 				
+				// columnType = 3
 				} else if (columnLayoutConfiguration.columnType == COL_RENDER_IMAGE) {
+//					console.log("id:"+columnIdReal+" render!")
 					colRenderImg('colRenderImage', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+				
+				// columnType = 5
+				} else if (columnLayoutConfiguration.columnType == COL_RENDER_SLICE) {
+//					console.log("id:"+columnIdReal+" render slice!")
+					colRenderImg('colRenderSlice', i, nRow, aData, columnId, columnIdReal, columnLayoutConfiguration)
+				
+				// None
+				} else if (columnLayoutConfiguration.columnType == COL_RENDER_NONE) {
+//					console.log("id:"+columnIdReal+ " nothing to render!")
 				}
 			}
 		} else {
@@ -180,6 +195,10 @@ function colRenderImg(mode, id, nRow, aData, columnId, columnIdReal, columnLayou
 		case "colRenderImage":
 			content_html += colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc)
 			break;
+		
+		case "colRenderSlice":
+			content_html += colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc)
+			break;
 	}
 	$('td:eq(' + columnIdReal + ')', nRow).html(content_html);
 }
@@ -214,6 +233,26 @@ function colRenderImage(id, aData, columnId, renderFunc, extraRenderFunc){
 		content_html += '&'	+ extraRenderFunc
 	}
 	content_html += '&image=' + aData[columnId] + '\"/>';
+
+	return content_html;
+}
+
+function colRenderSlice(id, aData, columnId, renderFunc, extraRenderFunc){
+	var content_html = '<span>' 
+			+ aData[columnId] + '</span>'
+			+ '<img style="display:none" class=\"tableImages\" id=\"'
+			+ id + '___' + aData[0]
+			+ '\" data-real_src=\"'+ getSubDomainURL() +'/render_column/?renderFunc='
+			+ renderFunc;
+			
+	if(extraRenderFunc.length > 0){
+		content_html += '&'	+ extraRenderFunc
+	}
+	
+	var volName = aData[columnId].split(".")
+	volName = volName[0] + "_tmp.mrc"
+	
+	content_html += '&image=' + volName + '\"/>';
 
 	return content_html;
 }
@@ -343,16 +382,16 @@ function enableDisableRenderColumn(event, element) {
 	// We enable/disable render event
 	var nTrs = oTable.fnGetNodes();
 	$('td:nth-child(' + (iCol + 1) + ')', nTrs).each(
-			function() {
-				if ($(element).find("i").hasClass("fa-eye-slash")
-						&& $(this).find("img").attr('src') == undefined) {
-					/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
-					setImageSize(false)
-					initializeImageLoad(false)
-				}
-				$(this).find("img").toggle()
-				$(this).find("span").toggle()
-			})
+		function() {
+			if ($(element).find("i").hasClass("fa-eye-slash")
+					&& $(this).find("img").attr('src') == undefined) {
+				/* $(this).find("img").attr("src",$(this).find("img").data('real_src')) */
+				setImageSize(false)
+				initializeImageLoad(false)
+			}
+			$(this).find("img").toggle()
+			$(this).find("span").toggle()
+		})
 
 	// Update table layout configuration model
 	var labelColumn = thCell.attr("id").split("___")[0]
@@ -430,7 +469,7 @@ function setElementsEditable(elements) {
 			// Get label from column
 			var label = oTable.fnSettings().aoColumns[columnIdReal].sTitle
 
-			// NAPA DE LUX TENEMOS QUE PONERLE UN ID A LAS FILAS
+			// ID in the rows? Done in the DataTable declaration
 			var aoData = oTable.fnSettings().aoData;
 			var nTd = aoData[aPos[0]]._anHidden[oTable.fnGetColumnIndex("id")];
 			var rowId = $(nTd).text()
