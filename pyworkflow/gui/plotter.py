@@ -78,11 +78,13 @@ class Plotter(View):
         
         # Create grid
         import matplotlib.gridspec as gridspec
+        from matplotlib.figure import Figure
         self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
         self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
         self.gridx = x
         self.gridy = y
         self.figure = plt.figure(figsize=figsize, dpi=dpi)
+        #self.figure = Figure(figsize=figsize, dpi=dpi)
         #self.mainTitle = mainTitle
         #self.windowTitle = windowTitle
         if (mainTitle):
@@ -90,6 +92,7 @@ class Plotter(View):
         if (windowTitle):
             self.figure.canvas.set_window_title(windowTitle) 
         self.plot_count = 0
+        self.last_subplot = None
         self.plot_title_fontsize = fontsize + 4
         self.plot_axis_fontsize  = fontsize + 2
         self.plot_text_fontsize  = fontsize
@@ -156,8 +159,8 @@ class Plotter(View):
         return a
     
     def tightLayout(self):
-        if self.tightLayoutOn:
-            self.plt.tight_layout()            
+        if self.tightLayoutOn and self.plot_count > 1:
+            self.grid.tight_layout(self.figure)            
         
     def show(self, interactive=True):
         self.setInteractive(interactive)
