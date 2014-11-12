@@ -239,7 +239,7 @@ class Window():
     It will encapsulates some basic creation and 
     setup functions. """
     
-    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
+    def __init__(self, title='', masterWindow=None, weight=True, minsize=(500, 300),
                  icon=None, **args):
         """Create a Tk window.
         title: string to use as title for the windows.
