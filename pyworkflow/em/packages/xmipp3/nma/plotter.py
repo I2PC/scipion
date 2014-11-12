@@ -40,43 +40,58 @@ class XmippNmaPlotter(XmippPlotter):
         """
         self._data = np.loadtxt(fnArray)
         XmippPlotter.__init__(self, **kwargs)
+        self.useLastPlot = False
         
+    def createSubPlot(self, title, xlabel, ylabel):
+        if self.useLastPlot and self.last_subplot:
+            ax = self.last_subplot
+            ax.cla()
+            ax.set_title(title)
+        else:
+            ax = XmippPlotter.createSubPlot(self, title, xlabel, ylabel)
+            
+        return ax
+            
     def plotArray1D(self, title, col, xlabel, ylabel):
         data = self._data
         if len(data.shape) > 1:
             data = self._data[:,col]
         
         ax = self.createSubPlot(title, xlabel, ylabel)
+        ax.hist(data, 50)
         
-        # histogram our data with numpy
-        n, bins = np.histogram(data, 50)
+        return
         
-        # get the corners of the rectangles for the histogram
-        left = np.array(bins[:-1])
-        right = np.array(bins[1:])
-        bottom = np.zeros(len(left))
-        top = bottom + n
-        
-        # we need a (numrects x numsides x 2) numpy array for the path helper
-        # function to build a compound path
-        XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
-        
-        import matplotlib.patches as patches
-        import matplotlib.path as path
-        # get the Path object
-        barpath = path.Path.make_compound_path_from_polys(XY)
-        
-        # make a patch out of it
-        patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
-        ax.add_patch(patch)
-        
-        # update the view limits
-        ax.set_xlim(left[0], right[-1])
-        ax.set_ylim(bottom.min(), top.max())
+        # CHECK WITH COSS why not to use matplotlib histogram ???
+#         # histogram our data with numpy
+#         n, bins = np.histogram(data, 50)
+#         
+#         # get the corners of the rectangles for the histogram
+#         left = np.array(bins[:-1])
+#         right = np.array(bins[1:])
+#         bottom = np.zeros(len(left))
+#         top = bottom + n
+#         
+#         # we need a (numrects x numsides x 2) numpy array for the path helper
+#         # function to build a compound path
+#         XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
+#         
+#         import matplotlib.patches as patches
+#         import matplotlib.path as path
+#         # get the Path object
+#         barpath = path.Path.make_compound_path_from_polys(XY)
+#         
+#         # make a patch out of it
+#         patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
+#         ax.add_patch(patch)
+#         
+#         # update the view limits
+#         ax.set_xlim(left[0], right[-1])
+#         ax.set_ylim(bottom.min(), top.max())
     
     def plotArray2D(self, title, colX, colY, xlabel, ylabel):
         ax = self.createSubPlot(title, xlabel, ylabel)
-        #ax.plot(self._data[:,colX], self._data[:,colY], '.')
+        #ax.plot(self._data[:,colX], self._data[:,colY], 'o')
         ax.scatter(self._data[:,colX], self._data[:,colY], c=self._data[:,colX])
     
     def plotArray3D(self, title, colX, colY, colZ, xlabel, ylabel, zlabel):
