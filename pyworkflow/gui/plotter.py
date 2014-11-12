@@ -169,7 +169,12 @@ class Plotter(View):
 
     def draw(self):
         self.tightLayout()
-        self.plt.draw()
+        self.getCanvas().draw()
+        
+    def clear(self):
+        self.getFigure().clear()
+        self.plot_count = 0
+        self.last_subplot = None
         
     def savefig(self, *args, **kwargs):
         self.tightLayout()
