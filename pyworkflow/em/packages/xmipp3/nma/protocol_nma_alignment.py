@@ -159,7 +159,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         md.write(self.modesFn)
             
     def copyDeformationsStep(self, defFn):
-        copyFile(defFn, self._getExtraPath(basename(defFn)))
+        copyFile(defFn, self.getDeformationsFile())
         
     def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -185,7 +185,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     def extractDeformationsStep(self):
         md = xmipp.MetaData(self.imgsFn)
         deformations = md.getColumnValues(xmipp.MDL_NMA)
-        defFn = self._getExtraPath("deformations.txt")
+        defFn = self.getDeformationsFile()
         fhDef = open(defFn, 'w')
         for deformation in deformations:
             for coef in deformation:
@@ -227,4 +227,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
     def _getLocalModesFn(self):
         modesFn = self.inputModes.get().getFileName()
         return self._getBasePath(modesFn)
+    
+    def getDeformationsFile(self):
+        return self._getExtraPath('deformations.txt')
     

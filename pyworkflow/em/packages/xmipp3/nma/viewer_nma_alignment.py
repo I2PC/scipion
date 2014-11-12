@@ -27,22 +27,19 @@
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
-import glob
-import numpy as np
 
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import *
-from protocol_nma import XmippProtNMA
+import os
+from os.path import join, dirname, basename
+
+from pyworkflow.viewer import (ProtocolViewer, CommandView,
+                               DESKTOP_TKINTER, WEB_DJANGO)
+from pyworkflow.protocol.params import StringParam, BooleanParam
 from protocol_nma_alignment import XmippProtAlignmentNMA
-from pyworkflow.gui.text import *
-from pyworkflow.gui.dialog import showError, showWarning
-from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+import xmipp
+
+from plotter import XmippNmaPlotter
 
 
-CLASSES = 0
-CLASS_CORES = 1
-CLASS_STABLE_CORES = 2
-   
         
 class XmippAlignmentNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol
@@ -106,10 +103,10 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                 return [self.errorMessage("Invalid mode(s) *%s*\n." % (', '.join(missingList)), 
                               title="Invalid input")]
             
-            defFn = self.protocol._getExtraPath('deformations.txt')
+            defFn = self.protocol.getDeformationsFile()
             
             # Actually plot
-            plotter = XmippNmaPlotter(defFn, dirname(modeNameList[0])) 
+            plotter = XmippNmaPlotter(defFn, windowTitle=dirname(modeNameList[0])) 
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
@@ -126,66 +123,3 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
         return views
 
     
-class XmippNmaPlotter(XmippPlotter):
-    """ Add some extra plot utilities to XmippPlotter class, mainly for
-    NMA vectors plotting of the deformations.txt file.
-    """
-    def __init__(self, fnArray, vectorsPath):
-        """ Load the data.
-        Params:
-            fnArray: path to deformations.txt data file.
-            vectorsPath: the folder path in which the vectors are located.
-        """
-        self._data = np.loadtxt(fnArray)
-        XmippPlotter.__init__(self, windowTitle=vectorsPath)
-        
-    def plotArray1D(self, title, col, xlabel, ylabel):
-        data = self._data
-        if len(data.shape) > 1:
-            data = self._data[:,col]
-        
-        ax = self.createSubPlot(title, xlabel, ylabel)
-        
-        # histogram our data with numpy
-        n, bins = np.histogram(data, 50)
-        
-        # get the corners of the rectangles for the histogram
-        left = np.array(bins[:-1])
-        right = np.array(bins[1:])
-        bottom = np.zeros(len(left))
-        top = bottom + n
-        
-        # we need a (numrects x numsides x 2) numpy array for the path helper
-        # function to build a compound path
-        XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
-        
-        import matplotlib.patches as patches
-        import matplotlib.path as path
-        # get the Path object
-        barpath = path.Path.make_compound_path_from_polys(XY)
-        
-        # make a patch out of it
-        patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
-        ax.add_patch(patch)
-        
-        # update the view limits
-        ax.set_xlim(left[0], right[-1])
-        ax.set_ylim(bottom.min(), top.max())
-    
-    def plotArray2D(self, title, colX, colY, xlabel, ylabel):
-        ax = self.createSubPlot(title, xlabel, ylabel)
-        ax.plot(self._data[:,colX], self._data[:,colY], '.')
-    
-    def plotArray3D(self, title, colX, colY, colZ, xlabel, ylabel, zlabel):
-        import mpl_toolkits.mplot3d.axes3d as p3
-        ax = p3.Axes3D(self.figure)
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.set_zlabel(zlabel)
-        a = self._data
-        ax.scatter3D(a[:,colX], a[:,colY], a[:,colZ])
-        # Disable tight_layout that is not available for 3D 
-        self.tightLayoutOn = False
-        
-
