@@ -6,7 +6,7 @@ import javax.swing.SwingUtilities;
 
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
@@ -63,7 +63,7 @@ public class Main
 					else if (mode == Mode.Review)
 						ppicker = new SupervisedParticlePicker(selfile, outputdir, Mode.Review);
 
-					new SupervisedParticlePickerJFrame(ppicker);
+					new SupervisedPickerJFrame(ppicker);
 				}
 				catch (Exception e)
 				{

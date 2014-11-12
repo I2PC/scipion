@@ -9,7 +9,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerParams;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
@@ -42,7 +42,7 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker.setProjectId(params.projectid);
                 ppicker.setProtId(params.protid);
             }
-            new SupervisedParticlePickerJFrame(ppicker);
+            new SupervisedPickerJFrame(ppicker);
         } catch (Exception e) {
             System.out.println("Error catched on main");
             ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);

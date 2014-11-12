@@ -87,9 +87,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 		initToolBar();
 		add(tb, XmippWindowUtil.getConstraints(constraints, 0, 1, 2, 1, GridBagConstraints.NONE));
-		add(new JLabel("Shape:"), XmippWindowUtil.getConstraints(constraints, 0, 2));
-		initShapePane();
-		add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 2));
+		
 		add(new JLabel("Color By:"), XmippWindowUtil.getConstraints(constraints, 0, 3));
 		initColorLegendPane();
 		add(colorlegendpn, XmippWindowUtil.getConstraints(constraints, 1, 3));
@@ -157,14 +155,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		micrographpn = new JPanel(new GridBagLayout());
 		micrographpn.setBorder(BorderFactory.createTitledBorder("Micrograph"));
 		JScrollPane sp = new JScrollPane();
-		JPanel ctfpn = new JPanel();
-		ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
 		iconbt = new JButton(Micrograph.getNoImageIcon());
 		iconbt.setToolTipText("Load CTF Profile");
 		iconbt.setBorderPainted(false);
 		iconbt.setContentAreaFilled(false);
 		iconbt.setFocusPainted(false);
 		iconbt.setOpaque(false);
+                iconbt.setMargin(new Insets(0, 0, 0, 0));
 		iconbt.addActionListener(new ActionListener()
 		{
 
@@ -179,22 +176,21 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 
 			}
 		});
-		ctfpn.add(iconbt);
 		micrographsmd = new ExtractMicrographsTableModel();
 		micrographstb.setModel(micrographsmd);
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(245);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(345);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(70);
-		micrographstb.setPreferredScrollableViewportSize(new Dimension(420, 304));
+		micrographstb.setPreferredScrollableViewportSize(new Dimension(520, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		if (index != -1)
 			micrographstb.setRowSelectionInterval(index, index);
 
 		sp.setViewportView(micrographstb);
 		micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
-		micrographpn.add(ctfpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
+		micrographpn.add(iconbt, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
 		JPanel infopn = new JPanel();
 		particleslb = new JLabel(Integer.toString(picker.getParticlesCount()));
 		

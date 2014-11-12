@@ -17,8 +17,8 @@ import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedParticle;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedMicrograph;
 import xmipp.viewer.particlepicker.tiltpair.model.UntiltedParticle;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
+import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, MouseListener
 {
@@ -105,8 +105,8 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 			if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
-				if (frame instanceof SupervisedParticlePickerJFrame)
-					((SupervisedParticlePickerMicrograph) frame.getMicrograph()).removeParticle(particle, ((SupervisedParticlePickerJFrame) frame).getParticlePicker());
+				if (frame instanceof SupervisedPickerJFrame)
+					((SupervisedPickerMicrograph) frame.getMicrograph()).removeParticle(particle, ((SupervisedPickerJFrame) frame).getParticlePicker());
 				else if (frame instanceof TiltPairPickerJFrame)
 				{
 					if (frame.getMicrograph() instanceof UntiltedMicrograph)

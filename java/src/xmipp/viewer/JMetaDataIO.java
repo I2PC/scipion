@@ -15,7 +15,7 @@ import xmipp.jni.MetaData;
 import static xmipp.viewer.particlepicker.ParticlePicker.getLogger;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 /**
  *
@@ -24,7 +24,7 @@ import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrog
 public class JMetaDataIO {
     
     
-    public static void saveData(SupervisedParticlePickerMicrograph m, String path)
+    public static void saveData(SupervisedPickerMicrograph m, String path)
 	{
                 //System.out.println("saving data on JMetaDataIO");
 		long id;

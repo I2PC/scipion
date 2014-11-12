@@ -72,11 +72,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 		initToolBar();
 		add(tb);
-		initShapePane();
-		JPanel shapepn2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		shapepn2.add(new JLabel("Shape:"));
-		shapepn2.add(shapepn);
-		add(shapepn2, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+		
 		initMicrographsPane();
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -183,12 +179,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	private void formatMicrographsTable() {
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(220);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(220);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
-		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(210);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(210);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(65);
+		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(70);
 		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(595, 304));
+				.setPreferredScrollableViewportSize(new Dimension(590, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		int index = tppicker.getMicrographIndex();
 		if (index != -1)

@@ -23,12 +23,12 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 public class TemplatesJDialog extends JDialog
 {
 
-	protected SupervisedParticlePickerJFrame frame;
+	protected SupervisedPickerJFrame frame;
 	protected JPanel templatespn;
 	protected int width, height;
     private JFormattedTextField templatestf;
 
-	public TemplatesJDialog(SupervisedParticlePickerJFrame frame)
+	public TemplatesJDialog(SupervisedPickerJFrame frame)
 	{
 		super(frame);
 		this.frame = frame;

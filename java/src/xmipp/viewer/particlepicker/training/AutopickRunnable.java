@@ -9,7 +9,7 @@ package xmipp.viewer.particlepicker.training;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
@@ -20,13 +20,13 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 public class AutopickRunnable implements Runnable
 	{
 
-		private SupervisedParticlePickerJFrame frame;
+		private SupervisedPickerJFrame frame;
 		private Particle[] autopickRows;
 		private SupervisedPickerMicrograph micrograph;
                 private final SupervisedParticlePicker picker;
                 private final PickingClassifier classifier;
                 
-		public AutopickRunnable(SupervisedParticlePickerJFrame frame, SupervisedPickerMicrograph micrograph)
+		public AutopickRunnable(SupervisedPickerJFrame frame, SupervisedPickerMicrograph micrograph)
 		{
 			this.frame = frame;
 			this.micrograph = micrograph;

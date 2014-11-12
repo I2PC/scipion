@@ -14,7 +14,7 @@ import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
@@ -25,7 +25,7 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 public class TrainRunnable implements Runnable
 	{
 
-		private SupervisedParticlePickerJFrame frame;
+		private SupervisedPickerJFrame frame;
 		private MDRow[] trainInput;
                 private Rectangle rectangle;
                 private Particle[] autopickRows;
@@ -33,7 +33,7 @@ public class TrainRunnable implements Runnable
                 private final SupervisedParticlePicker picker;
                 private final PickingClassifier classifier;
 
-		public TrainRunnable(SupervisedParticlePickerJFrame frame, MDRow[] trainInput)
+		public TrainRunnable(SupervisedPickerJFrame frame, MDRow[] trainInput)
 		{
 			this.frame = frame;
 			this.trainInput = trainInput;

@@ -13,7 +13,7 @@ import xmipp.jni.PickingClassifier;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.MicrographState;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
@@ -31,13 +31,13 @@ public class CorrectAndAutopickRunnable implements Runnable
                 private Particle[] autopickRows;
 
 		private SupervisedPickerMicrograph next;
-		private SupervisedParticlePickerJFrame frame;
+		private SupervisedPickerJFrame frame;
                 private final SupervisedParticlePicker picker;
                 private final PickingClassifier classifier;
     private final SupervisedPickerMicrograph micrograph;
                 
 
-		public CorrectAndAutopickRunnable(SupervisedParticlePickerJFrame frame, MDRow[] manualRows, MDRow[] automaticRows,
+		public CorrectAndAutopickRunnable(SupervisedPickerJFrame frame, MDRow[] manualRows, MDRow[] automaticRows,
 				SupervisedPickerMicrograph next)
 		{
 			this.frame = frame;

@@ -71,10 +71,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected ParticlesDialog particlesdialog;
 
 	protected JMenuItem ijmi;
-	protected JCheckBox circlechb;
-	protected JCheckBox rectanglechb;
+	protected JToggleButton circlechb;
+	protected JToggleButton rectanglechb;
 	protected JFormattedTextField sizetf;
-	protected JCheckBox centerchb;
+	protected JToggleButton centerchb;
 	protected JPanel shapepn;
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
@@ -609,16 +609,16 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		shapepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		ShapeItemListener shapelistener = new ShapeItemListener();
-
-		circlechb = new JCheckBox(Shape.Circle.toString());
+                shapepn.add(new JLabel("Shape:"));
+		circlechb = new JToggleButton(XmippResource.getIcon("circle.png"));
 		circlechb.setSelected(true);
 		circlechb.addItemListener(shapelistener);
 
-		rectanglechb = new JCheckBox(Shape.Rectangle.toString());
+		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
 		rectanglechb.setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
-		centerchb = new JCheckBox(Shape.Center.toString());
+		centerchb = new JToggleButton(XmippResource.getIcon("plus.png"));
 		centerchb.setSelected(true);
 		centerchb.addItemListener(shapelistener);
 
@@ -633,19 +633,21 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		tb = new JToolBar();
 
 		tb.setFloatable(false);
-
+                
 		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
 		usezoombt.setToolTipText("Keep zoom");
 		usezoombt.setFocusable(false);
                 usezoombt.setSelected(true);
 		tb.add(usezoombt);
+                initShapePane();
+                tb.add(shapepn);
 		initSizePane();
 		tb.add(sizepn);
 		if (!(this instanceof ExtractPickerJFrame))
 		{
 			initColorPane(getParticlePicker().getColor());
 			tb.add(colorpn);
-			eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("clean.gif"));
+			eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("eraser.png"));
 			tb.add(eraserbt);
 		}
 		
@@ -742,10 +744,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
 		int height = (int) sizesl.getPreferredSize().getHeight();
-
-		sizesl.setPreferredSize(new Dimension(100, height));
+		sizesl.setPreferredSize(new Dimension(50, height));
 		sizepn.add(sizesl);
-
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		sizetf.setColumns(3);
 		sizetf.setValue(size);

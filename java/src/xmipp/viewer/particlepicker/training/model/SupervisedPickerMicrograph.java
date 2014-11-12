@@ -11,7 +11,7 @@ import xmipp.viewer.particlepicker.PickerParticle;
 
 import java.awt.Rectangle;
 
-public class SupervisedParticlePickerMicrograph extends Micrograph
+public class SupervisedPickerMicrograph extends Micrograph
 {
 
 	private boolean autopicking = false;	
@@ -34,7 +34,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 
 
 
-	public SupervisedParticlePickerMicrograph(String file, String psd, String ctf)
+	public SupervisedPickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
                 

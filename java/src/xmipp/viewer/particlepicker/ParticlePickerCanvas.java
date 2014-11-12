@@ -217,7 +217,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			// only display a hand if the cursor is over the items
 			final Rectangle cellBounds = iw.getBounds();
 			Toolkit toolkit = Toolkit.getDefaultToolkit();
-			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("clean.gif").getImage(), new Point(0, 0), "Eraser");
+			Cursor eraserCursor = toolkit.createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
 			if (cellBounds != null && cellBounds.contains(x, y))
 				setCursor(eraserCursor);
 			else
