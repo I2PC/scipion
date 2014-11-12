@@ -354,3 +354,19 @@ class Color():
     STATUS_INTERACTIVE = '#F3F5CB',
     STATUS_ABORTED = '#F5CCCB',
     #STATUS_SAVED = '#124EB0',
+
+class colorText:
+    """printing in colors, bold, etc,
+       example: print colorText.BOLD + 'Hello World !' + color.END
+    """
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+

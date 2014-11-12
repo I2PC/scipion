@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Roberto Marabini       (roberto@cnb.csic.es)
+# * Authors:   Roberto Marabini       (roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -28,16 +27,30 @@
 
 import os
 from pyworkflow.em.data import SetOfVolumes
+from pyworkflow.em.packages.bsoft import bsoft
 import unittest
+
+###############COMANDS
+#CTF
+#bhead -ver 7 -images delta.mrc delta.mrc
+#bctf -ver 7 -act apply -out ctf_app.emx ctf.emx
+##project
+#bproject -View 0.0000,0.0000,1.0000,30.00  -origin 145.321,118.,122.08   0phantom_smooth.spi bsoft_2.spi
+#align 2D
+#breconstruct -verb 7 -TwoD -rec rec.mrc -out rec.emx images.emx
+#reconstruct
+#bhead -verbose 7 -images ./stack2D.mrc ./stack2D.mrc
+#3) breconstruct -verb 7  -rec rec2.mrc -out rec.emx stack2D.emx
 
 import xmipp
 from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.bsoft import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
 import subprocess
 from pyworkflow.utils.properties import colorText
 
-
+#EVENTUALLY THIS SHOULD BE BSOFT TEST
 class TestBasic(BaseTest):
     """ Test most basic conversions of the form:
     rowToObject(row, ...)
@@ -97,7 +110,7 @@ PRINT_MATRIX = False
 PRINT_FILES = False#False
 
 
-def runXmippProgram(cmd):
+def runBsoftProgram(cmd):
     print ">>>", cmd
     p = subprocess.Popen(cmd, shell=True, env=xmipp3.getEnviron())
     return p.wait()   
@@ -198,10 +211,10 @@ class TestConvertBase(BaseTest):
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
 
         # Launch apply transformation and check result images
-        runXmippProgram(self.CMD % locals())
+        runBsoftProgram(self.CMD % locals())
 
         if SHOW_IMAGES:
-            runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
+            runBsoftProgram('xmipp_showj -i %(outputFn)s' % locals())
 
         if os.path.exists(goldFn):
             self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
@@ -343,13 +356,6 @@ class TestAlignment(TestConvertBase):
                 print  >> sys.stderr, 'm1:\n', m1
                 print  >> sys.stderr, 'm2:\n', m2
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
-#        if commandLine is not None:
-#            import subprocess
-#            print ("Computing: ", commandLine%locals())
-#            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#            for line in p.stdout.readlines():
-#                print line,
-#            retval = p.wait()
 
         
     def test_alignFlip(self):
