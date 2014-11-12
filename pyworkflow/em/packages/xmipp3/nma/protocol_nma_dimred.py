@@ -1,0 +1,167 @@
+# **************************************************************************
+# *
+# * Authors:  J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es), Nov 2014
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+
+
+from os.path import basename
+
+from pyworkflow.protocol.params import (PointerParam, StringParam, EnumParam, IntParam,
+                                        LEVEL_ADVANCED)
+from pyworkflow.em.protocol import ProtAnalysis3D
+import xmipp 
+
+
+
+DIMRED_PCA = 0
+DIMRED_LTSA = 1
+DIMRED_DM = 2
+DIMRED_LLTSA = 3
+DIMRED_LPP = 4
+DIMRED_KPCA = 5
+DIMRED_PPCA = 6
+DIMRED_LE = 7
+DIMRED_HLLE = 8
+DIMRED_SPE = 9
+DIMRED_NPE = 10
+
+# Values to be passed to the program
+DIMRED_VALUES = ['PCA', 'LTSA', 'DM', 'LLTSA', 'LPP', 'kPCA', 'pPCA', 'LE', 'HLLE', 'SPE', 'NPE']
+
+
+       
+class XmippProtDimredNMA(ProtAnalysis3D):
+    """ This protocol will take the images with NMA deformations
+    as points in a N-dimensional space (where N is the number
+    of computed normal modes) and will project them in a reduced
+    spaced (usually with less dimensions).
+    """
+    _label = 'nma dimred'
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+        form.addParam('inputNMA', PointerParam, pointerClass='XmippProtAlignmentNMA',
+                      label="Input NMA alignment",                        
+                      help='Select a previous NMA alignment protocol')
+        
+        form.addParam('dimredMethod', EnumParam, default=DIMRED_PCA,
+                      choices=['Principal Component Analysis (PCA)',
+                               'Local Tangent Space Alignment',
+                               'Diffusion map',
+                               'Linear Local Tangent Space Alignment',
+                               'Linearity Preserving Projection',
+                               'Kernel PCA',
+                               'Probabilistic PCA',
+                               'Laplacian Eigenmap',
+                               'Hessian Locally Linear Embedding',
+                               'Stochastic Proximity Embedding',
+                               'Neighborhood Preserving Embedding'],
+                      label='Dim-Red method',
+                      help=""" Dimensionality Reduction method.
+    PCA
+       Principal Component Analysis 
+    LTSA <k=12>
+       Local Tangent Space Alignment, k=number of nearest neighbours 
+    DM <s=1> <t=1>
+       Diffusion map, t=Markov random walk, s=kernel sigma 
+    LLTSA <k=12>
+       Linear Local Tangent Space Alignment, k=number of nearest neighbours 
+    LPP <k=12> <s=1>
+       Linearity Preserving Projection, k=number of nearest neighbours, s=kernel sigma 
+    kPCA <s=1>
+       Kernel PCA, s=kernel sigma 
+    pPCA <n=200>
+       Probabilistic PCA, n=number of iterations 
+    LE <k=7> <s=1>
+       Laplacian Eigenmap, k=number of nearest neighbours, s=kernel sigma 
+    HLLE <k=12>
+       Hessian Locally Linear Embedding, k=number of nearest neighbours 
+    SPE <k=12> <global=1>
+       Stochastic Proximity Embedding, k=number of nearest neighbours, global embedding or not 
+    NPE <k=12>
+       Neighborhood Preserving Embedding, k=number of nearest neighbours 
+""")
+        form.addParam('extraParams', StringParam, level=LEVEL_ADVANCED,
+                      label="Extra params", 
+                      help='This parameters will be passed to the program.')
+                      
+        form.addParam('reducedDim', IntParam, default=2,
+                      label='Reduced dimension')
+        form.addParallelSection(threads=0, mpi=0)    
+    
+    
+    #--------------------------- INSERT steps functions --------------------------------------------
+
+    def _insertAllSteps(self):
+        # Get the reference to the input NMA alignment protocol
+        # to grab some parameters
+        inputNMA = self.inputNMA.get()
+        # Take deforamtions text file and the number of images and modes
+        deformationsFile = inputNMA.getDeformationsFile()
+        rows = inputNMA.inputParticles.get().getSize()
+        columns = inputNMA.inputModes.get().getSize()
+        reducedDim = self.reducedDim.get()
+        method = DIMRED_VALUES[self.dimredMethod.get()]
+        extraParams = self.extraParams.get('')
+        
+        self._insertFunctionStep('performDimredStep', 
+                                 deformationsFile, method, extraParams,
+                                 rows, columns, reducedDim) 
+        
+        self._insertFunctionStep('createOutputStep')
+        
+        
+    #--------------------------- STEPS functions --------------------------------------------   
+        
+    def performDimredStep(self, deformationsFile, method, extraParams,
+                          rows, columns, reducedDim):
+        outputMatrix = self.getOutputMatrixFile()
+        args = "-i %(deformationsFile)s -o %(outputMatrix)s -m %(method)s %(extraParams)s"
+        args += "--din %(columns)d --samples %(rows)d --dout %(reducedDim)d"
+        
+        self.runJob("xmipp_matrix_dimred", args % locals())
+        
+    def createOutputStep(self):
+        pass
+
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        summary = []
+        return summary
+    
+    def _validate(self):
+        errors = []
+        return errors
+    
+    def _citations(self):
+        return []
+    
+    def _methods(self):
+        return []
+    
+    #--------------------------- UTILS functions --------------------------------------------
+
+    def getOutputMatrixFile(self):
+        return self._getExtraPath('output_matrix.txt')
