@@ -395,7 +395,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		return micrographs;
 	}
 
-	public void saveData(Micrograph m)
+	public synchronized void saveData(Micrograph m)
 	{
                 //System.out.println("saving data");
 //		SupervisedPickerMicrograph tm = (SupervisedPickerMicrograph) m;
@@ -568,9 +568,14 @@ public class SupervisedParticlePicker extends ParticlePicker
             return isautopick;
         }
         
+        @Override
+        public synchronized void saveConfig()
+        {
+            JMetaDataIO.saveConfig(this, configfile);
+        }
         
-
-	protected void saveConfig(MetaData md, long id)
+        @Override
+	protected synchronized void saveConfig(MetaData md, long id)
 	{
 		try
 		{

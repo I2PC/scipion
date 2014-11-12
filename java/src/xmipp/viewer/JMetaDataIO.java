@@ -12,9 +12,11 @@ import java.io.FileWriter;
 import java.util.logging.Level;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.viewer.particlepicker.IJCommand;
 import static xmipp.viewer.particlepicker.ParticlePicker.getLogger;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 
 /**
@@ -76,6 +78,51 @@ public class JMetaDataIO {
                             }
                             out.close();
 			}                        
+            }
+            catch (Exception e)
+            {
+                    getLogger().log(Level.SEVERE, e.getMessage(), e);
+                    throw new IllegalArgumentException(e.getMessage());
+            }
+
+	}
+    
+        public static void saveConfig(SupervisedParticlePicker picker, String path)
+	{
+                //System.out.println("saving data on JMetaDataIO");
+		long id;
+		try
+		{
+			
+                    FileWriter fstream = new FileWriter(path);
+                    BufferedWriter out = new BufferedWriter(fstream);
+                    out.write("# XMIPP_STAR_1 * \n#\ndata_properties\nloop_\n");
+                    String cformat = "_%s\n";
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MICROGRAPH)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_COLOR)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_PARTICLE_SIZE)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_AUTOPICKPERCENT)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_TEMPLATES)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_STATE)));
+                    String vformat = "%20s";
+                    out.write(String.format(vformat, picker.getMicrograph().getName()));
+                    out.write(String.format(vformat, picker.getColor().getRGB()));
+                    out.write(String.format(vformat, picker.getSize()));
+                    out.write(String.format(vformat, picker.getAutopickpercent()));
+                    out.write(String.format(vformat, picker.getTemplatesNumber()));
+                    out.write(String.format(vformat, picker.getMode().toString()));
+                    out.newLine();
+                    out.write("data_filters\nloop_\n");
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MACRO_CMD)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MACRO_CMD_ARGS)));
+                    String options;
+                    for (IJCommand f : picker.getFilters()) {
+                        out.write(String.format(vformat, f.getCommand().replace(' ', '_')));
+                        options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
+                        out.write(String.format(vformat, options));
+                        
+                    }
+                    out.close();
             }
             catch (Exception e)
             {

@@ -174,7 +174,7 @@ public abstract class ParticlePicker {
 
     }
 
-    public void saveConfig() {
+    public synchronized void saveConfig() {
         try {
             MetaData md;
             String file = configfile;
@@ -586,6 +586,7 @@ public abstract class ParticlePicker {
                         size = (int)(size * scale);
                         setSize(size);
                         saveConfig();
+                        configmd.destroy();
                     }
                 }
     }

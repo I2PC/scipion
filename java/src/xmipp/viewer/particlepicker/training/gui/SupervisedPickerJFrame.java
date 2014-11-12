@@ -329,7 +329,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     private void initSupervisedPickerPane() {
         sppickerpn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		// sppickerpn.setBorder(BorderFactory.createTitledBorder("Supervised Picker"));
         autopickchb = new JCheckBox();
         autopickchb.setSelected(ppicker.isAutopick());
 
@@ -359,7 +358,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                             ppicker.setMode(Mode.Manual);
                             resetbt.setEnabled(true);
                             ppicker.saveAllData();
-                            updateMicrographsModel();
+                            updateMicrographsModel(true);
                             if (autopickchb.isSelected()) {
                                 autopickchb.setSelected(false);
                             }
@@ -581,8 +580,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         micrographpn = new JPanel(new GridBagLayout());
         micrographpn.setBorder(BorderFactory.createTitledBorder("Micrographs"));
         JScrollPane sp = new JScrollPane();
-        JPanel ctfpn = new JPanel();
-        //ctfpn.setBorder(BorderFactory.createTitledBorder(null, "CTF", TitledBorder.CENTER, TitledBorder.BELOW_BOTTOM));
         
         iconbt = new JButton(Micrograph.getNoImageIcon());
         iconbt.setToolTipText("Load CTF Profile");
@@ -607,14 +604,13 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
             }
         });
-        ctfpn.add(iconbt);
         micrographsmd = new MicrographsTableModel(this);
         micrographstb.setModel(micrographsmd);
         formatMicrographsTable();
 
         sp.setViewportView(micrographstb);
         micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
-        micrographpn.add(ctfpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
+        micrographpn.add(iconbt, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
         JPanel infopn = new JPanel();
         manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber()));
         autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
@@ -630,7 +626,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     }
 
-    protected void loadMicrograph() {
+    protected synchronized void loadMicrograph() {
 
         if (micrographstb.getSelectedRow() == -1) {
             return;// Probably from fireTableDataChanged raised
