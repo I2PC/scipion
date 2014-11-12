@@ -481,51 +481,55 @@ def get_slice(request):
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     mirrorY = 'mirrorY' in request.GET
+    
 #    applyTransformMatrix = 'applyTransformMatrix' in request.GET
 #    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
 
-    try:
-            # PAJM: Como vamos a gestionar lsa imagen    
-        if not '@' in imagePath:
-            raise Exception('Slice number required.')
-        
+    if not '@' in imagePath:
+        sliceNo = int(int(imageDim)/2)
+    else:
         parts = imagePath.split('@', 1)
         sliceNo = parts[0]
         imagePath = parts[1]
         
-        if '@' in imagePath:
-                parts = imagePath.split('@')
-                imageNo = parts[0]
-                imagePath = parts[1]
-    
-        if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-            if not os.path.isfile(imagePathTmp):
-                raise Exception('should not use getInputPath')
-                #imagePath = getInputPath('showj', imagePath)
-                
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath)                 
+    if '@' in imagePath:
+            parts = imagePath.split('@')
+            imageNo = parts[0]
+            imagePath = parts[1]
 
-        imgXmipp = xmipp.Image()
-        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
-                
-    #        if applyTransformMatrix and transformMatrix != None: 
-    #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
-    #        
-        if mirrorY: 
-            imgXmipp.mirrorY()
-        
-        # from PIL import Image
-        img = getPILImage(imgXmipp, None, False)
+    if 'projectPath' in request.session:
+        imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+#         if not os.path.isfile(imagePathTmp):
+#             raise Exception('should not use getInputPath')
+            #imagePath = getInputPath('showj', imagePath)
+            
+    if imageNo:
+        imagePath = '%s@%s' % (imageNo, imagePath)
+
+    imgXmipp = xmipp.Image()
     
-    except Exception, ex:
-        print "error loading slice: ", ex
-        img = getImage(findResource(getResourceIcon("no_image")), tkImage=False)         
+    if sliceNo >= 0:
+        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
+    else:
+        imgXmipp.readPreview(imagePath, int(imageDim), int(imageDim)/2)
+        
+#        if applyTransformMatrix and transformMatrix != None: 
+#            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+#        
+    if mirrorY: 
+        imgXmipp.mirrorY()
+    
+    # from PIL import Image
+#   img = getPILImage(imgXmipp, None, False)
+    img = getPILImage(imgXmipp)
+
     
     response = HttpResponse(mimetype="image/png")
+    
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
     img.save(response, "PNG")
     return response
 
