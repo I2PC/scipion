@@ -35,7 +35,9 @@ class TestBrandeisBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.micFn = cls.dataset.getFile('mic1')
-    
+        cls.volFn = cls.dataset.getFile('vol2')
+        #cls.parFn = cls.dataset.getFile('aligned_particles')
+
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
@@ -52,11 +54,49 @@ class TestBrandeisBase(BaseTest):
         if cls.protImport.outputMicrographs is None:
             raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
         return cls.protImport
-    
+
+    @classmethod
+    def runImportVolumes(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportVolumes,
+                                         pattern=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(cls.protImport)
+        return cls.protImport
+
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         pattern=pattern, samplingRate=samplingRate,
+                                         checkStack=checkStack)
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return cls.protImport
+
+
     @classmethod
     def runImportMicrographBPV(cls, pattern):
         """ Run an Import micrograph protocol. """
-        return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
+        return cls.runImportMicrograph(pattern,
+                                       samplingRate=1.237,
+                                       voltage=300,
+                                       sphericalAberration=2,
+                                       scannedPixelSize=None,
+                                       magnification=56000)
+
+    @classmethod
+    def runImportParticleBPV(cls, pattern):
+        """ Run an Import micrograph protocol. """
+        return cls.runImportParticles(pattern,
+                                      samplingRate=1.237,
+                                      checkStack=True)
+    @classmethod
+    def runImportVolumesBPV(cls, pattern):
+        """ Run an Import micrograph protocol. """
+        return cls.runImportVolumes(pattern,
+                                    samplingRate=1.237)
 
 
 class TestBrandeisCtffind(TestBrandeisBase):
@@ -75,6 +115,27 @@ class TestBrandeisCtffind(TestBrandeisBase):
         self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, places=1)
         self.assertAlmostEquals(ctfModel.getDefocusV(),23640.28, places=1)
         self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, places=2)
+
+class TestBrandeisFrealign(TestBrandeisBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestBrandeisBase.setData()
+        particlesPattern   = cls.dataset.getFile('particles/BPV_####_ptcls_64.spi')
+        cls.protImportPart = cls.runImportParticleBPV(particlesPattern)
+        cls.protImportVol  = cls.runImportVolumesBPV(cls.volFn)
+
+    def testFrealign(self):
+        frealign = self.newProtocol(ProtFrealign,
+                                    useInitialAngles=True,
+                                    mode=MOD_RECONSTRUCTION,
+                                    innerRadius=0,
+                                    outerRadius=32.,
+                                    symmetry='i1'
+                                    )
+        frealign.inputParticles.set(self.protImportPart.outputParticles)
+        frealign.input3DReference.set(self.protImportVol.outputVolume)
+        self.launchProtocol(frealign)
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
