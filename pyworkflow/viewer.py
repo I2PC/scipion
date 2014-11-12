@@ -187,7 +187,11 @@ class Viewer(object):
         return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
 
     def textView(self, filelist, title=''):
-        return TextView(filelist, title, tkParent=self.formWindow)    
+        return TextView(filelist, title, tkParent=self.formWindow)  
+    
+    def tkWindow(self, windowClass, **kwargs):
+        kwargs['masterWindow'] = self.formWindow
+        return windowClass(**kwargs)  
 
     def objectView(self, path, inputType):
         pass
