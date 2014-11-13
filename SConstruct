@@ -503,23 +503,25 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     libsCopy = libs + env['LIBS']
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
-    ldLibraryPathCopy = env['LIBPATH']
+    ldLibraryPathCopy = [env['LIBPATH']]
+    env2 = Environment()
     if mpi: 
         incsCopy += env['MPI_INCLUDE']
         libPathsCopy += env['MPI_LIBDIR']
-        libsCopy += env['MPI_LIB']
+        libsCopy += [env['MPI_LIB']]
         ldLibraryPathCopy += env['MPI_LIBDIR']
-#    print 'cc: %s' % cc
-#    print 'cxx: %s' % cxx
-#    print 'incs: %s' % incs
+        env2['ENV']['LD_LIBRARY_PATH'] = env['ENV']['LD_LIBRARY_PATH']
+        env2['ENV']['PATH'] = env['ENV']['PATH']
+#    print 'cc: %s' % ccCopy
+#    print 'cxx: %s' % cxxCopy
+#    print 'incs: %s' % incsCopy
 #    print 'libPaths: %s' % libPathsCopy
-#    print 'libs: %s' % libs
-#    print 'cxxflags: %s' % cxxflags
-#    print 'linkflags: %s' % linkflags
-#    print 'link: %s' % link
-#    print 'ldLibraryPath: %s' % ldLibraryPath
+#    print 'libs: %s' % libsCopy
+#    print 'cxxflags: %s' % cxxflagsCopy
+#    print 'linkflags: %s' % linkflagsCopy
+#    print 'link: %s' % linkCopy
+#    print 'ldLibraryPath: %s' % ldLibraryPathCopy
 
-    env2 = Environment()
 
     program = env2.Program(
                           File(join(installDir, name)).abspath,
