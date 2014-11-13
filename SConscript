@@ -911,6 +911,225 @@ if not int(env['release']):
                    libs=_libsrecons,
                    deps=_depsrecons)
 
+# MPI program
+_libsrecons += ['XmippParallel']
+_depsrecons += ['lib/libXmippParallel.so']
+
+env.AddProgram('xmipp_mpi_angular_class_average', 
+               src=['applications/programs/mpi_angular_class_average'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_angular_continuous_assign', 
+               src=['applications/programs/mpi_angular_continuous_assign'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_angular_discrete_assign', 
+               src=['applications/programs/mpi_angular_discrete_assign'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_angular_projection_matching', 
+               src=['applications/programs/mpi_angular_projection_matching'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_angular_project_library', 
+               src=['applications/programs/mpi_angular_project_library'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_classify_CL2D', 
+               src=['applications/programs/mpi_classify_CL2D'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+#AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
+env.AddProgram('xmipp_mpi_classify_CLTomo_prog', 
+               src=['applications/programs/mpi_classify_CLTomo_prog'],
+               incs=[Dir('.').path, Dir('#software/lib/python2.7/site-packages/numpy/core/include/').abspath],
+               libs=_libsrecons+_libsinterf,
+               deps=_depsrecons+_depsinterf,
+               mpi=True)
+#AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
+env.AddProgram('xmipp_mpi_classify_CL2D_core_analysis', 
+               src=['applications/programs/mpi_classify_CL2D_core_analysis'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_ctf_correct_idr', 
+               src=['applications/programs/mpi_ctf_correct_idr'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_ctf_sort_psds', 
+               src=['applications/programs/mpi_ctf_sort_psds'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_image_operate', 
+               src=['applications/programs/mpi_image_operate'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_image_rotational_pca', 
+               src=['applications/programs/mpi_image_rotational_pca'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_performance_test', 
+               src=['applications/programs/mpi_performance_test'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_image_resize', 
+               src=['applications/programs/mpi_image_resize'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_image_sort', 
+               src=['applications/programs/mpi_image_sort'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+#AddProgramLink('image_sort', 'mpi_image_sort')
+env.AddProgram('xmipp_mpi_ml_align2d', 
+               src=['applications/programs/mpi_ml_align2d'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_ml_tomo', 
+               src=['applications/programs/mpi_ml_tomo'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_mlf_align2d', 
+               src=['applications/programs/mpi_mlf_align2d'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_ml_refine3d', 
+               src=['applications/programs/mpi_ml_refine3d'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_mlf_refine3d', 
+               src=['applications/programs/mpi_mlf_refine3d'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_nma_alignment', 
+               src=['applications/programs/mpi_nma_alignment'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_xray_project', 
+               src=['applications/programs/mpi_xray_project'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_reconstruct_art', 
+               src=['applications/programs/mpi_reconstruct_art'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_reconstruct_fourier', 
+               src=['applications/programs/mpi_reconstruct_fourier'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_reconstruct_wbp', 
+               src=['applications/programs/mpi_reconstruct_wbp'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_reconstruct_significant', 
+               src=['applications/programs/mpi_reconstruct_significant'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_run', 
+               src=['applications/programs/mpi_run'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_tomo_extract_subvolume', 
+               src=['applications/programs/mpi_tomo_extract_subvolume'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_filter', 
+               src=['applications/programs/mpi_transform_filter'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_symmetrize', 
+               src=['applications/programs/mpi_transform_symmetrize'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_geometry', 
+               src=['applications/programs/mpi_transform_geometry'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_mask', 
+               src=['applications/programs/mpi_transform_mask'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_normalize', 
+               src=['applications/programs/mpi_transform_normalize'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+env.AddProgram('xmipp_mpi_transform_threshold', 
+               src=['applications/programs/mpi_transform_threshold'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               mpi=True)
+if not int(env['release']):
+    env.AddProgram('xmipp_mpi_write_test', 
+                   src=['applications/programs/mpi_write_test'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons,
+                   mpi=True)
+
 # Python batches (apps)
 
 lastTarget = xmippParallel
