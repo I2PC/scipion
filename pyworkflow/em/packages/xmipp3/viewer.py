@@ -158,9 +158,11 @@ class XmippViewer(Viewer):
             self._views.append(DataView(fn))
             
 
+
 #        elif issubclass(cls, SetOfNormalModes):
 #            fn = obj.getFileName()
 #            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={OBJ_CMDS: OBJ_CMDA}, **args))
+
 
               
         elif issubclass(cls, SetOfMicrographs):
