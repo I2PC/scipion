@@ -180,7 +180,11 @@ class Plotter(View):
         self.tightLayout()
         self.figure.savefig(*args, **kwargs)
         
-    def closed(self):
+    def isClosed(self):
         """ Return true if the figure have been closed. """
         return not self.plt.fignum_exists(self.figure.number)
+    
+    def close(self):
+        """ Close current Plotter figure. """
+        self.plt.close(self.figure)
         
