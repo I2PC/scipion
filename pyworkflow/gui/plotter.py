@@ -42,7 +42,7 @@ class Plotter(View):
         
     def __init__(self, x=1, y=1, mainTitle="", 
                  figsize=None, dpi=100, windowTitle="",
-                 fontsize=8):
+                 fontsize=8, **kwargs):
         """ This Plotter class has some utilities to create a Matplotlib figure
         and add some plots to it.
         Params:
@@ -179,4 +179,8 @@ class Plotter(View):
     def savefig(self, *args, **kwargs):
         self.tightLayout()
         self.figure.savefig(*args, **kwargs)
+        
+    def closed(self):
+        """ Return true if the figure have been closed. """
+        return not self.plt.fignum_exists(self.figure.number)
         
