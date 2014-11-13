@@ -1,6 +1,7 @@
 package xmipp.viewer.particlepicker;
 
 import ij.IJ;
+import static ij.IJ.URL;
 import ij.WindowManager;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -19,6 +20,9 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,6 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -113,88 +120,94 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton saveandexitbt;
 
 	protected JToolBar tb;
+        protected ResourceBundle bundle;
         
         
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
-		XmippApplication.addInstance(false);
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		addWindowListener(new WindowAdapter()
-		{
-			public void windowClosing(WindowEvent winEvt)
-			{
-
-				if (getParticlePicker().isChanged())
-				{
-					XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
-					boolean save = qd.showDialog();
-					if (save)
-						getParticlePicker().saveData();
-					else if (qd.isCanceled())
-						return;
-				}
-				close();
-
-			}
-		});
-
-		initMenuBar(picker);
-
-		resetbt = XmippWindowUtil.getTextButton("Reset Micrograph", new ActionListener()
-		{
+            try {
+                File file = new File(Filename.getXmippPath("resources"));
+                URL[] urls = new URL[]{file.toURI().toURL()};
+                ClassLoader loader = new URLClassLoader(urls);
+                bundle = ResourceBundle.getBundle("Bundle", Locale.getDefault(), loader);
+                XmippApplication.addInstance(false);
+                setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+                addWindowListener(new WindowAdapter()
+                {
+                    public void windowClosing(WindowEvent winEvt)
+                    {
+                        
+                        if (getParticlePicker().isChanged())
+                        {
+                            XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
+                            boolean save = qd.showDialog();
+                            if (save)
+                                getParticlePicker().saveData();
+                            else if (qd.isCanceled())
+                                return;
+                        }
+                        close();
+                        
+                    }
+                });
+                
+                initMenuBar(picker);
+                
+                resetbt = XmippWindowUtil.getTextButton(bundle.getString("resetmic"), new ActionListener()
+                {
                     
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-                                String resetmsg = getResetMsg();
-				XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, resetmsg,
-						false);
-				if (qd.showDialog())
-					resetMicrograph();
-			}
-		});
-
-		savebt = XmippWindowUtil.getTextButton("Save", new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent arg0)
-			{
-				getParticlePicker().saveData();
-				setChanged(false);
-
-			}
-		});
-
-		saveandexitbt = XmippWindowUtil.getTextButton("Save and Exit", new ActionListener()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e)
-
-			{
-				if (getParticlePicker().getMode() != Mode.ReadOnly)
-					getParticlePicker().saveData();
-                                if(getParticlePicker().isScipionSave())
-                                {
-                                    HashMap<String, String> msgfields = new HashMap<String, String>();
-                                    boolean createprot = getParticlePicker().getProtId() == null;
-                                    if(createprot)
-                                        msgfields.put("Run name:", "ProtUserCoordinates");
-                                    int count = getParticlePicker().getParticlesCount();
-                                    String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
-                                    ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
-                                    
-                                    if (dlg.action == ScipionMessageDialog.OK_OPTION)
-                                        executeScipionSaveAndExit();
-                                       
-                                }
-                                else
-                                    close();
-
-			}
-		});
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        String resetmsg = getResetMsg();
+                        XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, resetmsg,
+                                false);
+                        if (qd.showDialog())
+                            resetMicrograph();
+                    }
+                });
+                
+                savebt = XmippWindowUtil.getTextButton(bundle.getString("save"), new ActionListener()
+                {
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent arg0)
+                    {
+                        getParticlePicker().saveData();
+                        setChanged(false);
+                        
+                    }
+                });
+                
+                saveandexitbt = XmippWindowUtil.getTextButton(bundle.getString("saveandexit"), new ActionListener()
+                {
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                            
+                    {
+                        if (getParticlePicker().getMode() != Mode.ReadOnly)
+                            getParticlePicker().saveData();
+                        if(getParticlePicker().isScipionSave())
+                        {
+                            HashMap<String, String> msgfields = new HashMap<String, String>();
+                            boolean createprot = getParticlePicker().getProtId() == null;
+                            if(createprot)
+                                msgfields.put("Run name:", "ProtUserCoordinates");
+                            int count = getParticlePicker().getParticlesCount();
+                            String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
+                            ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
+                            
+                            if (dlg.action == ScipionMessageDialog.OK_OPTION)
+                                executeScipionSaveAndExit();
+                            
+                        }
+                        else
+                            close();
+                        
+                    }
+                });
                 if(picker.isScipionSave())
                 {
                     saveandexitbt.setText("Coordinates");
@@ -206,47 +219,51 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     saveandexitbt.setForeground(Color.WHITE);
                     
                 }
-		micrographstb = new JTable();
-		micrographstb.getSelectionModel().addListSelectionListener(new MicrographsSelectionListener());
-		micrographstb.addMouseListener(new MouseListener()
-		{
-
-			@Override
-			public void mouseReleased(MouseEvent arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mousePressed(MouseEvent arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseExited(MouseEvent arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent arg0)
-			{
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void mouseClicked(MouseEvent arg0)
-			{
-				if (micrographstb.getSelectedRow() == -1)
-					return;
-				loadMicrograph();
-			}
-		});
+                micrographstb = new JTable();
+                micrographstb.getSelectionModel().addListSelectionListener(new MicrographsSelectionListener());
+                micrographstb.addMouseListener(new MouseListener()
+                {
+                    
+                    @Override
+                    public void mouseReleased(MouseEvent arg0)
+                    {
+                        // TODO Auto-generated method stub
+                        
+                    }
+                    
+                    @Override
+                    public void mousePressed(MouseEvent arg0)
+                    {
+                        // TODO Auto-generated method stub
+                        
+                    }
+                    
+                    @Override
+                    public void mouseExited(MouseEvent arg0)
+                    {
+                        // TODO Auto-generated method stub
+                        
+                    }
+                    
+                    @Override
+                    public void mouseEntered(MouseEvent arg0)
+                    {
+                        // TODO Auto-generated method stub
+                        
+                    }
+                    
+                    @Override
+                    public void mouseClicked(MouseEvent arg0)
+                    {
+                        if (micrographstb.getSelectedRow() == -1)
+                            return;
+                        loadMicrograph();
+                    }
+                });
+            } catch (Exception ex) {
+                Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IllegalArgumentException(ex);
+            }
 	}
         
         protected class MicrographsSelectionListener implements ListSelectionListener
@@ -273,8 +290,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	private void initMenuBar(ParticlePicker picker)
 	{
-		filemn = new JMenu("File");
-		helpmn = new JMenu("Help");
+		filemn = new JMenu(bundle.getString("file"));
+		helpmn = new JMenu(bundle.getString("help"));
 		savemi = new JMenuItem("Save", XmippResource.getIcon("save.gif"));
 		savemi.setMnemonic('S');
 		savemi.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
@@ -380,7 +397,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		});
 
 		mifilters = new ArrayList<JCheckBoxMenuItem>();
-		filtersmn = new JMenu("Filters");
+		filtersmn = new JMenu(bundle.getString("filters"));
 		filtersmn.addMenuListener(new MenuListener()
 		{
 
@@ -653,7 +670,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		{
 			initColorPane(getParticlePicker().getColor());
 			tb.add(colorpn);
-			eraserbt = new JToggleButton("Eraser", XmippResource.getIcon("eraser.png"));
+			eraserbt = new JToggleButton(bundle.getString("eraser"), XmippResource.getIcon("eraser.png"));
 			tb.add(eraserbt);
 		}
 		

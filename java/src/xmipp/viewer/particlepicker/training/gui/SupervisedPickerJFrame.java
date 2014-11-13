@@ -29,7 +29,6 @@ import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.utils.ColorIcon;
@@ -214,7 +213,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         
     }
 
-    private void formatMicrographsTable() {
+    protected void formatMicrographsTable() {
         int width = 515;
         micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         micrographstb.getColumnModel().getColumn(0).setPreferredWidth(40);
@@ -284,7 +283,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             setLayout(new GridBagLayout());
 
             initToolBar();
-            centerparticlebt = new JToggleButton("Center", XmippResource.getIcon("center.png"));
+            centerparticlebt = new JToggleButton(bundle.getString("center"), XmippResource.getIcon("center.png"));
             centerparticlebt.setSelected(true);
             tb.add(centerparticlebt, 0);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.WEST));
@@ -292,7 +291,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             
             //add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-            autopicklb = new JLabel("Autopick:");
+            autopicklb = new JLabel(bundle.getString("autopick"));
             add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
             initSupervisedPickerPane();
             add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
@@ -494,7 +493,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         filemn.add(exportmi);
         filemn.add(exitmi);
 
-        JMenu windowmn = new JMenu("Window");
+        JMenu windowmn = new JMenu(bundle.getString("window"));
 
         mb.add(filemn);
         mb.add(filtersmn);
