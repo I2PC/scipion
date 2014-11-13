@@ -137,7 +137,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
 class ClusteringWindow(gui.Window):
     def __init__(self, **kwargs):
-        gui.Window.__init__(self, **kwargs)
+        gui.Window.__init__(self,  minsize=(420, 200), **kwargs)
         
         self.dim = kwargs.get('dim')
         self.data = kwargs.get('data')
@@ -160,8 +160,8 @@ class ClusteringWindow(gui.Window):
     
     def _createFigureBox(self, content):
         frame = tk.LabelFrame(content, text='Figure')
-        frame.columnconfigure(2, weight=1)#, minsize=30)
         frame.columnconfigure(0, minsize=50)
+        frame.columnconfigure(1, weight=1)#, minsize=30)
         # Create the 'Axes' label
         self._addLabel(frame, 'Axes', 0, 0)
         
@@ -170,7 +170,7 @@ class ClusteringWindow(gui.Window):
                              selectmode=tk.MULTIPLE, bg='white')        
         for x in range(1, self.dim+1):
             listbox.insert(tk.END, 'x%d' % x)        
-        listbox.grid(row=0, column=1, padx=5, pady=5)
+        listbox.grid(row=0, column=1, padx=5, pady=5, sticky='nw')
         self.listbox = listbox
         
         # Selection controls
@@ -178,49 +178,44 @@ class ClusteringWindow(gui.Window):
         # Selection label
         self.selectionVar = tk.StringVar()
         self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
-        self.clusterLabel.grid(row=1, column=1, sticky='nw', padx=5, pady=5, width=25)
+        self.clusterLabel.grid(row=1, column=1, sticky='nw', padx=5, pady=(10, 5))
+        self._updateSelectionLabel()
         # --- Expression
-        expressionLabel = tk.Label(frame, text='Expression')
-        expressionLabel.grid(row=2, column=1, sticky='nw')
+        expressionFrame = tk.Frame(frame)
+        expressionFrame.grid(row=2, column=1, sticky='news')
+        tk.Label(expressionFrame, text='Expression').grid(row=0, column=0, sticky='ne')
         self.expressionVar = tk.StringVar()
-        expressionEntry = tk.Entry(frame, textvariable=self.expressionVar)
-        expressionEntry.grid(row=2, column=2)
+        expressionEntry = tk.Entry(expressionFrame, textvariable=self.expressionVar, 
+                                   width=30, bg='white')
+        expressionEntry.grid(row=0, column=1, sticky='nw')
+        helpText = 'e.g. x1>0 and x1<100 or x3>20'
+        tk.Label(expressionFrame, text=helpText).grid(row=1, column=1, sticky='nw')
         
-        # Buttons        
-        resetBtn = tk.Button(frame, text='Reset', command=self._onResetClick)
-        resetBtn.grid(row=5, column=4, sticky='ne', padx=5, pady=5)
-        updateBtn = HotButton(frame, text='Update', command=self._onUpdateClick)
-        updateBtn.grid(row=5, column=5, sticky='ne', padx=5, pady=5)
+        # Buttons    
+        buttonFrame = tk.Frame(frame)
+        buttonFrame.grid(row=5, column=1, sticky='sew', pady=(10, 5))
+        buttonFrame.columnconfigure(0, weight=1)    
+        resetBtn = tk.Button(buttonFrame, text='Reset', command=self._onResetClick)
+        resetBtn.grid(row=0, column=0, sticky='ne', padx=(5, 0))
+        updateBtn = HotButton(buttonFrame, text='Update', command=self._onUpdateClick)
+        updateBtn.grid(row=0, column=1, sticky='ne', padx=5)
        
         frame.grid(row=0, column=0, sticky='new', padx=5, pady=(10, 5))
 
     def _createClusteringBox(self, content):
-        frame = tk.LabelFrame(content, text='Clustering')
-        frame.columnconfigure(1, weight=1)
+        frame = tk.LabelFrame(content, text='Cluster')
         frame.columnconfigure(0, minsize=50)
-        
+        frame.columnconfigure(1, weight=1)#, minsize=30)
+
         # Cluster line
-        self._addLabel(frame, 'Cluster', 0, 0)
+        self._addLabel(frame, 'Cluster name', 0, 0)
+        self.clusterVar = tk.StringVar()
+        clusterEntry = tk.Entry(frame, textvariable=self.clusterVar, 
+                                   width=30, bg='white')
+        clusterEntry.grid(row=0, column=1, sticky='nw', pady=5)
         
-        
-        # Selection controls
-#         self._addLabel(frame, 'Selection', 1, 0)  
-#         selectionFrame = tk.Frame(frame)
-#         selectionFrame.grid(row=1, column=1, sticky='news')
-#         # --- Expression
-#         expressionRb = tk.Radiobutton(selectionFrame, text='Expression', value=1)
-#         expressionRb.grid(row=0, column=0, sticky='nw')
-#         self.expressionVar = tk.StringVar()
-#         expressionEntry = tk.Entry(selectionFrame, textvariable=self.expressionVar)
-#         expressionEntry.grid(row=0, column=1)
-#         # --- Free hand
-#         freehandRb = tk.Radiobutton(selectionFrame, text='Free hand', value=2)
-#         freehandRb.grid(row=1, column=0, sticky='nw')
-#         
-#         
-#         # Create buttons frame        
         buttonsFrame = tk.Frame(frame, bg='green')
-        buttonsFrame.grid(row=2, column=0, columnspan=5,
+        buttonsFrame.grid(row=1, column=1, 
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
 
@@ -249,8 +244,10 @@ class ClusteringWindow(gui.Window):
     def _onUpdateClick(self, e=None):
         components = self.listbox.curselection()
         dim = len(components)
-            
-        if dim > 0:
+           
+        if not dim:
+            self.showWarning("Please select some Axis before update plots.")
+        else: 
             modeList = components
             modeNameList = ['x%d' % (m+1) for m in components]
             missingList = []
@@ -293,7 +290,8 @@ class ClusteringWindow(gui.Window):
                                                   self.data.getSize()))
         
     def _onClosing(self):
-        self.plotter.close()
+        if self.plotter:
+            self.plotter.close()
         gui.Window._onClosing(self)
         
         
