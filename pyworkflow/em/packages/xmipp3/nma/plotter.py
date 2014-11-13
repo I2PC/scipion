@@ -32,13 +32,10 @@ class XmippNmaPlotter(XmippPlotter):
     """ Add some extra plot utilities to XmippPlotter class, mainly for
     NMA vectors plotting of the deformations.txt file.
     """
-    def __init__(self, fnArray, **kwargs):
-        """ Load the data.
-        Params:
-            fnArray: path to deformations.txt data file.
-            vectorsPath: the folder path in which the vectors are located.
+    def __init__(self, **kwargs):
+        """ Create the plotter, 'data' should be passed in **kwargs.
         """
-        self._data = np.loadtxt(fnArray)
+        self._data = kwargs.get('data')
         XmippPlotter.__init__(self, **kwargs)
         self.useLastPlot = False
         
@@ -52,57 +49,33 @@ class XmippNmaPlotter(XmippPlotter):
             
         return ax
             
-    def plotArray1D(self, title, col, xlabel, ylabel):
-        data = self._data
-        if len(data.shape) > 1:
-            data = self._data[:,col]
-        
+    def plotArray1D(self, title, xlabel, ylabel):
+        xdata = self._data.getXData()
         ax = self.createSubPlot(title, xlabel, ylabel)
-        ax.hist(data, 50)
-        
-        return
-        
-        # CHECK WITH COSS why not to use matplotlib histogram ???
-#         # histogram our data with numpy
-#         n, bins = np.histogram(data, 50)
-#         
-#         # get the corners of the rectangles for the histogram
-#         left = np.array(bins[:-1])
-#         right = np.array(bins[1:])
-#         bottom = np.zeros(len(left))
-#         top = bottom + n
-#         
-#         # we need a (numrects x numsides x 2) numpy array for the path helper
-#         # function to build a compound path
-#         XY = np.array([[left,left,right,right], [bottom,top,top,bottom]]).T
-#         
-#         import matplotlib.patches as patches
-#         import matplotlib.path as path
-#         # get the Path object
-#         barpath = path.Path.make_compound_path_from_polys(XY)
-#         
-#         # make a patch out of it
-#         patch = patches.PathPatch(barpath, facecolor='blue', edgecolor='gray', alpha=0.8)
-#         ax.add_patch(patch)
-#         
-#         # update the view limits
-#         ax.set_xlim(left[0], right[-1])
-#         ax.set_ylim(bottom.min(), top.max())
+        ax.hist(xdata, 50)
     
-    def plotArray2D(self, title, colX, colY, xlabel, ylabel):
+    def plotArray2D(self, title, xlabel, ylabel):
         ax = self.createSubPlot(title, xlabel, ylabel)
         #ax.plot(self._data[:,colX], self._data[:,colY], 'o')
-        ax.scatter(self._data[:,colX], self._data[:,colY], c=self._data[:,colX])
+        xdata = self._data.getXData()
+        ydata = self._data.getYData()
+        weights = self._data.getWeights()
+        cax = ax.scatter(xdata, ydata, c=weights)
+        ax.figure.colorbar(cax)
     
-    def plotArray3D(self, title, colX, colY, colZ, xlabel, ylabel, zlabel):
+    def plotArray3D(self, title, xlabel, ylabel, zlabel):
         import mpl_toolkits.mplot3d.axes3d as p3
         ax = p3.Axes3D(self.figure)
         ax.set_title(title)
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_zlabel(zlabel)
-        a = self._data
-        ax.scatter3D(a[:,colX], a[:,colY], a[:,colZ])
+        xdata = self._data.getXData()
+        ydata = self._data.getYData()
+        zdata = self._data.getZData()
+        weights = self._data.getWeights()
+        cax = ax.scatter3D(xdata, ydata, zdata, c=weights)
+        ax.figure.colorbar(cax)
         # Disable tight_layout that is not available for 3D 
         self.tightLayoutOn = False
         
