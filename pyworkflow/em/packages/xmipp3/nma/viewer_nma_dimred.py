@@ -197,7 +197,7 @@ class ClusteringWindow(gui.Window):
         buttonFrame.columnconfigure(0, weight=1)    
         resetBtn = Button(buttonFrame, text='Reset', command=self._onResetClick)
         resetBtn.grid(row=0, column=0, sticky='ne', padx=(5, 0))
-        updateBtn = Button(buttonFrame, text='Update', imagePath='fa-refresh.png',
+        updateBtn = Button(buttonFrame, text='Update Plot', imagePath='fa-refresh.png',
                            command=self._onUpdateClick)
         updateBtn.grid(row=0, column=1, sticky='ne', padx=5)
        
@@ -220,7 +220,8 @@ class ClusteringWindow(gui.Window):
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
 
-        createBtn = HotButton(buttonsFrame, text='Create Cluster')
+        createBtn = HotButton(buttonsFrame, text='Create Cluster', 
+                              imagePath='fa-plus-circle.png')
         createBtn.grid(row=0, column=1)       
        
         frame.grid(row=1, column=0, sticky='new', padx=5, pady=(5, 10))
