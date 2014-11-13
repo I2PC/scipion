@@ -43,7 +43,7 @@ from pyworkflow.protocol.params import StringParam, BooleanParam
 from protocol_nma_dimred import XmippProtDimredNMA
 import xmipp
 
-from plotter import XmippNmaPlotter
+from plotter import XmippNmaPlotter, plotArray2D
 
 
         
@@ -185,7 +185,8 @@ class ClusteringWindow(gui.Window):
         
         # Cluster line
         self._addLabel(frame, 'Cluster', 0, 0)
-        self.clusterLabel = tk.Label(frame, text='0 / 100 points')
+        self.selectionVar = tk.StringVar()
+        self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
         self.clusterLabel.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
         
         # Selection controls
@@ -195,7 +196,8 @@ class ClusteringWindow(gui.Window):
         # --- Expression
         expressionRb = tk.Radiobutton(selectionFrame, text='Expression', value=1)
         expressionRb.grid(row=0, column=0, sticky='nw')
-        expressionEntry = tk.Entry(selectionFrame)
+        self.expressionVar = tk.StringVar()
+        expressionEntry = tk.Entry(selectionFrame, textvariable=self.expressionVar)
         expressionEntry.grid(row=0, column=1)
         # --- Free hand
         freehandRb = tk.Radiobutton(selectionFrame, text='Free hand', value=2)
@@ -208,14 +210,30 @@ class ClusteringWindow(gui.Window):
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
         
-        resetBtn = tk.Button(buttonsFrame, text='Reset')
+        resetBtn = tk.Button(buttonsFrame, text='Reset', command=self._onResetClick)
         resetBtn.grid(row=0, column=0)
         createBtn = HotButton(buttonsFrame, text='Create Cluster')
         createBtn.grid(row=0, column=1)       
-        
        
         frame.grid(row=1, column=0, sticky='new', padx=5, pady=(5, 10))
         
+    def _onResetClick(self, e=None):
+        """ Clean the expression and the current selection. """
+        self.expressionVar.set('')
+        for point in self.data:
+            point.setState(Point.NORMAL)
+        self._onUpdateClick()
+        
+    def _evalExpression(self):
+        """ Evaluate the input expression and add 
+        matching points to the selection.
+        """
+        value = self.expressionVar.get().strip()
+        if value:
+            for point in self.data:
+                if point.eval(value):
+                    point.setState(Point.SELECTED)
+                                        
     def _onUpdateClick(self, e=None):
         components = self.listbox.curselection()
         dim = len(components)
@@ -229,7 +247,7 @@ class ClusteringWindow(gui.Window):
                 return [self.errorMessage("Invalid mode(s) *%s*\n." % (', '.join(missingList)), 
                               title="Invalid input")]
             
-            if self.plotter is None or self.plotter.closed():
+            if self.plotter is None or self.plotter.isClosed():
                 self.plotter = XmippNmaPlotter(data=self.data)
                 #self.plotter.useLastPlot = True
             else:
@@ -246,14 +264,127 @@ class ClusteringWindow(gui.Window):
             else:
                 Point.YIND = modeList[1]
                 if dim == 2:
-                    self.plotter.plotArray2D("%s vs %s" % tuple(baseList), *baseList)
+                    self._evalExpression()
+                    self._updateSelectionLabel()
+                    ax = self.plotter.createSubPlot("Click and drag to add points to the Cluster",
+                                                    *baseList)
+                    self.ps = PointSelector(ax, self.data, callback=self._updateSelectionLabel)
                 elif dim == 3:
+                    del self.ps # Remove PointSelector
                     Point.ZIND = modeList[2]
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
             self.plotter.draw()
 
-
+    def _updateSelectionLabel(self):
+        self.selectionVar.set('%d / %d points' % (self.data.getSelectedSize(),
+                                                  self.data.getSize()))
+        
+    def _onClosing(self):
+        self.plotter.close()
+        gui.Window._onClosing(self)
+        
+        
+class PointSelector():
+    """ Graphical manager base on Matplotlib to handle mouse
+    events of click, drag and release and mark some point
+    from input Data as 'selected'.
+    """
+    def __init__(self, ax, data, callback=None):
+        self.ax = ax
+        self.data = data
+        self.createPlots(ax)
+        self.press = None
+        self.callback = callback
+        # connect to all the events we need 
+        self.cidpress = self.rectangle_selection.figure.canvas.mpl_connect(
+            'button_press_event', self.onPress)
+        self.cidrelease = self.rectangle_selection.figure.canvas.mpl_connect(
+            'button_release_event', self.onRelease)
+        self.cidmotion = self.rectangle_selection.figure.canvas.mpl_connect(
+            'motion_notify_event', self.onMotion)
+    
+    def createPlots(self, ax):
+        plotArray2D(ax, self.data)
+        self.createSelectionPlot(ax)
+    
+    def getSelectedData(self):
+        xs, ys = [], []
+        for point in self.data:
+            if point.getState() == 1: # point selected
+                xs.append(point.getX())
+                ys.append(point.getY())
+        return xs, ys
+        
+    def createSelectionPlot(self, ax):
+        xs, ys = self.getSelectedData()
+        self.plot_selected, = ax.plot(xs, ys, 'o', ms=8, alpha=0.4,
+                                  color='yellow')
+         
+        self.rectangle_selection, = ax.plot([0], [0], ':')  # empty line      
+        
+    def onPress(self, event):
+        if event.inaxes != self.rectangle_selection.axes: 
+            return
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        
+        self.press = True
+        self.originX = event.xdata
+        self.originY = event.ydata
+        
+    def onMotion(self, event):
+        if self.press is None: return
+        self.update(event, addSelected=False)
+        
+    def onRelease(self, event):
+        self.press = None
+        self.update(event, addSelected=True)
+        
+    def inside(self, x, y, xmin, xmax, ymin, ymax):
+        return (x >= xmin and x <= xmax and
+                y >= ymin and y <= ymax)
+        
+    def update(self, event, addSelected=False):
+        """ Update the plots with selected points.
+        Take the selection rectangle and include points from 'event'.
+        If addSelected is True, update the data selection.
+        """
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        ox, oy = self.originX, self.originY
+        ex, ey = event.xdata, event.ydata
+        xs1, ys1 = self.getSelectedData()
+        
+        x1 = min(ox, ex)
+        x2 = max(ox, ex)
+        y1 = min(oy, ey)
+        y2 = max(oy, ey)
+        
+        if addSelected:
+            xs, ys = [0], [0] # rectangle selection
+        else:
+            xs = [x1, x2, x2, x1, x1]
+            ys = [y1, y1, y2, y2, y1]
+            
+        for point in self.data:
+            x, y = point.getX(), point.getY()
+            if self.inside(x, y, x1, x2, y1, y2):
+                xs1.append(x)
+                ys1.append(y)
+                if addSelected:
+                    point.setState(Point.SELECTED)
+        
+        if self.callback: # Notify changes on selection
+            self.callback()
+        self.plot_selected.set_data(xs1, ys1)        
+        self.rectangle_selection.set_data(xs, ys)
+        
+        self.ax.figure.canvas.draw()
+        
+        
 class Point():
     """ Return x, y 2d coordinates and some other properties
     such as weight and state.
@@ -291,6 +422,15 @@ class Point():
     def getState(self):
         return self._state
     
+    def setState(self, newState):
+        self._state = newState
+        
+    def eval(self, expression):
+        localDict = {}
+        for i, x in enumerate(self._data):
+            localDict['x%d' % (i+1)] = x
+        return eval(expression, {"__builtins__":None}, localDict)
+    
     
 class Data():
     """ Store data points. """
@@ -315,5 +455,12 @@ class Data():
     
     def getWeights(self):
         return [p.getWeight() for p in self]
+    
+    def getSize(self):
+        return len(self._points)
+    
+    def getSelectedSize(self):
+        return len([p for p in self if p.getState()==Point.SELECTED])
+    
     
     
