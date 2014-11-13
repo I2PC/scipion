@@ -140,6 +140,7 @@ Java_xmipp_jni_ImageGeneric_read(JNIEnv *env, jobject jobj, jstring filename,
         ImageGeneric *image = GET_INTERNAL_IMAGE_GENERIC(jobj);
         jboolean aux=false;
         const char *fn = env->GetStringUTFChars(filename, &aux);
+        //std::cout << "DEBUG_JM: " << fn << std::endl;
         image->readOrReadPreview(fn, jx, jy, jz, jn, map);
     }
     XMIPP_JAVA_CATCH;

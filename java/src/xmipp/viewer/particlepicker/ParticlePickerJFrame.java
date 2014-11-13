@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -205,20 +207,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     
                 }
 		micrographstb = new JTable();
-		micrographstb.getSelectionModel().addListSelectionListener(new ListSelectionListener()
-		{
-
-			@Override
-			public void valueChanged(ListSelectionEvent e)
-			{
-				if (e.getValueIsAdjusting())
-					return;
-                                
-				if (micrographstb.getSelectedRow() == -1)
-					return;// Probably from fireTableDataChanged raised
-				loadMicrograph();
-			}
-		});
+		micrographstb.getSelectionModel().addListSelectionListener(new MicrographsSelectionListener());
 		micrographstb.addMouseListener(new MouseListener()
 		{
 
@@ -259,6 +248,21 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			}
 		});
 	}
+        
+        protected class MicrographsSelectionListener implements ListSelectionListener
+        {
+
+			@Override
+			public void valueChanged(ListSelectionEvent e)
+			{
+				if (e.getValueIsAdjusting())
+					return;
+                                
+				if (micrographstb.getSelectedRow() == -1)
+					return;// Probably from fireTableDataChanged raised
+				loadMicrograph();
+			}
+        }
 
 	protected abstract void loadMicrograph();
         
@@ -610,11 +614,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		shapepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		ShapeItemListener shapelistener = new ShapeItemListener();
                 shapepn.add(new JLabel("Shape:"));
-		circlechb = new JToggleButton(XmippResource.getIcon("circle.png"));
+                Icon icon = XmippResource.getIcon("circle.png");
+		circlechb = new JToggleButton(icon);
 		circlechb.setSelected(true);
 		circlechb.addItemListener(shapelistener);
-
+                
 		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
+                rectanglechb.setPreferredSize(null);
 		rectanglechb.setSelected(true);
 		rectanglechb.addItemListener(shapelistener);
 
@@ -730,6 +736,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		colorbt.setFocusPainted(false);
 		colorbt.setIcon(new ColorIcon(color));
 		colorbt.setBorderPainted(false);
+                colorbt.setMargin(new Insets(0, 0, 0, 0));
 		colorbt.addActionListener(new ColorActionListener());
 		colorpn.add(colorbt);
 	}
