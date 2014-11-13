@@ -368,6 +368,10 @@ class Window():
         from dialog import showInfo
         showInfo(header, msg, self.root)
         
+    def showWarning(self, msg, header='Warning'):
+        from dialog import showWarning
+        showWarning(header, msg, self.root)
+        
     def createCloseButton(self, parent):
         """ Create a button for closing the window, setting
         the proper label and icon. 
