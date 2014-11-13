@@ -120,7 +120,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         inputNMA = self.inputNMA.get()
         # Take deforamtions text file and the number of images and modes
         deformationsFile = inputNMA.getDeformationsFile()
-        rows = inputNMA.inputParticles.get().getSize()
+        rows = self.getInputParticles().getSize()
         columns = inputNMA.inputModes.get().getSize()
         reducedDim = self.reducedDim.get()
         method = DIMRED_VALUES[self.dimredMethod.get()]
@@ -163,5 +163,9 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     
     #--------------------------- UTILS functions --------------------------------------------
 
+    def getInputParticles(self):
+        """ Get the output particles of the input NMA protocol. """
+        return self.inputNMA.get().outputParticles
+    
     def getOutputMatrixFile(self):
         return self._getExtraPath('output_matrix.txt')

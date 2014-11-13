@@ -29,17 +29,17 @@ visualization program.
 """
 
 import os
-from os.path import join, dirname, basename
+from os.path import basename
 import numpy as np
 import Tkinter as tk
-import ttk
 
 import pyworkflow.gui as gui
 from pyworkflow.gui.widgets import Button, HotButton
-from pyworkflow.utils.properties import Icon, Color 
-from pyworkflow.viewer import (ProtocolViewer, CommandView,
-                               DESKTOP_TKINTER, WEB_DJANGO)
+
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
 from pyworkflow.protocol.params import StringParam, BooleanParam
+from pyworkflow.em.data import SetOfParticles
 from protocol_nma_dimred import XmippProtDimredNMA
 import xmipp
 
@@ -114,17 +114,46 @@ class XmippDimredNMAViewer(ProtocolViewer):
         return views
     
     def _displayClustering(self, paramName):
+        self.data = self.loadData()
         return [self.tkWindow(ClusteringWindow, 
                               dim=self.protocol.reducedDim.get(),
-                              data=self.loadData()
+                              data=self.data,
+                              callback=self._createCluster
                               )]
+        
+    def _createCluster(self):
+        """ Create the cluster with the selected particles
+        from the cluster. This method will be called when
+        the button 'Create Cluster' is pressed.
+        """
+        # Write the particles
+        prot = self.protocol
+        project = prot.getProject()
+        inputSet = prot.getInputParticles()
+        fnSqlite = prot._getTmpPath('cluster_particles.sqlite')
+        cleanPath(fnSqlite)
+        partSet = SetOfParticles(filename=fnSqlite)
+        partSet.copyInfo(inputSet)
+        for point in self.data:
+            if point.getState() == Point.SELECTED:
+                particle = inputSet[point.getId()]
+                partSet.append(particle)
+        partSet.write()
+        partSet.close()
+                
+        from protocol_batch_cluster import BatchProtNMACluster
+        newProt = project.newProtocol(BatchProtNMACluster)
+        newProt.inputNmaDimred.set(prot)
+        newProt.sqliteFile.set(fnSqlite)
+        
+        project.launchProtocol(newProt)
         
     def loadData(self):
         """ Iterate over the images and the output matrix txt file
         and create a Data object with theirs Points.
         """
         matrix = np.loadtxt(self.protocol.getOutputMatrixFile())
-        particles = self.protocol.inputNMA.get().outputParticles
+        particles = self.protocol.getInputParticles()
         
         data = Data()
         for i, particle in enumerate(particles):
@@ -141,6 +170,7 @@ class ClusteringWindow(gui.Window):
         
         self.dim = kwargs.get('dim')
         self.data = kwargs.get('data')
+        self.callback = kwargs.get('callback', None)
         self.plotter = None
          
         content = tk.Frame(self.root)
@@ -221,7 +251,7 @@ class ClusteringWindow(gui.Window):
         buttonsFrame.columnconfigure(0, weight=1)
 
         createBtn = HotButton(buttonsFrame, text='Create Cluster', 
-                              imagePath='fa-plus-circle.png')
+                              imagePath='fa-plus-circle.png', command=self._onCreateClick)
         createBtn.grid(row=0, column=1)       
        
         frame.grid(row=1, column=0, sticky='new', padx=5, pady=(5, 10))
@@ -232,6 +262,10 @@ class ClusteringWindow(gui.Window):
         for point in self.data:
             point.setState(Point.NORMAL)
         self._onUpdateClick()
+        
+    def _onCreateClick(self, e=None):
+        if self.callback:
+            self.callback()
         
     def _evalExpression(self):
         """ Evaluate the input expression and add 
