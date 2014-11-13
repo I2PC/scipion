@@ -76,7 +76,7 @@ opencv = env.AddLibrary(
        default=False)
 Depends(opencv, lastTarget)
 
-BASIC_LIBS = ['fftw3', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
+BASIC_LIBS = ['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
 
 # XMIPP SHARED LIBRARIES
 # Xmipp External Libraries (bilib, condor, alglib)
@@ -126,6 +126,7 @@ xmippClassif = env.AddPackageLibrary(
 xmippDimred = env.AddPackageLibrary(
             'XmippDimred',
             dirs=['libraries/dimred'],
+            patterns=['*.cpp'],
             incs=[Dir('.').path, Dir('libraries').path],
             libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
             deps=xmippExternal + xmippSqliteExt + xmippData)
@@ -304,11 +305,17 @@ xmippIJPlugin = env.AddJavaLibrary(
 pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', str(xmippIJPlugin[0]))
 env.Default(pluginLink)
 
+# For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
+# FIXME: Its needed to guess why and correct this. In the meanwhile we'll use an alternative environment
 env2 = Environment()
 env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir('java/lib').abspath,'*.jar'))))
 javaExtraFileTypes = env2.Java('java/build/HandleExtraFileTypes.class', 'java/src/HandleExtraFileTypes.java')
 env2.Depends(javaExtraFileTypes, 'java/lib/XmippViewer.jar')
 env2.Default(javaExtraFileTypes)
+
+# FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
+fileTypesInstallation = env.Install('external/imagej/plugins/', 'java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class')
+env.Default(fileTypesInstallation)
 
 # Java tests
 AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
@@ -320,6 +327,592 @@ env.AddJavaTest('MetadataTest', default=False)
 
 # XMIPP PROGRAMS
 # 
+# Idea about adding a set of programs defined in a dictionary
+xmippPrograms = {
+                 'xmipp_angular_commonline': ['XmippRecons'],
+                 'xmipp_angular_continuous_assign':['XmippRecons'], 
+                 }
+
+_libsrecons = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal']
+_depsrecons = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so']
+_libsinterf = BASIC_LIBS+['XmippInterface', 'python2.7', 'XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal']
+_depsinterf = ['lib/libXmippInterface.so']
+_libsclassif = BASIC_LIBS+['XmippClassif', 'XmippData', 'XmippExternal']
+_depsclassif = ['lib/libXmippClassif.so']
+_libsdimred = BASIC_LIBS+['XmippDimred', 'XmippClassif', 'XmippData', 'XmippExternal']
+_depsdimred = ['lib/libXmippDimred.so', 'lib/libXmippClassif.so']
+_libsnothing = BASIC_LIBS+['XmippData', 'XmippExternal']
+
+env.AddProgram('xmipp_angular_commonline', 
+               src=['applications/programs/angular_commonline/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_continuous_assign',
+               src=['applications/programs/angular_continuous_assign/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_discrete_assign',
+               src=['applications/programs/angular_discrete_assign/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_distance',
+               src=['applications/programs/angular_distance/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_distribution_show',
+               src=['applications/programs/angular_distribution_show/'],
+               incs=[Dir('.').path],
+               libs=_libsinterf, 
+               deps=_depsinterf)
+env.AddProgram('xmipp_angular_neighbourhood',
+               src=['applications/programs/angular_neighbourhood/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_projection_matching',
+               src=['applications/programs/angular_projection_matching/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_project_library',
+               src=['applications/programs/angular_project_library/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_angular_rotate',
+               src=['applications/programs/angular_rotate/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_classify_analyze_cluster',
+               src=['applications/programs/classify_analyze_cluster/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_classify_compare_classes',
+               src=['applications/programs/classify_compare_classes/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_classify_evaluate_classes',
+               src=['applications/programs/classify_evaluate_classes/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_classify_kerdensom',
+               src=['applications/programs/classify_kerdensom/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_ctf_correct_wiener3d',
+               src=['applications/programs/ctf_correct_wiener3d/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_correct_idr',
+               src=['applications/programs/ctf_correct_idr/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_create_ctfdat',
+               src=['applications/programs/ctf_create_ctfdat/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_enhance_psd',
+               src=['applications/programs/ctf_enhance_psd/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_estimate_from_micrograph',
+               src=['applications/programs/ctf_estimate_from_micrograph/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_estimate_from_psd',
+               src=['applications/programs/ctf_estimate_from_psd/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_group',
+               src=['applications/programs/ctf_group/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_phase_flip',
+               src=['applications/programs/ctf_phase_flip/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_show',
+               src=['applications/programs/ctf_show/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_ctf_sort_psds',
+               src=['applications/programs/ctf_sort_psds/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+if not int(env['release']):
+    env.AddProgram('xmipp_idr_xray_tomo',
+                   src=['applications/programs/idr_xray_tomo/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons, 
+                   deps=_depsrecons)
+env.AddProgram('xmipp_image_align',
+               src=['applications/programs/image_align/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_align_tilt_pairs',
+               src=['applications/programs/image_align_tilt_pairs/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_common_lines',
+               src=['applications/programs/image_common_lines/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_convert',
+               src=['applications/programs/image_convert/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_find_center',
+               src=['applications/programs/image_find_center/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_header',
+               src=['applications/programs/image_header/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_histogram',
+               src=['applications/programs/image_histogram/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_operate',
+               src=['applications/programs/image_operate/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_rotational_pca',
+               src=['applications/programs/image_rotational_pca/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_residuals',
+               src=['applications/programs/image_residuals/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_resize',
+               src=['applications/programs/image_resize/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_rotational_spectra',
+               src=['applications/programs/image_rotational_spectra/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_sort_by_statistics',
+               src=['applications/programs/image_sort_by_statistics/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons, 
+               deps=_depsrecons)
+env.AddProgram('xmipp_image_separate_objects',
+               src=['applications/programs/image_separate_objects/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_statistics',
+               src=['applications/programs/image_statistics/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_image_vectorize',
+               src=['applications/programs/image_vectorize/'],
+               incs=[Dir('.').path],
+               libs=_libsclassif, 
+               deps=_depsclassif)
+env.AddProgram('xmipp_matrix_dimred',
+               src=['applications/programs/matrix_dimred/'],
+               incs=[Dir('.').path],
+               libs=_libsdimred, 
+               deps=_depsdimred)
+env.AddProgram('xmipp_metadata_convert_to_spider',
+               src=['applications/programs/metadata_convert_to_spider/'],
+               incs=[Dir('.').path],
+               libs=_libsinterf, 
+               deps=_depsinterf)
+env.AddProgram('xmipp_metadata_histogram',
+               src=['applications/programs/metadata_histogram/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_metadata_import',
+               src=['applications/programs/metadata_import/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_metadata_split',
+               src=['applications/programs/metadata_split/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_metadata_split_3D',
+               src=['applications/programs/metadata_split_3D/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_metadata_utilities',
+               src=['applications/programs/metadata_utilities/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_metadata_xml',
+               src=['applications/programs/metadata_xml/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_micrograph_scissor',
+               src=['applications/programs/micrograph_scissor/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_micrograph_automatic_picking',
+               src=['applications/programs/micrograph_automatic_picking/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_ml_align2d',
+               src=['applications/programs/ml_align2d/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_mlf_align2d',
+               src=['applications/programs/mlf_align2d/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_ml_refine3d',
+               src=['applications/programs/ml_refine3d/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_mlf_refine3d',
+               src=['applications/programs/mlf_refine3d/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_ml_tomo',
+               src=['applications/programs/ml_tomo/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_mrc_create_metadata',
+               src=['applications/programs/mrc_create_metadata/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_nma_alignment',
+               src=['applications/programs/nma_alignment/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_nma_alignment_vol',
+               src=['applications/programs/nma_alignment_vol/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_flexible_alignment',
+               src=['applications/programs/flexible_alignment/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_pdb_analysis',
+               src=['applications/programs/pdb_analysis/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_pdb_construct_dictionary',
+               src=['applications/programs/pdb_construct_dictionary/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_pdb_nma_deform',
+               src=['applications/programs/pdb_nma_deform/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_pdb_restore_with_dictionary',
+               src=['applications/programs/pdb_restore_with_dictionary/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_phantom_create',
+               src=['applications/programs/phantom_create/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_phantom_project',
+               src=['applications/programs/phantom_project/'],
+               incs=[Dir('.').path],
+               libs=_libsinterf,
+               deps=['lib/libXmippInterface.so', 'lib/libXmippRecons.so', 'lib/libXmippClassif.so'])
+env.AddProgram('xmipp_phantom_simulate_microscope',
+               src=['applications/programs/phantom_simulate_microscope/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_phantom_transform',
+               src=['applications/programs/phantom_transform/'],
+               incs=[Dir('.').path],
+               libs=_libsinterf,
+               deps=['lib/libXmippInterface.so', 'lib/libXmippRecons.so', 'lib/libXmippClassif.so'])
+env.AddProgram('xmipp_reconstruct_art',
+               src=['applications/programs/reconstruct_art/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_reconstruct_art_pseudo',
+               src=['applications/programs/reconstruct_art_pseudo/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+if not int(env['release']):
+    env.AddProgram('xmipp_reconstruct_art_xray',
+                   src=['applications/programs/reconstruct_art_xray/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons)
+env.AddProgram('xmipp_reconstruct_fourier',
+               src=['applications/programs/reconstruct_fourier/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_reconstruct_significant',
+               src=['applications/programs/reconstruct_significant/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_reconstruct_wbp',
+               src=['applications/programs/reconstruct_wbp/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+#env.AddProgram('xmipp_reconstruct_fsc',
+#               src=['applications/programs/reconstruct_fsc/'],
+#               incs=[Dir('.').path],
+#               libs=_libsnothing)
+if not int(env['release']):
+    env.AddProgram('xmipp_resolution_ibw',
+                   src=['applications/programs/resolution_ibw/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons)
+env.AddProgram('xmipp_resolution_ssnr',
+               src=['applications/programs/resolution_ssnr/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_score_micrograph',
+               src=['applications/programs/score_micrograph/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_add_noise',
+               src=['applications/programs/transform_add_noise/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_adjust_volume_grey_levels',
+               src=['applications/programs/transform_adjust_volume_grey_levels/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_center_image',
+               src=['applications/programs/transform_center_image/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_dimred',
+               src=['applications/programs/transform_dimred/'],
+               incs=[Dir('.').path],
+               libs=BASIC_LIBS+['XmippDimred', 'XmippClassif', 'XmippData', 'XmippExternal'], 
+               deps=_depsdimred)
+env.AddProgram('xmipp_transform_downsample',
+               src=['applications/programs/transform_downsample/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_filter',
+               src=['applications/programs/transform_filter/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_geometry',
+               src=['applications/programs/transform_geometry/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_mask',
+               src=['applications/programs/transform_mask/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_mirror',
+               src=['applications/programs/transform_mirror/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_morphology',
+               src=['applications/programs/transform_morphology/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_normalize',
+               src=['applications/programs/transform_normalize/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_randomize_phases',
+               src=['applications/programs/transform_randomize_phases/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_range_adjust',
+               src=['applications/programs/transform_range_adjust/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_transform_symmetrize',
+               src=['applications/programs/transform_symmetrize/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_threshold',
+               src=['applications/programs/transform_threshold/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_transform_window',
+               src=['applications/programs/transform_window/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+if not int(env['release']):
+    env.AddProgram('xmipp_tomo_align_dual_tilt_series',
+                   src=['applications/programs/tomo_align_dual_tilt_series/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons)
+    env.AddProgram('xmipp_tomo_align_refinement',
+                   src=['applications/programs/tomo_align_refinement/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons)
+env.AddProgram('xmipp_tomo_align_tilt_series',
+               src=['applications/programs/tomo_align_tilt_series/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons,
+               cuda=int(env['cuda']))
+env.AddProgram('xmipp_tomo_detect_missing_wedge',
+               src=['applications/programs/tomo_detect_missing_wedge/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_tomo_project',
+               src=['applications/programs/tomo_project/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_tomo_remove_fluctuations',
+               src=['applications/programs/tomo_remove_fluctuations/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_tomo_extract_subvolume',
+               src=['applications/programs/tomo_extract_subvolume/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_align_prog',
+               src=['applications/programs/volume_align_prog/'],
+               incs=[Dir('.').path, Dir('#software/lib/python2.7/site-packages/numpy/core/include/').abspath],
+               libs=_libsinterf,
+               deps=_depsinterf)
+env.AddProgram('xmipp_volume_center',
+               src=['applications/programs/volume_center/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_volume_correct_bfactor',
+               src=['applications/programs/volume_correct_bfactor/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_enhance_contrast',
+               src=['applications/programs/volume_enhance_contrast/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_find_symmetry',
+               src=['applications/programs/volume_find_symmetry/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_volume_from_pdb',
+               src=['applications/programs/volume_from_pdb/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_initial_simulated_annealing',
+               src=['applications/programs/volume_initial_simulated_annealing/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_validate_pca',
+               src=['applications/programs/volume_validate_pca/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_reslice',
+               src=['applications/programs/volume_reslice/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_volume_segment',
+               src=['applications/programs/volume_segment/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_structure_factor',
+               src=['applications/programs/volume_structure_factor/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_volume_to_pseudoatoms',
+               src=['applications/programs/volume_to_pseudoatoms/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_volume_to_web',
+               src=['applications/programs/volume_to_web/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_xray_import',
+               src=['applications/programs/xray_import/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+env.AddProgram('xmipp_xray_psf_create',
+               src=['applications/programs/xray_psf_create/'],
+               incs=[Dir('.').path],
+               libs=_libsnothing)
+env.AddProgram('xmipp_xray_project',
+               src=['applications/programs/xray_project/'],
+               incs=[Dir('.').path],
+               libs=_libsrecons,
+               deps=_depsrecons)
+if not int(env['release']):
+    env.AddProgram('xmipp_xray_volume_correct',
+                   src=['applications/programs/xray_volume_correct/'],
+                   incs=[Dir('.').path],
+                   libs=_libsrecons,
+                   deps=_depsrecons)
+
+# Python batches (apps)
+
 lastTarget = xmippParallel
 
 Default(lastTarget)
