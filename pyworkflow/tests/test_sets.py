@@ -159,8 +159,9 @@ class TestSets(BaseTest):
 
             self.assertTrue(len(setFull) >= len(output))
 
-        check(self.micros)
-        check(self.vols)
+        # We won't do these first two, there are too few elements.
+        #   check(self.micros)
+        #   check(self.vols)
         check(self.movies)
         check(self.particles)
         check(self.particles, n1=3, n2=5)
@@ -180,9 +181,10 @@ class TestSets(BaseTest):
                 p_union.inputSets.append(setRandom)
             self.proj.launchProtocol(p_union, wait=True)
 
-            # Check something here.
             output = self.outputs(p_union).next()  # first (and only!) output
-            self.assertTrue(len(output) >= min(len(x) for x in setsIds))
+            self.assertEqual(len(output), sum(len(x) for x in setsIds))
+            # We might be able to do more interesting tests, using the
+            # collected setsIds.
 
         check(self.micros)
         check(self.vols)
