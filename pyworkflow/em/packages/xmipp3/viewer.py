@@ -153,11 +153,9 @@ class XmippViewer(Viewer):
             fn = getImageLocation(obj)
             self._views.append(DataView(fn))
             
-
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
-
               
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()

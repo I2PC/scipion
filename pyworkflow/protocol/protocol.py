@@ -1209,7 +1209,8 @@ class Protocol(Step):
         if packageCitations:
             citations.append('*Package References:*')
             citations += packageCitations   
-            
+        if not citations:
+            return ['No references provided']
         return citations
 
     def _methods(self):
