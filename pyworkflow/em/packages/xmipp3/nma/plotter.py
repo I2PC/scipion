@@ -53,16 +53,13 @@ class XmippNmaPlotter(XmippPlotter):
         xdata = self._data.getXData()
         ax = self.createSubPlot(title, xlabel, ylabel)
         ax.hist(xdata, 50)
+        return ax
     
     def plotArray2D(self, title, xlabel, ylabel):
         ax = self.createSubPlot(title, xlabel, ylabel)
-        #ax.plot(self._data[:,colX], self._data[:,colY], 'o')
-        xdata = self._data.getXData()
-        ydata = self._data.getYData()
-        weights = self._data.getWeights()
-        cax = ax.scatter(xdata, ydata, c=weights)
-        ax.figure.colorbar(cax)
-    
+        plotArray2D(ax, self._data)
+        return ax
+        
     def plotArray3D(self, title, xlabel, ylabel, zlabel):
         import mpl_toolkits.mplot3d.axes3d as p3
         ax = p3.Axes3D(self.figure)
@@ -75,8 +72,28 @@ class XmippNmaPlotter(XmippPlotter):
         zdata = self._data.getZData()
         weights = self._data.getWeights()
         cax = ax.scatter3D(xdata, ydata, zdata, c=weights)
-        ax.figure.colorbar(cax)
+        x2, y2, z2 = [], [], []
+        for point in self._data:
+            if point.getState() == 1:
+                x2.append(point.getX())
+                y2.append(point.getY())
+                z2.append(point.getZ())
+        ax.scatter(x2, y2, z2, color='yellow', alpha=0.4, s=8)
+        cb = ax.figure.colorbar(cax)
+        cb.set_label('Error')
         # Disable tight_layout that is not available for 3D 
         self.tightLayoutOn = False
+        return ax
         
 
+#---------- Utility functions -----------------
+
+def plotArray2D(ax, data):
+    xdata = data.getXData()
+    ydata = data.getYData()
+    weights = data.getWeights()
+    cax = ax.scatter(xdata, ydata, c=weights)
+    cb = ax.figure.colorbar(cax)
+    cb.set_label('Error')
+    
+    
