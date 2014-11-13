@@ -173,6 +173,22 @@ class ClusteringWindow(gui.Window):
         listbox.grid(row=0, column=1, padx=5, pady=5)
         self.listbox = listbox
         
+        # Selection controls
+        self._addLabel(frame, 'Selection', 1, 0)  
+        # Selection label
+        self.selectionVar = tk.StringVar()
+        self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
+        self.clusterLabel.grid(row=1, column=1, sticky='nw', padx=5, pady=5, width=25)
+        # --- Expression
+        expressionLabel = tk.Label(frame, text='Expression')
+        expressionLabel.grid(row=2, column=1, sticky='nw')
+        self.expressionVar = tk.StringVar()
+        expressionEntry = tk.Entry(frame, textvariable=self.expressionVar)
+        expressionEntry.grid(row=2, column=2)
+        
+        # Buttons        
+        resetBtn = tk.Button(frame, text='Reset', command=self._onResetClick)
+        resetBtn.grid(row=5, column=4, sticky='ne', padx=5, pady=5)
         updateBtn = HotButton(frame, text='Update', command=self._onUpdateClick)
         updateBtn.grid(row=5, column=5, sticky='ne', padx=5, pady=5)
        
@@ -185,33 +201,29 @@ class ClusteringWindow(gui.Window):
         
         # Cluster line
         self._addLabel(frame, 'Cluster', 0, 0)
-        self.selectionVar = tk.StringVar()
-        self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
-        self.clusterLabel.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+        
         
         # Selection controls
-        self._addLabel(frame, 'Selection', 1, 0)  
-        selectionFrame = tk.Frame(frame)
-        selectionFrame.grid(row=1, column=1, sticky='news')
-        # --- Expression
-        expressionRb = tk.Radiobutton(selectionFrame, text='Expression', value=1)
-        expressionRb.grid(row=0, column=0, sticky='nw')
-        self.expressionVar = tk.StringVar()
-        expressionEntry = tk.Entry(selectionFrame, textvariable=self.expressionVar)
-        expressionEntry.grid(row=0, column=1)
-        # --- Free hand
-        freehandRb = tk.Radiobutton(selectionFrame, text='Free hand', value=2)
-        freehandRb.grid(row=1, column=0, sticky='nw')
-        
-        
-        # Create buttons frame        
+#         self._addLabel(frame, 'Selection', 1, 0)  
+#         selectionFrame = tk.Frame(frame)
+#         selectionFrame.grid(row=1, column=1, sticky='news')
+#         # --- Expression
+#         expressionRb = tk.Radiobutton(selectionFrame, text='Expression', value=1)
+#         expressionRb.grid(row=0, column=0, sticky='nw')
+#         self.expressionVar = tk.StringVar()
+#         expressionEntry = tk.Entry(selectionFrame, textvariable=self.expressionVar)
+#         expressionEntry.grid(row=0, column=1)
+#         # --- Free hand
+#         freehandRb = tk.Radiobutton(selectionFrame, text='Free hand', value=2)
+#         freehandRb.grid(row=1, column=0, sticky='nw')
+#         
+#         
+#         # Create buttons frame        
         buttonsFrame = tk.Frame(frame, bg='green')
         buttonsFrame.grid(row=2, column=0, columnspan=5,
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
-        
-        resetBtn = tk.Button(buttonsFrame, text='Reset', command=self._onResetClick)
-        resetBtn.grid(row=0, column=0)
+
         createBtn = HotButton(buttonsFrame, text='Create Cluster')
         createBtn.grid(row=0, column=1)       
        
