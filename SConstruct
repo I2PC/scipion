@@ -321,7 +321,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX']}
         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
-        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], True):
+        if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], env['MPI_LINKERFORPROGRAMS'], False):
             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
             Exit(1)
         env = conf.Finish()
@@ -458,6 +458,88 @@ def addJavaTest(env, name, installDir=None, default=True):
     runTest = env.Command(name, join(installDir, 'XmippTest.jar'), cmd)
     env.Alias('run_java_tests', runTest)
     Default(runTest)
+
+
+def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[], deps=[], mpi=False, cuda=False, default=True):
+    """Add, compile and install a program to the compilation process
+    
+    This pseudobuilder compiles a C++ program using CXX compiler and linker.
+    
+    This is designed to compile the different parts of a EM software
+
+    If default=False, the program will not be compiled unless the 
+    --with-<program-name> is used.
+
+    Returns the final targets, the ones that Command returns.
+    
+    """
+    AddOption('--with-%s' % name, dest=name, action='store_true',
+              help='Add the program %s to the compilation' % name)
+    if not default and not GetOption(name):
+        return ''
+    src = src or ['src']
+    pattern = pattern or ['*.cpp']
+    installDir = installDir or 'bin'
+    libs = libs or []
+    libPathsCopy = libPaths + ['lib', '#software/lib']
+    incs = incs or []
+    incs += ['libraries', '#software/include', '#software/include/python2.7']
+    if cuda:
+        libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
+        incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
+                 join(env['CUDA_SDK_PATH'], "shared","inc"),
+                 join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
+                 join("/usr","local","cuda","lib64"),
+                 env['CUDA_LIB_PATH']]
+    sources = []
+    for x, dir in enumerate(src):
+        sources += glob(join(dir, pattern[x]))
+    
+    ccCopy = env['MPI_CC'] if mpi else env['CC']
+    cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
+    linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
+    incsCopy = incs + env['CPPPATH']
+    libPathsCopy += [env['LIBPATH']]
+    libsCopy = libs + env['LIBS']
+    cxxflagsCopy = cxxflags + env['CXXFLAGS']
+    linkflagsCopy = linkflags + env['LINKFLAGS']
+    ldLibraryPathCopy = env['LIBPATH']
+    if mpi: 
+        incsCopy += env['MPI_INCLUDE']
+        libPathsCopy += env['MPI_LIBDIR']
+        libsCopy += env['MPI_LIB']
+        ldLibraryPathCopy += env['MPI_LIBDIR']
+#    print 'cc: %s' % cc
+#    print 'cxx: %s' % cxx
+#    print 'incs: %s' % incs
+#    print 'libPaths: %s' % libPathsCopy
+#    print 'libs: %s' % libs
+#    print 'cxxflags: %s' % cxxflags
+#    print 'linkflags: %s' % linkflags
+#    print 'link: %s' % link
+#    print 'ldLibraryPath: %s' % ldLibraryPath
+
+    env2 = Environment()
+
+    program = env2.Program(
+                          File(join(installDir, name)).abspath,
+                          source=sources,
+                          CC=ccCopy,
+                          CXX=cxxCopy,
+                          CPPPATH=incsCopy,
+                          LIBPATH=libPathsCopy,
+                          LIBS=libsCopy,
+                          CXXFLAGS=cxxflagsCopy,
+                          LINKFLAGS=linkflagsCopy,
+                          LINK=linkCopy,
+                          LD_LIBRARY_PATH=ldLibraryPathCopy
+                          )
+    env2.Default(program)
+    
+    if deps: 
+        env2.Depends(program, [dep for dep in deps])
+    
+    return program
 
 
 def addMpiToBashrc(mpiPath, type, shellType='bash', replace=False):
@@ -619,14 +701,15 @@ def compilerConfig(env):
 
     conf.CheckCC()
     conf.CheckCXX()
-    return conf.Finish()
+    env = conf.Finish()
+    return env
 
 
 def libraryTest(env, name, lang='c'):
     """Check the existence of a concrete C/C++ library."""
     conf = Configure(env)
     conf.CheckLib(name, language=lang)
-    conf.Finish()
+    env = conf.Finish()
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
@@ -851,6 +934,7 @@ env.AddMethod(addPackageLibrary, 'AddPackageLibrary')
 env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
+env.AddMethod(addProgram, 'AddProgram')
 
 #  ************************************************************************
 #  *                                                                      *
