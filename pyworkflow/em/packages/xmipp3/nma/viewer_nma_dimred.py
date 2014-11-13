@@ -35,7 +35,7 @@ import Tkinter as tk
 import ttk
 
 import pyworkflow.gui as gui
-from pyworkflow.gui.widgets import IconButton, HotButton
+from pyworkflow.gui.widgets import Button, HotButton
 from pyworkflow.utils.properties import Icon, Color 
 from pyworkflow.viewer import (ProtocolViewer, CommandView,
                                DESKTOP_TKINTER, WEB_DJANGO)
@@ -195,9 +195,10 @@ class ClusteringWindow(gui.Window):
         buttonFrame = tk.Frame(frame)
         buttonFrame.grid(row=5, column=1, sticky='sew', pady=(10, 5))
         buttonFrame.columnconfigure(0, weight=1)    
-        resetBtn = tk.Button(buttonFrame, text='Reset', command=self._onResetClick)
+        resetBtn = Button(buttonFrame, text='Reset', command=self._onResetClick)
         resetBtn.grid(row=0, column=0, sticky='ne', padx=(5, 0))
-        updateBtn = HotButton(buttonFrame, text='Update', command=self._onUpdateClick)
+        updateBtn = Button(buttonFrame, text='Update', imagePath='fa-refresh.png',
+                           command=self._onUpdateClick)
         updateBtn.grid(row=0, column=1, sticky='ne', padx=5)
        
         frame.grid(row=0, column=0, sticky='new', padx=5, pady=(10, 5))
