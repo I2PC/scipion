@@ -38,7 +38,7 @@ from pyworkflow.protocol.params import (PointerParam, StringParam, IntParam, Enu
                                         LEVEL_EXPERT, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.protocol.params import NumericRangeParam
 import xmipp 
 
@@ -116,8 +116,9 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
             self._insertFunctionStep("performNmaStep", self.atomsFn, self.modesFn)
-            self._insertFunctionStep("extractDeformationsStep")
-        else:            
+        else:   
+            # TODO: for debugging and testing it will be useful to copy the deformations
+            # metadata file, not just the deformation.txt file         
             self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
             
         self._insertFunctionStep('createOutputStep')
@@ -195,7 +196,14 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         return defFn
     
     def createOutputStep(self):
-        pass
+        inputSet = self.inputParticles.get()
+        partSet = self._createSetOfParticles()
+        readSetOfParticles(self.imgsFn, partSet)
+        partSet.copyInfo(inputSet)
+        
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(self.getInputPdb(), partSet)
+        self._defineTransformRelation(inputSet, partSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
