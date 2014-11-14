@@ -146,6 +146,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             """
         self._defineOutputs(outputMicrographs=micSet)
         self._defineOutputs(outputMovies=movieSet)
+        self._defineSourceRelation(movieSet, micSet)
         """
         if alMethod == AL_DOSEFGPU:
             self._defineTransformRelation(inputMovies, micSet)
