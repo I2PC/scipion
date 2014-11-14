@@ -179,20 +179,19 @@ class ClusteringWindow(gui.Window):
             
             if self.plotter is None or self.plotter.isClosed():
                 self.plotter = XmippNmaPlotter(data=self.data)
-                #self.plotter.useLastPlot = True
             else:
                 self.plotter.clear()
             
             # Actually plot
             baseList = [basename(n) for n in modeNameList]
             
-            Point.XIND = modeList[0]
+            self.data.XIND = modeList[0]
             
             if dim == 1:
                 self.plotter.plotArray1D("Histogram for %s" % baseList[0],  
                                     "Deformation value", "Number of images")
             else:
-                Point.YIND = modeList[1]
+                self.data.YIND = modeList[1]
                 if dim == 2:
                     self._evalExpression()
                     self._updateSelectionLabel()
@@ -201,7 +200,7 @@ class ClusteringWindow(gui.Window):
                     self.ps = PointSelector(ax, self.data, callback=self._updateSelectionLabel)
                 elif dim == 3:
                     del self.ps # Remove PointSelector
-                    Point.ZIND = modeList[2]
+                    self.data.ZIND = modeList[2]
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
             self.plotter.draw()
