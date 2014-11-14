@@ -65,6 +65,7 @@ class Plotter(View):
             self.plt = plt
             if self.interactive:
                 plt.ion()
+       
            
         if figsize is None: # Set some defaults values
             if x == 1 and y == 1:
@@ -163,6 +164,7 @@ class Plotter(View):
             self.grid.tight_layout(self.figure)            
         
     def show(self, interactive=True):
+
         self.setInteractive(interactive)
         self.tightLayout()
         self.plt.show()

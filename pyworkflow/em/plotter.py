@@ -84,4 +84,5 @@ class EmPlotter(Plotter):
             **kwargs: keyword arguments that accepts:
                 marker, linestyle
         """
+
         self.plot(xValues, yValues, color, **kwargs) 

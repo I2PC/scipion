@@ -31,8 +31,8 @@ visualization program.
 from pyworkflow.protocol.params import BooleanParam, IntParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import ObjectView, VmdView
-from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 from protocol_nma import XmippProtNMA
+from plotter import XmippNmaPlotter
 import xmipp
 
 
@@ -80,7 +80,7 @@ class XmippNMAViewer(ProtocolViewer):
             return [ObjectView(self._project.getName(), modes.strId(), modes.getFileName())]
         elif paramName == 'displayMaxDistanceProfile':
             fn = self.protocol._getExtraPath("maxAtomShifts.xmd")
-            return [self._createShiftPlot(fn, "Maximum atom shifts", "maximum shift")]
+            return [createShiftPlot(fn, "Maximum atom shifts", "maximum shift")]
     
     def _viewSingleMode(self, paramName):
         """ visualization for a selected mode. """
@@ -95,12 +95,16 @@ class XmippNMAViewer(ProtocolViewer):
             vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % modeNumber)
             return [VmdView('-e "%s"' % vmdFile)]
         elif paramName == 'displayDistanceProfile':
-            fn = self.protocol._getExtraPath("distanceProfiles","vec%d.xmd" % modeNumber)
-            return [self._createShiftPlot(fn, "Atom shifts for mode %d" % modeNumber, "shift")]
-    
-    def _createShiftPlot(self, mdFn, title, ylabel):
-        plotter = XmippPlotter()
-        plotter.createSubPlot(title, 'atom index', ylabel)
-        plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
-        return plotter
-    
+            return [createDistanceProfilePlot(self.protocol, modeNumber)]
+
+
+def createShiftPlot(mdFn, title, ylabel):
+    plotter = XmippNmaPlotter()
+    plotter.createSubPlot(title, 'atom index', ylabel)
+    plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
+    return plotter
+
+def createDistanceProfilePlot(protocol, modeNumber):
+    vectorMdFn = protocol._getExtraPath("distanceProfiles","vec%d.xmd" % modeNumber)
+    plotter = createShiftPlot(vectorMdFn, "Atom shifts for mode %d" % modeNumber, "shift")
+    return plotter

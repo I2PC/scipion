@@ -155,7 +155,7 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
+            self._views.append(ObjectView(self._project.getName(), self.protocol.strId(), fn, viewParams={OBJ_CMDS: OBJ_NMAPLOT}, **args))
               
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()

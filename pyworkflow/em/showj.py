@@ -60,8 +60,7 @@ VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
 OBJ_CMDS = 'object_commands'
-OBJ_CMDA = 'A'
-
+OBJ_NMAPLOT = '\'Plot distance profile\''
 
 GOTO = 'goto'
 ROWS = 'rows'
