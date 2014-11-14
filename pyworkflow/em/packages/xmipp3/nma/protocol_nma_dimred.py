@@ -27,6 +27,7 @@
 
 from os.path import basename
 
+from pyworkflow.object import String
 from pyworkflow.protocol.params import (PointerParam, StringParam, EnumParam, IntParam,
                                         LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
@@ -49,6 +50,8 @@ DIMRED_NPE = 10
 # Values to be passed to the program
 DIMRED_VALUES = ['PCA', 'LTSA', 'DM', 'LLTSA', 'LPP', 'kPCA', 'pPCA', 'LE', 'HLLE', 'SPE', 'NPE']
 
+# Methods that allows mapping
+DIMRED_MAPPINGS = [DIMRED_PCA, DIMRED_LLTSA, DIMRED_LPP, DIMRED_PPCA, DIMRED_NPE]
 
        
 class XmippProtDimredNMA(ProtAnalysis3D):
@@ -58,6 +61,10 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     spaced (usually with less dimensions).
     """
     _label = 'nma dimred'
+    
+    def __init__(self, **kwargs):
+        ProtAnalysis3D.__init__(self, **kwargs)
+        self.mappingFile = String()
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -123,7 +130,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         rows = inputSet.getSize()
         columns = inputNMA.inputModes.get().getSize()
         reducedDim = self.reducedDim.get()
-        method = DIMRED_VALUES[self.dimredMethod.get()]
+        method = self.dimredMethod.get()
         extraParams = self.extraParams.get('')
         
         deformationsFile = self._getExtraPath('deformations.txt')
@@ -154,9 +161,13 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     def performDimredStep(self, deformationsFile, method, extraParams,
                           rows, columns, reducedDim):
         outputMatrix = self.getOutputMatrixFile()
-        args = "-i %(deformationsFile)s -o %(outputMatrix)s -m %(method)s %(extraParams)s"
+        methodName = DIMRED_VALUES[method]
+        args = "-i %(deformationsFile)s -o %(outputMatrix)s -m %(methodName)s %(extraParams)s"
         args += "--din %(columns)d --samples %(rows)d --dout %(reducedDim)d"
-        
+        if method in DIMRED_MAPPINGS:
+            mappingFile = self._getExtraPath('projections.txt')
+            args += " --saveMapping %(mappingFile)s"
+            self.mappingFile.set(mappingFile)
         self.runJob("xmipp_matrix_dimred", args % locals())
         
     def createOutputStep(self):
@@ -185,3 +196,6 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     
     def getOutputMatrixFile(self):
         return self._getExtraPath('output_matrix.txt')
+    
+    def getMappingFile(self):
+        return self.mappingFile.get()
