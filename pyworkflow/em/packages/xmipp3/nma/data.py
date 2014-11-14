@@ -74,7 +74,13 @@ class Point():
         for i, x in enumerate(self._data):
             localDict['x%d' % (i+1)] = x
         return eval(expression, {"__builtins__":None}, localDict)
-    
+
+    def setSelected(self):
+        self.setState(Point.SELECTED)
+        
+    def isSelected(self):
+        return self.getState()==Point.SELECTED    
+
     
 class Data():
     """ Store data points. """
@@ -104,9 +110,5 @@ class Data():
         return len(self._points)
     
     def getSelectedSize(self):
-        return len([p for p in self if p.getState()==Point.SELECTED])
-    
-    
-    
+        return len([p for p in self if p.isSelected()])
 
-            
