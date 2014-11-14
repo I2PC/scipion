@@ -25,12 +25,10 @@
 # **************************************************************************
 
 
-from os.path import basename
-
 from pyworkflow.protocol.params import PointerParam, FileParam
 from pyworkflow.em.protocol import BatchProtocol
-from pyworkflow.em.data import SetOfParticles
-import xmipp 
+from pyworkflow.em.data import SetOfParticles, Volume
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 
 
 
@@ -47,13 +45,17 @@ class BatchProtNMACluster(BatchProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------
         
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep')
-        self._insertFunctionStep('reconstructStep')
-        self._insertFunctionStep('createOutputStep')
+        imagesMd = self._getExtraPath('images.xmd')
+        outputVol = self._getExtraPath('reconstruction.vol')
+        
+        self._insertFunctionStep('convertInputStep', imagesMd)
+        params = '-i %(imagesMd)s -o %(outputVol)s ' % locals()
+        self._insertFunctionStep('reconstructStep', params)
+        self._insertFunctionStep('createOutputStep', outputVol)
         
     #--------------------------- STEPS functions --------------------------------------------   
         
-    def convertInputStep(self):
+    def convertInputStep(self, imagesMd):
         # It is unusual to create the output in the convertInputStep,
         # but just to avoid reading twice the sqlite with particles
         inputSet = self.inputNmaDimred.get().getInputParticles()
@@ -65,13 +67,18 @@ class BatchProtNMACluster(BatchProtocol):
         # Register outputs
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
-
-    def reconstructStep(self):
-        pass
-    
-    def createOutputStep(self):
-        pass
         
+        writeSetOfParticles(partSet, imagesMd, 
+                            is2D=False, inverseTransform=True)
+
+    def reconstructStep(self, params):
+        self.runJob('xmipp_reconstruct_fourier', params)
+    
+    def createOutputStep(self, outputVol):
+        vol = Volume()
+        vol.setFileName(outputVol)
+        vol.setSamplingRate(self.outputParticles.getSamplingRate())
+        self._defineOutputs(outputVol=vol)
         
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -88,7 +95,3 @@ class BatchProtNMACluster(BatchProtocol):
     def _methods(self):
         return []
     
-    #--------------------------- UTILS functions --------------------------------------------
-
-    def getOutputMatrixFile(self):
-        return self._getExtraPath('output_matrix.txt')
