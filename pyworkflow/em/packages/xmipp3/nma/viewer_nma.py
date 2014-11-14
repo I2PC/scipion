@@ -92,8 +92,7 @@ class XmippNMAViewer(ProtocolViewer):
             return [self.errorMessage("Invalid mode number *%d*\nDisplay the output Normal Modes to see the availables ones." % modeNumber, 
                                       title="Invalid input")]
         elif paramName == 'displayVmd':
-            vmdFile = self.protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % modeNumber)
-            return [VmdView('-e "%s"' % vmdFile)]
+            return [createVmdView(self.protocol, modeNumber)]
         elif paramName == 'displayDistanceProfile':
             return [createDistanceProfilePlot(self.protocol, modeNumber)]
 
@@ -108,3 +107,7 @@ def createDistanceProfilePlot(protocol, modeNumber):
     vectorMdFn = protocol._getExtraPath("distanceProfiles","vec%d.xmd" % modeNumber)
     plotter = createShiftPlot(vectorMdFn, "Atom shifts for mode %d" % modeNumber, "shift")
     return plotter
+
+def createVmdView(protocol, modeNumber):
+    vmdFile = protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % modeNumber)
+    return VmdView('-e "%s"' % vmdFile)

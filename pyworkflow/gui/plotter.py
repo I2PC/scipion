@@ -163,10 +163,10 @@ class Plotter(View):
         if self.tightLayoutOn and self.plot_count > 1:
             self.grid.tight_layout(self.figure)            
         
-    def show(self, interactive=True):
+    def show(self, interactive=True, block=False):
         self.setInteractive(interactive)
         self.tightLayout()
-        self.plt.show(block=True)
+        self.plt.show(block=block)
 
     def draw(self):
         self.tightLayout()
