@@ -40,7 +40,7 @@ from convert import writeSetOfMicrographs, readSetOfCoordinates
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using supervised picking support  """
+    either manually or using automatic picking support  """
     _label = 'supervised picking'
 
     
