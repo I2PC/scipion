@@ -28,63 +28,96 @@ from math import sqrt
 from pyworkflow.em.packages.xmipp3.nma.plotter import plotArray2D
 
 
-        
+STATE_NO_POINTS = 0 # on points have been selected, double-click will add first one
+STATE_DRAW_POINTS = 1 # still adding points, double-click will set the last one
+STATE_ADJUST_POINTS = 2 # no more points will be added, just adjust the current ones
+
+
 class PointPath():
     """ Graphical manager based on Matplotlib to handle mouse
     events to create a path of points. 
     It also allow to modify the point positions on the path.
     """
-    def __init__(self, ax, data, callback=None):
+    def __init__(self, ax, data, pathData, callback=None, tolerance=3):
         self.ax = ax
         self.data = data
         plotArray2D(ax, self.data)
-        self.path_line, = ax.plot([0], [0])  # empty line
-        self.path_points = None
-        self.drawing = 0
+
         self.dragIndex = None
-        self.xs = []
-        self.ys = []
+        self.tolerance = tolerance
         self.cidpress = ax.figure.canvas.mpl_connect('button_press_event', self.onClick)
         self.cidrelease = ax.figure.canvas.mpl_connect('button_release_event', self.onRelease)
         self.cidmotion = ax.figure.canvas.mpl_connect('motion_notify_event', self.onMotion)
         self.cidkey = ax.figure.canvas.mpl_connect('key_press_event', self.onKeyPress)
     
-        self.ax.set_title('Double click to select first point of trajectory')
+        self.xs = pathData.xs
+        self.ys = pathData.ys
+        if len(self.xs): # this means there is a path
+            self.setState(STATE_ADJUST_POINTS)
+            self.plotPath()
+        else:
+            self.setState(STATE_NO_POINTS)
+            self.path_line = None
+            self.path_points = None
+            
+    def setState(self, state):
+        self.drawing = state
+        if state == STATE_NO_POINTS:
+            self.ax.set_title('Double click to select first point of trajectory')
+        elif state == STATE_DRAW_POINTS:
+            self.ax.set_title('Click to add points and double click to end trajectory.')
+        elif state == STATE_ADJUST_POINTS:
+            self.ax.set_title('Click and drag points to adjust trajectory.')
+        else:
+            raise Exception("Invalid PointPath state: %d" % state)
         
     def onClick(self, event):
-        if event.inaxes!=self.path_line.axes: return
+        if event.inaxes!=self.ax: 
+            return
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        
         doubleClick = event.dblclick
         ex = event.xdata
         ey = event.ydata
-        if self.drawing == 0:
+        
+        if self.drawing == STATE_NO_POINTS:
             if doubleClick:
-                self.drawing += 1 # Pass to drawing points state
+                self.setState(STATE_DRAW_POINTS)
                 doubleClick = False 
-                self.ax.set_title('Click to add points and double click to end trajectory.')
-        if self.drawing == 1:
+        
+        if self.drawing == STATE_DRAW_POINTS:
             if doubleClick:
-                self.drawing += 1 # Stop drawing points
-                self.ax.set_title('Click and drag points to adjust trajectory.')
+                self.setState(STATE_ADJUST_POINTS)
             else:
                 self.xs.append(ex)
                 self.ys.append(ey)
                 if len(self.xs) == 1: # first point is added
-                    self.path_line, = self.ax.plot(self.xs, self.ys, alpha=0.75)
-                    self.path_points, = self.ax.plot(self.xs, self.ys, 'o', color='red')  # 5 points tolerance, mark line points
+                    self.plotPath()
                 else:
                     self.path_line.set_data(self.xs, self.ys)
                     self.path_points.set_data(self.xs, self.ys)
                 self.ax.figure.canvas.draw()
         
-        if self.drawing == 2 and not doubleClick: # Points moving state
+        if self.drawing == STATE_ADJUST_POINTS and not doubleClick: # Points moving state
             self.dragIndex = None
             for i, (x, y) in enumerate(zip(self.xs, self.ys)):
-                if sqrt((ex - x)**2 + (ey - y)**2) < 0.1:
+                if sqrt((ex - x)**2 + (ey - y)**2) < self.tolerance:
                     self.dragIndex = i
                     break
           
+    def plotPath(self):
+        self.path_line, = self.ax.plot(self.xs, self.ys, alpha=0.75, color='green')
+        self.path_points, = self.ax.plot(self.xs, self.ys, 'o', color='red')  # 5 points tolerance, mark line points
+        
     def onMotion(self, event):
-        if self.dragIndex is None or self.drawing < 2: return
+        if self.dragIndex is None or self.drawing < 2: 
+            return
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        
         ex, ey = event.xdata, event.ydata
         self.xs[self.dragIndex] = ex
         self.ys[self.dragIndex] = ey
@@ -97,6 +130,10 @@ class PointPath():
         if event.key == 'ctrl+z':
             del self.xs[-1]
             del self.ys[-1]
+            
+        if not self.xs:
+            self.setState(STATE_NO_POINTS)
+            
         self.update()
         
     def update(self):
