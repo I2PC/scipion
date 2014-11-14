@@ -147,7 +147,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         f = open(deformationFile, 'w')
         
         for particle in inputSet:
-            f.write(' '.join(particle._xmipp_nma))
+            f.write(' '.join(particle._xmipp_nmaDisplacements))
             f.write('\n')
         f.close()
     
