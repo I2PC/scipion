@@ -35,12 +35,12 @@ import Tkinter as tk
 
 import pyworkflow.gui as gui
 from pyworkflow.gui.widgets import Button, HotButton
-
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
 from pyworkflow.protocol.params import StringParam, BooleanParam
 from pyworkflow.em.data import SetOfParticles
 from protocol_nma_dimred import XmippProtDimredNMA
+from data import Point, Data
 import xmipp
 
 from plotter import XmippNmaPlotter, plotArray2D
@@ -53,6 +53,10 @@ class XmippDimredNMAViewer(ProtocolViewer):
     _label = 'viewer nma dimred'
     _targets = [XmippProtDimredNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    
+    def __init__(self, **kwargs):
+        ProtocolViewer.__init__(self, **kwargs)
+        self.data = self.loadData()
         
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -95,7 +99,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
                               title="Invalid input")]
             
             # Actually plot
-            plotter = XmippNmaPlotter(data=self.loadData()) 
+            plotter = XmippNmaPlotter(data=self.data) 
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
@@ -114,7 +118,6 @@ class XmippDimredNMAViewer(ProtocolViewer):
         return views
     
     def _displayClustering(self, paramName):
-        self.data = self.loadData()
         return [self.tkWindow(ClusteringWindow, 
                               dim=self.protocol.reducedDim.get(),
                               data=self.data,
@@ -431,82 +434,3 @@ class PointSelector():
         self.ax.figure.canvas.draw()
         
         
-class Point():
-    """ Return x, y 2d coordinates and some other properties
-    such as weight and state.
-    """
-    # Indexes of data
-    XIND = 0
-    YIND = 1
-    ZIND = 2
-    # Selection states
-    DISCARDED = -1
-    NORMAL = 0
-    SELECTED = 1
-    
-    def __init__(self, pointId, data, weight, state=0):
-        self._id = pointId
-        self._data = data
-        self._weight = weight
-        self._state = state
-        
-    def getId(self):
-        return self._id
-    
-    def getX(self):
-        return self._data[Point.XIND]
-    
-    def getY(self):
-        return self._data[Point.YIND]
-    
-    def getZ(self):
-        return self._data[Point.ZIND]
-    
-    def getWeight(self):
-        return self._weight
-    
-    def getState(self):
-        return self._state
-    
-    def setState(self, newState):
-        self._state = newState
-        
-    def eval(self, expression):
-        localDict = {}
-        for i, x in enumerate(self._data):
-            localDict['x%d' % (i+1)] = x
-        return eval(expression, {"__builtins__":None}, localDict)
-    
-    
-class Data():
-    """ Store data points. """
-    def __init__(self):
-        self._points = []
-        
-    def addPoint(self, point):
-        self._points.append(point)
-        
-    def __iter__(self):
-        for point in self._points:
-            yield point
-            
-    def getXData(self):
-        return [p.getX() for p in self]
-    
-    def getYData(self):
-        return [p.getY() for p in self]
-    
-    def getZData(self):
-        return [p.getZ() for p in self]
-    
-    def getWeights(self):
-        return [p.getWeight() for p in self]
-    
-    def getSize(self):
-        return len(self._points)
-    
-    def getSelectedSize(self):
-        return len([p for p in self if p.getState()==Point.SELECTED])
-    
-    
-    
