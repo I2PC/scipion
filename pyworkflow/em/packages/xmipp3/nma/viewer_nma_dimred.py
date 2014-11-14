@@ -103,15 +103,15 @@ class XmippDimredNMAViewer(ProtocolViewer):
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
-                Point.XIND = modeList[0]
+                self.data.XIND = modeList[0]
                 plotter.plotArray1D("Histogram for %s" % baseList[0], 
                                     "Deformation value", "Number of images")
             else:
-                Point.YIND = modeList[1]
+                self.data.YIND = modeList[1]
                 if dim == 2:
                     plotter.plotArray2D("%s vs %s" % tuple(baseList), *baseList)
                 elif dim == 3:
-                    Point.ZIND = modeList[2]
+                    self.data.ZIND = modeList[2]
                     plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
             views.append(plotter)
             
