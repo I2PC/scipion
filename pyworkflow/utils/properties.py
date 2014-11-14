@@ -195,7 +195,7 @@ Define the number of processors to be used in the execution.
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
-
+    TEXT_SAMP_RATE = "Sampling rate"
     LABEL_MAGNI_RATE = 'Magnification rate'
     TEXT_MAGNI_RATE = "Electron optical magnification(M). It can be used to calculate Sampling Rate(Ts) using Scanner Pixel Size(Tm), Ts = Tm/M. Otherwise it is used by few programs like Ctffind or Frealign"
     LABEL_SCANNED = 'Scanned pixel size (microns/px)'
