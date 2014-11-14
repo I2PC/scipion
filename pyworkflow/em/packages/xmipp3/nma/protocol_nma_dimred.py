@@ -119,22 +119,38 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         # to grab some parameters
         inputNMA = self.inputNMA.get()
         # Take deforamtions text file and the number of images and modes
-        deformationsFile = inputNMA.getDeformationsFile()
-        rows = self.getInputParticles().getSize()
+        inputSet = self.getInputParticles()
+        rows = inputSet.getSize()
         columns = inputNMA.inputModes.get().getSize()
         reducedDim = self.reducedDim.get()
         method = DIMRED_VALUES[self.dimredMethod.get()]
         extraParams = self.extraParams.get('')
         
+        deformationsFile = self._getExtraPath('deformations.txt')
+
+        self._insertFunctionStep('convertInputStep', 
+                                 deformationsFile, inputSet.getObjId())
         self._insertFunctionStep('performDimredStep', 
                                  deformationsFile, method, extraParams,
                                  rows, columns, reducedDim) 
-        
         self._insertFunctionStep('createOutputStep')
         
         
     #--------------------------- STEPS functions --------------------------------------------   
+    
+    def convertInputStep(self, deformationFile, inputId):
+        """ Iterate throught the images and write the 
+        plain deformation.txt file that will serve as 
+        input for dimensionality reduction.
+        """
+        inputSet = self.getInputParticles()
+        f = open(deformationFile, 'w')
         
+        for particle in inputSet:
+            f.write(' '.join(particle._xmipp_nma))
+            f.write('\n')
+        f.close()
+    
     def performDimredStep(self, deformationsFile, method, extraParams,
                           rows, columns, reducedDim):
         outputMatrix = self.getOutputMatrixFile()
