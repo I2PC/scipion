@@ -38,7 +38,8 @@ from pyworkflow.protocol.params import (PointerParam, StringParam, IntParam, Enu
                                         LEVEL_EXPERT, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles,\
+    xmippToLocation, getImageLocation
 from pyworkflow.protocol.params import NumericRangeParam
 import xmipp 
 
@@ -160,7 +161,19 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         md.write(self.modesFn)
             
     def copyDeformationsStep(self, deformationMd):
-        copyFile(deformationMd, self._getExtraPath('images.xmd'))
+        copyFile(deformationMd, self.imgsFn)
+        # We need to update the image name with the good ones
+        # and the same with the ids.
+        inputSet = self.inputParticles.get()
+        md = xmipp.MetaData(self.imgsFn)
+        for objId in md:
+            imgPath = md.getValue(xmipp.MDL_IMAGE, objId)
+            index, fn = xmippToLocation(imgPath)
+            # Conside the index is the id in the input set
+            particle = inputSet[index]
+            md.setValue(xmipp.MDL_IMAGE, getImageLocation(particle), objId)
+            md.setValue(xmipp.MDL_ITEM_ID, long(particle.getObjId()), objId)
+        md.write(self.imgsFn)
         
     def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -187,7 +200,8 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         inputSet = self.inputParticles.get()
         partSet = self._createSetOfParticles()
         readSetOfParticles(self.imgsFn, partSet,
-                           extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST])
+                           extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST],
+                           is2D=False, inverseTransform=True)
         partSet.copyInfo(inputSet)
         
         self._defineOutputs(outputParticles=partSet)
