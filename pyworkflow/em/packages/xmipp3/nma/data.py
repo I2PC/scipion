@@ -33,10 +33,6 @@ class Point():
     """ Return x, y 2d coordinates and some other properties
     such as weight and state.
     """
-    # Indexes of data
-    XIND = 0
-    YIND = 1
-    ZIND = 2
     # Selection states
     DISCARDED = -1
     NORMAL = 0
@@ -47,18 +43,19 @@ class Point():
         self._data = data
         self._weight = weight
         self._state = state
+        self._container = None
         
     def getId(self):
         return self._id
     
     def getX(self):
-        return self._data[Point.XIND]
+        return self._data[self._container.XIND]
     
     def getY(self):
-        return self._data[Point.YIND]
+        return self._data[self._container.YIND]
     
     def getZ(self):
-        return self._data[Point.ZIND]
+        return self._data[self._container.ZIND]
     
     def getWeight(self):
         return self._weight
@@ -80,19 +77,35 @@ class Point():
         
     def isSelected(self):
         return self.getState()==Point.SELECTED    
+    
+    def setDiscarded(self):
+        self.setState(Point.DISCARDED)
+           
+    def isDiscarded(self):
+        return self.getState()==Point.DISCARDED    
 
     
 class Data():
     """ Store data points. """
     def __init__(self):
+        # Indexes of data
+        self.XIND = 0
+        self.YIND = 1
+        self.ZIND = 2
         self._points = []
         
     def addPoint(self, point):
+        point._container = self
         self._points.append(point)
         
     def __iter__(self):
         for point in self._points:
-            yield point
+            if not point.isDiscarded():
+                yield point
+                
+    def iterAll(self):
+        """ Iterate over all points, including the discarded ones."""
+        return iter(self._points)
             
     def getXData(self):
         return [p.getX() for p in self]
@@ -111,4 +124,18 @@ class Data():
     
     def getSelectedSize(self):
         return len([p for p in self if p.isSelected()])
+    
+    def getDiscardedSize(self):
+        return len([p for p in self.iterAll() if p.isDiscarded()])
 
+
+class PathData():
+    """ Just contains two list of x and y coordinates. """
+    
+    def __init__(self):
+        self.clear()
+        
+    def clear(self):
+        self.xs = []  
+        self.ys = [] 
+        
