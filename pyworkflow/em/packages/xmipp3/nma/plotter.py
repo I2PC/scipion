@@ -40,6 +40,7 @@ class XmippNmaPlotter(XmippPlotter):
         self.useLastPlot = False
         
     def createSubPlot(self, title, xlabel, ylabel):
+
         if self.useLastPlot and self.last_subplot:
             ax = self.last_subplot
             ax.cla()

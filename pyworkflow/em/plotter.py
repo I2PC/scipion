@@ -85,4 +85,4 @@ class EmPlotter(Plotter):
                 marker, linestyle
         """
 
-        self.plot(xValues, yValues, color, **kwargs) 
+        self.plot(xValues, yValues, color, **kwargs)

@@ -164,10 +164,9 @@ class Plotter(View):
             self.grid.tight_layout(self.figure)            
         
     def show(self, interactive=True):
-
         self.setInteractive(interactive)
         self.tightLayout()
-        self.plt.show()
+        self.plt.show(block=True)
 
     def draw(self):
         self.tightLayout()
