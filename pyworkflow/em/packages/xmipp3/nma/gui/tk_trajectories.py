@@ -34,7 +34,7 @@ import Tkinter as tk
 import pyworkflow.gui as gui
 from pyworkflow.gui.widgets import Button, HotButton
 
-from pyworkflow.em.packages.xmipp3.nma.data import Point
+from pyworkflow.em.packages.xmipp3.nma.data import Point, PathData
 from pyworkflow.em.packages.xmipp3.nma.gui import PointPath
 from pyworkflow.em.packages.xmipp3.nma.plotter import XmippNmaPlotter
 
@@ -50,6 +50,7 @@ class TrajectoriesWindow(gui.Window):
         
         self.dim = kwargs.get('dim')
         self.data = kwargs.get('data')
+        self.pathData = PathData()
         self.callback = kwargs.get('callback', None)
         self.plotter = None
          
@@ -84,7 +85,7 @@ class TrajectoriesWindow(gui.Window):
         self.listbox = listbox
         
         # Selection controls
-        self._addLabel(frame, 'Selection', 1, 0)  
+        self._addLabel(frame, 'Rejection', 1, 0)  
         # Selection label
         self.selectionVar = tk.StringVar()
         self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
@@ -114,23 +115,23 @@ class TrajectoriesWindow(gui.Window):
         frame.grid(row=0, column=0, sticky='new', padx=5, pady=(10, 5))
 
     def _createClusteringBox(self, content):
-        frame = tk.LabelFrame(content, text='Cluster')
+        frame = tk.LabelFrame(content, text='Trajectories')
         frame.columnconfigure(0, minsize=50)
         frame.columnconfigure(1, weight=1)#, minsize=30)
 
         # Cluster line
-        self._addLabel(frame, 'Cluster name', 0, 0)
-        self.clusterVar = tk.StringVar()
-        clusterEntry = tk.Entry(frame, textvariable=self.clusterVar, 
-                                   width=30, bg='white')
-        clusterEntry.grid(row=0, column=1, sticky='nw', pady=5)
+#         self._addLabel(frame, 'Cluster name', 0, 0)
+#         self.clusterVar = tk.StringVar()
+#         clusterEntry = tk.Entry(frame, textvariable=self.clusterVar, 
+#                                    width=30, bg='white')
+#         clusterEntry.grid(row=0, column=1, sticky='nw', pady=5)
         
         buttonsFrame = tk.Frame(frame, bg='green')
         buttonsFrame.grid(row=1, column=1, 
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
 
-        createBtn = HotButton(buttonsFrame, text='Create Cluster', 
+        createBtn = HotButton(buttonsFrame, text='Generate Animation', 
                               imagePath='fa-plus-circle.png', command=self._onCreateClick)
         createBtn.grid(row=0, column=1)       
        
@@ -139,7 +140,8 @@ class TrajectoriesWindow(gui.Window):
     def _onResetClick(self, e=None):
         """ Clean the expression and the current selection. """
         self.expressionVar.set('')
-        for point in self.data:
+        self.pathData.clear()
+        for point in self.data.iterAll():
             point.setState(Point.NORMAL)
         self._onUpdateClick()
         
@@ -155,7 +157,7 @@ class TrajectoriesWindow(gui.Window):
         if value:
             for point in self.data:
                 if point.eval(value):
-                    point.setState(Point.SELECTED)
+                    point.setState(Point.DISCARDED)
                                         
     def _onUpdateClick(self, e=None):
         components = self.listbox.curselection()
@@ -181,28 +183,29 @@ class TrajectoriesWindow(gui.Window):
             # Actually plot
             baseList = [basename(n) for n in modeNameList]
             
-            Point.XIND = modeList[0]
+            self.data.XIND = modeList[0]
             
             if dim == 1:
                 self.plotter.plotArray1D("Histogram for %s" % baseList[0],  
                                     "Deformation value", "Number of images")
             else:
-                Point.YIND = modeList[1]
+                self.data.YIND = modeList[1]
                 if dim == 2:
                     self._evalExpression()
                     self._updateSelectionLabel()
                     ax = self.plotter.createSubPlot("Click and drag to add points to the Cluster",
                                                     *baseList)
-                    self.ps = PointPath(ax, self.data, callback=self._updateSelectionLabel)
+                    self.ps = PointPath(ax, self.data, self.pathData, 
+                                        callback=self._updateSelectionLabel)
                 elif dim == 3:
                     del self.ps # Remove PointSelector
-                    Point.ZIND = modeList[2]
+                    self.data.ZIND = modeList[2]
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
             self.plotter.draw()
 
     def _updateSelectionLabel(self):
-        self.selectionVar.set('%d / %d points' % (self.data.getSelectedSize(),
+        self.selectionVar.set('%d / %d points' % (self.data.getDiscardedSize(),
                                                   self.data.getSize()))
         
     def getClusterName(self):
