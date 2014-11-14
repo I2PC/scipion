@@ -448,7 +448,7 @@ public class ScipionGalleryData extends GalleryData {
         try {
             ScipionParams params = (ScipionParams)parameters;
             String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.inputid, String.valueOf(getId(index))};
-            System.out.println(XmippWindowUtil.executeCommand(cmd, true));
+            XmippWindowUtil.executeCommand(cmd, false);
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         } 
