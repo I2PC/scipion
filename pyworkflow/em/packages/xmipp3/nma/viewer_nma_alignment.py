@@ -35,6 +35,7 @@ from pyworkflow.viewer import (ProtocolViewer, CommandView,
                                DESKTOP_TKINTER, WEB_DJANGO)
 from pyworkflow.protocol.params import StringParam, BooleanParam
 from protocol_nma_alignment import XmippProtAlignmentNMA
+from data import Point, Data
 import xmipp
 
 from plotter import XmippNmaPlotter
@@ -47,7 +48,11 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
     _label = 'viewer nma alignment'
     _targets = [XmippProtAlignmentNMA]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-        
+
+    def __init__(self, **kwargs):
+        ProtocolViewer.__init__(self, **kwargs)
+        self.data = self.loadData()
+           
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         form.addParam('displayRawDeformation', StringParam, default='1',
@@ -57,19 +62,15 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                            'Type 1 2 to see the 2D plot of raw deformations number 1 vs 2.\n'
                            'Type 1 2 3 to see the 3D plot of raw deformations 1, 2 and 3; etc.'
                            )
-        form.addParam('analyzeMatlab', BooleanParam, default=True, 
-                      label="Analyze with Matlab?",
-                      help='In MATLAB you may create image clusters and draw deformation trajectories.')
     
     def _getVisualizeDict(self):
         return {'displayRawDeformation': self._viewRawDeformation,
-                'analyzeMatlab': self._viewWithMatlab
                 } 
                         
-    def _viewWithMatlab(self, paramName):
-        xmippLib = join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab')
-        command = "path(path, '%s');xmipp_nma_selection_tool('%s')" % (xmippLib, self._getPath())
-        return [CommandView('matlab -r "%s"' % command)]
+#     def _viewWithMatlab(self, paramName):
+#         xmippLib = join(os.environ['XMIPP_HOME'], 'libraries', 'bindings', 'matlab')
+#         command = "path(path, '%s');xmipp_nma_selection_tool('%s')" % (xmippLib, self._getPath())
+#         return [CommandView('matlab -r "%s"' % command)]
         
     def _viewRawDeformation(self, paramName):
         components = self.displayRawDeformation.get()
@@ -103,23 +104,38 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
                 return [self.errorMessage("Invalid mode(s) *%s*\n." % (', '.join(missingList)), 
                               title="Invalid input")]
             
-            defFn = self.protocol.getDeformationsFile()
-            
             # Actually plot
-            plotter = XmippNmaPlotter(defFn, windowTitle=dirname(modeNameList[0])) 
+            plotter = XmippNmaPlotter(data=self.data) 
             baseList = [basename(n) for n in modeNameList]
             
             if dim == 1:
-                plotter.plotArray1D("Histogram for %s" % baseList[0], modeList[0], 
+                Point.XIND = modeList[0]
+                plotter.plotArray1D("Histogram for %s" % baseList[0], 
                                     "Deformation value", "Number of images")
-            elif dim == 2:
-                plotter.plotArray2D("%s vs %s" % tuple(baseList), 
-                                    modeList[0], modeList[1], *baseList)
-            elif dim == 3:
-                plotter.plotArray3D("%s %s %s" % tuple(baseList), 
-                                    modeList[0], modeList[1], modeList[2], *baseList)
+            else:
+                Point.YIND = modeList[1]
+                if dim == 2:
+                    plotter.plotArray2D("%s vs %s" % tuple(baseList), *baseList)
+                elif dim == 3:
+                    Point.ZIND = modeList[2]
+                    plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
             views.append(plotter)
             
         return views
+    
+    def loadData(self):
+        """ Iterate over the images and their deformations 
+        to create a Data object with theirs Points.
+        """
+        particles = self.protocol.outputParticles
+        
+        data = Data()
+        for i, particle in enumerate(particles):
+            pointData = map(float, particle._xmipp_nmaDisplacements)
+            data.addPoint(Point(pointId=particle.getObjId(),
+                                data=pointData,
+                                weight=particle._xmipp_cost.get()))
+            
+        return data
 
     
