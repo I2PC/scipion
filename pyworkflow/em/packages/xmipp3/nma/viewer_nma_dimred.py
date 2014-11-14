@@ -39,7 +39,7 @@ from pyworkflow.em.data import SetOfParticles
 from protocol_nma_dimred import XmippProtDimredNMA
 from data import Point, Data
 from plotter import XmippNmaPlotter
-from gui import ClusteringWindow
+from gui import ClusteringWindow, TrajectoriesWindow
 
         
 class XmippDimredNMAViewer(ProtocolViewer):
@@ -67,11 +67,16 @@ class XmippDimredNMAViewer(ProtocolViewer):
                       label='Open clustering tool?',
                       help='Open a GUI to visualize the images as points'
                            'and select some of them to create new clusters.')
-        
+         
+        form.addParam('displayTrajectories', BooleanParam, default=False,
+                      label='Open trajectories tool?',
+                      help='Open a GUI to visualize the images as points'
+                           'to draw and ajust trajectories.')       
         
     def _getVisualizeDict(self):
         return {'displayRawDeformation': self._viewRawDeformation,
                 'displayClustering': self._displayClustering,
+                'displayTrajectories': self._displayTrajectories,
                 } 
                         
     def _viewRawDeformation(self, paramName):
@@ -114,11 +119,22 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
     def _displayClustering(self, paramName):
         self.clusterWindow = self.tkWindow(ClusteringWindow, 
+                                           title='Clustering Tool',
+                                           dim=self.protocol.reducedDim.get(),
+                                           data=self.data,
+                                           callback=self._createCluster
+                                           )
+        return [self.clusterWindow]
+    
+    
+    def _displayTrajectories(self, paramName):
+        self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
+                              title='Trajectories Tool',
                               dim=self.protocol.reducedDim.get(),
                               data=self.data,
                               callback=self._createCluster
                               )
-        return [self.clusterWindow]
+        return [self.trajectoriesWindow]
         
     def _createCluster(self):
         """ Create the cluster with the selected particles
