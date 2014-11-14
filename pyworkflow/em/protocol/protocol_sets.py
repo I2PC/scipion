@@ -51,12 +51,11 @@ class ProtSets(EMProtocol):
 
 
 class ProtUnionSet(ProtSets):
-    """ Protocol to merge two or more sets.
-
-    From two or more sets it produces another set joining all the elements
-    of the original sets.
-
-    All sets must be of the same type of elements (micrographs, particles, etc).
+    """ Protocol to join two or more sets of images.
+    This protocol allows to select two or more set of images
+    and will produce another set joining all elements of the 
+    selected sets. It will validate that all sets are of the
+    same type of elements (Micrographs, Particles or Volumes) 
     """
     _label = 'union sets'
 

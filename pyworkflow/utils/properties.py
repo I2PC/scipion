@@ -182,7 +182,7 @@ Define the number of processors to be used in the execution.
     LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
     TEXT_SPH_ABERRATION = "Optical effect due to the increased refraction of light rays when they strike lens near its edge, in comparison with those that strike nearer the centre."
     LABEL_AMPLITUDE = 'Amplitude Contrast'
-    TEXT_AMPLITUDE = 'Amplitude contrast is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
+    TEXT_AMPLITUDE = 'Is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
     'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined.'\
                      'It should be a positive number, typically between 0.05 and 0.3.'
     LABEL_PATTERNU = 'Pattern untilted'
@@ -195,9 +195,9 @@ Define the number of processors to be used in the execution.
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
-    TEXT_SAMP_RATE = " PUT SOME HELP HERE!!!  "
+    TEXT_SAMP_RATE = "Sampling rate"
     LABEL_MAGNI_RATE = 'Magnification rate'
-    TEXT_MAGNI_RATE = "This parameter is only used by very few programs like ctffind or frealign"
+    TEXT_MAGNI_RATE = "Electron optical magnification(M). It can be used to calculate Sampling Rate(Ts) using Scanner Pixel Size(Tm), Ts = Tm/M. Otherwise it is used by few programs like Ctffind or Frealign"
     LABEL_SCANNED = 'Scanned pixel size (microns/px)'
 
     

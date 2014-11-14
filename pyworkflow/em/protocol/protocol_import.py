@@ -272,7 +272,7 @@ class ProtImportMicBase(ProtImportImages):
                    help=Message.TEXT_SAMP_MODE)
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, help=Message.TEXT_SAMP_RATE)
+                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
         form.addParam('scannedPixelSize', FloatParam, default=7.0,
                    label=Message.LABEL_SCANNED,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
