@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 
+import webbrowser
+
 import Tkinter as tk
 import tkFont
 
@@ -148,3 +150,28 @@ class ProjectBaseWindow(Window):
     def getViewWidget(self):
         return self.viewWidget
         
+    #
+    # The next functions are callbacks from the menu options.
+    # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+    #
+    def onExit(self):
+        # Project -> Exit
+        self.close()
+
+    def onOnlineHelp(self):
+        # Help -> Online help
+        webbrowser.open_new("http://scipionwiki.cnb.csic.es/")
+
+    def onAbout(self):
+        # Help -> About
+        self.showInfo("""
+[[http://scipionwiki.cnb.csic.es/][Scipion]] is an image processing framework to obtain 3D models of macromolecular complexes using Electron Microscopy.
+
+It integrates several software packages with a unified interface. This way you can combine them in a single workflow, while all the formats and conversions are taken care of automatically.
+
+*Scipion* is developed by a multidisciplinary group of engineers, physicists, mathematicians and computer scientists. We are part of the [[http://i2pc.cnb.csic.es/][Instruct Image Processing Center]] and are hosted by the [[http://biocomp.cnb.csic.es/][Biocomputing Unit]] at the Spanish National Center for Biotechnology [[http://www.cnb.csic.es/][CNB]]-[[http://www.csic.es/][CSIC]].
+""")
+        # We should have something nice as in
+        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome
+        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/XmippTeam
+        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/XmippHistory

@@ -60,6 +60,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
+from pyworkflow.em.showj import *
 
 
 class XmippViewer(Viewer):
@@ -156,8 +157,13 @@ class XmippViewer(Viewer):
             fn = getImageLocation(obj)
             self._views.append(DataView(fn))
             
-        elif issubclass(cls, NormalModes):
-            self._views.append(DataView(fn))
+
+
+#        elif issubclass(cls, SetOfNormalModes):
+#            fn = obj.getFileName()
+#            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={OBJ_CMDS: OBJ_CMDA}, **args))
+
+
               
         elif issubclass(cls, SetOfMicrographs):
             

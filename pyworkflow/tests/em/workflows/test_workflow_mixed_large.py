@@ -53,8 +53,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         print "Running Eman fake particle picking..."
         protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsEmanDir, runMode=1)                
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
-        protPP.boxSize.set(60)
-        protPP.setObjLabel('Eman boxing') 
+        protPP.setObjLabel('Eman boxing')
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
         

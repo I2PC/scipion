@@ -94,8 +94,8 @@ estimate CTF on a set of micrographs using Xmipp 3.1 """
         md.write(fnEval)
         
         # Evaluate if estimated ctf is good enough
-        self.runJob("which","xmipp_ctf_sort_psds")
-        self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
+        # self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
+        self.runJob("xmipp_ctf_sort_psds","-i %s"%(fnEval))   
 
         # Check if it is a good micrograph
         fnRejected=self._getTmpPath(basename(micFn +"_rejected.xmd"))
@@ -220,7 +220,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
                     md.setValue(xmipp.MDL_ENABLED,-1,mdid)
                 else:
                     md.setValue(xmipp.MDL_ENABLED,1,mdid)
-            md.write(self._getPath("ctfs_selection.xmd"))
+        md.write(self._getPath("ctfs_selection.xmd"))
         cleanPath(fnRejected)
         
     def createOutputStep(self):

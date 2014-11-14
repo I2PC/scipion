@@ -36,7 +36,7 @@ from os.path import basename
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
+from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
                                 SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
 
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
@@ -60,12 +60,13 @@ class ProtUserSubSet(ProtSets):
         
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
-        form.addHidden('other', StringParam, allowsNull=True)
+        form.addHidden('otherObj', PointerParam, pointerClass='EMObject', allowsNull=True)
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
+        form.addHidden('volId', IntParam, allowsNull=True)
         
     def _insertAllSteps(self):
-        self._insertFunctionStep('createSetOfImagesStep')
+        self._insertFunctionStep('createSetStep')
     
     def _createSubSetFromImages(self, inputImages):
         className = inputImages.getClassName()
@@ -78,20 +79,6 @@ class ProtUserSubSet(ProtSets):
         # Register outputs
         self._defineOutput(className, output)
         self._defineSourceRelation(inputImages, output)
-
-    def _createVolumeFromSet(self, volfile):
-        src = volfile
-        if ':' in src:
-            src = src.split(':')[0]
-        dest = self._getPath(basename(src))
-        createLink(src, dest)
-        vol = Volume()
-        vol.setFileName(dest)
-        inputObject = self.inputObject.get()
-        samplingRate = inputObject.getSamplingRate()
-        vol.setSamplingRate(samplingRate)
-        self._defineOutputs(outputVolume=vol)
-        self._defineTransformRelation(inputObject, vol)
 
 
 
@@ -222,61 +209,72 @@ class ProtUserSubSet(ProtSets):
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict) 
         
-    def createSetOfImagesStep(self):
+
+    def createSetStep(self):
+
+        setObj = self.createSetObject()
         inputObj = self.inputObject.get()
-        
-        self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
 
-
-        if (isinstance(inputObj, SetOfVolumes) or isinstance(inputObj, SetOfClasses3D)) \
-                and '.' in self.other.get():#is volume file, not id
-                print 'other ' + self.other.get()
-                volfile = self.other.get()
-                self._createVolumeFromSet(volfile)
+        if self.volId.get():
+            volSet = SetOfVolumes(filename=self._dbName)
+            vol = volSet[self.volId.get()]
+            self._defineOutputs(outputVolume=vol)
+            self._defineSourceRelation(inputObj, vol)
 
         elif isinstance(inputObj, SetOfImages):
-
                 self._createSubSetFromImages(inputObj)
-            
+
         elif isinstance(inputObj, SetOfClasses):
             self._createSubSetFromClasses(inputObj)
-           
+
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 self._createMicsSubSetFromCTF(inputObj)
             else:
                 self._createSubSetOfCTF(inputObj)
-                
+
         elif isinstance(inputObj, MicrographsTiltPair):
             self._createSubSetFromMicrographsTiltPair(inputObj)
-        
-        elif isinstance(inputObj, EMProtocol):
-            setObj = self.getSetObject()
-            otherObj = self.getProject().mapper.selectById(int(self.other.get()))
 
-            
+        elif isinstance(inputObj, EMProtocol):
+            otherObj = self.otherObj.get()
+
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
                 self._createSubSetFromClasses(setObj)
-                
+
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
                 self._createSubSetFromImages(setObj)
-                
+        else:
+            className = inputObj.getClassName()
+            createFunc = getattr(self, '_create' + className)
+            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
 
-    
-    def getSetObject(self):            
+            output = createFunc()
+            for item in modifiedSet:
+                if item.isEnabled():
+                    output.append(item)
+            # Register outputs
+            self._defineOutput(className, output)
+            self._defineSourceRelation(inputObj, output)
+
+
+
+    def createSetObject(self):
+        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+        self._dbName = self._getPath('subset.sqlite')
+        os.rename(_dbName, self._dbName)
+
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1]
+
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
         setClassName = db.getProperty('self') # get the set class name
         setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
-        return setObj    
-            
-#     def defineOutputSet(self, outputset):
-#         outputs = {'output' + self.getOutputType(): outputset}
-#         self._defineOutputs(**outputs)
-#         self._defineSourceRelation(self.getInput(), outputset)
+        return setObj
     
     def _summary(self):
         summary = []
@@ -333,54 +331,65 @@ class ProtUnionSet(ProtSets):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        self.inputType = str(self.inputSets[0].get().getClassName())
-        outputSetFunction = getattr(self, "_create%s" % self.inputType)
-        outputSet = outputSetFunction()
-        
-        #Copy info from input (sampling rate, etc)
-        outputSet.copyInfo(self.inputSets[0].get())
-       
+        set1 = self.inputSets[0].get()  # 1st set (we use it many times)
+
+        # Read ClassName and create the corresponding EMSet (SetOfParticles...)
+        outputSet = getattr(self, "_create%s" % set1.getClassName())()
+
+        # Copy info from input sets (sampling rate, etc).
+        outputSet.copyInfo(set1)  # all sets must have the same info as set1!
+
+        # Keep original ids until we find a conflict. From then on, use new ids.
+        usedIds = set()  # to keep track of the object ids we have already seen
+        cleanIds = False
         for itemSet in self.inputSets:
-            for itemObj in itemSet.get():
-                print "itemObj", itemObj
-                itemObj.cleanObjId()
-                outputSet.append(itemObj)
-        
-        self._defineOutputs(outputImages=outputSet)
-        
+            for obj in itemSet.get():
+                objId = obj.getObjId()
+                if cleanIds:
+                    obj.cleanObjId()  # so it will be assigned automatically
+                elif objId in usedIds:  # duplicated id!
+                    # Note that we cannot use  "objId in outputSet"
+                    # because outputSet has not been saved to the sqlite
+                    # file yet, and it would fail :(
+                    obj.cleanObjId()
+                    cleanIds = True  # from now on, always clean the ids
+                else:
+                    usedIds.add(objId)
+                outputSet.append(obj)
+
+        self._defineOutputs(outputSet=outputSet)
+
+    def getObjDict(self, includeClass=False):
+        return super(ProtUnionSet, self).getObjDict(includeClass)
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        classList = []
-        #inputSets = [self.inputSet1, self.inputSet2]
-        for itemSet in self.inputSets:
-            itemClassName = itemSet.get().getClassName()
-            if len(classList) == 0 or itemClassName not in classList:
-                classList.append(itemClassName)
-            
-        errors = []
-        if len(classList) > 1:
-            errors.append("Object should have same type")
-            errors.append("Types of objects found: " + ", ".join(classList))
-        return errors   
+        # Are all inputSets from the same class?
+        classes = {x.get().getClassName() for x in self.inputSets}
+        if len(classes) > 1:
+            return ["All objects should have the same type.",
+                    "Types of objects found: %s" % ", ".join(classes)]
+
+        # Do all inputSets contain elements with the same attributes defined?
+        def attrNames(s):  # get attribute names of the first element of set s
+            return sorted(iter(s.get()).next().getObjDict().keys())
+        attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+        if len(attrs) > 1:
+            return ["All elements must have the same attributes.",
+                    "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+
+        return []  # no errors
 
     def _summary(self):
-        summary = []
-
-        if not hasattr(self, 'outputImages'):
-            summary.append("Protocol has not finished yet.")
+        if not hasattr(self, 'outputSet'):
+            return ["Protocol has not finished yet."]
         else:
-            m = "We have unioned the following sets: "
-            #inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in self.inputSets:
-                m += "%s, " % itemSet.get().getNameId()
-            summary.append(m[:-2])
-        
-        return summary
-        
+            return ["We have merged the following sets:",
+                    ", ".join(x.get().getNameId() for x in self.inputSets)]
+
     def _methods(self):
         return self._summary()
-            
+
 
 class ProtSplitSet(ProtSets):
     """ Protocol to split a set in two or more subsets. 
@@ -421,8 +430,9 @@ class ProtSplitSet(ProtSets):
         # to different subsets.
         elements = self.inputSet.get()
 
-        ns = [len(elements) // n + (1 if i < len(elements) % n else 0) for i in range(n)]
-        pos, i = 0, 0  # index of current bucket and index of position inside it
+        ns = [len(elements) // n + (1 if i < len(elements) % n else 0)
+              for i in range(n)]  # number of elements in each subset
+        pos, i = 0, 0  # index of current subset and index of position inside it
         for elem in elements.__iter__(random=self.randomize):
             if i >= ns[pos]:
                 pos += 1
@@ -444,8 +454,15 @@ class ProtSplitSet(ProtSets):
             errors.append("The number of subsets requested is greater than")
             errors.append("the number of elements in the input set.")
         return errors   
-    
-    
+
+    def _summary(self):
+        if not any(x.startswith('output') for x in dir(self)):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["We have split the set %s in %d sets." %
+                    (self.inputSet.getName(), self.numberOfSets.get())]
+
+
 class ProtSubSet(ProtSets):
     """    
     Create a set with the elements of an original set that are also
@@ -504,7 +521,7 @@ class ProtSubSet(ProtSets):
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
         self._defineSourceRelation(inputSubSet, outputSet)
-        
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
@@ -540,3 +557,12 @@ class ProtSubSet(ProtSets):
                         "%s and %s." % (c1, c2)]
 
         return []  # no errors
+
+    def _summary(self):
+        key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
+        if not hasattr(self, key):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["The elements of %s that also are referenced in %s" %
+                    (self.inputFullSet.getName(), self.inputSubSet.getName()),
+                    "are now in %s" % getattr(self, key).getName()]

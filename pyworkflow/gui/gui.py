@@ -278,12 +278,11 @@ class Window():
         return self.root
     
     def desiredDimensions(self):
-        """This method should be used by subclasses
-        to calculate desired dimensions"""
+        """Override this method to calculate desired dimensions."""
         return None
     
     def _configure(self, e):
-        """ Filter event and call appropiate handler. """
+        """ Filter event and call appropriate handler. """
         if self.root != e.widget:
             return
         
@@ -300,15 +299,13 @@ class Window():
             
         
     def handleResize(self):
-        """ This method should be overriden by subclasses
-        in order to response to resize event. """
+        """Override this method to respond to resize events."""
         pass
-        
+
     def handleMove(self):
-        """ This method should be overriden by subclasses
-        in order to response to move envet. """
+        """Override this method to respond to move events."""
         pass
-    
+
     def show(self, center=True):
         """This function will enter in the Tk mainloop"""
         if center:
@@ -326,7 +323,7 @@ class Window():
         self.root.destroy()
         
     def _onClosing(self):
-        """Do some cleanning before closing"""
+        """Do some cleaning before closing."""
         if self.master is None: 
             pass
         else:
@@ -337,23 +334,32 @@ class Window():
         return getImage(imgName, self._images, percent=percent, maxheight=maxheight)
     
     def createMainMenu(self, menuConfig):
-        """Create Main menu from a given configuration"""
+        """Create Main menu from the given MenuConfig object."""
         menu = tk.Menu(self.root)
         self._addMenuChilds(menu, menuConfig)
         self.root.config(menu=menu)
         return menu
         
     def _addMenuChilds(self, menu, menuConfig):
-        """Helper function for creating main menu"""
+        """Add entries of menuConfig in menu
+        (using add_cascade or add_command for sub-menus and final options)."""
+        # Helper function to create the main menu.
         for sub in menuConfig:
-            if len(sub):
+            if len(sub) > 0:  # sub-menu
                 submenu = tk.Menu(self.root, tearoff=0)
                 menu.add_cascade(label=sub.text.get(), menu=submenu)
-                self._addMenuChilds(submenu, sub)
-            else:
+                self._addMenuChilds(submenu, sub)  # recursive filling
+            else:  # menu option
+                # If there is an entry called "Browse files", when clicked it
+                # will call the method onBrowseFiles() (it has to be defined!)
+                def callback(name):
+                    """Return a callback function named "on<Name>"."""
+                    f = "on%s" % "".join(x.capitalize() for x in name.split())
+                    return lambda: getattr(self, f)()
                 menu.add_command(label=sub.text.get(), compound=tk.LEFT,
-                                 image=self.getImage(sub.icon.get()))
-                
+                                 image=self.getImage(sub.icon.get()),
+                                 command=callback(name=sub.text.get()))
+
     def showError(self, msg, header="Error"):
         from dialog import showError
         showError(header, msg, self.root)

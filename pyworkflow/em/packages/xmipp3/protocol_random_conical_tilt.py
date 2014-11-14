@@ -167,7 +167,10 @@ class XmippProtRCT(ProtInitialVolume):
 #             pairRow.setValue(xmipp.MDL_SHIFT_Y, alignment._xmipp_shiftY.get()*scaleFactor)
 #             pairRow.setValue(xmipp.MDL_ANGLE_PSI, alignment._xmipp_anglePsi.get())
 
+            # Scale alignment by scaleFactor
+            alignment.scale(scaleFactor)
             alignmentToRow(alignment, pairRow, is2D=True, inverseTransform=False)
+                                                           #/////////////////////
                                
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]

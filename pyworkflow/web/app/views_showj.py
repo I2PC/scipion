@@ -179,9 +179,9 @@ def setRenderingOptions(request, dataset, table, inputParams):
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
             is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
             #Setting the _convert 
-            _convert = isVol and (inputParams[sj.MODE]==sj.MODE_GALLERY or is3D)
+            _convert = isVol and (inputParams[sj.MODE] in [sj.MODE_GALLERY, sj.MODE_TABLE] or is3D)
             #Setting the _reslice 
-            _reslice = isVol and inputParams[sj.MODE]==sj.MODE_GALLERY
+            _reslice = isVol and inputParams[sj.MODE] in [sj.MODE_GALLERY, sj.MODE_TABLE]
             #Setting the _getStats 
             _getStats = isVol and is3D
             #Setting the _dataType 

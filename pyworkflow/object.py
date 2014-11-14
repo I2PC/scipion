@@ -483,7 +483,7 @@ class FakedObject(Object):
             else:
                 return attr
         return None
-    
+
     def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
@@ -650,7 +650,16 @@ class Pointer(Object):
                 value = self._objValue[itemId]
                 value._parentObject = self._objValue
             else:
-                raise Exception("Invalid value '%s' for pointer._extended property." % extended)
+                # This is now only for compatibility reasons
+                try:
+                    itemId = int(extended)
+                    value = self._objValue[itemId]
+                    value._parentObject = self._objValue
+                except Exception:
+                    attribute = str(extended)
+                    value = getattr(self._objValue, attribute, default)
+                    
+                #raise Exception("Invalid value '%s' for pointer._extended property." % extended)
         else:
             value = self._objValue
             
@@ -874,6 +883,10 @@ class Set(OrderedObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
+    def __contains__(self, itemId):
+        """ element in Set """
+        return self._mapper.selectById(itemId) != None
+
     def _iterItems(self, random=False):
         return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
 
@@ -939,10 +952,23 @@ class Set(OrderedObject):
         self._size.set(0)
          
     def append(self, item):
-        """ Add a image to the set. """
+        """ Add an item to the set.
+        If the item has already an id, use it.
+        If not, keep a counter with the max id
+        and assign the next one.
+        """
+        # The _idCount and _size properties work fine
+        # under the assumption that once a Set is stored,
+        # then it is read-only (no more appends).
+        #
+        # Anyway, this can be easily changed by updating
+        # both from the underlying sqlite when reading a set.
+
         if not item.hasObjId():
             self._idCount += 1
             item.setObjId(self._idCount)
+        else:
+            self._idCount = max(self._idCount, item.getObjId()) + 1
         self._insertItem(item)
         self._size.increment()
 #        self._idMap[item.getObjId()] = item

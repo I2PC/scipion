@@ -120,6 +120,11 @@ DataSet(name='rct',  folder='rct',
                'untilted': 'micrographs/F_rct_u*.tif',
         })
 
+DataSet(name='groel',  folder='groel',
+        files={
+               'averages': 'classes/level_classes.stk'
+        })
+
 DataSet(name='emx',  folder='emx', 
         files={
 

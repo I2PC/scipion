@@ -96,27 +96,41 @@ class TestEmanBoxing(TestEmanBase):
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 
-class TestEmanInitialModel(TestEmanBase):
+class TestEmanInitialModelMda(TestEmanBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('mda')
         cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 3.5
+        cls.symmetry = 'd6'
+        cls.numberOfIterations = 5
+        cls.numberOfModels = 2
 
     def test_initialmodel(self):
         #Import a set of averages
         print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=3.5)
+        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=2.1)
         self.launchProtocol(protImportAvg)
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
 
         print "Run Initial model"
         protIniModel = self.newProtocol(EmanProtInitModel,
-                                      symmetry='d6', numberOfIterations=5, numberOfModels=2, numberOfThreads=4)
-        protIniModel.inputClasses.set(protImportAvg.outputAverages)
+                                      symmetry=self.symmetry, numberOfIterations=self.numberOfIterations, numberOfModels=self.numberOfModels, numberOfThreads=4)
+        protIniModel.inputSet.set(protImportAvg.outputAverages)
         self.launchProtocol(protIniModel)
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with eman initial model protocol")
 
+class TestEmanInitialModelGroel(TestEmanInitialModelMda):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('groel')
+        cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 2.1
+        cls.symmetry = 'd7'
+        cls.numberOfIterations = 10
+        cls.numberOfModels = 10
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestEmanBoxing)
