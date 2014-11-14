@@ -309,17 +309,10 @@ class ProtUserSubSet(ProtSets):
 
 class ProtUnionSet(ProtSets):
     """ Protocol to join two or more sets of images.
-<<<<<<< HEAD
     This protocol allows to select two or more set of images
     and will produce another set joining all elements of the 
     selected sets. It will validate that all sets are of the
     same type of elements (Micrographs, Particles or Volumes) 
-=======
-    From two or more set of images it produces another set joining all
-    the elements of the original sets.
-
-    All sets must be of the same type of elements (micrographs, particles, etc).
->>>>>>> df2fee9ec17cc8602e63ff6125cb3564f832387c
     """
     _label = 'union sets'
 
