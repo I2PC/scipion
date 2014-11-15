@@ -41,8 +41,9 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" [--downsamplingI <Tp=1>]: Downsampling factor for projections");
     addParamsLine(" [--dontUseWeights]: Do not use weights if available in the input metadata");
     addParamsLine(" [--dontUseCTF]: Do not use CTF if available in the input metadata");
-    addParamsLine(" [--mu <mu=1e-5>]: Augmented Lagrange penalty");
-    addParamsLine(" [--lambda1 <lambda1=1e-8>]: Tikhonov regularization");
+    addParamsLine(" [--mu <mu=1e-4>]: Augmented Lagrange penalty");
+    addParamsLine(" [--lambda <lambda=1e-5>]: Total variation parameter");
+    addParamsLine(" [--lambda1 <lambda1=1e-7>]: Tikhonov parameter");
     addParamsLine(" [--cgiter <N=3>]: Conjugate Gradient iterations");
     addParamsLine(" [--admmiter <N=30>]: ADMM iterations");
 }
@@ -64,6 +65,7 @@ void ProgReconsADMM::readParams()
 	useWeights=!checkParam("--dontUseWeights");
 	useCTF=!checkParam("--dontUseCTF");
 	mu=getDoubleParam("--mu");
+	lambda=getDoubleParam("--lambda");
 	lambda1=getDoubleParam("--lambda1");
 	Ncgiter=getIntParam("--cgiter");
 	Nadmmiter=getIntParam("--admmiter");
@@ -71,11 +73,8 @@ void ProgReconsADMM::readParams()
 
 void ProgReconsADMM::produceSideInfo()
 {
-	// Read input images and adjust regularization weights
+	// Read input images
 	mdIn.read(fnIn);
-	size_t Nimgs=mdIn.size();
-	mu*=Nimgs;
-	lambda1*=Nimgs;
 
 	// Get Htb reconstruction
 	if (fnHtb=="")
@@ -85,6 +84,13 @@ void ProgReconsADMM::produceSideInfo()
 		VHtb.read(fnHtb);
 		VHtb().setXmippOrigin();
 	}
+
+	// Adjust regularization weights
+	double Nimgs=mdIn.size();
+	double VHtb_norm=sqrt(VHtb().sum2()/MULTIDIM_SIZE(VHtb()));
+	mu*=Nimgs/XSIZE(VHtb())*VHtb_norm;
+	lambda*=Nimgs/XSIZE(VHtb())*VHtb_norm;
+	lambda1*=Nimgs/XSIZE(VHtb());
 
 	// Get first volume
 	if (fnFirst=="")
@@ -139,6 +145,8 @@ void ProgReconsADMM::run()
 		doPOCSProjection();
 		updateUD();
 	}
+	produceVolume();
+	Vk.write(fnRoot+".vol");
 }
 
 void ProgReconsADMM::constructHtb()
@@ -486,15 +494,47 @@ void ProgReconsADMM::doPOCSProjection()
 
 void ProgReconsADMM::updateUD()
 {
-	ud=Vk(); applyLFilter(fourierLx); ux=ud; ux+=dx;
-	ud=Vk(); applyLFilter(fourierLy); uy=ud; uy+=dy;
-	ud=Vk(); applyLFilter(fourierLz); uz=ud; uz+=dz;
+	double threshold;
+	if (mu>0)
+		threshold=lambda/mu;
+	else
+		threshold=0;
+	std::cout << "lambda=" << lambda << std::endl;
+	std::cout << "mu=" << mu << std::endl;
+	std::cout << "Threshold=" << threshold << std::endl;
+	MultidimArray<double> LVk;
+
+	// Update gradient and Lagrange parameters
+	ud=Vk(); applyLFilter(fourierLx); LVk=ud;
+	ux=LVk; ux+=dx; ux.threshold("soft",threshold);
+	dx+=LVk; dx-=ux;
+
+	ud=Vk(); applyLFilter(fourierLy); LVk=ud;
+	uy=LVk; uy+=dy; uy.threshold("soft",threshold);
+	dy+=LVk; dy-=uy;
+
+	ud=Vk(); applyLFilter(fourierLz); LVk=ud;
+	uz=LVk; uz+=dz; uz.threshold("soft",threshold);
+	dz+=LVk; dz-=uz;
 
 	Vk.write("PPPVk.vol");
+
 	Image<double> save;
 	save()=ux; save.write("PPPux.vol");
 	save()=uy; save.write("PPPuy.vol");
 	save()=uz; save.write("PPPuz.vol");
+	save()=dx; save.write("PPPdx.vol");
+	save()=dy; save.write("PPPdy.vol");
+	save()=dz; save.write("PPPdz.vol");
+}
+
+void ProgReconsADMM::produceVolume()
+{
+	MultidimArray<double> kernel3D;
+	kernel3D.resize(Vk());
+	kernel.computeKernel3D(kernel3D);
+	std::cout << "kernel3D.sum()=" << kernel3D.sum() << std::endl;
+	convolutionFFT(Vk(),kernel3D,Vk());
 }
 
 void AdmmKernel::initializeKernel(double _alpha, double a, double astep)
@@ -618,6 +658,31 @@ void AdmmKernel::computeGradient(MultidimArray<double> &gradient, char direction
 				if (adjoint)
 					value*=-1;
 				A3D_ELEM(gradient,k,i,j)=value;
+			}
+		}
+	}
+}
+
+void AdmmKernel::computeKernel3D(MultidimArray<double> &kernel)
+{
+	double supp2=supp*supp;
+	double K=1/bessi2(alpha);
+	kernel.initZeros();
+	for (int k=-supp; k<=supp; ++k)
+	{
+		int k2=k*k;
+		for (int i=-supp; i<=supp; ++i)
+		{
+			int i2=i*i;
+			for (int j=-supp; j<=supp; ++j)
+			{
+				int j2=j*j;
+				double r2=k2+i2+j2;
+				if (r2>supp2)
+					continue;
+				double z=alpha*sqrt(1.0-r2/supp2);
+				double value=K*z*z*bessi2(z);
+				A3D_ELEM(kernel,k,i,j)=value;
 			}
 		}
 	}

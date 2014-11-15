@@ -58,6 +58,9 @@ public:
 
 	/* Direction=x,y,z, mode=L (Lx), T (L^T x), 2 (L^TLx) */
 	void computeGradient(MultidimArray<double> &gradient, char direction, bool adjoint=false);
+
+	/** Compute the kernel in 3D space */
+	void computeKernel3D(MultidimArray<double> &kernel);
 };
 
 class ProgReconsADMM: public XmippProgram
@@ -121,6 +124,9 @@ public:
 
     /** Update u and d */
     void updateUD();
+
+    /** Convert from coefficients to voxel volume */
+    void produceVolume();
 
 public:
 	AdmmKernel           kernel;
