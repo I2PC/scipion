@@ -132,7 +132,8 @@ class XmippDimredNMAViewer(ProtocolViewer):
                               title='Trajectories Tool',
                               dim=self.protocol.reducedDim.get(),
                               data=self.data,
-                              callback=self._createCluster
+                              callback=self._generateAnimations,
+                              numberOfPoints=10
                               )
         return [self.trajectoriesWindow]
         
@@ -165,6 +166,9 @@ class XmippDimredNMAViewer(ProtocolViewer):
         newProt.sqliteFile.set(fnSqlite)
         
         project.launchProtocol(newProt)
+        
+    def _generateAnimations(self):
+        pass
         
     def loadData(self):
         """ Iterate over the images and the output matrix txt file

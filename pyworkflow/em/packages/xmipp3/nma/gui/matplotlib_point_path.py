@@ -38,13 +38,16 @@ class PointPath():
     events to create a path of points. 
     It also allow to modify the point positions on the path.
     """
-    def __init__(self, ax, data, pathData, callback=None, tolerance=3):
+    def __init__(self, ax, data, pathData, callback=None, tolerance=3, maxPoints=10):
         self.ax = ax
         self.data = data
         plotArray2D(ax, self.data)
+        self.callback = callback
 
         self.dragIndex = None
         self.tolerance = tolerance
+        self.maxPoints = maxPoints
+        
         self.cidpress = ax.figure.canvas.mpl_connect('button_press_event', self.onClick)
         self.cidrelease = ax.figure.canvas.mpl_connect('button_release_event', self.onRelease)
         self.cidmotion = ax.figure.canvas.mpl_connect('motion_notify_event', self.onMotion)
@@ -60,7 +63,7 @@ class PointPath():
             self.path_line = None
             self.path_points = None
             
-    def setState(self, state):
+    def setState(self, state, notify=False):
         self.drawing = state
         if state == STATE_NO_POINTS:
             self.ax.set_title('Double click to select first point of trajectory')
@@ -70,6 +73,9 @@ class PointPath():
             self.ax.set_title('Click and drag points to adjust trajectory.')
         else:
             raise Exception("Invalid PointPath state: %d" % state)
+        
+        if notify and self.callback:
+            self.callback()
         
     def onClick(self, event):
         if event.inaxes!=self.ax: 
@@ -89,7 +95,7 @@ class PointPath():
         
         if self.drawing == STATE_DRAW_POINTS:
             if doubleClick:
-                self.setState(STATE_ADJUST_POINTS)
+                self.setState(STATE_ADJUST_POINTS, notify=True)
             else:
                 self.xs.append(ex)
                 self.ys.append(ey)
@@ -99,6 +105,10 @@ class PointPath():
                     self.path_line.set_data(self.xs, self.ys)
                     self.path_points.set_data(self.xs, self.ys)
                 self.ax.figure.canvas.draw()
+                
+                if len(self.xs) == self.maxPoints:
+                    self.setState(STATE_ADJUST_POINTS, notify=True)
+                    
         
         if self.drawing == STATE_ADJUST_POINTS and not doubleClick: # Points moving state
             self.dragIndex = None
