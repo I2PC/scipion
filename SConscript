@@ -1050,6 +1050,7 @@ AddXmippProgram('phantom_create', ['XmippRecons'])
 AddXmippProgram('phantom_project', ['XmippRecons', 'XmippInterface'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons', 'XmippInterface'])
+AddXmippProgram('reconstruct_admm', ['XmippRecons'])
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
 if not int(env['release']):
