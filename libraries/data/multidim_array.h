@@ -4480,6 +4480,7 @@ public:
      * above:     if  x >a => x=b
      * below:     if  x <a => x=b
      * range:     if  x <a => x=a   and    if x>b => x=b
+     * soft:      if abs(x)<a => x=0 else x=sgn(x)*(abs(x)-a)
      *
      * @code
      * v.threshold("abs_above", 10, 10);
@@ -4503,7 +4504,7 @@ public:
      */
     void threshold(const String& type,
                    T a,
-                   T b,
+                   T b=0,
                    MultidimArray<int> * mask = NULL )
     {
         int mode;
@@ -4518,12 +4519,15 @@ public:
             mode = 4;
         else if (type == "range")
             mode = 5;
+        else if (type == "soft")
+            mode = 6;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          formatString("Threshold: mode not supported (%s)", type.c_str() ));
 
         T* ptr=NULL;
         size_t n;
+        T ma=-a;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             if (mask == NULL || DIRECT_MULTIDIM_ELEM(*mask,n) > 0 )
@@ -4552,6 +4556,13 @@ public:
                     else if (*ptr > b)
                         *ptr = b;
                     break;
+                case 6:
+                	if (*ptr<ma)
+                		*ptr+=a;
+                	else if (*ptr>a)
+                		*ptr-=a;
+                	else
+                		*ptr=0;
                 }
             }
         }
