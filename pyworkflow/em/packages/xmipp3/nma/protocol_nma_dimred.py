@@ -199,3 +199,6 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     
     def getMappingFile(self):
         return self.mappingFile.get()
+    
+    def getMethodName(self):
+        return DIMRED_VALUES[self.dimredMethod.get()]
