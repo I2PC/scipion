@@ -46,6 +46,7 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" [--lambda1 <lambda1=1e-7>]: Tikhonov parameter");
     addParamsLine(" [--cgiter <N=3>]: Conjugate Gradient iterations");
     addParamsLine(" [--admmiter <N=30>]: ADMM iterations");
+    addParamsLine(" [--positivity]: Positivity constraint");
 }
 
 void ProgReconsADMM::readParams()
@@ -69,6 +70,7 @@ void ProgReconsADMM::readParams()
 	lambda1=getDoubleParam("--lambda1");
 	Ncgiter=getIntParam("--cgiter");
 	Nadmmiter=getIntParam("--admmiter");
+	positivity=checkParam("--positivity");
 }
 
 void ProgReconsADMM::produceSideInfo()
@@ -81,22 +83,22 @@ void ProgReconsADMM::produceSideInfo()
 		constructHtb();
 	else
 	{
-		VHtb.read(fnHtb);
-		VHtb().setXmippOrigin();
+		CHtb.read(fnHtb);
+		CHtb().setXmippOrigin();
 	}
 
 	// Adjust regularization weights
 	double Nimgs=mdIn.size();
-	double VHtb_norm=sqrt(VHtb().sum2()/MULTIDIM_SIZE(VHtb()));
-	mu*=Nimgs/XSIZE(VHtb())*VHtb_norm;
-	lambda*=Nimgs/XSIZE(VHtb())*VHtb_norm;
-	lambda1*=Nimgs/XSIZE(VHtb());
+	double VHtb_norm=sqrt(CHtb().sum2()/MULTIDIM_SIZE(CHtb()));
+	mu*=Nimgs/XSIZE(CHtb())*VHtb_norm;
+	lambda*=Nimgs/XSIZE(CHtb())*VHtb_norm;
+	lambda1*=Nimgs/XSIZE(CHtb());
 
 	// Get first volume
 	if (fnFirst=="")
-		Vk().initZeros(VHtb());
+		Ck().initZeros(CHtb());
 	else
-		Vk.read(fnFirst);
+		Ck.read(fnFirst);
 
 	// Prepare kernel
 	if (kernelShape=="KaiserBessel")
@@ -108,7 +110,7 @@ void ProgReconsADMM::produceSideInfo()
 	addRegularizationTerms();
 
 	// Resize u and d volumes
-	ux.initZeros(VHtb());
+	ux.initZeros(CHtb());
 	ux.setXmippOrigin();
 	uy=ux;
 	uz=ux;
@@ -139,12 +141,16 @@ void ProgReconsADMM::show()
 void ProgReconsADMM::run()
 {
 	produceSideInfo();
+	std::cout << "Running ADMM iterations ..." << std::endl;
+	init_progress_bar(Nadmmiter);
 	for (int iter=0; iter<Nadmmiter; ++iter)
 	{
 		applyConjugateGradient();
 		doPOCSProjection();
 		updateUD();
+		progress_bar(iter);
 	}
+	progress_bar(Nadmmiter);
 	produceVolume();
 	Vk.write(fnRoot+".vol");
 }
@@ -153,8 +159,8 @@ void ProgReconsADMM::constructHtb()
 {
 	size_t xdim, ydim, zdim, ndim;
 	getImageSize(mdIn,xdim,ydim,zdim,ndim);
-	VHtb().initZeros(xdim,xdim,xdim);
-	VHtb().setXmippOrigin();
+	CHtb().initZeros(xdim,xdim,xdim);
+	CHtb().setXmippOrigin();
 
 	Image<double> I;
 	double rot, tilt, psi;
@@ -183,7 +189,7 @@ void ProgReconsADMM::constructHtb()
 			progress_bar(i);
 	}
 	progress_bar(mdIn.size());
-	VHtb.write(fnRoot+"_firstReconstruction.vol");
+	CHtb.write(fnRoot+"_firstReconstruction.vol");
 }
 
 void ProgReconsADMM::project(double rot, double tilt, double psi, MultidimArray<double> &P, bool adjoint, double weight)
@@ -198,7 +204,7 @@ void ProgReconsADMM::project(double rot, double tilt, double psi, MultidimArray<
 
 void ProgReconsADMM::project(const Matrix1D<double> &r1, const Matrix1D<double> &r2, MultidimArray<double> &P, bool adjoint, double weight)
 {
-	const MultidimArray<double> &mV=VHtb();
+	const MultidimArray<double> &mV=CHtb();
 	if (!adjoint)
 	{
 		P.initZeros(std::ceil(XSIZE(mV)/Tp),std::ceil(YSIZE(mV)/Tp));
@@ -264,7 +270,7 @@ void ProgReconsADMM::project(const Matrix1D<double> &r1, const Matrix1D<double> 
 void ProgReconsADMM::computeHtKH()
 {
 	MultidimArray<double> kernelV;
-	kernelV.initZeros(2*ZSIZE(VHtb())-1,2*YSIZE(VHtb())-1,2*XSIZE(VHtb())-1);
+	kernelV.initZeros(2*ZSIZE(CHtb())-1,2*YSIZE(CHtb())-1,2*XSIZE(CHtb())-1);
 	kernelV.setXmippOrigin();
 
 	std::cerr << "Calculating H'KH ...\n";
@@ -351,7 +357,7 @@ void addGradientTerm(double mu, AdmmKernel &kernel, MultidimArray<double> &L, Fo
 void ProgReconsADMM::addRegularizationTerms()
 {
 	MultidimArray<double> L;
-	L.initZeros(2*ZSIZE(VHtb())-1,2*YSIZE(VHtb())-1,2*XSIZE(VHtb())-1);
+	L.initZeros(2*ZSIZE(CHtb())-1,2*YSIZE(CHtb())-1,2*XSIZE(CHtb())-1);
 	L.setXmippOrigin();
 	FourierTransformer transformer;
 	transformer.setReal(L);
@@ -443,11 +449,11 @@ void ProgReconsADMM::applyConjugateGradient()
 	r+=ud;
 	r*=mu;
 
-	r+=VHtb();
+	r+=CHtb();
 
 	// Apply A^tA to the current estimate of the reconstruction
 	MultidimArray<double> AtAVk;
-	applyKernel3D(Vk(),AtAVk);
+	applyKernel3D(Ck(),AtAVk);
 
 	// Compute first residual. This is the negative gradient of ||Ax-b||^2
 	r-=AtAVk;
@@ -458,7 +464,7 @@ void ProgReconsADMM::applyConjugateGradient()
 	p=r;
 
 	// Perform CG iterations
-	MultidimArray<double> &mVk=Vk();
+	MultidimArray<double> &mVk=Ck();
 
 	for (int iter=0; iter<Ncgiter; ++iter)
 	{
@@ -489,7 +495,46 @@ void ProgReconsADMM::applyConjugateGradient()
 
 void ProgReconsADMM::doPOCSProjection()
 {
+	if (positivity)
+	{
+		Ck().threshold("below",0.,0.);
+#ifdef NEVERDEFINED
+		MultidimArray<double> smallKernel3D(2*a+1,2*a+1,2*a+1);
+		smallKernel3D.setXmippOrigin();
+		kernel.computeKernel3D(smallKernel3D);
+		smallKernel3D/=sqrt(smallKernel3D.sum2());
 
+		produceVolume();
+		MultidimArray<double> &mVk=Vk();
+		MultidimArray<double> &mCk=Ck();
+		Ck.write("PPPCkBefore.vol");
+		int k0=STARTINGZ(mVk)+a;
+		int i0=STARTINGY(mVk)+a;
+		int j0=STARTINGX(mVk)+a;
+		int kF=FINISHINGZ(mVk)-a;
+		int iF=FINISHINGY(mVk)-a;
+		int jF=FINISHINGX(mVk)-a;
+		FOR_ALL_ELEMENTS_IN_ARRAY3D(mVk)
+			if (k<k0 || k>kF || i<i0 || i>iF || j<j0 || j>jF)
+				A3D_ELEM(mCk,k,i,j)=0.;
+			else if (A3D_ELEM(mVk,k,i,j)<0)
+			{
+				// Calculate dot product
+				double dot=0.;
+				for (int kk=-a; kk<=a; ++kk)
+					for (int ii=-a; ii<=a; ++ii)
+						for (int jj=-a; jj<=a; ++jj)
+							dot+=A3D_ELEM(mCk,k+kk,i+ii,j+jj)*A3D_ELEM(smallKernel3D,kk,ii,jj);
+
+				// Update C
+				for (int kk=-a; kk<=a; ++kk)
+					for (int ii=-a; ii<=a; ++ii)
+						for (int jj=-a; jj<=a; ++jj)
+							A3D_ELEM(mCk,k+kk,i+ii,j+jj)-=dot*A3D_ELEM(smallKernel3D,kk,ii,jj);
+			}
+		Ck.write("PPPCkAfter.vol");
+#endif
+	}
 }
 
 void ProgReconsADMM::updateUD()
@@ -502,39 +547,29 @@ void ProgReconsADMM::updateUD()
 	std::cout << "lambda=" << lambda << std::endl;
 	std::cout << "mu=" << mu << std::endl;
 	std::cout << "Threshold=" << threshold << std::endl;
-	MultidimArray<double> LVk;
+	MultidimArray<double> LCk;
 
 	// Update gradient and Lagrange parameters
-	ud=Vk(); applyLFilter(fourierLx); LVk=ud;
-	ux=LVk; ux+=dx; ux.threshold("soft",threshold);
-	dx+=LVk; dx-=ux;
+	ud=Ck(); applyLFilter(fourierLx); LCk=ud;
+	ux=LCk; ux+=dx; ux.threshold("soft",threshold);
+	dx+=LCk; dx-=ux;
 
-	ud=Vk(); applyLFilter(fourierLy); LVk=ud;
-	uy=LVk; uy+=dy; uy.threshold("soft",threshold);
-	dy+=LVk; dy-=uy;
+	ud=Ck(); applyLFilter(fourierLy); LCk=ud;
+	uy=LCk; uy+=dy; uy.threshold("soft",threshold);
+	dy+=LCk; dy-=uy;
 
-	ud=Vk(); applyLFilter(fourierLz); LVk=ud;
-	uz=LVk; uz+=dz; uz.threshold("soft",threshold);
-	dz+=LVk; dz-=uz;
-
-	Vk.write("PPPVk.vol");
-
-	Image<double> save;
-	save()=ux; save.write("PPPux.vol");
-	save()=uy; save.write("PPPuy.vol");
-	save()=uz; save.write("PPPuz.vol");
-	save()=dx; save.write("PPPdx.vol");
-	save()=dy; save.write("PPPdy.vol");
-	save()=dz; save.write("PPPdz.vol");
+	ud=Ck(); applyLFilter(fourierLz); LCk=ud;
+	uz=LCk; uz+=dz; uz.threshold("soft",threshold);
+	dz+=LCk; dz-=uz;
 }
 
 void ProgReconsADMM::produceVolume()
 {
 	MultidimArray<double> kernel3D;
-	kernel3D.resize(Vk());
+	kernel3D.resize(Ck());
 	kernel.computeKernel3D(kernel3D);
-	std::cout << "kernel3D.sum()=" << kernel3D.sum() << std::endl;
-	convolutionFFT(Vk(),kernel3D,Vk());
+	convolutionFFT(Ck(),kernel3D,Vk());
+	// Vk()*=kernel3D.sum();
 }
 
 void AdmmKernel::initializeKernel(double _alpha, double a, double astep)
@@ -666,7 +701,7 @@ void AdmmKernel::computeGradient(MultidimArray<double> &gradient, char direction
 void AdmmKernel::computeKernel3D(MultidimArray<double> &kernel)
 {
 	double supp2=supp*supp;
-	double K=1/bessi2(alpha);
+	double K=1/(bessi2(alpha)*alpha*alpha);
 	kernel.initZeros();
 	for (int k=-supp; k<=supp; ++k)
 	{

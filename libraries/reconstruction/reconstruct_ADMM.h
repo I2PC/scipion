@@ -83,6 +83,7 @@ public:
 	bool useCTF; // Use CTF if available in the input metadata
 	int Ncgiter; // Number of conjugate gradient iterations
 	int Nadmmiter; // Number of ADMM iterations
+	bool positivity; // Positivity constraint
 public:
     void defineParams();
     void readParams();
@@ -130,8 +131,8 @@ public:
 
 public:
 	AdmmKernel           kernel;
-	Image<double>        VHtb; // First reconstructed volume
-	Image<double>        Vk; // Reconstructed volume
+	Image<double>        CHtb; // First reconstructed volume
+	Image<double>        Ck, Vk; // Reconstructed volume
 	MetaData             mdIn; // Set of images and angles
 	MultidimArray<std::complex<double> > fourierKernelV;
 	MultidimArray<double> paddedx;
