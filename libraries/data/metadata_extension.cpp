@@ -34,7 +34,6 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
@@ -387,5 +386,95 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
         auxFn.compose(blocks[b],fnOut);
         md.write(auxFn, MD_APPEND);
         //MD._write(fnOut,blocks[b],MD_APPEND);
+    }
+}
+
+void bsoftRemoveLoopBlock(const FileName &_inFile, const FileName &_outFile)
+{
+    std::ifstream in(_inFile.c_str());
+    std::ofstream out(_outFile.c_str());
+
+    if (!in)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _inFile);
+
+    if (!out)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _outFile);
+
+    std::string line;
+    size_t len = 5;
+    bool newData = false;
+    size_t pos;
+    std::string _data;
+    int counter=1;
+    bool comment=true;
+
+    while (getline(in, line))
+    {
+        //remove comments xmipp cannot handle them outside header
+        pos = line.substr(0,1).find("#",0,1);
+        if (pos != std::string::npos)
+        {
+            if(comment)
+                out << line << '\n';
+            continue;
+        }
+        //make sure that data block does not start with a number xmipp cannot handle them
+        pos = line.substr(0,5).find("data_",0,5);
+        if (pos != std::string::npos)
+        {
+            if(('0' <= line[5]) && (line[5]<='9'))
+                line.replace(pos, len, "data_A");
+            newData = true;
+            comment=false;
+            out << line << '\n';
+            continue;
+        }
+        pos = line.substr(0,5).find("loop_",0,5);
+        if (pos != std::string::npos)
+        {
+            std::stringstream ss;
+            ss << "data_loop_" << counter++;
+            if (!newData)
+            {
+                line.replace(pos, len, ss.str());
+                out << line << "\nloop_\n";
+            }
+            else
+                out << line << '\n';
+            newData = false;
+            continue;
+        }
+        //line no data no comment no loop
+        pos = line.substr(0,2).find("_",0,1);
+        if (pos != std::string::npos)
+        {
+            newData = false;
+            out << line << '\n';
+            continue;
+        }
+        out << line << '\n';
+    }
+}
+void bsoftRestoreLoopBlock(const FileName &_inFile, const FileName &_outFile)
+{
+    std::ifstream in(_inFile.c_str());
+    std::ofstream out(_outFile.c_str());
+
+    if (!in)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _inFile);
+
+    if (!out)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _outFile);
+
+    std::string line;
+    size_t len = 10;
+    size_t pos;
+
+    while (getline(in, line))
+    {
+        pos = line.substr(0,10).find("data_loop_",0,len);
+        if (pos != std::string::npos)
+            continue;
+        out << line << '\n';
     }
 }
