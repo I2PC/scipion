@@ -179,12 +179,12 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	private void formatMicrographsTable() {
 		micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
-		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(210);
-		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(210);
+		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(220);
+		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(220);
 		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(65);
 		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(70);
 		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(590, 304));
+				.setPreferredScrollableViewportSize(new Dimension(610, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		int index = tppicker.getMicrographIndex();
 		if (index != -1)

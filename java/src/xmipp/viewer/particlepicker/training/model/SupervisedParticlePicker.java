@@ -59,6 +59,7 @@ public class SupervisedParticlePicker extends ParticlePicker
         private UpdateTemplatesTask uttask;
         private TemplatesJDialog dialog;
         private boolean isautopick;
+        private boolean existspsd;
 
 	// private String reviewfile;
 
@@ -340,6 +341,11 @@ public class SupervisedParticlePicker extends ParticlePicker
 			throw new IllegalArgumentException(e);
 		}
 	}
+        
+        public boolean containsPSD()
+        {
+            return existspsd;
+        }
 
 	@Override
 	public void loadEmptyMicrographs()
@@ -363,7 +369,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 				fileLabel = MDLabel.MDL_IMAGE;
 			else
 				throw new IllegalArgumentException(String.format("Labels MDL_MICROGRAPH or MDL_IMAGE not found in metadata %s", selfile));
-			boolean existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
+			existspsd = md.containsLabel(MDLabel.MDL_PSD_ENHANCED);
 			boolean existsctf = md.containsLabel(MDLabel.MDL_CTF_MODEL);
 			long[] ids = md.findObjects();
 			for (long id : ids)

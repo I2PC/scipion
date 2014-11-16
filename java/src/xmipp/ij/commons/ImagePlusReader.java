@@ -145,7 +145,6 @@ public abstract class ImagePlusReader {
         if(imp == null)
             loadImagePlus();
         return imp.getStackSize() > 1;
-        
     }
     
    

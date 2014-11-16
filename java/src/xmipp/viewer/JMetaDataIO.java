@@ -29,7 +29,6 @@ public class JMetaDataIO {
     public static void saveData(SupervisedPickerMicrograph m, String path)
 	{
                 //System.out.println("saving data on JMetaDataIO");
-		long id;
 		try
 		{
 			if (!m.hasData())

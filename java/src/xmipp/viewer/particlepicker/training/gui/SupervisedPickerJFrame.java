@@ -29,7 +29,6 @@ import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import xmipp.utils.ColorIcon;
@@ -214,13 +213,19 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         
     }
 
-    private void formatMicrographsTable() {
+    protected void formatMicrographsTable() {
+        int width = 515;
         micrographstb.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         micrographstb.getColumnModel().getColumn(0).setPreferredWidth(40);
         micrographstb.getColumnModel().getColumn(1).setPreferredWidth(325);
+        if(!ppicker.containsPSD())
+        {
+            micrographstb.getColumnModel().getColumn(1).setPreferredWidth(440);
+            width = 630;
+        }
         micrographstb.getColumnModel().getColumn(2).setPreferredWidth(70);
         micrographstb.getColumnModel().getColumn(3).setPreferredWidth(80);
-        micrographstb.setPreferredScrollableViewportSize(new Dimension(515, 304));
+        micrographstb.setPreferredScrollableViewportSize(new Dimension(width, 304));
         micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         int index = ppicker.getMicrographIndex();
         if (index != -1) {
@@ -278,7 +283,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             setLayout(new GridBagLayout());
 
             initToolBar();
-            centerparticlebt = new JToggleButton("Center", XmippResource.getIcon("center.png"));
+            centerparticlebt = new JToggleButton(bundle.getString("center"), XmippResource.getIcon("center.png"));
             centerparticlebt.setSelected(true);
             tb.add(centerparticlebt, 0);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.WEST));
@@ -286,7 +291,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             
             //add(shapepn, XmippWindowUtil.getConstraints(constraints, 1, 1));
 
-            autopicklb = new JLabel("Autopick:");
+            autopicklb = new JLabel(bundle.getString("autopick"));
             add(autopicklb, XmippWindowUtil.getConstraints(constraints, 0, 3));
             initSupervisedPickerPane();
             add(sppickerpn, XmippWindowUtil.getConstraints(constraints, 1, 3, 1, 1, GridBagConstraints.HORIZONTAL));
@@ -488,7 +493,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         filemn.add(exportmi);
         filemn.add(exitmi);
 
-        JMenu windowmn = new JMenu("Window");
+        JMenu windowmn = new JMenu(bundle.getString("window"));
 
         mb.add(filemn);
         mb.add(filtersmn);
@@ -579,38 +584,42 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         constraints.anchor = GridBagConstraints.NORTHWEST;
         micrographpn = new JPanel(new GridBagLayout());
         micrographpn.setBorder(BorderFactory.createTitledBorder("Micrographs"));
-        JScrollPane sp = new JScrollPane();
         
-        iconbt = new JButton(Micrograph.getNoImageIcon());
-        iconbt.setToolTipText("Load CTF Profile");
-        iconbt.setBorderPainted(false);
-        iconbt.setContentAreaFilled(false);
-        iconbt.setFocusPainted(false);
-        iconbt.setOpaque(false);
-        iconbt.setMargin(new Insets(0, 0, 0, 0));
-        iconbt.addActionListener(new ActionListener() {
+        
+        if(ppicker.containsPSD())
+        {
+            iconbt = new JButton(Micrograph.getNoImageIcon());
+            iconbt.setToolTipText("Load CTF Profile");
+            iconbt.setBorderPainted(false);
+            iconbt.setContentAreaFilled(false);
+            iconbt.setFocusPainted(false);
+            iconbt.setOpaque(false);
+            iconbt.setMargin(new Insets(0, 0, 0, 0));
+            iconbt.addActionListener(new ActionListener() {
 
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                String psd = getMicrograph().getPSD();
-                String ctf = getMicrograph().getCTF();
-                if (psd != null && ctf != null) {
-                    try {
-                        new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
-                    } catch (Exception ex) {
-                        Logger.getLogger(SupervisedPickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                    String psd = getMicrograph().getPSD();
+                    String ctf = getMicrograph().getCTF();
+                    if (psd != null && ctf != null) {
+                        try {
+                            new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                        } catch (Exception ex) {
+                            Logger.getLogger(SupervisedPickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
-                }
 
-            }
-        });
+                }
+            });
+            micrographpn.add(iconbt, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
+        }
+        
+        JScrollPane sp = new JScrollPane();
         micrographsmd = new MicrographsTableModel(this);
         micrographstb.setModel(micrographsmd);
         formatMicrographsTable();
-
         sp.setViewportView(micrographstb);
         micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
-        micrographpn.add(iconbt, XmippWindowUtil.getConstraints(constraints, 1, 0, 1));
         JPanel infopn = new JPanel();
         manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber()));
         autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
@@ -667,8 +676,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             thresholdtf.setValue(next.getThreshold());
         }
 
-
-        iconbt.setIcon(next.getCTFIcon());
+        if(ppicker.containsPSD())
+            iconbt.setIcon(next.getCTFIcon());
 
         pack();
 

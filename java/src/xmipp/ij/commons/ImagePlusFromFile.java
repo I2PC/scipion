@@ -80,6 +80,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
 				imp.updateImage();
 			}
 			return imp;
+                        
 		}
 		catch (Exception e)
 		{
@@ -110,7 +111,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
         String name = fileName;
         
         
-        if(index != -1)
+        if(index != -2)
             name = String.format("%d@%s", index, name);
         return name;
 
