@@ -1355,6 +1355,7 @@ TEST_F( MetadataTest, setGetValue)
     //We expect that MetaData will throw an exception
     //if you use getValue with a variable of type that
     // doesn't match the label type
+    std::cerr << "TEST COMMENT: you should get the ERROR: Mismatch Label (order_) and value type(INT)" <<std::endl;
     EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
 }
 TEST_F( MetadataTest, Comment)
@@ -1437,9 +1438,11 @@ TEST_F( MetadataTest, getValueAbort)
     auxMD1.setValue(MDL_ANGLE_ROT,rot,id);
     //psi assigned by defaults
     id = auxMD1.firstObject();
+    std::cerr << "TEST COMMENT: You should get the error  Cannot find label: order_" <<std::endl;
     EXPECT_THROW(auxMD1.getValueOrAbort(MDL_ORDER, rot, id), XmippError);
     MDRow  rowIn;
     auxMD1.getRow(rowIn, id);
+    std::cerr << "TEST COMMENT: You should get the error  Cannot find label: anglePsi" <<std::endl;
     EXPECT_THROW(rowGetValueOrAbort(rowIn,MDL_ANGLE_PSI,rot), XmippError);
     XMIPP_CATCH
 }
