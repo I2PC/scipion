@@ -34,6 +34,7 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
+        MD.getValue(image_label,fnImg,__iter.objId);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
