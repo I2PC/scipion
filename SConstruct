@@ -114,11 +114,17 @@ env.EnsureSConsVersion(2,3,2)
 # to do one step while the previous one is still running in the background.
 
 
-# Determine if a var is an iterable or not
 def is_sequence(arg):
+    'Determine if a var is an iterable or not'
     return (not hasattr(arg, "strip") and
             hasattr(arg, "__getitem__") or
             hasattr(arg, "__iter__"))
+
+
+def appendUnique(elem, list):
+    'Add element to a list only if it doesnt previously exist'
+    if elem not in list:
+        list.append(elem)
 
 
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
@@ -227,7 +233,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
 def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, replace):
     context.Message('* Checking for MPI ... ')
 
-    lastLIBS = context.env['LIBS']
+    lastLIBS = context.env.get('LIBS', '')
     lastLIBPATH = context.env['LIBPATH']
     lastCPPPATH = context.env['CPPPATH']
     lastCC = context.env['CC']
@@ -261,6 +267,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 
     context.Result(ret)
     return ret
+
 
 
 def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patterns=None, incs=None, libs=None, prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], mpi=False, cuda=False, default=True):
@@ -363,17 +370,19 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
 
 def symLink(env, target, source):
     #As the link will be in bin/ directory we need to move up
+    sources = source
     if isinstance(target, list):
         link = str(target[0])
-        source = str(source[0])
+        sources = str(source[0])
     else:
         link = target
-    source = os.path.relpath(source, os.path.split(link)[0])
+    sources = os.path.relpath(sources, os.path.split(link)[0])
     if os.path.lexists(link):
         os.remove(link)
-    print 'Linking from %s to %s' % (source, link)
-    os.symlink(source, link)
+    print 'Linking to %s from %s' % (sources, link)
+    os.symlink(sources, link)
     return target
+
 
 
 def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=None, buildDir=None, classDir=None, sourcePath=None, deps=[], default=True):
@@ -499,19 +508,19 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
     incsCopy = incs + env['CPPPATH']
-    libPathsCopy += [env['LIBPATH']]
-    libsCopy = libs + env['LIBS']
+    libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
+    appendUnique(env['LIBPATH'], libPathsCopy)
     env2 = Environment()
     if mpi: 
-        incsCopy += env['MPI_INCLUDE']
-        libPathsCopy += env['MPI_LIBDIR']
-        libsCopy += [env['MPI_LIB']]
-        ldLibraryPathCopy += env['MPI_LIBDIR']
-        env2['ENV']['LD_LIBRARY_PATH'] = env['ENV']['LD_LIBRARY_PATH']
-        env2['ENV']['PATH'] = env['ENV']['PATH']
+        appendUnique(env['MPI_INCLUDE'], incsCopy)
+        appendUnique(env['MPI_LIBDIR'], libPathsCopy)
+        appendUnique(env['MPI_LIB'], libsCopy)
+        appendUnique(env['MPI_LIBDIR'], ldLibraryPathCopy)
+	env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
+	env2['ENV']['PATH'] = env['ENV']['PATH']
 #    print 'cc: %s' % ccCopy
 #    print 'cxx: %s' % cxxCopy
 #    print 'incs: %s' % incsCopy
@@ -709,9 +718,10 @@ def compilerConfig(env):
 
 def libraryTest(env, name, lang='c'):
     """Check the existence of a concrete C/C++ library."""
-    conf = Configure(env)
+    env2 = Environment(LIBS=env.get('LIBS',''))
+    conf = Configure(env2)
     conf.CheckLib(name, language=lang)
-    env = conf.Finish()
+    env2 = conf.Finish()
     # conf.Finish() returns the environment it used, and we may want to use it,
     # like:  return conf.Finish()  but we don't do that so we keep our env clean :)
 
@@ -937,6 +947,7 @@ env.AddMethod(addJavaLibrary, 'AddJavaLibrary')
 env.AddMethod(symLink, 'SymLink')
 env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
+
 
 #  ************************************************************************
 #  *                                                                      *
