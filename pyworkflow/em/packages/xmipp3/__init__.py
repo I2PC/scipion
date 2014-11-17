@@ -92,7 +92,8 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_validate_nontilt import XmippProtValidateNonTilt
-
+from protocol_image_operate import XmippProtImageOperateParticles
+from protocol_image_operate import XmippProtImageOperateVolumes
 # Wizards
 from wizard import *
 
