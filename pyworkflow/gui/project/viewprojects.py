@@ -109,12 +109,12 @@ class ProjectsView(tk.Frame):
           
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT, 
-                     "Project *%s*" % projName + Message.MESSAGE_CREATE_PROJECT , self.root):
+                    "Project *%s*. " % projName + Message.MESSAGE_DELETE_PROJECT, self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
 
     def renameProject(self, projName):
-        newName = askString("Rename Project %s" % projName, "Enter new name:", self.root)
+        newName = askString("Rename project %s" % projName, "Enter new name:", self.root)
         if not newName or newName == projName:
             return
         if newName in os.listdir(pw.PROJECTS):
