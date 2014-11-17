@@ -910,7 +910,6 @@ if not int(env['release']):
                    incs=[Dir('.').path],
                    libs=_libsrecons,
                    deps=_depsrecons)
-
 # MPI program
 _libsrecons += ['XmippParallel']
 _depsrecons += ['lib/libXmippParallel.so']
@@ -951,14 +950,14 @@ env.AddProgram('xmipp_mpi_classify_CL2D',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-#AddProgramLink('classify_CL2D', 'mpi_classify_CL2D')
+env.SymLink('bin/xmipp_classify_CL2D', 'bin/xmipp_mpi_classify_CL2D')
 env.AddProgram('xmipp_mpi_classify_CLTomo_prog', 
                src=['applications/programs/mpi_classify_CLTomo_prog'],
                incs=[Dir('.').path, Dir('#software/lib/python2.7/site-packages/numpy/core/include/').abspath],
                libs=_libsrecons+_libsinterf,
                deps=_depsrecons+_depsinterf,
                mpi=True)
-#AddProgramLink('classify_CLTomo', 'mpi_classify_CLTomo')
+env.SymLink('bin/xmipp_classify_CLTomo', 'bin/xmipp_mpi_classify_CLTomo')
 env.AddProgram('xmipp_mpi_classify_CL2D_core_analysis', 
                src=['applications/programs/mpi_classify_CL2D_core_analysis'],
                incs=[Dir('.').path],
@@ -1007,7 +1006,7 @@ env.AddProgram('xmipp_mpi_image_sort',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-#AddProgramLink('image_sort', 'mpi_image_sort')
+env.SymLink('bin/xmipp_image_sort', 'bin/xmipp_mpi_image_sort')
 env.AddProgram('xmipp_mpi_ml_align2d', 
                src=['applications/programs/mpi_ml_align2d'],
                incs=[Dir('.').path],
@@ -1130,7 +1129,32 @@ if not int(env['release']):
                    deps=_depsrecons,
                    mpi=True)
 
-# Python batches (apps)
+# Batches (apps)
+env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
+env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
+env.SymLink('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py')
+env.SymLink('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py')
+env.SymLink('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py')
+env.SymLink('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py')
+env.SymLink('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py')
+env.SymLink('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py')
+env.SymLink('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py')
+env.SymLink('bin/xmipp_protocols', 'protocols/batch_protocols.py')
+env.SymLink('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py')
+env.SymLink('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py')
+env.SymLink('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py')
+env.SymLink('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
+env.SymLink('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
+env.SymLink('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py')
+env.SymLink('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py')
+env.SymLink('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py')
+env.SymLink('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py')
+env.SymLink('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
+env.SymLink('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh')
+env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
+env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
+
+
 
 lastTarget = xmippParallel
 
