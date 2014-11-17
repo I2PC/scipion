@@ -39,7 +39,6 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn)
 from pyworkflow.utils.properties import Message, Color, Icon
-from pyworkflow.em.viewer import DataView
 
 
 # Define a function to open files cleanly in a system-dependent way
@@ -216,6 +215,7 @@ class Text(tk.Text, Scrollable):
         if not os.path.exists(path):
             print "Can't find %s" % path
         else:
+            from pyworkflow.em.viewer import DataView
             DataView(path).show()
 
     def updateMenu(self, e=None):

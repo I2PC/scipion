@@ -50,7 +50,10 @@ if __name__ == '__main__':
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
         if projName == 'last': # Get last project
-            projName = manager.listProjects()[0].projName
+            projects = manager.listProjects()
+            if not projects:
+                sys.exit("No projects yet, cannot open the last one.")
+            projName = projects[0].projName
             
         projPath = manager.getProjectPath(projName)
         projWindow = ProjectWindow(projPath)

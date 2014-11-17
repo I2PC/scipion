@@ -60,7 +60,7 @@ SOFTWARE = join(SCIPION_HOME, 'software')
 INSTALL = join(SOFTWARE, 'install')
 LOGFILE = join(SOFTWARE, 'log', 'scons.log')
 
-SCONS = 'scons-2.3.2'
+SCONS = 'scons-2.3.4'
 
 if sys.version_info[:2] >= (3, 0):
     sys.exit('Running with Python 3, but Python 2 needed for the installation.')
