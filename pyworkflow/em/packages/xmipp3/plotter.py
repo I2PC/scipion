@@ -32,8 +32,8 @@ from pyworkflow.em.plotter import EmPlotter
 
 class XmippPlotter(EmPlotter):
     ''' Class to create several plots with Xmipp utilities'''
-    def __init__(self, **args):
-        EmPlotter.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EmPlotter.__init__(self, **kwargs)
     
     def plotMdAngularDistribution(self, title, md, color='blue'):
         '''Create an special type of subplot, representing the angular

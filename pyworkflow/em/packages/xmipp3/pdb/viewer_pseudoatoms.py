@@ -1,6 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), May 2013
+# *           Slavica Jonic                (jonic@impmc.upmc.fr)
+# * Ported to Scipion:
+# *           J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es), Nov 2014
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,23 +26,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
-"""
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
 
-from parallel import ProtTestParallel
+from pyworkflow.em.viewer import DataView, ChimeraView
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
+
+from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
+
+
+
+class XmippPseudoAtomsViewer(XmippViewer):
+    """ Visualize the output of protocol Convert to PseudoAtoms """
+    _label = 'pseudoatoms viewer'
+    _targets = [XmippProtConvertToPseudoAtoms]
+    
+    def _visualize(self, obj, **args):
+        self._views.append(ChimeraView(obj.outputPdb._chimeraScript))
+        self._views.append(DataView(obj._getExtraPath('pseudoatoms_approximation.vol')))
 

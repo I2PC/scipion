@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,23 +23,31 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
-"""
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
 
-from parallel import ProtTestParallel
+from collections import OrderedDict
 
+from pyworkflow.em.data import NormalMode
+from pyworkflow.em.packages.xmipp3.convert import rowToObject, objectToRow
+import xmipp
+
+            
+MODE_DICT = OrderedDict([ 
+       ("_modeFile", xmipp.MDL_NMA_MODEFILE),
+       ("_collectivity", xmipp.MDL_NMA_COLLECTIVITY),
+       ("_score", xmipp.MDL_NMA_SCORE)
+       ])
+
+
+def rowToMode(row):
+    """ Set properties of a NormalMode object from a Metadata row. """
+    mode = NormalMode()
+    rowToObject(row, mode, MODE_DICT)
+    mode.setObjId(row.getValue(xmipp.MDL_ORDER))
+    return mode
+
+
+def modeToRow(mode, row):
+    """ Write the MetaData row from a given NormalMode object. """
+    row.setValue(xmipp.MDL_ORDER, long(mode.getObjId()))
+    objectToRow(mode, row, MODE_DICT)
+    

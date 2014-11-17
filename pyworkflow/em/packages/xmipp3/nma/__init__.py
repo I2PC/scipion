@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,22 +24,17 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
+This sub-package will contains projection matching related utilities.
 """
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
 
-from parallel import ProtTestParallel
+from protocol_nma import XmippProtNMA
+from protocol_nma_alignment import XmippProtAlignmentNMA
+from protocol_nma_base import NMA_CUTOFF_ABS, NMA_CUTOFF_REL
+#from protocol_nma_choose import XmippProtNMAChoose
+from protocol_nma_dimred import XmippProtDimredNMA
+from protocol_batch_cluster import BatchProtNMACluster
+
+from viewer_nma import XmippNMAViewer
+from viewer_nma_alignment import XmippAlignmentNMAViewer
+from viewer_nma_dimred import XmippDimredNMAViewer
 
