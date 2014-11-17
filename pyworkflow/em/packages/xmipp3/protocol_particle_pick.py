@@ -40,7 +40,7 @@ from convert import writeSetOfMicrographs, readSetOfCoordinates
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using supervised picking support  """
+    either manually or using automatic picking support  """
     _label = 'supervised picking'
 
     
@@ -140,13 +140,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return msg
     
     def _methods(self):
-        methodsMsgs = []
-        methodsMsgs.append("Number of particles picked: ")
-        for _, output in self.iterOutputAttributes(EMObject):
-            methodsMsgs.append('    %d on one set' % output.getSize())  
-            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographs.get().getSize(), output.getBoxSize()))
-
-        return methodsMsgs
+        return ProtParticlePicking._methods(self)
     
     def _summary(self):
         summary = []

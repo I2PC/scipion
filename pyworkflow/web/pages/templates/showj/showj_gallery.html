@@ -62,5 +62,11 @@ $(document).ready(function(){
 {% block content_end_page %}	{% endblock %}
 
 {% block bottom_menu %}
-	{% include "showj/showj_bottom_menu.html" %}
+	{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+		<!-- VOLUME MENU -->
+		{% include "showj/showj_bottom_vol_menu.html" %}
+	{% else %}
+		<!-- IMAGE MENU -->
+		{% include "showj/showj_bottom_img_menu.html" %}
+	{% endif %}
 {% endblock %}

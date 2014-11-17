@@ -39,6 +39,7 @@ from protocol_sets import *
 from protocol_tiltpairs import *
 from protocol_ctf_assign import ProtCTFAssign
 from protocol_alignment_assign import ProtAlignmentAssign
+from protocol_batch import *
 
 from parallel import ProtTestParallel
 

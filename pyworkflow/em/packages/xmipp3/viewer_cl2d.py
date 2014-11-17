@@ -33,8 +33,8 @@ from pyworkflow.em import *
 from protocol_cl2d import XmippProtCL2D
 from pyworkflow.gui.text import *
 from pyworkflow.gui.dialog import showError, showWarning
+from pyworkflow.protocol.params import HiddenBooleanParam
 import glob
-
 
 CLASSES = 0
 CLASS_CORES = 1
@@ -69,7 +69,7 @@ class XmippCL2DViewer(ProtocolViewer):
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
               help='Specify a  list of levels like: 0,1,3 or 0-3 ')    
-        form.addParam('doShowClassHierarchy', BooleanParam, default=False,
+        form.addParam('doShowClassHierarchy', HiddenBooleanParam, default=False,
                       label="Visualize class hierarchy.")      
     
     def _getVisualizeDict(self):

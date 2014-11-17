@@ -90,13 +90,11 @@ class ProtParticlePicking(ProtParticles):
     
     def _methods(self):
         methodsMsgs = []
-        #TODO: Provide summary with more details
-        summary.append("Number of particles picked: ")
+        methodsMsgs.append("Number of particles picked: ")
         for _, output in self.iterOutputAttributes(EMObject):
-            summary.append('    %d on one set' % output.getSize())
-        
-            
-        methodsMsgs.append("from %d micrographs with a size of %d." % (self.inputMicrographs.get().getSize(), size))
+            methodsMsgs.append('    %d on one set' % output.getSize())
+            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographs.get().getSize(), output.getBoxSize()))
+
         return methodsMsgs
 
     def getCoordsSuffix(self):

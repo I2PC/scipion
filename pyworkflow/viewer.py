@@ -59,10 +59,11 @@ class CommandView(View):
         View.__init__(self)
         self._cmd = cmd
         self._env = kwargs.get('env', None)
+        self._cwd = kwargs.get('cwd', None)
         
     def show(self):
         from subprocess import call
-        call(self._cmd, shell=True, env=self._env)
+        call(self._cmd, shell=True, env=self._env, cwd=self._cwd)
         
 
 MSG_INFO = 0
@@ -186,7 +187,11 @@ class Viewer(object):
         return MessageView(msg, title, msgType=MSG_WARN, tkParent=self._tkRoot)
 
     def textView(self, filelist, title=''):
-        return TextView(filelist, title, tkParent=self.formWindow)    
+        return TextView(filelist, title, tkParent=self.formWindow)  
+    
+    def tkWindow(self, windowClass, **kwargs):
+        kwargs['masterWindow'] = self.formWindow
+        return windowClass(**kwargs)  
 
     def objectView(self, path, inputType):
         pass

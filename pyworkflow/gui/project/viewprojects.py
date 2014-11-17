@@ -34,7 +34,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.utils.properties import Message
 from pyworkflow.gui.widgets import HotButton
 from pyworkflow.gui.text import TaggedText
-from pyworkflow.gui.dialog import askString, askYesNo
+from pyworkflow.gui.dialog import askString, askYesNo, showError
 
 
             
@@ -89,6 +89,9 @@ class ProjectsView(tk.Frame):
         delLabel = tk.Label(frame, text=Message.LABEL_DELETE_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)
         delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))
+        mvLabel = tk.Label(frame, text=Message.LABEL_RENAME_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
+        mvLabel.grid(row=1, column=2)
+        mvLabel.bind('<Button-1>', lambda e: self.renameProject(projInfo.projName))
         
         return frame
     
@@ -106,8 +109,17 @@ class ProjectsView(tk.Frame):
           
     def deleteProject(self, projName):
         if askYesNo(Message.TITLE_DELETE_PROJECT, 
-                     "Project *%s*" % projName + Message.MESSAGE_CREATE_PROJECT , self.root):
+                    "Project *%s*. " % projName + Message.MESSAGE_DELETE_PROJECT, self.root):
             self.manager.deleteProject(projName)
             self.createProjectList(self.text)
-            
-            
+
+    def renameProject(self, projName):
+        newName = askString("Rename project %s" % projName, "Enter new name:", self.root)
+        if not newName or newName == projName:
+            return
+        if newName in os.listdir(pw.PROJECTS):
+            showError("Rename cancelled",
+                      "Project name already exists: %s" % newName, self.root)
+            return
+        self.manager.renameProject(projName, newName)
+        self.createProjectList(self.text)

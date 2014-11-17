@@ -253,6 +253,8 @@ marginal likelihood.
         # Define the outputs and relations
         self._defineOutputs(outputClasses=classes)
         self._defineOutputs(outputVolumes=volumes)
+        #TODO: save alignment
+
         self._defineSourceRelation(imgSet, classes)
         self._defineSourceRelation(self.input3DReference.get(), classes)
         self._defineSourceRelation(imgSet, volumes)

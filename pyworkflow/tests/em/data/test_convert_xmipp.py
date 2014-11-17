@@ -35,6 +35,7 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
 import subprocess
+from pyworkflow.utils.properties import colorText
 
 
 class TestBasic(BaseTest):
@@ -92,7 +93,7 @@ class TestBasic(BaseTest):
 
 SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = False#True # Remove the output temporary files
-PRINT_MATRIX = True
+PRINT_MATRIX = False
 PRINT_FILES = False#False
 
 
@@ -126,18 +127,19 @@ class TestConvertBase(BaseTest):
         print "*" * 80
         print "* Launching test: ", fileKey
         print "*" * 80
-        
+
         stackFn = self.dataset.getFile(fileKey)
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
         mdFn    = self.getOutputPath(fileKey + "_particles.xmd")
         partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
-        
+
         if self.IS_ALIGNMENT:
             outputFn = self.getOutputPath(fileKey + "_output.mrcs")
+            goldFn = self.dataset.getFile(fileKey + '_Gold_output.mrcs')
         else:
             outputFn = self.getOutputPath(fileKey + "_output.vol")
-            
-        goldFn = self.dataset.getFile(fileKey + 'Gold')
+            goldFn = self.dataset.getFile(fileKey + '_Gold_output.vol')
+
         if PRINT_FILES:
             print "BINARY DATA: ", stackFn
             print "SET1:        ", partFn1
@@ -145,7 +147,7 @@ class TestConvertBase(BaseTest):
             print "SET2:        ", partFn2
             print "OUTPUT:      ", outputFn
             print "GOLD:        ", goldFn
-        
+
         if is2D:
             partSet = SetOfParticles(filename=partFn1)
         else:
@@ -182,8 +184,8 @@ class TestConvertBase(BaseTest):
         else:
             readSetOfParticles(mdFn, partSet2, is2D=is2D,
                                inverseTransform= inverseTransform)
-            
-        partSet2.write()         
+
+        partSet2.write()
 
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
@@ -194,18 +196,18 @@ class TestConvertBase(BaseTest):
                 print 'm1:\n', m1
                 print 'm2:\n', m2
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
-        
+
         # Launch apply transformation and check result images
         runXmippProgram(self.CMD % locals())
-        
+
         if SHOW_IMAGES:
             runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
-            
+
         if os.path.exists(goldFn):
             self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
         else:
-            print "WARNING: Gold file '%s' missing!!!" % goldFn
-        
+            print colorText.RED + colorText.BOLD + "WARNING: Gold file '%s' missing!!!" % goldFn + colorText.END
+
         if CLEAN_IMAGES:
             cleanPath(outputFn)
                 

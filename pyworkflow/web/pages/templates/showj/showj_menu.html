@@ -203,9 +203,15 @@
 	    {{ hidden }}
 	    {% endfor %} 
 	    
-		 <!-- Hidden fields to storage temporally some list attributes. -->
-		 <input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
-		 <input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
-		 <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    <!-- Hidden fields to storage temporally some list attributes. -->
+	    <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+		<!-- VOLUME  -->
+		<input type="hidden" id="selectedItem" name="selectedItem" value="">
+		{% else %}
+		<!-- IMAGE -->
+		<input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
+		<input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
+		{% endif %}
 	</form>
 </div>	
