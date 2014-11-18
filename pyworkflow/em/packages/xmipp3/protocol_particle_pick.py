@@ -40,7 +40,7 @@ from convert import writeSetOfMicrographs, readSetOfCoordinates
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using automatic picking support  """
+    either manually or using automatic picking support. Particles will be used in order to reconstruct a 3D molecule from it's 2D projections. """
     _label = 'supervised picking'
 
     
@@ -140,32 +140,47 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return msg
     
     def _methods(self):
-        return ProtParticlePicking._methods(self)
+        methodsMsgs = ProtParticlePicking._methods(self)
+        self.loadConfig()
+        if self.existsConfig:
+            methodsMsgs.append('User picked %d particles from %d micrographs with a particle size of %d.' % (self.autoParticlesSize + self.manualParticlesSize, self.inputMicrographs.get().getSize(), self.particleSize))
+            if self.isAutopick:
+                methodsMsgs.append("Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(self.autoParticlesSize, self.manualParticlesSize))
+
+
+        return methodsMsgs
     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputCoordinates'):
-            summary.append("Output coordinates not ready yet.") 
-        else:
-            for key, output in self.iterOutputAttributes(EMObject):
-                summary.append("Particles picked: %d (from %d micrographs)" % (output.getSize(), self.inputMicrographs.get().getSize()))
-                summary.append("Particle size:%d" % output.getBoxSize())
+        self.loadConfig()
+        if self.existsConfig:
+            summary.append("Manual particles picked: %d"%(self.manualParticlesSize))
+            summary.append("Particle size:%d" %(self.particleSize))
+            summary.append("Input micrographs:%d" %(self.inputMicrographs.get().getSize()))
+            autopick = "Yes" if self.isAutopick else "No"
+            summary.append("Autopick: " + autopick)
+            if self.isAutopick:
+                summary.append("Automatic particles picked: %d"%(self.autoParticlesSize))
+            summary.append("Last micrograph: " + self.activeMic)
 
-            configfile = join(self._getExtraPath(), 'config.xmd')
-            if exists(configfile):      
-                md = xmipp.MetaData('properties@' + configfile)
-                configobj = md.firstObject()
-                state = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
-                if(state is "Manual"):
-                    autopick = "No"
-                else:
-                    autopick = "Yes"
-                activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-                
-                summary.append("Autopick: " + autopick)
-                summary.append("Last micrograph: " + activemic)
-        
         return summary
+
+    def loadConfig(self):
+
+        configfile = join(self._getExtraPath(), 'config.xmd')
+        self.existsConfig = exists(configfile)
+        if self.existsConfig:
+            md = xmipp.MetaData('properties@' + configfile)
+            configobj = md.firstObject()
+            self.pickingState = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
+            self.particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            self.activeMic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+            self.isAutopick = self.pickingState != "Manual"
+            self.manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            self.autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+
+        else:
+            return False
     
     def getInputMicrographs(self):
         return self.inputMicrographs.get()

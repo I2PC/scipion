@@ -137,5 +137,29 @@ class PathData():
         
     def clear(self):
         self.xs = []  
-        self.ys = [] 
+        self.ys = []
+        
+    def getPoint(self, index):
+        return self.xs[index], self.ys[index]
+    
+    def getSize(self):
+        return len(self.xs)
+    
+    def splitLongestSegment(self):
+        """ Split the longest segment by adding the midpoint. """
+        maxDist = 0
+        n = self.getSize()
+        # Find the longest segment and its index
+        for i in range(n-1):
+            x1, y1 = self.getPoint(i)
+            x2, y2 = self.getPoint(i+1)
+            dist = (x1-x2)**2 + (y1-y2)**2
+            if dist > maxDist:
+                maxDist = dist
+                maxIndex = i+1
+                midX = (x1+x2)/2
+                midY = (y1+y2)/2
+        # Add a midpoint to it
+        self.xs.insert(maxIndex, midX)
+        self.ys.insert(maxIndex, midY)
         

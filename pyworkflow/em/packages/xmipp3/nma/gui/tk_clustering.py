@@ -67,6 +67,7 @@ class ClusteringWindow(gui.Window):
     def _createContent(self, content):
         self._createFigureBox(content)
         self._createClusteringBox(content)
+        self._updateSelectionLabel()
         
     def _addLabel(self, parent, text, r, c):
         label = tk.Label(parent, text=text, font=self.fontBold)
@@ -94,7 +95,7 @@ class ClusteringWindow(gui.Window):
         self.selectionVar = tk.StringVar()
         self.clusterLabel = tk.Label(frame, textvariable=self.selectionVar)
         self.clusterLabel.grid(row=1, column=1, sticky='nw', padx=5, pady=(10, 5))
-        self._updateSelectionLabel()
+        
         # --- Expression
         expressionFrame = tk.Frame(frame)
         expressionFrame.grid(row=2, column=1, sticky='news')
@@ -135,9 +136,10 @@ class ClusteringWindow(gui.Window):
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
 
-        createBtn = HotButton(buttonsFrame, text='Create Cluster', 
-                              imagePath='fa-plus-circle.png', command=self._onCreateClick)
-        createBtn.grid(row=0, column=1)       
+        self.createBtn = HotButton(buttonsFrame, text='Create Cluster', 
+                                   tooltip="Select some points to create the cluster",
+                                   imagePath='fa-plus-circle.png', command=self._onCreateClick)
+        self.createBtn.grid(row=0, column=1)       
        
         frame.grid(row=1, column=0, sticky='new', padx=5, pady=(5, 10))
         
@@ -206,8 +208,13 @@ class ClusteringWindow(gui.Window):
             self.plotter.draw()
 
     def _updateSelectionLabel(self):
-        self.selectionVar.set('%d / %d points' % (self.data.getSelectedSize(),
-                                                  self.data.getSize()))
+        selected = self.data.getSelectedSize()
+        self.selectionVar.set('%d / %d points' % (selected, self.data.getSize()))
+        
+        if selected:
+            self.createBtn.config(state=tk.NORMAL)
+        else:
+            self.createBtn.config(state=tk.DISABLED)
         
     def getClusterName(self):
         return self.clusterVar.get().strip()
