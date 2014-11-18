@@ -33,8 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes
-                                )
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, SetOfNormalModes)
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
 
 
