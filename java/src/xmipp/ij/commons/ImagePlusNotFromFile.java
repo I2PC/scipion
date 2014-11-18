@@ -19,7 +19,6 @@ public class ImagePlusNotFromFile extends ImagePlusReader{
 
 
     public ImagePlusNotFromFile(ImagePlus imp, ImageGeneric ig) {
-        System.out.println("image plus not from file");
         if(imp == null && ig == null)
             throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("image") );
         this.imp = imp;
