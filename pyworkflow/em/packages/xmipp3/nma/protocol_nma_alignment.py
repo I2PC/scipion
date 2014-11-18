@@ -66,9 +66,9 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            'If you leave the field empty, all modes will be used.\n'
                            'You have several ways to specify selected modes.\n'
                            '   Examples:\n'
-                           ' "1,5-8,10" -> [1,5,6,7,8,10]\n'
-                           ' "2,6,9-11" -> [2,6,9,10,11]\n'
-                           ' "2 5, 6-8" -> [2,5,6,7,8])\n')
+                           ' "7,8-10" -> [7,8,9,10]\n'
+                           ' "8, 10, 12" -> [8,10,12]\n'
+                           ' "8 9, 10-12" -> [8,9,10,11,12])\n')
         form.addParam('inputParticles', PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
@@ -101,7 +101,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            'alignment is refined with Splines method if Wavelets and Splines \n'
                            'alignment is chosen.')
                       
-        form.addParallelSection(threads=1, mpi=8)    
+        form.addParallelSection(threads=0, mpi=8)    
     
     
     #--------------------------- INSERT steps functions --------------------------------------------
