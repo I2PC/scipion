@@ -159,7 +159,7 @@ class XmippViewer(Viewer):
               
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: MODE_MD}, **args))
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
