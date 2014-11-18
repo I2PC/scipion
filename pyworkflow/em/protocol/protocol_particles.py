@@ -86,10 +86,12 @@ class ProtParticlePicking(ProtParticles):
     
     def _methods(self):
         methodsMsgs = []
-        methodsMsgs.append("Number of particles picked: ")
+        if not hasattr(self, 'outputCoordinates'):
+            return methodsMsgs
+
+        methodsMsgs.append("User picked ")
         for _, output in self.iterOutputAttributes(EMObject):
-            methodsMsgs.append('    %d on one set' % output.getSize())
-            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographs.get().getSize(), output.getBoxSize()))
+            methodsMsgs.append('%d particles from %d micrographs with a particle size of %d.' % (output.getSize(), self.inputMicrographs.get().getSize(), output.getBoxSize()))
 
         return methodsMsgs
 
