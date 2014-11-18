@@ -70,8 +70,8 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputNMA', PointerParam, pointerClass='XmippProtAlignmentNMA',
-                      label="Input NMA alignment",                        
-                      help='Select a previous NMA alignment protocol')
+                      label="Conformational distribution",                        
+                      help='Select a previous run of the NMA alignment.')
         
         form.addParam('dimredMethod', EnumParam, default=DIMRED_PCA,
                       choices=['Principal Component Analysis (PCA)',
