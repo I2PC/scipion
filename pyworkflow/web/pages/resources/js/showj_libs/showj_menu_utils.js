@@ -294,16 +294,18 @@ function updateListSession(id, attr){
 	/*
 	 * Method to update the session variable about list depending on attr.
 	 */
-	switch(attr){
-		case "enabled":
-			var res = updateList(id, "listEnabledItems");
-			updateListChanges(id, res);
-			break;
-		
-		case "selected":
-			updateList(id, "listSelectedItems");
-			break;
-	}
+//	if(getModeList()=='image'){
+		switch(attr){
+			case "enabled":
+				var res = updateList(id, "listEnabledItems");
+				updateListChanges(id, res);
+				break;
+			
+			case "selected":
+				updateList(id, "listSelectedItems");
+				break;
+		}
+//	}
 }
 
 
@@ -380,5 +382,19 @@ function containsElem(id, list){
  ******************************************** VOLUME METHODS
  **/
 
-
+//function markSelectedVol(mode, selectedItem){
+//	switch(mode){
+//	    case "gallery":
+//	        // Came from the table mode
+//	        for (var x=0;list.length>x;x++){
+//	        	$("div#img_container___"+ list[x]).addClass("image_selected");
+//	        }
+//	        break;
+//	        
+//	    case "table":
+//	        // Came from the gallery mode
+//	    	updateSelectedTemplate(list);
+//	        break;
+//	
+//}
 
