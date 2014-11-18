@@ -124,7 +124,7 @@ public abstract class ImagePlusReader {
             }
             catch (Exception e)
             {
-                    throw new IllegalArgumentException(e.getMessage());
+                throw new IllegalArgumentException(e.getMessage());
             }
     }
 
