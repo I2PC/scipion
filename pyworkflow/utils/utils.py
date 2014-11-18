@@ -318,6 +318,9 @@ def greenStr(text):
 def redStr(text):
     return getColorStr(text, color='red')
 
+def magentaStr(text):
+    return getColorStr(text, color='magenta')
+
 
 #-------------- Hyper text highlighting ----------------------------
 """

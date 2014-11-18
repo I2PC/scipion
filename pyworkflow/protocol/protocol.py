@@ -36,7 +36,7 @@ import time
 from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr
+from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -706,7 +706,7 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info(redStr("STARTED") + ": %s, step %d" %
+        self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
         self.__updateStep(step)
         
@@ -728,7 +728,7 @@ class Protocol(Step):
         self._stepsDone.increment()
         self._store(self._stepsDone)
         
-        self.info(redStr(step.getStatus().upper()) + ": %s, step %d" %
+        self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
 
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
