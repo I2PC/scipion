@@ -1549,10 +1549,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Metadata operations
 			addItem(METADATA, "Metadata");
                         addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(STATS, "Statistics");
-			addItem(STATS_AVGSTD, "Avg & Std images");
-			addItem(STATS_PCA, "PCA");
-			addItem(STATS_FSC, "FSC");
+			
+			
 			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
@@ -1562,6 +1560,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			addSeparator(METADATA);
 			addItem(MD_FIND_REPLACE, "Find & Replace", "search.gif", "control released F");
+                        //Stats
+                        addItem(STATS, "Statistics");
+                        addItem(STATS_AVGSTD, "Avg & Std images");
+                        addItem(STATS_PCA, "PCA");
+			addItem(STATS_FSC, "FSC");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
@@ -1601,7 +1604,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
-                        //setItemVisible(METADATA, !isscipion);
+                        setItemVisible(METADATA, !isscipion);
                         addDisplayLabelItems();
                         addRenderImageColumnItems();
 		}// function update

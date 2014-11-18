@@ -1297,7 +1297,6 @@ public class GalleryData {
         int index = 0;
         String imagepath;
         // md.print();
-        System.out.println(useGeo);
         for (long id : md.findObjects()) {
             if (isEnabled(index)) {
                 
@@ -1305,14 +1304,14 @@ public class GalleryData {
                 if (imagepath != null && ImageGeneric.exists(imagepath)) {
                     mdRow = new MDRow();
                     
-                    if (useGeo) {
-                        
-                        md.getRow(mdRow, id);
-                        mdRow.setValueString(idlabel, imagepath);
-                        
-                    } else {
+//                    if (useGeo) {
+//                        
+//                        md.getRow(mdRow, id);
+//                        mdRow.setValueString(idlabel, imagepath);
+//                        
+//                    } else {
                         mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
-                    }
+//                    }
                     
                     imagesmd.add(mdRow);
                 }

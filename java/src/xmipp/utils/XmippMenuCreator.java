@@ -221,10 +221,10 @@ public abstract class XmippMenuCreator implements ActionListener {
 	public final String MD_SAVE_SELECTION = "Metadata.SaveSelection_mi";
 	public final String MD_FIND_REPLACE = "Metadata.FindReplace_mi";
 	public final String MD_REMOVE_DISABLED = "Metadata.RemoveDisabled_mi";
-	public final String STATS = "Metadata.Stats";
-	public final String STATS_AVGSTD = "Metadata.Stats.AvgStd_mi";
-	public final String STATS_PCA = "Metadata.Stats.Pca_mi";
-	public final String STATS_FSC = "Metadata.Stats.Fsc_mi";
+	public final String STATS = "Stats";
+	public final String STATS_AVGSTD = "Stats.AvgStd_mi";
+	public final String STATS_PCA = "Stats.Pca_mi";
+	public final String STATS_FSC = "Stats.Fsc_mi";
 	public final String MD_PLOT = "Metadata.Plot_mi";
 	
 	public final String HELP = "Help";
