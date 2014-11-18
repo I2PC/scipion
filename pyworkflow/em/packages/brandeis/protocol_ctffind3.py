@@ -89,7 +89,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         
         if getExt(micFn) != ".mrc":
             micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc")) 
-            ImageHandler().convert(micFn, micFnMrc)
+            ImageHandler().convert(micFn, micFnMrc, "float")
         else: 
             micFnMrc = micFn
         
