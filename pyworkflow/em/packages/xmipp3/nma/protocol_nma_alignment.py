@@ -33,7 +33,7 @@ from os.path import basename
 
 from pyworkflow.utils import isPower2, getListFromRangeString
 from pyworkflow.utils.path import copyFile, cleanPath 
-from pyworkflow.protocol.params import (PointerParam, StringParam, IntParam, EnumParam,
+from pyworkflow.protocol.params import (PointerParam, PathParam, IntParam, EnumParam,
                                         FloatParam,
                                         LEVEL_EXPERT, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
@@ -73,9 +73,12 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
 
-        form.addParam('copyDeformations', StringParam,
+        form.addParam('copyDeformations', PathParam,
                       expertLevel=LEVEL_EXPERT,
-                      label='Copy deformations(only for debug)')
+                      label='Precomputed results (for development)',
+                      help='Enter a metadata file with precomputed elastic  \n'
+                           'and rigid-body alignment parameters and perform \n'
+                           'all remaining steps using this file.')
         
         form.addSection(label='Angular assignment')
         form.addParam('trustRegionScale', IntParam, default=1,
