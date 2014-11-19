@@ -2144,10 +2144,10 @@ private:
         MDL::addLabel(BSOFT_PARTICLE_CMP_CC, LABEL_STRING, "particle.cmp_cc");
         MDL::addLabel(BSOFT_PARTICLE_RFACTORAB, LABEL_STRING, "particle.rfactorab");
         MDL::addLabel(BSOFT_PARTICLE_COVERAGE, LABEL_STRING, "particle.coverage");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE, LABEL_STRING, "particle.box_size");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_X, LABEL_STRING, "particle.box_size_x");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Y, LABEL_STRING, "particle.box_size_y");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Z, LABEL_STRING, "particle.box_size_z");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE, LABEL_DOUBLE, "particle.box_size");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_X, LABEL_DOUBLE, "particle.box_size_x");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Y, LABEL_DOUBLE, "particle.box_size_y");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Z, LABEL_DOUBLE, "particle.box_size_z");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS, LABEL_STRING, "particle.box_radius");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS_X, LABEL_STRING, "particle.box_radius_x");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS_Y, LABEL_STRING, "particle.box_radius_y");
