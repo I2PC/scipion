@@ -39,5 +39,13 @@ def loadEnvironment():
     environAdd('PATH', BSOFT_BIN)
     os.environ['BSOFT'] = BSOFT_HOME
     
-    
+def getEnviron(xmippFirst=True):
+    """ Create the needed environment for Bsoft programs. """
+    environ = Environ(os.environ)
+    pos = Environ.BEGIN if xmippFirst else Environ.END
+    environ.update({
+            'PATH': join(os.environ['BSOFT_HOME'], 'bin'),
+            #'LD_LIBRARY_PATH': join(os.environ['BSOFT_HOME'], 'lib')
+            }, position=pos)
+    return environ
     

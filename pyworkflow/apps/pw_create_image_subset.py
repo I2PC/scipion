@@ -31,6 +31,7 @@ import sys
 from pyworkflow.manager import Manager
 from pyworkflow.em import ProtUserSubSet
 from pyworkflow.utils import timeit
+from pyworkflow.em.data import (SetOfVolumes, Volume)
 
 
 @timeit
@@ -43,19 +44,26 @@ def runSubsetProtocol(projectId, inputId, sqliteFile,
     project = Manager().loadProject(projectId)
     inputObject = project.mapper.selectById(int(inputId))
 
+
+
     # Create the new protocol instance and set the input values
     prot = project.newProtocol(ProtUserSubSet)
     prot.inputObject.set(inputObject)
     prot.setObjLabel(protocolLabel)
     prot.sqliteFile.set(sqliteFile)
     prot.outputClassName.set(outputType)
-    prot.other.set(other)
-    
+    if ',Volume' in other:
+        volId = int(other.split(',')[0])
+        prot.volId.set(volId)
+    elif other.isdigit():
+        otherObj = project.mapper.selectById(int(other))
+        prot.otherObj.set(otherObj)
 
-        
+
     # Launch the protocol
     project.launchProtocol(prot, wait=True)
-    
+
+
 
 if __name__ == '__main__':
     #TODO: REMOVE THIS AFTER DEBUGGING

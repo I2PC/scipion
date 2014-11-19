@@ -44,7 +44,6 @@ import xmipp
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -60,6 +59,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
+from pyworkflow.em.showj import *
 
 
 class XmippViewer(Viewer):
@@ -67,31 +67,30 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [  
-                  CoordinatesTiltPair 
-                , Image
-                , MicrographsTiltPair
-                , NormalModes
-                , ParticlesTiltPair
-                , ProtExtractParticles
-                , SetOfClasses2D
-                , SetOfClasses3D
-                , SetOfCoordinates
-                , SetOfCTF
-                , SetOfImages
-                , SetOfMovies
-                , XmippParticlePickingAutomatic
-                , XmippProtConvertToPseudoAtoms
-                , XmippProtExtractParticlesPairs
-                , XmippProtIdentifyOutliers
-                , XmippProtKerdensom
-                , XmippProtParticlePicking
-                , XmippProtParticlePickingPairs
-                , XmippProtRotSpectra
-                , XmippProtScreenClasses
-                , XmippProtScreenParticles
-                , XmippProtCTFMicrographs
-                , XmippProtRecalculateCTF
+    _targets = [                  
+                CoordinatesTiltPair, 
+                Image, 
+                MicrographsTiltPair, 
+                ParticlesTiltPair, 
+                ProtExtractParticles, 
+                SetOfClasses2D, 
+                SetOfClasses3D, 
+                SetOfCoordinates, 
+                SetOfCTF, 
+                SetOfImages, 
+                SetOfMovies, 
+                SetOfNormalModes, 
+                XmippParticlePickingAutomatic, 
+                XmippProtExtractParticlesPairs, 
+                XmippProtIdentifyOutliers, 
+                XmippProtKerdensom, 
+                XmippProtParticlePicking, 
+                XmippProtParticlePickingPairs, 
+                XmippProtRotSpectra, 
+                XmippProtScreenClasses, 
+                XmippProtScreenParticles, 
+                XmippProtCTFMicrographs, 
+                XmippProtRecalculateCTF
                 ]
     
     def __init__(self, **args):
@@ -148,21 +147,20 @@ class XmippViewer(Viewer):
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            if fn.endswith('.mrc'):
-                fn += ":mrc"
             self._views.append(DataView(fn, viewParams={RENDER: 'image'}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
             self._views.append(DataView(fn))
             
-        elif issubclass(cls, NormalModes):
-            self._views.append(DataView(fn))
-              
-        elif issubclass(cls, SetOfMicrographs):
-            
+        elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: MODE_MD}, **args))
+            objCommands = '%s %s' % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, self.protocol.strId(), viewParams={OBJCMDS: objCommands}, **args))
+              
+        elif issubclass(cls, SetOfMicrographs):            
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
@@ -297,9 +295,6 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
             self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
 
-        elif issubclass(cls, XmippProtConvertToPseudoAtoms):
-            self._views.append(CommandView(obj._getPath('chimera.cmd')))
-            
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())

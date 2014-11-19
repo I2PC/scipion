@@ -28,15 +28,23 @@
 # *
 # **************************************************************************
 
-import math
-from glob import glob
 
-from pyworkflow.em import *  
-from pyworkflow.utils import * 
-from pyworkflow.protocol.constants import LEVEL_EXPERT, LEVEL_ADVANCED
-from convert import writeSetOfParticles
-import xmipp
+from os.path import basename
+
+from pyworkflow.utils import isPower2, getListFromRangeString
+from pyworkflow.utils.path import copyFile, cleanPath 
+from pyworkflow.protocol.params import (PointerParam, PathParam, IntParam, EnumParam,
+                                        FloatParam,
+                                        LEVEL_EXPERT, LEVEL_ADVANCED)
+from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.packages.xmipp3 import XmippMdRow
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles,\
+    xmippToLocation, getImageLocation
 from pyworkflow.protocol.params import NumericRangeParam
+import xmipp 
+
+from convert import modeToRow
+
 
 NMA_ALIGNMENT_WAV = 0
 NMA_ALIGNMENT_PROJ = 1    
@@ -44,34 +52,35 @@ NMA_ALIGNMENT_PROJ = 1
         
 class XmippProtAlignmentNMA(ProtAnalysis3D):
     """ Protocol for flexible angular alignment. """
-    _label = 'nma analysis'
+    _label = 'nma alignment'
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('modeList', NumericRangeParam, label="Modes selection",
+        form.addParam('inputModes', PointerParam, pointerClass='SetOfNormalModes',
+                      label="Normal modes",                        
+                      help='Set of normal modes to explore.')
+        form.addParam('modeList', NumericRangeParam, expertLevel=LEVEL_EXPERT,
+                      label="Modes selection",
                       help='Select which modes do you want to use from all of them.\n'
                            'If you leave the field empty, all modes will be used.\n'
                            'You have several ways to specify selected modes.\n'
                            '   Examples:\n'
-                           ' "1,5-8,10" -> [1,5,6,7,8,10]\n'
-                           ' "2,6,9-11" -> [2,6,9,10,11]\n'
-                           ' "2 5, 6-8" -> [2,5,6,7,8])\n')
+                           ' "7,8-10" -> [7,8,9,10]\n'
+                           ' "8, 10, 12" -> [8,10,12]\n'
+                           ' "8 9, 10-12" -> [8,9,10,11,12])\n')
         form.addParam('inputParticles', PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
-        form.addParam('inputPdb', PointerParam, label="Input PDB",  
-                      pointerClass='PdbFile',
-                      help='Atomic or pseudo-atomic structure to apply the normal modes.')
-        form.addParam('inputModes', PointerParam, label="Normal modes",  
-                      pointerClass='NormalModes',
-                      help='Set of normal modes to explore.')
-        
-        form.addParam('copyDeformations', StringParam,
+
+        form.addParam('copyDeformations', PathParam,
                       expertLevel=LEVEL_EXPERT,
-                      label='Copy deformations(only for debug)')
+                      label='Precomputed results (for development)',
+                      help='Enter a metadata file with precomputed elastic  \n'
+                           'and rigid-body alignment parameters and perform \n'
+                           'all remaining steps using this file.')
         
-        form.addSection(label='Angular assignment and mode detection')
+        form.addSection(label='Angular assignment')
         form.addParam('trustRegionScale', IntParam, default=1,
                       expertLevel=LEVEL_ADVANCED,
                       label='Trust region scale',
@@ -92,60 +101,82 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            'alignment is refined with Splines method if Wavelets and Splines \n'
                            'alignment is chosen.')
                       
-        form.addParallelSection(threads=1, mpi=8)    
+        form.addParallelSection(threads=0, mpi=8)    
     
     
     #--------------------------- INSERT steps functions --------------------------------------------
+    def getInputPdb(self):
+        """ Return the Pdb object associated with the normal modes. """
+        return self.inputModes.get().getPdb()
+    
     def _insertAllSteps(self):
-        atomsFn = self.inputPdb.get().getFileName()
-        modesFn = self.inputModes.get().getFileName()
-        # Convert input images if necessary
+        atomsFn = self.getInputPdb().getFileName()
+        # Define some outputs filenames
         self.imgsFn = self._getExtraPath('images.xmd') 
-        self._insertFunctionStep('convertInputStep') 
+        self.atomsFn = self._getExtraPath(basename(atomsFn))
+        self.modesFn = self._getExtraPath('modes.xmd')
         
-        localModesFn = self._getBasePath(modesFn)
-        
-        self._insertFunctionStep('copyFilesStep', atomsFn, modesFn)
-        self._insertFunctionStep('selectModesStep', localModesFn)
+        self._insertFunctionStep('convertInputStep', atomsFn) 
         
         if self.copyDeformations.empty(): #ONLY FOR DEBUGGING
-            self._insertFunctionStep("performNmaStep", self._getBasePath(atomsFn), localModesFn)
-            self._insertFunctionStep("extractDeformationsStep")
-        else:            
+            self._insertFunctionStep("performNmaStep", self.atomsFn, self.modesFn)
+        else:   
+            # TODO: for debugging and testing it will be useful to copy the deformations
+            # metadata file, not just the deformation.txt file         
             self._insertFunctionStep('copyDeformationsStep', self.copyDeformations.get())
             
         self._insertFunctionStep('createOutputStep')
         
         
     #--------------------------- STEPS functions --------------------------------------------   
-    def convertInputStep(self):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
-         
-    def copyFilesStep(self, atomsFn, modesFn):
-        """ Copy the input files to the local working dir. """
-        for fn in [modesFn, atomsFn]:
-            copyFile(fn, self._getBasePath(fn))
+    def convertInputStep(self, atomsFn):
+        # Write the modes metadata taking into account the selection
+        self.writeModesMetaData()
+        # Write a metadata with the normal modes information
+        # to launch the nma alignment programs
+        writeSetOfParticles(self.inputParticles.get(), self.imgsFn)
+        # Copy the atoms file to current working dir
+        copyFile(atomsFn, self.atomsFn)
             
-    def selectModesStep(self, modesFn):
-        """ Read the modes metadata and keep only those modes selected
-        by the user in the protocol. 
+    def writeModesMetaData(self):
+        """ Iterate over the input SetOfNormalModes and write
+        the proper Xmipp metadata.
+        Take into account a possible selection of modes (This option is 
+        just a shortcut for testing. The recommended
+        way is just create a subset from the GUI and use that as input)
         """
-        if not self.modeList.empty():
-            modeList = getListFromRangeString(self.modeList.get())
-            md = xmipp.MetaData(modesFn)
+        modeSelection = []
+        if self.modeList.empty():
+            modeSelection = []
+        else:
+            modeSelection = getListFromRangeString(self.modeList.get())
             
-            for objId in md:
-                order = md.getValue(xmipp.MDL_ORDER, objId)
-                if order in modeList:
-                    enable = 1
-                else:
-                    enable = 0
-                md.setValue(xmipp.MDL_ENABLED, enable, objId)
+        md = xmipp.MetaData()
+        
+        inputModes = self.inputModes.get()
+        for mode in inputModes:
+            # If there is a mode selection, only
+            # take into account those selected
+            if not modeSelection or mode.getObjId() in modeSelection:
+                row = XmippMdRow()
+                modeToRow(mode, row)
+                row.writeToMd(md, md.addObject())
+        md.write(self.modesFn)
             
-            md.write(modesFn)
-            
-    def copyDeformationsStep(self, defFn):
-        copyFile(defFn, self._getExtraPath(basename(defFn)))
+    def copyDeformationsStep(self, deformationMd):
+        copyFile(deformationMd, self.imgsFn)
+        # We need to update the image name with the good ones
+        # and the same with the ids.
+        inputSet = self.inputParticles.get()
+        md = xmipp.MetaData(self.imgsFn)
+        for objId in md:
+            imgPath = md.getValue(xmipp.MDL_IMAGE, objId)
+            index, fn = xmippToLocation(imgPath)
+            # Conside the index is the id in the input set
+            particle = inputSet[index]
+            md.setValue(xmipp.MDL_IMAGE, getImageLocation(particle), objId)
+            md.setValue(xmipp.MDL_ITEM_ID, long(particle.getObjId()), objId)
+        md.write(self.imgsFn)
         
     def performNmaStep(self, atomsFn, modesFn):
         sampling = self.inputParticles.get().getSamplingRate()
@@ -158,31 +189,27 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         args += "--discrAngStep %(discreteAngularSampling)f --odir %(odir)s --centerPDB "
         args += "--trustradius_scale %(trustRegionScale)d --resume "
         
-        if self.inputPdb.get().getPseudoAtoms():
+        if self.getInputPdb().getPseudoAtoms():
             args += "--fixed_Gaussian "
         
         if self.alignmentMethod == NMA_ALIGNMENT_PROJ:
             args += "--projMatch "
     
-        print "self.numberOfMpi", self.numberOfMpi
-        self.runJob("xmipp_nma_alignment", args % locals(), self.numberOfMpi.get())
+        self.runJob("xmipp_nma_alignment", args % locals())
+        
         cleanPath(self._getPath('nmaTodo.xmd'))
     
-    def extractDeformationsStep(self):
-        md = xmipp.MetaData(self.imgsFn)
-        deformations = md.getColumnValues(xmipp.MDL_NMA)
-        defFn = self._getExtraPath("deformations.txt")
-        fhDef = open(defFn, 'w')
-        for deformation in deformations:
-            for coef in deformation:
-                fhDef.write("%f " % coef)
-            fhDef.write("\n")
-        fhDef.close()
-        return defFn
-    
     def createOutputStep(self):
-        modes = NormalModes(filename=self._getLocalModesFn())
-        self._defineOutputs(selectedModes=modes)
+        inputSet = self.inputParticles.get()
+        partSet = self._createSetOfParticles()
+        readSetOfParticles(self.imgsFn, partSet,
+                           extraLabels=[xmipp.MDL_NMA, xmipp.MDL_COST],
+                           is2D=False, inverseTransform=True)
+        partSet.copyInfo(inputSet)
+        
+        self._defineOutputs(outputParticles=partSet)
+        self._defineSourceRelation(self.getInputPdb(), partSet)
+        self._defineTransformRelation(inputSet, partSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):

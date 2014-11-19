@@ -75,6 +75,13 @@ DataSet(name='mda', folder='hemoglobin_mda',
                'averages':'averages/averages.stk'})
 
 
+DataSet(name='nma', folder='nma', 
+        files={
+               'pdb': 'pdb/AK.pdb',
+               'vol': 'volumes/AK_LP10.vol',
+               'particles': 'particles/img.stk'})
+
+
 DataSet(name='tomo', folder='xmipp_tomo_test', 
         files={
                'vol1': 'volumes/subvols_6E6.001.mrc.spi',
@@ -118,6 +125,11 @@ DataSet(name='rct',  folder='rct',
                'positions': 'positions',
                'tilted': 'micrographs/F_rct_t*.tif',
                'untilted': 'micrographs/F_rct_u*.tif',
+        })
+
+DataSet(name='groel',  folder='groel',
+        files={
+               'averages': 'classes/level_classes.stk'
         })
 
 DataSet(name='emx',  folder='emx', 

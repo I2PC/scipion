@@ -203,9 +203,10 @@
 	    {{ hidden }}
 	    {% endfor %} 
 	    
-		 <!-- Hidden fields to storage temporally some list attributes. -->
-		 <input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
-		 <input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
-		 <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    <!-- Hidden fields to storage temporally some list attributes. -->
+	    <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    <!--  In the volume case, the list just contains one element -->
+		<input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
+		<input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
 	</form>
 </div>	

@@ -30,7 +30,7 @@ This sub-package contains the XmippCtfMicrographs protocol
 """
 
 from pyworkflow.em import *  
-from pyworkflow.utils.path import makePath, moveFile, removeBaseExt
+from pyworkflow.utils.path import makePath, moveFile, removeBaseExt, replaceBaseExt
 from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 
@@ -94,8 +94,8 @@ estimate CTF on a set of micrographs using Xmipp 3.1 """
         md.write(fnEval)
         
         # Evaluate if estimated ctf is good enough
-        self.runJob("which","xmipp_ctf_sort_psds")
-        self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
+        # self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))   
+        self.runJob("xmipp_ctf_sort_psds","-i %s"%(fnEval))   
 
         # Check if it is a good micrograph
         fnRejected=self._getTmpPath(basename(micFn +"_rejected.xmd"))
@@ -167,7 +167,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         for downFactor in downsampleList:
             # Downsample if necessary
             if downFactor != 1:
-                finalName = self._getTmpPath(basename(micFn))
+                #finalName = self._getTmpPath(basename(micFn))
+                #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
+                finalName = self._getTmpPath(replaceBaseExt(micFn, 'mrc'))
                 self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, finalName, downFactor))
                 deleteTmp=finalName
       
@@ -220,7 +222,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
                     md.setValue(xmipp.MDL_ENABLED,-1,mdid)
                 else:
                     md.setValue(xmipp.MDL_ENABLED,1,mdid)
-            md.write(self._getPath("ctfs_selection.xmd"))
+        md.write(self._getPath("ctfs_selection.xmd"))
         cleanPath(fnRejected)
         
     def createOutputStep(self):
@@ -259,6 +261,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
             for mdid in md:
                 micId = md.getValue(xmipp.MDL_MICROGRAPH_ID,mdid)
                 mic = inputMics[micId]
+                micSet.setSamplingRate(self._params['samplingRate'])
                 micSet.append(mic)
             self._defineOutputs(outputMicrographs=micSet)
             self._defineTransformRelation(inputMics, micSet)

@@ -1,0 +1,18 @@
+<script>
+function getModeList(){return "volume";}
+
+$(document).ready(function(){
+	var mode = document.forms['showjForm'].mode.value
+	
+	var selectedItems = [{{listSelectedItems}}];
+	console.log("selectedItems: " + selectedItems)
+	
+	$("select#id_blockComboBox").change(function(){
+		alert("hola")
+		alert($("select#id_blockComboBox").val());
+	})
+
+
+});
+</script>
+	

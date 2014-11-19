@@ -114,7 +114,7 @@ def runJobMPISlave(mpiComm):
                 #return
                 mpiComm.Disconnect()
                 # next thing, I'll try the rain dance
-                os._exit()  # be brave, die like a you care
+                os._exit()  # be brave, do die
 
         print "Slave %d received command." % rank
         if command == 'None':

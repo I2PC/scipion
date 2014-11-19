@@ -563,7 +563,7 @@ class ProtImportVolumes(ProtImport):
     
 
 class ProtImportPdb(ProtImport):
-    """Protocol to import a set of pdb volumes to the project"""
+    """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
     
     def __init__(self, **args):
@@ -571,32 +571,36 @@ class ProtImportPdb(ProtImport):
        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('path', StringParam, 
-                      label="Pattern",
-                      help='Specify a path or an url to desired PDB structure.')
+        form.addParam('pdbPath', FileParam, 
+                      label="PDB file",
+                      help='Specify a path to desired PDB structure.')
          
     def _insertAllSteps(self):
-        self._insertFunctionStep('importPdbStep', self.path.get())
+        self._insertFunctionStep('createOutputStep', self.pdbPath.get())
         
-    def importPdbStep(self, path):
-        """ Copy volumes matching the filename pattern
-        Register other parameters.
+    def createOutputStep(self, pdbPath):
+        """ Copy the PDB structure and register the output object.
         """
-        if not exists(path):
-            raise Exception("PDB not found at *%s*" % path)
+        if not exists(pdbPath):
+            raise Exception("PDB not found at *%s*" % pdbPath)
+        
+        baseName = basename(pdbPath)
+        localPath = self._getExtraPath(baseName)
+        copyFile(pdbPath, localPath)
         pdb = PdbFile()
-        pdb.setFileName(path)
+        pdb.setFileName(localPath)
         self._defineOutputs(outputPdb=pdb)
 
     def _summary(self):
-        summary = ['PDB file imported from *%s*' % self.path.get()]
+        summary = ['PDB file imported from *%s*' % self.pdbPath.get()]
 
         return summary
     
     def _validate(self):
         errors = []
-        if not exists(self.path.get()):
-            errors.append("PDB not found at *%s*" % self.path.get())
+        if not exists(self.pdbPath.get()):
+            errors.append("PDB not found at *%s*" % self.pdbPath.get())
+        #TODO: maybe also validate that if exists is a valid PDB file 
         return errors
     
     

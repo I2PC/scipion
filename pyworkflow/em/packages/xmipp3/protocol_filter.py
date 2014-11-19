@@ -255,7 +255,9 @@ class XmippProtFilter():
         pass
 
 
-class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles, XmippProtFilter):
+class XmippProtFilterParticles(ProtFilterParticles,
+                               XmippProcessParticles,
+                               XmippProtFilter):
     """ Apply Fourier filters to a set of particles  """
     _label = 'filter particles'
 

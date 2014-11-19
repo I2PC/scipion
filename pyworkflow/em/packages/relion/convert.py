@@ -275,7 +275,7 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
     restoreXmippLabels()
     
     
-def splitInCTFGroups(self, imgStar, groups):
+def splitInCTFGroups(imgStar, groups):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     addRelionLabels(replace=True)
     
