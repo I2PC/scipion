@@ -1282,6 +1282,45 @@ public class GalleryData {
         mdRow.destroy();
         return imagesmd;
     }
+    
+    public MDRow[] getImages(MetaData md) {
+        int idlabel = getRenderLabel();
+        if (md == null) {
+            return null;
+        }
+        if (!md.containsLabel(idlabel)) {
+            return null;
+        }
+
+        MDRow mdRow = null;
+        ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
+        int index = 0;
+        String imagepath;
+        // md.print();
+        for (long id : md.findObjects()) {
+            if (isEnabled(index)) {
+                
+                imagepath = md.getValueString(idlabel, id, true);
+                if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                    mdRow = new MDRow();
+                    
+//                    if (useGeo) {
+//                        
+//                        md.getRow(mdRow, id);
+//                        mdRow.setValueString(idlabel, imagepath);
+//                        
+//                    } else {
+                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
+//                    }
+                    
+                    imagesmd.add(mdRow);
+                }
+            }
+            index++;
+        }
+
+        return imagesmd.toArray(new MDRow[]{});
+    }
 
     public String getFileInfo() {
         File file = new File(getFileName());

@@ -344,6 +344,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeo
 JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
   (JNIEnv * env, jobject jobj, jstring matrixString, jboolean wrap);
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getStatsOnImages
+(JNIEnv *env, jclass, jobjectArray,
+ jobject , jobject , jboolean , jint);
+
 #ifdef __cplusplus
 }
 #endif

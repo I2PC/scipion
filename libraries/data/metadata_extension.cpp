@@ -76,6 +76,68 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     _sd().selfSQRT();
 }
 
+
+/*----------   Statistics --------------------------------------- */
+
+void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, double& _min,
+                   double& _max, bool apply_geo, MDLabel image_label)
+{
+    _min = MAXDOUBLE;
+    _max = -MAXDOUBLE;
+    bool first = true;
+    int n = 0;
+
+    // Calculate Mean
+    if (MD.size() == 0)
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images.");
+
+    Image<double> image, tmpImg;
+    double min=0, max=0, avg, stddev;
+    FileName fnImg;
+    for (size_t i=0;i<MD.size();i++)
+    {
+        MD[i].getValue(image_label,fnImg);
+        if (apply_geo)
+            image.readApplyGeo(fnImg, MD[i]);
+        else
+            image.read(fnImg);
+        image().computeStats(avg, stddev, min, max);
+        if (min < _min)
+            _min = min;
+        if (max > _max)
+            _max = max;
+        if (first)
+        {
+            _ave = image;
+            first = false;
+        }
+        else
+        {
+            _ave() += image();
+        }
+        n++;
+    }
+
+    if (n > 0)
+        _ave() /= n;
+    _sd = _ave;
+    _sd().initZeros();
+    // Calculate SD
+    for (size_t i=0;i<MD.size();i++)
+    {
+    	MD[i].getValue(image_label,fnImg);
+        if (apply_geo)
+            image.readApplyGeo(fnImg, MD[i]);
+        else
+            image.read(fnImg);
+        tmpImg() = ((image() - _ave()));
+        tmpImg() *= tmpImg();
+        _sd() += tmpImg();
+    }
+    _sd() /= (n - 1);
+    _sd().selfSQRT();
+}
+
 //Copy of the Metadata is required to remove disabled objects before computing stats
 void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label)
 {

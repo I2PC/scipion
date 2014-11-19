@@ -589,6 +589,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 			md.setValueInt(MDLabel.MDL_PICKING_AUTOPICKPERCENT, getAutopickpercent(), id);
 			md.setValueInt(MDLabel.MDL_PICKING_TEMPLATES, getTemplatesNumber(), id);
 			md.setValueString(MDLabel.MDL_PICKING_STATE, mode.toString(), id);
+                        md.setValueInt(MDLabel.MDL_PICKING_MANUALPARTICLES_SIZE, getManualParticlesNumber(), id);
+                        md.setValueInt(MDLabel.MDL_PICKING_AUTOPARTICLES_SIZE, getAutomaticParticlesNumber(), id);
 
 		}
 		catch (Exception e)

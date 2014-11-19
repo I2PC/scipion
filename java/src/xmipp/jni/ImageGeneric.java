@@ -316,5 +316,9 @@ public class ImageGeneric {
          * binding in its string representation read from the sqlite file.
          */
         public native void applyGeoMatrix(String matrixString, boolean wrap);
+        
+        /** Get the average and std images, result is left on input image */
+	public static native void getStatsOnImages(MDRow[] images, ImageGeneric imageAvg,
+			ImageGeneric imageStd, boolean applyGeo, int label);
     
 }

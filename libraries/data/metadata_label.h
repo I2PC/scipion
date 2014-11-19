@@ -284,6 +284,8 @@ enum MDLabel
     MDL_PICKING_MICROGRAPH_STATE, ///< Micrograph state for particle picking
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
+    MDL_PICKING_AUTOPARTICLES_SIZE, ///< Number of automatic particles picked
+    MDL_PICKING_MANUALPARTICLES_SIZE, ///< Number of manual particles picked
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
@@ -1578,6 +1580,8 @@ private:
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
+        MDL::addLabel(MDL_PICKING_AUTOPARTICLES_SIZE, LABEL_INT, "autoParticlesNum");
+        MDL::addLabel(MDL_PICKING_MANUALPARTICLES_SIZE, LABEL_INT, "manualParticlesNum");
 
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");

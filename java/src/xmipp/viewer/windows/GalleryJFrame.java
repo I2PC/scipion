@@ -93,6 +93,8 @@ import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
@@ -755,13 +757,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		public String message;
 		/** Constructor selecting operation */
 		private int op; // store operation
-		private MetaData imagesmd;
+		private MDRow[] images;
 
-		public Worker(int operation, MetaData imagesmd)
+		public Worker(int operation, MDRow[] images)
 		{
 			op = operation;
-			this.imagesmd = imagesmd;
-			if (imagesmd.findObjects().length == 0)
+			this.images = images;
+			if (images.length == 0)
 				throw new IllegalArgumentException("No images available");
 		}
 
@@ -772,16 +774,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				switch (op)
 				{
 				case STATS:
-					computeStatsImages(imagesmd);
+					computeStatsImages(images);
 					break;
-				case PCA:
-					pca(imagesmd);
-					break;
-				case FSC:
-					fsc(imagesmd);
-					break;
+//				case PCA:
+//					pca(images);
+//					break;
+//				case FSC:
+//					fsc(images);
+//					break;
 				}
-				imagesmd.destroy();
+
 			}
 			catch (Exception e)
 			{
@@ -813,7 +815,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void runInBackground(int operation)
 	{
 
-		MetaData imagesmd, md;
+		MetaData md;
                 if(data.hasSelection())
                 {
                     int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
@@ -828,20 +830,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     md = data.getMd();
                     
                 
-                imagesmd = data.getImagesMd(md);
-		Worker w = new Worker(operation, imagesmd);
+                MDRow[] images = data.getImages(md);
+               
+		Worker w = new Worker(operation, images);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
 
 	}
 
-	private void computeStatsImages(MetaData imagesmd) throws Exception
+	private void computeStatsImages(MDRow[] images) throws Exception
 	{
 		ImageGeneric imgAvg = new ImageGeneric();
 		ImageGeneric imgStd = new ImageGeneric();
-
-		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo(), data.getRenderLabel());
+                imgAvg.setDataType(ImageGeneric.Double);
+                imgStd.setDataType(ImageGeneric.Double);
+                
+		ImageGeneric.getStatsOnImages(images, imgAvg, imgStd, data.useGeo(), MDLabel.MDL_IMAGE);
 		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
 		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
 		imgAvg.destroy();
@@ -854,7 +859,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
 		winStd.setVisible(true);
-		imagesmd.destroy();
 	}
 
 	private boolean openClassesDialog()
@@ -874,23 +878,23 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		return filename.substring(0, dot) + ext;
 	}
 
-	public void pca(MetaData imagesmd) throws Exception
-	{
-		ImageGeneric image = new ImageGeneric();
-		imagesmd.getPCAbasis(image, data.getRenderLabel());
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-		imp.setTitle("PCA: " + data.getFileName());
-		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
-		imagesmd.destroy();
-
-	}
-
-	public void fsc(MetaData imagesmd) throws Exception
-	{
-		FSCJFrame frame = new FSCJFrame(data, imagesmd);
-		XmippWindowUtil.centerWindows(frame, this);
-		frame.setVisible(true);
-	}
+//	public void pca(MetaData imagesmd) throws Exception
+//	{
+//		ImageGeneric image = new ImageGeneric();
+//		imagesmd.getPCAbasis(image, data.getRenderLabel());
+//		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
+//		imp.setTitle("PCA: " + data.getFileName());
+//		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
+//		imagesmd.destroy();
+//
+//	}
+//
+//	public void fsc(MetaData imagesmd) throws Exception
+//	{
+//		FSCJFrame frame = new FSCJFrame(data, imagesmd);
+//		XmippWindowUtil.centerWindows(frame, this);
+//		frame.setVisible(true);
+//	}
 
 	/***
 	 * Helper function to create toolbar toggle buttons
@@ -1545,10 +1549,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// Metadata operations
 			addItem(METADATA, "Metadata");
                         addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(STATS, "Statistics");
-			addItem(STATS_AVGSTD, "Avg & Std images");
-			addItem(STATS_PCA, "PCA");
-			addItem(STATS_FSC, "FSC");
+			
+			
 			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
@@ -1558,6 +1560,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			addSeparator(METADATA);
 			addItem(MD_FIND_REPLACE, "Find & Replace", "search.gif", "control released F");
+                        //Stats
+                        addItem(STATS, "Statistics");
+                        addItem(STATS_AVGSTD, "Avg & Std images");
+                        addItem(STATS_PCA, "PCA");
+			addItem(STATS_FSC, "FSC");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
