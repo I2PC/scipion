@@ -155,18 +155,20 @@ class ProtImport(EMProtocol):
         self.numberOfFiles = len(filePaths)
         
         return filePaths
-    
+
+    def getCopyOrLink(self):    
+        # Set a function to copyFile or createLink
+        # depending in the user selected option 
+        if self.copyFiles:
+            return copyFile
+        else:
+            return createLink
+        
     def iterFiles(self):
         """ Iterate throught the files matched with the pattern.
         Provide the fileName and fileId.
         """
         filePaths = self.getMatchFiles()
-        # Set a function to copyFile or createLink
-        # depending in the user selected option 
-        if self.copyFiles:
-            self.copyOrLink = copyFile
-        else:
-            self.copyOrLink = createLink
         
         for fileName in filePaths:
             if self._idRegex:
@@ -242,10 +244,11 @@ class ProtImportImages(ProtImport):
         img = imgSet.ITEM_TYPE()
         img.setAcquisition(acquisition)
         n = 1
+        copyOrLink = self.getCopyOrLink()
         
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
-            self.copyOrLink(fileName, dst)
+            copyOrLink(fileName, dst)
             
             if self._checkStacks:
                 _, _, _, n = imgh.getDimensions(dst)
@@ -382,6 +385,18 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     def _defineBasicParams(self, form):
         ProtImportMicBase._defineBasicParams(self, form)
+        
+        form.addParam('micrographsEMX', PathParam,
+              condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+              label='Input EMX file',
+              help="Select the EMX file containing micrographs information.\n"
+                   "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
+        form.addParam('acquisitionFromEmx', BooleanParam, default=True,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      label='Read acquisition from EMX?', 
+                      help='If you set to _Yes_, the acquistion parameters\n'
+                           'will be recovered from the EMX file.')
+        
         form.addParam('micrographsMd', PathParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Micrographs metadata file',
@@ -394,33 +409,24 @@ class ProtImportMicrographs(ProtImportMicBase):
                       help='If you set to _Yes_, some acquistion parameters\n'
                            'will try to be recovered from the _microscope.xmd_\n'
                            'and _acquisition_info.xmd_\n')
-        
-        form.addParam('micrographsEMX', PathParam,
-              condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-              label='Input EMX file',
-              help="Select the EMX file containing micrographs information.\n"
-                   "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
-        form.addParam('acquisitionFromEmx', BooleanParam, default=True,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-                      label='Read acquisition from EMX?', 
-                      help='If you set to _Yes_, the acquistion parameters\n'
-                           'will be recovered from the EMX file.')
 
     def _insertAllSteps(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
             ProtImportMicBase._insertAllSteps(self)
         elif self.importFrom == self.IMPORT_FROM_EMX:
             self._insertFunctionStep('importFromEmxStep', self.micrographsEMX.get())
+        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
+            pass
             
     def importFromEmxStep(self, emxFile):
         from pyworkflow.em.packages.emxlib import EmxImport
         emx = EmxImport()
-        emx.importData(self, emxFile)
+        emx.importData(self, emxFile, copyOrLink=self.getCopyOrLink())
         
     def importFromXmippStep(self, micrographsMd):
         from pyworkflow.em.packages.xmipp3.convert import XmippImport
         xi = XmippImport(self)
-        xi.importMicrographs(micrographsMd)
+        xi.importMicrographs(micrographsMd, copyOrLink=self.getCopyOrLink())
         
         
 

@@ -67,12 +67,14 @@ class TestImportMicrographs(TestImportBase):
         # Id's should be set increasing from 1 if ### is not in the 
         # pattern
         protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport.setObjLabel('from files')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1, 2, 3], size=3)
         
         # Id's should be taken from filename    
         args['filesPattern'] = 'BPV_####.mrc'
         protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport.setObjLabel('from files (with id)')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1386, 1387, 1388], size=3)
 
@@ -92,8 +94,8 @@ class TestImportMicrographs(TestImportBase):
         protEmxImport = self.newProtocol(ProtImportMicrographs,
                                          objLabel='emx - import mics',
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
-                                         micrographsEMX=emxFn
-                                         #magnification=10000
+                                         micrographsEMX=emxFn,
+                                         magnification=10000
                                          )
         self.launchProtocol(protEmxImport)
         micFn =self.dsEmx.getFile('emxMicrographCtf1Gold')
@@ -103,9 +105,6 @@ class TestImportMicrographs(TestImportBase):
             # Remove the absolute path in the micrographs to
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))
-            print "mic1"
-            mic1.printAll()
             mic2.setFileName(os.path.basename(mic2.getFileName()))
-            print "mic2"
-            mic2.printAll()
-            self.assertTrue(mic1.equalAttributes(mic2))
+
+            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))

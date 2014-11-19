@@ -80,7 +80,7 @@ class EmxImport():
                             protocol.setAttributeValue(k, obj.get(v))
 
     #--------------------------- STEPS functions --------------------------------------------       
-    def importData(self, protocol, emxFile):
+    def importData(self, protocol, emxFile, copyOrLink):
         """ Export micrographs to EMX file.
         micsId is only passed to force redone of this step if micrographs change.
         """
@@ -88,8 +88,7 @@ class EmxImport():
         from convert import importData
         #emxFile=self._getRelPathExecutionDir(emxFile)
         importData(protocol, emxFile, protocol._getExtraPath(), 
-                   acquisition, protocol.samplingRate.get(),
-                   protocol.copyFiles.get())
+                   acquisition, protocol.samplingRate.get(), copyOrLink)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self, protocol, emxFile):
