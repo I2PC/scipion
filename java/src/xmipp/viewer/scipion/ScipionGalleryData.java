@@ -407,8 +407,8 @@ public class ScipionGalleryData extends GalleryData {
      * Return true if current file is a rotspectra classes
      */
     public boolean isRotSpectraMd() {
-        if (filename != null) {
-            GalleryData.RotSpectra rs = getRotSpectra();
+        GalleryData.RotSpectra rs = getRotSpectra();
+        if (rs != null) {
             boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);
             
             if (isClassificationMd() && filesExist) {
@@ -423,6 +423,8 @@ public class ScipionGalleryData extends GalleryData {
     public GalleryData.RotSpectra getRotSpectra()
     {
         String dir = getExtraPath();
+        if(dir == null)
+            return null;
         String fnClasses = Filename.join(dir, "kerdensom_classes.xmd");
         String fnVectors = Filename.join(dir, "kerdensom_vectors.xmd");
         String fnVectorsData = Filename.join(dir, "kerdensom_vectors.vec");
@@ -434,6 +436,8 @@ public class ScipionGalleryData extends GalleryData {
         if(filename == null)
             return null;
         String dir = new File(filename).getParent();
+        if(dir == null)
+            return null;
         return Filename.join(dir, "extra");
     }
     
