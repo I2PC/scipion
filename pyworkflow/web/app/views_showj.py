@@ -177,9 +177,9 @@ def setRenderingOptions(request, dataset, table, inputParams):
             _imageVolName = table.getElementById(index, label)
             inputParams[sj.VOL_SELECTED] = _imageVolName
         
-        elif inputParams[sj.GOTO] and isVol and inputParams[sj.MODE] == sj.MODE_TABLE:
+#         elif inputParams[sj.GOTO] and isVol and inputParams[sj.MODE] == sj.MODE_TABLE:
 #              inputParams[sj.SELECTEDITEMS] = int(inputParams[sj.GOTO]) + 1
-             _imageVolName = inputParams[sj.VOL_SELECTED]
+#              _imageVolName = inputParams[sj.VOL_SELECTED]
 #             print "imageVolName: ", _imageVolName
 
         else:

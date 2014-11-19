@@ -195,7 +195,7 @@ function multipleEnableDisableImage(mode){
 			case 'enable':
 				if(elm.hasClass('selected')){
 					// Update the session list
-					updateListSession(id, "enabled")
+					updateListSession(id, "enabled", "gallery")
 				}
 	
 				enableDisableImage(elm, 'enable')
@@ -205,7 +205,7 @@ function multipleEnableDisableImage(mode){
 			case 'disable':
 				if(!elm.hasClass('selected')){
 					// Update the session list
-					updateListSession(id, "enabled")
+					updateListSession(id, "enabled", "gallery")
 				}
 				
 				enableDisableImage(elm, 'disable')
@@ -235,8 +235,9 @@ function multipleSelect(mode){
 	var element_id = parseInt($("#multipleSelectionTool").data('img_container_id').split("___")[1]);
 	$(".img_container").each(function(){
 		if(!$(this).hasClass("image_selected")){
+			
 			// Update the session list
-			updateListSession($(this).attr("id"), "selected")
+			updateListSession($(this).attr("id"), "selected", "gallery")
 			
 			if (mode=='all' 
 				|| (mode=='from' && $(this).attr('id').split("___")[1]>element_id) 

@@ -502,7 +502,7 @@ function valueChange(element) {
 			elm.prop("checked", true);
 		}
 		//Fix to keep the datatable updated
-		updateListSession(id, "enabled")
+		updateListSession(id, "enabled", "table")
 		
 	} else {
 		element_value = elm.val()
@@ -559,7 +559,7 @@ function initializeSelectionRowEvent() {
 								elm.addClass("row_selected");
 								
 								/* Elements added to the session list */
-								updateListSession(elm.attr("id"), "selected")
+								updateListSession(elm.attr("id"), "selected", "table")
 							}
 						}
 
@@ -579,7 +579,7 @@ function initializeSelectionRowEvent() {
 								$(this).removeClass('row_selected');
 								
 								// remove all from selectedList
-								updateListSession($(this).attr("id"), "selected")
+								updateListSession($(this).attr("id"), "selected", "table")
 							
 							});
 						}
@@ -587,7 +587,7 @@ function initializeSelectionRowEvent() {
 						$(this).toggleClass('row_selected');
 						
 						// add/remove to selectedList
-						updateListSession($(this).attr("id"), "selected")
+						updateListSession($(this).attr("id"), "selected", "table")
 					}
 
 					lastChecked = this;
@@ -721,7 +721,7 @@ function multipleEnableDisableImage(mode) {
 				if(!elm.is(":checked")){
 					elm.prop("checked", true);
 					// Update the session list
-					updateListSession(id, "enabled")
+					updateListSession(id, "enabled", "table")
 				}
 				break;
 		
@@ -729,7 +729,7 @@ function multipleEnableDisableImage(mode) {
 				if(elm.is(":checked")){
 					elm.prop("checked", false);
 					// Update the session list
-					updateListSession(id, "enabled")
+					updateListSession(id, "enabled", "table")
 				}
 				break;
 		}
@@ -743,7 +743,7 @@ function multipleSelect(mode) {
 			function() {
 				if(!$(this).hasClass("row_selected")){
 					// Update the session list
-					updateListSession($(this).attr("id"), "selected")
+					updateListSession($(this).attr("id"), "selected", "table")
 					
 					if (mode == 'all'
 							|| (mode == 'from' && $(this).index() > row_id)
