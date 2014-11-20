@@ -24,8 +24,7 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to 2D processing
-
+Protocol base classes related to 2D processing.
 """
 from pyworkflow.em.data import Class2D
 from pyworkflow.em.protocol import *

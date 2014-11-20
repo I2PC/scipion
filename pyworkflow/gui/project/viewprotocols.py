@@ -27,6 +27,7 @@
 """
 Main project window application
 """
+import os
 import pickle
 from collections import OrderedDict
 import Tkinter as tk
@@ -1010,7 +1011,7 @@ class ProtocolsView(tk.Frame):
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """
         prot = self.getSelectedProtocol()
-        if prot.getStatus() != STATUS_SAVED:
+        if os.path.exists(prot._getPath()):
             self._analyzeResults(prot)
         else:
             self.windows.showInfo("Selected protocol hasn't been run yet.")

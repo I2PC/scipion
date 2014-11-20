@@ -33,6 +33,7 @@ import Tkinter as tk
 
 from pyworkflow.gui.tree import DbTreeProvider
 from pyworkflow.gui.browser import *
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
             
             
 class EMTreeProvider(DbTreeProvider):

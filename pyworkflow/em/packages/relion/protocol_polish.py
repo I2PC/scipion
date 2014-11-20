@@ -126,7 +126,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         params += ' --sigma_nb %0.3f' % self.stddevParticleDistance.get()
         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
         params += ' --autob_lowres %0.3f' % self.lowresLimitBfactorEstimation.get()
-        params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
+#         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
         if self.performBfactorWeighting:
             params += ' --mask %s' % self.maskForReconstructions.get().getFileName()
         else:

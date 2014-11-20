@@ -75,6 +75,13 @@ DataSet(name='mda', folder='hemoglobin_mda',
                'averages':'averages/averages.stk'})
 
 
+DataSet(name='nma', folder='nma', 
+        files={
+               'pdb': 'pdb/AK.pdb',
+               'vol': 'volumes/AK_LP10.vol',
+               'particles': 'particles/img.stk'})
+
+
 DataSet(name='tomo', folder='xmipp_tomo_test', 
         files={
                'vol1': 'volumes/subvols_6E6.001.mrc.spi',

@@ -94,8 +94,7 @@ class XmippProtNMABase(EMProtocol):
         fnDistanceHist=os.path.join(baseDir,'extra',fnBase+'_distance.hist')
         rc = self._getRc(fnDistanceHist)
         self._enterWorkingDir()
-        nma_record_info = join(os.environ['XMIPP_HOME'], 'bin', 'nma_record_info.py')
-        self.runJob("xmipp_python", "%s %d %s.pdb %d" % (nma_record_info, numberOfModes, fnBase, rc))
+        self.runJob('nma_record_info.py', "%d %s.pdb %d" % (numberOfModes, fnBase, rc))
         self.runJob("nma_pdbmat.pl","pdbmat.dat")
         self.runJob("nma_diag_arpack","")
         if not exists("fort.11"):
@@ -174,14 +173,14 @@ class XmippProtNMABase(EMProtocol):
         fnDiag = "diagrtb.eigenfacs"
         
         if structureEM:
-            self.runJob("nma_reformatForElNemo.sh","%d" % numberOfModes)
+            self.runJob("nma_reformatForElNemo.sh", "%d" % numberOfModes)
             fnDiag = "diag_arpack.eigenfacs"
             
-        self.runJob("echo","%s | nma_check_modes" % fnDiag)
+        self.runJob("echo", "%s | nma_check_modes" % fnDiag)
         cleanPath(fnDiag)
         
         fh = open("Chkmod.res")
-        MDout = xmipp.MetaData()
+        mdOut = xmipp.MetaData()
         collectivityList = []
         
         for n in range(numberOfModes):
@@ -189,19 +188,19 @@ class XmippProtNMABase(EMProtocol):
             collectivity = float(line.split()[1])
             collectivityList.append(collectivity)
     
-            id = MDout.addObject()
+            objId = mdOut.addObject()
             modefile = self._getPath("modes", "vec.%d" % (n+1))
-            MDout.setValue(xmipp.MDL_NMA_MODEFILE, modefile, id)
-            MDout.setValue(xmipp.MDL_ORDER, long(n+1), id)
+            mdOut.setValue(xmipp.MDL_NMA_MODEFILE, modefile, objId)
+            mdOut.setValue(xmipp.MDL_ORDER, long(n+1), objId)
             
             if n >= 6:
-                MDout.setValue(xmipp.MDL_ENABLED, 1, id)
+                mdOut.setValue(xmipp.MDL_ENABLED, 1, objId)
             else:
-                MDout.setValue(xmipp.MDL_ENABLED, -1, id)
-            MDout.setValue(xmipp.MDL_NMA_COLLECTIVITY, collectivity, id)
+                mdOut.setValue(xmipp.MDL_ENABLED, -1, objId)
+            mdOut.setValue(xmipp.MDL_NMA_COLLECTIVITY, collectivity, objId)
             
             if collectivity < collectivityThreshold:
-                MDout.setValue(xmipp.MDL_ENABLED,-1,id)
+                mdOut.setValue(xmipp.MDL_ENABLED,-1,objId)
         fh.close()
         idxSorted = [i[0] for i in sorted(enumerate(collectivityList), key=lambda x:x[1])]
         score = [0]*numberOfModes
@@ -209,19 +208,31 @@ class XmippProtNMABase(EMProtocol):
             score[i] += i+1
             score[idxSorted[i]] += numberOfModes - i
         i = 0
-        for id in MDout:
+        for objId in mdOut:
             score_i = float(score[i])/(2.0*numberOfModes)
-            MDout.setValue(xmipp.MDL_NMA_SCORE,score_i,id)
+            mdOut.setValue(xmipp.MDL_NMA_SCORE, score_i, objId)
             i+=1
-        MDout.write("modes.xmd")
+        mdOut.write("modes.xmd")
         cleanPath("Chkmod.res")
+        
         self._leaveWorkingDir()
                                                         
     def _validate(self):
-        validateMsgs = []
-        if which('nma_diag_arpack') is '':
-            validateMsgs.append('Check that the programs nma_* are in $XMIPP_HOME/bin')
-        return validateMsgs
+        errors = []
+        xmippBin = join(os.environ['XMIPP_HOME'], 'bin')
+        nma_programs = ['nma_check_modes',
+                        'nma_diag_arpack',
+                        'nma_diagrtb',
+                        'nma_elnemo_pdbmat']
+        # Check Xmipp was compiled with NMA flag to True and
+        # some of the nma programs are under the Xmipp/bin/ folder
+        for prog in nma_programs:
+            if not exists(join(xmippBin, prog)):
+                errors.append("Some NMA programs are missing in the Xmipp folder.")
+                errors.append("Check that Xmipp was installed with NMA flag set.")
+                break
+                
+        return errors
     
     def _citations(self):
         return ['Nogales2013','Jin2014']

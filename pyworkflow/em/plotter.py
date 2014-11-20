@@ -34,8 +34,8 @@ import matplotlib.pyplot as plt
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
-    def __init__(self, x=1, y=1, mainTitle="", **args):
-        Plotter.__init__(self, x, y, mainTitle, **args)
+    def __init__(self, x=1, y=1, mainTitle="", **kwargs):
+        Plotter.__init__(self, x, y, mainTitle, **kwargs)
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
@@ -84,4 +84,5 @@ class EmPlotter(Plotter):
             **kwargs: keyword arguments that accepts:
                 marker, linestyle
         """
-        self.plot(xValues, yValues, color, **kwargs) 
+
+        self.plot(xValues, yValues, color, **kwargs)

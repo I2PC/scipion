@@ -1015,6 +1015,10 @@ def ObjectWrap(value):
         return Boolean(value)
     if t is float:
         return Float(value)
+    if t is list:
+        o = CsvList()
+        o.set(value)
+        return o
     if t is None:
         return None
     #If it is str, unicode or unknown type, convert to string

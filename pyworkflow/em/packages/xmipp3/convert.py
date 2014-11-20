@@ -350,7 +350,8 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     
     setObjId(img, imgRow)
     # Read some extra labels
-    rowToObject(imgRow, img, {}, extraLabels=IMAGE_EXTRA_LABELS)
+    rowToObject(imgRow, img, {}, 
+                extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row

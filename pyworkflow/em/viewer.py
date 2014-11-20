@@ -29,8 +29,9 @@ This module implement viewers for some type of common objects.
 """
 
 import os
-from pyworkflow.viewer import View, Viewer, DESKTOP_TKINTER
+from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.em.protocol import PdbFile
+from pyworkflow.utils import Environ, runJob
 import pyworkflow as pw
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
                    MODE, PATH, TABLE_NAME, MODE_MD, RENDER)
@@ -175,9 +176,28 @@ class CoordinatesObjectView(DataView):
     def show(self):
         runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
         
-        
-#------------------------ Some viewers ------------------------
 
+    
+        
+#------------------------ Some views and  viewers ------------------------
+        
+def getChimeraEnviron(): 
+    """ Return the proper environ to launch chimera.
+    CHIMERA_HOME variable is read from the ~/.config/scipion.conf file.
+    """
+    environ = Environ(os.environ)
+    environ.set('PATH', os.path.join(os.environ['CHIMERA_HOME'], 'bin'),
+                position=Environ.BEGIN)
+    return environ    
+    
+       
+class ChimeraView(CommandView):
+    """ View for calling an external command. """
+    def __init__(self, inputFile, **kwargs):
+        CommandView.__init__(self, 'chimera "%s" &' % inputFile,
+                             env=getChimeraEnviron(), **kwargs)
+        
+        
 class ChimeraViewer(Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [DESKTOP_TKINTER]
@@ -191,22 +211,38 @@ class ChimeraViewer(Viewer):
         
         if issubclass(cls, PdbFile):
             fn = obj.getFileName()
-            from protlib_gui_ext import chimera
             if obj.getPseudoAtoms():
-                # Write an script for this case to use colored spheres
-                pdb = os.path.basename(fn)
-                fn += '_tmp_chimera.cmd'
-                f = open(fn, 'w')
-                f.write("open %s\n" % pdb)
-                f.write("rangecol bfactor,a 0 white 1 red \n")
-                f.write("setattr a radius 1 \n")
-                f.write("represent sphere \n")
-                f.close()
-            chimera(fn)
+                if hasattr(obj, '_chimeraScript'):
+                    fn = obj._chimeraScript.get()
+            ChimeraView(fn).show()
+            #FIXME: there is an asymetry between ProtocolViewer and Viewer
+            # for the first, the visualize method return a list of View's (that are shown)
+            # for the second, the visualize directly shows the objects. 
+            # the first approach is better 
         else:
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
  
  
+def getVmdEnviron():
+    """ Return the proper environ to launch VMD.
+    VMD_HOME variable is read from the ~/.config/scipion.conf file.
+    """
+    environ = Environ(os.environ)
+    environ.set('PATH', os.path.join(os.environ['VMD_HOME'], 'bin'),
+                position=Environ.BEGIN)
+    return environ
+    
+       
+class VmdView(CommandView):
+    """ View for calling an external command. """
+    def __init__(self, vmdCommand, **kwargs):
+        CommandView.__init__(self, 'vmd %s' % vmdCommand,
+                             env=getVmdEnviron(), **kwargs)
+            
+    def show(self):
+        runJob(None, '', self._cmd, env=getVmdEnviron())
+        
+        
 class VmdViewer(Viewer):
     """ Wrapper to visualize PDB objects with VMD viewer. """
     _environments = [DESKTOP_TKINTER]
@@ -219,8 +255,11 @@ class VmdViewer(Viewer):
         cls = type(obj)
         
         if issubclass(cls, PdbFile):
-            fn = obj.getFileName()
-            os.system("vmd %s" % fn)
+            VmdView(obj.getFileName()).show()
+            #FIXME: there is an asymetry between ProtocolViewer and Viewer
+            # for the first, the visualize method return a list of View's (that are shown)
+            # for the second, the visualize directly shows the objects. 
+            # the first approach is better 
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s' % obj.getClassName())     
         

@@ -363,8 +363,10 @@ class ShowjForm(forms.Form):
                 if self.data[sj.MODE] == sj.MODE_GALLERY:
                     self.fields[sj.GOTO].widget.attrs['readonly'] = True
                 
-            if dataset.getNumberSlices() > 1:    
-                volumesToRenderComboBoxValues = tuple(zip(dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED]), dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED])))
+            if dataset.getNumberSlices() > 1:
+                labelColumn = dataset.getTable().getColumnValues(self.data[sj.LABEL_SELECTED])
+                volumesToRenderComboBoxValues = tuple(zip(labelColumn, labelColumn))
+                
                 self.fields[sj.VOL_SELECTED] = forms.ChoiceField(label=messagesForm.LABEL_VOLUME_SELECTION,
                                                                 required=False,
                                                                 choices=volumesToRenderComboBoxValues)

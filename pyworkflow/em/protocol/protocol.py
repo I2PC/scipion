@@ -35,7 +35,7 @@ from pyworkflow.object import Set
 from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles,
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
                                 SetOfVolumes, SetOfCTF, SetOfMovies, SetOfAlignment, 
-                                SetOfMovieParticles, SetOfAverages)
+                                SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
 from pyworkflow.em.data_tiltpairs import SetOfAngles
 from pyworkflow.utils.path import cleanPath
@@ -60,7 +60,6 @@ class EMProtocol(Protocol):
         
         SqliteDb.closeConnection(setFn)        
         setObj = SetClass(filename=setFn)
-        
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):
@@ -98,6 +97,10 @@ class EMProtocol(Protocol):
     
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
+
+
+    def _createSetOfNormalModes(self, suffix=''):
+        return self.__createSet(SetOfNormalModes, 'modes%s.sqlite', suffix)
     
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)

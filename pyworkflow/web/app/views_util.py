@@ -487,33 +487,32 @@ def get_slice(request):
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
 
-    if not '@' in imagePath:
-        sliceNo = int(int(imageDim)/2)
-    else:
-        parts = imagePath.split('@', 1)
-        sliceNo = parts[0]
+    # This validations not works for volumes into a stack
+    if '__slice__' in imagePath:
+        parts = imagePath.split('__slice__', 1)
+        sliceNo = int(parts[0])
         imagePath = parts[1]
         
-    if '@' in imagePath:
-            parts = imagePath.split('@')
-            imageNo = parts[0]
-            imagePath = parts[1]
-
+#     if '@' in imagePath:
+#             parts = imagePath.split('@')
+#             imageNo = parts[0]
+#             imagePath = parts[1]
+            
     if 'projectPath' in request.session:
         imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
 #         if not os.path.isfile(imagePathTmp):
 #             raise Exception('should not use getInputPath')
             #imagePath = getInputPath('showj', imagePath)
             
-    if imageNo:
-        imagePath = '%s@%s' % (imageNo, imagePath)
+#     if imageNo:
+#         imagePath = '%s@%s' % (imageNo, imagePath)
 
     imgXmipp = xmipp.Image()
     
-    if sliceNo >= 0:
-        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
+    if sliceNo is None:
+        imgXmipp.readPreview(imagePath, int(imageDim))
     else:
-        imgXmipp.readPreview(imagePath, int(imageDim), int(imageDim)/2)
+        imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
         
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
