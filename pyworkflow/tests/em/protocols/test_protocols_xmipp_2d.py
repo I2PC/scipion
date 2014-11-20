@@ -2,6 +2,7 @@
 # *
 # * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
 # *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *             Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -135,7 +136,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         protMask6 = self.newProtocol(XmippProtCreateMask2D,
                                      samplingRate = self.samplingRate, 
                                      size= self.size, 
-                                     geo=5, innerRadius=2, outerRadius=12, decay=2 )
+                                     geo=5, innerRadius=2, outerRadius=12, borderDecay=2 )
         protMask6.setObjLabel('raised crown mask')
         self.launchProtocol(protMask6)
         self.assertIsNotNone(protMask6.outputMask, "There was a problem with create raised crown mask for particles")
@@ -211,7 +212,7 @@ class TestXmippApplyMask2D(TestXmippBase):
     def testApplyRaisedCrownMask(self):
         print "Run apply raised crown mask for particles"
         protMask6 = self.newProtocol(XmippProtMaskParticles,
-                                     source=0, geo=5, innerRadius=2, outerRadius=12, decay=2,
+                                     source=0, geo=5, innerRadius=2, outerRadius=12, borderDecay=2,
                                      fillType=1 )
         protMask6.inputParticles.set(self.protImport.outputParticles)
         protMask6.setObjLabel('raised crown mask')
