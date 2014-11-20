@@ -32,8 +32,103 @@ This module contains converter functions that will serve to:
 """
 
 from brandeis import *
+from collections import OrderedDict
+from itertools import izip
+
+HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
+                  'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',
+                  '-LogP', 'SIGMA', 'SCORE', 'CHANGE']
 
 
+class FrealignParFile(object):
+    """ Handler class to read/write frealign metadata."""
+    def __init__(self, filename, mode='r'):
+        self._file = open(filename, mode)
+        self._count = 0
+
+    def iterValues(self):
+        """PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE
+        """
+        for line in self._file:
+            line = line.strip()
+            if not line.startswith('C'):
+                row = OrderedDict(zip(HEADER_COLUMNS, line.split()))
+                yield row
+
+    def close(self):
+        self._file.close()
+
+
+def readSetOfParticles(inputSet, outputSet, parFileName):
+    """
+     Iterate through the inputSet and the parFile lines
+     and populate the outputSet with the same particles
+     of inputSet, but with the angles and shift (3d alignment)
+     updated from the parFile info.
+     It is assumed that the order of iteration of the particles
+     and the lines match and have the same number.
+    """
+    parFile = FrealignParFile(parFileName)
+    for particle, row in izip(inputSet, parFile):
+        particle.setAlignment(rowToAlignment(row))
+        # We assume that each particle have ctfModel
+        # in order to be processed in Frealign
+        rowToCtfModel(row, particle.getCTF())
+        outputSet.append(particle)
+
+
+def rowToAlignment(alignmentRow):
+    """
+    Return an Alignment object from a given parFile row.
+    """
+    angles = numpy.zeros(3)
+    shifts = numpy.zeros(3)
+    alignment = Alignment()
+    # PSI   THETA     PHI       SHX       SHY
+    angles[0] = float(alignmentRow.get('PSI'))
+    angles[1] = float(alignmentRow.get('THETA'))
+    angles[2] = float(alignmentRow.get('PHI'))
+    shifts[0] = float(alignmentRow.get('SHX'))
+    shifts[1] = float(alignmentRow.get('SHY'))
+
+    M = matrixFromGeometry(shifts, angles)
+    alignment.setMatrix(M)
+
+    return alignment
+
+def matrixFromGeometry(shifts, angles):
+    """ Create the transformation matrix from a given
+    2D shifts in X and Y...and the 3 euler angles.
+    """
+    from pyworkflow.em.transformations import euler_matrix
+    from numpy import deg2rad
+    radAngles = -deg2rad(angles)
+
+    M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
+    if inverseTransform:
+        from numpy.linalg import inv
+        M[:3, 3] = -shifts[:3]
+        M = inv(M)
+    else:
+        M[:3, 3] = shifts[:3]
+
+    if flip:
+        #M[0,:4]*=-1.
+        M[0,:3]*=-1.
+        M[3][3]*=-1.
+    return M
+
+def rowToCtfModel(ctfRow, ctfModel):
+    defocusU = float(ctfRow.get('DF1'))
+    defocusV = float(ctfRow.get('DF2'))
+    defocusAngle = float(ctfRow.get('ANGAST'))
+    ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
+
+
+
+
+
+#-------------- Old fuctions (before using EMX matrix for alignment) ------
 
 def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     """read from frealign .par.
@@ -81,6 +176,9 @@ def parseCtffindOutput(filename):
     f.close()
     return result
 
+def frealignMetadataToXmipp(inFile, outFile):
+    #process first line
+    #copy rest
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg

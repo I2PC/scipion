@@ -553,6 +553,7 @@ class ProtFrealignBase(EMProtocol):
             
             imgFn = self._getFileName('particles')
             volFn = self._getFileName('init_vol')
+            #TODO check if the input is already a single mrc stack
             imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
@@ -678,7 +679,7 @@ class ProtFrealignBase(EMProtocol):
         params2 = self._setParams3DR(iterN)
         
         params3DR = dict(paramsDic.items() + params2.items())
-        
+
         args = self._prepareCommand()
         iterDir = self._iterWorkingDir(iterN)
         # frealign program is already in the args script, that's why runJob('')
@@ -1126,7 +1127,7 @@ eot
         from convert import geometryFromMatrix
         shifts, angles = geometryFromMatrix(img.getAlignment())
         #TODO: check if can use shiftZ
-        shiftX, shiftY, shiftZ = shifts * img.getSamplingRate()
+        shiftX, shiftY, _ = shifts * img.getSamplingRate()
         psi, theta, phi = angles
 #        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
 #        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
