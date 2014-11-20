@@ -105,14 +105,11 @@ class ProtParticlePicking(ProtParticles):
 
         return methodsMsgs
 
-    def getCoordsSuffix(self):
-        count = len(list(self.iterOutputAttributes(EMObject)))
-        suffix = str(count) if count > 1 else ''
-        
-        return suffix
+
     
     def getCoords(self):
-        suffix = self.getCoordsSuffix()
+        count = self.getOutputsSize()
+        suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
 
@@ -120,16 +117,10 @@ class ProtParticlePicking(ProtParticles):
         self._leaveDir()# going back to project dir
 
         micSet = self.inputMics
-
-        count = 0;
-        for key, output in self.iterOutputAttributes(EMObject):
-            count += 1
+        count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
         outputName = 'outputCoordinates' + suffix
-
         coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
-
-        print "dir " + outputDir
         self.readSetOfCoordinates(outputDir, coordSet)
         outputs = {outputName: coordSet}
         self._defineOutputs(**outputs)
@@ -137,6 +128,13 @@ class ProtParticlePicking(ProtParticles):
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
+
+    def summary(self):
+        summary = []
+        if(self.getOutputsSize() > 0):
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append(key + ":\n" + output.getObjComment())
+        return summary
 
 
 class ProtExtractParticles(ProtParticles):

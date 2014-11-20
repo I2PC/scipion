@@ -75,6 +75,10 @@ if __name__ == '__main__':
         outputName = 'outputCoordinates' + suffix
         outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
         readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+        summary = prot.getSummary()
+        outputset.setObjComment("\n".join(summary))
+
+
     
 
     outputs = {outputName: outputset}
