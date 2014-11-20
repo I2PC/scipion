@@ -55,7 +55,7 @@ class XmippAlignmentNMAViewer(ProtocolViewer):
            
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('displayRawDeformation', StringParam, default='1',
+        form.addParam('displayRawDeformation', StringParam, default='7',
                       label='Display raw deformation',
                       help='Type 1 to see the histogram of raw deformation number 1; \n'
                            'type 2 to see the histogram of raw deformation number 2, etc.\n'

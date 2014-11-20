@@ -59,13 +59,11 @@ class ProtProcessParticles(ProtParticles):
 
 
 class ProtFilterParticles(ProtProcessParticles):
-    """ This is the base for the branch of filters, 
-    between the ProtPreprocessParticles """
+    """Base class for filters on particles of type ProtPreprocessParticles"""
     pass
 
 class ProtOperateParticles(ProtProcessParticles):
-    """ This is the base for the branch of filters,
-    between the ProtPreprocessParticles """
+    """Base class for operations on particles of type ProtPreprocessParticles"""
     pass
 
 class ProtMaskParticles(ProtProcessParticles):
@@ -143,4 +141,3 @@ class ProtParticlePicking(ProtParticles):
 
 class ProtExtractParticles(ProtParticles):
     pass
-

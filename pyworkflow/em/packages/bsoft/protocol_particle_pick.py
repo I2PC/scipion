@@ -93,20 +93,10 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         readSetOfCoordinates(workingDir, self.inputMics, coordSet)
         
     def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
-        return methodsMsgs
+        return ProtParticlePicking._methods(self)
     
     def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputCoordinates'):
-            summary.append("Output coordinates not ready yet.") 
-        else:
-            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
-            boxSize = self.outputCoordinates.getBoxSize()
-            if not boxSize is None:
-                summary.append("Particle size:%d" % boxSize)
-        return summary
+        return ProtParticlePicking._summary(self)
 
     def __str__(self):
         """ String representation of a Supervised Picking run """
