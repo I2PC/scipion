@@ -32,7 +32,6 @@
 Import('env')
 
 
-
 #  ************************************************************************
 #  *                                                                      *
 #  *                              Libraries                               *
@@ -50,7 +49,6 @@ if not env.GetOption('clean'):
 #     autoConfigTarget='config.mk')
 # But because freetype's compilation is a pain, it's better to use whatever
 # version is in the system.
-
 fftw = env.AddLibrary(
     'fftw',
     tar='fftw-3.3.4.tgz',
@@ -71,6 +69,7 @@ tk = env.AddLibrary(
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
     targets=[File('#software/lib/libtk8.6.so').abspath],
+    libChecks=['xft'],
     flags=['--enable-threads'],
     deps=[tcl],
     clean=[Dir('#software/tmp/tk8.6.1').abspath])
@@ -79,7 +78,13 @@ zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
     targets=[File('#software/lib/libz.so').abspath],
-    addPath=False)
+    addPath=False,
+    autoConfigTargets='zlib.pc')
+
+jpeg = env.AddLibrary(
+    'jpeg',
+    tar='libjpeg-turbo-1.3.1.tgz',
+    flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
 sqlite = env.AddLibrary(
     'sqlite',
@@ -91,7 +96,8 @@ sqlite = env.AddLibrary(
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    targets=[File('#software/lib/libpython2.7.so').abspath, File('#software/bin/python').abspath],
+    targets=[File('#software/lib/libpython2.7.so').abspath,
+             File('#software/bin/python').abspath],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
@@ -118,7 +124,7 @@ boost_headers_only = env.ManualInstall(
 
 # Helper function to include the python dependency automatically.
 def addModule(*args, **kwargs):
-    kwargs['deps'] = kwargs.get('deps', []) + (python or [])
+    kwargs['deps'] = kwargs.get('deps', []) + python
     return env.AddModule(*args, **kwargs)
 
 
@@ -191,7 +197,7 @@ addModule(
     tar='Pillow-2.5.1.tgz',
     targets=['PIL'],
     flags=['--old-and-unmanageable'],
-    deps=[setuptools])
+    deps=[setuptools, jpeg])
 
 addModule(
     'winpdb',
@@ -210,9 +216,6 @@ addModule(
 env.AddPackage('xmipp',
                tar='xmipp_scipion.tgz',
                buildDir='xmipp',
-#               extraActions=[('xmipp.bashrc',
-#                             './install.sh --unattended=true --gui=false -j %s'
-#                              % GetOption('num_jobs'))],
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',
@@ -221,6 +224,12 @@ env.AddPackage('xmipp',
                      'ssl': 'cxx',
                      'readline': 'cxx'},
                default=False)
+# In case you want to install an older version of Xmipp, you can use
+# the extraActions parameter instead of using its own SConscript, like this:
+# 
+#               extraActions=[('xmipp.bashrc',
+#                             './install.sh --unattended=true --gui=false -j %s'
+#                              % GetOption('num_jobs'))],
 
 env.AddPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
@@ -244,6 +253,7 @@ env.AddPackage('pytom',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
                               % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
+               deps=[boost_headers_only],
                default=False)
 
 env.AddPackage('relion',
@@ -256,7 +266,14 @@ env.AddPackage('relion',
 
 env.AddPackage('spider',
                tar='spider-web-21.13.tgz',
+               neededProgs=['csh'],
                default=False)
+
+env.AddPackage('motioncorr',
+               tar='motioncorr_v2.1.tgz',
+               default=False)
+# This last one already contains the binary.
+
 
 # TODO: check if we have to use the "purge" option below:
 
