@@ -176,9 +176,6 @@ def parseCtffindOutput(filename):
     f.close()
     return result
 
-def frealignMetadataToXmipp(inFile, outFile):
-    #process first line
-    #copy rest
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
