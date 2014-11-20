@@ -239,7 +239,7 @@ class Window():
     It will encapsulates some basic creation and 
     setup functions. """
     
-    def __init__(self, title, masterWindow=None, weight=True, minsize=(500, 300),
+    def __init__(self, title='', masterWindow=None, weight=True, minsize=(500, 300),
                  icon=None, **args):
         """Create a Tk window.
         title: string to use as title for the windows.
@@ -367,6 +367,10 @@ class Window():
     def showInfo(self, msg, header="Info"):
         from dialog import showInfo
         showInfo(header, msg, self.root)
+        
+    def showWarning(self, msg, header='Warning'):
+        from dialog import showWarning
+        showWarning(header, msg, self.root)
         
     def createCloseButton(self, parent):
         """ Create a button for closing the window, setting

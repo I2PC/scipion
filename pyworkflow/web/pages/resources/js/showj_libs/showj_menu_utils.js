@@ -50,7 +50,7 @@
  * 	->	This method was done to keep updated the data core in
  *		the datatable library used to show in the table mode.
  *
- * function updateListSession(id, attr)
+ * function updateListSession(id, attr, mode)
  * 	->	Method to update the session variable about list depending on attr.
  * 
  * function updateList(id, list)
@@ -67,6 +67,7 @@
 /**
  ****************************************** COMMON METHODS
  **/
+
 function changeMode(modeNew){
 	/*
 	 * Function to change the visualization mode.
@@ -81,8 +82,34 @@ function changeMode(modeNew){
 	}
 }
 
+function updateListSession(id, attr, mode){
+	/*
+	 * Method to update the session variable about list depending on attr.
+	 */
+	
+	// IMAGE METHODS
+	if(getModeList()=='image'){
+		switch(attr){
+			case "enabled":
+				var res = updateList(id, "listEnabledItems");
+				updateListChanges(id, res);
+				break;
+			
+			case "selected":
+				updateList(id, "listSelectedItems");
+				break;
+		}
+		
+	// VOLUME METHODS	
+	} else if(getModeList()=='volume'){
+		if (attr == "selected" && mode == "table"){
+			updateList(id, "listSelectedItems");
+		}
+	}
+}
+
 /**
- ******************************************** IMAGE METHODS
+ ******************************************** METHODS
  **/
  
 function getListEnabledItems(mode){
@@ -240,18 +267,20 @@ function updateEnabledItems(mode, list){
 /* LIST UTILS **********************************************/
 
 function replaceList(mode, value){
-	switch(mode){
-	case "selected":
-		$("input#listSelectedItems").val(value)
-		break;
-		
-	case "enabled":
-		$("input#listEnabledItems").val(value)
-		break;
-		
-	case "changes":
-		$("input#listChangesItems").val(value)
-		break;
+	if(getModeList()=='image'){
+		switch(mode){
+		case "selected":
+			$("input#listSelectedItems").val(value)
+			break;
+			
+		case "enabled":
+			$("input#listEnabledItems").val(value)
+			break;
+			
+		case "changes":
+			$("input#listChangesItems").val(value)
+			break;
+		}
 	}
 }
 
@@ -287,23 +316,6 @@ function getList(attr){
 		break;
 	}
 	return list;
-}
-
-
-function updateListSession(id, attr){
-	/*
-	 * Method to update the session variable about list depending on attr.
-	 */
-	switch(attr){
-		case "enabled":
-			var res = updateList(id, "listEnabledItems");
-			updateListChanges(id, res);
-			break;
-		
-		case "selected":
-			updateList(id, "listSelectedItems");
-			break;
-	}
 }
 
 
@@ -375,10 +387,4 @@ function containsElem(id, list){
 	} while(x<list.length && enc==-1);
 	return enc;
 }
-
-/**
- ******************************************** VOLUME METHODS
- **/
-
-
 

@@ -27,7 +27,20 @@
 # *
 # **************************************************************************
 
-from protocol_nma_base import *
+import os
+import math
+from os.path import basename, exists, join
+
+from pyworkflow.utils import redStr
+from pyworkflow.utils.path import copyFile, createLink, makePath, cleanPath, moveFile
+from pyworkflow.protocol.params import (PointerParam, IntParam, FloatParam, 
+                                        LEVEL_ADVANCED)
+from pyworkflow.em.data import SetOfNormalModes
+from pyworkflow.em.packages.xmipp3 import XmippMdRow
+import xmipp
+from protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
+from convert import rowToMode
+        
         
 class XmippProtNMA(XmippProtNMABase):
     """ Flexible angular alignment using normal modes """
@@ -130,8 +143,7 @@ class XmippProtNMA(XmippProtNMABase):
         rc = self._getRc(self._getExtraPath('atoms_distance.hist'))
                 
         self._enterWorkingDir()
-        
-        self.runJob("xmipp_python nma_record_info_PDB.py","%d %d atoms.pdb %f %f" % (numberOfModes,RTBblockSize,rc,RTBForceConstant))
+        self.runJob('nma_record_info_PDB.py', "%d %d atoms.pdb %f %f" % (numberOfModes, RTBblockSize, rc, RTBForceConstant))
         self.runJob("nma_elnemo_pdbmat","")
         self.runJob("nma_diagrtb","")
 
@@ -168,7 +180,7 @@ class XmippProtNMA(XmippProtNMABase):
                 fhAni.write("\n")
         fhIn.close()
         fhAni.close()
-        runJob(log,"nma_prepare_for_animate.py","")
+        self.runJob("nma_prepare_for_animate.py","")
         cleanPath("vec_ani.txt")
         moveFile('vec_ani.pkl', 'extra/vec_ani.pkl')
 
@@ -184,7 +196,7 @@ class XmippProtNMA(XmippProtNMABase):
                       (fn,numberOfModes,amplitude,nFrames,downsample,pseudoAtomThreshold))
         else:
             fn="atoms.pdb"
-            runJob(log,"nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
+            self.runJob("nma_animate_atoms.py","%s extra/vec_ani.pkl 7 %d %f extra/animations/animated_mode %d"%\
                       (fn,numberOfModes,amplitude,nFrames))
         
         for mode in range(7,numberOfModes+1):
@@ -198,7 +210,8 @@ class XmippProtNMA(XmippProtNMABase):
                 fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(pseudoAtomRadius))
             else:
                 fhCmd.write("mol modcolor 0 0 Index\n")
-                fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
+                #fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
+                fhCmd.write("mol modstyle 0 0 NewRibbons 1.800000 6.000000 2.600000 0\n")
             fhCmd.write("animate speed 0.5\n")
             fhCmd.write("animate forward\n")
             fhCmd.close();
@@ -231,12 +244,22 @@ class XmippProtNMA(XmippProtNMABase):
             fhIn.close()
         md = xmipp.MetaData()
         for i, _ in enumerate(maxShift):
-            id = md.addObject()
-            md.setValue(xmipp.MDL_NMA_ATOMSHIFT, maxShift[i],id)
-            md.setValue(xmipp.MDL_NMA_MODEFILE, self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1)), id)
+            objId = md.addObject()
+            md.setValue(xmipp.MDL_NMA_ATOMSHIFT, maxShift[i],objId)
+            md.setValue(xmipp.MDL_NMA_MODEFILE, self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1)), objId)
         md.write(self._getExtraPath('maxAtomShifts.xmd'))
                                                       
     def createOutputStep(self):
-        modes = NormalModes(filename=self._getPath('modes.xmd'))
-        self._defineOutputs(outputModes=modes)
-        self._defineSourceRelation(self.inputStructure.get(), self.outputModes)
+        fnSqlite = self._getPath('modes.sqlite')
+        nmSet = SetOfNormalModes(filename=fnSqlite)
+
+        md = xmipp.MetaData(self._getPath('modes.xmd'))
+        row = XmippMdRow()
+        
+        for objId in md:
+            row.readFromMd(md, objId)
+            nmSet.append(rowToMode(row))
+        inputPdb = self.inputStructure.get()
+        nmSet.setPdb(inputPdb)
+        self._defineOutputs(outputModes=nmSet)
+        self._defineSourceRelation(inputPdb, nmSet)

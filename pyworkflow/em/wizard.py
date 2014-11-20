@@ -118,7 +118,7 @@ class EmWizard(Wizard):
                 provider = ListTreeProvider(particles)
                 provider.getText = self._getText
             
-            if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume) :
+            if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume):
                 vols = self._getVols(objs)
                 provider = ListTreeProvider(vols)
             

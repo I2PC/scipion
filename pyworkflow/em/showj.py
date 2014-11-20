@@ -59,9 +59,10 @@ ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
-OBJ_CMDS = 'object_commands'
-OBJ_CMDA = 'A'
 
+OBJCMDS = 'object_commands'
+OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
+OBJCMD_NMA_VMD = "'Display VMD animation'"
 
 GOTO = 'goto'
 ROWS = 'rows'

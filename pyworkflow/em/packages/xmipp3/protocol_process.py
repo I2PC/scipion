@@ -98,8 +98,6 @@ class XmippProcessParticles(XmippProcess):
         self.outputMd = self._getExtraPath('output_images.xmd')
         self.outputStk = self._getExtraPath('output_images.stk')
 
-
-
 class XmippProcessVolumes(XmippProcess):
     """ Class to create a base template for Xmipp protocols that process 
     both volume or a SetOfVolumes objects 
