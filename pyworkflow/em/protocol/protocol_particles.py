@@ -82,16 +82,9 @@ class ProtParticlePicking(ProtParticles):
                       help='Select the SetOfMicrographs ')
 
     #--------------------------- INFO functions ----------------------------------------------------
-    def _summary(self):
+    def getSummary(self, coordSet):
         summary = []
-        if not hasattr(self, 'outputCoordinates'):
-            summary.append(Message.TEXT_NO_OUTPUT_CO) 
-        else:
-            #TODO: MOVE following line to manual picking
-            summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
-            summary.append("Number of particles picked: ")
-            for _, output in self.iterOutputAttributes(EMObject):
-                summary.append('    %d on one set' % output.getSize())
+        summary.append("Number of particles picked: %d" % coordSet.getSize())
         return summary
     
     def _methods(self):
@@ -106,6 +99,8 @@ class ProtParticlePicking(ProtParticles):
         return methodsMsgs
 
 
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
     
     def getCoords(self):
         count = self.getOutputsSize()
@@ -114,14 +109,13 @@ class ProtParticlePicking(ProtParticles):
         return getattr(self, outputName)
 
     def _createOutput(self, outputDir):
-        self._leaveDir()# going back to project dir
-
-        micSet = self.inputMics
+        micSet = self.getInputMicrographs()
         count = self.getOutputsSize()
         suffix = str(count + 1) if count > 0 else ''
         outputName = 'outputCoordinates' + suffix
-        coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
+        coordSet = self._createSetOfCoordinates(micSet, suffix)
         self.readSetOfCoordinates(outputDir, coordSet)
+        coordSet.setObjComment("\n".join(self.getSummary(coordSet)))
         outputs = {outputName: coordSet}
         self._defineOutputs(**outputs)
         self._defineSourceRelation(micSet, coordSet)
@@ -129,11 +123,17 @@ class ProtParticlePicking(ProtParticles):
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
 
-    def summary(self):
+    def _summary(self):
         summary = []
-        if(self.getOutputsSize() > 0):
+        summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        if(self.getOutputsSize() > 1):
             for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
                 summary.append(key + ":\n" + output.getObjComment())
+        elif(self.getOutputsSize() == 1):
+            summary.append(self.getCoords().getObjComment())
+        else:
+            summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
 
 

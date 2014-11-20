@@ -141,7 +141,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     
     def _summary(self):
         if self.getOutputsSize() > 0:
-            return ProtParticlePicking.summary()
+            return ProtParticlePicking._summary(self)
         else:
             return self.getSummary()
 
@@ -185,7 +185,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
             summary.append("Manual particles picked: %d"%(manualParticlesSize))
             summary.append("Particle size:%d" %(particleSize))
-            summary.append("Input micrographs:%d" %(self.inputMicrographs.get().getSize()))
             autopick = "Yes" if isAutopick else "No"
             summary.append("Autopick: " + autopick)
             if isAutopick:
