@@ -232,12 +232,11 @@ class ProtImportImages(ProtImport):
         createSetFunc = getattr(self, '_create' + self._outputClassName)
         imgSet = createSetFunc()
         acquisition = imgSet.getAcquisition()
-        self._fillAcquistion(acquisition)
-        # Setting Acquisition properties
-
+        
+        self.fillAcquisition(acquisition)
         
         # Call a function that should be implemented by each subclass
-        self._setSampling(imgSet)
+        self.setSamplingRate(imgSet)
         
         outFiles = [imgSet.getFileName()]
         imgh = ImageHandler()
@@ -323,7 +322,7 @@ class ProtImportImages(ProtImport):
     def _getOutputSet(self):
         return getattr(self, self._getOutputName(), None)
     
-    def _fillAcquistion(self, acquisition):
+    def fillAcquisition(self, acquisition):
         """ Fill the acquition object with protocol params. """
         acquisition.setVoltage(self.voltage.get())
         acquisition.setSphericalAberration(self.sphericalAberration.get())
@@ -333,7 +332,7 @@ class ProtImportImages(ProtImport):
     def getAcquisition(self):
         """ Build and fill an acquisition object. """
         acquisition = Acquisition()
-        self._fillAcquistion(acquisition)
+        self.fillAcquisition(acquisition)
         
         return acquisition    
 
@@ -361,7 +360,8 @@ class ProtImportMicBase(ProtImportImages):
                        label=Message.LABEL_SCANNED,
                        help='')
         
-    def _setSampling(self, micSet):
+    def setSamplingRate(self, micSet):
+        """ Set the sampling rate to the given set. """
         if self.samplingRateMode == SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
@@ -373,15 +373,15 @@ class ProtImportMicrographs(ProtImportMicBase):
     _label = 'import micrographs'
     _outputClassName = 'SetOfMicrographs' 
     
-    IMPORT_FROM_XMIPP3 = 1
-    IMPORT_FROM_EMX = 2
+    IMPORT_FROM_EMX = 1
+    IMPORT_FROM_XMIPP3 = 2
 
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return ['xmipp3', 'emx']
+        return ['emx', 'xmipp3']
     
     def _defineBasicParams(self, form):
         ProtImportMicBase._defineBasicParams(self, form)
@@ -416,7 +416,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         elif self.importFrom == self.IMPORT_FROM_EMX:
             self._insertFunctionStep('importFromEmxStep', self.micrographsEMX.get())
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            pass
+            self._insertFunctionStep('importFromXmippStep', self.micrographsMd.get())
             
     def importFromEmxStep(self, emxFile):
         from pyworkflow.em.packages.emxlib import EmxImport
@@ -424,9 +424,9 @@ class ProtImportMicrographs(ProtImportMicBase):
         emx.importData(self, emxFile, copyOrLink=self.getCopyOrLink())
         
     def importFromXmippStep(self, micrographsMd):
-        from pyworkflow.em.packages.xmipp3.convert import XmippImport
+        from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
         xi = XmippImport(self)
-        xi.importMicrographs(micrographsMd, copyOrLink=self.getCopyOrLink())
+        xi.importMicrographs(micrographsMd)
         
         
 
@@ -442,8 +442,8 @@ class ProtImportMovies(ProtImportMicBase):
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
         
-    def _setSampling(self, movieSet):
-        ProtImportMicBase._setSampling(self, movieSet)
+    def setSamplingRate(self, movieSet):
+        ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
                     
 
@@ -458,7 +458,7 @@ class ProtImportParticles(ProtImportImages):
         group.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
         
-    def _setSampling(self, imgSet):
+    def setSamplingRate(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())
     
 

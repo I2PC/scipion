@@ -92,11 +92,11 @@ class TestImportMicrographs(TestImportBase):
         """
         emxFn = self.dsEmx.getFile('emxMicrographCtf1')
         protEmxImport = self.newProtocol(ProtImportMicrographs,
-                                         objLabel='emx - import mics',
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
                                          micrographsEMX=emxFn,
                                          magnification=10000
                                          )
+        protEmxImport.setObjLabel('from emx ')
         self.launchProtocol(protEmxImport)
         micFn =self.dsEmx.getFile('emxMicrographCtf1Gold')
         mics  = SetOfMicrographs(filename = micFn)
@@ -108,3 +108,17 @@ class TestImportMicrographs(TestImportBase):
             mic2.setFileName(os.path.basename(mic2.getFileName()))
 
             self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
+    
+    def test_fromXmipp(self):
+        """ Import an EMX file with micrographs and defocus
+        """
+        micsRoot = 'xmipp_project/Micrographs/Imported/run_001/%s'
+        micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
+        prot1 = self.newProtocol(ProtImportMicrographs,
+                                         importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
+                                         micrographsMd=micsMd,
+                                         magnification=10000
+                                         )
+        prot1.setObjLabel('from xmipp (no-ctf)')
+        self.launchProtocol(prot1)
+        
