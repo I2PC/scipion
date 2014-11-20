@@ -50,7 +50,7 @@ $(document).ready(function(){
 				<div class="img_inner_container">
 					<img class="tableImages" 
 					title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" 
-					data-real_src="{{abs_url}}/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
+					data-real_src="{{abs_url}}/render_column/?renderFunc=get_slice&image={{i|add:1}}__slice__{{dataset.getVolumeName}}"/>
 				</div>
 				<div id="column_label">{{i|add:1}}</div> 
 			</div>
