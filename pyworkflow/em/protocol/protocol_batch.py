@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, SetOfNormalModes)
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
 
 
@@ -266,7 +266,8 @@ class ProtUserSubSet(BatchProtocol):
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
         setClassName = db.getProperty('self') # get the set class name
-        setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
+        from pyworkflow.em import emObjectsDict
+        setObj = emObjectsDict[setClassName](filename=self._dbName, prefix=self._dbPrefix)
         return setObj
 
     def _summary(self):

@@ -177,11 +177,12 @@ def setRenderingOptions(request, dataset, table, inputParams):
             _imageVolName = table.getElementById(index, label)
             inputParams[sj.VOL_SELECTED] = _imageVolName
         
-#         elif inputParams[sj.GOTO] and isVol and inputParams[sj.MODE] == sj.MODE_TABLE:
-#              inputParams[sj.SELECTEDITEMS] = int(inputParams[sj.GOTO]) + 1
-#              _imageVolName = inputParams[sj.VOL_SELECTED]
-#             print "imageVolName: ", _imageVolName
-
+        elif inputParams[sj.VOL_SELECTED] and isVol and inputParams[sj.MODE] == sj.MODE_TABLE:
+            # New Functionality used to mark elements rendered in gallery mode for volumes
+            print "selectedItem: ", inputParams[sj.SELECTEDITEMS]
+            _imageVolName = inputParams[sj.VOL_SELECTED]
+            print "imageVolName: ", _imageVolName
+        
         else:
             #Setting the _imageVolName
             _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)

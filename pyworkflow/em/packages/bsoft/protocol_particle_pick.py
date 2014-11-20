@@ -34,6 +34,7 @@ from convert import readSetOfCoordinates
 from posixpath import abspath
 import bsoft
 from pyworkflow.gui.dialog import askYesNo
+from convert import readSetOfCoordinates
 
 
 class BsoftProtParticlePicking(ProtParticlePicking):
@@ -47,10 +48,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         
     def _defineParams(self, form):
     
-        form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
+        ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)    
         
@@ -62,7 +60,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         # Launch Particle Picking GUI
         self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
         # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep')
+        #self._insertFunctionStep('createOutputStep')
         
         
     def launchParticlePickGUIStep(self):
@@ -78,17 +76,22 @@ class BsoftProtParticlePicking(ProtParticlePicking):
         bsoft.loadEnvironment()
         for mic in self.inputMics:
             self.runJob("bshow", basename(mic.getFileName()))
-        self._leaveDir()
+
+
         # Open dialog to request confirmation to create output
         if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
-            self.createOutputStep()
+            self._leaveDir()# going back to project dir
+            self._createOutput(outputdir)
    
-    def createOutputStep(self):
-        outputDir = self._getExtraPath()
-        coordSet = self._createSetOfCoordinates(self.inputMics)
-        readSetOfCoordinates(outputDir, self.inputMics, coordSet)
-        self._defineOutputs(outputCoordinates=coordSet)        
-        self._defineSourceRelation(self.inputMics, coordSet)
+#    def createOutputStep(self):
+#        outputDir = self._getExtraPath()
+#        coordSet = self._createSetOfCoordinates(self.inputMics)
+#        readSetOfCoordinates(outputDir, self.inputMics, coordSet)
+#        self._defineOutputs(outputCoordinates=coordSet)
+#        self._defineSourceRelation(self.inputMics, coordSet)
+
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        readSetOfCoordinates(workingDir, self.inputMics, coordSet)
         
     def _methods(self):
         return ProtParticlePicking._methods(self)

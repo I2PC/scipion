@@ -109,7 +109,7 @@ function updateListSession(id, attr, mode){
 }
 
 /**
- ******************************************** IMAGE METHODS
+ ******************************************** METHODS
  **/
  
 function getListEnabledItems(mode){
@@ -387,9 +387,4 @@ function containsElem(id, list){
 	} while(x<list.length && enc==-1);
 	return enc;
 }
-
-/**
- ******************************************** VOLUME METHODS
- **/
-
 

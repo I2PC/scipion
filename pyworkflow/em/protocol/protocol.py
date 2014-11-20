@@ -60,7 +60,6 @@ class EMProtocol(Protocol):
         
         SqliteDb.closeConnection(setFn)        
         setObj = SetClass(filename=setFn)
-        
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):
