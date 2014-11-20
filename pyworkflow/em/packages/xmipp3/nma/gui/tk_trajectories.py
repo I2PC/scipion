@@ -50,7 +50,7 @@ class TrajectoriesWindow(gui.Window):
         
         self.dim = kwargs.get('dim')
         self.data = kwargs.get('data')
-        self.pathData = PathData()
+        self.pathData = PathData(dim=self.dim)
         self.callback = kwargs.get('callback', None)
         self.numberOfPoints = kwargs.get('numberOfPoints', 10)
         
@@ -162,7 +162,12 @@ class TrajectoriesWindow(gui.Window):
             for point in self.data:
                 if point.eval(value):
                     point.setState(Point.DISCARDED)
-                                        
+                   
+    def setDataIndex(self, indexName, value):
+        """ Set which point data index will be used as X, Y or Z. """
+        setattr(self.data, indexName, value)
+        setattr(self.pathData, indexName, value)
+                             
     def _onUpdateClick(self, e=None):
         components = self.listbox.curselection()
         dim = len(components)
@@ -187,13 +192,14 @@ class TrajectoriesWindow(gui.Window):
             # Actually plot
             baseList = [basename(n) for n in modeNameList]
             
-            self.data.XIND = modeList[0]
+            self.setDataIndex('XIND', modeList[0])
+            self.ps = None
             
             if dim == 1:
                 self.plotter.plotArray1D("Histogram for %s" % baseList[0],  
                                     "Deformation value", "Number of images")
             else:
-                self.data.YIND = modeList[1]
+                self.setDataIndex('YIND', modeList[1])
                 if dim == 2:
                     self._evalExpression()
                     self._updateSelectionLabel()
@@ -202,8 +208,8 @@ class TrajectoriesWindow(gui.Window):
                     self.ps = PointPath(ax, self.data, self.pathData, 
                                         callback=self._checkNumberOfPoints)
                 elif dim == 3:
-                    del self.ps # Remove PointSelector
-                    self.data.ZIND = modeList[2]
+                    #del self.ps # Remove PointSelector
+                    self.setDataIndex('ZIND', modeList[2])
                     self.plotter.plotArray3D("%s %s %s" % tuple(baseList), *baseList)
 
             self.plotter.draw()

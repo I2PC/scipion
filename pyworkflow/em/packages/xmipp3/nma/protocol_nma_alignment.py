@@ -33,7 +33,7 @@ from os.path import basename
 
 from pyworkflow.utils import isPower2, getListFromRangeString
 from pyworkflow.utils.path import copyFile, cleanPath 
-from pyworkflow.protocol.params import (PointerParam, StringParam, IntParam, EnumParam,
+from pyworkflow.protocol.params import (PointerParam, PathParam, IntParam, EnumParam,
                                         FloatParam,
                                         LEVEL_EXPERT, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
@@ -66,16 +66,19 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            'If you leave the field empty, all modes will be used.\n'
                            'You have several ways to specify selected modes.\n'
                            '   Examples:\n'
-                           ' "1,5-8,10" -> [1,5,6,7,8,10]\n'
-                           ' "2,6,9-11" -> [2,6,9,10,11]\n'
-                           ' "2 5, 6-8" -> [2,5,6,7,8])\n')
+                           ' "7,8-10" -> [7,8,9,10]\n'
+                           ' "8, 10, 12" -> [8,10,12]\n'
+                           ' "8 9, 10-12" -> [8,9,10,11,12])\n')
         form.addParam('inputParticles', PointerParam, label="Input particles", 
                       pointerClass='SetOfParticles',
                       help='Select the set of particles that you want to use for flexible analysis.')  
 
-        form.addParam('copyDeformations', StringParam,
+        form.addParam('copyDeformations', PathParam,
                       expertLevel=LEVEL_EXPERT,
-                      label='Copy deformations(only for debug)')
+                      label='Precomputed results (for development)',
+                      help='Enter a metadata file with precomputed elastic  \n'
+                           'and rigid-body alignment parameters and perform \n'
+                           'all remaining steps using this file.')
         
         form.addSection(label='Angular assignment')
         form.addParam('trustRegionScale', IntParam, default=1,
@@ -98,7 +101,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                            'alignment is refined with Splines method if Wavelets and Splines \n'
                            'alignment is chosen.')
                       
-        form.addParallelSection(threads=1, mpi=8)    
+        form.addParallelSection(threads=0, mpi=8)    
     
     
     #--------------------------- INSERT steps functions --------------------------------------------
