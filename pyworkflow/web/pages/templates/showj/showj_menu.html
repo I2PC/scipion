@@ -1,7 +1,7 @@
 <script type="text/javascript" src="{{showj_menu_utils}}" ></script>
 
 <div id="asideMainContainer">
-	<form id="showjForm" action="/showj/" method="post"> {% csrf_token %}
+	<form id="showjForm" action="{{abs_url}}/showj/" method="post"> {% csrf_token %}
 		<div id="modeContainer" class="sectionMenu">
 			
 			<!-- TABLE -->
@@ -45,7 +45,7 @@
 			 
 			<!-- VOLUME VISUALIZE WITH ASTEX -->
 			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
-			<input type="button" id="volume_astex" name="select_mode" 
+			<input type="button" id="volume_jsmol" name="select_mode" 
 			onclick="changeMode('volume_astex');"
 			class="submitButton
 			 {% if form.mode.value != 'volume_astex' %}
@@ -57,9 +57,21 @@
 			 />
 			 {% endif %}
 			 
+			 <!-- VOLUME VISUALIZE WITH JSMOL -->
+			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+			<input type="button" id="volume_jsmol" name="select_mode" 
+			onclick="changeMode('volume_jsmol');"
+			class="submitButton
+			 {% if form.mode.value != 'volume_jsmol' %}
+			 visualizeVolOff
+			 {% else %}
+			  visualizeVolOn
+			 {% endif %}
+			 "
+			 />
+			 {% endif %}
 			 
 			 <!-- VOLUME VISUALIZE WITH CHIMERA HEADLESS -->
-			
 <!-- 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %}  -->
 <!-- 			<input type="button" id="volume_chimera" name="select_mode"  -->
 <!-- 			onclick="changeMode('volume_chimera');" -->
@@ -191,9 +203,15 @@
 	    {{ hidden }}
 	    {% endfor %} 
 	    
-		 <!-- Hidden fields to storage temporally some list attributes. -->
-		 <input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
-		 <input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
-		 <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    <!-- Hidden fields to storage temporally some list attributes. -->
+	    <input type="hidden" id="listChangesItems" name="listChangesItems" value="">
+	    {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+		<!-- VOLUME  -->
+		<input type="hidden" id="selectedItem" name="selectedItem" value="">
+		{% else %}
+		<!-- IMAGE -->
+		<input type="hidden" id="listSelectedItems" name="listSelectedItems" value="">
+		<input type="hidden" id="listEnabledItems" name="listEnabledItems" value="">
+		{% endif %}
 	</form>
 </div>	

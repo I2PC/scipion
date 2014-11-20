@@ -28,7 +28,6 @@ import json
 from django.http import HttpResponse
 from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView
 
-
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
 def launch_viewer(request):
@@ -89,7 +88,7 @@ def viewToUrl(request, view):
 
     # PLOT
     if isinstance(view, Plotter):
-        url = 'url::' + savePlot(request, view)
+        url = 'url::/' + savePlot(request, view)
     
     # SHOWJ
     elif isinstance(view, DataView):
@@ -102,7 +101,7 @@ def viewToUrl(request, view):
         
         if view.getTableName():
             url += '&%s=%s' % (TABLE_NAME, view.getTableName())
-        url = 'showj::' + url
+        url = 'showj::'+ url
         
     # TEXT VIEWER
     elif isinstance(view, TextView):

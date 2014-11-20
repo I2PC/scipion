@@ -33,6 +33,7 @@ from pyworkflow.utils import *
 # import xmipp
 from geometrical_mask import XmippGeometricalMask3D, XmippGeometricalMask2D
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
+from convert import getImageLocation
 
 from pyworkflow.em.constants import *
 from constants import *
@@ -58,7 +59,13 @@ class XmippProtMask():
                       default=SOURCE_GEOMETRY, choices=['Geometry','Created mask'], 
                       help='Select which type of mask do you want to apply. \n ')
         
-        self._defineProtParams(form)
+        form.addParam('inputMask', PointerParam, pointerClass=self.MASK_CLASSNAME, 
+                      condition='source==%d' % SOURCE_MASK,
+                      label="Input mask")
+        
+        self.GEOMETRY_BASECLASS.defineParams(self, form, 
+                                             isGeometry='source==%d' % SOURCE_GEOMETRY,
+                                             addSize=False)
         
         form.addParam('fillType', EnumParam, 
                       choices=['value', 'min', 'max', 'avg'], 
@@ -74,27 +81,89 @@ class XmippProtMask():
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
         inputFn = self.inputFn
-        if self.source.get() == SOURCE_MASK:
-            self._insertFunctionStep('copyFileStep')
-        inputFn = self.inputFn
+
+        if self.source == SOURCE_MASK:
+            inputMaskFile = getImageLocation(self.inputMask.get())
+            outputMaskFile = self._getTmpPath(self.MASK_FILE)
+            self._insertFunctionStep('copyMaskFileStep', inputMaskFile, outputMaskFile)
+        
         if self.fillType == MASK_FILL_VALUE:
             fillValue = self.fillValue.get()
+        else:
+            fillValue = self.getEnumText('fillType')
         
-        self._args += " --substitute %(fillValue)f "
+        self._args += " --substitute %(fillValue)s "
         
         if self.source == SOURCE_GEOMETRY:
             self._args += self._getGeometryCommand()
         elif self.source == SOURCE_MASK:
-            self._args += "--mask binary_file %s" % self.maskFn
+            self._args += ("--mask binary_file %s" % outputMaskFile)
         else:
             raise Exception("Unrecognized mask type: %d" % self.source)
         
         self._insertFunctionStep("maskStep", self._args % locals())
     
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def copyMaskFileStep(self, inputMaskFile, outputMaskFile):
+        """ Create a local copy of the mask.
+        We use ImageHandler.convert instead of copyFile 
+        because the mask could be inside an stack.
+        """
+        ImageHandler().convert(self.inputMask.get(), outputMaskFile)
+    
+    def maskStep(self, args):
+        args += self._getExtraMaskArgs()
+        self.runJob('xmipp_transform_mask', args)            
+        
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _getExtraMaskArgs(self):
+        """ Return some extra arguments for the mask program.
+        This function will varies when masking particles or volumes.
+        """
+        args = " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
+        return args
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self, geoClass):
+        messages = []      
+        messages.append("*Mask application*")
+        if self.source.get() == SOURCE_GEOMETRY:
+            messages.append(' Used geometrical mask:')
+            messages += geoClass.summary(self)
+        else:
+            messages.append(' Used created mask: %s' % self.inputMask.get().getNameId())
+            
+        if self.fillType.get() == MASK_FILL_VALUE:
+            messages.append(' Filled with %s value' % self.fillValue.get())
+        else:
+            messages.append(' Filled with %s value' % self.getEnumText('fillType'))
+                                 
+        return messages    
+
+    def _methods(self, geoClass):
+        messages = []      
+        messages.append("*Mask application*")
+        
+        if self.source.get() == SOURCE_GEOMETRY:
+            messages.append("We applied a geometrical mask:")
+            messages+=geoClass.methods(self)
+        else:
+            messages.append('We applied a created mask: %s' % self.inputMask.get().getNameId())
+            
+        if self.fillType.get() == MASK_FILL_VALUE:
+            messages.append('filled with %s value' % self.fillValue.get())
+        else:
+            messages.append('filled with %s value' % self.getEnumText('fillType'))
+
+        return messages
+        
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
     """ Apply mask to a set of particles """
-    _label = 'apply mask'
+    _label = 'apply 2d mask'
+    
+    MASK_FILE = 'mask.spi'
+    MASK_CLASSNAME = 'Mask'
+    GEOMETRY_BASECLASS = XmippGeometricalMask2D
     
     def __init__(self, **args):
         ProtMaskParticles.__init__(self, **args)
@@ -105,35 +174,33 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
     def _defineProcessParams(self, form):
         XmippProtMask._defineProcessParams(self, form)
     
-    def _defineProtParams(self, form):
-        form.addParam('inputMask', PointerParam, pointerClass="Mask", label="Input mask",condition='source==%d' % SOURCE_MASK)
-        XmippGeometricalMask2D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def copyFileStep(self, *args):
-        """ Convert the input mask to file. """
-        ImageHandler().convert(self.inputMask.get().getLocation(), (None, self.maskFn))
-    
-    def maskStep(self, args):
-        args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-        self.runJob('xmipp_transform_mask', args)
-    
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _defineFilenames(self):
-        XmippProcessParticles._defineFilenames(self)
-        if self.source == SOURCE_MASK:
-            self.maskFn = self.inputMask.get().getLocation()
-    
     def _getGeometryCommand(self):
         Xdim = self.inputParticles.get().getDimensions()[0]
         self.ndim = self.inputParticles.get().getSize()
         args = XmippGeometricalMask2D.argsForTransformMask(self, Xdim)
         return args
 
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        messages = []      
+        messages += XmippProtMask._summary(self, XmippGeometricalMask2D)
 
+        return messages
+
+    def _methods(self):
+        messages = []      
+        messages += XmippProtMask._methods(self, XmippGeometricalMask2D)
+
+        return messages
+    
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
     """ Apply mask to a volume """
-    _label = 'apply mask'
+    _label = 'apply 3d mask'
+    
+    MASK_FILE = 'mask.vol'
+    MASK_CLASSNAME = 'VolumeMask'
+    GEOMETRY_BASECLASS = XmippGeometricalMask3D
     
     def __init__(self, **args):
         ProtMaskVolumes.__init__(self, **args)
@@ -144,34 +211,30 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
     def _defineProcessParams(self, form):
         XmippProtMask._defineProcessParams(self, form)
     
-    def _defineProtParams(self, form):
-        form.addParam('inputMask', PointerParam, pointerClass="VolumeMask", label="Input mask",condition='source==%d' % SOURCE_MASK)
-        XmippGeometricalMask3D.defineParams(self, form, isGeometry='source==%d' % SOURCE_GEOMETRY, addSize=False)
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def copyFileStep(self, *args):
-        """ Convert the input mask to file. """
-        ImageHandler().convert(self.inputMask.get().getLocation(), (None, self.maskFn))
-    
-    def maskStep(self, args):
-        if self._isSingleInput():
-            args += " -o %s" % self.outputStk
-        else:
-            args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-        
-        self.runJob('xmipp_transform_mask', args)
-    
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _defineFilenames(self):
-        XmippProcessVolumes._defineFilenames(self)
-        if self.source == SOURCE_MASK:
-            self.maskFn = self.inputMask.get().getLocation()
-    
     def _getGeometryCommand(self):
-        if isinstance(self.inputVolumes.get(), Volume):
+        if self._isSingleInput():            
             Xdim = self.inputVolumes.get().getDim()[0]
         else:
             Xdim = self.inputVolumes.get().getDimensions()[0]
-        args = XmippGeometricalMask3D.argsForTransformMask(self,Xdim)
+        args = XmippGeometricalMask3D.argsForTransformMask(self, Xdim)
         return args
 
+    def _getExtraMaskArgs(self):
+        if self._isSingleInput():
+            return " -o %s" % self.outputStk
+        else:
+            return XmippProtMask._getExtraMaskArgs(self)
+
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        messages = []      
+        messages += XmippProtMask._summary(self, XmippGeometricalMask3D)
+
+        return messages
+    
+    def _methods(self):
+        messages = []      
+        messages += XmippProtMask._methods(self, XmippGeometricalMask3D)
+
+        return messages

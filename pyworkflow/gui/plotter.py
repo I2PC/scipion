@@ -42,7 +42,7 @@ class Plotter(View):
         
     def __init__(self, x=1, y=1, mainTitle="", 
                  figsize=None, dpi=100, windowTitle="",
-                 fontsize=8):
+                 fontsize=8, **kwargs):
         """ This Plotter class has some utilities to create a Matplotlib figure
         and add some plots to it.
         Params:
@@ -53,18 +53,19 @@ class Plotter(View):
             windowTitle: title for the whole windows.
         """
         self.fontsize = fontsize
+        self.tightLayoutOn = True
+        
         if self.plt is None:
-            import matplotlib
-
             if self.interactive:
                 self.backend = 'TkAgg'
             else:
                 self.backend = 'Agg'
-            matplotlib.use(self.backend)
             import matplotlib.pyplot as plt
+            plt.switch_backend(self.backend)
             self.plt = plt
             if self.interactive:
                 plt.ion()
+       
            
         if figsize is None: # Set some defaults values
             if x == 1 and y == 1:
@@ -78,11 +79,13 @@ class Plotter(View):
         
         # Create grid
         import matplotlib.gridspec as gridspec
+        from matplotlib.figure import Figure
         self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
         self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
         self.gridx = x
         self.gridy = y
         self.figure = plt.figure(figsize=figsize, dpi=dpi)
+        #self.figure = Figure(figsize=figsize, dpi=dpi)
         #self.mainTitle = mainTitle
         #self.windowTitle = windowTitle
         if (mainTitle):
@@ -90,6 +93,7 @@ class Plotter(View):
         if (windowTitle):
             self.figure.canvas.set_window_title(windowTitle) 
         self.plot_count = 0
+        self.last_subplot = None
         self.plot_title_fontsize = fontsize + 4
         self.plot_axis_fontsize  = fontsize + 2
         self.plot_text_fontsize  = fontsize
@@ -154,18 +158,34 @@ class Plotter(View):
         a.set_axis_off()
         self.figure.set_facecolor('white')
         return a
+    
+    def tightLayout(self):
+        if self.tightLayoutOn and self.plot_count > 1:
+            self.grid.tight_layout(self.figure)            
         
-    def show(self, interactive=True):
+    def show(self, interactive=True, block=False):
         self.setInteractive(interactive)
-        self.plt.tight_layout()
-        self.plt.show()
+        self.tightLayout()
+        self.plt.show(block=block)
 
     def draw(self):
-        #self.activate()
-        self.plt.tight_layout()
-        self.plt.draw()
+        self.tightLayout()
+        self.getCanvas().draw()
+        
+    def clear(self):
+        self.getFigure().clear()
+        self.plot_count = 0
+        self.last_subplot = None
         
     def savefig(self, *args, **kwargs):
-        self.plt.tight_layout()
+        self.tightLayout()
         self.figure.savefig(*args, **kwargs)
+        
+    def isClosed(self):
+        """ Return true if the figure have been closed. """
+        return not self.plt.fignum_exists(self.figure.number)
+    
+    def close(self):
+        """ Close current Plotter figure. """
+        self.plt.close(self.figure)
         

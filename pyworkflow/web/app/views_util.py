@@ -34,7 +34,7 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFoun
 from django.core.servers.basehttp import FileWrapper
 
 from pyworkflow.em import emProtocolsDict
-from pyworkflow.web.pages import settings
+from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.utils import *
@@ -44,6 +44,8 @@ from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
 
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
+            'logo_scipion_small': 'scipion_logo.png',
+            'logo_scipion_normal': 'scipion_logo_normal.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
             'favicon': 'favicon.png',
             'help': 'system_help24.png',
@@ -59,7 +61,20 @@ iconDict = {
             'analyze_toolbar': 'visualize.gif',
             'new_toolbar': 'new_object.gif',
             'no_image': 'no-image.png',
-            'loading' : 'loading.gif'
+            'loading' : 'loading.gif',
+            'error_page' : 'error_page.jpg',
+            
+            #Extensions file
+            'folder': 'fa-folder-open.png',
+            'file_normal': 'fa-file-o.png',
+            'file_text':'file_text.gif',
+            'file_image':'file_image.gif',
+            'file_python': 'file_python.gif',
+            'file_java':'file_java.gif',
+            'file_md':'file_md.gif',
+            'file_sqlite':'file_sqlite.gif',
+            'file_vol':'file_vol.gif',
+            'file_stack':'file_stack.gif',
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -88,7 +103,9 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jquery_ui': 'jquery/jquery-ui.js',
           'jquery_ui_touch': 'jquery/jquery.ui.touch-punch.min.js',
           'jquery_hover_intent': 'jquery/jquery.hoverIntent.minified.js',
-          'jsplumb': 'jsPlumb/jquery.jsPlumb.js',
+          'jquery_browser':'jquery/jquery.serverBrowser.js',
+          
+          'config': 'templates_libs/config.js',
           'utils': 'templates_libs/utils.js',
           'host_utils': 'templates_libs/host_utils.js',
           'graph_utils': 'templates_libs/graph_utils.js',
@@ -97,6 +114,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'project_utils': 'templates_libs/project_utils.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
+          'upload_utils': 'templates_libs/upload_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'showj_libs/colReorder.js',
@@ -110,22 +128,28 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'showj_table_utils': 'showj_libs/showj_table_utils.js',
           'showj_column_utils': 'showj_libs/showj_column_utils.js',
           
-          'messi': 'messi/messi.js',
-          'raphael': 'raphael/raphael.js',
+          #Utils libs
+          'jsplumb': 'jsPlumb.js',
+          'messi': 'messi.js',
+          'raphael': 'raphael.js',
+          
+          #JSmol
+          'jsmol': 'jsmol/JSmol.min.js',
+          'jsmolFolder': 'jsmol/j2s',
           
           }
 
 def getResourceIcon(icon):
-    return os.path.join(settings.MEDIA_URL, iconDict[icon])
+    return os.path.join(django_settings.MEDIA_URL, iconDict[icon])
 
 def getResourceLogo(logo):
-    return os.path.join(settings.MEDIA_URL, logo)
+    return os.path.join(django_settings.MEDIA_URL, logo)
 
 def getResourceCss(css):
-    return os.path.join(settings.STATIC_URL, "css/", cssDict[css])
+    return os.path.join(django_settings.STATIC_URL, "css/", cssDict[css])
 
 def getResourceJs(js):
-    return os.path.join(settings.STATIC_URL, "js/", jsDict[js])
+    return os.path.join(django_settings.STATIC_URL, "js/", jsDict[js])
 
 def loadProject(projectName):
     manager = Manager()
@@ -293,7 +317,7 @@ def textfileViewer(title, file):
     
     return html
 
-def file_downloader(request):
+def get_log(request):
     "Return a response with the content of the file mentioned in ?path=fname"
     # Got the idea from here:
     # https://stackoverflow.com/questions/8600843
@@ -312,6 +336,46 @@ def file_downloader(request):
     response['Content-Disposition'] = 'attachment; filename=%s' % path
     return response
 
+def get_file(request):
+    "Return a response with the content of the file mentioned in ?path=fname"
+    path = request.GET.get("path")
+    filename = request.GET.get("filename", path)
+    
+
+    if not os.path.exists(path):
+        return HttpResponseNotFound('Path not found: %s' % path)
+
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
+
+
+def download_output(request):
+    if request.is_ajax():
+        projectName = request.session['projectName']
+        project = loadProject(projectName)
+        objId = request.GET.get('objId', None)
+        
+        obj = project.getProtocol(int(objId))
+        if obj is None:
+            obj = project.getProtocol(int(objId)).get()
+            
+        files = obj.getFiles()
+        
+        import zipfile
+        z = zipfile.ZipFile("output.zip", "w")
+        
+        for f in files:
+            z.write(f, arcname=os.path.basename(f))
+        z.close()
+        
+        pathFile = os.path.join(request.session['projectPath'], "output.zip")
+        
+        return HttpResponse(pathFile, mimetype='application/javascript')
+    
+    
 def render_column(request):
     
     renderFunction = request.GET.get("renderFunc")
@@ -417,51 +481,55 @@ def get_slice(request):
     imagePath = request.GET.get('image')
     imageDim = request.GET.get('dim', 150)
     mirrorY = 'mirrorY' in request.GET
+    
 #    applyTransformMatrix = 'applyTransformMatrix' in request.GET
 #    onlyApplyShifts = request.GET.get('onlyApplyShifts',False)
 #    wrap = request.GET.get('wrap',False)
 #    transformMatrix = request.GET.get('transformMatrix',None)
 
-    try:
-            # PAJM: Como vamos a gestionar lsa imagen    
-        if not '@' in imagePath:
-            raise Exception('Slice number required.')
-        
+    if not '@' in imagePath:
+        sliceNo = int(int(imageDim)/2)
+    else:
         parts = imagePath.split('@', 1)
         sliceNo = parts[0]
         imagePath = parts[1]
         
-        if '@' in imagePath:
-                parts = imagePath.split('@')
-                imageNo = parts[0]
-                imagePath = parts[1]
-    
-        if 'projectPath' in request.session:
-            imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
-            if not os.path.isfile(imagePathTmp):
-                raise Exception('should not use getInputPath')
-                #imagePath = getInputPath('showj', imagePath)
-                
-        if imageNo:
-            imagePath = '%s@%s' % (imageNo, imagePath)                 
+    if '@' in imagePath:
+            parts = imagePath.split('@')
+            imageNo = parts[0]
+            imagePath = parts[1]
 
-        imgXmipp = xmipp.Image()
-        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
-                
-    #        if applyTransformMatrix and transformMatrix != None: 
-    #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
-    #        
-        if mirrorY: 
-            imgXmipp.mirrorY()
-        
-        # from PIL import Image
-        img = getPILImage(imgXmipp, None, False)
+    if 'projectPath' in request.session:
+        imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+#         if not os.path.isfile(imagePathTmp):
+#             raise Exception('should not use getInputPath')
+            #imagePath = getInputPath('showj', imagePath)
+            
+    if imageNo:
+        imagePath = '%s@%s' % (imageNo, imagePath)
+
+    imgXmipp = xmipp.Image()
     
-    except Exception, ex:
-        print "error loading slice: ", ex
-        img = getImage(findResource(getResourceIcon("no_image")), tkImage=False)         
+    if sliceNo >= 0:
+        imgXmipp.readPreview(imagePath, int(imageDim), int(sliceNo))
+    else:
+        imgXmipp.readPreview(imagePath, int(imageDim), int(imageDim)/2)
+        
+#        if applyTransformMatrix and transformMatrix != None: 
+#            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
+#        
+    if mirrorY: 
+        imgXmipp.mirrorY()
+    
+    # from PIL import Image
+#   img = getPILImage(imgXmipp, None, False)
+    img = getPILImage(imgXmipp)
+
     
     response = HttpResponse(mimetype="image/png")
+    
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
     img.save(response, "PNG")
     return response
 
@@ -566,6 +634,19 @@ def savePlot(request, plot):
     name_img = 'image%s.png' % id(plot)
     fn = os.path.join(projectPath,'Tmp', name_img)
     plot.savefig(fn)
-    url_plot = "/get_image_plot/?image=" + fn
+    url_plot = "get_image_plot/?image=" + fn
         
     return url_plot
+
+#===============================================================================
+# ERROR PAGE
+#===============================================================================
+
+def error(request):
+    from views_base import base_grid
+    context = {"logoScipionNormal": getResourceIcon("logo_scipion_normal"),
+               "logoErrorPage":getResourceIcon("error_page"),
+               }
+    context = base_grid(request, context)
+    return render_to_response('error.html', context)
+

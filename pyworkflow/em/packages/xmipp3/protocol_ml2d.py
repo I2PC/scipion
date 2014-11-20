@@ -33,7 +33,7 @@ from pyworkflow.em.protocol import ProtClassify2D
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
 from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam
 
-from convert import createXmippInputImages, readSetOfClasses2D
+from convert import writeSetOfParticles, readSetOfClasses2D
 
 
         
@@ -54,18 +54,26 @@ class XmippProtML2D(ProtClassify2D):
     _label = 'ml2d'
     
     def __init__(self, **args):
-        ProtClassify2D.__init__(self, **args)        
-        self.progId = "ml"
-        self.oroot = ""
+        ProtClassify2D.__init__(self, **args)
+        
+    def _defineFileNames(self):
+        """ Centralize how files are called within the protocol. """
+        myDict = {
+                  'input_particles': self._getTmpPath('input_particles.xmd'),
+                  'input_references': self._getTmpPath('input_references.xmd'),
+                  'output_classes': self._getOroot() + 'classes.xmd',
+                  }
+        self._updateFilenamesDict(myDict)
        
     #--------------------------- DEFINE param functions --------------------------------------------   
     
     def _defineParams(self, form):
         form.addSection(label='Params')
+        
         group = form.addGroup('Input')
-        group.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
-                      pointerClass='SetOfParticles',
-                      help='Select the input images from the project.')        
+        group.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+                       label="Input particles", important=True,
+                       help='Select the input images from the project.')        
         group.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate references?', 
                       help='If you set to *No*, you should provide references images'
@@ -74,7 +82,8 @@ class XmippProtML2D(ProtClassify2D):
         group.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of references:',
                       help='Number of references to be generated.')
-        group.addParam('referenceParticles', PointerParam, condition='not doGenerateReferences',
+        group.addParam('inputReferences', PointerParam, allowsNull=True,
+                       condition='not doGenerateReferences',
                       label="Reference image(s)", 
                       pointerClass='SetOfParticles',
                       help='Image(s) that will serve as initial 2D references')
@@ -95,9 +104,7 @@ class XmippProtML2D(ProtClassify2D):
                       help='No frequencies higher than this limit will be taken into account.'
                            'If zero is given, no limit is imposed.')
         
-        form.addSection(label='Advanced')#, questionParam='showAdvanced')        
-#        form.addParam('showAdvanced', BooleanParam, default=False,
-#                      label='Show advanced parameters')
+        form.addSection(label='Advanced')
         form.addParam('doMirror', BooleanParam, default=True,
                       label='Also include mirror in the alignment?',
                       help='Including the mirror transformation is useful if your particles'
@@ -133,26 +140,23 @@ class XmippProtML2D(ProtClassify2D):
            
     #--------------------------- INSERT steps functions --------------------------------------------  
     
-    def _insertAllSteps(self):        
-        self.oroot = self._getOroot()
-        self.program = "xmipp_%s_align2d" % self.progId       
-        
-        # Convert input images if necessary
-        self.imgsFn = createXmippInputImages(self, self.inputParticles.get())
-        
-        self._insertMLStep()
+    def _insertAllSteps(self):  
+        self._defineFileNames()      
+        self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
+        program = self._getMLProgram()
+        params = self._getMLParams()
+        self._insertRunJobStep(program, params)
         self._insertFunctionStep('createOutputStep')
 
-    def _insertMLStep(self):
+    def _getMLParams(self):
         """ Mainly prepare the command line for call ml(f)2d program"""
-        params = ' -i %s --oroot %s' % (self.imgsFn, self.oroot)
+        params = ' -i %s --oroot %s' % (self._getFileName('input_particles'), self._getOroot())
         if self.doGenerateReferences:
             params += ' --nref %d' % self.numberOfReferences.get()
+            self.inputReferences.set(None)
         else:
-            self.inputRefs = self.referenceParticles.get()
-            refsFn = createXmippInputImages(self, self.inputRefs, imagesFn='input_references.xmd')
-            params += ' --ref %s' % refsFn
-            self.numberOfReferences.set(self.inputRefs.getSize())
+            params += ' --ref %s' % self._getFileName('input_references')
+            self.numberOfReferences.set(self.inputReferences.get().getSize())
         
         if self.doMlf:
             if not self.doCorrectAmplitudes:
@@ -165,11 +169,11 @@ class XmippProtML2D(ProtClassify2D):
         else:
             if self.doFast:
                 params += ' --fast'
-            if self.numberOfThreads.get() > 1:
+            if self.numberOfThreads > 1:
                 params += ' --thr %d' % self.numberOfThreads.get()
             
-        if self.maxIters.get() != 100:
-            params += " --iter %d" % self.maxIters.get()
+        if self.maxIters != 100:
+            params += ' --iter %d' % self.maxIters.get()
 
         if self.doMirror:
             params += ' --mirror'
@@ -177,21 +181,33 @@ class XmippProtML2D(ProtClassify2D):
         if self.doNorm:
             params += ' --norm'
 
-        self._insertRunJobStep(self.program, params)
+        return params
         
     #--------------------------- STEPS functions --------------------------------------------       
-    
+    def convertInputStep(self, inputId):
+        """ Write the input images as a Xmipp metadata file. """
+        writeSetOfParticles(self.inputParticles.get(), self._getFileName('input_particles'))
+        # If input references, also convert to xmipp metadata
+        if not self.doGenerateReferences:
+            writeSetOfParticles(self.inputReferences.get(), self._getFileName('input_references'))
+        
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
-        readSetOfClasses2D(classes2DSet, self.oroot + 'classes.xmd')
+        readSetOfClasses2D(classes2DSet, self._getFileName('output_classes'))
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
+        if not self.doGenerateReferences:
+            self._defineSourceRelation(self.inputReferences.get(), classes2DSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _validate(self):
         errors = []
+        if self.doMlf:
+            if not self.inputParticles.get().hasCTF():
+                errors.append('Input particles does not have CTF information.\n'
+                              'This is required when using ML in fourier space.')
         return errors
     
     def _citations(self):
@@ -199,6 +215,7 @@ class XmippProtML2D(ProtClassify2D):
         
         if self.doMlf:
             cites.append('Scheres2007b')
+            
         elif self.doFast:
             cites.append('Scheres2005b')
             
@@ -223,7 +240,19 @@ class XmippProtML2D(ProtClassify2D):
         return summary
     
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        methods = []
+        methods.append('An input dataset of *%d* images was classified' % self.inputParticles.get().getSize())
+        methods.append('into *%d* 2D classes using Maximum Likelihood (ML) inside Xmipp.' % self.numberOfReferences.get())
+        
+        if self.doMlf:
+            methods.append('ML was used in _Fourier-space_.')
+        elif self.doFast:
+            methods.append('Used _fast_, reduced search-space approach.')
+
+        if self.doNorm:
+            methods.append('The _normalization_ was refined for each experimental image.')
+            
+        return methods
     
     #--------------------------- UTILS functions --------------------------------------------
     
@@ -233,10 +262,8 @@ class XmippProtML2D(ProtClassify2D):
         """
         if it is None:
             it = self._lastIteration()
-        else:
-            self.oroot = self._getOroot()
             
-        extra = self.oroot + 'extra'
+        extra = self._getOroot() + 'extra'
         mdFile = join(extra, 'iter%03d' % it, 'iter_classes.xmd')
         if block:
             mdFile = block + '@' + mdFile
@@ -245,8 +272,6 @@ class XmippProtML2D(ProtClassify2D):
     
     def _lastIteration(self):
         """ Find the last iteration number """
-        if self.oroot == "":
-            self.oroot = self._getOroot()
         it = 0        
         while True:
             if not exists(self._getIterClasses(it+1)):
@@ -254,8 +279,16 @@ class XmippProtML2D(ProtClassify2D):
             it += 1
         return it        
     
-    def _getOroot(self):        
+    def _getMLId(self):
+        """ Return ml or mlf depending if using fourier or not. """
         if self.doMlf:
-            self.progId += "f"
-        return self._getPath('%s2d_' % self.progId)  
+            return 'mlf'
+        return 'ml'
+    
+    def _getMLProgram(self):
+        """ Return the program to be used, depending if using fourier. """
+        return "xmipp_%s_align2d" % self._getMLId()
+    
+    def _getOroot(self):        
+        return self._getPath('%s2d_' % self._getMLId())  
     

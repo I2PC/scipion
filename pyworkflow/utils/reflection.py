@@ -25,7 +25,7 @@
 # **************************************************************************
 """
 This module contains reflection utilities
-(dynamically load classes, inspect object properties and others) 
+(dynamically load classes, inspect object properties and others)
 """
 
 import os, sys
@@ -42,7 +42,7 @@ def getModules(path):
     sys.path.append(path)
     folders = os.listdir(path)
     modules = {}
-    
+
     for f in folders:
         if exists(join(path, f, '__init__.py')):
             try:
@@ -53,14 +53,14 @@ def getModules(path):
                 print ">>> Exception: ", ex
                 import traceback
                 traceback.print_exc()
-    
+
     return modules
-    
+
 def getSubclassesFromModules(BaseClass, modules, debug=False):
     """ Find subclasses of BaseClass from a give dict of modules.
     """
     subclasses = {}
-    
+
     for m in modules.values():
         if debug:
             print "loading module: ", m.__name__
@@ -74,7 +74,7 @@ def getSubclassesFromModules(BaseClass, modules, debug=False):
                 if debug:
                     print "  found: ", subclass.__name__, "module: ", subclass.__module__
         subclasses.update(subDict)
-    
+
     return subclasses
 
 def getSubclassesFromPath(BaseClass, path):
@@ -84,7 +84,7 @@ def getSubclassesFromPath(BaseClass, path):
     """
     modules = getModules(path)
     return getSubclassesFromModules(BaseClass, modules)
-    
+
 def getSubclasses(BaseClass, inputDict):
     """ Iterate over inputDict and find all subclasses
     of BaseClass, that will be set in outputDict.
@@ -94,6 +94,3 @@ def getSubclasses(BaseClass, inputDict):
         if isclass(v) and issubclass(v, BaseClass):
             outputDict[k] = v
     return outputDict
-
-
-    

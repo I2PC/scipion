@@ -31,17 +31,31 @@ Bibtex string file for Xmipp package.
 _bibtexStr = """
 
 @article{Abrishami2013,
-author = {Abrishami, V. and Zaldívar-Peraza, A. and de la Rosa-Trevín, J. M. and Vargas, J. and Otón, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.}, 
+author = {Abrishami, V. and Zaldívar-Peraza, A. and de la Rosa-Trevín, J. M. and Vargas, J. and Otón, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.},
 title = {A pattern matching approach to the automatic selection of particles from low-contrast electron micrographs},
-volume = {29}, 
-number = {19}, 
-pages = {2460-2468}, 
-year = {2013}, 
-doi = {http://dx.doi.org/10.1093/bioinformatics/btt429}, 
-url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract}, 
-journal = {Bioinformatics} 
+volume = {29},
+number = {19},
+pages = {2460-2468},
+year = {2013},
+doi = {http://dx.doi.org/10.1093/bioinformatics/btt429},
+url = {http://bioinformatics.oxfordjournals.org/content/29/19/2460.abstract},
+journal = {Bioinformatics}
 }
 
+@article{Abrishami2014a,
+title = "Alignment of Direct Detector Device micrographs using a robust Optical Flow approach",
+journal = "Journal of Structural Biology",
+volume = "None",
+number = "None",
+pages = "None",
+year = "?",
+note = "Submitted",
+issn = "None",
+doi = "None",
+url = "None",
+author = "Abrishami, V. and Vargas, J. and Xueming, L. and Yifan, C. and Marabini, R. and Sorzano, C. O. S. and Carazo, J. M. ",
+keywords = "Direct Detector Devices"
+}
 
 @article{Chen2013,
 title = "Fast and accurate reference-free alignment of subtomograms ",
@@ -98,6 +112,18 @@ doi = "http://dx.doi.org/10.1016/j.ultramic.2005.02.002",
 url = "http://www.sciencedirect.com/science/article/pii/S0304399105000173",
 author = "Jonic, S. and C.O.S. Sorzano and P. Thevenaz and C. El-Bez and S. De Carlo and M. Unser",
 keywords = "2D/3D registration, Splines, 3DEM, Angular assignment "
+}
+
+@article{Li2013,
+  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
+  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
+  journal="Nature methods",
+  volume="10",
+  number="6",
+  pages="584-590",
+  year="2013",
+  publisher="Nature Publishing Group",
+  doi = "http://dx.doi.org/10.1038/nmeth.2727"
 }
 
 @article{Nogales2013,
@@ -252,21 +278,6 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
     G, chemistry/ultrastructure; Protein Structure, Tertiary}
 }
 
-@incollection{Sorzano2013,
-title = "Semiautomatic, High-Throughput, High-Resolution Protocol for Three-Dimensional Reconstruction of Single Particles in Electron Microscopy",
-booktitle = "Nanoimaging",
-year = "2013",
-isbn = "978-1-62703-136-3",
-volume = "950",
-journal = "Methods in Molecular Biology",
-editor = "Sousa, Alioscka A. and Kruhlak, Michael J.",
-doi = "http://dx.doi.org/10.1007/978-1-62703-137-0_11",
-publisher = "Humana Press",
-keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
-author = "Sorzano, C.O.S. and de la Rosa-TrevÃ­n, J.M. and OtÃ³n, J. and Vega, J.J. and Cuenca, J. and ZaldÃ­var-Peraza, A. and GÃ³mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, JosÃ©MarÃ­a",
-pages = "171-193",
-}
-
 @article{Sorzano2004b,
 title = "A multiresolution approach to orientation assignment in 3D electron microscopy of single particles ",
 journal = "JSB ",
@@ -281,33 +292,28 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847704000073",
 author = "Sorzano, C.O.S. and S. Jonic and C. El-Bez and J.M. Carazo and S. De Carlo and P. Thevenaz and M. Unser"
 }
 
-@article{Vargas2013a,
-author = {Vargas, J. and Otón, J. and Marabini, R. and Jonic, S. and {de la
-  Rosa-Trevín}, J. M. and et.al.},
-title = {{FASTDEF}: Fast defocus and astigmatism estimation for high-throughput
-  transmission electron microscopy.},
-journal = "JSB",
-doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
-year = {2013},
-volume = {181},
-pages = {136--148},
-number = {2},
-month = {Feb},
+@Article{Sorzano2007a,
+  Title                    = {Fast, robust and accurate determination of transmission electron microscopy contrast transfer function},
+  Author                   = {Sorzano, C. O. S. and Jonic, S. and N\'u\~nez-Ram\'irez, R. and Boisset, N. and Carazo, J. M.},
+  Journal                  = {J. Structural Biology},
+  Year                     = {2007},
+  Pages                    = {249--262},
+  Volume                   = {160},
+  doi = {http://dx.doi.org/10.1016/j.jsb.2007.08.013},
+  url = "http://www.sciencedirect.com/science/article/pii/S104784770700202X"
 }
 
-@article{Vargas2013b,
-title = "Particle quality assessment and sorting for automatic and semiautomatic particle-picking techniques ",
-journal = "JSB",
-volume = "183",
-number = "3",
-pages = "342 - 353",
-year = "2013",
+@article{Sorzano2009d,
+title = "Effects of the downsampling scheme on three-dimensional electron microscopy of single particles",
+journal = "Proc. of IEEE Workshop on Intelligent Signal Processing",
+pages = "175-179",
+year = "2009",
 note = "",
-issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
-author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
-keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
+issn = "978-1-4244-5059-6",
+doi = "http://dx.doi.org/10.1109/WISP.2009.5286563",
+url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5286563",
+author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J. M.",
+keywords = "Downsampling, Single Particles, Electron microscopy"
 }
 
 @article{Sorzano2010a,
@@ -325,37 +331,77 @@ author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo
 keywords = "Single-particle analysis, 2D analysis, Multireference analysis, Electron microscopy "
 }
 
-@article{Sorzano2009d,
-title = "Effects of the downsampling scheme on three-dimensional electron microscopy of single particles",
-journal = "Proc. of IEEE Workshop on Intelligent Signal Processing",
-pages = "175-179",
-year = "2009",
-note = "",
-issn = "978-1-4244-5059-6",
-doi = "http://dx.doi.org/10.1109/WISP.2009.5286563",
-url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=5286563",
-author = "Sorzano, C. O. S. and Iriarte-Ruiz, A. and Marabini, R. and Carazo, J. M.",
-keywords = "Downsampling, Single Particles, Electron microscopy"
+@incollection{Sorzano2013,
+title = "Semiautomatic, High-Throughput, High-Resolution Protocol for Three-Dimensional Reconstruction of Single Particles in Electron Microscopy",
+booktitle = "Nanoimaging",
+year = "2013",
+isbn = "978-1-62703-136-3",
+volume = "950",
+journal = "Methods in Molecular Biology",
+editor = "Sousa, Alioscka A. and Kruhlak, Michael J.",
+doi = "http://dx.doi.org/10.1007/978-1-62703-137-0_11",
+publisher = "Humana Press",
+keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
+author = "Sorzano, C.O.S. and de la Rosa-Trevin, J.M. and Oton, J. and Vega, J.J. and Cuenca, J. and Zaldivar-Peraza, A. and GÃ³mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, JosÃ©MarÃ­a",
+pages = "171-193",
 }
 
-@article{Vargas2013,
-title = "FASTDEF: Fast defocus and astigmatism estimation for high-throughput transmission electron microscopy ",
-journal = "JSB",
-volume = "181",
-number = "2",
-pages = "136 - 148",
+@InProceedings{Sorzano2014,
+  title                    = {Outlier detection for single particle analysis in Electron Microscopy},
+  author                   = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-Trevín, J. M. and Zaldívar-Peraza, A. and Otón, J. and Abrishami, V. and Foche, I. and Marabini, R. and Caffarena, G. and Carazo, J. M.},
+  journal                  = {Proc. Intl. Work-Conference on Bioinformatics and Biomedical Engineering, IWBBIO},
+  year                     = {2014},
+  pages                    = {950},
+  doi                      = "http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf"
+}
+
+@article{Vargas2013a,
+author = {Vargas, J. and Otón, J. and Marabini, R. and Jonic, S. and {de la
+  Rosa-Trevín}, J. M. and et.al.},
+title = {{FASTDEF}: Fast defocus and astigmatism estimation for high-throughput
+  transmission electron microscopy.},
+journal = "J. Structural Biology",
+doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
+year = {2013},
+volume = {181},
+pages = {136--148},
+number = {2},
+month = {Feb},
+}
+
+@article{Vargas2013b,
+title = "Particle quality assessment and sorting for automatic and semiautomatic particle-picking techniques ",
+journal = "J. Structural Biology",
+volume = "183",
+number = "3",
+pages = "342 - 353",
 year = "2013",
 note = "",
 issn = "1047-8477",
-doi = "http://dx.doi.org/10.1016/j.jsb.2012.12.006",
-url = "http://www.sciencedirect.com/science/article/pii/S1047847712003401",
-author = "J. Vargas and J. Otón and R. Marabini and S. Jonic and J.M. de la Rosa-Trevín and J.M. Carazo and C.O.S. Sorzano",
-keywords = "Contrast transfer function, Power spectrum, Single particle analysis "
+doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
+author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
+keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
+}
+
+@article{Vargas2014a,
+title = "A general validation approach for cryoEM ",
+journal = "Nature Methods",
+volume = "",
+number = "",
+pages = "",
+year = "",
+note = "submitted",
+issn = "",
+doi = "",
+url = "",
+author = "Vargas",
+keywords = "Validation"
 }
 
 @article{Marabini2014a,
 title = "CTF Challenge... ",
-journal = "JSB",
+journal = "J. Structural Biology",
 volume = "",
 number = "",
 pages = "",

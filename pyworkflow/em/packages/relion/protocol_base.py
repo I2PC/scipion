@@ -36,13 +36,15 @@ import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
-from pyworkflow.utils import environAdd, moveFile, cleanPath
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import createRelionInputParticles, createClassesFromImages, addRelionLabels
-
+from convert import (createClassesFromImages
+                   , addRelionLabels
+                   , restoreXmippLabels
+                   , convertBinaryFiles)
 
 
 class ProtRelionBase(EMProtocol):
@@ -86,7 +88,7 @@ class ProtRelionBase(EMProtocol):
         myDict = {
                   'input_star': self._getPath('input_particles.star'),
                   'input_mrcs': self._getPath('input_particles.mrcs'),
-                  'data_sorted_xmipp': self.extraIter + 'data_sorted_xmipp.star',
+                  'data_scipion': self.extraIter + 'data_scipion.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
@@ -126,6 +128,10 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
+        form.addParam('verboseLevel', EnumParam, default=1,
+                      choices=['0 low','1 high'],
+                      label='Verbose Level',
+                      help='the higher the more verbose output')
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
@@ -214,14 +220,13 @@ class ProtRelionBase(EMProtocol):
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
                            'are not multiplied by the CTFs.')        
-        #NOTE: this is read from the input particles object
-#         form.addParam('haveDataPhaseFlipped', BooleanParam, default=False,
-#                       label='Have data been phase-flipped?',
-#                       help='Set this to Yes if the images have been ctf-phase corrected during the pre-processing steps. '
-#                            'Note that CTF-phase flipping is NOT a necessary pre-processing step for MAP-refinement in RELION, ' 
-#                            'as this can be done inside the internal CTF-correction. However, if the phases do have been flipped, ' 
-#                            'one should tell the program about it using this option.'
-#                            '*TODO*: remove this property if we keep track of phase flipped')   
+        form.addParam('doCtfManualGroups', BooleanParam, default=False,
+                      label='Do manual grouping ctfs?',
+                      condition='not is2D',
+                      help='Set this to Yes the CTFs will grouping manually.')
+        form.addParam('numberOfGroups', IntParam, default=200,
+                      label='Number of ctf groups', condition='doCtfManualGroups and not is2D',
+                      help='Number of ctf groups that will be create')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
@@ -399,6 +404,7 @@ class ProtRelionBase(EMProtocol):
         """ Prepare the command line arguments before calling Relion. """
         # Join in a single line all key, value pairs of the args dict    
         args = {}
+        
         if self.doContinue:
             self._setContinueArgs(args)
         else:
@@ -425,6 +431,8 @@ class ProtRelionBase(EMProtocol):
         
         if self.IS_3D:
             args['--ref'] = self.referenceVolume.get().getFileName()
+            if not self.isMapAbsoluteGreyScale:
+                args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
             
@@ -455,6 +463,8 @@ class ProtRelionBase(EMProtocol):
                      '--o': self._getExtraPath('relion'),
                      '--oversampling': '1'
                     })
+
+        args['--verb'] = self.verboseLevel.get()
         if self.IS_CLASSIFY:
             args['--tau2_fudge'] = self.regularisationParamT.get()
             args['--iter'] = self.numberOfIterations.get()
@@ -493,13 +503,16 @@ class ProtRelionBase(EMProtocol):
         """
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
-        imgFn = self._getFileName('input_mrcs')
-        Xdim = imgSet.getDimensions()[0]
-        
-        self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
+        filesMapping = convertBinaryFiles(imgSet,self._getTmpPath())
+
+        self.info("Converting set from '%s' into '%s'" %
+                           (imgSet.getFileName(), imgStar))
         from convert import writeSetOfParticles
         # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet, imgStar, None)
+        writeSetOfParticles(imgSet, imgStar, filesMapping)
+        
+        if self.doCtfManualGroups:
+            self._splitInCTFGroups(imgStar)
         
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
@@ -553,9 +566,17 @@ class ProtRelionBase(EMProtocol):
         return cites
     
     def _summary(self):
+        self._initialize()
+        iterMsg = 'Iteration %d' % self._lastIter()
+        if self.hasAttribute('numberOfIterations'):
+            iterMsg += '/%d' % self.numberOfIterations.get()
+        summary = [iterMsg]
+        
         if self.doContinue:
-            return self._summaryContinue()
-        return self._summaryNormal()
+            summary += self._summaryContinue()
+        summary += self._summaryNormal()
+        
+        return summary
 
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 
@@ -611,18 +632,18 @@ class ProtRelionBase(EMProtocol):
                                     self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
         return data_classes
     
-    def _getIterSortedData(self, it):
+    def _getIterData(self, it):
         """ Sort the it??.data.star file by the maximum likelihood. """
-        data_sorted = self._getFileName('data_sorted_xmipp', iter=it)
+        data_sqlite = self._getFileName('data_scipion', iter=it)
         
-        if not exists(data_sorted):
+        if not exists(data_sqlite):
             data = self._getFileName('data', iter=it)
             # TODO: convert the sorted data directly to sqlite
             # and just displayed sorted by LL
-            from convert import sortImagesByLL
-            sortImagesByLL(data, data_sorted)
+            from convert import writeSqliteIterData
+            writeSqliteIterData(data, data_sqlite)
         
-        return data_sorted
+        return data_sqlite
     
     def _getIterAngularDist(self, it):
         """ Return the .star file with the classes angular distribution
@@ -631,30 +652,15 @@ class ProtRelionBase(EMProtocol):
         data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
         
         if not exists(data_angularDist):
-            self._writeIterAngularDist(it)
+            from convert import writeIterAngularDist
+            data_star = self._getFileName('data', iter=it)
+            writeIterAngularDist(data_star, data_angularDist, 
+                                 self.numberOfClasses.get(), self.PREFIXES)
  
         return data_angularDist
     
-    def _writeIterAngularDist(self, it):
-        """ Write the angular distribution. Should be overriden in subclasses. """
-        addRelionLabels()
-        
-        data_star = self._getFileName('data', iter=it)
-        md = xmipp.MetaData(data_star)
-        data_angularDist = self._getFileName('angularDist_xmipp', iter=it)
-        
-        refsList = range(1, self.numberOfClasses.get()+1) 
-        print "refsList: ", refsList
-        for ref3d in refsList:
-            for prefix in self.PREFIXES:
-                mdGroup = xmipp.MetaData()
-                mdGroup.importObjects(md, xmipp.MDValueEQ(xmipp.MDL_REF, ref3d))
-                mdDist = xmipp.MetaData()
-                mdDist.aggregateMdGroupBy(mdGroup, xmipp.AGGR_COUNT, 
-                                          [xmipp.MDL_ANGLE_ROT, xmipp.MDL_ANGLE_TILT], 
-                                          xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
-                mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
-                blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
-                print "Writing angular distribution to: ", blockName + data_angularDist
-                mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND)  
-           
+    def _splitInCTFGroups(self, imgStar):
+        """ Add a new colunm in the image star to separate the particles into ctf groups """
+        from convert import splitInCTFGroups
+        splitInCTFGroups(imgStar, self.numberOfGroups.get())
+

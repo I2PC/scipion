@@ -64,6 +64,9 @@
  * 
  ******************************************************************************/
 
+/**
+ ****************************************** COMMON METHODS
+ **/
 function changeMode(modeNew){
 	/*
 	 * Function to change the visualization mode.
@@ -77,6 +80,10 @@ function changeMode(modeNew){
  		form.submit();
 	}
 }
+
+/**
+ ******************************************** IMAGE METHODS
+ **/
  
 function getListEnabledItems(mode){
 	/*
@@ -154,7 +161,7 @@ function createSubset(){
 	
 }
 
-/** METHOD TO KEEP ITEMS BETWEEN EVENTS *********************/
+/* METHOD TO KEEP ITEMS BETWEEN EVENTS *********************/
 
 function applyChangesToUpdate(){
 	var listSelectedItems = getList("selected").split(",");
@@ -186,7 +193,7 @@ function updateEnabledTemplate(list){
 	}
 }
 
-/** METHOD TO KEEP ITEMS BETWEEN MODES *********************/
+/* METHOD TO KEEP ITEMS BETWEEN MODES *********************/
 	
 function markSelectedItems(mode, list){
 	/*
@@ -230,7 +237,7 @@ function updateEnabledItems(mode, list){
 }
 
 	
-/** LIST UTILS **********************************************/
+/* LIST UTILS **********************************************/
 
 function replaceList(mode, value){
 	switch(mode){
@@ -368,4 +375,10 @@ function containsElem(id, list){
 	} while(x<list.length && enc==-1);
 	return enc;
 }
+
+/**
+ ******************************************** VOLUME METHODS
+ **/
+
+
 

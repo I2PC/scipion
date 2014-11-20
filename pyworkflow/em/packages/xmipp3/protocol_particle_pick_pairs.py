@@ -149,8 +149,12 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         return msg
     
     def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
+        methodsMsgs = []
+        methodsMsgs.append("Number of particles picked: ")
+        for _, output in self.iterOutputAttributes(EMObject):
+            methodsMsgs.append('    %d on one set' % output.getTilted().getSize())
+            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographsTiltedPair.get().getTilted().getSize(), output.getTilted().getBoxSize()))
+
         return methodsMsgs
     
     def _summary(self):
@@ -160,18 +164,15 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         else:
             for key, output in self.iterOutputAttributes(EMObject):
                 summary.append("Particles picked: %d (from %d micrographs)" % (output.getTilted().getSize(), self.inputMicrographsTiltedPair.get().getTilted().getSize()))
-            # Read the picking state from the config.xmd metadata
+                summary.append("Particle size:%d" % output.getBoxSize())
+            
             configfile = join(self._getExtraPath(), 'config.xmd')
-            if exists(configfile):
-                 
+            if exists(configfile):      
                 md = xmipp.MetaData('properties@' + configfile)
                 configobj = md.firstObject()
-                size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
                 activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-                summary.append("Particle size:%d" % size)
                 summary.append("Last micrograph: " + activemic)
         return summary
-    
-    
+       
     
 

@@ -7,14 +7,15 @@ from os.path import dirname, realpath, join
 import pyworkflow as pw
 
 DIRECTORY_PROJECT = dirname(realpath(__file__))
-DB_PATH = join(pw.HOME, 'web', 'scipion.db')
+DB_PATH = join(pw.HOME, 'web', 'scipion_web.db')
 
 DEBUG = True
+# DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
-    ('Jose Gutierrez', 'jose.gutierrez@cnb.csic.es'),
+    ('scipion', 'scipion@cnb.csic.es'),
 )
 
 MANAGERS = ADMINS
@@ -34,6 +35,17 @@ DATABASES = {
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['localhost']
+
+# Subdomain where Scipion is hosted or working
+ABSOLUTE_URL = ''
+# ABSOLUTE_URL = '/examples'
+
+# URL_REDIRECTS = (
+#         (r'www\.example\.com/hello/$', 'http://hello.example.com/'),
+#         (r'www\.example2\.com/$', 'http://www.example.com/example2/'),
+#         (r'asimov.cnb.csic.es/$', 'http://asimov.cnb.csic.es/%s/$' % ABSOLUTE_URL),
+#     )
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -66,7 +78,11 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
+# MEDIA_URL = ABSOLUTE_URL+'/resources/'
 MEDIA_URL = '/resources/'
+
+# Temporary folder where store the files after do a upload
+FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -77,7 +93,7 @@ STATIC_ROOT = 'static'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
+STATIC_URL = ABSOLUTE_URL+'/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -107,15 +123,13 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    
-
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#     'pyworkflow.web.app.middleware.UrlRedirectMiddleware',
 )
 
 SESSION_ENGINE = (
@@ -146,8 +160,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     # 'gunicorn',
     'app',
-    'grappelli',
-    'filebrowser',
 )
 
 try:

@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+from os.path import exists
 import json
 from views_base import base_grid, base_flex
 from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
@@ -31,9 +32,8 @@ from views_tree import loadProtTree
 
 from pyworkflow.manager import Manager
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
-
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -49,7 +49,6 @@ def projects(request):
     context = {'projects': projects,
                'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
-               'view': 'projects',
                }
     
     context = base_grid(request, context)
@@ -91,12 +90,12 @@ def getNodeStateColor(node):
 def update_prot_tree(request):
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     index = request.GET.get('index', None)
 
     # set the new protocol tree chosen
-    settings.setCurrentProtocolMenu(index)
-    settings.write()
+    project_settings.setCurrentProtocolMenu(index)
+    project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -105,13 +104,13 @@ def update_graph_view(request):
     status = request.GET.get('status', None)
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
 
     if status == "True":
-        settings.graphView.set(True)
+        project_settings.graphView.set(True)
     else :
-        settings.graphView.set(False)
-    settings.write()
+        project_settings.graphView.set(False)
+    project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
 
@@ -121,12 +120,12 @@ def save_selection(request):
         
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         
         # Set the selected runs stored in BD    
-        settings.runSelection.set(mark)
+        project_settings.runSelection.set(mark)
         
-        settings.write()
+        project_settings.write()
         
     return HttpResponse(mimetype='application/javascript')
 
@@ -146,7 +145,7 @@ def run_table_graph(request):
     try:
         projectName = request.session['projectName']
         project = loadProject(projectName)
-        settings = project.getSettings()
+        project_settings = project.getSettings()
         provider = ProjectRunsTreeProvider(project)
         
         runs = request.session['runs']
@@ -169,10 +168,10 @@ def run_table_graph(request):
             request.session['runs'] = runsNew
             
             # Get the selected runs stored in BD    
-            selectedRuns = settings.runSelection
+            selectedRuns = project_settings.runSelection
     
             # Get the mode view (list or graph) stored in BD
-            graphView = settings.graphView.get()
+            graphView = project_settings.graphView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
@@ -184,15 +183,15 @@ def run_table_graph(request):
         elif listNewElm:
             request.session['runs'] = runsNew
             jsonStr = json.dumps(listNewElm, ensure_ascii=False)
-            return HttpResponse(jsonStr,mimetype='application/json')
+            return HttpResponse(jsonStr, mimetype='application/json')
         
         else:
             print "No changes detected"
-            return HttpResponse("ok")
+            return HttpResponse("ok", mimetype='text/plain')
         
     except Exception:
         print "Stopped script"
-        return HttpResponse("stop")
+        return HttpResponse("stop", mimetype='text/plain')
 
 
 def formatProvider(provider, mode):
@@ -218,6 +217,7 @@ def project_content(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
     
     projectName = request.GET.get('projectName', None)
+    mode = request.GET.get('mode', None)
     
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -227,28 +227,32 @@ def project_content(request):
     request.session['projectPath'] = manager.getProjectPath(projectName)
    
     project = loadProject(projectName)
-    settings = project.getSettings()
+    project_settings = project.getSettings()
     
     provider = ProjectRunsTreeProvider(project)
     runs = formatProvider(provider, "runs")
     request.session['runs'] = runs
 
     # Get the selected runs stored in BD    
-    selectedRuns = settings.runSelection
+    selectedRuns = project_settings.runSelection
 
     # Get the mode view (list or graph) stored in BD
-    graphView = settings.graphView.get()
+    graphView = project_settings.graphView.get()
     
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
     # get the choices to load protocol trees
-    choices = [pm.text.get() for pm in settings.protMenuList]
+    choices = [pm.text.get() for pm in project_settings.protMenuList]
 
     # get the choice current 
-    choiceSelected =  settings.protMenuList.getIndex()
+    choiceSelected =  project_settings.protMenuList.getIndex()
+    
+    # show the project name in the header.html
+    projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
+               'mode': mode,
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
@@ -267,7 +271,7 @@ def project_content(request):
                'choiceSelected': choiceSelected,
                'runs': runs,
                'columns': provider.getColumns(),
-               'view': 'protocols',
+               'projectNameHeader': projectNameHeader, 
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
@@ -332,4 +336,90 @@ def protocol_info(request):
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
 
+#===============================================================================
+# SERVICE PROJECTS
+#===============================================================================
+
+def service_projects(request):
+    #Example Projects to be showed
+    exProjects = {'TestXmippWorkflow'}
+    
+    if 'projectName' in request.session: request.session['projectName'] = ""
+    if 'projectPath' in request.session: request.session['projectPath'] = ""
+
+    context = {'projects_css': getResourceCss('projects'),
+               'project_utils_js': getResourceJs('project_utils'),
+               }
+    
+    context = base_grid(request, context)
+    return render_to_response('service_projects.html', context)
+
+
+def writeCustomMenu(customMenu):
+    if not exists(customMenu):
+        f = open(customMenu, 'w')
+        f.write('''
+[PROTOCOLS]
+
+Initial_Volume = [
+    {"tag": "section", "text": "1. Upload and Import", "children": [
+        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
+        {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "2. Create a 3D volume", "children": [
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+    {"tag": "section", "text": "3. Download good volumes."}]
+''')
+        
+def create_service_project(request):
+    if request.is_ajax():
+        import sys
+        from pyworkflow.manager import Manager
+        from pyworkflow.gui.project import ProjectWindow
+        from pyworkflow.em.protocol import *
+        from pyworkflow.em.packages.xmipp3 import *
+        from pyworkflow.em.packages.eman2 import *
+        
+        # Create a new project
+        manager = Manager()
+        projectName = request.GET.get('projectName')
+        customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        writeCustomMenu(customMenu)
+        #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
+        confs = {'protocols': customMenu}
+        project = manager.createProject(projectName, confs, graphView=True)   
+        
+        # 1. Import averages
+        protImport = project.newProtocol(ProtImportAverages,
+                                         objLabel='import averages')
+        project.saveProtocol(protImport)
+        
+        # 2a. Ransac 
+        protRansac = project.newProtocol(XmippProtRansac)
+        protRansac.inputSet.set(protImport)
+        protRansac.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protRansac)
+        
+        # 2b. Eman 
+        protEmanInitVol = project.newProtocol(EmanProtInitModel)
+        protEmanInitVol.inputSet.set(protImport)
+        protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protEmanInitVol)
+        
+        
+    return HttpResponse(mimetype='application/javascript')
+
+def check_project_id(request):
+    result = 0
+    projectName = request.GET.get('code', None)
+    
+    try:
+        manager = Manager()
+        project = loadProject(projectName)
+        result = 1
+    except Exception:
+        pass
+    
+    return HttpResponse(result, mimetype='application/javascript')
+ 
 

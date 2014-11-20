@@ -41,12 +41,14 @@ from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
+from protocol_extract_particles import XmippProtExtractParticles
+from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_filter import XmippProtFilterParticles, XmippProtFilterVolumes
 from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
 from protocol_align_volume import XmippProtAlignVolume
+from protocol_cl2d import XmippProtCL2D
 
-
-from pyworkflow.em.wizard import * 
+from pyworkflow.em.wizard import *
 
 #===============================================================================
 # DOWNSAMPLING
@@ -124,7 +126,50 @@ class XmippCTFWizard(CtfWizard):
     @classmethod    
     def getView(self):
         return "wiz_ctf_downsampling"  
-    
+
+#===============================================================================
+# BOXSIZE
+#===============================================================================
+class XmippBoxSizeWizard(Wizard):
+    _targets = [(XmippProtExtractParticles, ['boxSize'])]
+
+    def _getBoxSize(self, protocol):
+
+        boxSize = 0
+
+        if issubclass(protocol.getClass(), XmippProtExtractParticles):
+            if protocol.inputCoordinates.hasValue():
+                boxSize = protocol.inputCoordinates.get().getBoxSize()
+        if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
+            if protocol.inputCoordinatesTiltedPairs.hasValue():
+                boxSize= protocol.inputCoordinatesTiltedPairs.get().getUntilted().getBoxSize()
+
+        return boxSize
+
+
+    def show(self, form):
+        form.setVar('boxSize', self._getBoxSize(form.protocol))
+
+#===============================================================================
+# NUMBER OF CLASSES
+#===============================================================================
+class XmippCL2DNumberOfClassesWizard(Wizard):
+    _targets = [(XmippProtCL2D, ['numberOfReferences'])]
+
+    def _getNumberOfReferences(self, protocol):
+
+        numberOfReferences = 64
+
+        if protocol.inputParticles.hasValue():
+            from protocol_cl2d import IMAGES_PER_CLASS
+            numberOfReferences = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
+
+        return numberOfReferences
+
+
+    def show(self, form):
+        form.setVar('numberOfReferences', self._getNumberOfReferences(form.protocol))
+
 #===============================================================================
 # MASKS 
 #===============================================================================

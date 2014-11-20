@@ -483,7 +483,7 @@ class FakedObject(Object):
             else:
                 return attr
         return None
-    
+
     def getAttributes(self):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
@@ -620,14 +620,16 @@ class Pointer(Object):
     """Reference object to other one"""
     def __init__(self, value=None, **args):
         Object.__init__(self, value, objIsPointer=True, **args)
-        # this will be used to point to attributes of a pointed object
+        # The _extended attribute will be used to point to attributes of a pointed object
         # or the id of an item inside a set
-        self._extended = None
+        self._extended = String() 
        
     def __str__(self):
         """String representation of a pointer"""
         if self.hasValue():
-            return '-> %s (%s)' % (self.get().getClassName(), self.get().strId())
+            className = self.getObjValue().getClassName()
+            strId = self.getObjValue().strId()
+            return '-> %s (%s)' % (className, strId)
         return '-> None'
 
     def hasValue(self):
@@ -638,34 +640,49 @@ class Pointer(Object):
         If the _extended property is set, then the extended attribute or item id
         will be retrieved by the call to get().
         """
-        if self._extended is not None:
-            if isinstance(self._extended, String):
-                value = getattr(self._objValue, self._extended.get(), default)
-            elif isinstance(self._extended, Integer):
-                value = self._objValue[self._extended.get()]
+        extended = self._extended.get()
+        if extended:
+            if extended.startswith('__attribute__'):
+                attribute = extended.split('__')[-1]
+                value = getattr(self._objValue, attribute, default)
+            elif extended.startswith('__itemid__'):
+                itemId = int(extended.split('__')[-1])
+                value = self._objValue[itemId]
                 value._parentObject = self._objValue
             else:
-                raise Exception("Invalid type '%s' for pointer._extended property." % type(self._extended))
+                # This is now only for compatibility reasons
+                try:
+                    itemId = int(extended)
+                    value = self._objValue[itemId]
+                    value._parentObject = self._objValue
+                except Exception:
+                    attribute = str(extended)
+                    value = getattr(self._objValue, attribute, default)
+                    
+                #raise Exception("Invalid value '%s' for pointer._extended property." % extended)
         else:
             value = self._objValue
             
         return value
     
+    def set(self, other):
+        """ Set the pointer value but cleanning the extendend property. """
+        Object.set(self, other)
+        # This check is needed because set is call from the Object constructor
+        # when this attribute is not setup yet (a dirty patch, I know)
+        if hasattr(self, '_extended'):
+            self._extended.set(None)
+        
     def setExtendedAttribute(self, attributeName):
         """ Point to an attribute of the pointed object. """
-        if not self._extended:
-            self._extended = String()
-        self._extended.set(attributeName)
+        self._extended.set('__attribute__' + attributeName)
         
     def setExtendedItemId(self, itemId):
         """ Point to an specific item of a pointed Set. """
-        if not self._extended:
-            self._extended = Integer()
-        self._extended.set(itemId)
+        self._extended.set('__itemid__%d' % itemId)
         
     def getAttributes(self):
-        if self._extended:
-            yield ('_extended', getattr(self, '_extended'))
+        yield ('_extended', getattr(self, '_extended'))
     
 
 class List(Object, list):
@@ -741,7 +758,23 @@ class PointerList(List):
                 self.append(Pointer(value=obj))
         else:
             raise Exception("Could not set a PointerList value to: %s" % value)
-      
+
+    def append(self, value):
+        """ Append Pointer of objects to the list.
+         If value is a Pointer, just add it to the list.
+         If is another subclass of Object, create
+         a Pointer first and append the pointer.
+        """
+        if isinstance(value, Pointer):
+            pointer = value
+        elif isinstance(value, Object):
+            pointer = Pointer()
+            pointer.set(value)
+        else:
+            raise Exception("Only subclasses of Object can be added to PointerList")
+
+        List.append(self, pointer)
+
             
 class CsvList(Scalar, list):
     """This class will store a list of objects
@@ -832,8 +865,13 @@ class Set(OrderedObject):
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper           
-        
+            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper
+
+    def aggregate(self, operations
+                      , operationLabel
+                      , groupByLabels=None):
+        return self._mapper.aggregate(operations, operationLabel, groupByLabels)
+
     def setMapperClass(self, MapperClass):
         """ Set the mapper to be used for storage. """
         if MapperClass is None:
@@ -845,9 +883,13 @@ class Set(OrderedObject):
         """ Get the image with the given id. """
         return self._mapper.selectById(itemId)
 
-    def _iterItems(self):        
-        return self._mapper.selectAll()#has flat mapper, iterate is true
-    
+    def __contains__(self, itemId):
+        """ element in Set """
+        return self._mapper.selectById(itemId) != None
+
+    def _iterItems(self, random=False):
+        return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
+
     def getFirstItem(self):
         """ Return the first item in the Set. """
         return self._mapper.selectFirst()
@@ -910,10 +952,23 @@ class Set(OrderedObject):
         self._size.set(0)
          
     def append(self, item):
-        """ Add a image to the set. """
+        """ Add an item to the set.
+        If the item has already an id, use it.
+        If not, keep a counter with the max id
+        and assign the next one.
+        """
+        # The _idCount and _size properties work fine
+        # under the assumption that once a Set is stored,
+        # then it is read-only (no more appends).
+        #
+        # Anyway, this can be easily changed by updating
+        # both from the underlying sqlite when reading a set.
+
         if not item.hasObjId():
             self._idCount += 1
             item.setObjId(self._idCount)
+        else:
+            self._idCount = max(self._idCount, item.getObjId()) + 1
         self._insertItem(item)
         self._size.increment()
 #        self._idMap[item.getObjId()] = item
@@ -960,6 +1015,10 @@ def ObjectWrap(value):
         return Boolean(value)
     if t is float:
         return Float(value)
+    if t is list:
+        o = CsvList()
+        o.set(value)
+        return o
     if t is None:
         return None
     #If it is str, unicode or unknown type, convert to string

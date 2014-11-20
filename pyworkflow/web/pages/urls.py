@@ -3,7 +3,6 @@ from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 from django.conf import settings
-from filebrowser.sites import site
 
 #===============================================================================
 # URL ASSOCIATION
@@ -15,17 +14,21 @@ urlpatterns = patterns('',
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
                 
-    url(r'^filebrowser/', include(site.urls)),
-    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
     # If no path given, load the projects view
-    url(r'^$', 'app.views_project.projects'),
+#     url(r'^$', 'app.views_project.projects'),
+    url(r'^$', 'app.views_project.service_projects'),
     
+    #SERVICE PROJECT 
+    url(r'^service_projects/', 'app.views_project.service_projects'),
+    url(r'^check_project_id/$', 'app.views_project.check_project_id'),
+
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
+    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
@@ -46,6 +49,7 @@ urlpatterns = patterns('',
     url(r'^object_tree/$', 'app.views_data.object_tree'),
     
     #UTILS
+    url(r'^error/', 'app.views_util.error'), # Launch error page
     url(r'^render_column/', 'app.views_util.render_column'), # Load images dynamically
     url(r'^get_image_plot/', 'app.views_util.get_image_plot'), # Load plots images dynamically
     url(r'^get_image/', 'app.views_util.get_image'), # Load images dynamically
@@ -55,7 +59,7 @@ urlpatterns = patterns('',
     url(r'^browse_protocol_class/$', 'app.views_util.browse_protocol_class'), # Browse objects from the database
     url(r'^get_attributes/$', 'app.views_util.get_attributes'), # Get Label and Comment for an Object
     url(r'^set_attributes/$', 'app.views_util.set_attributes'), # Set Label and Comment for an Object
-
+    url(r'^download_output/$', 'app.views_util.download_output'), # Download output files
 
     #PROTOCOL (INCLUDE FORM)
     url(r'^save_protocol/$', 'app.views_protocol.save_protocol'),
@@ -78,15 +82,18 @@ urlpatterns = patterns('',
     url(r'^launch_viewer/$', 'app.em_viewer.launch_viewer'),
     url(r'^viewer_element/$', 'app.em_viewer.viewer_element'),
     url(r'^file_viewer/$', 'app.views_util.file_viewer'),
-    url(r'^file_downloader/$', 'app.views_util.file_downloader'),
+    url(r'^get_log/$', 'app.views_util.get_log'),
     
     #SHOWJ 
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     
-    #UPLOAD
-    url(r'^upload/', 'app.views_upload.upload', name='upload'),
-    url(r'^doUpload/', 'app.views_upload.doUpload'),
+    #BROWSER & UPLOAD FILES
+    url(r'^upload/', 'app.views_management.upload', name='upload'),
+    url(r'^doUpload/', 'app.views_management.doUpload'),
+    url(r'^getPath/', 'app.views_management.getPath'),
+    url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
+    url(r'^get_file/$', 'app.views_util.get_file'),
     
 
 #===============================================================================
@@ -103,3 +110,6 @@ urlpatterns = patterns('',
 #    url(r'^host_form/$', 'app.views_host.hostForm'),
 
 )
+
+handler404 = "app.views_util.error"
+handler500 = "app.views_util.error"

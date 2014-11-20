@@ -55,9 +55,11 @@ function updateObjTabs(id) {
 	/*
 	 * Fill the content of the summary tab for a object selected 
 	 */
+	var URL = getSubDomainURL() + '/object_info/?objectId=' + id
+	
 	$.ajax({
 		type : "GET",
-		url : '/object_info/?objectId=' + id,
+		url : URL,
 		dataType : "json",
 		success : function(json) {
 
@@ -112,9 +114,10 @@ function updateObjButtons(id, mode){
 
 
 function callPaintObjTree(){
+	var URL = getSubDomainURL() + '/object_tree/'
 	$.ajax({
 		type : "GET",
-		url : '/object_tree/',
+		url : URL,
 		dataType: "html",
 		async: false,
 		success : function(data) {

@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+
 from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
 from sqlite_db import SqliteDb
@@ -548,6 +549,8 @@ class SqliteFlatMapper(Mapper):
                 self._objClassName = r['class_name']
                 self._objTemplate = self._buildObject(self._objClassName)
             else:
+                # Lets update the database column mapping
+                self.db._columnsMapping[label] = r['column_name']
                 columnList.append(label)
                 attrClasses[label] = r['class_name']
                 attrParts = label.split('.')
@@ -626,13 +629,28 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None):        
+    def selectAll(self, iterate=True, objectFilter=None, random=False):
         if self._objTemplate is None:
             self.__loadObjDict()
-        objRows = self.db.selectAll()
+        objRows = self.db.selectAll(random=random)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
-    
+
+    def aggregate(self, operations, operationLabel, groupByLabels=None):
+        rows = self.db.aggregate(operations, operationLabel, groupByLabels)
+        results = []
+        for row in rows:
+            values = {}
+            for label in operations:
+                values[label] = row[label]
+            if groupByLabels is not None:
+                for label in groupByLabels:
+                    values[label] = row[label]
+            results.append(values)
+
+        return results
+        #convert row to dictionary
+
     def count(self):
         if self.doCreateTables:
             return 0
@@ -663,12 +681,12 @@ SELF = 'self'
 class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.
     It will create connection, execute queries and commands"""
-    
+
     CLASS_MAP = {'Integer': 'INTEGER',
                  'Float': 'REAL',
                  'Boolean': 'INTEGER'
                  }
-    
+
     def __init__(self, dbName, tablePrefix='', timeout=1000):
         SqliteDb.__init__(self)
         self._reuseConnections = True
@@ -677,63 +695,65 @@ class SqliteFlatDb(SqliteDb):
             tablePrefix += '_'
         self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
         self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix
+        self.FROM   = "FROM %sObjects" % tablePrefix
         self.DELETE = "DELETE FROM %sObjects WHERE " % tablePrefix
         self.INSERT_CLASS = "INSERT INTO %sClasses (label_property, column_name, class_name) VALUES (?, ?, ?)" % tablePrefix
         self.SELECT_CLASS = "SELECT * FROM %sClasses;" % tablePrefix
         self.tablePrefix = tablePrefix
         self._createConnection(dbName, timeout)
         self.INSERT_OBJECT = None
-        self.UPDATE_OBJECT = None 
-        
+        self.UPDATE_OBJECT = None
+        self._columnsMapping = {}
+
         self.INSERT_PROPERTY = "INSERT INTO Properties (key, value) VALUES (?, ?)"
         self.DELETE_PROPERTY = "DELETE FROM Properties WHERE key=?"
         self.UPDATE_PROPERTY = "UPDATE Properties SET value=? WHERE key=?"
         self.SELECT_PROPERTY = "SELECT value FROM Properties WHERE key=?"
-        
+
 
     def hasProperty(self, key):
         """ Return true if a property with this value is registered. """
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
         return (result is not None)
-        
+
     def getProperty(self, key, defaultValue=None):
         """ Return the value of a given property with this key.
         If not found, the defaultValue will be returned.
         """
         self.executeCommand(self.SELECT_PROPERTY, (key,))
         result = self.cursor.fetchone()
-        
+
         if result:
             return result['value']
         else:
             return defaultValue
-        
+
     def setProperty(self, key, value):
         """ Insert or update the property with a value. """
         if self.hasProperty(key):
             self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
         else:
             self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
-        
+
     def deleteProperty(self, key):
         self.executeCommand(self.DELETE_PROPERTY, (key,))
-    
+
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
-        
+
     def missingTables(self):
         """ Return True is the needed Objects and Classes table are not created yet. """
         self.executeCommand(self.CHECK_TABLES)
         result = self.cursor.fetchone()
-        
+
         return result is None
-        
+
     def clear(self):
         self.executeCommand("DROP TABLE IF EXISTS Properties;")
         self.executeCommand("DROP TABLE IF EXISTS %sClasses;" % self.tablePrefix)
         self.executeCommand("DROP TABLE IF EXISTS %sObjects;" % self.tablePrefix)
-                
+
     def createTables(self, objDict):
         """Create the Classes and Object table to store items of a Set.
         Each object will be stored in a single row.
@@ -758,7 +778,7 @@ class SqliteFlatDb(SqliteDb):
                       comment   TEXT DEFAULT NULL,   -- object comment, text used for annotations
                       creation  DATE                 -- creation date and time of the object
                       """ % self.tablePrefix
-        
+
         c = 0
         for k, v in objDict.iteritems():
             colName = 'c%02d' % c
@@ -767,47 +787,48 @@ class SqliteFlatDb(SqliteDb):
             self.executeCommand(self.INSERT_CLASS, (k, colName, className))
             if k != SELF:
                 CREATE_OBJECT_TABLE += ',%s  %s DEFAULT NULL' % (colName, self.CLASS_MAP.get(className, 'TEXT'))
-        
+
         CREATE_OBJECT_TABLE += ')'
         # Create the Objects table
         self.executeCommand(CREATE_OBJECT_TABLE)
         self.commit()
         # Prepare the INSERT and UPDATE commands
         self.setupCommands(objDict)
-        
+
     def setupCommands(self, objDict):
         """ Setup the INSERT and UPDATE commands base on the object dictionray. """
         self.INSERT_OBJECT = "INSERT INTO %sObjects (id, enabled, label, comment, creation" % self.tablePrefix
-        self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix 
+        self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix
         c = 0
         for k in objDict:
             colName = 'c%02d' % c
+            self._columnsMapping[k] = colName
             c += 1
             if k != SELF:
                 self.INSERT_OBJECT += ',%s' % colName
                 self.UPDATE_OBJECT += ', %s=?' % colName
-        
+
         self.INSERT_OBJECT += ") VALUES (?,?,?,?, datetime('now')" + ',?' * (c-1) + ')'
         self.UPDATE_OBJECT += ' WHERE id=?'
-        
+
     def getClassRows(self):
         """ Create a dictionary with names of the attributes
         of the colums. """
         self.executeCommand(self.SELECT_CLASS)
         return self._results(iterate=False)
-    
+
     def getSelfClassName(self):
         """ Return the class name of the attribute named 'self'.
         This is the class of the items stored in a Set.
         """
         self.executeCommand(self.SELECT_CLASS)
-        
+
         for classRow in self._iterResults():
             print "classRow['label_property']", classRow['label_property']
             if classRow['label_property'] == SELF:
                 return classRow['class_name']
         raise Exception("Row '%s' was not found in Classes table. " % SELF)
-   
+
     def insertObject(self, *args):
         """Insert a new object as a row.
         *args: id, label, comment, ...
@@ -818,22 +839,64 @@ class SqliteFlatDb(SqliteDb):
     def updateObject(self, *args):
         """Update object data """
         self.executeCommand(self.UPDATE_OBJECT, args)
-        
+
     def selectObjectById(self, objId):
         """Select an object give its id"""
-        self.executeCommand(self.selectCmd("id=?"), (objId,))  
+        self.executeCommand(self.selectCmd("id=?"), (objId,))
         return self.cursor.fetchone()
-    
-    def selectAll(self, iterate=True):
-        self.executeCommand(self.selectCmd('1'))
+
+    def selectAll(self, iterate=True, random=False):
+        if not random:
+            cmd = self.selectCmd('1')
+        else:
+            cmd = self.selectCmd('1', orderByStr=' ORDER BY RANDOM()')
+        self.executeCommand(cmd)
         return self._results(iterate)
-    
+
+    def aggregate(self, operations, operationLabel, groupByLabels=None):
+        print "aggregate3"
+
+        print "operations", operations
+        print "operationLabel", operationLabel
+        print "groupByLabels", groupByLabels
+        #let us count for testing
+        selectStr = 'SELECT '
+        separator = ' '
+        #This cannot be like the following line should be expresed in terms
+        #of C1, C2 etc....
+        for operation in operations:
+            print "operation", operation
+            print "operationLabel", operationLabel
+            print "hhhh", self._columnsMapping[operationLabel]
+            selectStr += "%s %s(%s) AS %s"%(separator
+                                            , operation
+                                            , self._columnsMapping[operationLabel]
+                                            , operation)
+            separator = ', '
+        print "selectStr", selectStr
+        if groupByLabels is not None:
+            groupByStr = 'GROUP BY '
+            separator = ' '
+            for groupByLabel in groupByLabels:
+                groupByCol = self._columnsMapping[groupByLabel]
+                selectStr += ", %(groupByCol)s as %(groupByLabel)s" % locals()
+                groupByStr += "%s %s" % (separator, groupByCol)
+                separator = ', '
+        else:
+            groupByStr = ' '
+        print "groupByStr",groupByStr
+        sqlCommand = selectStr +"\n" + self.FROM + "\n" + groupByStr
+        print "sqlCommand", sqlCommand
+        self.executeCommand(sqlCommand)
+        return self._results(iterate=False)
+
     def count(self):
         """ Return the number of element in the table. """
         self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(*)'))
         return self.cursor.fetchone()[0]
-    
-    def selectObjectsBy(self, iterate=False, **args):     
+
+
+    def selectObjectsBy(self, iterate=False, **args):
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
         whereList = ['%s=?' % k for k in args.keys()]
@@ -841,15 +904,15 @@ class SqliteFlatDb(SqliteDb):
         whereTuple = tuple(args.values())
         self.executeCommand(self.selectCmd(whereStr), whereTuple)
         return self._results(iterate)
-    
+
     def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
-        return self._results(iterate)   
-    
+        return self._results(iterate)
+
     def deleteObject(self, objId):
         """Delete an existing object"""
         self.executeCommand(self.DELETE + "id=?", (objId,))
-        
+
     def deleteAll(self):
         """ Delete all objects from the db. """
         if not self.missingTables():

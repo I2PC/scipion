@@ -160,7 +160,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
                 
         #Then simulate a particle picking               
         print "Running fake particle picking..."   
-        protPicking = XmippProtParticlePickingPairs(importFolder=self.allCrdsDir)
+        protPicking = self.newProtocol(XmippProtParticlePickingPairs, importFolder=self.allCrdsDir)
                 
         protPicking.inputMicrographsTiltedPair.set(protImport.outputMicrographsTiltPair)
         
@@ -171,7 +171,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         #Extract particles    
         print "Run extract particles with Same as picking"
-        protExtract = XmippProtExtractParticlesPairs(boxSize=60, downsampleType=OTHER, downFactor=2)
+        protExtract = self.newProtocol(XmippProtExtractParticlesPairs, boxSize=60, downsampleType=OTHER, downFactor=2)
         protExtract.inputCoordinatesTiltedPairs.set(protPicking.outputCoordinatesTiltPair)
 
         self.proj.launchProtocol(protExtract, wait=True)
@@ -203,7 +203,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
         # Random Conical Tilt    
         print "Run Random Conical Tilt"
-        protRCT = XmippProtRCT()
+        protRCT = self.newProtocol(XmippProtRCT)
         protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)
         protRCT.inputParticles.set(protCL2D.outputClasses)
 

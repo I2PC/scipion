@@ -35,8 +35,10 @@
 	<script src={{jquery}} type="text/javascript"></script>
 	<script src={{messi_js}} type="text/javascript"></script>
 	<script src={{utils}} type="text/javascript"></script>
+	<script src={{config}} type="text/javascript"></script>
 	<script src={{protocol_form_utils}} type="text/javascript"></script>
 	<script src="{{jquery_ui}} "type="text/javascript"></script>
+	<script src="{{jquery_browser}} "type="text/javascript"></script>
 	<script>
 	
 	function putMode(mode){
@@ -78,7 +80,7 @@
 		launchViewer(objId);
 	}
 	</script>
-	 <script>
+	<script>
 	  $(function() {
 	    $("#tabs").tabs();
 	  });
@@ -104,11 +106,9 @@
 		</div>
 		
 		<form id="protocolForm" action="/protocol/" method="POST" data-mode="">{% csrf_token %}
-<!-- 			<input type="hidden" id="windowName" name="windowName" value=""/> -->
 			<input type="hidden" id="protocolClass" name="protocolClass" value="{{protocol.getClassName}}"/>
 			<input type="hidden" name="protocolId" value="{{protocol.getObjId}}"/>
 			<input type="hidden" name="protRunIdViewer" value="{{protRunIdViewer}}"/>
-<!-- 			<input type="hidden" id="wizName" name="wizName" value=""/> -->
 			<input type="hidden" id="wizClassName" name="wizClassName" value=""/>
 			<input type="hidden" id="viewerParam" name="viewerParam" value="None"/>
 			<input type="hidden" id="label" name="label" value="{{protocol.getObjLabel}}"/>

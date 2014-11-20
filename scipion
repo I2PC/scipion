@@ -30,7 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from os.path import join, exists, dirname
+from os.path import join, exists, dirname, basename
 import time
 try:
     from ConfigParser import ConfigParser
@@ -63,40 +63,32 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 # If we don't have a local user installation, create it.
 #
 
-CONF_FILE = os.path.expanduser('~/.config/scipion/scipion.conf')
+# Default values for configuration files.
+SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
+SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
 
-def createConf():
-    if not exists(dirname(CONF_FILE)):
-        os.makedirs(dirname(CONF_FILE))
-    if exists(CONF_FILE):
-        backup = '%s.%d' % (CONF_FILE, int(time.time()))
+# Allow the user to override them (and remove them from sys.argv).
+while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
+    arg = sys.argv.pop(1)
+    value = sys.argv.pop(1)
+    if arg == '--config':
+        SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
+    elif arg == '--menu':
+        SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
+    else:
+        sys.exit('Unknown argument: %s' % arg)
+
+
+def createConf(fpath, ftemplate):
+    "Create config file in fpath following the template in ftemplate"
+    if not exists(dirname(fpath)):
+        os.makedirs(dirname(fpath))
+    if exists(fpath):
+        backup = '%s.%d' % (fpath, int(time.time()))
         sys.stdout.write('File %s already exists. Creating backup %s.\n' %
-                         (CONF_FILE, backup))
-        os.rename(CONF_FILE, backup)
-    open(CONF_FILE, 'w').write("""
-# All relative paths will have $SCIPION_HOME as their root.
-
-[DIRS_LOCAL]
-SCIPION_USER_DATA = ~/ScipionUserData
-SCIPION_LOGS = %(SCIPION_USER_DATA)s/logs
-SCIPION_TMP = %(SCIPION_USER_DATA)s/tmp
-
-[DIRS_GLOBAL]
-SCIPION_TESTS = data/tests
-SCIPION_SOFTWARE = software
-
-[PACKAGES]
-EM_ROOT = software/em
-XMIPP_HOME = %(EM_ROOT)s/xmipp
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-EMAN2DIR = %(EM_ROOT)s/eman
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-CTFFIND_HOME = %(EM_ROOT)s/ctffind
-RELION_HOME = %(EM_ROOT)s/relion
-BSOFT_HOME = %(EM_ROOT)s/bsoft
-DOSEFGPU_HOME = %(EM_ROOT)s/dosefgpu
-DOSEFGPU_CUDA_LIB = None
-""")
+                         (fpath, backup))
+        os.rename(fpath, backup)
+    open(fpath, 'w').write(open(ftemplate).read())  # cp ftemplate fpath
 
 
 #
@@ -104,13 +96,17 @@ DOSEFGPU_CUDA_LIB = None
 #
 
 try:
-    if not exists(CONF_FILE):
-        sys.stdout.write('Creating local configuration file: %s\n' % CONF_FILE)
-        createConf()
+    if not exists(SCIPION_CONFIG):
+        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_CONFIG)
+        createConf(SCIPION_CONFIG, '%s/settings/scipion.conf' % SCIPION_HOME)
+
+    if not exists(SCIPION_MENU):
+        sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_MENU)
+        createConf(SCIPION_MENU, '%s/settings/menu.conf' % SCIPION_HOME)
 
     config = ConfigParser()
     config.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
-    assert config.read(CONF_FILE) != [], 'Missing file %s' % CONF_FILE
+    assert config.read(SCIPION_CONFIG) != [], 'Missing file %s' % SCIPION_CONFIG
 
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
@@ -129,13 +125,8 @@ try:
 except Exception:
     # This way of catching exceptions works with Python 2 & 3
     sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
-    try:
-        sys.stdout.write('Trying to rewrite %s\n' % CONF_FILE)
-        createConf()  # try to create a working configuration file
-    except Exception:
-        pass  # but don't be upset if we can't :)
     sys.stdout.write('Please check the configuration file %s and try again.\n' %
-                     CONF_FILE)
+                     SCIPION_CONFIG)
     sys.exit(1)
 
 PATH = os.pathsep.join(
@@ -160,6 +151,8 @@ VARS = {
     'SCIPION_HOME': SCIPION_HOME,
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
+    'SCIPION_CONFIG': SCIPION_CONFIG,
+    'SCIPION_MENU': SCIPION_MENU,
     'PATH': PATH,
     'PYTHONPATH': PYTHONPATH,
     'LD_LIBRARY_PATH': LD_LIBRARY_PATH,
@@ -198,18 +191,18 @@ def runApp(app, args='', chdir=True):
 #
 # If this is the first time that the user runs scipion...
 #
-if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
-    os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
-    os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
-    try:
-        from pyworkflow.apps.config import writeDefaults
-        writeDefaults()
-    except Exception:  # we expect a ImportError due to no psutil
-        if len(sys.argv) < 2 or sys.argv[1] != 'install':
-            sys.exit('%s\nDid you already run "%s install" ?' %
-                     (sys.exc_info()[1], sys.argv[0]))
-        else:
-            pass  # go ahead, install it!
+# if not exists(join(DIRS_LOCAL['SCIPION_USER_DATA'], 'settings.sqlite')):
+#     os.environ['SCIPION_USER_DATA'] = VARS['SCIPION_USER_DATA']
+#     os.environ['SCIPION_PYTHON'] = VARS['SCIPION_PYTHON']
+#     try:
+#         from pyworkflow.apps.config import writeDefaults
+#         writeDefaults()
+#     except Exception:  # we expect a ImportError due to no psutil
+#         if len(sys.argv) < 2 or sys.argv[1] != 'install':
+#             sys.exit('%s\nDid you already run "%s install" ?' %
+#                      (sys.exc_info()[1], sys.argv[0]))
+#         else:
+#             pass  # go ahead, install it!
 
 
 #
@@ -232,6 +225,8 @@ MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
+MODE_RUNPROTOCOL = 'runprotocol'
+MODE_PROTOCOLS = 'protocols' 
 MODE_STATS = 'stats'
 MODE_ENV = 'printenv'
 MODE_RUN = 'run'
@@ -333,7 +328,8 @@ def main():
             args = ['-c']
         from scripts.install import build
         ret = build(args=args)
-        if ret == 0 and not ('--help' in args or '-h' in args or '-c' in args):
+        if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
+                             or'-c' in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
                       'success.log'), 'w').write('Yes :)')
             sys.stdout.write("""
@@ -345,13 +341,13 @@ def main():
   ************************************************************************
 
 """)
-            runApp('config.py')
+            runApp('pw_config.py')
             # FIXME: I am not sure this is a good idea. To begin with,
             # right now it expects xmipp to be installed.
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
-        runApp('config.py')
+        runApp('pw_config.py')
 
     elif mode == MODE_STATS:
         statsDir = join(SCIPION_HOME, 'data', 'stats')
@@ -363,7 +359,7 @@ def main():
         sys.stdout.write('%s\n' % __version__)
         sys.exit(0)
 
-    elif mode == 'runprotocol':
+    elif mode == MODE_RUNPROTOCOL:
         assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
@@ -371,6 +367,9 @@ def main():
         params = ['"%s"' % s for s in sys.argv[3:6]]
         args = ' '.join(params)
         runApp(protocolApp, args)
+        
+    elif mode == MODE_PROTOCOLS:
+        runApp('pw_protocol_list.py')
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.

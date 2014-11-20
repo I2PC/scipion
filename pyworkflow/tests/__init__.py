@@ -71,7 +71,15 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
 DataSet(name='mda', folder='hemoglobin_mda', 
         files={
                'particles': 'particles/*.spi',
-               'volumes': 'volumes/*.spi'})
+               'volumes': 'volumes/*.spi',
+               'averages':'averages/averages.stk'})
+
+
+DataSet(name='nma', folder='nma', 
+        files={
+               'pdb': 'pdb/AK.pdb',
+               'vol': 'volumes/AK_LP10.vol',
+               'particles': 'particles/img.stk'})
 
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
@@ -119,15 +127,54 @@ DataSet(name='rct',  folder='rct',
                'untilted': 'micrographs/F_rct_u*.tif',
         })
 
+DataSet(name='groel',  folder='groel',
+        files={
+               'averages': 'classes/level_classes.stk'
+        })
+
 DataSet(name='emx',  folder='emx', 
         files={
+
+               'alignFlip':'alignment/alignFlip.mrcs',
+               'alignFlip2':'alignment/alignFlip2.mrcs',
+               'alignShiftRotExp': 'alignment/Test1/images.mrc',
+               'alignShiftRotExpGold': 'alignment/gold/align_shift_rot_exp_gold.mrcs',
+               
+               'alignReconst': 'alignment/recons.mrcs',
+               'alignReconstShift': 'alignment/recons_sh.mrcs',
+               
+               'alignRotOnly': 'alignment/align_rot_only.mrcs',
+               'alignRotOnlyGold': 'alignment/gold/align_rot_only_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
+               'alignRotOnly3D': 'alignment/align_rot_only_3d.mrcs',
+               
+               #'alignRotShift': 'alignment/align_rot_shift.mrcs',
+               'alignShiftOnly': 'alignment/align_shift_only.mrcs',
+               'alignShiftOnlyGold': 'alignment/gold/align_shift_only_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
+               'alignShiftOnly3D': 'alignment/align_shift_only_3d.mrcs',
+               
+               'alignShiftRot': 'alignment/align_shift_rot.mrcs',
+               'alignShiftRotGold': 'alignment/gold/align_shift_rot_gold.mrcs',
+               
+               # TODO: transform geometry not working in stacks of volumes
+               'alignShiftRot3D': 'alignment/align_shift_rot_3d.mrcs',
+               
                'coordinatesGoldT1': 'coordinates/Test1/coordinates_gold.sqlite',
-                'coordinatesT1': 'coordinates/Test1/coordinates.emx',
-                'defocusParticleT2': 'defocusParticle/particles.emx',
-                'emxMicrographCtf1':'MicrographsCTF/ctfindCTFEstimation.emx',
-                'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
-                'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',##
-                'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
+               'coordinatesT1': 'coordinates/Test1/coordinates.emx',
+               'defocusParticleT2': 'defocusParticle/particles.emx',
+               'emxMicrographCtf1':'MicrographsCTF/ctfindCTFEstimation.emx',
+               'emxMicrographCtf1Gold':'MicrographsCTF/ctfindCTFEstimation.sqlite',
+               'micrographsGoldT2': 'defocusParticle/micrographs_gold.sqlite',
+               'particlesGoldT2': 'defocusParticle/particles_gold.sqlite',
+               
+               'reconstRotOnly': 'reconstruction/reconstRotOnly.mrcs',
+               'reconstRotOnlyGold': 'reconstruction/gold/reconstRotOnly_output.vol',
+               
+               'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
+               'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
               })
                
                
@@ -139,6 +186,10 @@ DataSet(name='CTFDiscrepancy',  folder='CTFDiscrepancy',
                'ctfsGold':'ctfs.sqlite',
               })
 
-               
+DataSet(name='movies',  folder='movies',
+        files={'movie1':'Falcon_2012_06_12-14_33_35_0_movie.mrcs',
+               'movie2':'Falcon_2012_06_12-16_55_40_0_movie.mrcs',
+               'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
+                })             
                
                

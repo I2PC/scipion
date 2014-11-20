@@ -26,10 +26,17 @@
 """
 This module implement the import/export of Micrographs and Particles to EMX
 """
+
 from __future__ import print_function
-#unused import from pyworkflow.em.packages.emxlib.emxlib import emxDataTypes
-from pyworkflow.utils import *
-from pyworkflow.em.data import *
+from os.path import join, dirname, basename, exists
+
+from pyworkflow.utils.path import (copyFile, createLink, makePath, cleanPath, 
+                                   replaceBaseExt)
+from pyworkflow.em.convert import ImageHandler, NO_INDEX
+from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
+                                Coordinate, Alignment,
+                                SetOfMicrographs, SetOfCoordinates, 
+                                SetOfParticles)
 import emxlib
 from collections import OrderedDict
 
@@ -39,6 +46,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     cleanPath(emxDir)
     makePath(emxDir) 
     emxData = emxlib.EmxData()
+    micSet=None
     
     if binaryFile is None:
         binaryFile = xmlFile.replace('.emx', '.mrc')
@@ -156,6 +164,7 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
 def _particleToEmx(emxData, particle, micSet):
     #import pdb
     #pdb.set_trace()
+
     index, filename = particle.getLocation()
     emxParticle = _setupEmxParticle(emxData, particle.getCoordinate(), index, filename, micSet)
     if particle.hasCTF():
@@ -197,6 +206,7 @@ def _particlesToEmx(emxData, partSet, stackFn=None, micSet=None):
         micSet: input set of micrographs
         filename: the EMX file where to store the micrographs information.
     """
+
     ih = ImageHandler()
 
     for i, particle in enumerate(partSet):
@@ -256,9 +266,9 @@ def _ctfFromEmx(emxObj, ctf):
     """ Create a CTF model from the values in elem. """
     if _hasCtfLabels(emxObj):
         # Multiply by 10 to convert from nm to A
-        ctf.setDefocusU(emxObj.get('defocusU')*10.0)
-        ctf.setDefocusV(emxObj.get('defocusV')*10.0)
-        ctf.setDefocusAngle(emxObj.get('defocusUAngle'))
+        ctf.setStandardDefocus(emxObj.get('defocusU')*10.0,
+                               emxObj.get('defocusV')*10.0,
+                               emxObj.get('defocusUAngle'))
     else: # Consider the case of been a Particle and take CTF from Micrograph
         if isinstance(emxObj, emxlib.EmxParticle):
             _ctfFromEmx(emxObj.getMicrograph(), ctf)
@@ -290,7 +300,7 @@ def _transformFromEmx(emxParticle, part, transform):
     
     for i in range(3):
         for j in range(4):
-            m.setValue(i, j, emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1)))
+            m[i, j] = emxParticle.get('transformationMatrix__t%d%d' % (i+1, j+1))
     
     transform.setObjId(part.getObjId())
             
@@ -348,11 +358,12 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
             #ctf.setMicFile(newFn)
             ctfSet.append(ctf)
 
+    if emxMic is not None:
+        protocol._defineOutputs(outputMicrographs=micSet)
 
-    protocol._defineOutputs(outputMicrographs=micSet)
-    if ctfSet is not None:
-        protocol._defineOutputs(outputCTF=ctfSet)
-        protocol._defineCtfRelation(micSet, ctfSet)
+        if ctfSet is not None:
+            protocol._defineOutputs(outputCTF=ctfSet)
+            protocol._defineCtfRelation(micSet, ctfSet)
 
 
 def _particlesFromEmx(protocol
@@ -368,8 +379,7 @@ def _particlesFromEmx(protocol
     emxParticle = emxData.getFirstObject(emxlib.PARTICLE)
     partDir = dirname(emxFile)
     micSet = getattr(protocol, 'outputMicrographs', None)
-    alignmentSet = None
-    
+
     if emxParticle is not None:     
         # Check if there are particles or coordinates
         fn = emxParticle.get(emxlib.FILENAME)
@@ -385,7 +395,7 @@ def _particlesFromEmx(protocol
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
-                alignmentSet = protocol._createSetOfAlignment(partSet)
+                partSet.setHasAlignment(True)
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 
@@ -397,25 +407,30 @@ def _particlesFromEmx(protocol
             part = Coordinate()
             particles = False
             
-        ih = ImageHandler()
+        copiedFiles = {} # copied or linked
+        if doCopyFiles:
+            copyOrLink = copyFile
+        else:
+            copyOrLink = createLink
         
         for emxParticle in emxData.iterClasses(emxlib.PARTICLE):
             if particles:
                 _particleFromEmx(emxParticle, part)
                 i, fn = part.getLocation()
                 partFn = join(partDir, fn)
-                if doCopyFiles:
-                    partBase = basename(partFn)
-                    newLoc = (i, join(outputDir, partBase))
-                    ih.convert((i, partFn), newLoc)
-                else:
-                    newLoc = (i, partFn)
+                newFn = join(outputDir, basename(partFn))
+                newLoc = (i, newFn)
+                
+                if not partFn in copiedFiles:
+                    copyOrLink(partFn, newFn)
+                    copiedFiles[partFn] = newFn
+                    
                 part.setLocation(newLoc)
                 
-                if alignmentSet is not None:
-                    transform = Transform()
-                    _transformFromEmx(emxParticle, part, transform)  
-                    alignmentSet.append(transform)               
+                if partSet.hasAlignment():
+                    transform = Alignment()
+                    _transformFromEmx(emxParticle, part, transform)
+                    part.setAlignment(transform)
             else:
                 _coordinateFromEmx(emxParticle, part)
                 
@@ -424,8 +439,6 @@ def _particlesFromEmx(protocol
             
         if particles:
             protocol._defineOutputs(outputParticles=partSet)
-            if alignmentSet is not None:
-                protocol._defineOutputs(outputAlignment=alignmentSet)
         else:
             protocol._defineOutputs(outputCoordinates=partSet)
         

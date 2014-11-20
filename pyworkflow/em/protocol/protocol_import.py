@@ -34,7 +34,8 @@ from glob import glob
 from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
-                                        EnumParam, IntParam, StringParam, PointerParam)
+                                        EnumParam, IntParam, StringParam, PointerParam,
+                                        LEVEL_EXPERT)
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -77,6 +78,9 @@ class ProtImportImages(ProtImport):
     """Common protocol to import a set of images in the project"""
     # This label should be set in subclasses
     _label = 'None'
+    # Allow the flexibility to each sub-classes to set default
+    # value to check stack 
+    CHECKSTACK_DEFAULT = True
     # The following class property should be set in each import subclass
     # for example, if set to SetOfParticles, this will the output classes
     # It is also assumed that a function with the name _createSetOfParticles
@@ -88,17 +92,19 @@ class ProtImportImages(ProtImport):
         form.addSection(label='Input')
         form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN,
                       help=Message.TEXT_PATTERN)
-        form.addParam('checkStack', BooleanParam, label=Message.LABEL_CHECKSTACK, default=False)
-        form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
+        form.addParam('checkStack', BooleanParam, expertLevel=LEVEL_EXPERT,
+                      label=Message.LABEL_CHECKSTACK, default=self.CHECKSTACK_DEFAULT)
+        form.addParam('copyToProj', BooleanParam, expertLevel=LEVEL_EXPERT, 
+                      label=Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', FloatParam, default=200,
-                   label=Message.LABEL_VOLTAGE)
-        form.addParam('sphericalAberration', FloatParam, default=2.26,
-                   label=Message.LABEL_SPH_ABERRATION)
+                   label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
+        form.addParam('sphericalAberration', FloatParam, default=2,
+                   label=Message.LABEL_SPH_ABERRATION, help=Message.TEXT_SPH_ABERRATION)
         form.addParam('ampContrast', FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
         form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE)
+                   label=Message.LABEL_MAGNI_RATE, help=Message.TEXT_MAGNI_RATE)
         
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
@@ -227,8 +233,9 @@ class ProtImportImages(ProtImport):
         methods = []
         outputSet = self._getOutputSet()
         if outputSet is not None:
-            methods.append("*%d* %s has been imported" % (outputSet.getSize(), self._getOutputItemName()))
-            methods.append("with a sampling rate of *%0.2f* A/px" % outputSet.getSamplingRate())
+            methods.append("We used *%d* %s" % (outputSet.getSize(), self._getOutputItemName())+\
+                           " with a sampling rate of *%0.2f* A/px (microscope voltage %d kV, magnification %dx)" %
+                            (outputSet.getSamplingRate(),round(self.voltage.get()),round(self.magnification.get())))
             
         return methods
     
@@ -255,11 +262,14 @@ class ProtImportMicBase(ProtImportImages):
     """ Just to have a base class to both 
     ProtImportMicrographs and ProtImportMovies
     """
+    CHECKSTACK_DEFAULT = False
+    
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
         form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
                    label=Message.LABEL_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
+                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
+                   help=Message.TEXT_SAMP_MODE)
         form.addParam('samplingRate', FloatParam, default=1, 
                    label=Message.LABEL_SAMP_RATE,
                    condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
@@ -290,7 +300,8 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase._defineParams(self, form)    
         form.addParam('gainFile', FileParam,  
                       label='Gain image', 
-                      help='')
+                      help='A gain reference related to a set of movies'
+                           ' for gain correction')
         
     def _setSampling(self, movieSet):
         ProtImportMicBase._setSampling(self, movieSet)
@@ -311,6 +322,11 @@ class ProtImportParticles(ProtImportImages):
         imgSet.setSamplingRate(self.samplingRate.get())
     
 
+class ProtImportAverages(ProtImportParticles):
+    """Protocol to import a set of averages to the project"""
+    _label = 'import averages'
+    _outputClassName = 'SetOfAverages'    
+    
 
 class ProtImportVolumes(ProtImport):
     """Protocol to import a set of volumes to the project"""
@@ -335,6 +351,8 @@ class ProtImportVolumes(ProtImport):
         dst = self._getPath(basename(volumePath))            
         createLink(volumePath, dst)
         vol = Volume()
+        if dst.endswith('.mrc'):
+            dst += ':mrc'
         vol.setFileName(dst)
         vol.setSamplingRate(self.samplingRate.get())
         return vol
@@ -421,7 +439,7 @@ class ProtImportVolumes(ProtImport):
 
 
 class ProtImportPdb(ProtImport):
-    """Protocol to import a set of pdb volumes to the project"""
+    """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
     
     def __init__(self, **args):
@@ -429,32 +447,36 @@ class ProtImportPdb(ProtImport):
        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('path', StringParam, 
-                      label="Pattern",
-                      help='Specify a path or an url to desired PDB structure.')
+        form.addParam('pdbPath', FileParam, 
+                      label="PDB file",
+                      help='Specify a path to desired PDB structure.')
          
     def _insertAllSteps(self):
-        self._insertFunctionStep('importPdbStep', self.path.get())
+        self._insertFunctionStep('createOutputStep', self.pdbPath.get())
         
-    def importPdbStep(self, path):
-        """ Copy volumes matching the filename pattern
-        Register other parameters.
+    def createOutputStep(self, pdbPath):
+        """ Copy the PDB structure and register the output object.
         """
-        if not exists(path):
-            raise Exception("PDB not found at *%s*" % path)
+        if not exists(pdbPath):
+            raise Exception("PDB not found at *%s*" % pdbPath)
+        
+        baseName = basename(pdbPath)
+        localPath = self._getExtraPath(baseName)
+        copyFile(pdbPath, localPath)
         pdb = PdbFile()
-        pdb.setFileName(path)
+        pdb.setFileName(localPath)
         self._defineOutputs(outputPdb=pdb)
 
     def _summary(self):
-        summary = ['PDB file imported from *%s*' % self.path.get()]
+        summary = ['PDB file imported from *%s*' % self.pdbPath.get()]
 
         return summary
     
     def _validate(self):
         errors = []
-        if not exists(self.path.get()):
-            errors.append("PDB not found at *%s*" % self.path.get())
+        if not exists(self.pdbPath.get()):
+            errors.append("PDB not found at *%s*" % self.pdbPath.get())
+        #TODO: maybe also validate that if exists is a valid PDB file 
         return errors
     
     

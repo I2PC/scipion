@@ -27,9 +27,11 @@ MODIFICATION ADVICE:
 Please,  do not  generate or  distribute 
 a modified version of this file under its original name. 
 """
+
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.emxlib import ProtEmxImport
+
 
 class TestEmxBase(BaseTest):
     @classmethod
@@ -62,8 +64,8 @@ class TestEmxBase(BaseTest):
                                          inputEMX=emxFn
                                          )
         self.launchProtocol(protEmxImport)
-        micFn =self.dataset.getFile('micrographsGoldT2')
-        mics  = SetOfMicrographs(filename = micFn)
+        micFn = self.dataset.getFile('micrographsGoldT2')
+        mics = SetOfMicrographs(filename = micFn)
             
         for mic1, mic2 in izip(mics, protEmxImport.outputMicrographs):
             # Remove the absolute path in the micrographs to 
@@ -77,6 +79,7 @@ class TestEmxBase(BaseTest):
         """
         emxFn = self.dataset.getFile('emxMicrographCtf1')
         protEmxImport = self.newProtocol(ProtEmxImport,
+                                         objLabel='emx - import mics',
                                          inputEMX=emxFn
                                          )
         self.launchProtocol(protEmxImport)
@@ -89,3 +92,19 @@ class TestEmxBase(BaseTest):
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
             self.assertTrue(mic1.equalAttributes(mic2))
+            
+ 
+    def test_particlesAlignment(self):
+        """ Import an EMX file with particles and alignment information.
+        """
+        emxFn = self.dataset.getFile('alignment/Test1/images.emx')
+        protEmxImport = self.newProtocol(ProtEmxImport,
+                                         objLabel='emx: import alignment',
+                                         inputEMX=emxFn,
+                                         provideAcquisition=True,
+                                         samplingRate=1.,
+                                         amplitudeContrast=2.,
+                                         sphericalAberration=0.1,
+                                         voltage=200)
+        self.launchProtocol(protEmxImport)
+            

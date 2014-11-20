@@ -30,11 +30,11 @@ visualization program.
 
 import os
 
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, CommandView
 from pyworkflow.em.data import *
 from pyworkflow.em.protocol import *
 
-from xmipp3 import getXmippPath
+from xmipp3 import getXmippPath, getEnviron
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, ParticlesTiltPair, CoordinatesTiltPair
 from convert import *
 from os.path import dirname, join
@@ -44,7 +44,6 @@ import xmipp
 
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -60,6 +59,7 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
+from pyworkflow.em.showj import *
 
 
 class XmippViewer(Viewer):
@@ -67,31 +67,30 @@ class XmippViewer(Viewer):
     with the Xmipp program xmipp_showj
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [  
-                  CoordinatesTiltPair 
-                , Image
-                , MicrographsTiltPair
-                , NormalModes
-                , ParticlesTiltPair
-                , ProtExtractParticles
-                , SetOfClasses2D
-                , SetOfClasses3D
-                , SetOfCoordinates
-                , SetOfCTF
-                , SetOfImages
-                , SetOfMovies
-                , XmippParticlePickingAutomatic
-                , XmippProtConvertToPseudoAtoms
-                , XmippProtExtractParticlesPairs
-                , XmippProtIdentifyOutliers
-                , XmippProtKerdensom
-                , XmippProtParticlePicking
-                , XmippProtParticlePickingPairs
-                , XmippProtRotSpectra
-                , XmippProtScreenClasses
-                , XmippProtScreenParticles
-                , XmippProtCTFMicrographs
-                , XmippProtRecalculateCTF
+    _targets = [                  
+                CoordinatesTiltPair, 
+                Image, 
+                MicrographsTiltPair, 
+                ParticlesTiltPair, 
+                ProtExtractParticles, 
+                SetOfClasses2D, 
+                SetOfClasses3D, 
+                SetOfCoordinates, 
+                SetOfCTF, 
+                SetOfImages, 
+                SetOfMovies, 
+                SetOfNormalModes, 
+                XmippParticlePickingAutomatic, 
+                XmippProtExtractParticlesPairs, 
+                XmippProtIdentifyOutliers, 
+                XmippProtKerdensom, 
+                XmippProtParticlePicking, 
+                XmippProtParticlePickingPairs, 
+                XmippProtRotSpectra, 
+                XmippProtScreenClasses, 
+                XmippProtScreenParticles, 
+                XmippProtCTFMicrographs, 
+                XmippProtRecalculateCTF
                 ]
     
     def __init__(self, **args):
@@ -148,19 +147,18 @@ class XmippViewer(Viewer):
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            if fn.endswith('.mrc'):
-                fn += ":mrc"
             self._views.append(DataView(fn, viewParams={RENDER: 'image'}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
             self._views.append(DataView(fn))
             
-        elif issubclass(cls, NormalModes):
-            self._views.append(DataView(fn))
+        elif issubclass(cls, SetOfNormalModes):
+            fn = obj.getFileName()
+            objCommands = '%s %s' % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
+            self._views.append(ObjectView(self._project.getName(), self.protocol.strId(), fn, viewParams={OBJCMDS: objCommands}, **args))
               
-        elif issubclass(cls, SetOfMicrographs):
-            
+        elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, viewParams={MODE: MODE_MD}, **args))
             
@@ -213,7 +211,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
             labels = 'id enabled _index _filename _xmipp_zScore _sampling '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle'
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _alignment._matrix'
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
@@ -225,7 +223,7 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn))
+            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
@@ -246,7 +244,8 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
 #            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio _xmippCTFCritFirstZero _micObj._filename' % psdLabels 
+            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio '\
+                     '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _micObj._filename' % psdLabels 
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
@@ -288,17 +287,14 @@ class XmippViewer(Viewer):
                 self._views.append(xplotter)
     
         elif issubclass(cls, XmippProtRotSpectra):
-            self._visualize(obj.outputClasses, extraParams='--mode rotspectra --columns %d' % obj.SomXdim.get())
+            self._visualize(obj.outputClasses, viewParams={'mode': 'rotspectra', 'columns': obj.SomXdim.get()})
         
         elif issubclass(cls, XmippProtKerdensom):
-            self._visualize(obj.outputClasses, extraParams='--columns %d' % obj.SomXdim.get())
+            self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get()})
 
         elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
             self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
 
-        elif issubclass(cls, XmippProtConvertToPseudoAtoms):
-            self._views.append(CommandView(obj._getPath('chimera.cmd')))
-            
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
@@ -338,4 +334,20 @@ class XmippViewer(Viewer):
             self._visualize(obj.outputParticlesTiltPair)
 
         return self._views
+    
+    
+class ChimeraClient(CommandView):
+    """ View for calling an external command. """
+    def __init__(self, inputFile, projectionSize=256, 
+                 angularDist=None, radius=None, sphere=None, **kwargs):
+        cmd = 'xmipp_chimera_client --input "%(inputFile)s" --mode projector %(projectionSize)d' % locals()
+        if angularDist:
+            cmd += ' -a %(angularDist)s red %(radius)f' % locals() 
+            if sphere > 0:
+                cmd += ' %f' % sphere
+        CommandView.__init__(self, cmd + ' &', env=getEnviron())
+        
+    def show(self):
+        from subprocess import call
+        call(self._cmd, shell=True, env=self._env)
         

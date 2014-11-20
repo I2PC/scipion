@@ -71,7 +71,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Select the SetOfCoordinates ')
         
         form.addParam('downsampleType', EnumParam, choices=['same as picking', 'other', 'original'], 
-                      default=1, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
+                      default=0, important=True, label='Downsampling type', display=EnumParam.DISPLAY_COMBO, 
                       help='Select the downsampling type.')
         form.addParam('downFactor', FloatParam, default=2, condition='downsampleType==1',
                       label='Downsampling factor',
@@ -394,7 +394,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                               SAME_AS_PICKING:'Same as picking',
                               OTHER: 'Other downsampling factor'}
         summary = []
-        summary.append("_Downsample type_: %s" % downsampleTypeText.get(self.downsampleType.get()))
+        summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
         if self.downsampleType == OTHER:
             summary.append("Downsampling factor: %d" % self.downFactor.get())
         summary.append("Particle box size: %d" % self.boxSize.get())
@@ -408,11 +408,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def _methods(self):
         methodsMsgs = []
-        methodsMsgs.append("Particle box size %d" % self.boxSize.get())
 
         if self.methodsInfo.hasValue():
             methodsMsgs.append(self.methodsInfo.get())
-        
+            
+        methodsMsgs.append("Particle box size %d" % self.boxSize.get())
         methodsMsgs.append("Automatic Rejection method selected: %s" % (self.rejectionMethod))    
         methodsMsgs.append("Phase flipping performed?: %s" % (self.doFlip.get()))
         if self.doFlip:
@@ -430,10 +430,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     #--------------------------- UTILS functions --------------------------------------------
     def getInputMicrographs(self):
-        """ Return the micrographs associated to the SetOfCoordinates. """
-        if self.inputCoordinates.get() is None:
-            return None
-        return self.inputCoordinates.get().getMicrographs()
+        """ Return the micrographs associated to the SetOfCoordinates or to the 
+        Selected micrographs if Same as Picking not chosen. """
+        if self.downsampleType == SAME_AS_PICKING:
+            return self.inputCoordinates.get().getMicrographs()
+        else:
+            return self.inputMicrographs.get()
     
     def getImgIdFromCoord(self, coordId):
         """ Get the image id from the related coordinate id. """
@@ -451,10 +453,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         numEnabled = md.size()
         numAutoDisabled = total - numEnabled
         zScoreMax = md.getValue(xmipp.MDL_ZSCORE, md.lastObject())
-        msg = "Total particles extracted: %d\n" % total
-        msg += "                Enabled: %d\n" % numEnabled
-        msg += "                Disabled: %d\n" % numAutoDisabled
+        msg = "A total of %d particles extracted from which %d are enabled and %d disabled" % (total, numEnabled, numAutoDisabled)
         if zScoreMax is not None:
-            msg += "Maximun ZScore value: %d\n" % zScoreMax
+            msg += " and a maximun ZScore value of %d\n" % zScoreMax
         
         self.methodsInfo.set(msg)

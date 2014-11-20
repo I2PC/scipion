@@ -43,13 +43,17 @@ def runRecalcCftProtocol(projectId, inputObjId, sqliteFile, pathFile):
     inputObj = project.mapper.selectById(int(inputObjId))
     parentProtId = inputObj.getObjParentId()
     parentProt = project.mapper.selectById(parentProtId)
-    
-    if parentProt.getClassName() == "XmippProtCTFMicrographs":
+    parentClassName = parentProt.getClassName()
+    if parentClassName in ["XmippProtCTFMicrographs", 
+                           "XmippProtRecalculateCTF"]:
         # Create the new protocol
         prot = project.newProtocol(XmippProtRecalculateCTF)
-    else:   
+    elif parentClassName in ["ProtCTFFind", 
+                             "ProtRecalculateCTFFind"]:
         # Create the new protocol
         prot = project.newProtocol(ProtRecalculateCTFFind)
+    else:
+        raise Exception('Unknown protocol class "%s" for recalculating CTF' % parentClassName)
     
     useQueue = parentProt.useQueue()
     Mpi = parentProt.numberOfMpi.get()
@@ -66,8 +70,8 @@ def runRecalcCftProtocol(projectId, inputObjId, sqliteFile, pathFile):
     project.launchProtocol(prot, wait=True)
 
 if __name__ == '__main__':
-    for i, arg in enumerate(sys.argv):
-        print "%02d: %s" % (i, arg)
+#    for i, arg in enumerate(sys.argv):
+#        print "%02d: %s" % (i, arg)
     
     runRecalcCftProtocol(projectId=sys.argv[1],
                         inputObjId=sys.argv[2],

@@ -31,11 +31,12 @@ import sys
 from pyworkflow.manager import Manager
 from pyworkflow.em import ProtUserSubSet
 from pyworkflow.utils import timeit
+from pyworkflow.em.data import (SetOfVolumes, Volume)
 
 
 @timeit
 def runSubsetProtocol(projectId, inputId, sqliteFile, 
-                      outputType, protocolLabel, otherId):
+                      outputType, protocolLabel, other):
     """ Load the project and launch the protocol to
     create the subset.
     """
@@ -43,20 +44,26 @@ def runSubsetProtocol(projectId, inputId, sqliteFile,
     project = Manager().loadProject(projectId)
     inputObject = project.mapper.selectById(int(inputId))
 
+
+
     # Create the new protocol instance and set the input values
     prot = project.newProtocol(ProtUserSubSet)
     prot.inputObject.set(inputObject)
     prot.setObjLabel(protocolLabel)
     prot.sqliteFile.set(sqliteFile)
     prot.outputClassName.set(outputType)
-    
-    if otherId:
-        otherObject = project.mapper.selectById(int(otherId))
-        prot.otherObject.set(otherObject)
-        
+    if ',Volume' in other:
+        volId = int(other.split(',')[0])
+        prot.volId.set(volId)
+    elif other.isdigit():
+        otherObj = project.mapper.selectById(int(other))
+        prot.otherObj.set(otherObj)
+
+
     # Launch the protocol
     project.launchProtocol(prot, wait=True)
-    
+
+
 
 if __name__ == '__main__':
     #TODO: REMOVE THIS AFTER DEBUGGING
@@ -65,14 +72,14 @@ if __name__ == '__main__':
         print "%02d: %s" % (i, arg)
         
     if len(sys.argv) > 6:
-        otherId = sys.argv[6]
+        other = sys.argv[6]
     else:
-        otherId = None 
+        other = ""
         
     runSubsetProtocol(projectId=sys.argv[1],
                       inputId=sys.argv[2],
                       sqliteFile=sys.argv[3],
                       outputType=sys.argv[4],
                       protocolLabel=sys.argv[5], 
-                      otherId=otherId)
+                      other=other)
 

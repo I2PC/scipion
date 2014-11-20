@@ -3,6 +3,7 @@
 # * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
 # *              Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Vahid Abrishami (vabrishami@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -39,6 +40,8 @@ from pyworkflow.em.data import Micrograph
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
+#from pyworkflow.em.packages.dosefgpu.protocol_dosefgpu import ProtDosefGpu
+#from pyworkflow.em.protocol import ProtProcessMovies
 
 
 
@@ -48,7 +51,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     This base class will iterate throught the movies (extract them if compressed)
     and call a _processMovie method for each one.
     """
-
+    
+    def __init__(self, **kwargs):
+        ProtPreprocessMicrographs.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
@@ -56,7 +63,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
-                      help='')
+                      help='Select a set of previously imported movies.')
         form.addParam('cleanMovieData', BooleanParam, default=True,
                       expertLevel=LEVEL_EXPERT,
                       label='Clean movie data?',
@@ -66,15 +73,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                            'finishing. Results files should be copied in \n'
                            'the "createOutputStep" function.\n'
                            'If set to *No*, the folder will not be deleted.')
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        
+        allMovies = []
         for movie in self.inputMovies.get():
-            self._insertFunctionStep('processMovieStep', 
-                                     movie.getObjId(), movie.getFileName())
-        self._insertFunctionStep('createOutputStep')
-        self._insertFunctionStep('cleanMovieDataStep', self.cleanMovieData.get())
+            movieStepId = self._insertFunctionStep('processMovieStep', 
+                                                   movie.getObjId(), movie.getFileName(),
+                                                   prerequisites=[])
+            allMovies.append(movieStepId)
+        self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def _filterMovie(self, movieId, movieFn):
@@ -90,7 +98,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             makePath(movieFolder)
             copyFile(movieFn, join(movieFolder, movieName))
             toDelete = [movieName]
-            self._enterDir(movieFolder)
     
             if movieName.endswith('bz2'):
                 movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
@@ -100,179 +107,42 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             else:
                 movieMrc = movieName
     
-            self.info("Processing movie: %s" % movieMrc)            
-            self._processMovie(movieId, movieMrc)
-            cleanPath(*toDelete)
+            self.info("Processing movie: %s" % movieMrc) 
             
-            self._leaveDir()
-        
-    def cleanMovieDataStep(self, cleanMovieData):
-        if cleanMovieData:
-            for movie in self.inputMovies.get():
-                movieFolder = self._getMovieFolder(movie.getObjId())
-                self.info('Cleanning folder: %s' % movieFolder)
+            self._processMovie(movieId, movieName, movieFolder)
+            
+            if self.cleanMovieData:
                 cleanPath(movieFolder)
-        else:
-            self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
+            else:
+                self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
 
+        
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getMovieFolder(self, movieId):
         """ Create a Movie folder where to work with it. """
-        return self._getExtraPath('movie_%06d' % movieId)  
+        return self._getTmpPath('movie_%06d' % movieId)  
                 
     def _getMovieName(self, movieId, ext='.mrc'):
         return 'movie_%06d%s' % (movieId, ext) 
     
     def _getMicName(self, movieId):
         return 'micrograph_%06d.mrc' % movieId
-    
-    
-class ProtAverageMovies(ProtProcessMovies):
-    """ Simple protocol to just average all frames
-    in a movie and produce a micrograph per movie.
-    """
-    _label = 'movie average'
-    
-    def _processMovie(self, movieId, movieName):
-        import xmipp
-        movieImg = xmipp.Image()
-        movieImg.read(movieName, xmipp.HEADER)
-    
-        x, y, z, n = movieImg.getDimensions()
-    
-        # Store all the particles
-        img = xmipp.Image()
-        sumImg = xmipp.Image()
-        
-        for i in range(n):
-            img.read('%d@%s' % (i+1, movieName))
-            if i:
-                sumImg += img
-            else:
-                sumImg = img
-        #sumImg *= (1./n)
-        sumImg.write(self._getMicName(movieId))
-        
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMovies)
-        
-        # Create a folder to store the resulting micrographs
-        micsFolder = self._getPath('micrographs')
-        makePath(micsFolder)
-        
-        for movie in self.inputMovies.get():
-            movieId = movie.getObjId()
-            micName = self._getMicName(movieId)
-            # Move the resulting micrograph before delete of movies folder
-            micNameSrc = join(self._getMovieFolder(movieId), micName)
-            micNameDst = join(micsFolder, micName)
-            moveFile(micNameSrc, micNameDst)
-            
-            mic = micSet.ITEM_TYPE()
-            mic.setFileName(micNameDst)
-            micSet.append(mic)
-            
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineTransformRelation(inputMovies, micSet)
-            
-    
-class ProtOpticalAlignment(ProtProcessMovies):
-    """ Aligns movies, from direct detectors cameras, into micrographs.
-    """
-    _label = 'movie alignment'
-    
-    def __init__(self, **args):
-        ProtProcessMovies.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
 
-    #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
-        
-        form.addParam('inputMovies', PointerParam, important=True,
-                      label=Message.LABEL_INPUT_MOVS, pointerClass='SetOfMovies')
-        form.addParam('doGPU', BooleanParam, default=False,
-                      label="Use GPU (vs CPU)", help="Set to true if you want the GPU implementation")
-        form.addParam('GPUCore', IntParam, default=0,
-                      label="Choose GPU core",
-                      condition="doGPU",
-                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about")
-        form.addParam('winSize', IntParam, default=150,
-                      label="Window size", expertLevel=LEVEL_EXPERT,
-                      help="Window size (shifts are assumed to be constant within this window).")
-        line = form.addLine('Frames rangeDrop Frames (NOT IMPLEMENTED):',
-                      help='Drop first and last frames. set to 0 in orser to keep all\n\n'
-                           'NOT IMPLEMENTED YET.')
-        line.addParam('firstFrame', IntParam, default='0',
-                      label='First')
-        line.addParam('lastFrame',  IntParam, default='0',
-                      label='Last')
-        form.addParallelSection(threads=1, mpi=1)
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        micList = []
-        listProcess = []
-        movSet = self.inputMovies.get()
-        for mov in movSet:
-            movFn = mov.getFileName()
-            processId = self._insertFunctionStep('processMoviesStep', movFn, prerequisites=[])
-            micList.append(self._defineMicFn(movFn))
-            listProcess.append(processId)
-        self._insertFunctionStep('createOutputStep', micList, prerequisites=listProcess)
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def processMoviesStep(self, movFn):
-        movName = removeBaseExt(movFn)
-        self._createMovWorkingDir(movName)
-        self._defineProgram()
-        micFn = self._defineMicFn(movFn)
-        
-        movExt = getExt(movFn)
-        if movExt == ".mrc":
-            movFn = movFn + ":mrcs"
-        args = '-i %s -o %s --winSize %d'%(movFn, micFn, self.winSize.get())
-        if False:
-            args += ' --dropFirst %d --dropLast %d' % (self.firstFrames.get(),self.lastFrames.get())
-        if self.doGPU:
-            args += ' --gpu %d' % self.GPUCore.get()
-        self.runJob(self._program, args)
-    
-    def createOutputStep(self, micList):
-        micSet = self._createSetOfMicrographs()
-        movSet = self.inputMovies.get()
-        micSet.setAcquisition(movSet.getAcquisition())
-        micSet.setSamplingRate(movSet.getSamplingRate())
-        
-        for m in micList:
-            mic = Micrograph()
-            mic.setFileName(m)
-            micSet.append(mic)
-        self._defineOutputs(outputMicrographs=micSet)
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _createMovWorkingDir(self, movFn):
-        """create a new directory for the movie and change to this directory.
+    def _getMetadataName(self, movieId):
+        return 'micrograph_%06d.xmd' % movieId
+
+    def _getCorrMovieName(self, movieId, ext='.mrcs'):
+        return 'movie_%06d%s' % (movieId, ext)
+
+    def _getLogFile(self, movieId):
+        return 'micrograph_%06d_Log.txt' % movieId
+
+    def _processMovie(self, movieId, movieName, movieFolder):
+        """ Process the movie actions, remember to:
+        1) Generate all output files inside movieFolder (usually with cwd in runJob)
+        2) Copy the important result files after processing (movieFolder will be deleted!!!)
         """
-        workDir = self._movWorkingDir(movFn)
-        makePath(workDir)   # Create a directory for a current iteration
-    
-    def _movWorkingDir(self, movFn):
-        """ Define which is the directory for the current movie"""
-        workDir = self._getTmpPath(movFn)
-        return workDir
-    
-    def _defineProgram(self):
-        if self.doGPU:
-            self._program = 'xmipp_optical_alignment_gpu'
-        else:
-            self._program = 'xmipp_optical_alignment_cpu'
-    
-    def _defineMicFn(self, movFn):
-        micFn = self._getExtraPath(removeBaseExt(movFn) + "_aligned.spi")
-        return micFn
+        pass
     
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """ Extract a set of Particles from each frame of a set of Movies.
@@ -298,7 +168,8 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         import xmipp
         from pyworkflow.em.packages import xmipp3
         
-        boxSize = self.inputCoordinates.get().getBoxSize()
+        # This is wrong for some cases.
+        boxSize = self.inputCoordinates.get().getBoxSize() 
         # Aux image to read and write images        
         img = xmipp.Image()
         

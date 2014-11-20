@@ -35,10 +35,11 @@ from pyworkflow.object import Set
 from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles,
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
                                 SetOfVolumes, SetOfCTF, SetOfMovies, SetOfAlignment, 
-                                SetOfMovieParticles)
+                                SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
 from pyworkflow.em.data_tiltpairs import SetOfAngles
 from pyworkflow.utils.path import cleanPath
+from pyworkflow.mapper.sqlite_db import SqliteDb
 
 
 
@@ -53,11 +54,12 @@ class EMProtocol(Protocol):
         """ Create a set and set the filename using the suffix. 
         If the file exists, it will be delete. """
         setFn = self._getPath(template % suffix)
+        # Close the connection to the database if
+        # it is open before deleting the file
         cleanPath(setFn)
+        
+        SqliteDb.closeConnection(setFn)        
         setObj = SetClass(filename=setFn)
-        #FIXME: check why the following clear is needed if we have done
-        # cleanPath before, maybe a db connection been reused?
-        setObj.clear()
         
         return setObj
     
@@ -71,7 +73,10 @@ class EMProtocol(Protocol):
     
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
-    
+
+    def _createSetOfAverages(self, suffix=''):
+        return self.__createSet(SetOfAverages, 'averages%s.sqlite', suffix)
+        
     def _createSetOfMovieParticles(self, suffix=''):
         return self.__createSet(SetOfMovieParticles, 'movie_particles%s.sqlite', suffix)
     
@@ -93,6 +98,10 @@ class EMProtocol(Protocol):
     
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
+
+
+    def _createSetOfNormalModes(self, suffix=''):
+        return self.__createSet(SetOfNormalModes, 'modes%s.sqlite', suffix)
     
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)

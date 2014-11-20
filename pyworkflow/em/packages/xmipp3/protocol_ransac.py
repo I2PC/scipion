@@ -34,8 +34,9 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
                                         STEPS_PARALLEL, LEVEL_EXPERT)
 from pyworkflow.em.protocol import ProtInitialVolume
+from pyworkflow.em.data import SetOfClasses2D
 
-from convert import writeSetOfClasses2D, readSetOfVolumes
+from convert import writeSetOfClasses2D, readSetOfVolumes, writeSetOfParticles
 from utils import isMdEmpty
 
 
@@ -52,12 +53,11 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
-        form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
-                      help='Select the input classes from the project.'
-                           'It should be a SetOfClasses2D class')    
-        
+         
+        form.addParam('inputSet', PointerParam, label="Input averages", important=True, 
+                      pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
+                      help='Select the input images from the project.'
+                           'It should be a SetOfClasses2D class')  
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
@@ -174,26 +174,27 @@ class XmippProtRansac(ProtInitialVolume):
     def _insertInitialSteps(self):
         # Convert the input classes to a metadata ready for xmipp
         self.imgsFn = self._getExtraPath('input_classes.xmd')
-        self._insertFunctionStep('convertClassesStep', self.imgsFn)
+        self._insertFunctionStep('convertInputStep', self.imgsFn)
         
-        self.Xdim=self.inputClasses.get().getDimensions()[0]
+        inputSet = self.inputSet.get()
+        self.Xdim = inputSet.getDimensions()[0]
         
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")
         fnOutputReducedClassNoExt = os.path.splitext(fnOutputReducedClass)[0]
     
         # Low pass filter and resize        
         maxFreq = self.maxFreq.get()
-        ts = self.inputClasses.get().getSamplingRate()
-        K = 0.25*(maxFreq/ts)
-        if K<1:
-            K=1
-        self.Xdim2 = self.Xdim/K
+        ts = inputSet.getSamplingRate()
+        K = 0.25 * (maxFreq / ts)
+        if K < 1:
+            K = 1
+        self.Xdim2 = self.Xdim / K
         if self.Xdim2 < 32:
             self.Xdim2 = 32
-            K = self.Xdim/self.Xdim2
+            K = self.Xdim / self.Xdim2
             
-        freq = ts/maxFreq
-        ts = K*ts
+        freq = ts / maxFreq
+        ts = K * ts
 
         self._insertRunJobStep("xmipp_transform_filter","-i %s -o %s --fourier low_pass %f --oroot %s"
                                                 %(self.imgsFn,fnOutputReducedClass,freq,fnOutputReducedClassNoExt))
@@ -207,8 +208,13 @@ class XmippProtRansac(ProtInitialVolume):
 
     #--------------------------- STEPS functions --------------------------------------------
 
-    def convertClassesStep(self, classesFn):
-        writeSetOfClasses2D(self.inputClasses.get(), classesFn)
+    def convertInputStep(self, classesFn):
+        inputSet = self.inputSet.get()
+        
+        if isinstance(inputSet, SetOfClasses2D):
+            writeSetOfClasses2D(inputSet, classesFn)
+        else:
+            writeSetOfParticles(inputSet, classesFn)
         
     def simulatedAnnealingStep(self, fnRoot):
         self.runJob("xmipp_volume_initial_simulated_annealing","-i %s.xmd --initial %s.vol --oroot %s_sa --sym %s --randomIter %d --rejection %f --dontApplyPositive"\
@@ -219,8 +225,8 @@ class XmippProtRansac(ProtInitialVolume):
     def ransacIterationStep(self, n):
     
         fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd")  
-        fnBase="ransac%05d"%n
-        fnRoot=self._getTmpPath(fnBase)
+        fnBase = "ransac%05d"%n
+        fnRoot = self._getTmpPath(fnBase)
         
     
         if self.dimRed:
@@ -419,23 +425,26 @@ class XmippProtRansac(ProtInitialVolume):
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
    
     def createOutputStep(self):
-        classes2DSet = self.inputClasses.get()
+        inputSet = self.inputSet.get()
         fn = self._getPath('proposedVolumes.xmd')
         md = xmipp.MetaData(fn)
         md.addItemId()
         md.write(fn)
         
         volumesSet = self._createSetOfVolumes()
-        volumesSet.setSamplingRate(classes2DSet.getSamplingRate())
+        volumesSet.setSamplingRate(inputSet.getSamplingRate())
         readSetOfVolumes(fn, volumesSet)
         
         self._defineOutputs(outputVolumes=volumesSet)
-        self._defineSourceRelation(classes2DSet, volumesSet)
+        self._defineSourceRelation(inputSet, volumesSet)
         self._storeSummaryInfo(self.numVolumes.get())
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if isinstance(self.inputSet.get(), SetOfClasses2D):
+            if not self.inputSet.get().hasRepresentatives():
+                errors.append("The input classes should have representatives.")
         return errors
     
     def _summary(self):
@@ -455,8 +464,8 @@ class XmippProtRansac(ProtInitialVolume):
             
     #--------------------------- UTILS functions --------------------------------------------        
     def getCCThreshold(self):
-        fnCorr=self._getExtraPath("correlations.xmd")               
-        mdCorr=xmipp.MetaData("corrThreshold@"+fnCorr)
+        fnCorr = self._getExtraPath("correlations.xmd")               
+        mdCorr = xmipp.MetaData("corrThreshold@"+fnCorr)
         return mdCorr.getValue(xmipp.MDL_WEIGHT, mdCorr.firstObject())
     
     def _storeSummaryInfo(self, numVolumes):

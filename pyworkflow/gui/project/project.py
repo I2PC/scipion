@@ -32,19 +32,21 @@ It is composed by three panels:
 3. Summary/Details
 """
 
+import os
 from os.path import basename
+import subprocess
 
 import pyworkflow as pw
 from pyworkflow.manager import Manager
-from pyworkflow.apps.config import loadSettings
+from pyworkflow.config import * # We need this to retrieve object from mapper
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.plotter import Plotter
 
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
-   
-   
-   
+
+
+
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
     def __init__(self, path, master=None):
@@ -88,13 +90,43 @@ class ProjectWindow(ProjectBaseWindow):
         self.generalCfg = self.settings.getConfig()
         self.menuCfg = self.settings.getCurrentMenu()
         self.protCfg = self.settings.getCurrentProtocolMenu()
-        
-        
+
+    #
+    # The next functions are callbacks from the menu options.
+    # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+    #
+    def onBrowseFiles(self):
+        # Project -> Browse files
+        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                          'browser', 'dir', self.project.path])
+        # I'd like to do something like
+        #   from pyworkflow.gui.browser import FileBrowserWindow
+        #   FileBrowserWindow("Browsing: " + path, path=path).show()
+        # but it doesn't work because the images are not shared by the
+        # Tk() instance or something like that.
+
+    def onRemoveTemporaryFiles(self):
+        # Project -> Remove temporary files
+        tmpPath = os.path.join(self.project.path, self.project.tmpPath)
+        n = 0
+        try:
+            for fname in os.listdir(tmpPath):
+                fpath = "%s/%s" % (tmpPath, fname)
+                if os.path.isfile(fpath):
+                    os.remove(fpath)
+                    n += 1
+                # TODO: think what to do with directories. Delete? Report?
+            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
+        except Exception as e:
+            self.showError(str(e))
+
+
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
     def __init__(self, **args):
         # Load global configuration
-        settings = loadSettings(pw.SETTINGS)
+        settings = ProjectSettings()
+        settings.loadConfig()
         self.menuCfg = settings.getCurrentMenu()
         self.generalCfg = settings.getConfig()
         
@@ -103,3 +135,37 @@ class ProjectManagerWindow(ProjectBaseWindow):
         
         self.switchView(VIEW_PROJECTS)
 
+    #
+    # The next functions are callbacks from the menu options.
+    # See how it is done in pyworkflow/gui/gui.py:Window._addMenuChilds()
+    #
+    def onBrowseFiles(self):
+        # Project -> Browse files
+        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
+                          'browser', 'dir', os.environ['SCIPION_USER_DATA']])
+        # I'd like to do something like
+        #   from pyworkflow.gui.browser import FileBrowserWindow
+        #   FileBrowserWindow("Browsing: " + path, path=path).show()
+        # but it doesn't work because the images are not shared by the
+        # Tk() instance or something like that.
+
+    def onRemoveTemporaryFiles(self):
+        # Project -> Remove temporary files
+        tmpPath = os.environ['SCIPION_TMP']
+        n = 0
+        try:
+            for fname in os.listdir(tmpPath):
+                fpath = "%s/%s" % (tmpPath, fname)
+                if os.path.isfile(fpath):
+                    os.remove(fpath)
+                    n += 1
+                # TODO: think what to do with directories. Delete? Report?
+            self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
+        except Exception as e:
+            self.showError(str(e))
+
+    def onCleanProject(self):
+        # Project -> Clean project
+        self.showInfo("I did nothing, because I don't know what I'm supposed "
+                      "to do here.")
+        # TODO: well, something, clearly.

@@ -27,13 +27,15 @@
 # **************************************************************************
 
 import os
+from pyworkflow.em.data import SetOfVolumes
 import unittest
 
 import xmipp
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
-
+import subprocess
+from pyworkflow.utils.properties import colorText
 
 
 class TestBasic(BaseTest):
@@ -88,7 +90,566 @@ class TestBasic(BaseTest):
         self.assertEquals(filename, img.getFileName())
 
 
-class TestSetConversions(BaseTest):
+
+SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+CLEAN_IMAGES = False#True # Remove the output temporary files
+PRINT_MATRIX = False
+PRINT_FILES = False#False
+
+
+def runXmippProgram(cmd):
+    print ">>>", cmd
+    p = subprocess.Popen(cmd, shell=True, env=xmipp3.getEnviron())
+    return p.wait()   
+
+
+class TestConvertBase(BaseTest):
+    """ Base class to launch both Alignment and Reconstruction tests."""
+    IS_ALIGNMENT = None
+    CMD = None
+        
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('emx')
+
+
+    def launchTest(self, fileKey, mList,
+                   is2D=True, inverseTransform=False, **kwargs):
+        """ Helper function to launch similar alignment tests
+        give the EMX transformation matrix.
+        Params:
+            fileKey: the file where to grab the input stack images.
+            mList: the matrix list of transformations 
+                (should be the same length of the stack of images)
+        """
+        print "\n"
+        print "*" * 80
+        print "* Launching test: ", fileKey
+        print "*" * 80
+
+        stackFn = self.dataset.getFile(fileKey)
+        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
+        mdFn    = self.getOutputPath(fileKey + "_particles.xmd")
+        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
+
+        if self.IS_ALIGNMENT:
+            outputFn = self.getOutputPath(fileKey + "_output.mrcs")
+            goldFn = self.dataset.getFile(fileKey + '_Gold_output.mrcs')
+        else:
+            outputFn = self.getOutputPath(fileKey + "_output.vol")
+            goldFn = self.dataset.getFile(fileKey + '_Gold_output.vol')
+
+        if PRINT_FILES:
+            print "BINARY DATA: ", stackFn
+            print "SET1:        ", partFn1
+            print "  MD:        ", mdFn
+            print "SET2:        ", partFn2
+            print "OUTPUT:      ", outputFn
+            print "GOLD:        ", goldFn
+
+        if is2D:
+            partSet = SetOfParticles(filename=partFn1)
+        else:
+            partSet = SetOfVolumes(filename=partFn1)
+        partSet.setAcquisition(Acquisition(voltage=300,
+                                  sphericalAberration=2,
+                                  amplitudeContrast=0.1,
+                                  magnification=60000))
+        # Populate the SetOfParticles with  images
+        # taken from images.mrc file
+        # and setting the previous alignment parameters
+        aList = [np.array(m) for m in mList]
+        for i, a in enumerate(aList):
+            p = Particle()
+            p.setLocation(i+1, stackFn)
+            p.setAlignment(Alignment(a))
+            partSet.append(p)
+        # Write out the .sqlite file and check that are correctly aligned
+        partSet.write()
+
+        # Convert to a Xmipp metadata and also check that the images are
+        # aligned correctly
+        if is2D:
+            writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+        else:
+            writeSetOfVolumes(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+        # Let's create now another SetOfImages reading back the written
+        # Xmipp metadata and check one more time.
+        partSet2 = SetOfParticles(filename=partFn2)
+        partSet2.copyInfo(partSet)
+        if is2D:
+            readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                               inverseTransform=( inverseTransform))
+        else:
+            readSetOfParticles(mdFn, partSet2, is2D=is2D,
+                               inverseTransform= inverseTransform)
+
+        partSet2.write()
+
+        if PRINT_MATRIX:
+            for i, img in enumerate(partSet2):
+                m1 = aList[i]
+                m2 = img.getAlignment().getMatrix()
+                print "-"*5
+                print img.getFileName(), img.getIndex()
+                print 'm1:\n', m1
+                print 'm2:\n', m2
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+
+        # Launch apply transformation and check result images
+        runXmippProgram(self.CMD % locals())
+
+        if SHOW_IMAGES:
+            runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
+
+        if os.path.exists(goldFn):
+            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
+        else:
+            print colorText.RED + colorText.BOLD + "WARNING: Gold file '%s' missing!!!" % goldFn + colorText.END
+
+        if CLEAN_IMAGES:
+            cleanPath(outputFn)
+                
+    
+class TestAlignment(TestConvertBase):
+    IS_ALIGNMENT = True
+    CMD = "xmipp_transform_geometry  -i %(mdFn)s -o %(outputFn)s --apply_transform"
+    
+    def test_isInverse(self):
+        def _testInv(matrixList):
+            a = Alignment(matrixList)
+            
+            row = XmippMdRow()
+            alignmentToRow(a, row, is2D=True, inverseTransform=False)
+            print "isInv=False, row", row      
+            
+            row2 = XmippMdRow()
+            alignmentToRow(a, row2, is2D=True, inverseTransform=True)
+            print "isInv=True, row2", row2
+          
+        _testInv([[1.0, 0.0, 0.0, 20.0],
+                  [0.0, 1.0, 0.0, 0.0],
+                  [0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 0.0, 1.0]])
+          
+        _testInv([[0.93969, 0.34202, 0.0, -6.8404],
+                  [-0.34202, 0.93969, 0.0, 18.7939],
+                  [0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 0.0, 1.0]])    
+
+
+    def test_alignShiftRotExp(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: angles, shifts
+        """
+        mList = [[[ 1.0, 0.0, 0.0, 20.0],
+                  [ 0.0, 1.0, 0.0,  0.0],
+                  [ 0.0, 0.0, 1.0,  0.0],
+                  [ 0.0, 0.0, 0.0,  1.0]],
+                 [[0.86602539, 0.5, 0.0, 20.0],
+                  [ -0.5,0.86602539, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0.86602539, 0.5, 0.0, 27.706396],
+                  [ -0.5,0.86602539, 0.0,0.331312],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0.5, 0.86602539, 0.0, 3.239186],
+                  [ -0.86602539, 0.5, 0.0,20.310715],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 0.0, 1.0, 0.0, 10.010269],
+                  [ -1.0, 0.0, 0.0, 3.6349521],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchTest('alignShiftRotExp', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignShiftRotflip(self):#Why is this call flip, ROB
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: angles, shifts
+        """
+        mList = [[[ -1.0, 0.0, 0.0, 20.0],
+                  [ 0.0, 1.0, 0.0,  0.0],
+                  [ 0.0, 0.0, 1.0,  0.0],
+                  [ 0.0, 0.0, 0.0,  -1.0]],
+                 [[-0.86602539, -0.5, 0.0, 20.0],
+                  [ -0.5,0.86602539, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, -1.0]],
+                 [[0.86602539, 0.5, 0.0, 27.706396],
+                  [ -0.5,0.86602539, 0.0,0.331312],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0.5, 0.86602539, 0.0, 3.239186],
+                  [ -0.86602539, 0.5, 0.0,20.310715],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 0.0, 1.0, 0.0, 10.010269],
+                  [ -1.0, 0.0, 0.0, 3.6349521],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        fileKey='alignShiftRotflip'
+        stackFn = self.dataset.getFile(fileKey)
+        partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
+        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
+        partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
+
+        partSet = SetOfParticles(filename=partFn1)
+        partSet.setAcquisition(Acquisition(voltage=300,
+                                  sphericalAberration=2,
+                                  amplitudeContrast=0.1,
+                                  magnification=60000))
+        # Populate the SetOfParticles with  images
+        # taken from images.mrc file
+        # and setting the previous alignment parameters
+        aList = [np.array(m) for m in mList]
+        for i, a in enumerate(aList):
+            p = Particle()
+            p.setLocation(i+1, stackFn)
+            p.setAlignment(Alignment(a))
+            partSet.append(p)
+        # Write out the .sqlite file and check that are correctly aligned
+        partSet.write()
+
+        # Convert to a Xmipp metadata and also check that the images are
+        # aligned correctly
+        writeSetOfParticles(partSet, mdFn, is2D=True, inverseTransform=False)
+
+        # Let's create now another SetOfImages reading back the written
+        # Xmipp metadata and check one more time.
+        partSet2 = SetOfParticles(filename=partFn2)
+        partSet2.copyInfo(partSet)
+        readSetOfParticles(mdFn, partSet2, is2D=True,
+                               inverseTransform=False)
+
+        ##partSet2.write()
+        #TODO_rob: I do not know how to make an assert here
+        #lo que habria que comprobar es que las imagenes de salida son identicas a la imagen 3
+        #inverse has no effect
+
+        if PRINT_MATRIX:
+            for i, img in enumerate(partSet2):
+                m1 = aList[i]
+                m2 = img.getAlignment().getMatrix()
+                print "-"*5
+                print img.getFileName(), img.getIndex()
+                print  >> sys.stderr, 'm1:\n', m1
+                print  >> sys.stderr, 'm2:\n', m2
+                self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
+#        if commandLine is not None:
+#            import subprocess
+#            print ("Computing: ", commandLine%locals())
+#            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#            for line in p.stdout.readlines():
+#                print line,
+#            retval = p.wait()
+
+        
+    def test_alignFlip(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: flip
+        """
+        mList = [[[ -1., -0., -0.,  0.],
+                  [  0.,  1.,  0.,  0.],
+                  [  0.,  0.,  1.,  0.],
+                  [  0,   0.,  0., -1.]],
+                 
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchTest('alignFlip', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignFlip2(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: flip
+        motive out of x axis
+        """
+        mList = [[[-0.86603,-0.50000,  0.00000, -17.32051],
+                  [-0.50000, 0.86603, -0.00000, -10.00000],
+                  [ 0.00000, 0.00000,  1.00000,  -0.00000],
+                  [ 0.00000, 0.00000,  0.00000,  -1.00000]],
+
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchTest('alignFlip2', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignShiftRot3D(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 3D alignment
+        Misalignment: angles, shifts
+        0.71461016 0.63371837 -0.29619813         15
+        -0.61309201 0.77128059 0.17101008         25
+        0.33682409 0.059391174 0.93969262         35
+                 0          0          0          1
+        """
+        mList = [[[ 0.71461016, 0.63371837, -0.29619813, 15],
+                  [ -0.61309201, 0.77128059, 0.17101008, 25],
+                  [ 0.33682409, 0.059391174, 0.93969262, 35],
+                  [ 0,          0,           0,           1]],
+
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchTest('alignShiftRot3D', mList,
+                         is2D=False, inverseTransform=False)
+
+    def test_alignRotOnly(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: angles
+        mList[0] * (0,32,0,1)' -> (32,0,0,1)'  T -> ref
+        mList[1] * (-32,0,0,1)' -> (32,0,0,1)'
+        """
+        mList = [[[ 0.0, 1.0, 0.0, 0.0],
+                  [-1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[-1.0, 0.0, 0.0, 0.0],
+                  [ 0.0,-1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchTest('alignRotOnly', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignRotOnly3D(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 3D alignment
+        Misalignment: angles
+           mList[0] * (22.8586, -19.6208, 10.7673)' -> (32,0,0,1); T -> ref
+           mList[1] * (22.8800, 20.2880, -9.4720) ->(32,0,0,1)'; T -> ref
+        """
+
+        mList = [[[ 0.715,-0.613, 0.337, 0.],
+                  [ 0.634, 0.771, 0.059, 0.],
+                  [-0.296, 0.171, 0.94,  0.],
+                  [ 0.   , 0.   , 0.,    1.]],
+                 [[ 0.71433,   0.63356,  -0.29586,   -0.00000],
+                  [ -0.61315,   0.77151,   0.17140,  -0.00000],
+                  [  0.33648,   0.05916,   0.93949,  -0.00000],
+                  [  0.00000,   0.00000,   0.00000,   1.00000]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchTest('alignRotOnly3D', mList,
+                         is2D=False, inverseTransform=False)
+
+
+    def test_alignShiftOnly(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: shifts
+         mList[0] * ( 32,0,0,1)-> (0,0,0,1); T -> ref
+         mList[1] * (  0,32,0,1)-> (0,0,0,1); T -> ref
+
+        """
+        mList = [[[ 1.0, 0.0, 0.0, -32.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, -32.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchTest('alignShiftOnly', mList,
+                         is2D=True, inverseTransform=False)
+
+    def test_alignShiftOnly3D(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 3D alignment
+        Misalignment: shifts
+        mList[0] * (0,0,0) -> (32,0,0)
+        mList[1] * (32,-16,0) -> (32,0,0)
+        mList[1] * (32,0,-8) -> (32,0,0)
+        mList[2] reference
+        """
+        mList = [[[ 1.0, 0.0, 0.0, 32.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 16.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 8.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+        
+        self.launchTest('alignShiftOnly3D', mList,
+                         is2D=False, inverseTransform=False)
+        
+    def test_alignShiftRot(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: 2D alignment
+        Misalignment: angles and shifts
+        note that when rot and shift are involved
+        the correct transformation matrix is
+        rot matrix + rot*shift
+        mList[0] * (16,32,0) -> (32,0,0)
+        mList[1] * (-32,16,0) -> (32,0,0)
+        mList[2] reference
+        """
+        mList = [[[ 0.0, 1.0, 0.0, 0.0],                  
+                  [-1.0, 0.0, 0.0,16.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[-1.0, 0.0, 0.0, 0.0],
+                  [ 0.0,-1.0, 0.0,16.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[ 1.0, 0.0, 0.0, 0.0],
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]]]
+
+        self.launchTest('alignShiftRot', mList,
+                         is2D=True, inverseTransform=False)
+
+
+class TestReconstruct(TestConvertBase):
+    IS_ALIGNMENT = False
+    CMD = "xmipp_reconstruct_art -i %(mdFn)s -o %(outputFn)s"
+    
+    def test_reconstRotOnly(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: reconstruction from projections
+        Misalignment: angles
+        Volume to be reconstructed is empty except for an small sphere
+        at (4,8,16)
+        mList[0] * (3.3429    9.6554   15.2184)   -> (4,8,16)
+        mList[1] * (14    4    4)   -> (4,8,16)
+        mList[2] * (16    4    8)   -> (4,8,16)
+        mList[3] * ( 0.30858   12.95297   12.96632)   -> (4,8,16)
+        mList[4] * (-10.4760   -9.5223   11.6438)   -> (4,8,16)
+        mList[5] * (4    8   16)   -> (4,8,16)
+        mList[6] * (-8   16   -4)  -> (4,8,16)
+        """
+        mList = [[[0.71461016, 0.63371837, -0.29619813,  0.],#a1
+                  [-0.61309201, 0.77128059, 0.17101008,  0.],
+                  [0.33682409, 0.059391174, 0.93969262,  0.],
+                  [0,          0,          0,            1.]],
+                 [[0., 0., -1., 0.],#a2
+                  [0., 1., 0., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[0., 1., 0., 0.],#a3
+                  [0., 0., 1., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[ 0.22612257, 0.82379508, -0.51983678, 0.],#a4
+                  [-0.88564873, 0.39606407, 0.24240388,  0.],
+                  [ 0.40557978, 0.40557978, 0.81915206,  0.],
+                  [ 0.,          0.,          0.,           1.]],
+                 [[-0.78850311, -0.24329656,-0.56486255,   0.],#a5
+                  [ 0.22753462, -0.96866286, 0.099600501,  0.],
+                  [-0.57139379, -0.049990479, 0.81915206,  0.],
+                  [0.,            0.,           0.,           1.]],
+                 [[ 1.0, 0.0, 0.0, 0.0],#a6
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0., 0., -1., 0.],#a7
+                  [-1., 0., 0.,  0.],
+                  [0., 1., 0.,  0.],
+                  [0., 0., 0., 1.]]
+                ]
+
+        self.launchTest('reconstRotOnly', mList,
+                     is2D=False, inverseTransform=True)
+
+    def test_reconstRotandShift(self):
+        """ Check that for a given alignment object,
+        the corresponding Xmipp metadata row is generated properly.
+        Goal: reconstruction from projections
+        Misalignment: angles and shifts
+        Volume to be reconstructed is empty except for an small sphere
+        at (4,8,16)
+        mList[0] * 64*(0.0210515   0.0037119   0.0587308)   -> (4,8,16)
+        mList[1] * 64*(0.250000   0.125000   0.062500)   -> (4,8,16)
+        mList[2] * 64*(0.218750   0.062500   0.062500)   -> (4,8,16)
+        mList[3] * 64*(-0.0037446   0.0683733   0.1968962)   -> (4,8,16)
+        mList[4] * 64*(-0.109277  -0.176747   0.256331)   -> (4,8,16)
+        mList[5] * 64*(4    8   16)   -> (4,8,16)
+        mList[6] * 64*(-0.125000   0.250000  -0.062500)  -> (4,8,16)
+        """
+        mList = [[[0.71461016, 0.63371837, -0.29619813,  4.],#a1
+                  [-0.61309201, 0.77128059, 0.17101008,  8.],
+                  [0.33682409, 0.059391174, 0.93969262, 12.],
+                  [0,          0,          0,            1.]],
+                 [[0., 0., -1., 0.],#a2
+                  [0., 1., 0., 0.],
+                  [1., 0., 0., 0.],
+                  [0., 0., 0., 1.]],
+                 [[0., 1., 0., 0.],#a3
+                  [0., 0., 1., 4.],
+                  [1., 0., 0., 2.],
+                  [0., 0., 0., 1.]],
+                 [[ 0.22612257, 0.82379508, -0.51983678, 7.],#a4
+                  [-0.88564873, 0.39606407, 0.24240388,  3.],
+                  [ 0.40557978, 0.40557978, 0.81915206,  4.],
+                  [ 0.,          0.,          0.,           1.]],
+                 [[-0.78850311, -0.24329656,-0.56486255,   5.],#a5
+                  [ 0.22753462, -0.96866286, 0.099600501, -3.],
+                  [-0.57139379, -0.049990479, 0.81915206, -2.],
+                  [0.,            0.,           0.,           1.]],
+                 [[ 1.0, 0.0, 0.0, 0.0],#a6
+                  [ 0.0, 1.0, 0.0, 0.0],
+                  [ 0.0, 0.0, 1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
+                 [[0., 0., -1., 0.],#a7
+                  [-1., 0., 0.,  0.],
+                  [0., 1., 0.,  0.],
+                  [0., 0., 0., 1.]]
+                ]
+
+        self.launchTest('reconstRotandShift', mList,
+                     is2D=False, inverseTransform=True)
+
+    
+class TestSetConvert(BaseTest):
     
     @classmethod
     def setUpClass(cls):
@@ -123,8 +684,6 @@ class TestSetConversions(BaseTest):
         # Labels order is not the same
         # TODO: Implement a better way to compare two metadatas
         #self.assertEqual(mdIn, mdOut)
-        
-        
         
     def test_micrographsToMd(self):
         """ Test the convertion of a SetOfMicrographs to Xmipp metadata. """

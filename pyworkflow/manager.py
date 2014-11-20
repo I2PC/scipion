@@ -77,31 +77,30 @@ class Manager(object):
             projList.sort(key=lambda k: k.mTime, reverse=True)
         return projList
     
-    def createProject(self, projectName):
-        """Create a new project """
-        from pyworkflow.apps.config import loadSettings
-        defaultSettings = loadSettings(pw.SETTINGS)
-        proj = Project(self.getProjectPath(projectName))
-        proj.create(defaultSettings)
-        # Copy default settings
-        #copyFile(pw.SETTINGS, proj.settingsPath)
-        return proj
+    def createProject(self, projectName, confs={}, graphView=False):
+        """Create a new project.
+        confs dict can contains customs .conf files 
+        for: menus, protocols, or hosts
+        """
+        project = Project(self.getProjectPath(projectName))
+        project.create(confs, graphView)
+        return project
     
     def loadProject(self, projId):
         """ Retrieve a project object, given its id. """
         proj = Project(self.getProjectPath(projId))
         proj.load()
         return proj
-        
+
     def deleteProject(self, projectName):
         cleanPath(self.getProjectPath(projectName))
-        
+
+    def renameProject(self, oldName, newName):
+        os.rename(self.getProjectPath(oldName), self.getProjectPath(newName))
+
     def hasProject(self, projectName):
         """Return True if exists a project with projectName"""
         for projInfo in self.listProjects():
             if projectName == projInfo.projName:
                 return True
         return False
-    
-        
-        

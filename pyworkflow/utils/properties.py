@@ -46,9 +46,11 @@ class Message():
     TITLE_CREATE_PROJECT = 'Enter the project name'
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
     TITLE_EDIT_OBJECT = 'Edit Object properties'
-    MESSAGE_CREATE_PROJECT = ', Are you sure to *DELETE* the project and all its *DATA*?'
+    MESSAGE_DELETE_PROJECT = 'This will *delete* the project and all its *data*. Are you sure?'
     LABEL_DELETE_PROJECT = 'Delete Project'
     TITLE_DELETE_PROJECT = 'Confirm project deletion'
+    LABEL_RENAME_PROJECT = 'Rename Project'
+    TITLE_RENAME_PROJECT = 'Confirm project renaming'
     LABEL_MODIFIED = 'Modified: '
     
     # Project Content Template
@@ -108,6 +110,7 @@ class Message():
     #-------- Protocol Form messages ----------
     LABEL_CITE = 'Cite'
     LABEL_HELP = 'Help'
+    TEXT_HELP = 'The file selected will be uploaded to the project folder. If the file was uploaded before, It will be replaced.'
     LABEL_RUNNAME = 'Run name'
     LABEL_RUNMODE = 'Mode' 
     LABEL_HOST = 'Host'
@@ -174,21 +177,29 @@ Define the number of processors to be used in the execution.
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
     LABEL_COPYFILES = 'Copy files?'
-    LABEL_VOLTAGE = 'Microscope voltage (in kV)'
-    LABEL_SPH_ABERRATION = 'Spherical aberration (in mm)'
+    LABEL_VOLTAGE = 'Microscope voltage (kV)'
+    TEXT_VOLTAGE = "Microscope voltage"
+    LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
+    TEXT_SPH_ABERRATION = "Optical effect due to the increased refraction of light rays when they strike lens near its edge, in comparison with those that strike nearer the centre."
     LABEL_AMPLITUDE = 'Amplitude Contrast'
-    TEXT_AMPLITUDE = 'It should be a positive number, typically between 0.05 and 0.3.'
+    TEXT_AMPLITUDE = 'Is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
+    'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined.'\
+                     'It should be a positive number, typically between 0.05 and 0.3.'
     LABEL_PATTERNU = 'Pattern untilted'
     LABEL_PATTERNT = 'Pattern tilted'
 
     
     LABEL_SAMP_MODE = 'Sampling rate mode'
+    TEXT_SAMP_MODE = "You can specify the sampling rate directly from the image (A/pixel, Ts)\n or by specifying the magnification rate (M) "\
+                     "and the scanner\n pixel size (microns/pixel, Tm). The relationship between\n the two is Ts=Tm/M." 
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
     LABEL_SAMP_RATE = 'Sampling rate (A/px)'
+    TEXT_SAMP_RATE = "Sampling rate"
     LABEL_MAGNI_RATE = 'Magnification rate'
-    LABEL_SCANNED = 'Scanned pixel size'
-    
+    TEXT_MAGNI_RATE = "Electron optical magnification(M). It can be used to calculate Sampling Rate(Ts) using Scanner Pixel Size(Tm), Ts = Tm/M. Otherwise it is used by few programs like Ctffind or Frealign"
+    LABEL_SCANNED = 'Scanned pixel size (microns/px)'
+
     
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
@@ -199,7 +210,7 @@ Define the number of processors to be used in the execution.
     LABEL_INPUT_VOLS = 'Input Volumes'
     LABEL_INPUT_MOVS = 'Input Movies'
     LABEL_ALIG_PART = 'Write aligned particles?'
-    TEXT_ALIG_PART = 'If set to *Yes*, the aligment will be applied to \n'+'input particles and a new aligned set will be created.'
+    TEXT_ALIG_PART = 'If set to *Yes*, the alignment will be applied to \n'+'input particles and a new aligned set will be created.'
 
     TEXT_NO_INPUT_MIC = 'No *Input Micrographs* selected.'
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
@@ -345,3 +356,19 @@ class Color():
     STATUS_INTERACTIVE = '#F3F5CB',
     STATUS_ABORTED = '#F5CCCB',
     #STATUS_SAVED = '#124EB0',
+
+class colorText:
+    """printing in colors, bold, etc,
+       example: print colorText.BOLD + 'Hello World !' + color.END
+    """
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+

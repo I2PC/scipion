@@ -34,14 +34,20 @@ _references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
 from convert import *
+
+# some sub-packages
+from nma import *
+from pdb import *
+
 from viewer import XmippViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
-from viewer_nma import XmippNMAViewer
-from viewer_nma_alignment import XmippAlignmentNMAViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
+from viewer_validate_nontilt import XmippValidateNonTiltViewer
+from viewer_movie_alignment import XmippMovieAlignViewer
+
 from plotter import XmippPlotter
 
 from protocol_align_volume import XmippProtAlignVolume
@@ -49,9 +55,9 @@ from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_convert_to_pseudoatoms import XmippProtConvertToPseudoAtoms
+
 from protocol_create_mask3d import XmippProtCreateMask3D
+from protocol_create_mask2d import XmippProtCreateMask2D
 from protocol_crop_resize import XmippProtCropResizeParticles
 from protocol_crop_resize import XmippProtCropResizeVolumes
 from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
@@ -68,9 +74,8 @@ from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes
 from protocol_micrographs_import import ProtXmippMicsImport
 from protocol_ml2d import XmippProtML2D
-from protocol_nma_alignment import XmippProtAlignmentNMA
-#from protocol_nma_choose import XmippProtNMAChoose
-from protocol_nma import XmippProtNMA
+from protocol_movie_alignment import ProtMovieAlignment
+
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick import XmippProtParticlePicking 
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
@@ -80,13 +85,15 @@ from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_projmatch import XmippProtProjMatch, XmippProjMatchViewer
 from protocol_random_conical_tilt import XmippProtRCT
 from protocol_ransac import XmippProtRansac
+from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_simulated_annealing import XmippProtInitVolSimAnneal
-
-
+from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_image_operate import XmippProtImageOperateParticles
+from protocol_image_operate import XmippProtImageOperateVolumes
 # Wizards
 from wizard import *
 

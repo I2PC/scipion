@@ -23,20 +23,19 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
 """
 This sub-package contains wrapper around align2d Xmipp program
 """
 
 from pyworkflow.em import *  
 
-from convert import createXmippInputImages, readSetOfParticles, locationToXmipp, matrixFromGeometry
-
+from convert import writeSetOfParticles, readSetOfParticles, getImageLocation, \
+    locationToXmipp, xmippToLocation, matrixFromGeometry
        
         
 class XmippProtCL2DAlign(ProtAlign2D):
     """ Aligns a set of particles using the CL2D algorithm. """
-    _label = 'cl2d align'
+    _label = 'align with cl2d'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     
@@ -52,12 +51,11 @@ class XmippProtCL2DAlign(ProtAlign2D):
                       help='Image that will serve as class reference')
         
         form.addParam('maximumShift', IntParam, default=10,
-                      label='Maximum shift:',
-                      help='in pixels')
+                      label='Maximum shift (px):')
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations')
-        form.addParallelSection(threads=1, mpi=3)
+        form.addParallelSection(threads=1, mpi=4)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     
@@ -65,10 +63,11 @@ class XmippProtCL2DAlign(ProtAlign2D):
         """ Mainly prepare the command line for call cl2d align program"""
         
         # Convert input images if necessary
-        imgsFn = createXmippInputImages(self, self.inputParticles.get())
+        self.imgsFn = self._getExtraPath('images.xmd') 
+        self._insertFunctionStep('convertInputStep')
         
         # Prepare arguments to call program: xmipp_classify_CL2D
-        self._params = {'imgsFn': imgsFn, 
+        self._params = {'imgsFn': self.imgsFn, 
                         'extraDir': self._getExtraPath(),
                         'maxshift': self.maximumShift.get(),
                         'iter': self.numberOfIterations.get(),
@@ -76,24 +75,21 @@ class XmippProtCL2DAlign(ProtAlign2D):
         args = '-i %(imgsFn)s --odir %(extraDir)s --nref 1 --iter %(iter)d --maxShift %(maxshift)d'
         
         if self.useReferenceImage:
-            args += " --ref0 " + locationToXmipp(*self.refenceImage.getLocation())
+            args += " --ref0 " + getImageLocation(self.referenceImage.get())
         else:
             args += " --nref0 1"
-            
-        self._insertClassifySteps("xmipp_classify_CL2D", args)
-    
-    
-    def _insertClassifySteps(self, program, args, subset=''):
-        self._insertRunJobStep(program, args % self._params)
+        self._insertRunJobStep("xmipp_classify_CL2D", args % self._params)
+
         self._insertFunctionStep('createOutputStep')        
 
     #--------------------------- STEPS functions --------------------------------------------        
-    
+    def convertInputStep(self):
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
+
     def createOutputStep(self):
         """ Store the setOfParticles object 
         as result of the protocol. 
         """
-        #TODO: Generate a set of Transforms
         particles = self.inputParticles.get()
         # Define the output average
         avgFile = self._getExtraPath('level_00', 'class_classes.stk')
@@ -103,53 +99,25 @@ class XmippProtCL2DAlign(ProtAlign2D):
         self._defineOutputs(outputAverage=avg)
         self._defineSourceRelation(particles, avg)
             
-        # Generate the SetOfAlignmet
+        # Generate the Set of Particles with alignment
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
-        
-        readSetOfParticles(self._getExtraPath('images.xmd'), alignedSet)
-        
+        readSetOfParticles(self.imgsFn, alignedSet)
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)
-                
-#         # Produce aligned images if requested and generate output
-#         if self.writeAlignedParticles:
-#             lastMdFn = self._getExtraPath("images.xmd")
-#             alignedMd = self._getPath("particles_aligned.xmd")
-#             alignedStk = self._getPath("particles_aligned.stk")
-#             params = "%(lastMdFn)s -o %(alignedStk)s --save_metadata_stack %(alignedMd)s"
-#             params += " --apply_transform --keep_input_columns" 
-#             
-#             # Apply transformation
-#             self.runJob("xmipp_transform_geometry", params % locals())
-#             md = xmipp.MetaData(alignedMd)
-#             
-#             #for label in [xmipp.MDL_ANGLE_PSI, xmipp.MDL_SHIFT_X, xmipp.MDL_SHIFT_Y, xmipp.MDL_FLIP]:
-#             #    md.removeLabel(label)
-#             if md.containsLabel(xmipp.MDL_ZSCORE):
-#                 md.sort(xmipp.MDL_ZSCORE)
-#             md.write(alignedMd)
-#             
-#             # Define the output of aligned particles
-#             imgSet = self._createSetOfParticles()
-#             imgSet.copyInfo(particles)
-#             imgSet.setHasAlignment(True)
-#             readSetOfParticles(alignedMd, imgSet, imgSet.hasCTF())
-#             self._defineOutputs(outputParticles=imgSet)
-#             self._defineTransformRelation(particles, imgSet)
-
-        
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        refImage = self.referenceImage.get()
         if self.useReferenceImage:
-            if len(refImage) > 0:
-                if not exists(refImage):
-                    errors.append("Cannot find the file " + refImage)
+            if self.referenceImage.hasValue():
+                refImage = self.referenceImage.get()
+                [x1,y1,z1]=refImage.getDim()
+                [x2,y2,z2]=self.inputParticles.get().getDim()
+                if x1!=x2 or y1!=y2 or z1!=z2:
+                    errors.append('The input images and the reference image have different sizes') 
             else:
-                errors.append("Please, enter an Image file")
+                errors.append("Please, enter a reference image")
         return errors
         
     def _summary(self):
@@ -165,6 +133,8 @@ class XmippProtCL2DAlign(ProtAlign2D):
         return ['Sorzano2010a']
     
     def _methods(self):
-        """ METHODS TO DO"""
-        pass
+        if self.useReferenceImage:
+            return ["We aligned all images with respect to the image "+self.referenceImage.get().getNameId()+" using CL2D [Sorzano2010a]"]
+        else:
+            return ["We aligned all images with no reference using CL2D [Sorzano2010a]"]
         

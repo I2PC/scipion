@@ -44,6 +44,7 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _addParams(self, form):
+        form.addSection(label='Kerdensom')
         form.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
                       default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
                       label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
@@ -60,7 +61,6 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         form.addParam('spectraHighHarmonic', IntParam, default=15,
                       label='Highest harmonic to calculate',
                       expertLevel=LEVEL_ADVANCED) 
-        form.addSection(label='Kerdensom')
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _prepareParams(self):
@@ -121,13 +121,22 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         
         program = 'xmipp_image_rotational_spectra'
         args = "-i %s -o %s" % (inputImages, outputSpectra)
-        args += ' --x0 %(xOffset)d --y0 %(yOffset)d --r1 %(R1)d --r2 %(R2)d' + \
+        args += ' --x0 %(xOffset)s --y0 %(yOffset)s --r1 %(R1)d --r2 %(R2)d' + \
                      ' --low %(spectraLowHarmonic)d --high %(spectraHighHarmonic)d'
         # Run the command with formatted parameters
         self.runJob(program, args % self._params)
         return [outputSpectra]
     
     #--------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        return KendersomBaseClassify._validate(self)
+    
     def _citations(self):
         return ['Pascual2000']
+    
+    def _summary(self):
+        return KendersomBaseClassify._summary(self)
+    
+    def _methods(self):
+        return KendersomBaseClassify._methods(self)
         

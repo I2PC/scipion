@@ -86,6 +86,9 @@
  *  * function launchViewer(id)
  * 	->	Launch the viewers to analyze the results for an object (protocol or object).
  * 
+ * function getKnownExt()
+ * 	->	Return the all extensions used in Scipion to be mapped in a filebrowser.
+ * 
  ******************************************************************************/
 
 /** METHODS *******************************************************************/
@@ -93,7 +96,6 @@
 function startsWith(str, pattern){
 	return str.lastIndexOf(pattern, 0) === 0
 }
-
 
 function detectWebBrowser(){
 	/*
@@ -131,9 +133,10 @@ function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
+	var URL = getSubDomainURL() + URL
 	var popup_width = 600;
 	var popup_height = 500;
-	day = new Date();
+	var day = new Date();
 	id = day.getTime();
 	eval("page"
 			+ id
@@ -147,8 +150,9 @@ function customPopup(URL, widthValue, heightValue) {
 	 * Launch a popup opening the URL passed by argument. 
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var URL = getSubDomainURL() + URL
+	var day = new Date();
+	var id = day.getTime();
 	eval("page"
 			+ id
 			+ " = window.open(URL, '"
@@ -161,13 +165,13 @@ function customPopupFileHTML(html, title, widthValue, heightValue) {
 	 * Launch a popup with the HTML code passed by argument.
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var day = new Date();
+	var id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
 	
-	style = "background-color:black;color:white;font-family:Monospace;padding:1em;"
-    title = "<title>"+ title + "</title>"
-    body = "<div style="+ style +">" + title + html + "</div>"
+	var style = "background-color:black;color:white;font-family:Monospace;padding:1em;"
+    var title = "<title>"+ title + "</title>"
+    var body = "<div style="+ style +">" + title + html + "</div>"
 
 	popup.document.write(body);
 	popup.document.close();
@@ -178,17 +182,19 @@ function customPopupHTML(html, widthValue, heightValue) {
 	 * Launch a popup with the HTML code passed by argument.
 	 * The size of the popup is customized with the width and height chosen.
 	 */
-	day = new Date();
-	id = day.getTime();
+	var day = new Date();
+	var id = day.getTime();
 	var popup = window.open('', id, 'height='+heightValue+',width='+widthValue);
+	
 	popup.document.write(html);
 	popup.document.close();
 }
 
 function customPopUpFile(url){
+	var URL = getSubDomainURL() + url
 	$.ajax({
 		type : "GET",
-		url : url,
+		url : URL,
 		dataType : "html",
 		success : function(html) {
 			customPopupHTML(html,600,500);
@@ -207,12 +213,11 @@ function popUpJSON(json){
 	$.each(json, function(i, item) {
 		array = item.split('::')
 		key = array[0]
+//		value = "/"+array[1]
 		value = array[1]
 		//alert("item=" + item + " key=" + key + " value="+value)
 
-		if (key=="url_form"){
-			popup(value);
-		} else if(key=="urls"){
+		if(key=="urls"){
 			for(var x=0;x<value.length;x++){
 				customPopup(value[x],1000,900);
 			}
@@ -294,7 +299,7 @@ function infoPopup(title, msgText, autoclose, closeFunc) {
 	}	
 }
 
-function warningPopup(title, msgText, funcName){
+function warningPopup(title, msgText, funcName, icon){
 	/*
 	 * Creates a messi popup with a title and message passed by arguments.
 	 * funcName is the function that will be executed if 'Yes' option is selected
@@ -302,8 +307,9 @@ function warningPopup(title, msgText, funcName){
 	 */
 	
 	// HTML to be used in the warning popup
-	msg = "<table><tr><td><i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
-		+ "</td><td>"+ msgText +"</td></tr></table>"
+	msg = "<table><tr><td>"
+	msg += "<i class=\"fa fa-warning fa-4x\" style=\"color:#fad003;\"></i>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
 
 	new Messi(msg, {
 		title : title,
@@ -344,6 +350,30 @@ function errorPopup(title, msgText){
 		} ]
 	});
 }
+
+function accessPopup(title, msgText, funcName, btnYes, btnNo){
+
+	msg = "<table><tr><td>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
+
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : btnYes,
+			val : 'Y',
+			btnClass : 'fa-check',
+			btnFunc : funcName
+		}, {
+			id : 1,
+			label : btnNo,
+			val : 'C',
+			btnClass : 'fa-ban'
+		} ]
+	});
+}
+
 
 function listToString(list){
 	var res = "";
@@ -449,10 +479,10 @@ function updateLabelComment(){
 			"id=" + id + 
 			"&label=" + value_label + 
 			"&comment=" + value_comment 
-			
+		var URL = getSubDomainURL() + url_param
 		$.ajax({
 			type : "GET",
-			url : encodeURI(url_param),
+			url : encodeURI(URL),
 			async: false,
 			success : function() {
 				// Return the new values to the source form
@@ -478,13 +508,38 @@ function launchViewer(id){
 	/*
 	 * Launch the viewers to analyze the results of the protocol run
 	 */
+	var URL = getSubDomainURL() + "/launch_viewer/?objectId=" + id
 	$.ajax({
 		type : "GET",
 		// Execute the viewer 
-		url : "/launch_viewer/?objectId=" + id,
+		url : URL,
 		dataType : "json",
 		success : function(json) {
 			popUpJSON(json);
 		}
 	});	
 }
+
+function getKnownExt(){
+	return ['txt', 'log', 'out', 'err', 'stdout', 'stderr', 'emx','py', 'pyc',
+	        'java','xmd', 'star', 'pos','sqlite', 'db','xmp', 'tif', 'tiff', 
+	        'spi', 'mrc', 'map', 'raw', 'inf', 'dm3', '.em', 'pif', 'psd', 
+	        'spe', 'ser', 'img', 'hed', 'vol','stk', 'mrcs', 'st', 'pif',
+	        'png', 'gif', 'jpg', 'jpeg']
+}
+
+function randomString(length, chars) {
+    var mask = '';
+    
+    if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
+    if (chars.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (chars.indexOf('#') > -1) mask += '0123456789';
+    if (chars.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
+    var result = '';
+    for (var i = length; i > 0; --i){
+    	result += mask[Math.round(Math.random() * (mask.length - 1))];
+    }
+    
+    return result;
+}
+

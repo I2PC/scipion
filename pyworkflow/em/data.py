@@ -113,15 +113,8 @@ class CTFModel(EMObject):
         self._micObj  = None
 
     def __str__(self):
-        str = """
-        defocusU = %f
-        defocusV = %f
-        defocusAngle = %f
-        psdFile = %s
-        """%(self._defocusU.get()
-            ,self._defocusV.get()
-            ,self._defocusAngle.get()
-            ,self._psdFile.get())
+        str = "defocus(U,V,a) = (%f,%f,%f)"%(self._defocusU.get()
+              , self._defocusV.get(), self._defocusAngle.get())
         if self._micObj:
             str + " %s" % self._micObj
         return str
@@ -146,13 +139,10 @@ class CTFModel(EMObject):
         
     def getDefocusRatio(self):
         return self._defocusRatio.get()
-        
-    def setDefocusRatio(self, value):
-        self._defocusRatio.set(value)
-        
+
     def copyInfo(self, other):
-        self.copyAttributes(other, '_defocusU', '_defocusV',
-                            '_defocusAngle', '_psdFile', '_micFile')
+        self.copyAttributes(other, '_defocusU', '_defocusV','_defocusAngle',
+                            '_defocusRatio', '_psdFile', '_micFile')
         
     def getPsdFile(self):
         return self._psdFile.get()
@@ -167,7 +157,7 @@ class CTFModel(EMObject):
     def setMicrograph(self, mic):
         self._micObj = mic
 
-    def getDefocus(self, mic):
+    def getDefocus(self):
         """ Returns defocusU, defocusV and defocusAngle. """
         return (self._defocusU.get(), 
                 self._defocusV.get(), 
@@ -196,7 +186,9 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(-180.)
         elif self._defocusAngle < 0.:
             self._defocusAngle.sum(180.)
-        self.setDefocusRatio(self.getDefocusU()/self.getDefocusV())
+        # At this point defocusU is always greater than defocusV
+        # following the EMX standard
+        self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
 
 
 class DefocusGroup(EMObject):
@@ -213,7 +205,7 @@ class DefocusGroup(EMObject):
         
     def setDefocusMin(self, value):
         self._defocusMin.set(value)
-        
+
     def getDefocusMax(self):
         return self._defocusMax.get()
         
@@ -285,7 +277,7 @@ class Image(EMObject):
     
     def setSamplingRate(self, sampling):
         self._samplingRate.set(sampling)
-    
+
     def getFormat(self):
         pass
     
@@ -294,9 +286,8 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        i, fn = self.getLocation()
-        if exists(fn.replace(':mrc', '')):
-            x, y, z, n = ImageHandler().getDimensions(self.getLocation())
+        if exists(self.getFileName().replace(':mrc', '')):
+            x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
     
@@ -305,7 +296,7 @@ class Image(EMObject):
     
     def setIndex(self, index):
         self._index.set(index)
-        
+
     def getFileName(self):
         """ Use the _objValue attribute to store filename. """
         return self._filename.get()
@@ -383,7 +374,7 @@ class Image(EMObject):
     
     def setAlignment(self, newAlignment):
         self._alignment = newAlignment
-        
+
     def hasProjection(self):
         return self._projection is not None
     
@@ -401,7 +392,11 @@ class Image(EMObject):
         else:
             dimStr = 'No-Dim'
         return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate())
-
+    
+    def getFiles(self):
+        filePaths = set()
+        filePaths.add(self.getFileName())
+        return filePaths
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -602,14 +597,10 @@ class SetOfImages(EMSet):
         
     def getFiles(self):
         filePaths = set()
-        filePaths.add(self.getFileName())
-        for item in self:
-            # item is an XmippImage or an Image
-            filePaths.add(item.getFileName())
-            # If it has CTF we must include ctf file
-#            if item.hasCTF():
-#                # ctf is a XMippCTFModel
-#                filePaths.update(item.getCTF().getFiles())
+        uniqueFiles = self.aggregate(['count'],'_filename',['_filename'])
+
+        for row in uniqueFiles:
+            filePaths.add(row['_filename'])
         return filePaths
     
     def setDownsample(self, downFactor):
@@ -676,16 +667,16 @@ class SetOfImages(EMSet):
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
-    def __iter__(self):
+    def __iter__(self, random=False):
         """ Redefine iteration to set the acquisition to images. """
-        for img in self._iterItems():
+        for img in self._iterItems(random=random):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # dont want to override with the set acquistion for this case
             if not img.hasAcquisition():
                 img.setAcquisition(self.getAcquisition())
             yield img
-            
+
     def appendFromImages(self, imagesSet):
         """ Iterate over the images and append 
         every image that is enabled. 
@@ -763,7 +754,7 @@ class SetOfParticles(SetOfImages):
         return self._coordsPointer.get()
     
     def setCoordinates(self, coordinates):
-        """ Set the SetOfCoordinates associates with 
+        """ Set the SetOfCoordinates associates with
         this set of particles.
          """
         self._coordsPointer.set(coordinates)    
@@ -774,6 +765,13 @@ class SetOfParticles(SetOfImages):
         """
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())    
+
+
+class SetOfAverages(SetOfParticles):
+    """Represents a set of Averages.
+    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    def __init__(self, **args):
+        SetOfParticles.__init__(self, **args)
 
 
 class SetOfVolumes(SetOfImages):
@@ -802,7 +800,7 @@ class SetOfCTF(EMSet):
 
 class SetOfDefocusGroup(EMSet):
     """ Contains a set of DefocusGroup.
-        id min/max/avg exists the corresponding flaf must be
+        if min/max/avg exists the corresponding flag must be
         set to true.
     """
     ITEM_TYPE = DefocusGroup
@@ -1008,36 +1006,44 @@ class Transform(EMObject):
     It should contain information about euler angles, translation(or shift)
     and mirroring.
     """
-    def __init__(self, **args):
+
+    def __init__(self, matrix=None, **args):
         EMObject.__init__(self, **args)
         self._matrix = Matrix()
-        
+        if matrix is not None:
+            self.setMatrix(matrix)
+
     def getMatrix(self):
         return self._matrix.getMatrix()
     
     def setMatrix(self, matrix):
         self._matrix.setMatrix(matrix)
-        
+
     def __str__(self):
         return str(self._matrix)
-    
+
+    def scale(self, factor):
+        m = self.getMatrix()
+        m *= factor
+        m[3, 3] = 1.
     
 class Alignment(Transform):
-    """ Transform used for 2D alignment agains a reference. """
+    """ Transform used for 2D alignment against a reference. """
     pass
-        
+
 
 class SetOfAlignment(EMSet):
-    """ An Aligment is an particular type of Transform.
+    """ An Alignment is an particular type of Transform.
     A set of transform is usually the result of alignment or multi-reference
-    alignment of a SetOfPartices. Each Transformation modifies the original
+    alignment of a SetOfParticles. Each Transformation modifies the original
     image to be the same of a given reference.
     """
     ITEM_TYPE = Alignment
-    
+
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._particlesPointer = Pointer()
+        self._is2D = Boolean(True)
 
     def getParticles(self):
         """ Return the SetOfParticles from which the SetOfAligment was obtained. """
@@ -1047,7 +1053,21 @@ class SetOfAlignment(EMSet):
         """ Set the SetOfParticles associated with this SetOfAlignment..
          """
         self._particlesPointer.set(particles)
-        
+
+    def set2D(self):
+        """ Mark the alignment as 2D transform. """
+        self._is2D.set(True)
+
+    def set3D(self):
+        """ Mark the alignment as 3D transform. """
+        self._is2D.set(False)
+
+    def is2D(self):
+        return self._is2D.get()
+
+    def is3D(self):
+        return not self.is2D()
+
 
 class TransformParams(object):
     """ Class to store transform parameters in the way
@@ -1195,14 +1215,51 @@ class SetOfClassesVol(SetOfClasses3D):
     pass
     
 
-class NormalModes(EMObject):
-    """ Store results from a 2D classification. """
-    def __init__(self, filename=None, **kwargs):
+class NormalMode(EMObject):
+    """ Store normal mode information. """
+    def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
-        self._filename = String(filename)
+        self._modeFile = String(kwargs.get('modeFile', None))
+        self._collectivity = Float(kwargs.get('collectivity', None))
+        self._score = Float(kwargs.get('score', None))
         
-    def getFileName(self):
-        return self._filename.get()
+    def getModeFile(self):
+        return self._modeFile.get()
+    
+    def setModeFile(self, value):
+        self._modeFile.set(value)
+        
+    def getCollectivity(self):
+        return self._collectivity.get()
+    
+    def setCollectivity(self, value):
+        self._collectivity.set(value)
+        
+    def getScore(self):
+        return self._score.get()
+    
+    def setScore(self, value):
+        self._score.set(value)
+        
+    
+class SetOfNormalModes(EMSet):
+    """ Set containing NormalMode items. """
+    ITEM_TYPE = NormalMode
+    
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
+        # Store a pointer to the PdbFile object
+        # from which this normal modes where computed.
+        self._pdbPointer = Pointer()
+        
+    def setPdb(self, pdbFile):
+        self._pdbPointer.set(pdbFile)
+        
+    def getPdb(self):
+        return self._pdbPointer.get()
+    
+    def copyInfo(self, other):
+        self._pdbPointer.copy(other._pdbPointer, copyId=False)
 
 
 class Movie(Micrograph):

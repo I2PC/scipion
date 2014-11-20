@@ -54,8 +54,10 @@ reconstructions.
         vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
         vol.setFileName(volFn)
         self._defineOutputs(outputVolume=vol)
+        #TODO: save alignment
         self._defineSourceRelation(self.inputParticles.get(), vol)
         self._defineSourceRelation(self.input3DReference.get(), vol)
+        print "SAVE ALIGNMENT INFORMATION"
 
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):

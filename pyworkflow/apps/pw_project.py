@@ -37,13 +37,23 @@ from pyworkflow.gui.project import ProjectWindow
 
 
 if __name__ == '__main__':
-    
-    
+
+    # Add callback for remote debugging if available.
+    try:
+        from rpdb2 import start_embedded_debugger
+        from signal import signal, SIGUSR2
+        signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
+    except ImportError:
+        pass
+
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
         if projName == 'last': # Get last project
-            projName = manager.listProjects()[0].projName
+            projects = manager.listProjects()
+            if not projects:
+                sys.exit("No projects yet, cannot open the last one.")
+            projName = projects[0].projName
             
         projPath = manager.getProjectPath(projName)
         projWindow = ProjectWindow(projPath)

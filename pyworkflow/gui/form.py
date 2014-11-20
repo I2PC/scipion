@@ -225,36 +225,42 @@ class SubclassesTreeProvider(TreeProvider):
         self.selected = selected
         self.protocol = protocol
         self.mapper = protocol.mapper
+        self.maxNum = 200
         
-    def _containsObject(self, objects, obj):
+    def _getObjectFromList(self, objects, obj):
+        # Returns an object if contained on a list, otherwise None
         for o in objects:
             if o.getObjId() == obj.getObjId():
-                return True
-        return False
+                return o
+        return None
             
     def getObjects(self):
+        # Retrieve all objects of type className
         objects = list(self.protocol.getProject().iterSubclasses(self.className, self.objFilter))
-
+        objects_child = list()
+               
+        # Retrieve all objects of type SetOf'className'
         for setObject in self.protocol.getProject().iterSubclasses("Set", self.classFilter):
-
-            if not self._containsObject(objects, setObject):
-           
+            # If object is not yet on the list add it but dont allow to select it 
+            obj = self._getObjectFromList(objects, setObject)
+            if  obj is None:
                 objects.append(setObject)
                 setObject._allowSelection = False # Do not allows set to be selected here
+            # If object is already on the list allow to select it
             else:
-                for o in objects:
-                    if o.getObjId() == setObject.getObjId():      
-                        setObject = o 
-                        break         
-                setObject._allowSelection = True # Do not allows set to be selected here
-                
-            for item in setObject:
+                obj._allowSelection = True   
+                setObject = obj
+            
+            # Add each item on the set to the list of objects
+            for i, item in enumerate(setObject):
+                if i == self.maxNum: # Only load up to NUM particles
+                    break
                 newItem = item.clone()
                 newItem.setObjId(item.getObjId())
                 newItem._parentObject = setObject
-                objects.append(newItem)
-                
+                objects_child.append(newItem)
         
+        objects.extend(objects_child)
         return objects
             
     def classFilter(self, obj):
@@ -262,10 +268,9 @@ class SubclassesTreeProvider(TreeProvider):
         itemType = getattr(obj, 'ITEM_TYPE', None)   
         filter = False
         for objClass in self.className.split(","):
-            filter = (itemType and itemType.__name__ == objClass)
-            if filter: 
-                break
-        return filter
+            if (itemType and itemType.__name__ == objClass):
+                return True
+        return False
         
     def objFilter(self, obj):
         result = True
@@ -649,10 +654,12 @@ class ParamWidget():
         entryWidth = 30
 
         if t is HiddenBooleanParam:
-           var=0
+            var = 0
+        
         elif t is BooleanParam:
             var, frame = ParamWidget.createBoolWidget(content, bg='white')
             frame.grid(row=0, column=0, sticky='w')
+        
         elif t is EnumParam:
             var = ComboVar(param)
             if param.display == EnumParam.DISPLAY_COMBO:
@@ -715,6 +722,7 @@ class ParamWidget():
             entry.grid(row=0, column=0, sticky='w')
             
             if issubclass(t, PathParam):
+                self._entryPath = entry
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:
@@ -841,6 +849,9 @@ class ParamWidget():
     def set(self, value):
         if value is not None:
             self.var.set(value)
+            
+        if hasattr(self, '_entryPath'):
+            self._entryPath.xview_moveto(1)
         
     def get(self):
         return self.var.get()

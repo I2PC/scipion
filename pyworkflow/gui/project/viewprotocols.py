@@ -27,13 +27,14 @@
 """
 Main project window application
 """
+import os
 import pickle
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
 
 
-from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, List, String, Pointer
+from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
 from pyworkflow.em import emProtocolsDict, findViewers, DESKTOP_TKINTER, EMObject
 from pyworkflow.utils import prettyDelta
@@ -43,7 +44,7 @@ import pyworkflow.gui as gui
 from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow, TreeProvider, BoundTree
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo, EditObjectDialog
+from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, showInfo
 from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas
 from pyworkflow.gui.graph import LevelTree
@@ -145,7 +146,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_COPY, True), 
                    (ACTION_DELETE, status != STATUS_RUNNING),
                    (ACTION_STEPS, single),
-                   (ACTION_BROWSE, single),
+                   (ACTION_BROWSE, single and status != STATUS_SAVED),
                    (ACTION_DB, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
                    #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
@@ -415,7 +416,7 @@ class ProtocolsView(tk.Frame):
         self.protCfg = windows.protCfg
         self.icon = windows.icon
         self.settings = windows.getSettings()
-        self.showGraph = self.settings.graphView.get()
+        self.showGraph = self.settings.getGraphView()
         
         self._loadSelection()        
         self._items = {}
@@ -778,10 +779,14 @@ class ProtocolsView(tk.Frame):
         self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
-        self.settings.graphView.set(self.showGraph)
+        self.settings.setGraphView(self.showGraph)
     
     def _protocolItemClick(self, e=None):
-        protClassName = self.protTree.getFirst().split('.')[-1]
+        # Get the tree widget that originated the event
+        # it could be the left panel protocols tree or just
+        # the search protocol dialog tree
+        tree = e.widget
+        protClassName = tree.getFirst().split('.')[-1]
         protClass = emProtocolsDict.get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
@@ -1005,7 +1010,11 @@ class ProtocolsView(tk.Frame):
         
     def _analyzeResultsClicked(self, e=None):
         """ this method should be called when button "Analyze results" is called. """
-        self._analyzeResults(self.getSelectedProtocol())
+        prot = self.getSelectedProtocol()
+        if os.path.exists(prot._getPath()):
+            self._analyzeResults(prot)
+        else:
+            self.windows.showInfo("Selected protocol hasn't been run yet.")
                 
     def _runActionClicked(self, action):
         prot = self.getSelectedProtocol()

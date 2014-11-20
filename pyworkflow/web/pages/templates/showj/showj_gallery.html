@@ -26,7 +26,7 @@ $(document).ready(function(){
 		{% for id,enable,data,transformationMatrix in tableDataset.getDataToRenderAndExtra %}
 			<div class="img_container" id="img_container___{{id}}">
 				<div class="img_inner_container">
-					<img class="tableImages" title="{{data}}" data-real_src="/render_column/?renderFunc=get_image&image={{data}}"/>
+					<img class="tableImages" title="{{data}}" data-real_src="{{abs_url}}/render_column/?renderFunc=get_image&image={{data}}"/>
 						{% if tableDataset.hasEnabledColumn %}
 						<img class="enabledGallery
 						{% if enable == 0 %}
@@ -50,7 +50,7 @@ $(document).ready(function(){
 				<div class="img_inner_container">
 					<img class="tableImages" 
 					title="Slice {{i|add:1}} from {{dataset.getVolumeName}}" 
-					data-real_src="/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
+					data-real_src="{{abs_url}}/render_column/?renderFunc=get_slice&image={{i|add:1}}@{{dataset.getVolumeName}}"/>
 				</div>
 				<div id="column_label">{{i|add:1}}</div> 
 			</div>
@@ -62,5 +62,11 @@ $(document).ready(function(){
 {% block content_end_page %}	{% endblock %}
 
 {% block bottom_menu %}
-	{% include "showj/showj_bottom_menu.html" %}
+	{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
+		<!-- VOLUME MENU -->
+		{% include "showj/showj_bottom_vol_menu.html" %}
+	{% else %}
+		<!-- IMAGE MENU -->
+		{% include "showj/showj_bottom_img_menu.html" %}
+	{% endif %}
 {% endblock %}

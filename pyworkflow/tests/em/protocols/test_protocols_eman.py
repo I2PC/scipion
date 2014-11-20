@@ -42,10 +42,10 @@ class TestEmanBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
             
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -59,6 +59,27 @@ class TestEmanBase(BaseTest):
         """ Run an Import micrograph protocol. """
         return cls.runImportMicrograph(pattern, samplingRate=1.237, voltage=300, sphericalAberration=2, scannedPixelSize=None, magnification=56000)
 
+    @classmethod
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         pattern=pattern, samplingRate=samplingRate,
+                                         checkStack=checkStack)
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+        return cls.protImport
+
+    @classmethod
+    def runClassify(cls, particles):
+        cls.ProtClassify = cls.newProtocol(XmippProtML2D,
+                                           numberOfReferences=8, maxIters=4, doMlf=False,
+                                           numberOfMpi=2, numberOfThreads=2)
+        cls.ProtClassify.inputParticles.set(particles)
+        cls.launchProtocol(cls.ProtClassify)
+        return cls.ProtClassify
+    
 
 class TestEmanBoxing(TestEmanBase):
     @classmethod
@@ -75,6 +96,41 @@ class TestEmanBoxing(TestEmanBase):
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 
+class TestEmanInitialModelMda(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('mda')
+        cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 3.5
+        cls.symmetry = 'd6'
+        cls.numberOfIterations = 5
+        cls.numberOfModels = 2
+
+    def test_initialmodel(self):
+        #Import a set of averages
+        print "Import Set of averages"
+        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=2.1)
+        self.launchProtocol(protImportAvg)
+        self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
+
+        print "Run Initial model"
+        protIniModel = self.newProtocol(EmanProtInitModel,
+                                      symmetry=self.symmetry, numberOfIterations=self.numberOfIterations, numberOfModels=self.numberOfModels, numberOfThreads=4)
+        protIniModel.inputSet.set(protImportAvg.outputAverages)
+        self.launchProtocol(protIniModel)
+        self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with eman initial model protocol")
+
+class TestEmanInitialModelGroel(TestEmanInitialModelMda):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('groel')
+        cls.averages = cls.dataset.getFile('averages')
+        cls.samplingRate = 2.1
+        cls.symmetry = 'd7'
+        cls.numberOfIterations = 10
+        cls.numberOfModels = 10
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestEmanBoxing)

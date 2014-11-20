@@ -42,11 +42,7 @@ if __name__ == '__main__':
     count = prot.getOutputsSize()
     
     suffix = str(count + 1) if count > 0 else ''
-    if prot.getClassName() == "XmippProtParticlePicking":
-        inputset = prot.inputMicrographs.get()
-        outputName = 'outputCoordinates' + suffix
-        outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
-        readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+    
     if prot.getClassName() == "XmippProtParticlePickingPairs":
         inputset = prot.inputMicrographsTiltedPair.get()
         uSet = inputset.getUntilted()
@@ -73,6 +69,13 @@ if __name__ == '__main__':
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
+        
+    else:#if prot.getClassName() == "XmippProtParticlePicking":
+        inputset = prot.getInputMicrographs()
+        outputName = 'outputCoordinates' + suffix
+        outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
+    
 
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)

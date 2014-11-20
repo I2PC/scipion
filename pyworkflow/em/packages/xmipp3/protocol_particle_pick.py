@@ -34,13 +34,13 @@ import xmipp
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import runJavaIJapp
 
-from convert import createXmippInputMicrographs, readSetOfCoordinates
+from convert import writeSetOfMicrographs, readSetOfCoordinates
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using supervised picking support  """
+    either manually or using automatic picking support  """
     _label = 'supervised picking'
 
     
@@ -65,6 +65,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
+        
+        micFn = self._getExtraPath('input_micrographs.xmd')
+        
+        self._insertFunctionStep('convertInputStep', micFn, 
+                                self.inputMics.getObjId())
         # Parameters needed 
         
         
@@ -73,7 +78,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 #                                 self._getPath('micrographs.xmd'))
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchParticlePickGUIStep', interactive=True)
+            self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
         # Insert step to create output objects       
@@ -81,12 +86,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         
     
     #--------------------------- STEPS functions --------------------------------------------
-    def launchParticlePickGUIStep(self):
+    def convertInputStep(self, micFn, inputId):
+        writeSetOfMicrographs(self.inputMics, micFn)
         
-        # Get the converted input micrographs in Xmipp format
-        # if not exists, means the input was already in Xmipp
-        micFn = createXmippInputMicrographs(self, self.inputMics)
-        
+    
+    def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
         scipion =  "%s %s \"%s\" %s" % ( pw.PYTHON, pw.join('apps', 'pw_create_coords.py'), self.getDbPath(), self.strId())
@@ -136,9 +140,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return msg
     
     def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
-        return methodsMsgs
+        return ProtParticlePicking._methods(self)
     
     def _summary(self):
         summary = []
@@ -147,23 +149,26 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         else:
             for key, output in self.iterOutputAttributes(EMObject):
                 summary.append("Particles picked: %d (from %d micrographs)" % (output.getSize(), self.inputMicrographs.get().getSize()))
-            # Read the picking state from the config.xmd metadata
+                summary.append("Particle size:%d" % output.getBoxSize())
+
             configfile = join(self._getExtraPath(), 'config.xmd')
-            if exists(configfile):
-                
+            if exists(configfile):      
                 md = xmipp.MetaData('properties@' + configfile)
                 configobj = md.firstObject()
-                size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
                 state = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
                 if(state is "Manual"):
                     autopick = "No"
                 else:
                     autopick = "Yes"
                 activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-                summary.append("Particle size:%d" % size)
+                
                 summary.append("Autopick: " + autopick)
                 summary.append("Last micrograph: " + activemic)
+        
         return summary
+    
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
     
     
     

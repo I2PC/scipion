@@ -59,6 +59,11 @@ class ProtFilterVolumes(ProtPreprocessVolumes):
     between the ProtPreprocessVolumes """
     pass
 
+class ProtOperateVolumes(ProtPreprocessVolumes):
+    """ This is the base for the branch of filters,
+    between the ProtPreprocessParticles """
+    pass
+
 class ProtMaskVolumes(ProtPreprocessVolumes):
     """ This is the base for the branch of mask, 
     between the ProtPreprocessVolumes """
@@ -73,6 +78,9 @@ class ProtAlignVolume(ProtPreprocessVolumes):
     """Protocol base for Align volumes protocols"""
     pass
 
+
+class ProtReconstruct3D(Prot3D):
+    pass
 
 class ProtRefine3D(Prot3D):
     pass

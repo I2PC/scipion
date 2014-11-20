@@ -36,6 +36,7 @@ from glob import glob
 import tarfile
 import fnmatch
 import platform
+import subprocess
 import SCons.Script
 import SCons.SConf
 
@@ -926,7 +927,6 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
         env.Default(lastTarget)
 
     return lastTarget
-
 
 
 # Add methods so SConscript can call them.

@@ -45,10 +45,11 @@ class EmanProtInitModel(ProtInitialVolume):
    
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D, SetOfParticles',# pointerCondition='hasRepresentatives',
-                      help='Select the input images from the project.'
-                           'It should be a SetOfClasses2D class')
+        form.addParam('inputSet', PointerParam, 
+                      pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
+                      label="Input averages", important=True, 
+                      help='Select the your classes average to build your 3D model.'
+                      'You can select SetOfAverages or SetOfClasses2D as input')
         form.addParam('numberOfIterations', IntParam, default=8,
                       label='Number of iterations to perform',
                       help='The total number of refinement to perform.')
@@ -88,15 +89,15 @@ class EmanProtInitModel(ProtInitialVolume):
     def createStackImgsStep(self):
         
         imgsFn = self._params['imgsFn']
-        if isinstance(self.inputClasses.get(), SetOfClasses):
+        if isinstance(self.inputSet.get(), SetOfClasses):
             imgSet = self._createSetOfParticles("_averages")
-            for i, cls in enumerate(self.inputClasses.get()):
+            for i, cls in enumerate(self.inputSet.get()):
                 img = cls.getRepresentative()
                 img.setSamplingRate(cls.getSamplingRate())
                 img.setObjId(i+1)
                 imgSet.append(img)
         else:
-            imgSet = self.inputClasses.get()
+            imgSet = self.inputSet.get()
         imgSet.writeStack(imgsFn)
     
     def createInitialModelStep(self, args):
@@ -105,13 +106,13 @@ class EmanProtInitModel(ProtInitialVolume):
         self.runJob(program, args, cwd=self._getExtraPath())        
                      
     def createOutputStep(self):
-        classes2DSet = self.inputClasses.get()
+        classes2DSet = self.inputSet.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
-        if isinstance(self.inputClasses.get(), SetOfClasses):
+        if isinstance(self.inputSet.get(), SetOfClasses):
             volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate())
         else:
-            volumes.setSamplingRate(self.inputClasses.get().getSamplingRate())
+            volumes.setSamplingRate(self.inputSet.get().getSamplingRate())
         
         for k in range(1, self.numberOfModels.get() + 1):
             volFn = self._getExtraPath('initial_models/model_00_%02d.hdf' % k)
@@ -129,7 +130,7 @@ class EmanProtInitModel(ProtInitialVolume):
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputClasses.get().getNameId())
+            summary.append("Input Images: %s" % self.inputSet.get().getNameId())
             summary.append("Output initials volumes: %s" % self.outputVolumes.get())
         return summary
     

@@ -25,15 +25,31 @@
 # **************************************************************************
 
 from views_util import getResourceCss, getResourceIcon, getResourceJs
+from pyworkflow.web.pages import settings as django_settings
 
-
-def base(request, context):
+def VARS_base(request, context):
     from pyworkflow.web.app.properties import MessageWeb, ColorWeb, IconWeb
-    
+
     # Properties class
     messages = MessageWeb()
     colors = ColorWeb()
     icons = IconWeb()
+    
+    context_base = {
+                    #ABSOLUTE PATH URL CONFIG
+                    'abs_url': django_settings.ABSOLUTE_URL, 
+                    'config': getResourceJs('config'),
+                    #OTHER
+                    'msg': messages,
+                    'color': colors,
+                    'icon': icons,
+                    }
+    
+    context.update(context_base)
+    return context
+    
+
+def base(request, context):
     
     context_base = {
                     #ICON
@@ -47,13 +63,11 @@ def base(request, context):
                     #JS
                     'jquery': getResourceJs('jquery'),
                     'messi_js': getResourceJs('messi'),
+                    #JS
                     'utils': getResourceJs('utils'),
-                    #OTHER
-                    'msg': messages,
-                    'color': colors,
-                    'icon': icons
                     }
     
+    context = VARS_base(request, context)
     context.update(context_base)
     return context
 
@@ -61,12 +75,15 @@ def base(request, context):
 def base_form(request, context):
     
     context_base = {
+                    #Folder
+                    'project_folder': request.session['projectPath'],
                     #CSS
                     'form_css': getResourceCss('form'),
                     'jquery_ui_css': getResourceCss('jquery_ui'),
                     #JS
                     'jquery_ui': getResourceJs('jquery_ui'),
                     'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
+                    'jquery_browser': getResourceJs('jquery_browser'),
                     }
 
     context = base(request, context)
@@ -127,7 +144,7 @@ def base_showj(request, context):
                     'showj_js':getResourceJs('showj_utils'),
                     'jquery_ui':getResourceJs('jquery_ui'),
                     'transpose_lib':getResourceJs('transpose'),
-                    'showj_menu_utils': getResourceJs('showj_menu_utils')
+                    'showj_menu_utils': getResourceJs('showj_menu_utils'),
                     }
     
     context = base_grid(request, context)
@@ -137,6 +154,7 @@ def base_showj(request, context):
 
 
 def base_wiz(request, context):
+    
     context_base = {'general_style': getResourceCss('general'),
                     'wizard_style': getResourceCss('wizard'),
                     'jquery_ui_style': getResourceCss('jquery_ui'),
@@ -150,5 +168,6 @@ def base_wiz(request, context):
                     'loading' : getResourceIcon('loading'),
                     }
     
+    context = VARS_base(request, context)
     context.update(context_base)
     return context

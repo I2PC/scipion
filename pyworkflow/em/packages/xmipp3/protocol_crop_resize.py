@@ -132,10 +132,10 @@ class XmippProtResize():
     def _validate(self):
         errors = []
         
-        if self.doResize and self.resizeOption.get() == RESIZE_SAMPLINGRATE and self.doFourier:
+        if self.doResize and self.resizeOption == RESIZE_SAMPLINGRATE and self.doFourier:
 #             imgSet = self.inputParticles.get()
             size = self._getSetSize()
-            if self.resizeDim.get() > size:
+            if self.resizeDim > size:
                 errors.append('Fourier resize method cannot be used to increase the dimensions')
                 
         return errors
@@ -144,6 +144,7 @@ class XmippProtResize():
     def _resizeCommonArgs(self):
         samplingRate = self._getSetSampling()
         inputFn = self.inputFn
+        
         if self.resizeOption == RESIZE_SAMPLINGRATE:
             newSamplingRate = self.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
@@ -216,28 +217,12 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
         XmippProtResize._defineProcessParams(self, form)
      
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertStep(self):
-        """ convert if necessary"""
-        pass
-#         imgSet = self.inputParticles.get()
-#         imgSet.writeStack(self.outputStk)
-    
-#     def createOutputStep(self):
-#         inImgSet = self.inputParticles.get()
-#         outImgSet = self._createSetOfParticles()
-#         outImgSet.copyInfo(inImgSet)
-#         if self.doResize:
-#             outImgSet.setSamplingRate(self.samplingRate)
-#         
-#         for i, img in enumerate(inImgSet):
-#             j = i + 1
-#             img.setLocation(j, self.outputStk)
-#             if self.doResize:
-#                 img.setSamplingRate(self.samplingRate)
-#             outImgSet.append(img)
-#         
-#         self._defineOutputs(outputParticles=outImgSet)
-#         self._defineTransformRelation(inImgSet, self.outputParticles)
+    def _preprocessOutput(self, output):
+        """ We need to update the sampling rate of the 
+        particles if the Resize option was used.
+        """
+        if self.doResize:
+            output.setSamplingRate(self.samplingRate)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

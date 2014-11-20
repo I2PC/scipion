@@ -26,16 +26,22 @@
 """
 This module contains protocols related to Set operations such us:
 - subsets
-- joins
+- unions
 - split
 ... etc
 """
-
+import os
+import math
+from os.path import basename
 from protocol import EMProtocol
-from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam,
+from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
                                         MultiPointerParam, IntParam)
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses, 
-                                SetOfClasses2D, SetOfClasses3D) #we need to import this to be used dynamically 
+from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
+                                SetOfClasses2D, SetOfClasses3D, SetOfNormalModes) #we need to import this to be used dynamically
+
+
+from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
+from pyworkflow.utils.path import createLink
 
 
 
@@ -44,285 +50,91 @@ class ProtSets(EMProtocol):
     pass
 
 
-class ProtUserSubSet(ProtSets):
-    """ Create subsets from the GUI.
-    This protocol will be executed mainly calling the script 'pw_create_image_subsets.py'
-    from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
-    file that will be read to create the new subset.
-    """
-    _label = 'create subset'
-     
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-        
-    def _defineParams(self, form):
-        form.addHidden('inputObject', PointerParam, pointerClass='EMObject')
-        form.addHidden('otherObject', PointerParam, pointerClass='EMObject', allowsNull=True)
-        form.addHidden('sqliteFile', FileParam)
-        form.addHidden('outputClassName', StringParam)
-        
-    def _insertAllSteps(self):
-        self._insertFunctionStep('createSetOfImagesStep')
-    
-    def _createSubSetFromImages(self, inputImages):
-        className = inputImages.getClassName()
-        createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        
-        output = createFunc()
-        output.copyInfo(inputImages)
-        output.appendFromImages(modifiedSet)
-        # Register outputs
-        self._defineOutput(className, output)
-        self._defineSourceRelation(inputImages, output)
-        
-    def _createSubSetFromClasses(self, inputClasses):
-        outputClassName = self.outputClassName.get()
-        
-        if (outputClassName.startswith('SetOfParticles') or
-            outputClassName.startswith('SetOfVolumes')):
-            # We need to distinguish two cases:
-            # a) when we want to create images by grouping class images
-            # b) create a subset from a particular class images
-            from pyworkflow.mapper.sqlite import SqliteFlatDb
-            db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-            itemClassName = db.getSelfClassName()
-            if itemClassName.startswith('Class'):
-                if outputClassName.endswith('Representatives'):
-                    self._createRepresentativesFromClasses(inputClasses, 
-                                                           outputClassName.split(',')[0])
-                else:
-                    self._createImagesFromClasses(inputClasses)
-            else:
-                self._createSubSetFromImages(inputClasses.getImages())
-        elif outputClassName.startswith('SetOfClasses'):
-            self._createClassesFromClasses(inputClasses)
-        else:
-            raise Exception("Unrecognized output type: '%s'" % outputClassName)  
-              
-    def _createMicsSubSetFromCTF(self, inputCTFs):
-        """ Create a subset of Micrographs analyzing the CTFs. """
-        outputMics = self._createSetOfMicrographs()
-        setOfMics = inputCTFs.getMicrographs()
-        SetOfImages.copyInfo(outputMics, setOfMics)
-        
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctf in modifiedSet:
-            if ctf.isEnabled():
-                mic = ctf.getMicrograph()
-                outputMics.append(mic)
-                
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
-        
-    def _createSubSetOfCTF(self, inputCtf):
-        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
-        
-        
-        setOfCtf = self._createSetOfCTF("_subset")
-        
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctf in modifiedSet:
-            if ctf.isEnabled():
-                mic = ctf.getMicrograph()
-                setOfCtf.append(ctf)
-                
-         # Register outputs
-        self._defineOutput(self.outputClassName.get(), setOfCtf)
-        
-        
-    def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
-        """ Create a new set of images joining all images
-        assigned to each class.
-        """
-        inputImages = inputClasses.getImages()
-        createFunc = getattr(self, '_create' + outputClassName)
-        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
-        
-        output = createFunc()
-        output.copyInfo(inputImages)
-        for cls in modifiedSet:
-            if cls.isEnabled():
-                img = cls.getRepresentative()
-                img.copyObjId(cls)
-                output.append(img)
-        # Register outputs
-        self._defineOutput('Representatives', output)
-        
-    def _createImagesFromClasses(self, inputClasses):
-        """ Create a new set of images joining all images
-        assigned to each class.
-        """
-        inputImages = inputClasses.getImages()
-        className = inputImages.getClassName()
-        createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
-        
-        output = createFunc()
-        output.copyInfo(inputImages)
-        output.appendFromClasses(modifiedSet)
-        # Register outputs
-        self._defineOutput(className, output)
- 
-    def _createClassesFromClasses(self, inputClasses):
-        """ Create a new set of images joining all images
-        assigned to each class.
-        """
-        #inputImages = inputClasses.getImages()
-        className = inputClasses.getClassName()
-        createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
-        
-        output = createFunc(inputClasses.getImages())
-        output.appendFromClasses(modifiedSet)
-        # Register outputs
-        self._defineOutput(className, output)
-               
-    def createSetOfImagesStep(self):
-        inputObj = self.inputObject.get()
-        
-        self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
-        
-        if isinstance(inputObj, SetOfImages):
-            self._createSubSetFromImages(inputObj)
-            
-        elif isinstance(inputObj, SetOfClasses):
-            self._createSubSetFromClasses(inputObj)
-           
-        elif isinstance(inputObj, SetOfCTF):
-            outputClassName = self.outputClassName.get()
-            if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj)
-            else:
-                self._createSubSetOfCTF(inputObj)
-            
-        elif isinstance(inputObj, EMProtocol):
-            setObj = self.getSetObject()
-            otherObj = self.otherObject.get()
-            
-            if isinstance(setObj, SetOfClasses):
-                setObj.setImages(otherObj)
-                self._createSubSetFromClasses(setObj)
-                
-            elif isinstance(setObj, SetOfImages):
-                setObj.copyInfo(otherObj) # copy info from original images
-                self._createSubSetFromImages(setObj)
-                
-            # Clean the pointer to other, to avoid dependency in the graph
-            self.otherObject.set(None)
-    
-    def getSetObject(self):            
-        from pyworkflow.mapper.sqlite import SqliteFlatDb
-        db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
-        setClassName = db.getProperty('self') # get the set class name
-        setObj = globals()[setClassName](filename=self._dbName, prefix=self._dbPrefix)
-        return setObj    
-            
-#     def defineOutputSet(self, outputset):
-#         outputs = {'output' + self.getOutputType(): outputset}
-#         self._defineOutputs(**outputs)
-#         self._defineSourceRelation(self.getInput(), outputset)
-    
-    def _summary(self):
-        summary = []
-#         input = self.getInputType()
-#         if hasattr(self.getInput(), "getSize"):
-#             input = "%d %s"%(self.getInput().getSize(), input)
-#         summary.append("From input set of %s created subset of %s %s"%(input, self.getOutputSet().getSize(), self.getOutputType()))
-        return summary
-
-    def _methods(self):
-        return self._summary()
-
-    def _defineOutput(self, className, output):
-        outputDict = {'output' + className.replace('SetOf', ''): output}
-        self._defineOutputs(**outputDict) 
-        
-    def _loadDbNamePrefix(self):
-        """ Setup filename and prefix for db connection. """
-        self._dbName, self._dbPrefix = self.sqliteFile.get().split(',')
-        if self._dbPrefix.endswith('_'):
-            self._dbPrefix = self._dbPrefix[:-1] 
-            
-
-class ProtJoinSets(ProtSets):
+class ProtUnionSet(ProtSets):
     """ Protocol to join two or more sets of images.
-    This protocol allows to select two or more set of images 
+    This protocol allows to select two or more set of images
     and will produce another set joining all elements of the 
     selected sets. It will validate that all sets are of the
     same type of elements (Micrographs, Particles or Volumes) 
     """
-    _label = 'join sets'
+    _label = 'union sets'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputSets', MultiPointerParam, label="Input set of images", important=True, 
-                      pointerClass='SetOfImages', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more set of images (micrographs, particles o volumes) to be joined.'
-                           'If you select 3 sets with 100, 200, 200 images, the final set should contans a '
-                           'total of 500 images. All sets should have the same sampling rate.'
-                           )
-    
+        form.addParam('inputSets', MultiPointerParam, label="Input set", important=True,
+                      pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
+                      help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
+                           'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
+                           'total of 500 elements.')
+        # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        #Read Classname and generate corresponding SetOfImages (SetOfParticles, SetOfVolumes, SetOfMicrographs)
-        self.inputType = str(self.inputSets[0].get().getClassName())
-        outputSetFunction = getattr(self, "_create%s" % self.inputType)
-        outputSet = outputSetFunction()
-        
-        #Copy info from input (sampling rate, etc)
-        outputSet.copyInfo(self.inputSets[0].get())
-       
+        set1 = self.inputSets[0].get()  # 1st set (we use it many times)
+
+        # Read ClassName and create the corresponding EMSet (SetOfParticles...)
+        outputSet = getattr(self, "_create%s" % set1.getClassName())()
+
+        # Copy info from input sets (sampling rate, etc).
+        outputSet.copyInfo(set1)  # all sets must have the same info as set1!
+
+        # Keep original ids until we find a conflict. From then on, use new ids.
+        usedIds = set()  # to keep track of the object ids we have already seen
+        cleanIds = False
         for itemSet in self.inputSets:
-            for itemObj in itemSet.get():
-                itemObj.cleanObjId()
-                outputSet.append(itemObj)
-        
-        self._defineOutputs(outputImages=outputSet)
-        
+            for obj in itemSet.get():
+                objId = obj.getObjId()
+                if cleanIds:
+                    obj.cleanObjId()  # so it will be assigned automatically
+                elif objId in usedIds:  # duplicated id!
+                    # Note that we cannot use  "objId in outputSet"
+                    # because outputSet has not been saved to the sqlite
+                    # file yet, and it would fail :(
+                    obj.cleanObjId()
+                    cleanIds = True  # from now on, always clean the ids
+                else:
+                    usedIds.add(objId)
+                outputSet.append(obj)
+
+        self._defineOutputs(outputSet=outputSet)
+
+    def getObjDict(self, includeClass=False):
+        return super(ProtUnionSet, self).getObjDict(includeClass)
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        classList = []
-        #inputSets = [self.inputSet1, self.inputSet2]
-        for itemSet in self.inputSets:
-            itemClassName = itemSet.get().getClassName()
-            if len(classList) == 0 or itemClassName not in classList:
-                classList.append(itemClassName)
-            
-        errors = []
-        if len(classList) > 1:
-            errors.append("Object should have same type")
-            errors.append("Types of objects found: " + ", ".join(classList))
-        return errors   
+        # Are all inputSets from the same class?
+        classes = {x.get().getClassName() for x in self.inputSets}
+        if len(classes) > 1:
+            return ["All objects should have the same type.",
+                    "Types of objects found: %s" % ", ".join(classes)]
+
+        # Do all inputSets contain elements with the same attributes defined?
+        def attrNames(s):  # get attribute names of the first element of set s
+            return sorted(iter(s.get()).next().getObjDict().keys())
+        attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+        if len(attrs) > 1:
+            return ["All elements must have the same attributes.",
+                    "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+
+        return []  # no errors
 
     def _summary(self):
-        summary = []
-
-        if not hasattr(self, 'outputImages'):
-            summary.append("Protocol has not finished yet.")
+        if not hasattr(self, 'outputSet'):
+            return ["Protocol has not finished yet."]
         else:
-            m = "We have joint the following sets: "
-            #inputSets = [self.inputSet1, self.inputSet2]
-            for itemSet in self.inputSets:
-                m += "%s, " % itemSet.get().getNameId()
-            summary.append(m[:-2])
-        
-        return summary
-        
+            return ["We have merged the following sets:",
+                    ", ".join(x.get().getNameId() for x in self.inputSets)]
+
     def _methods(self):
         return self._summary()
-            
+
 
 class ProtSplitSet(ProtSets):
     """ Protocol to split a set in two or more subsets. 
@@ -333,13 +145,18 @@ class ProtSplitSet(ProtSets):
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputSet', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfImages', 
-                      help='Select the set of images that you want to split. '
-                           )
-        form.addParam('numberOfSets', IntParam, label="Number of subsets", default=2,
-                      help='Select how many subsets do you want to create. '
-                           )    
+        form.addParam('inputSet', PointerParam, pointerClass='EMSet',
+                      label="Input set", important=True,
+                      help='Select the set of elements (images, etc) that you want to split.'
+                      )
+        form.addParam('numberOfSets', IntParam, default=2,
+                      label="Number of subsets",
+                      help='Select how many subsets do you want to create.'
+                      )
+        form.addParam('randomize', BooleanParam, default=False,
+                      label="Randomize elements",
+                      help='Put the elements at random in the different subsets.'
+                      )
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -353,11 +170,21 @@ class ProtSplitSet(ProtSets):
         
         # Create as many subsets as requested by the user
         subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
-        # Iterate over the images in the input set and assign
-        # diffent subsets
-        for i, img in enumerate(self.inputSet.get()):
-            subsets[i % n].append(img)
-            
+
+        # Iterate over the elements in the input set and assign
+        # to different subsets.
+        elements = self.inputSet.get()
+
+        ns = [len(elements) // n + (1 if i < len(elements) % n else 0)
+              for i in range(n)]  # number of elements in each subset
+        pos, i = 0, 0  # index of current subset and index of position inside it
+        for elem in elements.__iter__(random=self.randomize):
+            if i >= ns[pos]:
+                pos += 1
+                i = 0
+            subsets[pos].append(elem)
+            i += 1
+
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
         for i in range(1, n+1):
             subset = subsets[i-1]
@@ -372,75 +199,115 @@ class ProtSplitSet(ProtSets):
             errors.append("The number of subsets requested is greater than")
             errors.append("the number of elements in the input set.")
         return errors   
-    
-    
-class ProtIntersectSet(ProtSets):
+
+    def _summary(self):
+        if not any(x.startswith('output') for x in dir(self)):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["We have split the set %s in %d sets." %
+                    (self.inputSet.getName(), self.numberOfSets.get())]
+
+
+class ProtSubSet(ProtSets):
     """    
-    Create a set with the intersection (common elements) 
-    from two different sets.
+    Create a set with the elements of an original set that are also
+    referenced in another set.
     
-    Usually, there is a bigger set with all elements...
-    and a smaller one (obtained from classification, cleanning...). 
-    In that case, the desired result is the elements from the 
-    original set that are present in the smaller set. 
+    Usually there is a bigger set with all the elements, and a smaller
+    one obtained from classification, cleaning, etc. The desired result
+    is a set with the elements from the original set that are also present
+    somehow in the smaller set (in the smaller set they may be downsampled
+    or processed in some other way).
     
-    Both set should be of the same type of elements 
-    (micrographs, particles, volumes)
+    Both sets should be of the same kind (micrographs, particles, volumes)
+    or related (micrographs and CTFs for example).
     """
-    _label = 'intersect sets'
+    _label = 'subset'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
         
-        form.addParam('inputFullSet', PointerParam, label="Full set of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='Even if the intersection can be applied to two subsets,\n'
-                           'the most common use-case is to retrieve a subset of  \n'
+        form.addParam('inputFullSet', PointerParam, label="Full set of items",
+                      important=True, pointerClass='EMSet',
+                      help='Even if the operation can be applied to two arbitrary sets,\n'
+                           'the most common use-case is to retrieve a subset of\n'
                            'elements from an original full set.\n' 
-                           '*Note*: the images of the result set will be the same \n'
-                           'ones of this input set.'
-                           )
-        form.addParam('inputSubSet', PointerParam, label="Subset of items", important=True, 
-                      pointerClass='EMSet', 
-                      help='The elements that are in this (normally smaller) set and \n'
-                           'in the full set will be included in the result set'
-                           )
-        
+                           '*Note*: the elements of the resulting set will be the same\n'
+                           'ones as this input set.')
+        form.addParam('inputSubSet', PointerParam, label="Subset of items",
+                      important=True, pointerClass='EMSet',
+                      help='The elements that are in this (normally smaller) set and\n'
+                           'in the full set will be included in the resulting set.')
+
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
         inputSubSet = self.inputSubSet.get()
-        
+
         inputClassName = inputFullSet.getClassName()
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
 
         outputSet = outputSetFunction()
         outputSet.copyInfo(inputFullSet)    
-        # Iterate over the images in the smaller set
+        # Iterate over the elements in the smaller set
         # and take the info from the full set
-        for img in inputSubSet:
-            #TODO: this can be improved if you perform an
-            # intersection directly in sqlite
-            origImg = inputFullSet[img.getObjId()]
-            if origImg is not None:
-                outputSet.append(origImg)
+        for elem in inputSubSet:
+            # TODO: this can be improved if we perform intersection directly in sqlite
+            origElem = inputFullSet[elem.getObjId()]
+            if origElem is not None:
+                outputSet.append(origElem)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
         self._defineSourceRelation(inputSubSet, outputSet)
-        
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        errors = []
-#         if self.inputFullSet.get().getClassName() != self.inputSubSet.get().getClassName():
-#             errors.append("Both the full set and the subset should be of the same")
-#             errors.append("type of elements (micrographs, particles, volumes).")
-        return errors   
+        """Make sure the input data make sense."""
 
-    
+        # self.inputFullSet and self.inputSubSet .get().getClassName() can be SetOf...
+        #   Alignment
+        #   Angles
+        #   Averages
+        #   Classes
+        #   ClassesVol
+        #   Coordinates
+        #   CTF
+        #   Micrographs
+        #   MovieParticles
+        #   Movies
+        #   Particles
+        #   Volumes
+
+        c1 = self.inputFullSet.get().getClassName()
+        c2 = self.inputSubSet.get().getClassName()
+
+        if c1 == c2:
+            return []
+
+        # Avoid combinations that make no sense.
+        for classA, classesIncompatible in [
+            ('SetOfParticles', {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfCoordinates', {'SetOfMicrographs', 'SetOfMovies', 'SetOfVolumes'}),
+            ('SetOfVolumes', {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
+            if ((c1 == classA and c2 in classesIncompatible) or
+                (c2 == classA and c1 in classesIncompatible)):
+                return ["The full set and the subset are of incompatible classes",
+                        "%s and %s." % (c1, c2)]
+
+        return []  # no errors
+
+    def _summary(self):
+        key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
+        if not hasattr(self, key):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["The elements of %s that also are referenced in %s" %
+                    (self.inputFullSet.getName(), self.inputSubSet.getName()),
+                    "are now in %s" % getattr(self, key).getName()]

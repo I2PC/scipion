@@ -36,6 +36,7 @@ import time
 from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
+from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -95,6 +96,7 @@ class Step(OrderedObject):
         
     def setFailed(self, msg):
         """ Set the run failed and store an error message. """
+        self.endTime.set(dt.datetime.now())
         self._error.set(msg)
         self.status.set(STATUS_FAILED)
         
@@ -199,6 +201,8 @@ class FunctionStep(Step):
     def _run(self):
         """ Run the function and check the result files if any. """
         resultFiles = self._runFunc() 
+        if isinstance(resultFiles, basestring):
+            resultFiles = [resultFiles]
         if resultFiles and len(resultFiles):
             missingFiles = missingPaths(*resultFiles)
             if len(missingFiles):
@@ -702,7 +706,8 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info("STARTED: %s, step %d" % (step.funcName.get(), step._index))
+        self.info(magentaStr("STARTED") + ": %s, step %d" %
+                  (step.funcName.get(), step._index))
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -714,7 +719,7 @@ class Protocol(Step):
             doContinue = False
         elif step.isFailed():
             doContinue = False
-            errorMsg = "Protocol failed: " + step.getErrorMessage()
+            errorMsg = redStr("Protocol failed: " + step.getErrorMessage())
             self.setFailed(errorMsg)
             self.error(errorMsg)
         self.lastStatus = step.getStatus()
@@ -723,8 +728,9 @@ class Protocol(Step):
         self._stepsDone.increment()
         self._store(self._stepsDone)
         
-        self.info("%s: %s, step %d" % (step.getStatus().upper(), step.funcName.get(), step._index))
-        
+        self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
+                  (step.funcName.get(), step._index))
+
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
@@ -838,10 +844,10 @@ class Protocol(Step):
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
         if 'env' not in kwargs:
-            self._log.info("calling self._getEnviron...")
+            # self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
                        
-        self._log.info("Using environ for runJob: ", str(kwargs['env']))
+        # self._log.info("Using environ for runJob: ", str(kwargs['env']))
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):
@@ -850,7 +856,7 @@ class Protocol(Step):
         """
         self.__initLogs()
         
-        self.info('RUNNING PROTOCOL -----------------')
+        self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: ' + self.workingDir.get())
@@ -865,7 +871,8 @@ class Protocol(Step):
     def _endRun(self):
         """ Print some ending message and close some files. """   
         self._store()
-        self.info('------------------- PROTOCOL ' + self.getStatusMessage().upper())
+        self.info(greenStr('------------------- PROTOCOL ' +
+                           self.getStatusMessage().upper()))
         self.__closeLogs()
         
     def __initLogs(self):
@@ -922,7 +929,7 @@ class Protocol(Step):
             if url.startswith('http://'):
                 self._buffer += '[[%s][%s]]' % (url, txt)
             else:
-                self._buffer += '[[/file_downloader/?path=%s][%s]]' % (url, txt)
+                self._buffer += '[[/get_log/?path=%s][%s]]' % (url, txt)
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
@@ -1008,17 +1015,23 @@ class Protocol(Step):
     
     def getDefaultRunName(self):
         return '%s.%s' % (self.getClassName(), self.strId())
+    
+    @classmethod
+    def getClassPackage(cls):
+        """ Return the package module to which this protocol belongs
+        """
+        return getattr(cls, '_package', scipion)
+        
+    @classmethod 
+    def getClassPackageName(cls):
+        return cls.getClassPackage().__name__.replace('pyworkflow.protocol.scipion', 'scipion')
         
     @classmethod
     def getClassLabel(cls):
         """ Return a more readable string representing the protocol class """
         label = getattr(cls, '_label', cls.__name__)
-        label = "%s - %s" % (cls.getClassPackage().__name__.replace('pyworkflow.protocol.scipion', 'scipion'), label)
+        label = "%s - %s" % (cls.getClassPackageName(), label)
         return label
-    
-    @classmethod
-    def getClassPackage(cls):
-        return getattr(cls, '_package', scipion)
         
     def getSubmitDict(self):
         """ Return a dictionary with the necessary keys to
@@ -1140,14 +1153,20 @@ class Protocol(Step):
         return text
     
     def _getCiteText(self, cite, useKeyLabel=False):
-        # Get the first author surname
-        if useKeyLabel:
-            label = cite['id']
-        else:
-            label = cite['author'].split('and')[0].split(',')[0].strip()
-            label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
-        
-        return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+        try:
+            # Get the first author surname
+            if useKeyLabel:
+                label = cite['id']
+            else:
+                label = cite['author'].split('and')[0].split(',')[0].strip()
+                label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
+            
+            return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+        except Exception, ex:
+            print "Error with citation: " + label
+            print ex
+            text = "Error with citation *%s*." % label
+        return text
     
     def __getCitations(self, citations):
         """ From the list of citations keys, obtains the full
@@ -1190,19 +1209,13 @@ class Protocol(Step):
         if packageCitations:
             citations.append('*Package References:*')
             citations += packageCitations   
-            
+        if not citations:
+            return ['No references provided']
         return citations
 
     def _methods(self):
         """ Should be implemented in subclasses. See methods. """
         return ["No methods information."]
-        
-    def methods_old(self):
-        """ Return a description about methods about current protocol execution. """
-        baseMethods = self._methods()
-        if not baseMethods:
-            baseMethods = []
-        return baseMethods + [''] + self.citations()
         
     def getParsedMethods(self):
         """ Get the _methods results and parse possible cites. """
@@ -1330,7 +1343,7 @@ def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
      
 def getProtocolFromDb(dbPath, protId):
     import pyworkflow.em as em
-    import pyworkflow.apps.config as config
+    import pyworkflow.config as config
     classDict = dict(em.__dict__)
     classDict.update(config.__dict__)
     from pyworkflow.mapper import SqliteMapper

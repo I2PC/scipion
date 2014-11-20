@@ -254,7 +254,7 @@ class ProtCTFFindViewer(Viewer):
             mics = obj.inputMicrographs.get()
             visualizeObjs(obj, mics)
 
-        if issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
+        elif issubclass(cls, ProtRecalculateCTFFind) and not obj.hasAttribute("outputCTF"):
             
             mics = obj.inputCtf.get().getMicrographs()
             visualizeObjs(obj, mics)

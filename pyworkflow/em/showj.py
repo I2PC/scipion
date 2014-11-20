@@ -53,11 +53,16 @@ MODE_TABLE = 'table'
 MODE_MD = 'metadata'
 MODE_VOL_ASTEX = 'volume_astex'
 MODE_VOL_CHIMERA = 'volume_chimera'
+MODE_VOL_JSMOL = 'volume_jsmol'
 RENDER = 'render'
 ORDER = 'order'
 VISIBLE = 'visible'
 ZOOM = 'zoom'
 SORT_BY = 'sortby'
+
+OBJCMDS = 'object_commands'
+OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
+OBJCMD_NMA_VMD = "'Display VMD animation'"
 
 GOTO = 'goto'
 ROWS = 'rows'
@@ -236,6 +241,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
 def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
-    
+
     args = getJavaIJappArguments(memory, appName, args)
+    print args
     subprocess.Popen('java ' + args, shell=True, env=env)

@@ -29,7 +29,15 @@ This module is responsible for launching protocol executions.
 """
 import sys
 from pyworkflow.em import *
-from pyworkflow.apps.config import *
+from pyworkflow.config import *
+
+# Add callback for remote debugging if available.
+try:
+    from rpdb2 import start_embedded_debugger
+    from signal import signal, SIGUSR2
+    signal(SIGUSR2, lambda sig, frame: start_embedded_debugger('a'))
+except ImportError:
+    pass
 
 
 if __name__ == '__main__':

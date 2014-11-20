@@ -40,7 +40,7 @@ class ProtParticles(EMProtocol):
 
 class ProtProcessParticles(ProtParticles):
     """ This class will serve as a base for all protocol
-    that performs some operation on Partices (i.e. filters, mask, resize, etc)
+    that performs some operation on Particles (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
     """
     def _defineParams(self, form):
@@ -63,6 +63,10 @@ class ProtFilterParticles(ProtProcessParticles):
     between the ProtPreprocessParticles """
     pass
 
+class ProtOperateParticles(ProtProcessParticles):
+    """ This is the base for the branch of filters,
+    between the ProtPreprocessParticles """
+    pass
 
 class ProtMaskParticles(ProtProcessParticles):
     """ This is the base for the branch of mask, 
@@ -85,8 +89,12 @@ class ProtParticlePicking(ProtParticles):
         return summary
     
     def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
+        methodsMsgs = []
+        methodsMsgs.append("Number of particles picked: ")
+        for _, output in self.iterOutputAttributes(EMObject):
+            methodsMsgs.append('    %d on one set' % output.getSize())
+            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographs.get().getSize(), output.getBoxSize()))
+
         return methodsMsgs
 
     def getCoordsSuffix(self):
