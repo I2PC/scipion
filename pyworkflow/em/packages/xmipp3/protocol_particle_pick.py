@@ -52,10 +52,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
     
-        form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
+        ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)  
               
@@ -81,8 +78,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep')
+            # Insert step to create output objects
+            self._insertFunctionStep('createOutputStep')
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -119,7 +116,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
-        
         self._defineSourceRelation(self.inputMics, coordSet)
         
 
