@@ -40,9 +40,9 @@ if __name__ == '__main__':
     prot = getProtocolFromDb(dbpath, protid)
     extradir = prot._getExtraPath()
     count = prot.getOutputsSize()
-    
+
     suffix = str(count + 1) if count > 0 else ''
-    
+
     if prot.getClassName() == "XmippProtParticlePickingPairs":
         inputset = prot.inputMicrographsTiltedPair.get()
         uSet = inputset.getUntilted()
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         tCoordSet = prot._createSetOfCoordinates(tSet, suffix=tSuffix)
         readSetOfCoordinates(extradir, tSet, tCoordSet)
         tCoordSet.write()
-        
+
         # Read Angles from input micrographs
         micsFn = prot._getPath('input_micrographs.xmd')
         setAngles = prot._createSetOfAngles(suffix=suffix)
@@ -69,17 +69,15 @@ if __name__ == '__main__':
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
-        
+
     else:#if prot.getClassName() == "XmippProtParticlePicking":
         inputset = prot.getInputMicrographs()
         outputName = 'outputCoordinates' + suffix
         outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
         readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
-        summary = prot.getSummary()
-        outputset.setObjComment("\n".join(summary))
 
-
-    
+    summary = prot.getSummary()
+    outputset.setObjComment("\n".join(summary))
 
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)

@@ -156,22 +156,30 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographsTiltedPair.get().getTilted().getSize(), output.getTilted().getBoxSize()))
 
         return methodsMsgs
-    
+
     def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputCoordinatesTiltPair'):
-            summary.append("Output coordinates not ready yet.") 
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._summary(self)
         else:
-            for key, output in self.iterOutputAttributes(EMObject):
-                summary.append("Particles picked: %d (from %d micrographs)" % (output.getTilted().getSize(), self.inputMicrographsTiltedPair.get().getTilted().getSize()))
-                summary.append("Particle size:%d" % output.getBoxSize())
-            
-            configfile = join(self._getExtraPath(), 'config.xmd')
-            if exists(configfile):      
-                md = xmipp.MetaData('properties@' + configfile)
-                configobj = md.firstObject()
-                activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-                summary.append("Last micrograph: " + activemic)
+            return self.getSummary(self.getCoords(self))
+
+    def getInputMicrographs(self):
+        return self.inputMicrographsTiltedPair.get().getTilted()
+
+    def getCoords(self):
+        count = self.getOutputsSize()
+        suffix = str(count) if count > 1 else ''
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        return getattr(self, outputName)
+    
+    def getSummary(self):
+        summary = []
+        configfile = join(self._getExtraPath(), 'config.xmd')
+        if exists(configfile):
+            md = xmipp.MetaData('properties@' + configfile)
+            configobj = md.firstObject()
+            activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+            summary.append("Last micrograph: " + activemic)
         return summary
        
     
