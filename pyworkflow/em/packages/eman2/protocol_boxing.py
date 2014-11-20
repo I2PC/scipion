@@ -89,7 +89,7 @@ class EmanProtBoxing(ProtParticlePicking):
         print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
         copyTree(self.importFolder.get(), os.getcwd())
         
-        self._createOutput()
+        self._createOutput(self.getWorkingDir())
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
