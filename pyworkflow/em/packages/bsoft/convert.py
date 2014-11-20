@@ -8,7 +8,7 @@ from xmipp import *
 from pyworkflow.utils.path import join, dirname, replaceBaseExt
 from xmipp import addLabelAlias
 from pyworkflow.em import *
-from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate
+from pyworkflow.em.packages.xmipp3.convert import rowToCoordinate, rowFromMd
 from xmipp3 import XmippMdRow
 
 # Map from Xmipp labels to Relion labels names
@@ -65,7 +65,7 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
             posMd = xmipp.MetaData()
         
         for objId in posMd:
-            coord = rowToCoordinate(posMd, objId)
+            coord = rowToCoordinate(rowFromMd(posMd, objId))
             boxSize = 2 * posMd.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, objId)
             coord.setMicrograph(mic)
             coord.setX(coord.getX())

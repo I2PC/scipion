@@ -75,6 +75,14 @@ class ProtMaskParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(ProtParticles):
+
+    def _defineParams(self, form):
+
+        form.addSection(label='Input')
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrographs ')
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
@@ -109,6 +117,28 @@ class ProtParticlePicking(ProtParticles):
         suffix = self.getCoordsSuffix()
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
+
+    def _createOutput(self, outputDir):
+        self._leaveDir()# going back to project dir
+
+        micSet = self.inputMics
+
+        count = 0;
+        for key, output in self.iterOutputAttributes(EMObject):
+            count += 1
+        suffix = str(count + 1) if count > 0 else ''
+        outputName = 'outputCoordinates' + suffix
+
+        coordSet = self._createSetOfCoordinates(self.inputMics, suffix)
+
+        print "dir " + outputDir
+        self.readSetOfCoordinates(outputDir, coordSet)
+        outputs = {outputName: coordSet}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(micSet, coordSet)
+
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        pass
 
 
 class ProtExtractParticles(ProtParticles):
