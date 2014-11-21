@@ -395,7 +395,8 @@ def _particlesFromEmx(protocol
                 part.setCoordinate(Coordinate())
             _particleFromEmx(emxParticle, part)
             if emxParticle.has('transformationMatrix__t11'):
-                partSet.setHasAlignment(True)
+                #FIXME: Detect if the alignment is 2D or 3D
+                partSet.setAlignment3D()
             if not samplingRate:
                 samplingRate = part.getSamplingRate()
             partSet.setSamplingRate(samplingRate) 

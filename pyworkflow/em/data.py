@@ -566,6 +566,13 @@ class SetOfImages(EMSet):
             raise Exception('Invalid alignment value')
         self._alignment.set(value)
         
+    def setAlignment2D(self):
+        self.setAlignment(ALIGN_2D)
+        
+    def setAlignment3D(self):
+        self.setAlignment(ALIGN_3D)    
+    
+        
 #    def hasProjection(self):
 #        return self._hasProjection.get()
     
