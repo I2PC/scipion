@@ -50,8 +50,8 @@ LINUX = (platform.system() == 'Linux')
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
 # Define our builders.
-Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
+download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
+untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
@@ -291,9 +291,9 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # Alternatively we could use CheckConfigLib() (as in commit cac431d117)
 
     # Create and concatenate the builders.
-    tDownload = Download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
+    tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath, tDownload,
+    tUntar = untar(env, File('#software/tmp/%s/configure' % configDir[0]).abspath, tDownload,
                    cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
@@ -364,7 +364,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     if tars:
         for x, dir in enumerate(dirs):
             tarDestination, tarName = splitext(tars[x])
-            tUntar = Untar(env, File(join(dirs[x], untarTargets[x])).abspath, 
+            tUntar = untar(env, File(join(dirs[x], untarTargets[x])).abspath, 
                            File(tars[x]),
                            cdir=Dir(dirs[x]).abspath)
             SideEffect('dummy', tUntar)
@@ -443,7 +443,7 @@ def symLink(env, target, source):
     sources = os.path.relpath(sources, os.path.split(link)[0])
     if os.path.lexists(link):
         os.remove(link)
-    print 'Linking to %s from %s' % (sources, link)
+    #print 'Linking to %s from %s' % (sources, link)
     os.symlink(sources, link)
     return target
 
@@ -632,9 +632,9 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
                   help='Activate module %s' % name)
 
     # Create and concatenate the builders.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = download(env, 'software/tmp/%s' % tar, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
+    tUntar = untar(env, 'software/tmp/%s/setup.py' % buildDir, tDownload,
                    cdir='software/tmp')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/tmp/%s' % buildDir)
@@ -794,9 +794,9 @@ Continue anyway? (y/n)""" % (p, name)
                 Exit(2)
 
     # Donload, untar, link to it and execute any extra actions.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = download(env, 'software/tmp/%s' % tar, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
+    tUntar = untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
                    cdir='software/em')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/em/%s' % buildDir)
@@ -900,19 +900,19 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
                   help='Activate %s' % name)
 
     # Donload, untar, and execute any extra actions.
-    tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = Untar(env, 'software/tmp/%s/README' % buildDir, tDownload,
-                   cdir='software/tmp')
+    tUntar = untar(env, File('#software/tmp/%s/README' % buildDir).abspath, tDownload,
+                   cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/tmp/%s' % buildDir)
+    Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
     lastTarget = tUntar
 
     for target, command in extraActions:
         lastTarget = env.Command(
             target,
             lastTarget,
-            Action(command, chdir='software/tmp/%s' % buildDir))
+            Action(command, chdir=Dir('#software/tmp/%s' % buildDir).abspath))
         SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
 
     # Clean the special generated files.
@@ -930,6 +930,8 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
 
 
 # Add methods so SConscript can call them.
+env.AddMethod(download, 'Download')
+env.AddMethod(untar, 'Untar')
 env.AddMethod(addLibrary, 'AddLibrary')
 env.AddMethod(addModule, 'AddModule')
 env.AddMethod(addPackage, 'AddPackage')
