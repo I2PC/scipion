@@ -64,7 +64,7 @@ class TestNMA(TestWorkflow):
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
         protImportParts = self.newProtocol(ProtImportParticles,
-                                           pattern=self.ds.getFile('particles'),
+                                           filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
 
@@ -74,7 +74,7 @@ class TestNMA(TestWorkflow):
         
         # Import a Volume
         protImportVol = self.newProtocol(ProtImportVolumes,
-                                         pattern=self.ds.getFile('vol'),
+                                         filesPath=self.ds.getFile('vol'),
                                          samplingRate=1.0)
         self.launchProtocol(protImportVol)
         

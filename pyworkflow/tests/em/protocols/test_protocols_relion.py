@@ -42,7 +42,7 @@ class TestRelionBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         protImport = cls.newProtocol(ProtImportParticles, 
-                                      pattern=pattern, samplingRate=samplingRate, 
+                                      filesPath=pattern, samplingRate=samplingRate, 
                                       checkStack=checkStack)
         cls.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
@@ -63,7 +63,7 @@ class TestRelionBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         protImport = cls.newProtocol(ProtImportVolumes, 
-                                     pattern=pattern, samplingRate=samplingRate)
+                                     filesPath=pattern, samplingRate=samplingRate)
         cls.launchProtocol(protImport)
         return protImport
 

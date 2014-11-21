@@ -168,7 +168,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         import xmipp
         from pyworkflow.em.packages import xmipp3
         
-        # This is wrong for some cases.
+        # TODO: Check this.Is wrong for some cases.
         boxSize = self.inputCoordinates.get().getBoxSize() 
         # Aux image to read and write images        
         img = xmipp.Image()

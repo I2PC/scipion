@@ -63,21 +63,21 @@ class TestSets(BaseTest):
 
         # Micrographs
         p_imp_micros = new(ProtImportMicrographs,
-                           pattern=cls.dataset_xmipp.getFile('allMics'),
+                           filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
         launch(p_imp_micros, wait=True)
         cls.micros = p_imp_micros.outputMicrographs
 
         # Volumes
         p_imp_volumes = new(ProtImportVolumes,
-                            pattern=cls.dataset_xmipp.getFile('volumes'),
+                            filesPath=cls.dataset_xmipp.getFile('volumes'),
                             samplingRate=9.896)
         launch(p_imp_volumes, wait=True)
         cls.vols = p_imp_volumes.outputVolumes
 
         # Movies
         p_imp_movies = new(ProtImportMovies,
-                           pattern=cls.dataset_ribo.getFile('movies'),
+                           filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
                            voltage=300, sphericalAberration=2.0)
         launch(p_imp_movies, wait=True)
@@ -85,7 +85,7 @@ class TestSets(BaseTest):
 
         # Particles
         p_imp_particles = new(ProtImportParticles,
-                              pattern=cls.dataset_mda.getFile('particles'),
+                              filesPath=cls.dataset_mda.getFile('particles'),
                               samplingRate=3.5)
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles

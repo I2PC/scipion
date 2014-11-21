@@ -50,7 +50,7 @@ class TestSpiderConvert(TestWorkflow):
     
     def test_convert(self):
         """ Run an Import particles protocol. """
-        protImport = self.newProtocol(ProtImportParticles, pattern=self.particlesFn, samplingRate=3.5)
+        protImport = self.newProtocol(ProtImportParticles, filesPath=self.particlesFn, samplingRate=3.5)
         self.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
@@ -87,7 +87,7 @@ class TestSpiderWorkflow(TestWorkflow):
     
     def test_mdaWorkflow(self):
         """ Run an Import particles protocol. """
-        protImport = self.newProtocol(ProtImportParticles, pattern=self.particlesFn, samplingRate=3.5)
+        protImport = self.newProtocol(ProtImportParticles, filesPath=self.particlesFn, samplingRate=3.5)
         self.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
