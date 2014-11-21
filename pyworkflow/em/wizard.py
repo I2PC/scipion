@@ -29,20 +29,27 @@ This module implement some wizards
 """
 
 import os
+from os.path import basename
 import Tkinter as tk
 import ttk
-from os.path import basename
-from pyworkflow.em.constants import *
-from pyworkflow.em.convert import ImageHandler
 
-from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
-from pyworkflow.em.data import Micrograph
-
+from pyworkflow.wizard import Wizard
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
+
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.constants import (UNIT_PIXEL, 
+                                     UNIT_PIXEL_FOURIER,
+                                     UNIT_ANGSTROM,
+                                     FILTER_LOW_PASS, 
+                                     FILTER_BAND_PASS, 
+                                     FILTER_HIGH_PASS
+                                     )
+from pyworkflow.em.data import (Volume, 
+                                SetOfMicrographs, SetOfParticles, SetOfVolumes)
+from pyworkflow.em.protocol import ProtImportImages
 
 import xmipp
 
@@ -741,4 +748,22 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
+    
+    
+#===============================================================================
+#    Wizards base classes
+#===============================================================================
+
+class ImportAcquisitionWizard(EmWizard):
+    _targets = [(ProtImportImages, ['acquisitionWizard'])]
+    
+    def show(self, form, *params):
+        prot = form.protocol
+        acquisition = None # prot.loadAcquisition()
+        
+        if acquisition is not None:
+            pass
+        else:
+            dialog.showWarning("Import failed", 
+                               "Could not import acquisition info.", form.root)    
     
