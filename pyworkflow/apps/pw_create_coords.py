@@ -77,7 +77,7 @@ if __name__ == '__main__':
         readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
 
     summary = prot.getSummary()
-    outputset.setObjComment("\n".join(summary))
+    outputset.setObjComment(summary)
 
     outputs = {outputName: outputset}
     prot._defineOutputs(**outputs)

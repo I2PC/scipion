@@ -34,8 +34,8 @@ class TestBrandeisBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.micFn = cls.dataset.getFile('mic1')
-        cls.volFn = cls.dataset.getFile('vol2')
+        cls.micFn = cls.dataset.getFile('micrographs/BPV_1386.mrc')
+        cls.volFn = cls.dataset.getFile('volumes/volume_1_iter_002.mrc')
         #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
@@ -139,5 +139,5 @@ class TestBrandeisFrealign(TestBrandeisBase):
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
-    #suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
+    suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
     unittest.TextTestRunner(verbosity=2).run(suite)

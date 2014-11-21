@@ -109,14 +109,6 @@ class TestXmippCreateMask3D(TestXmippBase):
         self.launchProtocol(protMask3)
         self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")
 
-#         print "Apply dilation mask to imported volume"
-#         protMaskVolume = self.newProtocol(XmippProtMaskVolumes)
-#         protMaskVolume.inputVolumes.set(self.protImport.outputVolume)
-#         protMaskVolume.source.set(SOURCE_MASK)
-#         protMaskVolume.inputMask.set(protMask3.outputMask)
-#         self.launchProtocol(protMaskVolume)
-#         self.assertIsNotNone(protMaskVolume.outputVol, "There was a problem with applying mask to a volume")
-
         print "Run create mask from geometry"
         protMask4 = self.newProtocol(XmippProtCreateMask3D,
                                      source=1, size=64, samplingRate=9.89,
@@ -229,24 +221,6 @@ class TestXmippApplyMask3D(TestXmippBase):
         self.assertIsNotNone(protMask02.outputVol, "There was a problem with apply user custom mask for Volumes")
   
 
-class TestXmippResolution3D(TestXmippBase):
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData()
-        cls.protImport1 = cls.runImportVolumes(cls.vol2, 9.896)
-        cls.protImport2 = cls.runImportVolumes(cls.vol3, 9.896)
-
-    def testCalculateResolution(self):
-        print "Run resolution 3D"
-        protResol3D = XmippProtResolution3D(doSSNR=False)
-        protResol3D.inputVolume.set(self.protImport1.outputVolume)
-        protResol3D.referenceVolume.set(self.protImport2.outputVolume)
-        self.proj.launchProtocol(protResol3D, wait=True)
-        self.assertIsNotNone(protResol3D._defineFscName(), "There was a problem with fsc")
-        self.assertIsNotNone(protResol3D._defineStructFactorName(), "There was a problem with structure factor")
-
-
 class TestXmippPreprocessVolumes(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -271,6 +245,24 @@ class TestXmippPreprocessVolumes(TestXmippBase):
         protPreprocessVol2.inputVolumes.set(self.protImport1.outputVolumes)
         self.proj.launchProtocol(protPreprocessVol2, wait=True)
         self.assertIsNotNone(protPreprocessVol2.outputVol, "There was a problem with preprocess a SetOfVolumes")
+
+
+class TestXmippResolution3D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport1 = cls.runImportVolumes(cls.vol2, 9.896)
+        cls.protImport2 = cls.runImportVolumes(cls.vol3, 9.896)
+
+    def testCalculateResolution(self):
+        print "Run resolution 3D"
+        protResol3D = XmippProtResolution3D(doSSNR=False)
+        protResol3D.inputVolume.set(self.protImport1.outputVolume)
+        protResol3D.referenceVolume.set(self.protImport2.outputVolume)
+        self.proj.launchProtocol(protResol3D, wait=True)
+        self.assertIsNotNone(protResol3D._defineFscName(), "There was a problem with fsc")
+        self.assertIsNotNone(protResol3D._defineStructFactorName(), "There was a problem with structure factor")
 
 
 class TestXmippFilterVolumes(TestXmippBase):
