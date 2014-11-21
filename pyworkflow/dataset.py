@@ -201,8 +201,21 @@ class Table(object):
         """ Iterate over the rows. """
         return self._rowDict.itervalues()
     
-    def getElementById(self, index, label):
-        return self._rowDict.values()[index]._asdict()[label]
+    def getValueFromIndex(self, index, label):
+        """ Return the value of the property 'label'
+        in the element that has this 'index'.
+        """
+        value = self._rowDict.values()[index]._asdict()[label]
+        return value
+    
+    def getIndexFromValue(self, value, label):
+        """ Search the element that has property 'label'
+        equals to value and returns its index.
+        """
+        for index, row in enumerate(self.iterRows()):
+            if value == row._asdict()[label]:
+                return index            
+        return -1
     
     def __str__(self):
         return '\n'.join([str(row) for row in self.iterRows()])
