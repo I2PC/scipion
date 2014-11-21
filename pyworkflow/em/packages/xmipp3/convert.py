@@ -153,6 +153,8 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    row.setValue(xmipp.MDL_ENABLED, obj.isEnabled())
+    
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
@@ -177,6 +179,8 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    obj.setEnabled(row.getValue(xmipp.MDL_ENABLED, True))
+    
     for attr, label in attrDict.iteritems():
         value = row.getValue(label)
         if not hasattr(obj, attr):

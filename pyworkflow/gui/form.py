@@ -713,6 +713,10 @@ class ParamWidget():
             #btn.grid(row=1, column=0)
         elif t is Line:
             var = None
+            
+        elif t is LabelParam:
+            var = None
+        
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()

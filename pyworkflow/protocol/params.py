@@ -350,6 +350,14 @@ class FolderParam(PathParam):
     """Folder path"""
     pass
 
+
+class LabelParam(StringParam):
+    """ Just the same as StringParam, but to be rendered
+    as a label and can not be directly edited by the user
+    in the Protocol Form.
+    """
+    pass
+
         
 class IntParam(Param):
     def __init__(self, **args):

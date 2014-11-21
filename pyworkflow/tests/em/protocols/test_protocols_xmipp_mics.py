@@ -152,7 +152,6 @@ class TestImportMicrographs(TestXmippBase):
         self.assertEquals(m.getSphericalAberration(), sphericalAberration, "Incorrect Spherical aberration on output micrographs.")
 
 
-
 class TestXmippPreprocessMicrographs(TestXmippBase):
     """This class check if the preprocessing micrographs protocol in Xmipp works properly."""
     @classmethod
@@ -171,13 +170,14 @@ class TestXmippPreprocessMicrographs(TestXmippBase):
         # check that output micrographs have double sampling rate than input micrographs
         self.assertEquals(protDown.outputMicrographs.getSamplingRate(), self.protImport.outputMicrographs.getSamplingRate()*downFactorValue, "Micrographs uncorrectly downsampled")
     
-    def testCrop(self):
-        # test crop on a set of micrographs
+    def testPreprocessing(self):
+        # test Crop, Take logarithm and Remove bad pixels on a set of micrographs
         cropPixels = 100
-        protCrop = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=cropPixels)
-        protCrop.inputMicrographs.set(self.protImport.outputMicrographs)
-        self.proj.launchProtocol(protCrop, wait=True)
-
+        protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, doLog=True, doRemoveBadPix=True, cropPixels=cropPixels)
+        protPreprocess.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.proj.launchProtocol(protPreprocess, wait=True)
+        self.assertIsNotNone(protPreprocess.outputMicrographs, "SetOfMicrographs has not been preprocessed.")
+        
 
 class TestXmippCTFEstimation(TestXmippBase):
     """This class check if the protocol to determine the CTF in Xmipp works properly."""
@@ -201,6 +201,7 @@ class TestXmippCTFEstimation(TestXmippBase):
         self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, places=1)
         self.assertAlmostEquals(ctfModel.getDefocusAngle(),55.256, places=2)
 
+
 class TestXmippCTFRestimation(TestXmippBase):
     """This class check if the protocol to determine the CTF in Xmipp works properly."""
     @classmethod
@@ -220,7 +221,7 @@ class TestXmippCTFRestimation(TestXmippBase):
         
         print "Performing CTF Recalculation..."
         str = "1,22000,24000,0,0.05,0.26; 3,21000,23000,0,0.04,0.3"
-        protReCTF = XmippProtRecalculateCTF(numberOfMpi=3)
+        protReCTF = XmippProtRecalculateCTF(numberOfThreads=3, numberOfMpi=1)
         protReCTF.inputCtf.set(protCTF.outputCTF)
         protReCTF.inputValues.set(str)
         self.proj.launchProtocol(protReCTF, wait=True)
