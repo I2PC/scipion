@@ -173,7 +173,7 @@ class TestXmippApplyMask2D(TestXmippBase):
                                 self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
         self.assertIsNotNone(protMask2.outputParticles, "There was a problem with apply boxed mask for particles")
     
-    def testapplyCrownMask(self):
+    def testApplyCrownMask(self):
         print "Run apply crown mask for particles"
         protMask3 = self.newProtocol(XmippProtMaskParticles,
                                      source=0, geo=2, innerRadius=2, outerRadius=12,
@@ -221,7 +221,7 @@ class TestXmippApplyMask2D(TestXmippBase):
                                 self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
         
         self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
-        
+        Mask
     def testApplyUserMask(self):
         print "Run apply user mask for particles"
         # Create MASK
@@ -270,9 +270,6 @@ class TestXmippPreprocessParticles(TestXmippBase):
                 print "compare ", x , " with ", y
                 self.assertEquals(x.getAlignment(), y.getAlignment(), "Alignment wrong")
                 
-            self.assertAlmostEquals(protPreproc.outputParticles.getSamplingRate(), 
-                                    self.protImport.outputParticles.getSamplingRate(), "There was a problem with preprocess particles")
-        
         self.assertAlmostEquals(protPreproc.outputParticles.getSamplingRate(), 
                           self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate in the preprocess particles")
 

@@ -174,14 +174,14 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         summary = []
         summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
         summary.append("Particles picked: %d" % coordSet.getSize())
-        summary.append("Particle size:%d" % coordSet.getSize())
+        summary.append("Particle size:%d" % coordSet.getBoxSize())
             
-        return summary
+        return "\n".join(summary)
     
-    def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
-        return methodsMsgs
+    def getMethods(self, output):
+        msg = 'Program picked %d particles of size %d using training from %s. For more detail see [Abrishami2013]' % (output.getSize(), output.getBoxSize(), self.xmippParticlePicking.get().getNameId())
+
+        return msg
     
     
     def _citations(self):
