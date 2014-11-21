@@ -106,8 +106,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         try:
             self.runJob(self._program, self._args % self._params)
         except Exception:
-            break
-        
+            raise
         cleanPath(micFnMrc)
     
     def createOutputStep(self):
@@ -185,8 +184,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         try:
             self.runJob(self._program, self._args % self._params)
         except Exception:
-            break
-        
+            raise
         cleanPattern(micFnMrc)
     
     def _createNewCtfModel(self, mic):
