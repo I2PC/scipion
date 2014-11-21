@@ -3,14 +3,17 @@ function getModeList(){return "volume";}
 
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
+	
+	// Update the variable to know the old mode used
+	$("input#oldModeShowj").val(mode)
+	
 	var listSelectedItems = [{{listSelectedItems}}];
  	$("input#listSelectedItems").val(listSelectedItems)
  	console.log("selectedItems: " + listSelectedItems)
 
 	if (mode == "table"){
 	 	markSelectedItems(mode, listSelectedItems)
-	}
-	else if (mode == "gallery"){
+	} else if (mode == "gallery"){
 // 		var index = $("select#id_volumesToRenderComboBox option:selected=selected").index()
 // 		var index = document.getElementById("select#id_volumesToRenderComboBox").selectedIndex
 // 		$("input#listSelectedItems").val(index+1)
