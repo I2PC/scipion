@@ -522,13 +522,15 @@ class EMSet(Set, EMObject):
 class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
+
     
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
-        self._hasAlignment = Boolean(args.get('alignmet', False))
-        self._hasProjection = Boolean(False)
+        #self._hasAlignment = Boolean(args.get('alignmet', False))
+        #self._hasProjection = Boolean(False)
+        self._alignment = Integer(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
@@ -551,16 +553,24 @@ class SetOfImages(EMSet):
         self._hasCtf.set(value)
         
     def hasAlignment(self):
-        return self._hasAlignment.get()
+        return self._alignment != ALIGN_NONE
     
-    def setHasAlignment(self, value):
-        self._hasAlignment.set(value)
+    def hasAlignment2D(self):
+        return self._alignment == ALIGN_2D
+
+    def hasAlignment3D(self):
+        return self._alignment == ALIGN_3D
+
+    def setAlignment(self, value):
+        if value < ALIGN_NONE or value > ALIGN_3D:
+            raise Exception('Invalid alignment value')
+        self._alignment.set(value)
         
-    def hasProjection(self):
-        return self._hasProjection.get()
+#    def hasProjection(self):
+#        return self._hasProjection.get()
     
-    def setHasProjection(self, value):
-        self._hasProjection.set(value)
+#    def setHasProjection(self, value):
+#        self._hasProjection.set(value)
         
     def isPhaseFlipped(self):
         return self._isPhaseFlipped.get()
@@ -592,7 +602,7 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_hasProjection', '_hasAlignment')
+        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):
