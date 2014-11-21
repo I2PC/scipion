@@ -33,6 +33,8 @@ This module contains converter functions that will serve to:
 
 import numpy
 from collections import OrderedDict
+from numpy import rad2deg
+from numpy.linalg import inv
 #from itertools import izip
 
 from brandeis import *
@@ -78,7 +80,7 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
         # in order to be processed in Frealign
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
-
+    outputSet.setAlignment(ALIGN_3D)
 
 def rowToAlignment(alignmentRow, samplingRate):
     """
@@ -134,17 +136,17 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
     """read from frealign .par.
     """
     imgSet = classes3DSet.getImages()
-    
+
     for ref, volFn in enumerate(volumeList):
         class3D = Class3D()
         class3D.setObjId(ref+1)
         vol = Volume()
         vol.copyObjId(class3D)
         vol.setLocation(volFn)
-        
+
         class3D.setRepresentative(vol)
         classes3DSet.append(class3D)
-        
+
         file1 = fileparList[ref]
         f1 = open(file1)
         for l in f1:
@@ -156,13 +158,13 @@ def readSetOfClasses3D(classes3DSet, fileparList, volumeList):
                     img = imgSet[objId]
                     class3D.append(img)
         f1.close()
-        
+
         # Check if write function is necessary
         class3D.write()
-        
+
 
 def parseCtffindOutput(filename):
-    """ Retrieve defocus U, V and angle from the 
+    """ Retrieve defocus U, V and angle from the
     output file of the ctffind3 execution.
     """
     f = open(filename)
@@ -176,14 +178,11 @@ def parseCtffindOutput(filename):
     f.close()
     return result
 
-def geometryFromMatrix(matrix, inverseTransform):
+def geometryFromMatrix(matrix):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    from numpy import rad2deg
-    flip = bool(matrix[3,3]<0)
-    if flip:
-        matrix[0,:4] *= -1.
+    inverseTransform = True
+
     if inverseTransform:
-        from numpy.linalg import inv
         matrix = inv(matrix)
         shifts = -translation_from_matrix(matrix)
     else:
