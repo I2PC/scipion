@@ -156,8 +156,6 @@ def setRenderingOptions(request, dataset, table, inputParams):
     # Setting the _typeOfColumnToRender
     label = inputParams[sj.LABEL_SELECTED]
 
-    print inputParams
-
     if not label:
         volPath = None
         _imageDimensions = ''
@@ -169,23 +167,32 @@ def setRenderingOptions(request, dataset, table, inputParams):
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
        
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
-        
-        if inputParams[sj.SELECTEDITEMS] and isVol and inputParams[sj.MODE] == sj.MODE_GALLERY:
-            # New Functionality used to render elements selected in table mode for volumes
-            lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
-            index = int(lastItemSelected)-1
-            _imageVolName = table.getElementById(index, label)
-            inputParams[sj.VOL_SELECTED] = _imageVolName
-        
-#         elif inputParams[sj.GOTO] and isVol and inputParams[sj.MODE] == sj.MODE_TABLE:
-#              inputParams[sj.SELECTEDITEMS] = int(inputParams[sj.GOTO]) + 1
-#              _imageVolName = inputParams[sj.VOL_SELECTED]
-#             print "imageVolName: ", _imageVolName
+        oldMode =  inputParams[sj.OLDMODE]
 
+        if oldMode == None:
+            _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
         else:
-            #Setting the _imageVolName
-            _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
-
+            if oldMode == inputParams[sj.MODE]:
+                # No mode change
+                if oldMode == 'table':
+                    pass
+                elif oldMode == 'gallery':
+                    _imageVolName = inputParams[sj.VOL_SELECTED]
+                    index = table.getIndexFromValue(_imageVolName, label) +1
+                    inputParams[sj.SELECTEDITEMS] = index
+                    
+            elif oldMode != inputParams[sj.MODE]:
+                # Mode changed
+                if oldMode == 'gallery':
+                    # New Functionality used to mark elements rendered in gallery mode for volumes
+                    _imageVolName = inputParams[sj.VOL_SELECTED]
+                elif oldMode == 'table':
+                    # New Functionality used to render elements selected in table mode for volumes
+                    lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
+                    index = int(lastItemSelected)-1
+                    _imageVolName = table.getValueFromIndex(index, label)
+                    inputParams[sj.VOL_SELECTED] = _imageVolName
+        
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -248,6 +255,7 @@ DEFAULT_PARAMS = {
     sj.SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
     sj.ENABLEDITEMS: 0,     # List with the id for the enabled items in the before mode.
     sj.CHANGES: 0,          # List with the changes done
+    sj.OLDMODE: None,
 }
 
 def showj(request):

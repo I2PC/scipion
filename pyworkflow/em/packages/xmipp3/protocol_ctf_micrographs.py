@@ -225,9 +225,9 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         ctfSet.setMicrographs(inputMics)
         defocusList = []
         if self.doAutomaticRejection:
-            fn=self._getPath("micrographs.xmd")
+            fn = self._getPath("micrographs.xmd")
         else:
-            fn=self._getPath("ctfs_selection.xmd")
+            fn = self._getPath("ctfs_selection.xmd")
         md = xmipp.MetaData(fn)
         mdAux = xmipp.MetaData()
         mdCTF = xmipp.MetaData()
@@ -251,14 +251,15 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         self._defineOutputs(outputCTF=ctfSet)
         self._defineCtfRelation(inputMics, ctfSet)
         self._defocusMaxMin(defocusList)
-        
+
+        #TODO: Review with COSS and JM if this is needed
         if self.someMicrographsRejected and self.doAutomaticRejection:
             micSet = self._createSetOfMicrographs()
+            micSet.copyInfo(inputMics)
             md = xmipp.MetaData(self._getPath("ctfs_selection.xmd"))
             for mdid in md:
                 micId = md.getValue(xmipp.MDL_MICROGRAPH_ID,mdid)
                 mic = inputMics[micId]
-                micSet.setSamplingRate(self._params['samplingRate'])
                 micSet.append(mic)
             self._defineOutputs(outputMicrographs=micSet)
             self._defineTransformRelation(inputMics, micSet)

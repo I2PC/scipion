@@ -568,7 +568,7 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         return args
     
     def _segmentLocalArgs(self, inputVol, fnMask, args):
-        return "-i %s -o %s --method " % (inputVol, fnMask) + args
+        return "-i %s -o %s " % (inputVol, fnMask) + args
     
     def _segMentMaskArgs(self, inputVol, outputVol, fnMask):
             if self.isFirstStep:

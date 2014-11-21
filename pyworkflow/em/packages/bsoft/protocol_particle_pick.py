@@ -80,6 +80,7 @@ class BsoftProtParticlePicking(ProtParticlePicking):
 
         # Open dialog to request confirmation to create output
         if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+            self._leaveDir()# going back to project dir
             self._createOutput(outputdir)
    
 #    def createOutputStep(self):

@@ -2,6 +2,7 @@
 # *
 # * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
 # *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *             Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -71,6 +72,180 @@ class TestXmippBase(BaseTest):
         return cls.ProtClassify
 
 
+class TestXmippCreateMask2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.samplingRate = cls.protImport.getSamplingRate()
+        cls.size = 20
+        
+    def testCreateCircularMask(self):
+        print "Run create circular mask for particles"
+        protMask1 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size, 
+                                     geo=0, radius=-1 )
+        protMask1.setObjLabel('circular mask')
+        self.launchProtocol(protMask1)
+        self.assertIsNotNone(protMask1.outputMask, "There was a problem with create circular mask for particles")
+    
+    def testCreateBoxMask(self):
+        print "Run create box mask for particles"
+        protMask2 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size, 
+                                     geo=1, boxSize=-1 )
+        protMask2.setObjLabel('box mask')
+        self.launchProtocol(protMask2)
+        self.assertIsNotNone(protMask2.outputMask, "There was a problem with create boxed mask for particles")
+    
+    def testCreateCrownMask(self):
+        print "Run create crown mask for particles"
+        protMask3 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size, 
+                                     geo=2, innerRadius=2, outerRadius=12 )
+        protMask3.setObjLabel('crown mask')
+        self.launchProtocol(protMask3)
+        self.assertIsNotNone(protMask3.outputMask, "There was a problem with create crown mask for particles")
+    
+    def testCreateGaussianMask(self):
+        print "Run create gaussian mask for particles"
+        protMask4 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size, 
+                                     geo=3, sigma=-1 )
+        protMask4.setObjLabel('gaussian mask')
+        self.launchProtocol(protMask4)
+        self.assertIsNotNone(protMask4.outputMask, "There was a problem with create gaussian mask for particles")
+    
+    def testCreateRaisedCosineMask(self):
+        print "Run create raised cosine mask for particles"
+        protMask5 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size,
+                                     geo=4, innerRadius=2, outerRadius=12 )
+        protMask5.setObjLabel('raised cosine mask')
+        self.launchProtocol(protMask5)
+        self.assertIsNotNone(protMask5.outputMask, "There was a problem with create raised cosine mask for particles")
+    
+    def testCreateRaisedCrownMask(self):
+        print "Run create raised crown mask for particles"
+        protMask6 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = self.samplingRate, 
+                                     size= self.size, 
+                                     geo=5, innerRadius=2, outerRadius=12, borderDecay=2 )
+        protMask6.setObjLabel('raised crown mask')
+        self.launchProtocol(protMask6)
+        self.assertIsNotNone(protMask6.outputMask, "There was a problem with create raised crown mask for particles")
+    
+
+class TestXmippApplyMask2D(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+
+    def testApplyCircularMask(self):
+        print "Run apply circular mask for particles"
+        protMask1 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=0, radius=-1,
+                                     fillType=0, fillValue=5 )
+        protMask1.inputParticles.set(self.protImport.outputParticles)
+        protMask1.setObjLabel('circular mask')
+        self.launchProtocol(protMask1)
+        self.assertAlmostEquals(protMask1.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        self.assertIsNotNone(protMask1.outputParticles, "There was a problem with apply circular mask for particles")
+    
+    def testApplyBoxMask(self):
+        print "Run apply box mask for particles"
+        protMask2 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=1, boxSize=-1,
+                                     fillType=1 )
+        protMask2.inputParticles.set(self.protImport.outputParticles)
+        protMask2.setObjLabel('box mask')
+        self.launchProtocol(protMask2)
+        self.assertAlmostEquals(protMask2.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        self.assertIsNotNone(protMask2.outputParticles, "There was a problem with apply boxed mask for particles")
+    
+    def testApplyCrownMask(self):
+        print "Run apply crown mask for particles"
+        protMask3 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=2, innerRadius=2, outerRadius=12,
+                                     fillType=2 )
+        protMask3.inputParticles.set(self.protImport.outputParticles)
+        protMask3.setObjLabel('crown mask')
+        self.launchProtocol(protMask3)
+        self.assertAlmostEquals(protMask3.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        self.assertIsNotNone(protMask3.outputParticles, "There was a problem with apply crown mask for particles")
+        
+    def testApplyGaussianMask(self):
+        print "Run apply gaussian mask for particles"
+        protMask4 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=3, sigma=-1,
+                                     fillType=3 )
+        protMask4.inputParticles.set(self.protImport.outputParticles)
+        protMask4.setObjLabel('gaussian mask')
+        self.launchProtocol(protMask4)
+        self.assertAlmostEquals(protMask4.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        self.assertIsNotNone(protMask4.outputParticles, "There was a problem with apply gaussian mask for particles")
+        
+    def testApplyRaisedCosineMask(self):
+        print "Run apply raised cosine mask for particles"
+        protMask5 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=4, innerRadius=2, outerRadius=12,
+                                     fillType=0, fillValue=5 )
+        protMask5.inputParticles.set(self.protImport.outputParticles)
+        protMask5.setObjLabel('raised cosine mask')
+        self.launchProtocol(protMask5)
+        self.assertAlmostEquals(protMask5.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        self.assertIsNotNone(protMask5.outputParticles, "There was a problem with apply raised cosine mask for particles")
+        
+    def testApplyRaisedCrownMask(self):
+        print "Run apply raised crown mask for particles"
+        protMask6 = self.newProtocol(XmippProtMaskParticles,
+                                     source=0, geo=5, innerRadius=2, outerRadius=12, borderDecay=2,
+                                     fillType=1 )
+        protMask6.inputParticles.set(self.protImport.outputParticles)
+        protMask6.setObjLabel('raised crown mask')
+        self.launchProtocol(protMask6)
+        self.assertAlmostEquals(protMask6.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        
+        self.assertIsNotNone(protMask6.outputParticles, "There was a problem with apply raised crown mask for particles")
+        Mask
+    def testApplyUserMask(self):
+        print "Run apply user mask for particles"
+        # Create MASK
+        protMask01 = self.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate=1.237, 
+                                     size=20, 
+                                     geo=0, radius=-1 )
+        protMask01.setObjLabel('circular mask')
+        self.launchProtocol(protMask01)
+        self.assertIsNotNone(protMask01.outputMask, "There was a problem with apply user custom mask for particles")
+        # Apply MASK
+        protMask02 = self.newProtocol(XmippProtMaskParticles,
+                                     source=1,
+                                     fillType=1 )
+        protMask02.inputParticles.set(self.protImport.outputParticles)
+        protMask02.inputMask.set(protMask01.outputMask)
+        protMask02.setObjLabel('user custom mask')
+        self.launchProtocol(protMask02)
+        self.assertAlmostEquals(protMask02.outputParticles.getSamplingRate(), 
+                                self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for particles")
+        
+        self.assertIsNotNone(protMask02.outputParticles, "There was a problem with apply user custom mask for particles")
+        
+
 class TestXmippPreprocessParticles(TestXmippBase):
     """This class check if the protocol to preprocess particles in Xmipp works properly."""
     @classmethod
@@ -78,7 +253,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-    
+        
     def test_preprocessPart(self):
         print "Run Preprocess particles"
         protPreproc = self.newProtocol(XmippProtPreprocessParticles, 
@@ -89,6 +264,15 @@ class TestXmippPreprocessParticles(TestXmippBase):
         protPreproc.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protPreproc)
         
+        if self.protImport.outputParticles.hasAlignment():
+            from itertools import izip
+            for x, y in izip(self.protImport.outputParticles.get(), protPreproc.outputParticles.get()):
+                print "compare ", x , " with ", y
+                self.assertEquals(x.getAlignment(), y.getAlignment(), "Alignment wrong")
+                
+        self.assertAlmostEquals(protPreproc.outputParticles.getSamplingRate(), 
+                          self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate in the preprocess particles")
+
         self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
 
 

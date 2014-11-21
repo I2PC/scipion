@@ -75,7 +75,7 @@ class EmanProtBoxing(ProtParticlePicking):
 
         # Open dialog to request confirmation to create output
         if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
-
+            self._leaveDir()# going back to project dir
             self._createOutput(self.getWorkingDir())
         
 
@@ -85,11 +85,11 @@ class EmanProtBoxing(ProtParticlePicking):
         simulating an particle picking run...this is only
         for testing purposes.
         """
-
-        print "COPYTREE from %s TO %s" % (self.importFolder.get(), os.getcwd())
+        cwd = os.getcwd()
+        print "COPYTREE from %s TO %s" % (self.importFolder.get(), cwd)
         copyTree(self.importFolder.get(), os.getcwd())
-        
-        self._createOutput()
+        self._leaveDir()# going back to project dir
+        self._createOutput(cwd)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
@@ -104,8 +104,7 @@ class EmanProtBoxing(ProtParticlePicking):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
 
-    def _methods(self):
-        return ProtParticlePicking._methods(self)
+
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMics, coordSet)

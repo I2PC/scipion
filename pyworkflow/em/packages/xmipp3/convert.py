@@ -38,7 +38,8 @@ import numpy
 import xmipp
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
-from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt
+from pyworkflow.utils.path import join, dirname, replaceBaseExt, removeExt,\
+    findRootFrom
 
 
 # This dictionary will be used to map
@@ -58,6 +59,13 @@ CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
        ("_defocusAngle", xmipp.MDL_CTF_DEFOCUS_ANGLE)
+       ])
+
+CTF_PSD_DICT = OrderedDict([
+       ("_psdFile", xmipp.MDL_PSD),
+       ("_xmipp_enhanced_psd", xmipp.MDL_PSD_ENHANCED),
+       ("_xmipp_ctfmodel_quadrant", xmipp.MDL_IMAGE1),
+       ("_xmipp_ctfmodel_halfplane", xmipp.MDL_IMAGE1)
        ])
 
 CTF_EXTRA_LABELS = [   
@@ -145,6 +153,8 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    row.setValue(xmipp.MDL_ENABLED, obj.isEnabled())
+    
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
@@ -169,6 +179,8 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    obj.setEnabled(row.getValue(xmipp.MDL_ENABLED, True))
+    
     for attr, label in attrDict.iteritems():
         value = row.getValue(label)
         if not hasattr(obj, attr):
@@ -476,12 +488,23 @@ def defocusGroupSetToRow(defocusGroup, defocusGroupRow):
     objectToRow(defocusGroup, defocusGroupRow, CTF_DICT)
 
 
+def setPsdFiles(ctfModel, ctfRow):
+    """ Set the PSD files of CTF estimation related
+    to this ctfModel. The values will be read from
+    the ctfRow if present.
+    """
+    for attr, label in CTF_PSD_DICT.iteritems():
+        if ctfRow.containsLabel(label):
+            setattr(ctfModel, attr, String(ctfRow.getValue(label)))
+
+
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a metadata. """
     if _containsAll(ctfRow, CTF_DICT):
         ctfModel = CTFModel()
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
+        setPsdFiles(ctfModel, ctfRow)
     else:
         ctfModel = None
         
