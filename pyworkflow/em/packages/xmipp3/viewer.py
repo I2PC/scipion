@@ -60,6 +60,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs, XmippProtRecalculateCTF
 from pyworkflow.em.showj import *
+from protocol_movie_alignment import ProtMovieAlignment
 
 
 class XmippViewer(Viewer):
@@ -90,7 +91,8 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                XmippProtRecalculateCTF
+                XmippProtRecalculateCTF,
+                ProtMovieAlignment
                 ]
     
     def __init__(self, **args):
@@ -329,6 +331,11 @@ class XmippViewer(Viewer):
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
             runJavaIJapp("%dg" % obj.memory.get(), app, args)
+        elif issubclass(cls, ProtMovieAlignment):
+            outputMics = self.protocol.outputMicrographs
+            objCommands = '%s %s %s' % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
+            self._views.append(ObjectView(self._project.getName(), outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands}))
+
             
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)

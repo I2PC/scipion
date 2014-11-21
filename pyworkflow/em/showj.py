@@ -63,6 +63,9 @@ SORT_BY = 'sortby'
 OBJCMDS = 'object_commands'
 OBJCMD_NMA_PLOTDIST = "'Plot distance profile'"
 OBJCMD_NMA_VMD = "'Display VMD animation'"
+OBJCMD_MOVIE_ALIGNPOLAR = "'Display Polar Presentation'"
+OBJCMD_MOVIE_ALIGNCARTESIAN = "'Display Cartesian Presentation'"
+OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "'Display Polar + Cartesian Presentations'"
 
 GOTO = 'goto'
 ROWS = 'rows'
