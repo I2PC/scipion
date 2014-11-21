@@ -123,10 +123,10 @@ class EMProtocol(Protocol):
         # A transform relation allways implies a source relation
         self._defineSourceRelation(srcObj, dstObj)
         
-    def _defineCtfRelation(self, srcObj, dstObj):
-        self._defineRelation(RELATION_CTF, srcObj, dstObj)
+    def _defineCtfRelation(self, micsObj, ctfsObj):
+        self._defineRelation(RELATION_CTF, micsObj, ctfsObj)
         # A ctf relation allways implies a source relation
-        self._defineSourceRelation(srcObj, dstObj)
+        self._defineSourceRelation(micsObj, ctfsObj)
     
     def _insertChild(self, key, child):
         if isinstance(child, Set):
