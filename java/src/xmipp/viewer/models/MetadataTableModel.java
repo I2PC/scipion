@@ -245,8 +245,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return true;
 			}
 		} catch (Exception e) {
-                        e.printStackTrace();
-                        XmippDialog.showError(null, e.getMessage());
+                        if(e.getMessage() == null)
+                            e.printStackTrace();
+                        else
+                            XmippDialog.showError(null, e.getMessage());
 			
 		}
 		return false;

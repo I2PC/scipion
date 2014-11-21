@@ -30,9 +30,11 @@ import java.util.ArrayList;
 import java.util.List;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
+import xmipp.ij.commons.XmippMenuBar;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
 import xmipp.viewer.windows.ImagesWindowFactory;
@@ -51,7 +53,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	{
 		super(data);
 		data.normalize = false;
-
 	}
 
 	/** Update the columns display information */
@@ -146,29 +147,22 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		{
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
-			for (int i = 0; i < data.ids.length; ++i)
-			{
-				String imageFn = getImageFilename(i, renderLabel.label);
-				if (imageFn != null && Filename.exists(imageFn))
-				{
-					try
-					{
-						image = new ImageGeneric(imageFn);
-						dim = new ImageDimension(image);
-						break;
-					}
-					catch (Exception e)
-					{
-						dim = null;
-					}
-				}
-			}
+			String imageFn = data.getSampleImage(renderLabel);
+                        if(imageFn != null)
+                            try
+                            {
+                                    image = new ImageGeneric(imageFn);
+                                    dim = new ImageDimension(image);
+                            }
+                            catch (Exception e)
+                            {
+                                    dim = null;
+                            }
 		}
 
 		if (dim == null)
 			dim = new ImageDimension(30);
 		dim.setZDim(data.ids.length);
-
 		return dim;
 	}
 
@@ -274,6 +268,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
         protected void openXmippImageWindow(int index, int label)
         {
                 String file = getImageFilename(index, label);
+                if(file == null)
+                    throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(data.getValueFromLabel(index, label)));
                 ImagePlusLoader loader = new ImagePlusLoader(file, data.useGeo, data.wrap);
                 if(data.containsGeometryInfo())
                     loader.setGeometry(data.getGeometry(data.ids[index]));

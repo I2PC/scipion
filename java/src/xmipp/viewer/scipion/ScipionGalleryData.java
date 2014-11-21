@@ -406,7 +406,8 @@ public class ScipionGalleryData extends GalleryData {
      /**
      * Return true if current file is a rotspectra classes
      */
-    public boolean isRotSpectraMd() {
+    public boolean isRotSpectraMd() 
+    {
         GalleryData.RotSpectra rs = getRotSpectra();
         if (rs != null) {
             boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);

@@ -50,7 +50,7 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
-import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.ImageDimension;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
@@ -465,7 +465,7 @@ public class GalleryData {
             if (!renderLabel.equalsIgnoreCase("first")) {
                 inputRenderLabel = MetaData.str2Label(renderLabel);
             }
-
+            String sampleImage;
             for (int i = 0; i < labelids.length; ++i) {
                 ci = initColumnInfo(labelids[i]);
                 if (labels != null) {
@@ -485,9 +485,10 @@ public class GalleryData {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                if (ciFirstRender == null && ci.allowRender)
+                sampleImage = getSampleImage(ci);
+                if (ciFirstRender == null && ci.allowRender &&  sampleImage != null)
                     ciFirstRender = ci;
-                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible) 
+                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible  &&  sampleImage != null) 
                     ciFirstRenderVisible = ci;
             }
             if (ciFirstRenderVisible != null) {
@@ -513,6 +514,21 @@ public class GalleryData {
             e.printStackTrace();
         }
     }// function loadLabels
+    
+    public String getSampleImage(ColumnInfo ci)
+    {
+        String imageFn, mddir = md.getBaseDir();
+        for (int i = 0; i < ids.length; ++i)
+        {
+                imageFn = getValueFromLabel(i, ci.label);
+                imageFn = Filename.findImagePath(imageFn, mddir, true);
+                if (imageFn != null && Filename.exists(imageFn))
+                {
+                       return imageFn;
+                }
+        }
+        return null;
+    }
     
     public ColumnInfo initColumnInfo(int label)
     {
