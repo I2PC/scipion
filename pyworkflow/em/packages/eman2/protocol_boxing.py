@@ -104,8 +104,7 @@ class EmanProtBoxing(ProtParticlePicking):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
 
-    def _methods(self):
-        return ProtParticlePicking._methods(self)
+
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMics, coordSet)
