@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez BLanco (jgomez@cnb.csic.es)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -47,6 +48,15 @@ estimate CTF on a set of micrographs using ctffind """
             errors.append('Missing ctffind3.exe')
         return errors
     
+    def _citations(self):
+        return ['Mindell2003']
+
+    def _methods(self):
+        str="We calculated the CTF using CtfFind [Midell2003]."
+        if self.methodsInfo.hasValue():
+            str+=" "+self.methodsInfo.get()
+        return [str]
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getPsdPath(self, micDir):
         return join(micDir, 'ctffind_psd.mrc')
@@ -66,15 +76,6 @@ estimate CTF on a set of micrographs using ctffind """
         ctf.setPsdFile(psdFile)
         
         return ctf
-    
-    def _citations(self):
-        return ['Mindell2003']
-
-    def _methods(self):
-        str="We calculated the CTF using CtfFind [Midell2003]."
-        if self.methodsInfo.hasValue():
-            str+=" "+self.methodsInfo.get()
-        return [str]
 
 class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     """Estimates CTF on a set of micrographs
@@ -86,22 +87,28 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         """ Run ctffind3 with required parameters """
         # Create micrograph dir 
         makePath(micDir)
+        downFactor = self.ctfDownFactor.get()
         
-        if getExt(micFn) != ".mrc":
-            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc")) 
-            ImageHandler().convert(micFn, micFnMrc, "float")
-        else: 
-            micFnMrc = micFn
+        micFnMrc = self._getTmpPath(replaceBaseExt(micFn, 'mrc'))
+        if downFactor != 1:
+            #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
+            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor))
+        else:
+            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
+            ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
+        
         
         # Update _params dictionary
         self._params['micFn'] = micFnMrc
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = self._getCtfOutPath(micDir)
         self._params['ctffindPSD'] = self._getPsdPath(micDir)
-        self.runJob(self._program, self._args % self._params)
+        try:
+            self.runJob(self._program, self._args % self._params)
+        except Exception:
+            break
         
-        if getExt(micFn) != ".mrc":
-            cleanPattern(micFnMrc)
+        cleanPath(micFnMrc)
     
     def createOutputStep(self):
         ctfSet = self._createSetOfCTF()
@@ -165,11 +172,8 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         
         cleanPath(out)
         cleanPath(psdFile)
-        if getExt(micFn) != ".mrc":
-            micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc")) 
-            ImageHandler().convert(micFn, micFnMrc)
-        else: 
-            micFnMrc = micFn
+        micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
+        ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
 
         # Update _params dictionary
         self._prepareCommand(line)
@@ -177,9 +181,13 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = out
         self._params['ctffindPSD'] = psdFile
-        self.runJob(self._program, self._args % self._params)
-        if getExt(micFn) != ".mrc":
-            cleanPattern(micFnMrc)
+        
+        try:
+            self.runJob(self._program, self._args % self._params)
+        except Exception:
+            break
+        
+        cleanPattern(micFnMrc)
     
     def _createNewCtfModel(self, mic):
         micDir = self._getMicrographDir(mic)                    
