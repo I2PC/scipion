@@ -34,6 +34,7 @@ _references = ['delaRosaTrevin2013', 'Sorzano2013']
 
 from xmipp3 import *
 from convert import *
+from dataimport import *
 
 # some sub-packages
 from nma import *
