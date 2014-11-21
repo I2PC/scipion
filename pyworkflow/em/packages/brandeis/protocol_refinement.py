@@ -33,7 +33,7 @@ from data import *
 from brandeis import *
 from constants import *
 from protocol_frealign_base import ProtFrealignBase
-
+from pyworkflow.em.packages.brandeis.convert import readSetOfParticles
 
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     """ Protocol to refine a 3D map using Frealign. The algorithms implemented
@@ -48,15 +48,33 @@ reconstructions.
         ProtFrealignBase.__init__(self, **args)
     
     def createOutputStep(self):
-        lastIterDir = self._iterWorkingDir(self._getLastIter())
-        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % (self._getLastIter()))
+        lastIter = self._getLastIter()
+        inputSet = self.inputParticles.get()
+        inputRef = self.input3DReference.get()
+        lastIterDir = self._iterWorkingDir(lastIter)
+
+        # Register output volume
+        volFn = join(lastIterDir, 'volume_iter_%03d.mrc' % lastIter)
         vol = Volume()
-        vol.setSamplingRate(self.inputParticles.get().getSamplingRate())
+        vol.setSamplingRate(inputSet.getSamplingRate())
         vol.setFileName(volFn)
         self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(inputSet, vol)
+        self._defineSourceRelation(inputRef, vol)
+
+        # Register output Particles with their 3D alignment
         #TODO: save alignment
-        self._defineSourceRelation(self.inputParticles.get(), vol)
-        self._defineSourceRelation(self.input3DReference.get(), vol)
+        #read last alignment file
+        file2 = self._getFileName('output_par', iter=lastIter)
+        partSet = self._createSetOfParticles()
+        partSet.copyInfo(inputSet)
+        readSetOfParticles(inputSet, partSet, file2)
+        self._defineOutputs(outputParticles=partSet)
+        self._defineTransformRelation(inputSet, partSet)
+        self._defineSourceRelation(inputRef, partSet)
+
+        #convert to scipion
+
         print "SAVE ALIGNMENT INFORMATION"
 
     #--------------------------- INFO functions ----------------------------------------------------
