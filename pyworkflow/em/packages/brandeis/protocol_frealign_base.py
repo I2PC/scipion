@@ -710,7 +710,7 @@ class ProtFrealignBase(EMProtocol):
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if not imgSet.hasAlignment() and self.useInitialAngles.get():
+        if not imgSet.hasAlignment3D() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
     
@@ -1125,7 +1125,7 @@ eot
         
         # get alignment parameters for each particle
         from convert import geometryFromMatrix
-        shifts, angles = geometryFromMatrix(img.getAlignment())
+        shifts, angles = geometryFromMatrix(img.getAlignment().getMatrix())
         #TODO: check if can use shiftZ
         shiftX, shiftY, _ = shifts * img.getSamplingRate()
         psi, theta, phi = angles
