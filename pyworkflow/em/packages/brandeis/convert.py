@@ -31,9 +31,11 @@ This module contains converter functions that will serve to:
 2. Read from Grigo packs files to base classes
 """
 
-from brandeis import *
+import numpy
 from collections import OrderedDict
-from itertools import izip
+#from itertools import izip
+
+from brandeis import *
 
 HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',
@@ -46,7 +48,7 @@ class FrealignParFile(object):
         self._file = open(filename, mode)
         self._count = 0
 
-    def iterValues(self):
+    def __iter__(self):
         """PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE
         """
         for line in self._file:
@@ -68,16 +70,17 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
      It is assumed that the order of iteration of the particles
      and the lines match and have the same number.
     """
+    samplingRate = inputSet.getSamplingRate()
     parFile = FrealignParFile(parFileName)
     for particle, row in izip(inputSet, parFile):
-        particle.setAlignment(rowToAlignment(row))
+        particle.setAlignment(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
         rowToCtfModel(row, particle.getCTF())
         outputSet.append(particle)
 
 
-def rowToAlignment(alignmentRow):
+def rowToAlignment(alignmentRow, samplingRate):
     """
     Return an Alignment object from a given parFile row.
     """
@@ -88,8 +91,8 @@ def rowToAlignment(alignmentRow):
     angles[0] = float(alignmentRow.get('PSI'))
     angles[1] = float(alignmentRow.get('THETA'))
     angles[2] = float(alignmentRow.get('PHI'))
-    shifts[0] = float(alignmentRow.get('SHX'))
-    shifts[1] = float(alignmentRow.get('SHY'))
+    shifts[0] = float(alignmentRow.get('SHX'))/samplingRate
+    shifts[1] = float(alignmentRow.get('SHY'))/samplingRate
 
     M = matrixFromGeometry(shifts, angles)
     alignment.setMatrix(M)
@@ -100,6 +103,7 @@ def matrixFromGeometry(shifts, angles):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
+    inverseTransform = True
     from pyworkflow.em.transformations import euler_matrix
     from numpy import deg2rad
     radAngles = -deg2rad(angles)
@@ -112,10 +116,6 @@ def matrixFromGeometry(shifts, angles):
     else:
         M[:3, 3] = shifts[:3]
 
-    if flip:
-        #M[0,:4]*=-1.
-        M[0,:3]*=-1.
-        M[3][3]*=-1.
     return M
 
 def rowToCtfModel(ctfRow, ctfModel):
