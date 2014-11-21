@@ -24,11 +24,12 @@
 # *
 # **************************************************************************
 
-from os.path import join, basename
+from os.path import join, basename, dirname
 
-from pyworkflow.utils.path import findRootFrom
-from pyworkflow.em.packages.xmipp3.convert import readSetOfMicrographs
+from pyworkflow.utils.path import findRootFrom, copyTree, createLink
+from pyworkflow.em.packages.xmipp3.convert import readSetOfMicrographs, CTF_PSD_DICT
 from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
+from pyworkflow.em.packages.xmipp3 import XmippMdRow
 
 import xmipp
 
@@ -53,6 +54,7 @@ class XmippImport():
         self._findPathAndCtf(micsMd)
         micSet = self.protocol._createSetOfMicrographs()
         micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % micsMd)
+        
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(micSet)
@@ -63,6 +65,17 @@ class XmippImport():
                            preprocessImageRow=self._preprocessImageRow, 
                            readAcquisition=False)
         self.protocol._defineOutputs(outputMicrographs=micSet)
+        
+        # Also create a SetOfCTF if the present
+        if self._ctfPath:
+            ctfSet = self.protocol._createSetOfCTF()
+            for mic in micSet:
+                ctf = mic.getCTF()
+                ctf.copyObjId(mic)
+                ctfSet.append(ctf)
+                
+            self.protocol._defineOutputs(outputCTF=ctfSet)
+            self.protocol._defineCtfRelation(micSet, ctfSet)
         
     def _findPathAndCtf(self, micsMd):
         """ Find the relative path from which the micrographs exists
@@ -80,7 +93,11 @@ class XmippImport():
         self._micsPath = findRootFrom(micsMd, row.getValue(xmipp.MDL_MICROGRAPH))
         if self._micsPath is None:
             self.protocol.warning("Micrographs binary data was not found from metadata: %s" % micsMd)
-        self._hasCtf = row.containsLabel(xmipp.MDL_CTF_MODEL)
+        
+        if row.containsLabel(xmipp.MDL_CTF_MODEL):
+            self._ctfPath = findRootFrom(micsMd, row.getValue(xmipp.MDL_CTF_MODEL))
+        else:
+            self._ctfPath = None # means no CTF info from micrographs metadata
     
         
     def _preprocessImageRow(self, img, imgRow):
@@ -92,6 +109,34 @@ class XmippImport():
             micDst = self.protocol._getExtraPath(micBase)
             self.copyOrLink(join(self._micsPath, micFile), micDst)
             imgRow.setValue(xmipp.MDL_MICROGRAPH, micDst)
+            
+        if self._ctfPath:
+            # Read Xmipp ctfModel parameters and add
+            # to the original micrograph row
+            ctfFile = imgRow.getValue(xmipp.MDL_CTF_MODEL) 
+            ctfPath = join(self._micsPath, ctfFile)
+            ctfRow = XmippMdRow()
+            ctfRow.readFromFile(ctfPath)
+            imgRow.copyFromRow(ctfRow)
+            # Also copy or link to the result micrograph 
+            # folder output by Xmipp containing the PSD and other images
+            ctfSrcDir = dirname(ctfPath)
+            ctfBaseDir = basename(ctfSrcDir)
+            ctfDstDir = self.protocol._getExtraPath(ctfBaseDir)
+            
+            if self.copyOrLink == createLink:
+                createLink(ctfSrcDir, ctfDstDir)
+            else: # use copyTree instead of copyFile
+                copyTree(ctfSrcDir, ctfDstDir)
+            # Fix the path to psd files
+            for label in CTF_PSD_DICT.values():
+                filePath = imgRow.getValue(label)
+                # Take the last part of the path including
+                # the filename and the folder up to that
+                fileName = basename(filePath)
+                newFilePath = join(ctfDstDir, fileName)
+                imgRow.setValue(label, newFilePath)
+            
     
     def _postprocessImageRow(self, img, imgRow):
         pass  
