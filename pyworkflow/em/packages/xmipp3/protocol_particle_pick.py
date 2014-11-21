@@ -135,8 +135,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     
         return msg
     
-    def _methods(self):
-        return self.getMethods()
+
 
     
     def _summary(self):
@@ -145,14 +144,20 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         else:
             return self.getSummary()
 
+    def _methods(self):
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._methods(self)
+        else:
+            return [self.getMethods(None)]
+
 
 
     
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
     
-    def getMethods(self):
-        methodsMsgs = []
+    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
+
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         if existsConfig:
@@ -163,10 +168,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             isAutopick = pickingState != "Manual"
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
             autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
-            methodsMsgs.append('User picked %d particles from %d micrographs with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, self.inputMicrographs.get().getSize(), particleSize))
+            msg = 'User picked %d particles with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, particleSize)
             if isAutopick:
-                methodsMsgs.append("Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize))
-        return methodsMsgs
+                msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
+        return msg
 
     def getSummary(self):
 
@@ -183,11 +188,11 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
             autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
 
-            summary.append("Manual particles picked: %d"%(manualParticlesSize))
+            summary.append("Manual particles picked: %d"%manualParticlesSize)
             summary.append("Particle size:%d" %(particleSize))
             autopick = "Yes" if isAutopick else "No"
             summary.append("Autopick: " + autopick)
             if isAutopick:
-                summary.append("Automatic particles picked: %d"%(autoParticlesSize))
+                summary.append("Automatic particles picked: %d"%autoParticlesSize)
             summary.append("Last micrograph: " + activeMic)
-        return summary
+        return "\n".join(summary)
