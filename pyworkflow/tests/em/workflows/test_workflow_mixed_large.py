@@ -23,14 +23,14 @@ class TestMixedRelionTutorial(TestWorkflow):
     def test_workflow(self):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRateMode=1, magnification=79096,
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRateMode=1, magnification=79096,
                                            scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import 20 mics')
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
         
         print "Importing a volume..."
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol, samplingRate=7.08)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol, samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
@@ -122,14 +122,14 @@ class TestMixedFrealignClassify(TestWorkflow):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
         #TODO missing contrst amplitude ROB
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRateMode=1, magnification=79096,
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRateMode=1, magnification=79096,
                                            scannedPixelSize=56, voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import 20 mics')
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
         
         print "Importing a volume..."
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol, samplingRate=7.08)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol, samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")

@@ -1,6 +1,11 @@
-<script>
+ <script>
+function getModeList(){return "image";}
+ 
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
+	
+	// Update the variable to know the old mode used
+	$("input#oldModeShowj").val(mode)
 	
 	// Mark the selected items in the template
 	var listSelectedItems = [{{listSelectedItems}}];
@@ -14,7 +19,7 @@ $(document).ready(function(){
 	
 	// Update the ListChanges html variable
  	$("input#listChangesItems").val("");
- 	
+
  	
 	/* ---- MODE TABLE UTILS ---------------*/
 	//Update the enabled/selected items in the template between pagination

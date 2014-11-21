@@ -105,8 +105,10 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         
         if self.isPhaseFlipped:
             partSet.setIsPhaseFlipped(True)
+        
         if self.hasAlignment:
-            partSet.setHasAlignment(True)
+            #FIXME: Detect 2D or 3D alignment
+            partSet.setAlignment3D()
         
         return partSet   
     

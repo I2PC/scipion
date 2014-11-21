@@ -39,8 +39,11 @@ def getMdFirstRow(filename):
     """
     md = xmipp.MetaData()
     md.read(filename, 1)
-    row = XmippMdRow()
-    row.readFromMd(md, md.firstObject())
+    if md.getParsedLines():
+        row = XmippMdRow()
+        row.readFromMd(md, md.firstObject())
+    else:
+        row = None
     
     return row
 

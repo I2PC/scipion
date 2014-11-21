@@ -19,7 +19,7 @@ class HighThroughputTest(TestWorkflow):
     def test_workflow(self):
         #First, import a set of movies
         print "Importing a set of movies..."
-        protImport = ProtImportMovies(pattern=self.movies, samplingRate=2.37, magnification=59000,
+        protImport = ProtImportMovies(filesPath=self.movies, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)

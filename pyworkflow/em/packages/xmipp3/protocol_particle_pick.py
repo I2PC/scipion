@@ -40,7 +40,7 @@ from convert import writeSetOfMicrographs, readSetOfCoordinates
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
 
     """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using automatic picking support  """
+    either manually or using automatic picking support. Particles will be used in order to reconstruct a 3D molecule from it's 2D projections. """
     _label = 'supervised picking'
 
     
@@ -52,10 +52,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
     
-        form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
-                      pointerClass='SetOfMicrographs',
-                      help='Select the SetOfMicrograph ')
+        ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)  
               
@@ -81,8 +78,8 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
         else: # This is only used for test purposes
             self._insertFunctionStep('_importFromFolderStep')       
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep')
+            # Insert step to create output objects
+            self._insertFunctionStep('createOutputStep')
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -119,7 +116,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         coordSet = self._createSetOfCoordinates(self.inputMics)
         readSetOfCoordinates(posDir, self.inputMics, coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
-        
         self._defineSourceRelation(self.inputMics, coordSet)
         
 
@@ -139,37 +135,64 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     
         return msg
     
-    def _methods(self):
-        return ProtParticlePicking._methods(self)
+
+
     
     def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputCoordinates'):
-            summary.append("Output coordinates not ready yet.") 
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._summary(self)
         else:
-            for key, output in self.iterOutputAttributes(EMObject):
-                summary.append("Particles picked: %d (from %d micrographs)" % (output.getSize(), self.inputMicrographs.get().getSize()))
-                summary.append("Particle size:%d" % output.getBoxSize())
+            return self.getSummary()
 
-            configfile = join(self._getExtraPath(), 'config.xmd')
-            if exists(configfile):      
-                md = xmipp.MetaData('properties@' + configfile)
-                configobj = md.firstObject()
-                state = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
-                if(state is "Manual"):
-                    autopick = "No"
-                else:
-                    autopick = "Yes"
-                activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-                
-                summary.append("Autopick: " + autopick)
-                summary.append("Last micrograph: " + activemic)
-        
-        return summary
+    def _methods(self):
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._methods(self)
+        else:
+            return [self.getMethods(None)]
+
+
+
     
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
     
-    
-    
+    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
 
+        configfile = join(self._getExtraPath(), 'config.xmd')
+        existsConfig = exists(configfile)
+        if existsConfig:
+            md = xmipp.MetaData('properties@' + configfile)
+            configobj = md.firstObject()
+            pickingState = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
+            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            isAutopick = pickingState != "Manual"
+            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+            msg = 'User picked %d particles with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, particleSize)
+            if isAutopick:
+                msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
+        return msg
+
+    def getSummary(self):
+
+        summary = []
+        configfile = join(self._getExtraPath(), 'config.xmd')
+        existsConfig = exists(configfile)
+        if existsConfig:
+            md = xmipp.MetaData('properties@' + configfile)
+            configobj = md.firstObject()
+            pickingState = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
+            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            activeMic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+            isAutopick = pickingState != "Manual"
+            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+
+            summary.append("Manual particles picked: %d"%manualParticlesSize)
+            summary.append("Particle size:%d" %(particleSize))
+            autopick = "Yes" if isAutopick else "No"
+            summary.append("Autopick: " + autopick)
+            if isAutopick:
+                summary.append("Automatic particles picked: %d"%autoParticlesSize)
+            summary.append("Last micrograph: " + activeMic)
+        return "\n".join(summary)

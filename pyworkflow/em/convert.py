@@ -33,6 +33,7 @@ import xmipp
 from constants import *
 
 # TODO: remove dependency from Xmipp
+DT_FLOAT = xmipp.DT_FLOAT
 
 
 class ImageHandler(object):
@@ -70,13 +71,16 @@ class ImageHandler(object):
         
         return outLocation
         
-    def convert(self, inputObj, outputObj):
+    def convert(self, inputObj, outputObj, dataType=None):
         """ Convert from one image to another.
         inputObj and outputObj can be: tuple, string, or Image subclass 
         (see self._convertToLocation)
         """
         # Read from input
         self._img.read(self._convertToLocation(inputObj))
+        
+        if dataType is not None:
+            self._img.convert2DataType(dataType)
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
         

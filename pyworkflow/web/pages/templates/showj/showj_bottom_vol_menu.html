@@ -1,48 +1,25 @@
 <script>
+function getModeList(){return "volume";}
+
 $(document).ready(function(){
 	var mode = document.forms['showjForm'].mode.value
 	
-	// Mark the selected item in the template
-// 	var selectedItem = [{{selectedItem}}];
-//  	$("input#selectedItem").val(selectedItem)
-// 	markSelectedItem(mode, selectedItem)
+	// Update the variable to know the old mode used
+	$("input#oldModeShowj").val(mode)
 	
-// 	// Update the enabled items in the template
-// 	var listEnabledItems = [{{listEnabledItems}}];
-//  	$("input#listEnabledItems").val(listEnabledItems)
-// 	updateEnabledItems(mode, listEnabledItems)
-	
-// 	// Update the ListChanges html variable
-//  	$("input#listChangesItems").val("");
- 	
- 	
-// 	/* ---- MODE TABLE UTILS ---------------*/
-// 	//Update the enabled/selected items in the template between pagination
-//  	$("div.dataTables_paginate").click(function(){
-//  		initializeMultipleSelectionTool() //showj_table_utils.js
-//  		applyChangesToUpdate() //showj_menu_utils.js
-//  	});
- 	
-//  	// Update the enabled/selected items in the template after change size of  
-//  	// the elements to show. 
-//  	$("div#data_table_length > label > select").change(function(){
-//  		initializeMultipleSelectionTool() //showj_table_utils.js
-//  		applyChangesToUpdate() //showj_menu_utils.js
-//  	});
- 	
+	var listSelectedItems = [{{listSelectedItems}}];
+ 	$("input#listSelectedItems").val(listSelectedItems)
+ 	console.log("selectedItems: " + listSelectedItems)
+
+	if (mode == "table"){
+	 	markSelectedItems(mode, listSelectedItems)
+	} else if (mode == "gallery"){
+// 		var index = $("select#id_volumesToRenderComboBox option:selected=selected").index()
+// 		var index = document.getElementById("select#id_volumesToRenderComboBox").selectedIndex
+// 		$("input#listSelectedItems").val(index+1)
+		
+// 		console.log("index: " + index)
+	}
 });
 </script>
 	
-	
-<!-- <div id="asideMainContainer"> -->
-<!-- 	<div id="createContainer" class="sectionMenu" style="float:right;"> -->
-<!-- 		<a id="saveButton" href="javascript:createSubset()" class="btn buttonRed" style="padding: 5px 10px;"> -->
-<!-- 			Create Subset -->
-<!-- 		</a> -->
-<!-- 	</div> -->
-
-<!-- 		<div class="sectionMenu"> -->
-<!-- 			<img src="/resources/showj/separator.png" class="menuIcon"> -->
-<!-- 		</div> -->
-
-<!-- </div>	 -->

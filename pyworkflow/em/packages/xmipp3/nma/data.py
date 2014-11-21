@@ -51,11 +51,20 @@ class Point():
     def getX(self):
         return self._data[self._container.XIND]
     
+    def setX(self, value):
+        self._data[self._container.XIND] = value
+    
     def getY(self):
         return self._data[self._container.YIND]
     
+    def setY(self, value):
+        self._data[self._container.YIND] = value
+        
     def getZ(self):
         return self._data[self._container.ZIND]
+        
+    def setZ(self, value):
+        self._data[self._container.ZIND] = value    
     
     def getWeight(self):
         return self._weight
@@ -87,16 +96,20 @@ class Point():
     
 class Data():
     """ Store data points. """
-    def __init__(self):
+    def __init__(self, **kwargs):
         # Indexes of data
-        self.XIND = 0
-        self.YIND = 1
-        self.ZIND = 2
-        self._points = []
+        self._dim = kwargs.get('dim') # The points dimentions
+        self.clear()
         
-    def addPoint(self, point):
+    def addPoint(self, point, position=None):
         point._container = self
-        self._points.append(point)
+        if position is None:
+            self._points.append(point)
+        else:
+            self._points.insert(position, point)
+            
+    def getPoint(self, index):
+        return self._points[index]
         
     def __iter__(self):
         for point in self._points:
@@ -127,15 +140,48 @@ class Data():
     
     def getDiscardedSize(self):
         return len([p for p in self.iterAll() if p.isDiscarded()])
+    
+    def clear(self):
+        self.XIND = 0
+        self.YIND = 1
+        self.ZIND = 2
+        self._points = []
 
 
-class PathData():
+class PathData(Data):
     """ Just contains two list of x and y coordinates. """
     
-    def __init__(self):
-        self.clear()
+    def __init__(self, **kwargs):
+        Data.__init__(self, **kwargs)
+    
+    def splitLongestSegment(self):
+        """ Split the longest segment by adding the midpoint. """
+        maxDist = 0
+        n = self.getSize()
+        # Find the longest segment and its index
+        for i in range(n-1):
+            p1 = self.getPoint(i)
+            x1, y1 = p1.getX(), p1.getY()
+            p2 = self.getPoint(i+1)
+            x2, y2 = p2.getX(), p2.getY()
+            dist = (x1-x2)**2 + (y1-y2)**2
+            if dist > maxDist:
+                maxDist = dist
+                maxIndex = i+1
+                midX = (x1+x2)/2
+                midY = (y1+y2)/2
+        # Add a midpoint to it
+        point = self.createEmptyPoint()
+        point.setX(midX)
+        point.setY(midY)
+        self.addPoint(point, position=maxIndex)
         
-    def clear(self):
-        self.xs = []  
-        self.ys = [] 
+    def createEmptyPoint(self):
+        data = [0.] * self._dim # create 0, 0...0 point
+        point = Point(0, data, 0)
+        point._container = self
         
+        return point
+    
+    def removeLastPoint(self):
+        del self._points[-1]

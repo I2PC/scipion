@@ -99,7 +99,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             stepId = self._insertFunctionStep('autopickMicrographStep', mic.getFileName(), prerequisites=[copyId])
             deps.append(stepId)
                     
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+        self._insertFunctionStep('_createOutput',self._getExtraPath(), prerequisites=deps)
         
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -139,13 +139,17 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             self.runJob("xmipp_micrograph_automatic_picking", args)
         
                   
-    def createOutputStep(self):
-        posDir = self._getExtraPath()
-        inputMicrographs = self.getInputMicrographs()
-        coordSet = self._createSetOfCoordinates(inputMicrographs)
-        readSetOfCoordinates(posDir, inputMicrographs, coordSet)
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(inputMicrographs, coordSet)
+    # def createOutputStep(self):
+    #     posDir = self._getExtraPath()
+    #     inputMicrographs = self.getInputMicrographs()
+    #     coordSet = self._createSetOfCoordinates(inputMicrographs)
+    #     readSetOfCoordinates(posDir, inputMicrographs, coordSet)
+    #     coordSet.setObjComment("\n".join(self.getSummary(coordSet)))
+    #     self._defineOutputs(outputCoordinates=coordSet)
+    #     self._defineSourceRelation(inputMicrographs, coordSet)
+
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
         
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -166,25 +170,18 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         return validateMsgs
     
     
-    def _summary(self):
+    def getSummary(self, coordSet):
         summary = []
-        if not getattr(self, 'outputCoordinates', None):
-            summary.append("Output coordinates not ready yet.") 
-        else:
-            summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
-            summary.append("Particles picked: %d (from %d micrographs)" % (self.outputCoordinates.getSize(), self.inputMicrographs.get().getSize()))
-            md = xmipp.MetaData('properties@' + join(self._getExtraPath(), 'config.xmd'))
-            configobj = md.firstObject()
-            size = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+        summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
+        summary.append("Particles picked: %d" % coordSet.getSize())
+        summary.append("Particle size:%d" % coordSet.getBoxSize())
             
-            summary.append("Particle size:%d" % size)
-            
-        return summary
+        return "\n".join(summary)
     
-    def _methods(self):
-        methodsMsgs = self.summary()
-        #TODO: Provide summary with more details
-        return methodsMsgs
+    def getMethods(self, output):
+        msg = 'Program picked %d particles of size %d using training from %s. For more detail see [Abrishami2013]' % (output.getSize(), output.getBoxSize(), self.xmippParticlePicking.get().getNameId())
+
+        return msg
     
     
     def _citations(self):

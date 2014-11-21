@@ -38,21 +38,24 @@ class PointPath():
     events to create a path of points. 
     It also allow to modify the point positions on the path.
     """
-    def __init__(self, ax, data, pathData, callback=None, tolerance=3):
+    def __init__(self, ax, data, pathData, callback=None, tolerance=3, maxPoints=10):
         self.ax = ax
         self.data = data
         plotArray2D(ax, self.data)
+        self.callback = callback
 
         self.dragIndex = None
         self.tolerance = tolerance
+        self.maxPoints = maxPoints
+        
         self.cidpress = ax.figure.canvas.mpl_connect('button_press_event', self.onClick)
         self.cidrelease = ax.figure.canvas.mpl_connect('button_release_event', self.onRelease)
         self.cidmotion = ax.figure.canvas.mpl_connect('motion_notify_event', self.onMotion)
         self.cidkey = ax.figure.canvas.mpl_connect('key_press_event', self.onKeyPress)
     
-        self.xs = pathData.xs
-        self.ys = pathData.ys
-        if len(self.xs): # this means there is a path
+        self.pathData = pathData
+        
+        if pathData.getSize(): # this means there is a path
             self.setState(STATE_ADJUST_POINTS)
             self.plotPath()
         else:
@@ -60,7 +63,7 @@ class PointPath():
             self.path_line = None
             self.path_points = None
             
-    def setState(self, state):
+    def setState(self, state, notify=False):
         self.drawing = state
         if state == STATE_NO_POINTS:
             self.ax.set_title('Double click to select first point of trajectory')
@@ -70,6 +73,9 @@ class PointPath():
             self.ax.set_title('Click and drag points to adjust trajectory.')
         else:
             raise Exception("Invalid PointPath state: %d" % state)
+        
+        if notify and self.callback:
+            self.callback()
         
     def onClick(self, event):
         if event.inaxes!=self.ax: 
@@ -89,27 +95,43 @@ class PointPath():
         
         if self.drawing == STATE_DRAW_POINTS:
             if doubleClick:
-                self.setState(STATE_ADJUST_POINTS)
+                self.setState(STATE_ADJUST_POINTS, notify=True)
             else:
-                self.xs.append(ex)
-                self.ys.append(ey)
-                if len(self.xs) == 1: # first point is added
+                point = self.pathData.createEmptyPoint()
+                point.setX(ex)
+                point.setY(ey)
+                self.pathData.addPoint(point)
+                
+                if self.pathData.getSize() == 1: # first point is added
                     self.plotPath()
                 else:
-                    self.path_line.set_data(self.xs, self.ys)
-                    self.path_points.set_data(self.xs, self.ys)
+                    xs, ys = self.getXYData()
+                    self.path_line.set_data(xs, ys)
+                    self.path_points.set_data(xs, ys)
                 self.ax.figure.canvas.draw()
+                
+                if self.pathData.getSize() == self.maxPoints:
+                    self.setState(STATE_ADJUST_POINTS, notify=True)
+                    
         
         if self.drawing == STATE_ADJUST_POINTS and not doubleClick: # Points moving state
             self.dragIndex = None
-            for i, (x, y) in enumerate(zip(self.xs, self.ys)):
+            for i, point in enumerate(self.pathData):
+                x = point.getX()
+                y = point.getY()
                 if sqrt((ex - x)**2 + (ey - y)**2) < self.tolerance:
                     self.dragIndex = i
                     break
           
+    def getXYData(self):
+        xs = self.pathData.getXData()
+        ys = self.pathData.getYData()
+        return xs, ys
+    
     def plotPath(self):
-        self.path_line, = self.ax.plot(self.xs, self.ys, alpha=0.75, color='green')
-        self.path_points, = self.ax.plot(self.xs, self.ys, 'o', color='red')  # 5 points tolerance, mark line points
+        xs, ys = self.getXYData()
+        self.path_line, = self.ax.plot(xs, ys, alpha=0.75, color='green')
+        self.path_points, = self.ax.plot(xs, ys, 'o', color='red')  # 5 points tolerance, mark line points
         
     def onMotion(self, event):
         if self.dragIndex is None or self.drawing < 2: 
@@ -119,26 +141,29 @@ class PointPath():
             return
         
         ex, ey = event.xdata, event.ydata
-        self.xs[self.dragIndex] = ex
-        self.ys[self.dragIndex] = ey
+        point = self.pathData.getPoint(self.dragIndex)
+        point.setX(ex)
+        point.setY(ey)
         self.update()
         
     def onRelease(self, event):
         self.dragIndex = None
         
     def onKeyPress(self, event):
-        if event.key == 'ctrl+z':
-            del self.xs[-1]
-            del self.ys[-1]
+        n = self.pathData.getSize()
+        
+        if event.key == 'ctrl+z' and n > 1:
+            self.pathData.removeLastPoint()
             
-        if not self.xs:
+        if n == 1: # Removed last point, change state appropriately
             self.setState(STATE_NO_POINTS)
             
         self.update()
         
     def update(self):
-        self.path_line.set_data(self.xs, self.ys)
-        self.path_points.set_data(self.xs, self.ys)
+        xs, ys = self.getXYData()
+        self.path_line.set_data(xs, ys)
+        self.path_points.set_data(xs, ys)
         self.ax.figure.canvas.draw()
         
         

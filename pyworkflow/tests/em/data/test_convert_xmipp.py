@@ -709,6 +709,7 @@ class TestSetConvert(BaseTest):
             p.setCTF(ctf)
             micSet.append(p)
             id = mdXmipp.addObject()
+            mdXmipp.setValue(xmipp.MDL_ENABLED, 1, id)
             mdXmipp.setValue(xmipp.MDL_ITEM_ID, long(i+1), id)
             mdXmipp.setValue(xmipp.MDL_MICROGRAPH, file, id)
             # set CTFModel params
@@ -768,6 +769,7 @@ class TestSetConvert(BaseTest):
             p.setAcquisition(acquisition)
             imgSet.append(p)
             id = mdXmipp.addObject()
+            mdXmipp.setValue(xmipp.MDL_ENABLED, 1, id)
             mdXmipp.setValue(xmipp.MDL_ITEM_ID, long(i+1), id)
             mdXmipp.setValue(xmipp.MDL_IMAGE, locationToXmipp(i+1, fn), id)
             # set CTFModel params
@@ -839,6 +841,7 @@ class TestSetConvert(BaseTest):
         objId = md.addObject()
         defocusGroupRow = XmippMdRow()
 
+        defocusGroupRow.setValue(xmipp.MDL_ENABLED, 1)
         defocusGroupRow.setValue(xmipp.MDL_CTF_GROUP, 1)
         defocusGroupRow.setValue(xmipp.MDL_MIN, 2000.)
         defocusGroupRow.setValue(xmipp.MDL_MAX, 2500.)
@@ -846,13 +849,14 @@ class TestSetConvert(BaseTest):
         defocusGroupRow.writeToMd(md, objId)
 
         objId = md.addObject()
+        defocusGroupRow.setValue(xmipp.MDL_ENABLED, 1)
         defocusGroupRow.setValue(xmipp.MDL_CTF_GROUP, 2)
         defocusGroupRow.setValue(xmipp.MDL_MIN, 3000.)
         defocusGroupRow.setValue(xmipp.MDL_MAX, 5500.)
         defocusGroupRow.setValue(xmipp.MDL_AVG, 5000.)
         defocusGroupRow.writeToMd(md, objId)
         #
-        fnScipion=self.getOutputPath("writeSetOfDefocusGroups.sqlite")
+        fnScipion = self.getOutputPath("writeSetOfDefocusGroups.sqlite")
         setOfDefocus = SetOfDefocusGroup(filename=fnScipion)
 
         df = DefocusGroup()
@@ -867,8 +871,11 @@ class TestSetConvert(BaseTest):
         df.setDefocusAvg(5000)
         setOfDefocus.append(df)
         
-        fnXmipp=self.getOutputPath("writeSetOfDefocusGroups.xmd")
+        fnXmipp = self.getOutputPath("writeSetOfDefocusGroups.xmd")
+        fnScipion = self.getOutputPath("writeSetOfDefocusGroups2.xmd")
         writeSetOfDefocusGroups(setOfDefocus, fnXmipp)
         mdAux = xmipp.MetaData(fnXmipp)
-        self.assertEqual(md,mdAux, "test writeSetOfDefocusGroups fails")
+        md.write(fnScipion)
+        print "Comparing metadatas: \n%s\n%s" % (fnXmipp, fnScipion)
+        self.assertEqual(md, mdAux, "test writeSetOfDefocusGroups fails")
        

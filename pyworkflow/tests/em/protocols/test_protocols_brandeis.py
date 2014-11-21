@@ -34,8 +34,8 @@ class TestBrandeisBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.micFn = cls.dataset.getFile('mic1')
-        cls.volFn = cls.dataset.getFile('vol2')
+        cls.micFn = cls.dataset.getFile('micrographs/BPV_1386.mrc')
+        cls.volFn = cls.dataset.getFile('volumes/volume_1_iter_002.mrc')
         #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
@@ -43,10 +43,10 @@ class TestBrandeisBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = ProtImportMicrographs(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = ProtImportMicrographs(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
         
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -59,7 +59,7 @@ class TestBrandeisBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         pattern=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern, samplingRate=samplingRate)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
@@ -67,7 +67,7 @@ class TestBrandeisBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         pattern=pattern, samplingRate=samplingRate,
+                                         filesPath=pattern, samplingRate=samplingRate,
                                          checkStack=checkStack)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -139,5 +139,5 @@ class TestBrandeisFrealign(TestBrandeisBase):
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
-    #suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
+    suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
     unittest.TextTestRunner(verbosity=2).run(suite)

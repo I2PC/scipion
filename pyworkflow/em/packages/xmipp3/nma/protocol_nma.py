@@ -210,7 +210,8 @@ class XmippProtNMA(XmippProtNMABase):
                 fhCmd.write("mol modstyle 0 0 Beads %f 8.000000\n"%(pseudoAtomRadius))
             else:
                 fhCmd.write("mol modcolor 0 0 Index\n")
-                fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
+                #fhCmd.write("mol modstyle 0 0 Beads 1.000000 8.000000\n")
+                fhCmd.write("mol modstyle 0 0 NewRibbons 1.800000 6.000000 2.600000 0\n")
             fhCmd.write("animate speed 0.5\n")
             fhCmd.write("animate forward\n")
             fhCmd.close();

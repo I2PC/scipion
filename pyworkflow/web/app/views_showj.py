@@ -164,17 +164,39 @@ def setRenderingOptions(request, dataset, table, inputParams):
         inputParams[sj.MODE] = sj.MODE_TABLE
         dataset.setNumberSlices(0)
     else:
-        #Setting the _imageVolName
-        _imageVolName = inputParams.get(sj.VOL_SELECTED, None) or table.getElementById(0, label)
-        
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
        
+        isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
+        oldMode =  inputParams[sj.OLDMODE]
+
+        if oldMode == None:
+            _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
+        else:
+            if oldMode == inputParams[sj.MODE]:
+                # No mode change
+                if oldMode == 'table':
+                    pass
+                elif oldMode == 'gallery':
+                    _imageVolName = inputParams[sj.VOL_SELECTED]
+                    index = table.getIndexFromValue(_imageVolName, label) +1
+                    inputParams[sj.SELECTEDITEMS] = index
+                    
+            elif oldMode != inputParams[sj.MODE]:
+                # Mode changed
+                if oldMode == 'gallery':
+                    # New Functionality used to mark elements rendered in gallery mode for volumes
+                    _imageVolName = inputParams[sj.VOL_SELECTED]
+                elif oldMode == 'table':
+                    # New Functionality used to render elements selected in table mode for volumes
+                    lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
+                    index = int(lastItemSelected)-1
+                    _imageVolName = table.getValueFromIndex(index, label)
+                    inputParams[sj.VOL_SELECTED] = _imageVolName
+        
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
         dataset.setNumberSlices(_imageDimensions[2])
-        
-        isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
             is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
@@ -187,6 +209,8 @@ def setRenderingOptions(request, dataset, table, inputParams):
             #Setting the _dataType 
             _dataType = xmipp.DT_FLOAT if isVol and inputParams[sj.MODE]==sj.MODE_VOL_ASTEX else xmipp.DT_UCHAR
             #Setting the _imageVolName and _stats     
+            
+            # CONVERTION TO .mrc DONE HERE!
             _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
             
             if isVol:
@@ -227,10 +251,11 @@ DEFAULT_PARAMS = {
     sj.VOL_SELECTED: None,       # If 3D, Volume to be displayed in gallery, volume_astex and volume_chimera mode. If None the first one will be displayed
     sj.VOL_VIEW: xmipp.VIEW_Z_NEG,      # If 3D, axis to slice volume 
     sj.VOL_TYPE: 'map',                 # If map, it will be displayed normally, else if pdb only astexViewer and chimera display will be available
-
+    
     sj.SELECTEDITEMS: 0,     # List with the id for the selected items in the before mode.
     sj.ENABLEDITEMS: 0,     # List with the id for the enabled items in the before mode.
     sj.CHANGES: 0,          # List with the changes done
+    sj.OLDMODE: None,
 }
 
 def showj(request):
@@ -351,7 +376,8 @@ def createContextShowj(request, inputParams, dataset, table, paramStats, volPath
     # IMPROVE TO KEEP THE ITEMS (SELECTED, ENABLED, CHANGES)
     context.update({sj.SELECTEDITEMS : inputParams[sj.SELECTEDITEMS],
                     sj.ENABLEDITEMS: inputParams[sj.ENABLEDITEMS],
-                    sj.CHANGES: inputParams[sj.CHANGES]})
+                    sj.CHANGES: inputParams[sj.CHANGES],
+                    })
         
     return_page =  'showj/%s%s%s' % ('showj_', showjForm.data[sj.MODE], '.html')
     return context, return_page

@@ -128,13 +128,19 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
     
     def _displayTrajectories(self, paramName):
-        self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
-                              title='Trajectories Tool',
-                              dim=self.protocol.reducedDim.get(),
-                              data=self.data,
-                              callback=self._createCluster
-                              )
-        return [self.trajectoriesWindow]
+        if self.protocol.getMappingFile():
+            self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
+                                  title='Trajectories Tool',
+                                  dim=self.protocol.reducedDim.get(),
+                                  data=self.data,
+                                  callback=self._generateAnimations,
+                                  numberOfPoints=10
+                                  )
+            return [self.trajectoriesWindow]
+        else:
+            methodName = self.protocol.getMethodName()
+            return [self.infoMessage("The method *%s* does not allow to generate trajectories." % methodName, 
+                                     title="Info message")]
         
     def _createCluster(self):
         """ Create the cluster with the selected particles
@@ -165,6 +171,9 @@ class XmippDimredNMAViewer(ProtocolViewer):
         newProt.sqliteFile.set(fnSqlite)
         
         project.launchProtocol(newProt)
+        
+    def _generateAnimations(self):
+        pass
         
     def loadData(self):
         """ Iterate over the images and the output matrix txt file

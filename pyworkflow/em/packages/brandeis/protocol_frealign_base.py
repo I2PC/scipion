@@ -553,6 +553,7 @@ class ProtFrealignBase(EMProtocol):
             
             imgFn = self._getFileName('particles')
             volFn = self._getFileName('init_vol')
+            #TODO check if the input is already a single mrc stack
             imgSet.writeStack(imgFn) # convert the SetOfParticles into a mrc stack.
             ImageHandler().convert(vol.getLocation(), volFn) # convert the reference volume into a mrc volume
             copyFile(volFn, refVol)  #Copy the initial volume in the current directory.
@@ -678,7 +679,7 @@ class ProtFrealignBase(EMProtocol):
         params2 = self._setParams3DR(iterN)
         
         params3DR = dict(paramsDic.items() + params2.items())
-        
+
         args = self._prepareCommand()
         iterDir = self._iterWorkingDir(iterN)
         # frealign program is already in the args script, that's why runJob('')
@@ -709,7 +710,7 @@ class ProtFrealignBase(EMProtocol):
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if not imgSet.hasAlignment() and self.useInitialAngles.get():
+        if not imgSet.hasAlignment3D() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
     
@@ -1124,9 +1125,9 @@ eot
         
         # get alignment parameters for each particle
         from convert import geometryFromMatrix
-        shifts, angles = geometryFromMatrix(img.getAlignment())
+        shifts, angles = geometryFromMatrix(img.getAlignment().getMatrix())
         #TODO: check if can use shiftZ
-        shiftX, shiftY, shiftZ = shifts * img.getSamplingRate()
+        shiftX, shiftY, _ = shifts * img.getSamplingRate()
         psi, theta, phi = angles
 #        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
 #        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
@@ -1136,13 +1137,13 @@ eot
                     
         # get ctfModel for each particle
         ctfModel = img.getCTF()
-        defU     = float(str(ctfModel.getDefocusU()))
-        defV     = float(str(ctfModel.getDefocusV()))
-        defAngle = float(str(ctfModel.getDefocusAngle()))
+        defU     = ctfModel.getDefocusU()
+        defV     = ctfModel.getDefocusV()
+        defAngle = ctfModel.getDefocusAngle()
         
         # get the adquisition info
         acquisition = img.getAcquisition()
-        mag = float(str(acquisition.getMagnification()))
+        mag = acquisition.getMagnification()
         
         filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f %(shiftX)9.2f %(shiftY)9.2f"
                    " %(mag)7.0f %(objId)5d %(defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000     0.5000   00.00   00.00\n" % locals())

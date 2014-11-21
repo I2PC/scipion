@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains protocol for particles filters operations
+Particle filter operations.
 """
 
 from pyworkflow.em.protocol import ProtFilterParticles  

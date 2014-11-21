@@ -59,13 +59,11 @@ class ProtProcessParticles(ProtParticles):
 
 
 class ProtFilterParticles(ProtProcessParticles):
-    """ This is the base for the branch of filters, 
-    between the ProtPreprocessParticles """
+    """Base class for filters on particles of type ProtPreprocessParticles"""
     pass
 
 class ProtOperateParticles(ProtProcessParticles):
-    """ This is the base for the branch of filters,
-    between the ProtPreprocessParticles """
+    """Base class for operations on particles of type ProtPreprocessParticles"""
     pass
 
 class ProtMaskParticles(ProtProcessParticles):
@@ -75,40 +73,79 @@ class ProtMaskParticles(ProtProcessParticles):
 
 
 class ProtParticlePicking(ProtParticles):
+
+    def _defineParams(self, form):
+
+        form.addSection(label='Input')
+        form.addParam('inputMicrographs', PointerParam, label="Micrographs",
+                      pointerClass='SetOfMicrographs',
+                      help='Select the SetOfMicrographs ')
+
     #--------------------------- INFO functions ----------------------------------------------------
-    def _summary(self):
+    def getSummary(self, coordSet):
         summary = []
-        if not hasattr(self, 'outputCoordinates'):
-            summary.append(Message.TEXT_NO_OUTPUT_CO) 
-        else:
-            #TODO: MOVE following line to manual picking
-            summary.append("Number of input micrographs: %d" % self.inputMicrographs.get().getSize())
-            summary.append("Number of particles picked: ")
-            for _, output in self.iterOutputAttributes(EMObject):
-                summary.append('    %d on one set' % output.getSize())
-        return summary
+        summary.append("Number of particles picked: %d" % coordSet.getSize())
+        summary.append("Particle size: %d" % coordSet.getBoxSize())
+        return "\n".join(summary)
+
+    def getMethods(self, output):
+        msg = 'User picked %d particles with a particle size of %d.' % (output.getSize(), output.getBoxSize())
+        return msg
     
     def _methods(self):
         methodsMsgs = []
-        methodsMsgs.append("Number of particles picked: ")
-        for _, output in self.iterOutputAttributes(EMObject):
-            methodsMsgs.append('    %d on one set' % output.getSize())
-            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographs.get().getSize(), output.getBoxSize()))
+        methodsMsgs.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        if(self.getOutputsSize() > 1):
+            for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
+                msg = self.getMethods(output)
+                methodsMsgs.append("*%s:*\n%s"%(key, msg))
+        elif(self.getOutputsSize() == 1):
+            output = self.getCoords()
+            methodsMsgs.append(self.getMethods(output))
+        else:
+            methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
 
-    def getCoordsSuffix(self):
-        count = len(list(self.iterOutputAttributes(EMObject)))
-        suffix = str(count) if count > 1 else ''
-        
-        return suffix
+
+    def getInputMicrographs(self):
+        return self.inputMicrographs.get()
     
     def getCoords(self):
-        suffix = self.getCoordsSuffix()
+        count = self.getOutputsSize()
+        suffix = str(count) if count > 1 else ''
         outputName = 'outputCoordinates' + suffix
         return getattr(self, outputName)
+
+    def _createOutput(self, outputDir):
+        micSet = self.getInputMicrographs()
+        count = self.getOutputsSize()
+        suffix = str(count + 1) if count > 0 else ''
+        outputName = 'outputCoordinates' + suffix
+        coordSet = self._createSetOfCoordinates(micSet, suffix)
+        self.readSetOfCoordinates(outputDir, coordSet)
+        coordSet.setObjComment(self.getSummary(coordSet))
+        outputs = {outputName: coordSet}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(micSet, coordSet)
+
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        pass
+
+    def _summary(self):
+        summary = []
+        summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        if(self.getOutputsSize() > 1):
+            for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
+                summary.append("*%s:*\n%s"%(key, output.getObjComment()))
+        elif(self.getOutputsSize() == 1):
+            summary.append(self.getCoords().getObjComment())
+        else:
+            summary.append(Message.TEXT_NO_OUTPUT_CO)
+        return summary
 
 
 class ProtExtractParticles(ProtParticles):
     pass
-

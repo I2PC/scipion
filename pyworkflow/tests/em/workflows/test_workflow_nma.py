@@ -28,7 +28,8 @@
 from pyworkflow.em.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
 from pyworkflow.tests import setupTestProject, DataSet
 from test_workflow import TestWorkflow  
-from pyworkflow.em.packages.xmipp3.nma import XmippProtNMA, NMA_CUTOFF_ABS
+from pyworkflow.em.packages.xmipp3.nma import (XmippProtNMA, XmippProtAlignmentNMA, 
+                                               XmippProtDimredNMA, NMA_CUTOFF_ABS)
 from pyworkflow.em.packages.xmipp3 import XmippProtConvertToPseudoAtoms
    
    
@@ -63,7 +64,7 @@ class TestNMA(TestWorkflow):
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
         protImportParts = self.newProtocol(ProtImportParticles,
-                                           pattern=self.ds.getFile('particles'),
+                                           filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
 
@@ -73,7 +74,7 @@ class TestNMA(TestWorkflow):
         
         # Import a Volume
         protImportVol = self.newProtocol(ProtImportVolumes,
-                                         pattern=self.ds.getFile('vol'),
+                                         filesPath=self.ds.getFile('vol'),
                                          samplingRate=1.0)
         self.launchProtocol(protImportVol)
         
@@ -86,6 +87,20 @@ class TestNMA(TestWorkflow):
         protNMA2 = self.newProtocol(XmippProtNMA,
                                     cutoffMode=NMA_CUTOFF_ABS)
         protNMA2.inputStructure.set(protConvertVol.outputPdb)
-        self.launchProtocol(protNMA2)        
+        self.launchProtocol(protNMA2)
                                           
+        # Launch NMA alignment, but just reading result from a previous metadata
+        protAlignment = self.newProtocol(XmippProtAlignmentNMA,
+                                         modeList='7-9',
+                                         copyDeformations=self.ds.getFile('gold/pseudo_run1_images.xmd'))
+        protAlignment.inputModes.set(protNMA2.outputModes)
+        protAlignment.inputParticles.set(protImportParts.outputParticles)
+        self.launchProtocol(protAlignment)       
         
+        # Launch Dimred after NMA alignment 
+        protDimRed = self.newProtocol(XmippProtDimredNMA,
+                                      dimredMethod=0, # PCA
+                                      reducedDim=2)
+        protDimRed.inputNMA.set(protAlignment)
+        self.launchProtocol(protDimRed)     
+                                      

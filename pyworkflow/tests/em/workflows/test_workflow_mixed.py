@@ -20,7 +20,7 @@ class TestMixedBPV(TestWorkflow):
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, 
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, 
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
@@ -28,7 +28,7 @@ class TestMixedBPV(TestWorkflow):
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
@@ -68,9 +68,14 @@ class TestMixedBPV(TestWorkflow):
         
         # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
-        protFrealign = self.newProtocol(ProtFrealign, angStepSize=15, numberOfIterations=2, mode=1, doExtraRealSpaceSym=True,
-                                    innerRadius=130, outerRadius=300, symmetry='I1', PhaseResidual=30,molMass=19400,
-                                    score=5, resolution=20, runMode=1, numberOfMpi=5)
+        protFrealign = self.newProtocol(ProtFrealign, angStepSize=15,
+                                        numberOfIterations=2, mode=1,
+                                        doExtraRealSpaceSym=True,
+                                    innerRadius=130, outerRadius=300,
+                                    symmetry='I1', PhaseResidual=30,
+                                    molMass=19400,
+                                    score=5, resolution=20,
+                                    runMode=1, numberOfMpi=5)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         self.launchProtocol(protFrealign)
@@ -215,14 +220,14 @@ class TestMixedBPV2(TestWorkflow):
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRate=1.237, voltage=300)
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
@@ -244,9 +249,9 @@ class TestMixedBPV2(TestWorkflow):
 #         self.validateFiles('protCTF', protCTF)
         
         print "Running Eman fake particle picking..."
-        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir, runMode=1) 
+        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir,
+                                  runMode=1)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
-        protPP.boxSize.set(550)
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 #         self.protDict['protPP'] = protPP
