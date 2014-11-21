@@ -92,7 +92,7 @@ class TestEmanBoxing(TestEmanBase):
         print "Running Eman fake particle picking..."
         protPP = EmanProtBoxing(importFolder=self.crdsDir, runMode=1)
         protPP.inputMicrographs.set(self.protImport.outputMicrographs)
-        protPP.boxSize.set(550)
+        #protPP.boxSize.set(550)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
 

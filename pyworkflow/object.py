@@ -258,16 +258,20 @@ class Object(object):
             return object.__eq__(other)
         return self._objValue == other._objValue
     
-    def equalAttributes(self, other):
+    def equalAttributes(self, other, verbose=False):
         """Compare that all attributes are equal"""
         for k, _ in self.getAttributes():
             v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
-                comp = v1.equalAttributes(v2)
+                comp = v1.equalAttributes(v2, verbose)
             else:
                 comp = v1 == v2
             if not comp:
+                if verbose:
+                    print "Different attributes: "
+                    print "self.%s = %s" % (k, v1)
+                    print "other.%s = %s" % (k, v2)
                 return False
         return True
             
@@ -495,7 +499,7 @@ class Scalar(Object):
     def hasValue(self):        
         return self._objValue is not None
     
-    def equalAttributes(self, other):
+    def equalAttributes(self, other, verbose=False):
         """Compare that all attributes are equal"""
         return self._objValue == other._objValue
     
@@ -580,7 +584,7 @@ class Float(Scalar):
     def _convertValue(self, value):
         return float(value)
     
-    def equalAttributes(self, other):
+    def equalAttributes(self, other, verbose=False):
         """Compare that all attributes are equal"""
         # If both float has some value distinct of None
         # then we should compare the absolute value of difference 
