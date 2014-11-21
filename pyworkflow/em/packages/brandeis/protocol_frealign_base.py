@@ -1137,13 +1137,13 @@ eot
                     
         # get ctfModel for each particle
         ctfModel = img.getCTF()
-        defU     = float(str(ctfModel.getDefocusU()))
-        defV     = float(str(ctfModel.getDefocusV()))
-        defAngle = float(str(ctfModel.getDefocusAngle()))
+        defU     = ctfModel.getDefocusU()
+        defV     = ctfModel.getDefocusV()
+        defAngle = ctfModel.getDefocusAngle()
         
         # get the adquisition info
         acquisition = img.getAcquisition()
-        mag = float(str(acquisition.getMagnification()))
+        mag = acquisition.getMagnification()
         
         filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f %(shiftX)9.2f %(shiftY)9.2f"
                    " %(mag)7.0f %(objId)5d %(defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000     0.5000   00.00   00.00\n" % locals())
