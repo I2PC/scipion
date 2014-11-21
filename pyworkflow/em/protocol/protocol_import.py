@@ -36,7 +36,7 @@ from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
                                         EnumParam, IntParam, StringParam, PointerParam,
-                                        LEVEL_EXPERT)
+                                        LabelParam, LEVEL_EXPERT)
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -202,6 +202,11 @@ class ProtImportImages(ProtImport):
         ProtImport._defineParams(self, form)
         
         group = form.addGroup('Acquisition info')
+        group.addParam('acquisitionWizard', LabelParam, important=True,
+                       label='Use the wizard button to import acquisition.',
+                       help='Depending on the import Format, the wizard\n'
+                            'will try to import the acquisition values.\n'
+                            'If not found, required ones should be provided.')
         group.addParam('voltage', FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE, 
                    help=Message.TEXT_VOLTAGE)
