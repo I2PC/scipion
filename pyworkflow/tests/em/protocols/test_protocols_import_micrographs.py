@@ -40,6 +40,20 @@ class TestImportBase(BaseTest):
     
 class TestImportMicrographs(TestImportBase):
     
+    def checkMicSet(self, micSet, goldFn):
+        """ Compare micrographs of micSet with the 
+        ones in the goldFn. Maybe except the full path.
+        """
+        goldSet  = SetOfMicrographs(filename = goldFn)
+
+        for mic1, mic2 in izip(goldSet, micSet):
+            # Remove the absolute path in the micrographs to
+            # really check that the attributes should be equal
+            mic1.setFileName(os.path.basename(mic1.getFileName()))
+            mic2.setFileName(os.path.basename(mic2.getFileName()))
+
+            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))        
+    
     def test_pattern(self):
         """ Import several micrographs from a given pattern.
         """
@@ -94,20 +108,15 @@ class TestImportMicrographs(TestImportBase):
         protEmxImport = self.newProtocol(ProtImportMicrographs,
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
                                          micrographsEMX=emxFn,
-                                         magnification=10000
+                                         magnification=10000,
+                                         samplingRate=2.46
                                          )
         protEmxImport.setObjLabel('from emx ')
         self.launchProtocol(protEmxImport)
-        micFn =self.dsEmx.getFile('emxMicrographCtf1Gold')
-        mics  = SetOfMicrographs(filename = micFn)
+        
+        self.checkMicSet(protEmxImport.outputMicrographs, 
+                         goldFn=self.dsEmx.getFile('emxMicrographCtf1Gold'))
 
-        for mic1, mic2 in izip(mics, protEmxImport.outputMicrographs):
-            # Remove the absolute path in the micrographs to
-            # really check that the attributes should be equal
-            mic1.setFileName(os.path.basename(mic1.getFileName()))
-            mic2.setFileName(os.path.basename(mic2.getFileName()))
-
-            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
     
     def test_fromXmipp(self):
         """ Import an EMX file with micrographs and defocus
@@ -117,8 +126,24 @@ class TestImportMicrographs(TestImportBase):
         prot1 = self.newProtocol(ProtImportMicrographs,
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
                                          micrographsMd=micsMd,
-                                         magnification=10000
+                                         magnification=10000,
+                                         samplingRate=1.
                                          )
         prot1.setObjLabel('from xmipp (no-ctf)')
         self.launchProtocol(prot1)
+        self.checkMicSet(prot1.outputMicrographs, 
+                         goldFn=micsMd.replace('.xmd', '_gold.sqlite'))
+        
+        micsRoot = 'xmipp_project/Micrographs/Screen/run_001/%s'
+        micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
+        prot2 = self.newProtocol(ProtImportMicrographs,
+                                         importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
+                                         micrographsMd=micsMd,
+                                         magnification=10000,
+                                         samplingRate=1.
+                                         )
+        prot2.setObjLabel('from xmipp (ctf)')
+        self.launchProtocol(prot2)
+        self.checkMicSet(prot2.outputMicrographs, 
+                 goldFn=micsMd.replace('.xmd', '_gold.sqlite'))
         
