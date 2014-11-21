@@ -145,23 +145,35 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         else:
             picked = self.outputCoordinatesTiltPair.getTilted().getSize()
             msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographsTiltedPair.get().getTilted().getSize())
-    
         return msg
-    
-    def _methods(self):
-        methodsMsgs = []
-        methodsMsgs.append("Number of particles picked: ")
-        for _, output in self.iterOutputAttributes(EMObject):
-            methodsMsgs.append('    %d on one set' % output.getTilted().getSize())
-            methodsMsgs.append("    from %d micrographs with a particle size of %d." % (self.inputMicrographsTiltedPair.get().getTilted().getSize(), output.getTilted().getBoxSize()))
 
-        return methodsMsgs
+    
+
+
+    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
+
+        configfile = join(self._getExtraPath(), 'config.xmd')
+        existsConfig = exists(configfile)
+        if existsConfig:
+            md = xmipp.MetaData('properties@' + configfile)
+            configobj = md.firstObject()
+            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            msg = 'User picked %d particles with a particle size of %d.' % (manualParticlesSize, particleSize)
+
+        return msg
 
     def _summary(self):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return self.getSummary(self.getCoords(self))
+            return self.getSummary(self.getCoords())
+
+    def _methods(self):
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._methods(self)
+        else:
+            return [self.getMethods(None)]
 
     def getInputMicrographs(self):
         return self.inputMicrographsTiltedPair.get().getTilted()
@@ -179,8 +191,10 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             md = xmipp.MetaData('properties@' + configfile)
             configobj = md.firstObject()
             activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            summary.append("Particles picked: %d"%manualParticlesSize)
             summary.append("Last micrograph: " + activemic)
-        return summary
+        return "\n".join(summary)
        
     
 

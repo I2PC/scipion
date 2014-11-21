@@ -71,7 +71,7 @@ def exportData(emxDir, inputSet, ctfSet=None, xmlFile='data.emx', binaryFile=Non
     
     
 def importData(protocol, emxFile, outputDir, acquisition, 
-               samplingRate=None, doCopyFiles=True):
+               samplingRate=None, copyOrLink=createLink):
     """ Import objects into Scipion from a given EMX file. 
     Returns:
         a dictionary with key and values as outputs sets
@@ -81,9 +81,9 @@ def importData(protocol, emxFile, outputDir, acquisition,
     emxData.read(emxFile)
 
     _micrographsFromEmx(protocol, emxData, emxFile, outputDir, acquisition, 
-                        samplingRate, doCopyFiles)
+                        samplingRate, copyOrLink)
     _particlesFromEmx(protocol, emxData, emxFile, outputDir, acquisition,
-                      samplingRate, doCopyFiles)
+                      samplingRate, copyOrLink)
 
 
 #---------------- Export related functions -------------------------------
@@ -312,7 +312,7 @@ def _coordinateFromEmx(emxObj, coordinate):
     
     
 def _micrographsFromEmx(protocol, emxData, emxFile, outputDir, 
-                        acquisition, samplingRate, doCopyFiles=True):
+                        acquisition, samplingRate, copyOrLink):
     """ Create the output SetOfMicrographs given an EMXData object.
     If there is information of the CTF, also the SetOfCTF will
     be registered as output of the protocol.
@@ -341,10 +341,10 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
         _micrographFromEmx(emxMic, mic)
         _, fn = mic.getLocation()
         micFn = join(micDir, fn)
-        if doCopyFiles and exists(micFn):
+        if copyOrLink is not None:
             micBase = basename(micFn)
             newFn = join(outputDir, micBase)
-            copyFile(micFn, newFn)
+            copyOrLink(micFn, newFn)
             mic.setLocation(newFn)
         else:
             mic.setLocation(micFn)
@@ -372,7 +372,7 @@ def _particlesFromEmx(protocol
                       , outputDir
                       , acquisition
                       , samplingRate
-                      , doCopyFiles=True):
+                      , copyOrLink):
     """ Create the output SetOfCoordinates or SetOfParticles given an EMXData object.
     Add CTF information to the particles if present.
     """    
@@ -408,10 +408,6 @@ def _particlesFromEmx(protocol
             particles = False
             
         copiedFiles = {} # copied or linked
-        if doCopyFiles:
-            copyOrLink = copyFile
-        else:
-            copyOrLink = createLink
         
         for emxParticle in emxData.iterClasses(emxlib.PARTICLE):
             if particles:
