@@ -72,13 +72,17 @@ class EmxImport():
                     self.binaryFile = binaryFile
                     self.classElement = classElement
                     
-                for k, v in self.PARAM_DICT.iteritems():
-                    # Read from the EMX files the values not set in the Form
-                    if (protocol.acquisitionFromEmx or 
-                        not getattr(protocol, k).hasValue()):
-                        if obj.get(v) is not None:
-                            protocol.setAttributeValue(k, obj.get(v))
-
+        def loadAcquistion():
+            """ Try to read acquistion from input file. """
+            acquisition = Acquisition()
+            acquisition.samplingRate = Float() 
+            
+            self._loadEmxInfo()
+            
+            for k, v in self.PARAM_DICT.iteritems():
+                # Read from the EMX files the values and fill acquisition
+                acquisition.setAttributeValue(k, self.object.get(v))
+                
     #--------------------------- STEPS functions --------------------------------------------       
     def importData(self, protocol, emxFile, copyOrLink):
         """ Export micrographs to EMX file.

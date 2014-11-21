@@ -36,7 +36,7 @@ from pyworkflow.object import Float, Integer
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
                                         EnumParam, IntParam, StringParam, PointerParam,
-                                        LabelParam, LEVEL_EXPERT)
+                                        LabelParam, LEVEL_ADVANCED)
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -90,7 +90,7 @@ class ProtImport(EMProtocol):
                            "digits in the filename to be used as ID. ")
         
         form.addParam('copyFiles', BooleanParam, default=False, 
-                      expertLevel=LEVEL_EXPERT, 
+                      expertLevel=LEVEL_ADVANCED, 
                       label="Copy files?",
                       help="By default the files are not copied into\n"
                            "the project to avoid data duplication and to save\n"
@@ -396,11 +396,6 @@ class ProtImportMicrographs(ProtImportMicBase):
               label='Input EMX file',
               help="Select the EMX file containing micrographs information.\n"
                    "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
-        form.addParam('acquisitionFromEmx', BooleanParam, default=True,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-                      label='Read acquisition from EMX?', 
-                      help='If you set to _Yes_, the acquistion parameters\n'
-                           'will be recovered from the EMX file.')
         
         form.addParam('micrographsMd', PathParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
@@ -408,12 +403,6 @@ class ProtImportMicrographs(ProtImportMicBase):
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
-        form.addParam('acquisitionFromXmd', BooleanParam, default=True,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
-                      label='Read acquisition from Metadatas?', 
-                      help='If you set to _Yes_, some acquistion parameters\n'
-                           'will try to be recovered from the _microscope.xmd_\n'
-                           'and _acquisition_info.xmd_\n')
 
     def _insertAllSteps(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
