@@ -125,7 +125,7 @@ class TestXmippWorkflow(unittest.TestCase):
         projName = "relion_ribo"
         self.proj = Manager().loadProject(projName) # Now it will be loaded if exists
         
-#        protImport = ProtImportParticles(pattern=getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp'), checkStack=True, samplingRate=1.237)
+#        protImport = ProtImportParticles(filesPath=getInputPath('Images_Vol_ML3D/phantom_images', '*.xmp'), checkStack=True, samplingRate=1.237)
 #        self.proj.launchProtocol(protImport, wait=True)
 #        
         setOfPart = self.proj.mapper.selectByClass('SetOfParticles')[0]

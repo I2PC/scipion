@@ -47,7 +47,7 @@ class TestXmippBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         pattern=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern, samplingRate=samplingRate)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
@@ -55,7 +55,7 @@ class TestXmippBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         pattern=pattern, samplingRate=samplingRate,
+                                         filesPath=pattern, samplingRate=samplingRate,
                                          checkStack=checkStack)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -274,13 +274,13 @@ class TestXmippFilterVolumes(TestXmippBase):
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
     def testFilterVolumes(self):
-        print "Run filter single volume"
+        print "Run filter on single volume"
         protFilterVolume = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
         protFilterVolume.inputVolumes.set(self.protImport2.outputVolume)
         self.proj.launchProtocol(protFilterVolume, wait=True)
         self.assertIsNotNone(protFilterVolume.outputVol, "There was a problem with filter a volume")
 
-        print "Run filter SetOfVolumes"
+        print "Run filter on SetOfVolumes"
         protFilterVolumes = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
         protFilterVolumes.inputVolumes.set(self.protImport1.outputVolumes)
         self.proj.launchProtocol(protFilterVolumes, wait=True)
@@ -418,7 +418,7 @@ class TestXmippRansacMda(TestXmippBase):
     def test_ransac(self):
         #Import a set of averages
         print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True,
+        protImportAvg = self.newProtocol(ProtImportAverages, filesPath=self.averages, checkStack=True,
                                          samplingRate=self.samplingRate)
         self.launchProtocol(protImportAvg)
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
@@ -459,14 +459,14 @@ class TestXmippProjMatching(TestXmippBase):
 
     def testXmippProjMatching(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRate=1.237, voltage=300)
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
 #         self.validateFiles('protImport', protImport)
 
         #Import a set of volumes
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)

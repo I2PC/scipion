@@ -62,30 +62,34 @@ class TestSets(BaseTest):
         launch = cls.proj.launchProtocol
 
         # Micrographs
+        print "Importing data - micrographs"
         p_imp_micros = new(ProtImportMicrographs,
-                           pattern=cls.dataset_xmipp.getFile('allMics'),
+                           filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
         launch(p_imp_micros, wait=True)
         cls.micros = p_imp_micros.outputMicrographs
 
         # Volumes
+        print "Importing data - volumes"
         p_imp_volumes = new(ProtImportVolumes,
-                            pattern=cls.dataset_xmipp.getFile('volumes'),
+                            filesPath=cls.dataset_xmipp.getFile('volumes'),
                             samplingRate=9.896)
         launch(p_imp_volumes, wait=True)
         cls.vols = p_imp_volumes.outputVolumes
 
         # Movies
+        print "Importing data - movies"
         p_imp_movies = new(ProtImportMovies,
-                           pattern=cls.dataset_ribo.getFile('movies'),
+                           filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
                            voltage=300, sphericalAberration=2.0)
         launch(p_imp_movies, wait=True)
         cls.movies = p_imp_movies.outputMovies
 
         # Particles
+        print "Importing data - particles"
         p_imp_particles = new(ProtImportParticles,
-                              pattern=cls.dataset_mda.getFile('particles'),
+                              filesPath=cls.dataset_mda.getFile('particles'),
                               samplingRate=3.5)
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
@@ -120,6 +124,7 @@ class TestSets(BaseTest):
 
         def check(set0, n=2, randomize=False):
             "Simple checks on split sets from set0."
+            print "Checking split of %s" % type(set0).__name__
             unsplit_set = [x.strId() for x in set0]
             p_split = self.split(set0, n=n, randomize=randomize)
             # Are all output elements of the protocol in the original set?

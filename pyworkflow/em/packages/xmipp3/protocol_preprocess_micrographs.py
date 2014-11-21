@@ -97,7 +97,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         an easy replacement in the programs command line. 
         """
         # Get pointer to input micrographs 
-        self.inputMics = self.inputMicrographs.get() 
+        self.inputMics = self.inputMicrographs.get()
         
         # Parameters needed to preprocess the micrographs
         self.params = {'downFactor': self.downFactor.get(),
@@ -116,27 +116,12 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         pre = []
         for mic in self.inputMics:
             fnOut = self._getOutputMicrograph(mic)
-            stepId = self.__insertStepsForMicrograph(mic.getFileName(), fnOut)
+            stepId = self._insertStepsForMicrograph(mic.getFileName(), fnOut)
             pre.append(stepId)
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep', prerequisites=pre)
     
-    def __insertOneStep(self, condition, program, arguments):
-        """Insert operation if the condition is met.
-        Possible conditions are: doDownsample, doCrop...etc"""
-        if condition.get():
-            # If the input micrograph and output micrograph differss, 
-            # add the -o option
-            if self.params['inputMic'] != self.params['outputMic']:
-                arguments += " -o %(outputMic)s"
-            # Insert the command with the formatted parameters
-            self.lastStepId = self._insertRunJobStep(program, arguments % self.params,
-                                                     prerequisites=self.prerequisites)
-            self.prerequisites = [self.lastStepId] # next should depend on this step
-            # Update inputMic for next step as outputMic
-            self.params['inputMic'] = self.params['outputMic']
-    
-    def __insertStepsForMicrograph(self, inputMic, outputMic):
+    def _insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
         self.params['outputMic'] = outputMic
         self.lastStepId = None
@@ -153,8 +138,22 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
-                
         return self.lastStepId
+    
+    def __insertOneStep(self, condition, program, arguments):
+        """Insert operation if the condition is met.
+        Possible conditions are: doDownsample, doCrop...etc"""
+        if condition.get():
+            # If the input micrograph and output micrograph differss, 
+            # add the -o option
+            if self.params['inputMic'] != self.params['outputMic']:
+                arguments += " -o %(outputMic)s"
+            # Insert the command with the formatted parameters
+            self.lastStepId = self._insertRunJobStep(program, arguments % self.params,
+                                                     prerequisites=self.prerequisites)
+            self.prerequisites = [self.lastStepId] # next should depend on this step
+            # Update inputMic for next step as outputMic
+            self.params['inputMic'] = self.params['outputMic']
     
     #--------------------------- STEPS functions ---------------------------------------------------
     
@@ -195,14 +194,14 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             summary.append("*Output Micrographs* not ready yet.")
         else:
             summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
-            if self.doDownsample.get():
-                summary.append("Downsampling factor: %d" % self.downFactor.get())
             if self.doCrop.get():
                 summary.append("Number of pixels cropped: %d" % self.cropPixels.get())
             if self.doLog.get():
                 summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
             if self.doRemoveBadPix.get():
                 summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev.get())
+            if self.doDownsample.get():
+                summary.append("Downsampling factor: %d" % self.downFactor.get())
         return summary
     
     def _methods(self):
@@ -211,14 +210,14 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             methods.append("*Output micrographs* not ready yet.")
         else:
             methods.append("The %d micrographs has been" % self.inputMicrographs.get().getSize())
-            if self.doDownsample.get():
-                methods.append("downsampled with a factor of %d" % self.downFactor.get())
             if self.doCrop.get():
                 methods.append("cropped %d pixels" % self.cropPixels.get())
             if self.doLog.get():
                 methods.append("changed from trasmisivity to density with the formula: %f - %f ln(x + %f)" % (self.logA.get(), self.logB.get(), self.logC.get(),))
             if self.doRemoveBadPix.get():
                 methods.append("removed pixels with standard deviation beyond %d times" % self.mulStddev.get())
+            if self.doDownsample.get():
+                methods.append("downsampled with a factor of %d" % self.downFactor.get())
         return methods
     
     #--------------------------- UTILS functions --------------------------------------------
@@ -227,10 +226,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         the input Micrograph object.
         """
         fn = mic.getFileName()
-        
         extFn = getExt(fn)
-        if extFn == ".dm3" or extFn == ".tif" or extFn == ".tiff" or extFn == ".ser":
-            fn = replaceExt(fn, ".mrc")
+        if extFn != ".mrc":
+            fn = replaceExt(fn, "mrc")
         
         fnOut = self._getExtraPath(basename(fn))
         

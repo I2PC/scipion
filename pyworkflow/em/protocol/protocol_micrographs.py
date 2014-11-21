@@ -58,6 +58,14 @@ class ProtCTFMicrographs(ProtMicrographs):
         
         form.addParam('inputMicrographs', PointerParam, important=True,
                       label=Message.LABEL_INPUT_MIC, pointerClass='SetOfMicrographs')
+        form.addParam('ctfDownFactor', FloatParam, default=1.,
+                      label='CTF Downsampling factor',
+                      help='Set to 1 for no downsampling. Non-integer downsample factors are possible. '
+                      'This downsampling is only used for estimating the CTF and it does not affect '
+                      'any further calculation. Ideally the estimation of the CTF is optimal when '
+                      'the Thon rings are not too concentrated at the origin (too small to be seen) '
+                      'and not occupying the whole power spectrum (since this downsampling might '
+                      'entail aliasing).')
         
         self._defineProcessParams(form)
 
@@ -94,23 +102,24 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ This method should be implemented by subclasses
         to add other parameter relatives to the specific operation."""
         pass
-        
+    
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Insert the steps to perform ctf estimation on a set of micrographs.
         """
-        
         self._defineValues()
         self._prepareCommand()
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each micrograph insert the steps to process it
         for micFn, micDir, _ in self._iterMicrographs():
             # CTF estimation
+            # Make estimation steps independent between them
             stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
-                                              prerequisites=[]) # Make estimation steps independent between them
+                                                  prerequisites=[]) # Make estimation steps independent between them
             deps.append(stepId)
         self._insertFinalSteps(deps)
-        
+    
+    
     def _insertFinalSteps(self, deps):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
