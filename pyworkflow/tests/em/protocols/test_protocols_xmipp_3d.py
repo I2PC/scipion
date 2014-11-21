@@ -274,13 +274,13 @@ class TestXmippFilterVolumes(TestXmippBase):
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
     def testFilterVolumes(self):
-        print "Run filter single volume"
+        print "Run filter on single volume"
         protFilterVolume = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
         protFilterVolume.inputVolumes.set(self.protImport2.outputVolume)
         self.proj.launchProtocol(protFilterVolume, wait=True)
         self.assertIsNotNone(protFilterVolume.outputVol, "There was a problem with filter a volume")
 
-        print "Run filter SetOfVolumes"
+        print "Run filter on SetOfVolumes"
         protFilterVolumes = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
         protFilterVolumes.inputVolumes.set(self.protImport1.outputVolumes)
         self.proj.launchProtocol(protFilterVolumes, wait=True)
