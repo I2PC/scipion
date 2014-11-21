@@ -1480,15 +1480,3 @@ def editObject(self, title, root, obj, mapper):
     return EditObjectDialog(root, title, obj, mapper)
     
 
-if __name__ == '__main__':
-    # Just for testing
-    from pyworkflow.em import ProtImportMicrographs
-    p = ProtImportMicrographs()
-    p.sphericalAberration.set(2.3)
-    p.setSamplingRate('5.4')
-    w = FormWindow(p)
-    w.show()
-    
-   
-
-
