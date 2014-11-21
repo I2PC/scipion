@@ -134,7 +134,14 @@ class ProtImport(EMProtocol):
         and also replacing special character # by digit matching.
         """
         self._idRegex = None
-        fullPattern = join(self.filesPath.get(''), self.filesPattern.get(''))
+        filesPath = self.filesPath.get('').strip()
+        filesPattern = self.filesPattern.get('').strip()
+        
+        if filesPattern:
+            fullPattern = join(filesPath, filesPattern)
+        else:
+            fullPattern = filesPath
+            
         pattern = expandPattern(fullPattern)
         match = re.match('[^#]*(#+)[^#]*', pattern)
         

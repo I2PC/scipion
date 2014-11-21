@@ -20,7 +20,7 @@ class TestMixedBPV(TestWorkflow):
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, 
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, 
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
@@ -28,7 +28,7 @@ class TestMixedBPV(TestWorkflow):
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
@@ -220,14 +220,14 @@ class TestMixedBPV2(TestWorkflow):
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, pattern=self.micsFn, samplingRate=1.237, voltage=300)
+        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, pattern=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
