@@ -32,11 +32,10 @@ Import('env')
 from glob import glob
 import os
 from os.path import join, exists
-from types import *
 import os
 import sys
 
-lastTarget = env.get('lastTarget')
+packageDeps = env.get('packageDeps')
 
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'
@@ -52,7 +51,7 @@ tiff = env.AddLibrary(
 #     targets=['lib/libtiff.so'],
      clean=[Dir('#software/tmp/tiff-3.9.4').abspath],
      url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/tiff-3.9.4.tgz',)
-Depends(tiff, lastTarget)
+Depends(tiff, packageDeps)
 
 # Hdf5
 hdf5 = env.AddLibrary(
@@ -65,7 +64,7 @@ hdf5 = env.AddLibrary(
      targets=[[File('#software/lib/libhdf5.so').abspath], [File('#software/lib/libhdf5_cpp.so').abspath]],
      clean=[Dir('#software/tmp/hdf5-1.8.10').abspath],
      url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/hdf5-1.8.10.tgz')
-Depends(hdf5, lastTarget)
+Depends(hdf5, packageDeps)
 
 # OpenCV
 opencv = env.AddLibrary(
@@ -74,7 +73,7 @@ opencv = env.AddLibrary(
        clean=[Dir('#software/tmp/opencv').abspath],
        url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/opencv.tgz',
        default=False)
-Depends(opencv, lastTarget)
+Depends(opencv, packageDeps)
 
 BASIC_LIBS = ['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
 
@@ -95,14 +94,14 @@ xmippExternal = env.AddPackageLibrary(
                         'condor/*.cpp',
                         'alglib-3.8.0.cpp/src/*.cpp'],
               incs=['external/bilib' + s for s in ['', '/headers', '/types']],
-              deps=tiff + hdf5 + lastTarget)
+              deps=tiff + hdf5 + packageDeps)
 
 xmippSqliteExt = env.AddPackageLibrary(
                'XmippSqliteExt',
                dirs=['external/sqliteExt'],
                patterns=['extension-functions.c'],
                libs=['m'],
-               deps=tiff + hdf5 + lastTarget)
+               deps=tiff + hdf5 + packageDeps)
 
 # Data
 xmippData = env.AddPackageLibrary(
@@ -178,6 +177,20 @@ xmippParallel = env.AddPackageLibrary(
               libs=['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', 'pthread', (env['MPI_LIB'] or '')] + BASIC_LIBS,
               deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal,
               mpi=True)
+
+# Gtest
+if int(env['gtest']):
+    gtest = env.ManualInstall('gtest',
+                              tar='gtest-1.6.0.tgz',
+                              buildDir='gtest-1.6.0/fused-src/gtest',
+                              url='http://scipionwiki.cnb.csic.es/files/xmipp/software/external/gtest-1.6.0.tgz',
+                              extraActions=[(File('#/software/lib/libgtest.so'), 
+                                             '%s -o %s -shared -L %s -L /usr/lib %s -fPIC %s' % (env['CC'],
+                                                                                                 File('#/software/lib/libgtest.so').abspath,
+                                                                                                 Dir('#software/lib').abspath,
+                                                                                                 '-l '+' -l'.join(BASIC_LIBS), 
+                                                                                                 File('#software/tmp/gtest-1.6.0/fused-src/gtest/gtest-all.cc').abspath))])
+
 
 # Java libraries
 
@@ -276,31 +289,32 @@ xmippJavaJNI = env.AddJavaLibrary(
 xmippUtils = env.AddJavaLibrary(
            'XmippUtils',
            dirs=['java/src/xmipp/utils', 'java/src/xmipp/jni/'],
-           deps=['ij', 'commons-cli-1.1'],
+           deps=['ij', 'commons-cli-1.1', 'XmippJNI'],
            )
 
 xmippIJ = env.AddJavaLibrary(
         'XmippIJ',
         dirs=['java/src/xmipp/ij/commons'],
-        deps=['XmippUtils'],
+        deps=['XmippUtils', 'XmippJNI'],
         )
 
 xmippViewer = env.AddJavaLibrary(
             'XmippViewer',
             dirs=['java/src/xmipp/viewer'],
-            deps=['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13'],
+            deps=['XmippIJ', 'XmippUtils', 'ij', 'jfreechart-1.0.13', 'XmippJNI'],
             )
 
 xmippTest = env.AddJavaLibrary(
           'XmippTest',
           dirs=['java/src/xmipp/test'],
-          deps=['XmippViewer', 'junit4-4.8.2', 'core-1.1']
+          deps=['XmippViewer', 'junit4-4.8.2', 'core-1.1', 'XmippJNI']
           )
 
 xmippIJPlugin = env.AddJavaLibrary(
-          'XmippIJPlugin_MasksToolbar',
-          dirs=['java/src/xmipp/ij/plugins/maskstoolbar']
-          )
+              'XmippIJPlugin_MasksToolbar',
+              dirs=['java/src/xmipp/ij/plugins/maskstoolbar'],
+              deps=['XmippJNI']
+              )
 
 pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', str(xmippIJPlugin[0]))
 env.Default(pluginLink)
@@ -321,9 +335,9 @@ env.Default(fileTypesInstallation)
 AddOption('--run-java-tests', dest='run_java_tests', action='store_true',
           help='Run all Java tests (not only default ones)')
 
-env.AddJavaTest('FilenameTest', default=False)
-env.AddJavaTest('ImageGenericTest', default=False)
-env.AddJavaTest('MetadataTest', default=False)
+env.AddJavaTest('FilenameTest', 'XmippTest.jar', default=False)
+env.AddJavaTest('ImageGenericTest', 'XmippTest.jar', default=False)
+env.AddJavaTest('MetadataTest', 'XmippTest.jar', default=False)
 
 # XMIPP PROGRAMS
 # 
@@ -944,20 +958,22 @@ env.AddProgram('xmipp_mpi_angular_project_library',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-env.AddProgram('xmipp_mpi_classify_CL2D', 
-               src=['applications/programs/mpi_classify_CL2D'],
-               incs=[Dir('.').path],
-               libs=_libsrecons,
-               deps=_depsrecons,
-               mpi=True)
-env.SymLink('bin/xmipp_classify_CL2D', 'bin/xmipp_mpi_classify_CL2D')
-env.AddProgram('xmipp_mpi_classify_CLTomo_prog', 
-               src=['applications/programs/mpi_classify_CLTomo_prog'],
-               incs=[Dir('.').path, Dir('#software/lib/python2.7/site-packages/numpy/core/include/').abspath],
-               libs=_libsrecons+_libsinterf,
-               deps=_depsrecons+_depsinterf,
-               mpi=True)
-env.SymLink('bin/xmipp_classify_CLTomo', 'bin/xmipp_mpi_classify_CLTomo')
+xmippMPIClassifyCL2D = env.AddProgram('xmipp_mpi_classify_CL2D', 
+                                      src=['applications/programs/mpi_classify_CL2D'],
+                                      incs=[Dir('.').path],
+                                      libs=_libsrecons,
+                                      deps=_depsrecons,
+                                      mpi=True)
+xmippClassifyCL2D = env.SymLink('bin/xmipp_classify_CL2D', 'bin/xmipp_mpi_classify_CL2D')
+Depends(xmippClassifyCL2D, xmippMPIClassifyCL2D)
+xmippMPIClassifyCLTomoProg = env.AddProgram('xmipp_mpi_classify_CLTomo_prog', 
+                                            src=['applications/programs/mpi_classify_CLTomo_prog'],
+                                            incs=[Dir('.').path, Dir('#software/lib/python2.7/site-packages/numpy/core/include/').abspath],
+                                            libs=_libsrecons+_libsinterf,
+                                            deps=_depsrecons+_depsinterf,
+                                            mpi=True)
+xmippClassifyCLTomo = env.SymLink('bin/xmipp_classify_CLTomo', 'bin/xmipp_mpi_classify_CLTomo')
+Depends(xmippClassifyCLTomo, xmippMPIClassifyCLTomoProg)
 env.AddProgram('xmipp_mpi_classify_CL2D_core_analysis', 
                src=['applications/programs/mpi_classify_CL2D_core_analysis'],
                incs=[Dir('.').path],
@@ -1000,13 +1016,14 @@ env.AddProgram('xmipp_mpi_image_resize',
                libs=_libsrecons,
                deps=_depsrecons,
                mpi=True)
-env.AddProgram('xmipp_mpi_image_sort', 
-               src=['applications/programs/mpi_image_sort'],
-               incs=[Dir('.').path],
-               libs=_libsrecons,
-               deps=_depsrecons,
-               mpi=True)
-env.SymLink('bin/xmipp_image_sort', 'bin/xmipp_mpi_image_sort')
+xmippMPIImageSort = env.AddProgram('xmipp_mpi_image_sort', 
+                                   src=['applications/programs/mpi_image_sort'],
+                                   incs=[Dir('.').path],
+                                   libs=_libsrecons,
+                                   deps=_depsrecons,
+                                   mpi=True)
+xmippImageSort = env.SymLink('bin/xmipp_image_sort', 'bin/xmipp_mpi_image_sort')
+Depends(xmippImageSort, xmippMPIImageSort)
 env.AddProgram('xmipp_mpi_ml_align2d', 
                src=['applications/programs/mpi_ml_align2d'],
                incs=[Dir('.').path],
@@ -1130,33 +1147,190 @@ if not int(env['release']):
                    mpi=True)
 
 # Batches (apps)
-env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
-env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
-env.SymLink('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py')
-env.SymLink('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py')
-env.SymLink('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py')
-env.SymLink('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py')
-env.SymLink('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py')
-env.SymLink('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py')
-env.SymLink('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py')
-env.SymLink('bin/xmipp_protocols', 'protocols/batch_protocols.py')
-env.SymLink('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py')
-env.SymLink('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py')
-env.SymLink('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py')
-env.SymLink('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
-env.SymLink('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
-env.SymLink('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py')
-env.SymLink('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py')
-env.SymLink('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py')
-env.SymLink('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py')
-env.SymLink('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
-env.SymLink('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh')
-env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
-env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
+xmippApropos = env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
+Depends(xmippApropos, packageDeps)
+xmippCompile = env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
+Depends(xmippCompile, packageDeps)
+xmippExportEMX = env.SymLink('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py')
+Depends(xmippExportEMX, packageDeps)
+xmippImportBox = env.SymLink('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py')
+Depends(xmippImportBox, packageDeps)
+xmippImportCTFparam = env.SymLink('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py')
+Depends(xmippImportCTFparam, packageDeps)
+xmippImportCTFdat = env.SymLink('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py')
+Depends(xmippImportCTFdat, packageDeps)
+xmippImportEMX = env.SymLink('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py')
+Depends(xmippImportEMX, packageDeps)
+xmippMetadataPlot = env.SymLink('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py')
+Depends(xmippMetadataPlot, packageDeps)
+xmippMetadataSelfileCreate = env.SymLink('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py')
+Depends(xmippMetadataSelfileCreate, packageDeps)
+xmippProtocols = env.SymLink('bin/xmipp_protocols', 'protocols/batch_protocols.py')
+Depends(xmippProtocols, packageDeps)
+xmippBrowser = env.SymLink('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py')
+Depends(xmippBrowser, packageDeps)
+xmippMicrographParticlePicking = env.SymLink('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py')
+Depends(xmippMicrographParticlePicking, packageDeps)
+xmippChimeraClient = env.SymLink('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py')
+Depends(xmippChimeraClient, packageDeps)
+xmippMicrographTiltpairPicking = env.SymLink('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
+Depends(xmippMicrographTiltpairPicking, packageDeps)
+xmippMPIClassifyCLTomo = env.SymLink('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
+Depends(xmippMPIClassifyCLTomo, packageDeps)
+xmippMPIStepsRunner = env.SymLink('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py')
+Depends(xmippMPIStepsRunner, packageDeps)
+xmippProjectionsExplorer = env.SymLink('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py')
+Depends(xmippProjectionsExplorer, packageDeps)
+xmippShowj = env.SymLink('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py')
+Depends(xmippShowj, packageDeps)
+xmippTomoj = env.SymLink('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py')
+Depends(xmippTomoj, packageDeps)
+xmippVisualizePreprocessingMicrographj = env.SymLink('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
+Depends(xmippVisualizePreprocessingMicrographj, packageDeps)
+xmippVolumeAlign = env.SymLink('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh')
+Depends(xmippVolumeAlign, packageDeps)
+xmippImagej = env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
+Depends(xmippImagej, packageDeps)
+xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
+Depends(xmippPython, packageDeps)
 
+def AddXmippTest(name, testprog, command):
+    #testprog = AddXmippProgram(name, ['gtest'], 'tests')
+    testname = 'xmipp_' + name
+    xmlFileName = join('applications','tests','OUTPUT', testname) + ".xml"
+    if  os.path.exists(xmlFileName):
+       os.remove(xmlFileName)
+    testcase = env.Alias('run_' + name , env.Command(xmlFileName, testname, command))
+    env.Depends(testcase, testprog)
+    test = env.Alias('run_tests', testcase)
+    AlwaysBuild(testcase)
+    return testcase
 
+_libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
+_depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
+if int(env['gtest']):
+    testCTF = env.AddProgram('xmipp_test_ctf', 
+                             src=['applications/tests/test_ctf'],
+                             incs=[Dir('.').path],
+                             libs=_libstests,
+                             deps=_depstests)
+    AddXmippTest('xmipp_test_ctf', testCTF, "$SOURCE --gtest_output=xml:$TARGET")
+    testEuler = env.AddProgram('xmipp_test_euler', 
+                               src=['applications/tests/test_euler'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_euler', testEuler, "$SOURCE --gtest_output=xml:$TARGET")
+    testFftw = env.AddProgram('xmipp_test_fftw', 
+                               src=['applications/tests/test_fftw'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_fftw', testFftw, "$SOURCE --gtest_output=xml:$TARGET")
+    testFilters = env.AddProgram('xmipp_test_filters', 
+                                 src=['applications/tests/test_filters'],
+                                 incs=[Dir('.').path],
+                                 libs=_libstests,
+                                 deps=_depstests)
+    AddXmippTest('xmipp_test_filters', testFilters, "$SOURCE --gtest_output=xml:$TARGET")
+    testFringeProcessing = env.AddProgram('xmipp_test_fringe_processing', 
+                                          src=['applications/tests/test_fringe_processing'],
+                                          incs=[Dir('.').path],
+                                          libs=_libstests,
+                                          deps=_depstests)
+    AddXmippTest('xmipp_test_fringe_processing', testFringeProcessing, "$SOURCE --gtest_output=xml:$TARGET")
+    testFuncs = env.AddProgram('xmipp_test_funcs', 
+                               src=['applications/tests/test_funcs'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_funcs', testFuncs, "$SOURCE --gtest_output=xml:$TARGET")
+    testGeometry = env.AddProgram('xmipp_test_geometry', 
+                                  src=['applications/tests/test_geometry'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_geometry', testGeometry, "$SOURCE --gtest_output=xml:$TARGET")
+    testImage = env.AddProgram('xmipp_test_image', 
+                               src=['applications/tests/test_image'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_image', testImage, "$SOURCE --gtest_output=xml:$TARGET")
+    testImageGeneric = env.AddProgram('xmipp_test_image_generic', 
+                                      src=['applications/tests/test_image_generic'],
+                                      incs=[Dir('.').path],
+                                      libs=_libstests,
+                                      deps=_depstests)
+    AddXmippTest('xmipp_test_image_generic', testImageGeneric, "$SOURCE --gtest_output=xml:$TARGET")
+    testMatrix = env.AddProgram('xmipp_test_matrix', 
+                               src=['applications/tests/test_matrix'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_matrix', testMatrix, "$SOURCE --gtest_output=xml:$TARGET")
+    testMetadata = env.AddProgram('xmipp_test_metadata', 
+                                  src=['applications/tests/test_metadata'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_metadata', testMetadata, "$SOURCE --gtest_output=xml:$TARGET")
+    testMultidim = env.AddProgram('xmipp_test_multidim', 
+                                  src=['applications/tests/test_multidim'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_multidim', testMultidim, "$SOURCE --gtest_output=xml:$TARGET")
+    testPolar = env.AddProgram('xmipp_test_polar', 
+                               src=['applications/tests/test_polar'],
+                               incs=[Dir('.').path],
+                               libs=_libstests,
+                               deps=_depstests)
+    AddXmippTest('xmipp_test_polar', testPolar, "$SOURCE --gtest_output=xml:$TARGET")
+    testPolynomials = env.AddProgram('xmipp_test_polynomials', 
+                                     src=['applications/tests/test_polynomials'],
+                                     incs=[Dir('.').path],
+                                     libs=_libstests,
+                                     deps=_depstests)
+    AddXmippTest('xmipp_test_polynomials', testPolynomials, "$SOURCE --gtest_output=xml:$TARGET")
+    testSampling = env.AddProgram('xmipp_test_sampling', 
+                                  src=['applications/tests/test_sampling'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_sampling', testSampling, "$SOURCE --gtest_output=xml:$TARGET")
+    testSymmetries = env.AddProgram('xmipp_test_symmetries', 
+                                    src=['applications/tests/test_symmetries'],
+                                    incs=[Dir('.').path],
+                                    libs=_libstests,
+                                    deps=_depstests)
+    AddXmippTest('xmipp_test_symmetries', testSymmetries, "$SOURCE --gtest_output=xml:$TARGET")
+    testTransformation = env.AddProgram('xmipp_test_transformation', 
+                                        src=['applications/tests/test_transformation'],
+                                        incs=[Dir('.').path],
+                                        libs=_libstests,
+                                        deps=_depstests)
+    AddXmippTest('xmipp_test_transformation', testTransformation, "$SOURCE --gtest_output=xml:$TARGET")
+    testDimred = env.AddProgram('xmipp_test_dimred', 
+                                src=['applications/tests/test_dimred'],
+                                incs=[Dir('.').path],
+                                libs=_libstests,
+                                deps=_depstests)
+    AddXmippTest('xmipp_test_dimred', testDimred, "$SOURCE --gtest_output=xml:$TARGET")
+    testWavelets = env.AddProgram('xmipp_test_wavelets', 
+                                  src=['applications/tests/test_wavelets'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_wavelets', testWavelets, "$SOURCE --gtest_output=xml:$TARGET")
+    testFilename = env.AddProgram('xmipp_test_filename', 
+                                  src=['applications/tests/test_filename'],
+                                  incs=[Dir('.').path],
+                                  libs=_libstests,
+                                  deps=_depstests)
+    AddXmippTest('xmipp_test_filename', testFilename, "$SOURCE --gtest_output=xml:$TARGET")
 
-lastTarget = xmippParallel
+packageDeps = xmippParallel
 
-Default(lastTarget)
-Return('lastTarget')
+Default(packageDeps)
+Return('packageDeps')
