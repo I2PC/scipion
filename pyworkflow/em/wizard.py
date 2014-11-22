@@ -29,7 +29,7 @@ This module implement some wizards
 """
 
 import os
-from os.path import basename
+from os.path import basename, exists
 import Tkinter as tk
 import ttk
 
@@ -353,6 +353,33 @@ class GaussianParticlesWizard(GaussianWizard):
 class GaussianVolumesWizard(GaussianWizard):
     pass   
     
+    
+class ImportAcquisitionWizard(EmWizard):
+    _targets = [(ProtImportImages, ['acquisitionWizard'])]
+    
+    def show(self, form, *params):
+        prot = form.protocol
+        acquisitionInfo = prot.loadAcquisitionInfo()
+        
+        if prot.importFilePath:
+            if exists(prot.importFilePath):
+                if acquisitionInfo:
+                    msg = ''
+                    for k, v in acquisitionInfo.iteritems():
+                        msg += '%s = %s\n' % (k, v)
+                    msg += '\n*Do you want to use detected acquisition values?*'
+                    response = dialog.askYesNo("Import acquisition", msg, form.root)
+                    if response:
+                        for k, v in acquisitionInfo.iteritems():
+                            form.setVar(k, v)
+                else:
+                    dialog.showWarning("Import failed", 
+                                       "Could not import acquisition info.", form.root)
+            else:
+                dialog.showError("Input error", "*Import file doesn't exist.*\nFile:\n%s" % prot.importFilePath, form.root)
+        else:
+            dialog.showError("Input error", "Select import file first", form.root) 
+            
 
 #===============================================================================
 #  Dialogs used by wizards
@@ -748,22 +775,4 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
-    
-    
-#===============================================================================
-#    Wizards base classes
-#===============================================================================
-
-class ImportAcquisitionWizard(EmWizard):
-    _targets = [(ProtImportImages, ['acquisitionWizard'])]
-    
-    def show(self, form, *params):
-        prot = form.protocol
-        acquisition = None # prot.loadAcquisition()
-        
-        if acquisition is not None:
-            pass
-        else:
-            dialog.showWarning("Import failed", 
-                               "Could not import acquisition info.", form.root)    
     

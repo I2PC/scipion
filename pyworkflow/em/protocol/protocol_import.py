@@ -210,6 +210,7 @@ class ProtImportImages(ProtImport):
         
         group = form.addGroup('Acquisition info')
         group.addParam('acquisitionWizard', LabelParam, important=True,
+                       condition='importFrom != %d' % self.IMPORT_FROM_FILES,
                        label='Use the wizard button to import acquisition.',
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
@@ -346,7 +347,11 @@ class ProtImportImages(ProtImport):
         acquisition = Acquisition()
         self.fillAcquisition(acquisition)
         
-        return acquisition    
+        return acquisition   
+    
+    def loadAcquisitionInfo(self):
+        """ Override to import acquisition from the specified format. """
+        return None 
 
 
 class ProtImportMicBase(ProtImportImages):
@@ -412,23 +417,63 @@ class ProtImportMicrographs(ProtImportMicBase):
                            "from import, preprocess or downsample protocols.")
 
     def _insertAllSteps(self):
-        if self.importFrom == self.IMPORT_FROM_FILES:
+        importFrom = self.importFrom.get()
+        
+        if importFrom == self.IMPORT_FROM_FILES:
             ProtImportMicBase._insertAllSteps(self)
-        elif self.importFrom == self.IMPORT_FROM_EMX:
-            self._insertFunctionStep('importFromEmxStep', self.micrographsEMX.get())
-        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            self._insertFunctionStep('importFromXmippStep', self.micrographsMd.get())
+        elif importFrom == self.IMPORT_FROM_EMX:
+            self._insertFunctionStep('importMicrographsStep', importFrom,
+                                     self.micrographsEMX.get())
+        elif importFrom == self.IMPORT_FROM_XMIPP3:
+            self._insertFunctionStep('importMicrographsStep', importFrom,
+                                     self.micrographsMd.get())
             
-    def importFromEmxStep(self, emxFile):
-        from pyworkflow.em.packages.emxlib import EmxImport
-        emx = EmxImport()
-        emx.importData(self, emxFile, copyOrLink=self.getCopyOrLink())
+    def getImportClass(self):
+        """ Return the class in charge of importing the files. """
+        if self.importFrom == self.IMPORT_FROM_EMX:
+            from pyworkflow.em.packages.emxlib import EmxImport
+            self.importFilePath = self.micrographsEMX.get('').strip()
+            return EmxImport(self, self.importFilePath)
+        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
+            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            self.importFilePath = self.micrographsMd.get('').strip()
+            return XmippImport(self, self.micrographsMd.get())
+        else:
+            self.importFilePath = ''
+            return None       
         
-    def importFromXmippStep(self, micrographsMd):
-        from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
-        xi = XmippImport(self)
-        xi.importMicrographs(micrographsMd)
+    def importMicrographsStep(self, importFrom, *args):
+        ci = self.getImportClass()
+        ci.importMicrographs()
         
+        size = self.outputMicrographs.getSize()
+        sampling = self.outputMicrographs.getSamplingRate()
+        summary = "Import of *%d* Micrographs from %s file:\n" % (size, self.getEnumText('importFrom'))
+        summary += self.importFilePath + '\n'
+        summary += "Sampling rate : *%0.2f* A/px\n\n" % sampling
+        if self.copyFiles:
+            summary += 'WARNING: Binary files copied into project (extra disk space)'
+        self.summaryVar.set(summary)
+        
+    def loadAcquisitionInfo(self):
+        ci = self.getImportClass()
+        if exists(self.importFilePath):
+            return ci.loadAcquisitionInfo()
+        else:
+            return None
+        
+    def _validate(self):
+        ci = self.getImportClass()
+        if ci is None:
+            return ProtImportMicBase._validate(self)
+        else:
+            return ci.validate()
+    
+    def _summary(self):
+        if self.importfFrom == self.IMPORT_FROM_FILES:
+            return ProtImportMicBase._sumary()
+        else:
+            return [self.summaryVar.get()]
         
 
 class ProtImportMovies(ProtImportMicBase):

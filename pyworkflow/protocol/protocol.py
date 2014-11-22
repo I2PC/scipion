@@ -325,9 +325,11 @@ class Protocol(Step):
         self._stepsExecutor = None
         self._stepsDone = Integer(0)
         self._numberOfSteps = Integer(0)
-        
         # For visualization
-        self.allowHeader = Boolean(True)        
+        self.allowHeader = Boolean(True)    
+        # Create an String variable to allow some protocol to precompute
+        # the summary message
+        self.summaryVar = String()    
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 

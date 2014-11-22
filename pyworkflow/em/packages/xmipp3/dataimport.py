@@ -24,7 +24,8 @@
 # *
 # **************************************************************************
 
-from os.path import join, basename, dirname
+from os.path import join, basename, dirname, exists
+from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom, copyTree, createLink
 from pyworkflow.em.packages.xmipp3.convert import readSetOfMicrographs, CTF_PSD_DICT
@@ -38,11 +39,12 @@ class XmippImport():
     """ Class used to import different kind of objects
     from Xmipp projects into Scipion.
     """
-    def __init__(self, protocol):
+    def __init__(self, protocol, mdFile):
         self.protocol = protocol
+        self._mdFile = mdFile
         self.copyOrLink = protocol.getCopyOrLink()
     
-    def importMicrographs(self, micsMd):
+    def importMicrographs(self):
         """ Import a SetOfMicrographs from a given micrograph metadata.
         (usually the result "micrographs.xmd" from Xmipp protocols)
         If the CTF is found, a SetOfCTF will be also created.
@@ -51,17 +53,17 @@ class XmippImport():
                 the outputs.
             micsMd: the metadata with micrographs.
         """
-        self._findPathAndCtf(micsMd)
+        self._findPathAndCtf()
         micSet = self.protocol._createSetOfMicrographs()
-        micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % micsMd)
+        micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % self._mdFile)
         
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(micSet)
         self.protocol.fillAcquisition(micSet.getAcquisition())
-        # Read the micrographs from the 'micsMd' metadata
+        # Read the micrographs from the 'self._mdFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
-        readSetOfMicrographs(micsMd, micSet, 
+        readSetOfMicrographs(self._mdFile, micSet, 
                            preprocessImageRow=self._preprocessImageRow, 
                            readAcquisition=False)
         self.protocol._defineOutputs(outputMicrographs=micSet)
@@ -77,11 +79,12 @@ class XmippImport():
             self.protocol._defineOutputs(outputCTF=ctfSet)
             self.protocol._defineCtfRelation(micSet, ctfSet)
         
-    def _findPathAndCtf(self, micsMd):
+    def _findPathAndCtf(self):
         """ Find the relative path from which the micrographs exists
         repect to the metadata location. Also check if it contains
         CTF information and their relative root.
         """
+        micsMd = self._mdFile
         row = getMdFirstRow(micsMd)
         
         if row is None:
@@ -99,6 +102,16 @@ class XmippImport():
         else:
             self._ctfPath = None # means no CTF info from micrographs metadata
     
+    def validate(self):
+        """ Try to find errors on import. """
+        errors = []
+        try:
+            self._findPathAndCtf()
+        except Exception, ex:
+            errors.append(str(ex))
+            
+        return errors
+            
         
     def _preprocessImageRow(self, img, imgRow):
         if self._micsPath:
@@ -138,6 +151,28 @@ class XmippImport():
                 imgRow.setValue(label, newFilePath)
             
     
-    def _postprocessImageRow(self, img, imgRow):
-        pass  
+    def loadAcquisitionInfo(self):
+        """ Return a dictionary with acquisition values and 
+        the sampling rate information.
+        In the case of Xmipp, they are stored in files:
+        acquisition_info.xmd and microscope.xmd 
+        """
+        acquisitionDict = OrderedDict()
+        
+        if exists(self._mdFile):
+            dirName = dirname(self._mdFile)
+            acquisitionFile = join(dirName, 'acquisition_info.xmd')
+            microscopeFile = join(dirName, 'microscope.xmd')
+                
+            if exists(microscopeFile):
+                row = getMdFirstRow(microscopeFile)
+                acquisitionDict['voltage'] = row.getValue(xmipp.MDL_CTF_VOLTAGE)
+                acquisitionDict['sphericalAberration'] = row.getValue(xmipp.MDL_CTF_CS)
+            
+            if exists(acquisitionFile):
+                row = getMdFirstRow(acquisitionFile)
+                acquisitionDict['samplingRate'] = row.getValue(xmipp.MDL_SAMPLINGRATE)
+            
+        return acquisitionDict
+          
                 

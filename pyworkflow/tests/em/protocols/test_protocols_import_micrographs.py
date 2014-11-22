@@ -97,6 +97,7 @@ class TestImportMicrographs(TestImportBase):
         args['importFrom'] = ProtImportMicrographs.IMPORT_FROM_EMX
         args['micrographsEMX'] = emxFn
         protEmxImport = self.newProtocol(ProtImportMicrographs, **args)
+        protEmxImport.setObjLabel('from emx (with coords)')
         self.launchProtocol(protEmxImport)
         _checkOutput(protEmxImport, [], size=1)
 
