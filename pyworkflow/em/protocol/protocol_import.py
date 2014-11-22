@@ -470,8 +470,8 @@ class ProtImportMicrographs(ProtImportMicBase):
             return ci.validate()
     
     def _summary(self):
-        if self.importfFrom == self.IMPORT_FROM_FILES:
-            return ProtImportMicBase._sumary()
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            return ProtImportMicBase._summary(self)
         else:
             return [self.summaryVar.get()]
         
