@@ -1194,6 +1194,7 @@ Depends(xmippImagej, packageDeps)
 xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
 Depends(xmippPython, packageDeps)
 
+# Tests
 def AddXmippTest(name, testprog, command):
     #testprog = AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
@@ -1208,6 +1209,7 @@ def AddXmippTest(name, testprog, command):
     AlwaysBuild(testcase)
     return testcase
 
+# C tests
 _libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
 _depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
 if int(env['gtest']):
@@ -1331,6 +1333,9 @@ if int(env['gtest']):
                                   libs=_libstests,
                                   deps=_depstests)
     AddXmippTest('test_filename', testFilename, "$SOURCE --gtest_output=xml:$TARGET")
+
+# Python tests
+
 
 packageDeps = xmippParallel
 
