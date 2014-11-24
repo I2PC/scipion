@@ -90,13 +90,13 @@ class ProtImportMicrographs(ProtImportMicBase):
         """ Just redefine to put some import parameters
         before the acquisition related parameters.
         """
-        form.addParam('micrographsEMX', FileParam,
+        form.addParam('emxFile', FileParam,
               condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
               label='Input EMX file',
               help="Select the EMX file containing micrographs information.\n"
                    "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
         
-        form.addParam('micrographsMd', FileParam,
+        form.addParam('mdFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Micrographs metadata file',
                       help="Select the micrographs Xmipp metadata file.\n"
@@ -117,12 +117,12 @@ class ProtImportMicrographs(ProtImportMicBase):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
-            self.importFilePath = self.micrographsEMX.get('').strip()
+            self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
-            self.importFilePath = self.micrographsMd.get('').strip()
-            return XmippImport(self, self.micrographsMd.get())
+            self.importFilePath = self.mdFile.get('').strip()
+            return XmippImport(self, self.mdFile.get())
         else:
             self.importFilePath = ''
             return None       
@@ -152,7 +152,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         if ci is None:
             return ProtImportMicBase._validate(self)
         else:
-            return ci.validate()
+            return ci.validateMicrographs()
     
     def _summary(self):
         if self.importFrom == self.IMPORT_FROM_FILES:

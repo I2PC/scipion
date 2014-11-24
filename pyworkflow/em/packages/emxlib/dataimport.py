@@ -69,7 +69,8 @@ class EmxImport():
         self.classElement = None
         self.binaryFile = None
         self.object = None
-        self.objDict = {}
+        self.objDict = {} # store the first object of each class
+        
         for classElement in emxlib.CLASSLIST:
             obj = emxData.readFirstObject(classElement, self._emxFile)
             if obj is not None:
@@ -111,23 +112,38 @@ class EmxImport():
         
     def importMicrographs(self):
         self.importData()
-    
+        
+    def importParticles(self):
+        self.importData()
+            
     #--------------------------- INFO functions -------------------------------------------- 
-    def validate(self):
+    def validate(self, objectClassName):
+        """ Do some validation about the input EMX file.
+        Params:
+            objectClassName: it could be either (MICROGRAPHS or PARTICLES)
+        """
         emxFile = self._emxFile
         errors = []
         # Check that input EMX file exist
         if not exists(emxFile):
-                errors.append("Input EMX file *%s* doesn't exists" % emxFile)
+                errors.append("Input EMX file doesn't exists:\n*%s*" % emxFile)
         else:
             self._loadEmxInfo()   
             if self.object is None:
-                errors.append('Cannot find any object in EMX file *%s*' % emxFile)
+                errors.append("Cannot find any object in EMX file:\n*%s*" % emxFile)
             else:
                 if self.binaryFile is None:
-                    errors.append('Cannot find binary data *%s* associated with EMX metadata file.\n' % self.binaryFile)
+                    errors.append("Cannot find binary data *%s* associated with EMX metadata file.\n" % self.binaryFile)
                 
+                if objectClassName not in self.objDict:
+                    errors.append("EMX object *%s* not found in EMX file:\n*%s*" % emxFile)
         return errors
+    
+    def validateMicrographs(self):
+        return self.validate(emxlib.MICROGRAPH)
+    
+    def validateParticles(self):
+        return self.validate(emxlib.PARTICLE)
     
     
 class ProtEmxExport(EMProtocol):
@@ -145,7 +161,7 @@ class ProtEmxExport(EMProtocol):
         form.addParam('inputSet', PointerParam, 
                       pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles',
                       label="Set to export",
-                      help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
+                      help="Select the microgrpahs, coordinates or particles set to be exported to EMX.")
         form.addParam('ctfEstimation', RelationParam,
                       allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 

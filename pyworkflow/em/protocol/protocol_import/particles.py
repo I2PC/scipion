@@ -54,20 +54,20 @@ class ProtImportParticles(ProtImportImages):
     
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3 and relion formats. """
-        form.addParam('micrographsEMX', FileParam,
+        form.addParam('emxFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
                       help="Select the EMX file containing particles information.\n"
                            "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
         
-        form.addParam('particlesMd', FileParam,
+        form.addParam('mdFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd_ file result\n"
                            "from Xmipp protocols execution.")
         
-        form.addParam('dataStar', FileParam,
+        form.addParam('dataStarFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
@@ -89,6 +89,20 @@ class ProtImportParticles(ProtImportImages):
         else:
             self._insertFunctionStep('importParticlesStep', importFrom,
                                      self.importFilePath)
+            
+    def getImportClass(self):
+        """ Return the class in charge of importing the files. """
+        if self.importFrom == self.IMPORT_FROM_EMX:
+            from pyworkflow.em.packages.emxlib import EmxImport
+            self.importFilePath = self.emxFile.get('').strip()
+            return EmxImport(self, self.importFilePath)
+        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
+            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            self.importFilePath = self.mdFile.get('').strip()
+            return XmippImport(self, self.mdFile.get())
+        else:
+            self.importFilePath = ''
+            return None 
                     
     def setSamplingRate(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())
@@ -99,7 +113,7 @@ class ProtImportParticles(ProtImportImages):
         
         size = self.outputParticles.getSize()
         sampling = self.outputParticles.getSamplingRate()
-        summary = "Import of *%d* Micrographs from %s file:\n" % (size, self.getEnumText('importFrom'))
+        summary = "Import of *%d* Particles from %s file:\n" % (size, self.getEnumText('importFrom'))
         summary += self.importFilePath + '\n'
         summary += "Sampling rate : *%0.2f* A/px\n\n" % sampling
         if self.copyFiles:
@@ -119,13 +133,13 @@ class ProtImportParticles(ProtImportImages):
         if ci is None:
             return ProtImportImages._validate(self)
         else:
-            return ci.validate()
+            return ci.validateParticles()
     
     def _summary(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
             return ProtImportImages._summary(self)
         else:
-            return [self.summaryVar.get()]
+            return [self.summaryVar.get('')]
 
 
 class ProtImportAverages(ProtImportParticles):
