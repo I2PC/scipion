@@ -1217,23 +1217,23 @@ xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspa
 Depends(xmippPython, packageDeps)
 
 # Tests
-def AddXmippTest(name, testprog, command):
-    #testprog = AddXmippProgram(name, ['gtest'], 'tests')
-    testname = 'xmipp_' + name
-    xmlFileName = join('applications','tests','OUTPUT', testname) + ".xml"
-    if  os.path.exists(xmlFileName):
-       os.remove(xmlFileName)
-    env['ENV']['LD_LIBRARY_PATH'] = ':'.join([Dir('lib').abspath, Dir('#software/lib').abspath])
-    env['ENV']['XMIPP_HOME'] = Dir('.').abspath
-    testcase = env.Alias('run_' + name , env.Command(xmlFileName, 'bin/xmipp_%s' % name, command))
-    env.Depends(testcase, testprog)
-    test = env.Alias('run_tests', testcase)
-    AlwaysBuild(testcase)
-    return testcase
-
-_libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
-_depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
 if int(env['gtest']):
+    def AddXmippTest(name, testprog, command):
+        #testprog = AddXmippProgram(name, ['gtest'], 'tests')
+        testname = 'xmipp_' + name
+        xmlFileName = join('applications','tests','OUTPUT', testname) + ".xml"
+        if  os.path.exists(xmlFileName):
+           os.remove(xmlFileName)
+        env['ENV']['LD_LIBRARY_PATH'] = ':'.join([Dir('lib').abspath, Dir('#software/lib').abspath])
+        env['ENV']['XMIPP_HOME'] = Dir('.').abspath
+        testcase = env.Alias('run_' + name , env.Command(xmlFileName, 'bin/xmipp_%s' % name, command))
+        env.Depends(testcase, testprog)
+        test = env.Alias('run_tests', testcase)
+        AlwaysBuild(testcase)
+        return testcase
+    
+    _libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
+    _depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
     # C tests
     testCTF = env.AddProgram('xmipp_test_ctf', 
                              src=['applications/tests/test_ctf'],
