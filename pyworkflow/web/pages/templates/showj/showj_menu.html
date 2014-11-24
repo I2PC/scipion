@@ -43,7 +43,7 @@
 			 />
 			 
  			<!-- VOLUME VISUALIZE WITH ASTEX --> 
- 
+ <!--
  			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%} 
  			<input type="button" id="volume_jsmol" name="select_mode" 
 			onclick="changeMode('volume_astex');"
@@ -56,23 +56,10 @@
 			 "
 			 />
 			 {% endif %} 
+-->
 
-			<!-- VOLUME VISUALIZE WITH JSMOL -->
- 			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%}  
-			<input type="button" id="volume_jsmol" name="select_mode" 
-			onclick="changeMode('volume_jsmol');"
-			class="submitButton
-			 {% if form.mode.value != 'volume_jsmol' %}
-			 visualizeVolOff
-			 {% else %}
-			  visualizeVolOn
-			 {% endif %}
-			 "
-			 />
-			 {% endif %} 
-			 
 			<!-- VOLUME VISUALIZE WITH CHIMERA HEADLESS -->
-<!-- 
+ 
 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
 			<input type="button" id="volume_chimera" name="select_mode" 
 			onclick="changeMode('volume_chimera');" 
@@ -85,7 +72,23 @@
  			 " 
 			 />
 			 {% endif %}
+
+			<!-- VOLUME VISUALIZE WITH JSMOL -->
+<!--			
+ 			{% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb'%}  
+			<input type="button" id="volume_jsmol" name="select_mode" 
+			onclick="changeMode('volume_jsmol');"
+			class="submitButton
+			 {% if form.mode.value != 'volume_jsmol' %}
+			 visualizeVolOff
+			 {% else %}
+			  visualizeVolOn
+			 {% endif %}
+			 "
+			 />
+			 {% endif %} 
 -->
+
 		</div>
 		
 		{% if not form.zoom.is_hidden %}
