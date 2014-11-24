@@ -92,7 +92,7 @@ class ProtImportVolumes(ProtImportImages):
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
-            self._defineOutputs(outputVol=vol)
+            self._defineOutputs(outputVolume=vol)
         
     #--------------------------- INFO functions ----------------------------------------------------
     
