@@ -54,10 +54,16 @@ class ProtImport(EMProtocol):
         filesCondition = self._getFilesCondition()
         
         form.addSection(label='Import')
-        form.addParam('importFrom', EnumParam, 
-                      choices=importChoices, default=self.IMPORT_FROM_FILES,
-                      label='Import from',
-                      help='Select the type of import.')
+        if len(importChoices) > 1: # only from files
+            form.addParam('importFrom', EnumParam, 
+                          choices=importChoices, default=self.IMPORT_FROM_FILES,
+                          label='Import from',
+                          help='Select the type of import.')
+        else:
+            form.addHidden('importFrom', EnumParam, 
+                          choices=importChoices, default=self.IMPORT_FROM_FILES,
+                          label='Import from',
+                          help='Select the type of import.')
         form.addParam('filesPath', PathParam, 
                       condition=filesCondition,
                       label="Files path",

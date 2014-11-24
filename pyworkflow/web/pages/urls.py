@@ -87,6 +87,7 @@ urlpatterns = patterns('',
     #SHOWJ 
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
+    url(r'^jsmol/$', 'app.views_showj.jsmol'),
     
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
