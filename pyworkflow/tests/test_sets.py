@@ -30,6 +30,7 @@ import random
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
+from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.em.data import EMObject
 
 from pyworkflow.em.protocol.protocol_import import (
@@ -49,6 +50,8 @@ class TestSets(BaseTest):
     def setUpClass(cls):
         """Prepare the data that we will use later on."""
 
+        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+
         setupTestProject(cls)  # defined in BaseTest, creates cls.proj
 
         cls.dataset_xmipp = DataSet.getDataSet('xmipp_tutorial')
@@ -60,9 +63,8 @@ class TestSets(BaseTest):
         #
         new = cls.proj.newProtocol  # short notation
         launch = cls.proj.launchProtocol
-
         # Micrographs
-        print "Importing data - micrographs"
+        print magentaStr("\n==> Importing data - micrographs")
         p_imp_micros = new(ProtImportMicrographs,
                            filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
@@ -70,7 +72,7 @@ class TestSets(BaseTest):
         cls.micros = p_imp_micros.outputMicrographs
 
         # Volumes
-        print "Importing data - volumes"
+        print magentaStr("\n==> Importing data - volumes")
         p_imp_volumes = new(ProtImportVolumes,
                             filesPath=cls.dataset_xmipp.getFile('volumes'),
                             samplingRate=9.896)
@@ -78,7 +80,7 @@ class TestSets(BaseTest):
         cls.vols = p_imp_volumes.outputVolumes
 
         # Movies
-        print "Importing data - movies"
+        print magentaStr("\n==> Importing data - movies")
         p_imp_movies = new(ProtImportMovies,
                            filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
@@ -87,7 +89,7 @@ class TestSets(BaseTest):
         cls.movies = p_imp_movies.outputMovies
 
         # Particles
-        print "Importing data - particles"
+        print magentaStr("\n==> Importing data - particles")
         p_imp_particles = new(ProtImportParticles,
                               filesPath=cls.dataset_mda.getFile('particles'),
                               samplingRate=3.5)
@@ -122,9 +124,11 @@ class TestSets(BaseTest):
     def testSplit(self):
         """Test that the split operation works as expected."""
 
+        print "\n", greenStr(" Test Split ".center(75, '-'))
+
         def check(set0, n=2, randomize=False):
             "Simple checks on split sets from set0."
-            print "Checking split of %s" % type(set0).__name__
+            print magentaStr("\n==> Check split of %s" % type(set0).__name__)
             unsplit_set = [x.strId() for x in set0]
             p_split = self.split(set0, n=n, randomize=randomize)
             # Are all output elements of the protocol in the original set?
@@ -145,8 +149,11 @@ class TestSets(BaseTest):
     def testSubset(self):
         """Test that the subset operation works as expected."""
 
+        print "\n", greenStr(" Test Subset ".center(75, '-'))
+
         def check(set0, n1=2, n2=2):
             "Simple checks on subsets, coming from split sets of set0."
+            print magentaStr("\n==> Check subset of %s" % type(set0).__name__)
             p_split1 = self.split(set0, n=n1, randomize=True)
             p_split2 = self.split(set0, n=n2, randomize=True)
 
@@ -174,7 +181,11 @@ class TestSets(BaseTest):
     def testMerge(self):
         """Test that the union operation works as expected."""
 
+        print "\n", greenStr(" Test Merge ".center(75, '-'))
+
         def check(set0):
+            "Simple checks on merge, coming from many split sets of set0."
+            print magentaStr("\n==> Check merge of %s" % type(set0).__name__)
             p_union = self.proj.newProtocol(ProtUnionSet)
 
             setsIds = []
