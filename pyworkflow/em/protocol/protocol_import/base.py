@@ -50,9 +50,6 @@ class ProtImport(EMProtocol):
     IMPORT_FROM_FILES = 0
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        self._defineBasicParams(form)
-        
-    def _defineBasicParams(self, form):
         importChoices = ['files'] + self._getImportChoices()
         filesCondition = self._getFilesCondition()
         
@@ -87,6 +84,13 @@ class ProtImport(EMProtocol):
                            "created pointing to original files. This approach\n"
                            "has the drawback that if the project is moved to\n"
                            "another computer, the links needs to be restored.\n")
+        self._defineImportParams(form)
+        
+    def _defineImportParams(self, form):
+        """ Override to add options related to the different types
+        of import that are allowed by each protocol.
+        """
+        pass
         
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

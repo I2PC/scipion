@@ -27,6 +27,8 @@
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 """
 
+from os.path import exists
+
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import FloatParam, FileParam
 
@@ -50,14 +52,13 @@ class ProtImportParticles(ProtImportImages):
         """
         return ['emx', 'xmipp3', 'relion']
     
-    def _defineBasicParams(self, form):
-        ProtImportImages._defineBasicParams(self, form)
-        
+    def _defineImportParams(self, form):
+        """ Import files from: emx, xmipp3 and relion formats. """
         form.addParam('micrographsEMX', FileParam,
-              condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
-              label='Input EMX file',
-              help="Select the EMX file containing particles information.\n"
-                   "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      label='Input EMX file',
+                      help="Select the EMX file containing particles information.\n"
+                           "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
         
         form.addParam('particlesMd', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
@@ -72,16 +73,60 @@ class ProtImportParticles(ProtImportImages):
                       help="Select the particles Xmipp metadata file.\n"
                            "It is usually a images.xmd_ file result\n"
                            "from Xmipp protocols execution.")
-         
-    def _defineParams(self, form):
-        ProtImportImages._defineParams(self, form)
-        group = self.acquisitionGroup
+        
+    def _defineAcquisitionParams(self, form):
+        group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
+
+
+    def _insertAllSteps(self):
+        importFrom = self.importFrom.get()
+        ci = self.getImportClass()
         
+        if ci is None:
+            ProtImportImages._insertAllSteps(self)
+        else:
+            self._insertFunctionStep('importParticlesStep', importFrom,
+                                     self.importFilePath)
+                    
     def setSamplingRate(self, imgSet):
         imgSet.setSamplingRate(self.samplingRate.get())
     
+    def importParticlesStep(self, importFrom, *args):
+        ci = self.getImportClass()
+        ci.importParticles()
+        
+        size = self.outputParticles.getSize()
+        sampling = self.outputParticles.getSamplingRate()
+        summary = "Import of *%d* Micrographs from %s file:\n" % (size, self.getEnumText('importFrom'))
+        summary += self.importFilePath + '\n'
+        summary += "Sampling rate : *%0.2f* A/px\n\n" % sampling
+        if self.copyFiles:
+            summary += 'WARNING: Binary files copied into project (extra disk space)'
+        self.summaryVar.set(summary)
+        
+    def loadAcquisitionInfo(self):
+        ci = self.getImportClass()
+        
+        if exists(self.importFilePath):
+            return ci.loadAcquisitionInfo()
+        else:
+            return None
+        
+    def _validate(self):
+        ci = self.getImportClass()
+        if ci is None:
+            return ProtImportImages._validate(self)
+        else:
+            return ci.validate()
+    
+    def _summary(self):
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            return ProtImportImages._summary(self)
+        else:
+            return [self.summaryVar.get()]
+
 
 class ProtImportAverages(ProtImportParticles):
     """Protocol to import a set of averages to the project"""

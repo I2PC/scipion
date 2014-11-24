@@ -55,7 +55,12 @@ class ProtImportImages(ProtImport):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         ProtImport._defineParams(self, form)
+        self._defineAcquisitionParams(form)
         
+    def _defineAcquisitionParams(self, form):
+        """ Define acquisition parameters, it can be overriden
+        by subclasses to change what parameters to include.
+        """
         group = form.addGroup('Acquisition info')
         group.addParam('acquisitionWizard', LabelParam, important=True,
                        condition='importFrom != %d' % self.IMPORT_FROM_FILES,
@@ -75,7 +80,8 @@ class ProtImportImages(ProtImport):
         group.addParam('magnification', IntParam, default=50000,
                    label=Message.LABEL_MAGNI_RATE, 
                    help=Message.TEXT_MAGNI_RATE)
-        self.acquisitionGroup = group
+        return group
+        
         
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):

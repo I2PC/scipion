@@ -45,7 +45,9 @@ class ProtImportMicBase(ProtImportImages):
     
     def _defineParams(self, form):
         ProtImportImages._defineParams(self, form)
-        group = self.acquisitionGroup
+        
+    def _defineAcquisitionParams(self, form):
+        group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRateMode', EnumParam, 
                        choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
                        default=SAMPLING_FROM_IMAGE,
@@ -59,6 +61,7 @@ class ProtImportMicBase(ProtImportImages):
                        condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER,
                        label=Message.LABEL_SCANNED,
                        help='')
+        return group
         
     def setSamplingRate(self, micSet):
         """ Set the sampling rate to the given set. """
@@ -83,9 +86,10 @@ class ProtImportMicrographs(ProtImportMicBase):
         """
         return ['emx', 'xmipp3']
     
-    def _defineBasicParams(self, form):
-        ProtImportMicBase._defineBasicParams(self, form)
-        
+    def _defineImportParams(self, form):
+        """ Just redefine to put some import parameters
+        before the acquisition related parameters.
+        """
         form.addParam('micrographsEMX', FileParam,
               condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
               label='Input EMX file',
@@ -101,15 +105,13 @@ class ProtImportMicrographs(ProtImportMicBase):
 
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
+        ci = self.getImportClass()
         
-        if importFrom == self.IMPORT_FROM_FILES:
+        if ci is None:
             ProtImportMicBase._insertAllSteps(self)
-        elif importFrom == self.IMPORT_FROM_EMX:
+        else:
             self._insertFunctionStep('importMicrographsStep', importFrom,
-                                     self.micrographsEMX.get())
-        elif importFrom == self.IMPORT_FROM_XMIPP3:
-            self._insertFunctionStep('importMicrographsStep', importFrom,
-                                     self.micrographsMd.get())
+                                     self.importFilePath)
             
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
