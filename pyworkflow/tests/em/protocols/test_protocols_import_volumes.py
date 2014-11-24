@@ -57,6 +57,6 @@ class TestImportVolumes(TestImportBase):
         args['filesPath'] = self.dsRelion.getFile('import/case2/relion_volumes.mrc') 
         args['filesPattern'] = ''
         prot2 = self.newProtocol(ProtImportVolumes, **args)
-        prot2.setObjLabel('from files (with mic id)')
+        prot2.setObjLabel('from mrc stack')
         self.launchProtocol(prot2)
 

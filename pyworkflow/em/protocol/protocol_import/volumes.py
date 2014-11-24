@@ -28,15 +28,12 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 from os.path import exists, basename
-from glob import glob
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, FileParam,
-                                        EnumParam, IntParam, StringParam, PointerParam,
-                                        LabelParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import expandPattern, createLink, copyFile
+from pyworkflow.protocol.params import FloatParam, FileParam
+from pyworkflow.utils.path import copyFile
 from pyworkflow.em.data import Volume, PdbFile
-from pyworkflow.em.convert import ImageHandler, NO_INDEX
+from pyworkflow.em.convert import ImageHandler
 
 from base import ProtImport
 from images import ProtImportImages
@@ -69,43 +66,51 @@ class ProtImportVolumes(ProtImportImages):
         """
         self.info("Using pattern: '%s'" % pattern)
         
-        volumeFiles = self.getMatchFiles()
-        n = len(volumeFiles)
         # Create a Volume template object
         vol = Volume()
         vol.setSamplingRate(self.samplingRate.get())
         copyOrLink = self.getCopyOrLink()
         imgh = ImageHandler()
         
-        if n > 1:
-            volSet = self._createSetOfVolumes()
-            volSet.setSamplingRate(self.samplingRate.get())
-            for fileName, fileId in self.iterFiles():
-                dst = self._getExtraPath(basename(fileName))
-                copyOrLink(fileName, dst)
-                _, _, _, n = imgh.getDimensions(dst)
-                    
-                if n > 1:
-                    for index in range(1, n+1):
-                        vol.cleanObjId()
-                        vol.setLocation(index, dst)
-                else:
-                    vol.setObjId(fileId)
-                    vol.setLocation(dst)
+        volSet = self._createSetOfVolumes()
+        volSet.setSamplingRate(self.samplingRate.get())
+        
+        for fileName, fileId in self.iterFiles():
+            dst = self._getExtraPath(basename(fileName))
+            copyOrLink(fileName, dst)
+            _, _, _, n = imgh.getDimensions(dst)
+            if n > 1:
+                for index in range(1, n+1):
+                    vol.cleanObjId()
+                    vol.setLocation(index, dst)
+                    volSet.append(vol)
+            else:
+                vol.setObjId(fileId)
+                vol.setLocation(dst)
                 volSet.append(vol)
+        
+        if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
-            vol.setLocation(volumeFiles[0])
             self._defineOutputs(outputVol=vol)
         
     #--------------------------- INFO functions ----------------------------------------------------
     
+    def _getVolMessage(self):
+        if self.hasAttribute('outputVol'):
+            return "*one* volume"
+        else:
+            return "*%d* volumes" % self.outputVolumes.getSize()
+        
     def _summary(self):
         summary = []
+        summary.append("Imported %s from:\n%s" % (self._getVolMessage(), self.getPattern()))
+        summary.append("Sampling rate: *%0.2f* (A/px)" % self.samplingRate.get())
         return summary
     
     def _methods(self):
         methods = []
+        methods.append("Used %s with a sampling rate *%0.2f*." % (self._getVolMessage(), self.samplingRate.get()))
         return methods
     
     
