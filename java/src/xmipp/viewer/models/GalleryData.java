@@ -466,6 +466,7 @@ public class GalleryData {
                 inputRenderLabel = MetaData.str2Label(renderLabel);
             }
             String sampleImage;
+            ColumnInfo auxRender = null;
             for (int i = 0; i < labelids.length; ++i) {
                 ci = initColumnInfo(labelids[i]);
                 if (labels != null) {
@@ -476,6 +477,8 @@ public class GalleryData {
                     }
                 } else {
                     ci.render = isRenderLabel(ci);
+                    if(ci.render)
+                        auxRender = ci;
                     ci.visible = isVisibleLabel(ci);
                 }
                 newLabels.add(ci);
@@ -488,12 +491,15 @@ public class GalleryData {
                 sampleImage = getSampleImage(ci);
                 if (ciFirstRender == null && ci.allowRender &&  sampleImage != null)
                     ciFirstRender = ci;
-                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible  &&  sampleImage != null) 
+                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible && sampleImage != null) 
                     ciFirstRenderVisible = ci;
             }
+            if(ciFirstRender == null)
+                ciFirstRender = ciFirstRenderVisible = auxRender;//if there are no images found render none image on gallery mode
             if (ciFirstRenderVisible != null) {
                 ciFirstRender = ciFirstRenderVisible;
             }
+            
             // Add MDL_ENABLED if not present
             if (!md.containsLabel(MDLabel.MDL_ENABLED) && (md.containsLabel(MDLabel.MDL_IMAGE) || md.containsLabel(MDLabel.MDL_MICROGRAPH))) {
                 newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
@@ -503,6 +509,7 @@ public class GalleryData {
                 }
                 // hasMdChanges = true;
             }
+            
 
             labels = newLabels;
             orderLabels();
