@@ -128,16 +128,17 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
+        outputset.setObjComment(self.getSummary())
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
         self._defineSourceRelation(inputset, outputset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
-        return ['Abrishami2013']
+        return []
 
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------------------
     def __str__(self):
         """ String representation of a Particle Picking Tilt run """
         if not hasattr(self, 'outputCoordinatesTiltPair'):

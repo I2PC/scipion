@@ -226,7 +226,7 @@ class XmippProtML2D(ProtClassify2D):
     
     def _summary(self):
         summary = []
-        summary.append('Number of input images: *%d*' % self.inputParticles.get().getSize())
+        summary.append('Input Particles: *%d*' % self.inputParticles.get().getSize())
         summary.append('Classified into *%d* classes' % self.numberOfReferences.get())
         
         if self.doMlf:

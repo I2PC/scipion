@@ -259,7 +259,7 @@ class XmippProtCL2D(ProtClassify2D):
     
     def _summary(self):
         summary = []
-        summary.append("Input particles: *%d*, Number of classes: *%d* \n" % (self.inputParticles.get().getSize(), 
+        summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
                                                                               self.numberOfReferences.get()))
         
         levelFiles = self._getLevelMdFiles()

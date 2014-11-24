@@ -125,8 +125,8 @@ class XmippProtCL2DAlign(ProtAlign2D):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output alignment not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
-            summary.append("Output Aligned Images: %s" % self.outputParticles.get())
+            summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
+            #summary.append("Output Aligned Images: %s" % self.outputParticles.get())
         return summary
     
     def _citations(self):

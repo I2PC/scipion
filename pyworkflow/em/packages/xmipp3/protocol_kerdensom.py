@@ -148,8 +148,8 @@ class KendersomBaseClassify(ProtClassify2D):
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classification not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputImages.get().getNameId())
-            summary.append("Output Classified Images: %s" % self.outputClasses)
+            summary.append("Input Particles: %s" % self.inputImages.get().getSize())
+            summary.append("Classified into %s classes" % self.outputClasses.getSize())
         return summary
     
     def _methods(self):
@@ -158,7 +158,7 @@ class KendersomBaseClassify(ProtClassify2D):
             messages.append("Output classification not ready yet.")
         else:    
             messages.append("*Kendersom classification*")
-            messages.append('Particles %s were classified to obtain classes %s.' % (self.inputImages.get().getNameId(), self.outputClasses.getNameId()))
+            messages.append('%s particles were classified to obtain %s classes ' % (self.inputImages.get().getSize(), self.outputClasses.getSize()))
         return messages
 
 
