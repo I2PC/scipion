@@ -212,7 +212,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                 
     def createOutputStep(self):
         # Create the SetOfImages objects on the database and the ImagesTiltPair
- 
+
         mdUntilted = xmipp.MetaData()
         mdTilted = xmipp.MetaData()
         #for objId in mdPairs:
@@ -224,77 +224,89 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             if exists(fnMicU):
                 mdMicU = xmipp.MetaData(fnMicU)
                 mdPosU = xmipp.MetaData('particles@%s' % fnPosU)
-                mdPosU.merge(mdMicU)                 
-                mdUntilted.unionAll(mdPosU)            
+                mdPosU.merge(mdMicU)
+                mdUntilted.unionAll(mdPosU)
                 tmicName = removeBaseExt(tMic.getFileName())
                 fnMicT = self._getExtraPath(tmicName + ".xmd")
                 fnPosT = self._getExtraPath(tmicName + ".pos")
                 mdMicT = xmipp.MetaData(fnMicT)
                 mdPosT = xmipp.MetaData('particles@%s' % fnPosT)
-                mdPosT.merge(mdMicT)        
+                mdPosT.merge(mdMicT)
                 mdTilted.unionAll(mdPosT)
-                
+
         # Write image metadatas (check if it is really necessary)
         fnTilted = self._getExtraPath("images_tilted.xmd")
         fnUntilted = self._getExtraPath("images_untilted.xmd")
         mdUntilted.write(fnUntilted)
-        mdTilted.write(fnTilted)                 
-         
+        mdTilted.write(fnTilted)
+
         # Create outputs SetOfParticles both for tilted and untilted
         imgSetU = self._createSetOfParticles(suffix="Untilted")
         imgSetU.copyInfo(self.uMics)
-        
+
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
-        
+
         if self.downsampleType == OTHER:
             imgSetU.setSamplingRate(self.samplingFinal)
             imgSetT.setSamplingRate(self.samplingFinal)
-        
+
         imgSetU.setCoordinates(self.inputCoordinatesTiltedPairs.get().getUntilted())
         imgSetT.setCoordinates(self.inputCoordinatesTiltedPairs.get().getTilted())
-        
+
+        #Read untilted and tilted particles on a temporary object (also disabled particles)
         imgSetAuxU = self._createSetOfParticles('auxU')
         imgSetAuxU.copyInfo(imgSetU)
-        readSetOfParticles(fnUntilted, imgSetAuxU)
+        readSetOfParticles(fnUntilted, imgSetAuxU, removeDisabled=False)
         imgSetAuxU.write()
-        # For each untilted particle retrieve micId from SetOFCoordinates untilted
-        for img, coord in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
-            #FIXME: REmove this check when sure that objIds are equal
-            if img.getObjId() != coord.getObjId(): 
-                raise Exception('ObjId is not equal!!!!')
-            img.setCoordinate(coord)
-            #img.cleanObjId()
-            imgSetU.append(img)
 
         imgSetAuxT = self._createSetOfParticles('auxT')
         imgSetAuxT.copyInfo(imgSetT)
-        readSetOfParticles(fnTilted, imgSetAuxT)    
-        imgSetAuxT.write()        
+        readSetOfParticles(fnTilted, imgSetAuxT, removeDisabled=False)
+        imgSetAuxT.write()
+
+        coordsT = self.inputCoordinatesTiltedPairs.get().getTilted()
+        # For each untilted particle retrieve micId from SetOFCoordinates untilted
+        for imgU, coordU in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
+            #FIXME: REmove this check when sure that objIds are equal
+            id = imgU.getObjId()
+            if id != coordU.getObjId():
+                raise Exception('ObjId in untilted is not equal!!!!')
+
+            imgT = imgSetAuxT[id]
+            coordT = coordsT[id]
+
+            #If both particles are enabled append them
+            if imgU.isEnabled() and imgT.isEnabled():
+                imgU.setCoordinate(coordU)
+                imgSetU.append(imgU)
+                imgT.setCoordinate(coordT)
+                imgSetT.append(imgT)
+
         # For each untilted particle retrieve micId from SetOFCoordinates tilted
         #for img in imgSetAuxU:
-        for img, coord in izip(imgSetAuxT, self.inputCoordinatesTiltedPairs.get().getTilted()):
-            #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
-            #FIXME: REmove this check when sure that objIds are equal
-            if img.getObjId() != coord.getObjId(): 
-                raise Exception('ObjId is not equal!!!!')
-            #coord = self.inputCoordinatesTiltedPairs.get().getTilted()[img.getObjId()]
-            img.setCoordinate(coord)
-            #img.cleanObjId()
-            imgSetT.append(img)
-            
+        # for img, coord in izip(imgSetAuxT, self.inputCoordinatesTiltedPairs.get().getTilted()):
+        #     #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
+        #     #FIXME: REmove this check when sure that objIds are equal
+        #     if img.getObjId() != coord.getObjId():
+        #         raise Exception('ObjId is not equal!!!!')
+        #     #coord = self.inputCoordinatesTiltedPairs.get().getTilted()[img.getObjId()]
+        #     img.setCoordinate(coord)
+        #     #img.cleanObjId()
+        #     imgSetT.append(img)
+
         imgSetU.write()
         imgSetT.write()
-        
+
         self._storeMethodsInfo(fnUntilted)
-        
+
         # Define output ParticlesTiltPair 
         outputset = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         outputset.setTilted(imgSetT)
         outputset.setUntilted(imgSetU)
         for imgU, imgT in izip(imgSetU, imgSetT):
             outputset.append(TiltPair(imgU, imgT))
-            
+
         outputset.setCoordsPair(self.inputCoordinatesTiltedPairs.get())
         self._defineOutputs(outputParticlesTiltPair=outputset)
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs.get(), outputset)
