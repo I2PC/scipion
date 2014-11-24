@@ -1369,6 +1369,44 @@ if int(env['gtest']):
     Depends(testEMX, packageDeps)
     AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
 
+# Matlab programs
+if int(env['matlab']):
+    def CompileMatlab(name, dependencies=[]):
+        ''' name parameter is expected without .java extension '''
+        source = 'libraries/bindings/matlab/'+name+".cpp"
+        target = 'libraries/bindings/matlab/'+name+".mexa64"
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        compileCmd = env.Command(target, source, command)
+        env.Default(compileCmd)
+        return compileCmd
+
+    bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
+        'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
+        'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
+    for i in range(len(bindings)):
+        CompileMatlab('xmipp_read')
+        CompileMatlab('xmipp_write')
+        CompileMatlab('xmipp_nma_read_alignment')
+        CompileMatlab('xmipp_nma_save_cluster')
+        CompileMatlab('xmipp_read_structure_factor')
+
+# Optical Alignment program
+if int(env['opencv']):
+    _libsoptical = BASIC_LIBS + ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video', 'XmippDimred', 'XmippClassif', 'XmippRecons', 'XmippData', 'XmippExternal']
+    _depsoptical = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so', 'lib/libXmippClassif.so', 'lib/libXmippRecons.so', 'lib/libXmippData.so', 'lib/libXmippExternal.so']
+    env.AddProgram('xmipp_optical_alignment_cpu', 
+                   src=['applications/programs/optical_alignment_cpu'],
+                   incs=[Dir('.').path],
+                   libs=_libsoptical,
+                   deps=_depsoptical)
+    if int(env['cuda']):
+        _libsoptical += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
+        env.AddProgram('xmipp_optical_alignment_gpu', 
+                       src=['applications/programs/optical_alignment_gpu'],
+                       incs=[Dir('.').path],
+                       libs=_libsoptical,
+                       deps=_depsoptical)  
+
 packageDeps = xmippParallel
 
 Default(packageDeps)
