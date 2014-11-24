@@ -147,7 +147,7 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
             inputParams[sj.LABEL_SELECTED] = ''
     
     table.setLabelToRender(inputParams[sj.LABEL_SELECTED]) 
-    
+
 
 def setRenderingOptions(request, dataset, table, inputParams):
     """ Read the first renderizable item and setup some variables.
@@ -164,35 +164,40 @@ def setRenderingOptions(request, dataset, table, inputParams):
         inputParams[sj.MODE] = sj.MODE_TABLE
         dataset.setNumberSlices(0)
     else:
+        #Setting the _imageVolName
+        _imageVolName = inputParams[sj.VOL_SELECTED] 
+        if _imageVolName == None:
+            _imageVolName = table.getValueFromIndex(0, label)
+
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-       
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         oldMode =  inputParams[sj.OLDMODE]
-
-        if oldMode == None:
-            _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
-        else:
-            if oldMode == inputParams[sj.MODE]:
-                # No mode change
-                if oldMode == 'table':
-                    pass
-                elif oldMode == 'gallery':
-                    _imageVolName = inputParams[sj.VOL_SELECTED]
-                    index = table.getIndexFromValue(_imageVolName, label) +1
-                    inputParams[sj.SELECTEDITEMS] = index
-                    
-            elif oldMode != inputParams[sj.MODE]:
-                # Mode changed
-                if oldMode == 'gallery':
-                    # New Functionality used to mark elements rendered in gallery mode for volumes
-                    _imageVolName = inputParams[sj.VOL_SELECTED]
-                elif oldMode == 'table':
-                    # New Functionality used to render elements selected in table mode for volumes
-                    lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
-                    index = int(lastItemSelected)-1
-                    _imageVolName = table.getValueFromIndex(index, label)
-                    inputParams[sj.VOL_SELECTED] = _imageVolName
         
+        if isVol:
+            if oldMode == None or oldMode not in ['table', 'gallery']:
+                _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
+            else:
+                if oldMode == inputParams[sj.MODE]:
+                    # No mode change
+                    if oldMode == 'table':
+                        pass
+                    elif oldMode == 'gallery':
+                        _imageVolName = inputParams[sj.VOL_SELECTED]
+                        index = table.getIndexFromValue(_imageVolName, label) +1
+                        inputParams[sj.SELECTEDITEMS] = index
+                        
+                elif oldMode != inputParams[sj.MODE]:
+                    # Mode changed
+                    if oldMode == 'gallery':
+                        # New Functionality used to mark elements rendered in gallery mode for volumes
+                        _imageVolName = inputParams[sj.VOL_SELECTED]
+                    elif oldMode == 'table':
+                        # New Functionality used to render elements selected in table mode for volumes
+                        lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
+                        index = int(lastItemSelected)-1
+                        _imageVolName = table.getValueFromIndex(index, label)
+                        inputParams[sj.VOL_SELECTED] = _imageVolName
+            
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -223,7 +228,8 @@ def setRenderingOptions(request, dataset, table, inputParams):
         volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
     
     return volPath, _stats, _imageDimensions
-    
+
+
 #Initialize default values
 DEFAULT_PARAMS = {
     sj.PATH: None,
@@ -500,12 +506,26 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     return context
         
 def create_context_jsmol(request, volPath):
-    
     return {"volLink":volPath,
             'jsmol':getResourceJs('jsmol'),
             "jsmolFolder": getResourceJs('jsmolFolder'),
             }
-
+    
+def jsmol(request):
+    import mimetypes
+    from django.core.servers.basehttp import FileWrapper
+#     call = request.GET.get('call', None)
+#     database = request.GET.get('database', None)
+#     encoding = request.GET.get('encoding', None)
+    query = request.GET.get('query', None)
+    path = query.split("__path__")[1]
+    filename = path.split("/").pop()
+    
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
 
 def create_context_astex(request, typeVolume, volPath):
 

@@ -81,8 +81,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="Set to true if you want the GPU implementation of Optical Flow")
         group.addParam('GPUCore', IntParam, default=1,
                       label="Choose GPU core",
-                      condition="doGPU  or alignMethod==%d " % AL_DOSEFGPU,
-                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about")
+                      condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
+                      help="GPU may have several cores. Set it to one if you do not know what we are talking about")
         group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_EXPERT,
@@ -136,8 +136,8 @@ class ProtMovieAlignment(ProtProcessMovies):
         movieSet.copyInfo(inputMovies)
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
-            micName = self._getMicName(movie.getObjId())
-            metadataName = self._getMetadataName(movie.getObjId())
+            micName = self._getMicMetaName(movie.getFileName(), 'mrc')
+            metadataName = self._getMicMetaName(movie.getFileName(), 'xmd')
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
             mic.setFileName(self._getExtraPath(micName))
@@ -180,8 +180,10 @@ class ProtMovieAlignment(ProtProcessMovies):
         program = self._getProgram()
 
         # Read the parameters
-        micName = self._getMicName(movieId)
-        metadataName = self._getMetadataName(movieId)
+        #micName = self._getMicName(movieId)
+        micName = self._getMicMetaName(movieName, 'mrc')
+        print micName
+        metadataName = self._getMicMetaName(movieName, 'xmd')
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
         gpuId = self.GPUCore.get() -1
