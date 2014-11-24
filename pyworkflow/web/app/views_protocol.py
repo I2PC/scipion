@@ -43,7 +43,7 @@ def getPointerHtml(protVar):
         
 def findWizardsWeb(protocol):   
     import em_wizard
-    from pyworkflow.viewer import WEB_DJANGO
+    from pyworkflow.wizard import WEB_DJANGO
     from pyworkflow.em import findWizardsFromDict, getSubclassesFromModules, Wizard
     
     webWizardsDict = getSubclassesFromModules(Wizard, {'em_wizard': em_wizard})
