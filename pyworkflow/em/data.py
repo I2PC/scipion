@@ -796,7 +796,7 @@ class SetOfParticles(SetOfImages):
 
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
-    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    It is a SetOfParticles but it is useful to differentiate outputs."""
     def __init__(self, **args):
         SetOfParticles.__init__(self, **args)
 
