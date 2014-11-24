@@ -1149,48 +1149,70 @@ if not int(env['release']):
 # Batches (apps)
 xmippApropos = env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
 Depends(xmippApropos, packageDeps)
+
 xmippCompile = env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
 Depends(xmippCompile, packageDeps)
+
 xmippExportEMX = env.SymLink('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py')
 Depends(xmippExportEMX, packageDeps)
+
 xmippImportBox = env.SymLink('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py')
 Depends(xmippImportBox, packageDeps)
+
 xmippImportCTFparam = env.SymLink('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py')
 Depends(xmippImportCTFparam, packageDeps)
+
 xmippImportCTFdat = env.SymLink('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py')
 Depends(xmippImportCTFdat, packageDeps)
+
 xmippImportEMX = env.SymLink('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py')
 Depends(xmippImportEMX, packageDeps)
+
 xmippMetadataPlot = env.SymLink('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py')
 Depends(xmippMetadataPlot, packageDeps)
+
 xmippMetadataSelfileCreate = env.SymLink('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py')
 Depends(xmippMetadataSelfileCreate, packageDeps)
+
 xmippProtocols = env.SymLink('bin/xmipp_protocols', 'protocols/batch_protocols.py')
 Depends(xmippProtocols, packageDeps)
+
 xmippBrowser = env.SymLink('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py')
 Depends(xmippBrowser, packageDeps)
+
 xmippMicrographParticlePicking = env.SymLink('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py')
 Depends(xmippMicrographParticlePicking, packageDeps)
+
 xmippChimeraClient = env.SymLink('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py')
 Depends(xmippChimeraClient, packageDeps)
+
 xmippMicrographTiltpairPicking = env.SymLink('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
 Depends(xmippMicrographTiltpairPicking, packageDeps)
+
 xmippMPIClassifyCLTomo = env.SymLink('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
 Depends(xmippMPIClassifyCLTomo, packageDeps)
+
 xmippMPIStepsRunner = env.SymLink('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py')
 Depends(xmippMPIStepsRunner, packageDeps)
+
 xmippProjectionsExplorer = env.SymLink('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py')
 Depends(xmippProjectionsExplorer, packageDeps)
+
 xmippShowj = env.SymLink('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py')
 Depends(xmippShowj, packageDeps)
+
 xmippTomoj = env.SymLink('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py')
 Depends(xmippTomoj, packageDeps)
+
 xmippVisualizePreprocessingMicrographj = env.SymLink('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
 Depends(xmippVisualizePreprocessingMicrographj, packageDeps)
+
 xmippVolumeAlign = env.SymLink('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh')
 Depends(xmippVolumeAlign, packageDeps)
+
 xmippImagej = env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
 Depends(xmippImagej, packageDeps)
+
 xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
 Depends(xmippPython, packageDeps)
 
@@ -1209,10 +1231,10 @@ def AddXmippTest(name, testprog, command):
     AlwaysBuild(testcase)
     return testcase
 
-# C tests
 _libstests = BASIC_LIBS+['XmippRecons', 'XmippClassif', 'XmippData', 'XmippExternal', 'XmippDimred', 'gtest']
 _depstests = ['lib/libXmippRecons.so', 'lib/libXmippClassif.so', 'lib/libXmippDimred.so']
 if int(env['gtest']):
+    # C tests
     testCTF = env.AddProgram('xmipp_test_ctf', 
                              src=['applications/tests/test_ctf'],
                              incs=[Dir('.').path],
@@ -1334,8 +1356,18 @@ if int(env['gtest']):
                                   deps=_depstests)
     AddXmippTest('test_filename', testFilename, "$SOURCE --gtest_output=xml:$TARGET")
 
-# Python tests
-
+    # Python tests
+    testPythonInterface = env.SymLink('bin/xmipp_test_pythoninterface', 'applications/tests/test_pythoninterface/batch_test_pythoninterface.py')
+    Depends(testPythonInterface, packageDeps)
+    AddXmippTest('test_pythoninterface', testPythonInterface, "$SOURCE $TARGET")
+    
+    testPySqlite = env.SymLink('bin/xmipp_test_pysqlite', 'applications/tests/test_pysqlite/batch_test_pysqlite.py')
+    Depends(testPySqlite, packageDeps)
+    AddXmippTest('test_pysqlite', testPySqlite, "$SOURCE $TARGET")
+    
+    testEMX = env.SymLink('bin/xmipp_test_emx', 'applications/tests/test_emx/batch_test_emx.py')
+    Depends(testEMX, packageDeps)
+    AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
 
 packageDeps = xmippParallel
 
