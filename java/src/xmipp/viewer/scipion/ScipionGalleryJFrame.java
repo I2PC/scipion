@@ -253,7 +253,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         int size = ((ScipionGalleryData)data).getEnabledCount();
                         
         if (confirmCreate("Representatives", size)) {
-            String output = isClass2D()? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
+            String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
             createSubset(command, "Creating set ...");
 
