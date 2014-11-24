@@ -221,7 +221,9 @@ class XmippViewer(Viewer):
                
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
+            labels = 'id enabled _filename '
+            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, RENDER: '_filename'}))
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
