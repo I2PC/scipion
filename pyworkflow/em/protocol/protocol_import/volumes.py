@@ -36,111 +36,80 @@ from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam, Fil
                                         LabelParam, LEVEL_ADVANCED)
 from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.data import Volume, PdbFile
+from pyworkflow.em.convert import ImageHandler, NO_INDEX
 
 from base import ProtImport
+from images import ProtImportImages
 
 
 
-class ProtImportVolumes(ProtImport):
+class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
+    _outputClassName = 'SetOfVolumes'
     _label = 'import volumes'
     
     def __init__(self, **args):
-        ProtImport.__init__(self, **args)         
+        ProtImportImages.__init__(self, **args)         
        
-    def _defineParams(self, form):
-        form.addSection(label='Input')
-        form.addParam('pattern', PathParam, label=Message.LABEL_PATTERN)
+    def _defineAcquisitionParams(self, form):
+        """ Define acquisition parameters, it can be overriden
+        by subclasses to change what parameters to include.
+        """
         form.addParam('samplingRate', FloatParam,
                    label=Message.LABEL_SAMP_RATE)
     
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumes', self.getPattern(), self.samplingRate.get())
-        
-    def createVolume(self, volumePath):
-        """ Copy the volume to WorkingDir and create
-        the volumen object.
-        """
-        dst = self._getPath(basename(volumePath))            
-        createLink(volumePath, dst)
-        vol = Volume()
-        if dst.endswith('.mrc'):
-            dst += ':mrc'
-        vol.setFileName(dst)
-        vol.setSamplingRate(self.samplingRate.get())
-        return vol
+        self._insertFunctionStep('importVolumesStep', self.getPattern(), self.samplingRate.get())
+
+    #--------------------------- STEPS functions ---------------------------------------------------
     
-    def importVolumes(self, pattern, samplingRate):
-        """ Copy volumes matching the filename pattern
+    def importVolumesStep(self, pattern, samplingRate):
+        """ Copy images matching the filename pattern
         Register other parameters.
         """
-        n = self._getNumberFilePaths(pattern)
-        filePaths = self._getFilePaths(pattern)
+        self.info("Using pattern: '%s'" % pattern)
         
-        if n == 0:
-            raise Exception(Message.ERROR_IMPORT_VOL)
-        elif n == 1:
-            volume = self.createVolume(filePaths[0])
-            self._defineOutputs(outputVolume=volume)
-        else:
-            # Create a set of volumes
+        volumeFiles = self.getMatchFiles()
+        n = len(volumeFiles)
+        # Create a Volume template object
+        vol = Volume()
+        vol.setSamplingRate(self.samplingRate.get())
+        copyOrLink = self.getCopyOrLink()
+        imgh = ImageHandler()
+        
+        if n > 1:
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.samplingRate.get())
-#             filePaths.sort()
-            for f in filePaths:
-                volSet.append(self.createVolume(f))
+            for fileName, fileId in self.iterFiles():
+                dst = self._getExtraPath(basename(fileName))
+                copyOrLink(fileName, dst)
+                _, _, _, n = imgh.getDimensions(dst)
+                    
+                if n > 1:
+                    for index in range(1, n+1):
+                        vol.cleanObjId()
+                        vol.setLocation(index, dst)
+                else:
+                    vol.setObjId(fileId)
+                    vol.setLocation(dst)
+                volSet.append(vol)
             self._defineOutputs(outputVolumes=volSet)
-
-    def getPattern(self):
-        """ Expand the pattern using environ vars or username
-        and also replacing special character # by digit matching.
-        """
-        pattern = expandPattern(self.pattern.get())    
-        return pattern  
-        
-    def getFiles(self):
-        pattern = self.getPattern()
-        n = self._getNumberFilePaths(pattern)
-        
-        if n == 1:
-            return self.outputVolume.getFileName()
         else:
-            return self.outputVolumes.getFiles()
-    
-    def _getFilePaths(self, pattern):
-        """ Return a sorted list with the paths of files"""
-        filePaths = glob(pattern)
-        filePaths.sort()
+            vol.setLocation(volumeFiles[0])
+            self._defineOutputs(outputVol=vol)
         
-        return filePaths
+    #--------------------------- INFO functions ----------------------------------------------------
     
-    def _getNumberFilePaths(self, pattern):
-        """ Return the number of files""" 
-        filePaths = self._getFilePaths(pattern)
-        n = len(filePaths)
-        return n
-
     def _summary(self):
         summary = []
-        pattern = self.getPattern()
-        n = self._getNumberFilePaths(pattern)
-        
-        if n == 1:
-            if not hasattr(self, 'outputVolume'):
-                summary.append("Output volume not ready yet.") 
-            else:
-                summary.append("Import of %d volumes from %s" % (1, self.getPattern()))
-                summary.append("Sampling rate : %f" % self.samplingRate.get())
-        else:
-            if not hasattr(self, 'outputVolumes'):
-                summary.append("Output volumes not ready yet.") 
-            else:
-                summary.append("Import of %d volumes from %s" % (n, self.getPattern()))
-                summary.append("Sampling rate : %f" % self.samplingRate.get())
-        
         return summary
     
-
+    def _methods(self):
+        methods = []
+        return methods
+    
+    
+        
 class ProtImportPdb(ProtImport):
     """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
