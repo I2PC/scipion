@@ -395,6 +395,22 @@ class TestXmippRotSpectra(TestXmippBase):
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
+class TestXmippKerdensom(TestXmippBase):
+    """This class check if the protocol to calculate the kerdensom from particles in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+
+    def test_kerdensom(self):
+        print "Run Kerdensom"
+        xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
+        xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
+        self.launchProtocol(xmippProtKerdensom)
+        self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
