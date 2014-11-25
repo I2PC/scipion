@@ -574,7 +574,15 @@ class ProtFrealignBase(EMProtocol):
         imgSet = self.inputParticles.get()
         magnification = imgSet.getAcquisition().getMagnification()
         params = {}
-        
+
+        #frealign need to have a numeric micId not longer than 5 digits
+        micIdList = imgSet.aggregate(['count'],'_micId',['_micId'])
+        micIdMap={}
+        counter = 0;
+        for mic in micIdList:
+            micIdMap[mic['_micId']]=counter
+            counter = counter +1
+
         for block in self._allBlocks():
             more = 1
             initPart, lastPart = self._initFinalBlockPaticles(block)
@@ -588,13 +596,6 @@ class ProtFrealignBase(EMProtocol):
             #  Now, you iterate several times over the SetOfParticles
             # (as many threads as you have)
 
-            #frealign need to ha a numeric micId not longer than 5 digits 
-            micIdList = imgSet.aggregate(['count'],'_micId',['_micId'])
-            micIdMap={}
-            counter = 0;
-            for mic in micIdList:
-                micIdMap[mic['_micId']]=counter
-                counter = counter +1
             for i, img in enumerate(imgSet):
                 film = micIdMap[img.getMicId()]
                 ctf = img.getCTF()
@@ -625,7 +626,14 @@ class ProtFrealignBase(EMProtocol):
         """This function write a .par file with all necessary information for a refinement"""
         
         imgSet = self.inputParticles.get()
-        
+        #frealign need to have a numeric micId not longer than 5 digits
+        micIdList = imgSet.aggregate(['count'],'_micId',['_micId'])
+        self.micIdMap={}
+        counter = 0;
+        for mic in micIdList:
+            self.micIdMap[mic['_micId']]=counter
+            counter = counter +1
+
         for block in self._allBlocks():
             more = 1
             _, lastPart = self._initFinalBlockPaticles(block)
@@ -1130,7 +1138,7 @@ eot
     
     def writeAnglesLines(self, counter, img, filePar):
         
-        objId = img.getMicId()
+        objId = self.micIdMap[img.getMicId()]
         
         # get alignment parameters for each particle
         from convert import geometryFromMatrix
