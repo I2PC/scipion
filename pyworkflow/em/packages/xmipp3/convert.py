@@ -427,6 +427,7 @@ def rowToCoordinate(coordRow):
 
 def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
+    print 'rowToParticle'
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
     # copy micId if available
