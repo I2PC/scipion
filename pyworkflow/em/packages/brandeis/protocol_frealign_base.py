@@ -584,10 +584,19 @@ class ProtFrealignBase(EMProtocol):
             paramsRefine = dict(paramsDic.items() + params.items() + paramDic.items())
             f = self.__openParamFile(block, paramsRefine)
             
-            # ToDo: Implement a better method to get the info particles. Now, you iterate several times over the SetOfParticles (as many threads as you have)
+            # ToDo: Implement a better method to get the info particles.
+            #  Now, you iterate several times over the SetOfParticles
+            # (as many threads as you have)
 
+            #frealign need to ha a numeric micId not longer than 5 digits 
+            micIdList = imgSet.aggregate(['count'],'_micId',['_micId'])
+            micIdMap={}
+            counter = 0;
+            for mic in micIdList:
+                micIdMap[mic['_micId']]=counter
+                counter = counter +1
             for i, img in enumerate(imgSet):
-                film = img.getMicId()
+                film = micIdMap[img.getMicId()]
                 ctf = img.getCTF()
                 defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
                 partCounter = i + 1
