@@ -496,7 +496,7 @@ def create_context_volume(request, inputParams, volPath, param_stats):
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:   
-        context.update(create_context_chimera(volPath))
+        context.update(create_context_chimera(volPath, threshold))
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
         context.update(create_context_jsmol(request, volPath))
@@ -540,18 +540,39 @@ def create_context_astex(request, typeVolume, volPath):
             "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
-def create_context_chimera(volPath):
+def create_context_chimera(volPath, threshold=None):
+    # Chimera Headless version must be in the evironment variables 
+    # For example:
+    # export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera
+
     from subprocess import Popen, PIPE, STDOUT
-    
     p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    
+    # Build chimera command
     outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-    #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-    chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
+    chimeraCommand = ""
+    if threshold != None:
+        print "ENTRA EN THRESHOLD"
+        chimeraCommand += "volume #0 level " + str(threshold) +";"
+    chimeraCommand += ' export format WebGL ' + outputHtmlFile + '; stop'
+    print "CHIMERA COMMAND:", chimeraCommand
     stdout_data, stderr_data = p.communicate(input=chimeraCommand)
+        
     f = open(outputHtmlFile)
     chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
     
-    return {"chimeraHtml":chimeraHtml}
+    return {"chimeraHtml":chimeraHtml,
+            "volPath":volPath, 
+            "threshold": threshold
+            }
+
+
+def chimera_headless(request):
+    volPath = request.GET.get('volPath', None)
+    threshold = request.GET.get('threshold', None)
+    context = create_context_chimera(volPath, threshold)
+    
+    return render_to_response('showj/chimera.html', context)
     
     
 def calculateThreshold(params):

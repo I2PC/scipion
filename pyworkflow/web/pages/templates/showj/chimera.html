@@ -1,0 +1,33 @@
+<!-- Init webgl -->
+<script type="text/javascript">
+$(document).ready(function(){
+	webGLStart();
+});
+</script>
+
+<span>
+Threshold 
+<input id="thresholdValue" type="text" value="{{threshold}}"/>
+<input id="thresholdButton" class="btn buttonGrey" type="button" value="Load" onclick="updateThreshold()"/>
+</span>
+<div id="astexContainer">
+	<!-- CHIMERA -->
+	<div id="fallback" class="fallback"></div>
+	<canvas id="molview" width="512" height="334"></canvas>
+	
+	<script>
+	if (!PhiloGL.hasWebGL()) {
+		document.body.className = 'no-webgl';
+		document.getElementById('fallback').innerHTML = ''
+		+ '<div style="margin:10px;">'
+	// 	+ {{msg.ERROR_WEBGL}}
+		+ '</div>';
+	}
+	</script>
+</div>
+	{% autoescape off %}
+		{{chimeraHtml}}
+	{% endautoescape %}	
+
+
+
