@@ -32,6 +32,7 @@ import os
 from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.constants import ALIGN_3D
 
 from protocol_base import ProtRelionBase
 
@@ -93,23 +94,21 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         # Create the set of particles
         partSet = self._createSetOfParticles()
         self._findImagesPath(dataFile)
+        # Copy acquisition from first element
+        partSet.setSamplingRate(self.samplingRate.get())
         readSetOfParticles(dataFile, partSet, 
                            preprocessImageRow=self._preprocessImageRow, 
                            magnification=self.magnification.get())
         particle = partSet.getFirstItem()
-        
-        # Copy acquisition from first element
-        partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
-#         partSet.getAcquisition().setMagnification(self.magnification.get())
+        
         
         if self.isPhaseFlipped:
             partSet.setIsPhaseFlipped(True)
-        
+
         if self.hasAlignment:
             #FIXME: Detect 2D or 3D alignment
             partSet.setAlignment3D()
-        
         return partSet   
     
     def _createClasses(self, dataFile, partSet):     
