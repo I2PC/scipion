@@ -44,7 +44,7 @@ REJ_PERCENTAGE =2
         
         
 class XmippProtScreenParticles(ProtProcessParticles):
-    """ Screen a set of particles """
+    """ Classify particles according their similarity to the others in order to detect outliers """
     _label = 'screen particles'
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -54,15 +54,21 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       label="Automatic particle rejection", default=REJ_NONE,
                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
                       help='How to automatically reject particles. It can be none (no rejection), '
-                      'maxZscore (reject a particle if its Zscore is larger than this value), '
+                      'maxZscore (reject a particle if its Zscore [a similarity index] is larger than this value), '
                       'Percentage (reject a given percentage in each one of the screening criteria). ')
         form.addParam('maxZscore', IntParam, default=3, condition='autoParRejection==1',
                       label='Maximum Zscore', expertLevel=LEVEL_EXPERT,
                       help='Maximum Zscore.', validators=[Positive])      
         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
-                      help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
+                      help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
+        form.addParallelSection(threads=0, mpi=0)
         
+        
+    def _getDefaultParallel(self):
+        """This protocol doesn't have mpi version"""
+        return (0, 0)
+     
     #--------------------------- INSERT steps functions --------------------------------------------            
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""

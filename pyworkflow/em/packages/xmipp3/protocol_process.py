@@ -86,7 +86,7 @@ class XmippProcessParticles(XmippProcess):
         imgSet.copyInfo(inputSet)
         
         self._preprocessOutput(imgSet)
-        readSetOfParticles(self.outputMd, imgSet)
+        readSetOfParticles(self.outputMd, imgSet,is2D=imgSet.hasAlignment2D())
         self._postprocessOutput(imgSet)
         
         self._defineOutputs(outputParticles=imgSet)
