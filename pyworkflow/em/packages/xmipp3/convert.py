@@ -429,14 +429,14 @@ def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
-    # Setup the micId if is integer value
+    # copy micId if available
+    # if not copy micrograph name if available
     try:
         if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
-        else:
-            # this is changed to get the micId from relion metadata micrograph name(rlnMicrographName)
-            micName = removeExt(partRow.getValue(xmipp.MDL_MICROGRAPH))
-            img.setMicId([int(s) for s in micName.split("_") if s.isdigit()][0])
+        elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
+            micName = img.getValue(xmipp.MDL_MICROGRAPH)
+            img.setAttributeValue('_micrograph',micName)
     except Exception:
         pass    
     return img
