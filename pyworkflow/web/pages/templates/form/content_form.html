@@ -107,7 +107,7 @@
 							{% endif %}
 							</td>
 <!-- PATH PARAM -->
-						{% if param.getClassName == "PathParam" %}
+						{% if param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
 						
 						<style>
 							.top-div { border:none;}
@@ -126,15 +126,14 @@
 								color: white;
 							}
 			
-			
 						</style>
 						
 						<script type="text/javascript" language="javascript">
 						
 							$(document).ready(function() {
 								var URL = getSubDomainURL() + '/getPath/'
-								
-							    $('#FButton').serverBrowser({
+							    
+								$('#FButton_{{paramName}}').serverBrowser({
 							        //Accesing path
 							    	title: 'Select input',
 							        handlerUrl: URL,
@@ -155,21 +154,21 @@
 							        
 							        //Functionality
 							        onSelect: function(path) {
-							            $('[name="pattern"]').val(path);
+							        	$('input#{{paramName}}_input').val(path)
 							        },
 							        onLoad: function() {
-							            return $('[name="pattern"]').val();
+							            return $('input#{{paramName}}_input').val();
 							        },
 							    });
 							});
 						</script>
 						
 							<td class="ico">
-								<a id="FButton" href="#">
+								<a id="FButton_{{paramName}}" href="#">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a>
 							</td>
-<!-- POINTER PARAM -->
+<!-- POINTER PARAM -->	
 						{% elif param.getClassName == "PointerParam" %}
 							<td class="ico">
 								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
