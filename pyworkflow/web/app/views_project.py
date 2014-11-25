@@ -373,17 +373,16 @@ Initial_Volume = [
         
 def create_service_project(request):
     if request.is_ajax():
-        import sys
-        from pyworkflow.manager import Manager
-        from pyworkflow.gui.project import ProjectWindow
-        from pyworkflow.em.protocol import *
-        from pyworkflow.em.packages.xmipp3 import *
-        from pyworkflow.em.packages.eman2 import *
+        import os
+        from pyworkflow.object import Pointer
+        from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac
+        from pyworkflow.em.packages.eman2 import EmanProtInitModel
         
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
-        customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
         writeCustomMenu(customMenu)
         #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
@@ -396,15 +395,32 @@ def create_service_project(request):
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)
+        protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
         protRansac.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
         protEmanInitVol = project.newProtocol(EmanProtInitModel)
+        protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protEmanInitVol)
+        
+        # 3. Join result volumes
+        p1 = Pointer()
+        p1.set(protRansac)
+        p1.setExtendedAttribute('outputVolumes')
+        
+        p2 = Pointer()
+        p2.set(protEmanInitVol)
+        p2.setExtendedAttribute('outputVolumes')
+        
+        protJoin = project.newProtocol(ProtUnionSet)
+        protJoin.setObjLabel('merge all volumes')
+        protJoin.inputSets.append(p1)
+        protJoin.inputSets.append(p2)
+        project.saveProtocol(protJoin)
         
         
     return HttpResponse(mimetype='application/javascript')
