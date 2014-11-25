@@ -32,7 +32,6 @@ import os
 from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.constants import ALIGN_3D
 
 from protocol_base import ProtRelionBase
 
