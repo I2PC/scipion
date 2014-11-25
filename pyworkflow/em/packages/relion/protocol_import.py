@@ -88,8 +88,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
                 for par in partSet:
                     par.setMicID(micIdMap[mic['_micrograph']])
     #               MDL_MICROGRAPH:        'rlnMicrographName'
+            else:
+                self.warning("Micrograph ID was not set for particles!!!")
 
-            self.warning("Micrograph ID was not set for particles!!!")
         if not firstParticle.hasAlignment():
             self.warning("Alignment was not read from particles!!!")
         
