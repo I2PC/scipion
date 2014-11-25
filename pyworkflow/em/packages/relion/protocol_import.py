@@ -94,14 +94,14 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         # Create the set of particles
         partSet = self._createSetOfParticles()
         self._findImagesPath(dataFile)
+        # Copy acquisition from first element
+        partSet.setSamplingRate(self.samplingRate.get())
         readSetOfParticles(dataFile, partSet, 
                            preprocessImageRow=self._preprocessImageRow, 
                            magnification=self.magnification.get())
         particle = partSet.getFirstItem()
-        
-        # Copy acquisition from first element
-        partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
+        
         
         if self.isPhaseFlipped:
             partSet.setIsPhaseFlipped(True)
