@@ -439,7 +439,8 @@ def rowToParticle(partRow, **kwargs):
             img._micrograph = micName
             print "setting micname as", micName
             img.printAll()
-            print "getAttributes", img._micrograph
+            print "getAttributes1", img._micrograph
+            print "getAttributes2", getattr(img,"_micrograph",'kk')
         else:
             print "WARNING: No micname"
     except Exception as e:
