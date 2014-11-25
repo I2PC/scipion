@@ -77,6 +77,18 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         self._defineOutputs(outputParticles=partSet)
         firstParticle = partSet.getFirstItem()
         if firstParticle.getMicId() is None:
+            if firstParticle.hasAttribute("_micrograph"):
+                #create micID: aggregate function, argument function, group by
+                micIdList = partSet.aggregate(['count'],'_micrograph',['_micrograph'])
+                micIdMap={}
+                counter = 0;
+                for mic in micIdList:
+                    micIdMap[mic['_micrograph']]=counter
+                    counter = counter +1
+                for par in partSet:
+                    par.setMicID(micIdMap[mic['_micrograph']])
+    #               MDL_MICROGRAPH:        'rlnMicrographName'
+
             self.warning("Micrograph ID was not set for particles!!!")
         if not firstParticle.hasAlignment():
             self.warning("Alignment was not read from particles!!!")
@@ -175,12 +187,12 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         else:
             self.warning('Images binaries not found!!!')
             
+
     def _preprocessImageRow(self, img, imgRow):
         from convert import setupCTF, copyOrLinkFileName
         if self._imagesPath is not None:
             copyOrLinkFileName(imgRow, self._imagesPath, self._getExtraPath())
         setupCTF(imgRow, self.samplingRate.get())
-                
 #     def _preprocessRow(self, img, imgRow):
 #         from convert import setupCTF, prependToFileName
 #         if self._imagesPath is not None:
