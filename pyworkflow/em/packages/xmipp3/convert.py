@@ -427,7 +427,7 @@ def rowToCoordinate(coordRow):
 
 def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
-    print 'rowToParticle'
+    print 'rowToParticle1'
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
     # copy micId if available
@@ -437,12 +437,13 @@ def rowToParticle(partRow, **kwargs):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
         elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
             micName = partRow.getValue(xmipp.MDL_MICROGRAPH)
-            img.setAttributeValue('_micrograph',micName)
+            setattr(img,'_micrograph',micName)
         else:
             print "No micname"
             img.printAll()
     except Exception as e:
         print "Warning:", e.message
+    print 'rowToParticle2'
     return img
     
     
