@@ -32,6 +32,7 @@ import os
 from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.constants import ALIGN_3D
 
 from protocol_base import ProtRelionBase
 
@@ -105,8 +106,9 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         
         if self.isPhaseFlipped:
             partSet.setIsPhaseFlipped(True)
-        if self.hasAlignment:
-            partSet.setHasAlignment(True)
+
+        #TODO Detect when is 2D or 3D alignment
+        partSet.setHasAlignment(ALIGN_3D)
         
         return partSet   
     
