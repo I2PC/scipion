@@ -27,13 +27,23 @@
 """
 In this module are two protocols to Import/Export data from/to EMX.
 """
+
+from os.path import join, dirname, exists
+from collections import OrderedDict
+
+from pyworkflow.protocol.params import PointerParam, RelationParam, StringParam
+from pyworkflow.em.data import EMXObject
+from pyworkflow.em.protocol import EMProtocol, RELATION_CTF
+
 import emxlib
 
-from pyworkflow.em.protocol import *
-from pyworkflow.protocol.params import *
-from pyworkflow.em.data import Acquisition
-from pyworkflow.em.data import EMXObject
-
+# Mapping between form parameters and EMX tags
+PARAM_DICT = OrderedDict([
+                          ('voltage', 'acceleratingVoltage'),
+                          ('sphericalAberration', 'cs'),
+                          ('amplitudeContrast', 'amplitudeContrast'),
+                          ('samplingRate', 'pixelSpacing__X')
+                          ])                  
 
 class EmxImport():
     """
@@ -42,26 +52,27 @@ class EmxImport():
     EMX is a joint initiative for data exchange format between different 
     EM software packages. See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]
     """
-    # Mapping between form parameters and EMX tags
-    PARAM_DICT = {'voltage': 'acceleratingVoltage',
-                  'sphericalAberration': 'cs',
-                  'amplitudeContrast': 'amplitudeContrast',
-                  'samplingRate': 'pixelSpacing__X',                  
-                  }
         
-    def _loadEmxInfo(self, protocol, emxFile):
+    
+    def __init__(self, protocol, emxFile):
+        self.protocol = protocol
+        self._emxFile = emxFile
+        self.copyOrLink = protocol.getCopyOrLink()
+        
+    def _loadEmxInfo(self):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
         """
         emxData = emxlib.EmxData()
         
-        emxDir = dirname(emxFile)
+        emxDir = dirname(self._emxFile)
         self.classElement = None
         self.binaryFile = None
         self.object = None
-        self.objDict = {}
+        self.objDict = {} # store the first object of each class
+        
         for classElement in emxlib.CLASSLIST:
-            obj = emxData.readFirstObject(classElement, emxFile)
+            obj = emxData.readFirstObject(classElement, self._emxFile)
             if obj is not None:
                 self.objDict[classElement] = obj
                 #is the binary file of this type
@@ -72,45 +83,68 @@ class EmxImport():
                     self.binaryFile = binaryFile
                     self.classElement = classElement
                     
-                for k, v in self.PARAM_DICT.iteritems():
-                    # Read from the EMX files the values not set in the Form
-                    if (protocol.acquisitionFromEmx or 
-                        not getattr(protocol, k).hasValue()):
-                        if obj.get(v) is not None:
-                            protocol.setAttributeValue(k, obj.get(v))
-
+    def loadAcquisitionInfo(self):
+        """ Try to read acquistion from input file. """
+        acquisitionDict = OrderedDict()
+        
+        if exists(self._emxFile):  
+            self._loadEmxInfo()
+            
+            for k, v in PARAM_DICT.iteritems():
+                # Read from the EMX files the values and fill acquisition
+                if self.object.get(v) is not None:
+                    acquisitionDict[k] = self.object.get(v)
+            
+        return acquisitionDict
+                
     #--------------------------- STEPS functions --------------------------------------------       
-    def importData(self, protocol, emxFile, copyOrLink):
-        """ Export micrographs to EMX file.
-        micsId is only passed to force redone of this step if micrographs change.
+    def importData(self):
+        """ Import micrographs, coordinates and particles from EMX file.
+        If the file contains information about the CTF, it will be also
+        taken into account.
         """
-        acquisition = protocol.getAcquisition()
+        prot = self.protocol
+        acquisition = prot.getAcquisition()
         from convert import importData
         #emxFile=self._getRelPathExecutionDir(emxFile)
-        importData(protocol, emxFile, protocol._getExtraPath(), 
-                   acquisition, protocol.samplingRate.get(), copyOrLink)
-    
+        importData(prot, self._emxFile, prot._getExtraPath(), 
+                   acquisition, prot.samplingRate.get(), self.copyOrLink)
+        
+    def importMicrographs(self):
+        self.importData()
+        
+    def importParticles(self):
+        self.importData()
+            
     #--------------------------- INFO functions -------------------------------------------- 
-    def _validate(self, protocol, emxFile):
+    def validate(self, objectClassName):
+        """ Do some validation about the input EMX file.
+        Params:
+            objectClassName: it could be either (MICROGRAPHS or PARTICLES)
+        """
+        emxFile = self._emxFile
         errors = []
         # Check that input EMX file exist
         if not exists(emxFile):
-                errors.append("Input EMX file *%s* doesn't exists" % emxFile)
+                errors.append("Input EMX file doesn't exists:\n*%s*" % emxFile)
         else:
-            self._loadEmxInfo(protocol, emxFile)   
+            self._loadEmxInfo()   
             if self.object is None:
-                errors.append('Cannot find any object in EMX file *%s*' % emxFile)
+                errors.append("Cannot find any object in EMX file:\n*%s*" % emxFile)
             else:
                 if self.binaryFile is None:
-                    errors.append('Cannot find binary data *%s* associated with EMX metadata file.\n' % self.binaryFile)
+                    errors.append("Cannot find binary data *%s* associated with EMX metadata file.\n" % self.binaryFile)
                 
-                for k, v in self.PARAM_DICT.iteritems():
-                    if not getattr(self, k).hasValue():
-                        errors.append('*%s* param was left empty and *%s* does not have attribute *%s*.\n' % (k, self.classElement, v))
-        
+                if objectClassName not in self.objDict:
+                    errors.append("EMX object *%s* not found in EMX file:\n*%s*" % emxFile)
         return errors
     
-
+    def validateMicrographs(self):
+        return self.validate(emxlib.MICROGRAPH)
+    
+    def validateParticles(self):
+        return self.validate(emxlib.PARTICLE)
+    
     
 class ProtEmxExport(EMProtocol):
     """
@@ -127,7 +161,7 @@ class ProtEmxExport(EMProtocol):
         form.addParam('inputSet', PointerParam, 
                       pointerClass='SetOfMicrographs,SetOfCoordinates,SetOfParticles',
                       label="Set to export",
-                      help='Select the microgrpahs, coordinates or particles set to be exported to EMX.')
+                      help="Select the microgrpahs, coordinates or particles set to be exported to EMX.")
         form.addParam('ctfEstimation', RelationParam,
                       allowsNull=True, relationName=RELATION_CTF, attributeName='getInputSet', 
                       label='Include CTF from', 

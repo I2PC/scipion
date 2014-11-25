@@ -30,7 +30,7 @@ This module implement viewers for some type of common objects.
 
 import os
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
-from pyworkflow.em.protocol import PdbFile
+from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
 import pyworkflow as pw
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 

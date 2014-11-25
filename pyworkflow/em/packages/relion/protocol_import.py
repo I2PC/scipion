@@ -102,14 +102,13 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         # Copy acquisition from first element
         partSet.setSamplingRate(self.samplingRate.get())
         partSet.setAcquisition(particle.getAcquisition())
-#         partSet.getAcquisition().setMagnification(self.magnification.get())
         
         if self.isPhaseFlipped:
             partSet.setIsPhaseFlipped(True)
 
-        #TODO Detect when is 2D or 3D alignment
-        partSet.setHasAlignment(ALIGN_3D)
-        
+        if self.hasAlignment:
+            #FIXME: Detect 2D or 3D alignment
+            partSet.setAlignment3D()
         return partSet   
     
     def _createClasses(self, dataFile, partSet):     

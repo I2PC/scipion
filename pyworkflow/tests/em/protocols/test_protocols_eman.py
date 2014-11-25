@@ -42,10 +42,10 @@ class TestEmanBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = cls.newProtocol(ProtImportMicrographs, samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
             
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -63,7 +63,7 @@ class TestEmanBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         pattern=pattern, samplingRate=samplingRate,
+                                         filesPath=pattern, samplingRate=samplingRate,
                                          checkStack=checkStack)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -110,7 +110,7 @@ class TestEmanInitialModelMda(TestEmanBase):
     def test_initialmodel(self):
         #Import a set of averages
         print "Import Set of averages"
-        protImportAvg = self.newProtocol(ProtImportAverages, pattern=self.averages, checkStack=True, samplingRate=2.1)
+        protImportAvg = self.newProtocol(ProtImportAverages, filesPath=self.averages, checkStack=True, samplingRate=2.1)
         self.launchProtocol(protImportAvg)
         self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
 

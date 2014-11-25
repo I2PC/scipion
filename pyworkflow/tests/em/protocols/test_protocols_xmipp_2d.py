@@ -44,7 +44,7 @@ class TestXmippBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles, 
-                                         pattern=pattern, samplingRate=samplingRate, 
+                                         filesPath=pattern, samplingRate=samplingRate, 
                                          checkStack=checkStack)
         print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
@@ -78,7 +78,7 @@ class TestXmippCreateMask2D(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
-        cls.samplingRate = cls.protImport.getSamplingRate()
+        cls.samplingRate = cls.protImport.outputParticles.getSamplingRate()
         cls.size = 20
         
     def testCreateCircularMask(self):

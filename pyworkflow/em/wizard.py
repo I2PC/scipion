@@ -29,20 +29,27 @@ This module implement some wizards
 """
 
 import os
+from os.path import basename, exists
 import Tkinter as tk
 import ttk
-from os.path import basename
-from pyworkflow.em.constants import *
-from pyworkflow.em.convert import ImageHandler
 
-from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
-from pyworkflow.em.data import Micrograph
-
+from pyworkflow.wizard import Wizard
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
+
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.constants import (UNIT_PIXEL, 
+                                     UNIT_PIXEL_FOURIER,
+                                     UNIT_ANGSTROM,
+                                     FILTER_LOW_PASS, 
+                                     FILTER_BAND_PASS, 
+                                     FILTER_HIGH_PASS
+                                     )
+from pyworkflow.em.data import (Volume, 
+                                SetOfMicrographs, SetOfParticles, SetOfVolumes)
+from pyworkflow.em.protocol import ProtImportImages
 
 import xmipp
 
@@ -346,6 +353,33 @@ class GaussianParticlesWizard(GaussianWizard):
 class GaussianVolumesWizard(GaussianWizard):
     pass   
     
+    
+class ImportAcquisitionWizard(EmWizard):
+    _targets = [(ProtImportImages, ['acquisitionWizard'])]
+    
+    def show(self, form, *params):
+        prot = form.protocol
+        acquisitionInfo = prot.loadAcquisitionInfo()
+        
+        if prot.importFilePath:
+            if exists(prot.importFilePath):
+                if acquisitionInfo:
+                    msg = ''
+                    for k, v in acquisitionInfo.iteritems():
+                        msg += '%s = %s\n' % (k, v)
+                    msg += '\n*Do you want to use detected acquisition values?*'
+                    response = dialog.askYesNo("Import acquisition", msg, form.root)
+                    if response:
+                        for k, v in acquisitionInfo.iteritems():
+                            form.setVar(k, v)
+                else:
+                    dialog.showWarning("Import failed", 
+                                       "Could not import acquisition info.", form.root)
+            else:
+                dialog.showError("Input error", "*Import file doesn't exist.*\nFile:\n%s" % prot.importFilePath, form.root)
+        else:
+            dialog.showError("Input error", "Select import file first", form.root) 
+            
 
 #===============================================================================
 #  Dialogs used by wizards

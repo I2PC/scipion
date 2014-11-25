@@ -23,16 +23,16 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
-This sub-package contains protocol for ResMap
+Sub-packages containing different sub-modules to import different type
+of objects.
 """
-from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "resmap_logo.png"
-_references = ['lix2013']
 
-#from protocol_dosefgpu import ProtDosefGpu
-#from protocol_import import ProtDosefGpuImport
+from base import ProtImport
+from images import ProtImportImages
+from micrographs import ProtImportMicrographs, ProtImportMovies
+from particles import ProtImportParticles, ProtImportAverages
+from coordinates import ProtImportCoordinates
+from volumes import ProtImportVolumes, ProtImportPdb
 
-from convert import getEnviron
-
-_environ = getEnviron()

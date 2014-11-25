@@ -113,11 +113,12 @@ class CTFModel(EMObject):
         self._micObj  = None
 
     def __str__(self):
-        str = "defocus(U,V,a) = (%f,%f,%f)"%(self._defocusU.get()
-              , self._defocusV.get(), self._defocusAngle.get())
+        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                                           self._defocusV.get(), 
+                                                           self._defocusAngle.get())
         if self._micObj:
-            str + " %s" % self._micObj
-        return str
+            ctfStr + " mic=%s" % self._micObj
+        return ctfStr
 
     def getDefocusU(self):
         return self._defocusU.get()
@@ -189,6 +190,15 @@ class CTFModel(EMObject):
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
         self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
+        
+    def equalAttributes(self, other, verbose=False):
+        """ Override default behaviour to compare two
+        CTF objects, now ignoring the psdFile.
+        """
+        return (self._defocusU == other._defocusU and
+                self._defocusV == other._defocusV and
+                self._defocusAngle == other._defocusAngle
+                )
 
 
 class DefocusGroup(EMObject):
@@ -566,6 +576,13 @@ class SetOfImages(EMSet):
             raise Exception('Invalid alignment value')
         self._alignment.set(value)
         
+    def setAlignment2D(self):
+        self.setAlignment(ALIGN_2D)
+        
+    def setAlignment3D(self):
+        self.setAlignment(ALIGN_3D)    
+    
+        
 #    def hasProjection(self):
 #        return self._hasProjection.get()
     
@@ -779,7 +796,7 @@ class SetOfParticles(SetOfImages):
 
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
-    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    It is a SetOfParticles but it is useful to differentiate outputs."""
     def __init__(self, **args):
         SetOfParticles.__init__(self, **args)
 

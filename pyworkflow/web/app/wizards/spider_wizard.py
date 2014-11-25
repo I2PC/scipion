@@ -31,6 +31,7 @@ import xmipp
 from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
+from pyworkflow.wizard import WEB_DJANGO
 
 from pyworkflow.em.packages.spider.spider import runScript
 from pyworkflow.em.packages.spider.wizard import * 

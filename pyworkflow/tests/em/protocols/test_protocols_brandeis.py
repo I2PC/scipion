@@ -43,10 +43,10 @@ class TestBrandeisBase(BaseTest):
         """ Run an Import micrograph protocol. """
         # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, pattern=pattern, samplingRate=samplingRate, magnification=magnification, 
+            cls.protImport = ProtImportMicrographs(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
                                                    voltage=voltage, sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, pattern=pattern, scannedPixelSize=scannedPixelSize, 
+            cls.protImport = ProtImportMicrographs(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
                                                    voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
         
         cls.proj.launchProtocol(cls.protImport, wait=True)
@@ -59,7 +59,7 @@ class TestBrandeisBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         pattern=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern, samplingRate=samplingRate)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
@@ -67,7 +67,7 @@ class TestBrandeisBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         pattern=pattern, samplingRate=samplingRate,
+                                         filesPath=pattern, samplingRate=samplingRate,
                                          checkStack=checkStack)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)

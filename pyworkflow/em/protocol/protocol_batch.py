@@ -83,7 +83,7 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
         
-        if (outputClassName.startswith('SetOfParticles') or
+        if (outputClassName.startswith('SetOfAverages') or
             outputClassName.startswith('SetOfVolumes')):
             # We need to distinguish two cases:
             # a) when we want to create images by grouping class images

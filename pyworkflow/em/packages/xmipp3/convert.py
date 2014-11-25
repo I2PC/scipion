@@ -153,6 +153,12 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    if obj.isEnabled():
+        enabled = 1
+    else:
+        enabled = -1
+    row.setValue(xmipp.MDL_ENABLED, enabled)
+    
     for attr, label in attrDict.iteritems():
         if hasattr(obj, attr):
             valueType = getLabelPythonType(label)
@@ -177,6 +183,8 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
         extraLabels: a list with extra labels that could be included
             as _xmipp_labelName
     """
+    obj.setEnabled(row.getValue(xmipp.MDL_ENABLED, 1) > 0)
+    
     for attr, label in attrDict.iteritems():
         value = row.getValue(label)
         if not hasattr(obj, attr):
@@ -695,7 +703,11 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         hasAlignment = img.hasAlignment()
         
     imgSet.setHasCTF(hasCtf)
-    imgSet.setHasAlignment(hasAlignment)
+    if hasAlignment:
+        if kwargs.get('is2D', True):
+            imgSet.setAlignment2D()
+        else:
+            imgSet.setAlignment3D()
         
 
 def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
@@ -742,6 +754,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
         
 def readSetOfParticles(filename, partSet, **kwargs):
     readSetOfImages(filename, partSet, rowToParticle, **kwargs)
+    
 
 def setOfParticlesToMd(imgSet, md, **kwargs):
     setOfImagesToMd(imgSet, md, particleToRow, **kwargs)

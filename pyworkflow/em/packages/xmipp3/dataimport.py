@@ -24,10 +24,13 @@
 # *
 # **************************************************************************
 
-from os.path import join, basename, dirname
+from os.path import join, basename, dirname, exists
+from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom, copyTree, createLink
-from pyworkflow.em.packages.xmipp3.convert import readSetOfMicrographs, CTF_PSD_DICT
+from pyworkflow.em.packages.xmipp3.convert import (readSetOfMicrographs, readSetOfParticles,
+                                                   xmippToLocation, locationToXmipp, 
+                                                   CTF_PSD_DICT)
 from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 
@@ -38,31 +41,28 @@ class XmippImport():
     """ Class used to import different kind of objects
     from Xmipp projects into Scipion.
     """
-    def __init__(self, protocol):
+    def __init__(self, protocol, mdFile):
         self.protocol = protocol
+        self._mdFile = mdFile
         self.copyOrLink = protocol.getCopyOrLink()
     
-    def importMicrographs(self, micsMd):
+    def importMicrographs(self):
         """ Import a SetOfMicrographs from a given micrograph metadata.
         (usually the result "micrographs.xmd" from Xmipp protocols)
         If the CTF is found, a SetOfCTF will be also created.
-        Params:
-            protocol: the protocol that will be used to register
-                the outputs.
-            micsMd: the metadata with micrographs.
         """
-        self._findPathAndCtf(micsMd)
+        self._findPathAndCtf(label=xmipp.MDL_MICROGRAPH)
         micSet = self.protocol._createSetOfMicrographs()
-        micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % micsMd)
+        micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % self._mdFile)
         
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
         self.protocol.setSamplingRate(micSet)
         self.protocol.fillAcquisition(micSet.getAcquisition())
-        # Read the micrographs from the 'micsMd' metadata
+        # Read the micrographs from the 'self._mdFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
-        readSetOfMicrographs(micsMd, micSet, 
-                           preprocessImageRow=self._preprocessImageRow, 
+        readSetOfMicrographs(self._mdFile, micSet, 
+                           preprocessImageRow=self._preprocessMicrographRow, 
                            readAcquisition=False)
         self.protocol._defineOutputs(outputMicrographs=micSet)
         
@@ -76,45 +76,80 @@ class XmippImport():
                 
             self.protocol._defineOutputs(outputCTF=ctfSet)
             self.protocol._defineCtfRelation(micSet, ctfSet)
+            
+    def importParticles(self):
+        """ Import particles from a metadata 'images.xmd' """
+        self._imgDict = {} # store which images stack have been linked/copied and the new path
+        self._findPathAndCtf(label=xmipp.MDL_IMAGE)
+        partSet = self.protocol._createSetOfParticles()
+        partSet.setObjComment('Particles imported from Xmipp metadata:\n%s' % self._mdFile)
         
-    def _findPathAndCtf(self, micsMd):
+        # Update both samplingRate and acquisition with parameters
+        # selected in the protocol form
+        self.protocol.setSamplingRate(partSet)
+        self.protocol.fillAcquisition(partSet.getAcquisition())
+        # Read the micrographs from the 'self._mdFile' metadata
+        # but fixing the filenames with new ones (linked or copy to extraDir)
+        readSetOfParticles(self._mdFile, partSet, 
+                           preprocessImageRow=self._preprocessParticleRow, 
+                           readAcquisition=False)
+        self.protocol._defineOutputs(outputParticles=partSet)
+        
+    def _findPathAndCtf(self, label, warnings=True):
         """ Find the relative path from which the micrographs exists
         repect to the metadata location. Also check if it contains
         CTF information and their relative root.
         """
-        row = getMdFirstRow(micsMd)
+        row = getMdFirstRow(self._mdFile)
         
         if row is None:
-            raise Exception("Can not import Micrographs from an empty metadata: %s" % micsMd)
+            raise Exception("Can not import from an empty metadata: %s" % self._mdFile)
         
-        if not row.containsLabel(xmipp.MDL_MICROGRAPH):
-            raise Exception("Label 'micrograph' is missing from metadata: %s" % micsMd)
+        if not row.containsLabel(label):
+            raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
+                                                                         self._mdFile))
             
-        self._micsPath = findRootFrom(micsMd, row.getValue(xmipp.MDL_MICROGRAPH))
-        if self._micsPath is None:
-            self.protocol.warning("Micrographs binary data was not found from metadata: %s" % micsMd)
+        self._imgPath = findRootFrom(self._mdFile, row.getValue(label))
+        
+        if warnings and self._imgPath is None:
+            self.protocol.warning("Binary data was not found from metadata: %s" % self._mdFile)
         
         if row.containsLabel(xmipp.MDL_CTF_MODEL):
-            self._ctfPath = findRootFrom(micsMd, row.getValue(xmipp.MDL_CTF_MODEL))
+            self._ctfPath = findRootFrom(self._mdFile, row.getValue(xmipp.MDL_CTF_MODEL))
         else:
             self._ctfPath = None # means no CTF info from micrographs metadata
     
+    def validate(self, label):
+        """ Try to find errors on import. """
+        errors = []
+        try:
+            self._findPathAndCtf(label, warnings=False)
+        except Exception, ex:
+            errors.append(str(ex))
+            
+        return errors
         
-    def _preprocessImageRow(self, img, imgRow):
-        if self._micsPath:
+    def validateMicrographs(self):
+        return self.validate(xmipp.MDL_MICROGRAPH)
+    
+    def validateParticles(self):
+        return self.validate(xmipp.MDL_IMAGE)
+        
+    def _preprocessMicrographRow(self, img, imgRow):
+        if self._imgPath:
             # Create a link or copy files to extraPath
             # and update the Row properly
             micFile = imgRow.getValue(xmipp.MDL_MICROGRAPH)
             micBase = basename(micFile)
             micDst = self.protocol._getExtraPath(micBase)
-            self.copyOrLink(join(self._micsPath, micFile), micDst)
+            self.copyOrLink(join(self._imgPath, micFile), micDst)
             imgRow.setValue(xmipp.MDL_MICROGRAPH, micDst)
             
         if self._ctfPath:
             # Read Xmipp ctfModel parameters and add
             # to the original micrograph row
             ctfFile = imgRow.getValue(xmipp.MDL_CTF_MODEL) 
-            ctfPath = join(self._micsPath, ctfFile)
+            ctfPath = join(self._imgPath, ctfFile)
             ctfRow = XmippMdRow()
             ctfRow.readFromFile(ctfPath)
             imgRow.copyFromRow(ctfRow)
@@ -136,8 +171,41 @@ class XmippImport():
                 fileName = basename(filePath)
                 newFilePath = join(ctfDstDir, fileName)
                 imgRow.setValue(label, newFilePath)
+        
+    def _preprocessParticleRow(self, img, imgRow):
+        if self._imgPath:
+            # Create a link or copy files to extraPath
+            # and update the Row properly
+            imgFn = imgRow.getValue(xmipp.xmipp.MDL_IMAGE)
+            index, fn = xmippToLocation(imgFn)
+            imgBase = basename(fn)
+            imgDst = self.protocol._getExtraPath(imgBase)
+            if not exists(imgDst):
+                self.copyOrLink(join(self._imgPath, fn), imgDst)
+            imgRow.setValue(xmipp.MDL_IMAGE, locationToXmipp(index, imgDst))
             
-    
-    def _postprocessImageRow(self, img, imgRow):
-        pass  
+    def loadAcquisitionInfo(self):
+        """ Return a dictionary with acquisition values and 
+        the sampling rate information.
+        In the case of Xmipp, they are stored in files:
+        acquisition_info.xmd and microscope.xmd 
+        """
+        acquisitionDict = OrderedDict()
+        
+        if exists(self._mdFile):
+            dirName = dirname(self._mdFile)
+            acquisitionFile = join(dirName, 'acquisition_info.xmd')
+            microscopeFile = join(dirName, 'microscope.xmd')
+                
+            if exists(microscopeFile):
+                row = getMdFirstRow(microscopeFile)
+                acquisitionDict['voltage'] = row.getValue(xmipp.MDL_CTF_VOLTAGE)
+                acquisitionDict['sphericalAberration'] = row.getValue(xmipp.MDL_CTF_CS)
+            
+            if exists(acquisitionFile):
+                row = getMdFirstRow(acquisitionFile)
+                acquisitionDict['samplingRate'] = row.getValue(xmipp.MDL_SAMPLINGRATE)
+            
+        return acquisitionDict
+          
                 

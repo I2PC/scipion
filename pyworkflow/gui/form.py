@@ -713,6 +713,10 @@ class ParamWidget():
             #btn.grid(row=1, column=0)
         elif t is Line:
             var = None
+            
+        elif t is LabelParam:
+            var = None
+        
         else:
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
@@ -1475,16 +1479,4 @@ def editObject(self, title, root, obj, mapper):
     """ Show a Text area to edit the protocol label and comment. """    
     return EditObjectDialog(root, title, obj, mapper)
     
-
-if __name__ == '__main__':
-    # Just for testing
-    from pyworkflow.em import ProtImportMicrographs
-    p = ProtImportMicrographs()
-    p.sphericalAberration.set(2.3)
-    p.setSamplingRate('5.4')
-    w = FormWindow(p)
-    w.show()
-    
-   
-
 

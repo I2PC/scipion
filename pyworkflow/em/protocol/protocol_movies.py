@@ -125,11 +125,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getMovieName(self, movieId, ext='.mrc'):
         return 'movie_%06d%s' % (movieId, ext) 
     
-    def _getMicName(self, movieId):
-        return 'micrograph_%06d.mrc' % movieId
+    def _getMicMetaName(self, movieName, ext):
+        #return 'micrograph_%06d.mrc' % movieId
+        return removeBaseExt(movieName) + '-aligned.' + ext
 
-    def _getMetadataName(self, movieId):
-        return 'micrograph_%06d.xmd' % movieId
+    def _getMetadataName(self, movieName):
+        #return 'micrograph_%06d.xmd' % movieId
+        return removeBaseExt(movieName) + '-aligned.xmd'
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
@@ -168,7 +170,7 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
         import xmipp
         from pyworkflow.em.packages import xmipp3
         
-        # This is wrong for some cases.
+        # TODO: Check this.Is wrong for some cases.
         boxSize = self.inputCoordinates.get().getBoxSize() 
         # Aux image to read and write images        
         img = xmipp.Image()
