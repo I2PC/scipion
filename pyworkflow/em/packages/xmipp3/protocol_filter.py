@@ -50,7 +50,7 @@ FM_BAND_PASS = FILTER_BAND_PASS  #2
 FM_CTF       = 3
 # Real Space Filters
 FM_MEDIAN = 0
-#WaveLets decomposition base
+#Wavelets decomposition base
 FM_DAUB4   = 0
 FM_DAUB12  = 1
 FM_DAUB20  = 2
@@ -93,7 +93,7 @@ class XmippProtFilter():
                       label="Filter mode",
                       help='median: replace each pixel with the median of neighboring pixels.\n'
         )
-        form.addParam('filterModeWaveLets', EnumParam, choices=['daub4','daub12','daub20'],
+        form.addParam('filterModeWavelets', EnumParam, choices=['daub4','daub12','daub20'],
                       default=FM_DAUB4,
                       condition='filterSpace == %d' % FILTER_SPACE_WAVELET,
                       label="Filter mode",
@@ -111,8 +111,8 @@ class XmippProtFilter():
                                                            self.getModesCondition('filterModeReal',
                                                                                   FM_MEDIAN))
         #String that identifies filter in Real Space
-        waveLetCondition = 'filterSpace == %d and (%s)' % (FILTER_SPACE_WAVELET,
-                                                           self.getModesCondition('filterModeWaveLets',
+        waveletCondition = 'filterSpace == %d and (%s)' % (FILTER_SPACE_WAVELET,
+                                                           self.getModesCondition('filterModeWavelets',
                                                                                   FM_DAUB4,
                                                                                   FM_DAUB12,
                                                                                   FM_DAUB20))
@@ -162,7 +162,7 @@ class XmippProtFilter():
                       help='Object with CTF information')
 
         #wavelets
-        form.addParam('waveLetMode',  EnumParam, choices=['remove_scale',
+        form.addParam('waveletMode',  EnumParam, choices=['remove_scale',
                                                           'bayesian(not implemented)',
                                                           'soft_thresholding',
                                                           'adaptive_soft',
@@ -230,16 +230,16 @@ class XmippProtFilter():
                 filterStr += "DAUB20 "
             else:
                 raise Exception("Unknown wavelets filter mode: %d" % filterMode)
-            waveLetMode = self.waveLetMode.get()
-            if waveLetMode == FM_REMOVE_SCALE:
+            waveletMode = self.waveletMode.get()
+            if waveletMode == FM_REMOVE_SCALE:
                 filterStr += "remove_scale "
-            elif waveLetMode == FM_BAYESIAN:
+            elif waveletMode == FM_BAYESIAN:
                 raise Exception("Bayesian filter not implemented")
-            elif waveLetMode == FM_SOFT_THRESHOLDING:
+            elif waveletMode == FM_SOFT_THRESHOLDING:
                 filterStr += "soft_thresholding "
-            elif waveLetMode == FM_ADAPTIVE_SOFT:
+            elif waveletMode == FM_ADAPTIVE_SOFT:
                 filterStr += "adaptive_soft "
-            elif waveLetMode == FM_CENTRAL:
+            elif waveletMode == FM_CENTRAL:
                 filterStr += "central "
         else:
             raise Exception("Unknown filter space: %d" % self.filterSpace.get())

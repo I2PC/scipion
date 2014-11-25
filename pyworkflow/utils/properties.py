@@ -47,9 +47,9 @@ class Message():
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
     TITLE_EDIT_OBJECT = 'Edit Object properties'
     MESSAGE_DELETE_PROJECT = 'This will *delete* the project and all its *data*. Are you sure?'
-    LABEL_DELETE_PROJECT = 'Delete Project'
+    LABEL_DELETE_PROJECT = '[Delete]'
     TITLE_DELETE_PROJECT = 'Confirm project deletion'
-    LABEL_RENAME_PROJECT = 'Rename Project'
+    LABEL_RENAME_PROJECT = '[Rename]'
     TITLE_RENAME_PROJECT = 'Confirm project renaming'
     LABEL_MODIFIED = 'Modified: '
     
