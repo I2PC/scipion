@@ -29,31 +29,37 @@ section {
 <script type="text/javascript">
 $(document).ready(function(){
 	webGLStart();
-})
+});
+</script>
+
+<script type="text/javascript">
+function updateThreshold(){
+	var threshold = $("input#thresholdValue").val();
+	if (threshold == undefined){
+		threshold = $("input#thresholdValue").attr("value");
+	}
+	
+	$.ajax({
+		type : "GET",
+		url : "/chimera_headless/?volPath={{volPath}}&threshold="+threshold,
+		dataType : "html",
+		async: false,
+		success : function(data) {
+			$("div#chimeraContent1").html(data);
+		}
+	});	
+}
 </script>
 
 {% endblock %}
-
 {% block content_menu %}{% endblock %}
-			
-{% block content_view %}{% endblock %}
+{% block content_view %}
+{% endblock %}
 
-{% block content_end_page %}	
-<!-- CHIMERA -->
-<div id="fallback" class="fallback"></div>
-<canvas id="molview" width="512" height="334"></canvas>
-
-<script>
-if (!PhiloGL.hasWebGL()) {
-	document.body.className = 'no-webgl';
-	document.getElementById('fallback').innerHTML = ''
-	+ '<div style="margin:10px;">'
-// 	+ {{msg.ERROR_WEBGL}}
-	+ '</div>';
-}
-</script>
-{% autoescape off %}
-	{{chimeraHtml}}
-{% endautoescape %}	
-
+{% block content_end_page %}
+	<div id="chimeraContent">	
+		{% include "showj/chimera.html" %}
+	</div>
+	<div id="chimeraContent1">	
+	</div>
 {% endblock %}

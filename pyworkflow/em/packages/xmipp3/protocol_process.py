@@ -90,7 +90,6 @@ class XmippProcessParticles(XmippProcess):
         # is2D is only used if hasAlignment is true
         # if is2D=false --> you are in 3D
         readSetOfParticles(self.outputMd, imgSet,is2D=imgSet.hasAlignment2D())
-
         self._postprocessOutput(imgSet)
         
         self._defineOutputs(outputParticles=imgSet)

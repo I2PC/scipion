@@ -216,18 +216,19 @@ def setRenderingOptions(request, dataset, table, inputParams):
             #Setting the _imageVolName and _stats     
             
             # CONVERTION TO .mrc DONE HERE!
-            _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
+            _imageVolNameOld = _imageVolName
+            _imageVolNameNew, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                dataset.setVolumeName(_imageVolName)
+                dataset.setVolumeName(_imageVolNameNew)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
                
-        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
+        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolNameNew)
     
-    return volPath, _stats, _imageDimensions
+    return volPath, _stats, _imageDimensions, _imageVolNameOld
 
 
 #Initialize default values
@@ -327,7 +328,8 @@ def showj(request):
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
         
-        volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
+        volPath, _stats, _imageDimensions, volOld = setRenderingOptions(request, dataset, table, inputParams)
+        inputParams['volOld'] = volOld
         
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
@@ -495,7 +497,8 @@ def create_context_volume(request, inputParams, volPath, param_stats):
 
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
-    elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:   
+    elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
+        volPath = inputParams['volOld']   
         context.update(create_context_chimera(volPath))
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
@@ -540,18 +543,42 @@ def create_context_astex(request, typeVolume, volPath):
             "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
-def create_context_chimera(volPath):
+def create_context_chimera(volPath, threshold=None):
+    # Chimera Headless version must be in the evironment variables 
+    # For example:
+    # export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera
+
     from subprocess import Popen, PIPE, STDOUT
-    
     p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    
+    if threshold == None:
+        threshold = 0.1
+    
+    # Build chimera command
     outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-    #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-    chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-    stdout_data, stderr_data = p.communicate(input=chimeraCommand)
+    f = open(outputHtmlFile+'.cmd', 'w')
+    f.write("""
+    open %(volPath)s
+    volume #0 level %(threshold)s
+    export format WebGL %(outputHtmlFile)s
+    """ % locals())
+    f.close()
+    p = Popen([os.environ.get('CHIMERA_HEADLESS'), outputHtmlFile+'.cmd'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    
     f = open(outputHtmlFile)
     chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
     
-    return {"chimeraHtml":chimeraHtml}
+    return {"chimeraHtml":chimeraHtml,
+            "volPath":volPath, 
+            "threshold": threshold
+            }
+
+def chimera_headless(request):
+    volPath = request.GET.get('volPath', None)
+    threshold = request.GET.get('threshold', None)
+    context = create_context_chimera(volPath, threshold)
+    
+    return render_to_response('showj/chimera.html', context)
     
     
 def calculateThreshold(params):
