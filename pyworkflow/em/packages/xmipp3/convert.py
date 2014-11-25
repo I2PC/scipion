@@ -441,8 +441,8 @@ def rowToParticle(partRow, **kwargs):
         else:
             print "No micname"
             img.printAll()
-    except Exception:
-        pass    
+    except Exception as e:
+        print "Warning:", e.message
     return img
     
     
