@@ -76,6 +76,7 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         partSet = self._createParticles(dataFile)
         self._defineOutputs(outputParticles=partSet)
         firstParticle = partSet.getFirstItem()
+        firstParticle.printAll()
         if firstParticle.getMicId() is None:
             print "no micIDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
             if firstParticle.hasAttribute("_micrograph"):
