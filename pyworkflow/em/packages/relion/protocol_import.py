@@ -79,7 +79,7 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         firstParticle.printAll()
         if firstParticle.getMicId() is None:
             print "no micIDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-            if firstParticle.hasAttribute("_micrograph"):
+            if not firstParticle._micrograph is None:
                 print "I have micrograph"
                 #create micID: aggregate function, argument function, group by
                 micIdList = partSet.aggregate(['count'],'_micrograph',['_micrograph'])
