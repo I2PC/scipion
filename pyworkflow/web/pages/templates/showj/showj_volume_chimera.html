@@ -29,29 +29,44 @@
     <script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
 	<script src="{{jquery_ui}}"></script>
 	<link rel="stylesheet" href="{{jquery_ui_css}}">
+	<link rel="stylesheet" href="{{messi_css}}">
   	<script type="text/javascript">
   	function webGL(){
 	  	<!-- Init webgl -->
   		webGLStart();
   	}
+  	
+  	function putWait(){
+		new Messi("<i class='fa fa-picture-o'/>  Loading Volume...",{
+			modal : true
+		});
+		console.log("putWait")
+  	}
+  	
+  	function removeWait(){
+  		$('.messi').remove();
+		$('.messi-modal').remove();
+		console.log("removeWait")
+  	}
 	
   	function updateThreshold(){
+  		putWait();
+  		
 		var threshold = $("input#thresholdValue").val();
 		if (threshold == undefined){
 			threshold = $("input#thresholdValue").attr("value");
 		}
-		
 		$("div#chimeraContent").empty();
 		
 		$.ajax({
 			type : "GET",
 			url : "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
 			dataType : "html",
-			async: false,
+// 			async: false,
 			success : function(data) {
 				$("div#chimeraContent").html(data);
-				
 				webGL();
+				removeWait();
 			}
 		});	
 	}
@@ -59,9 +74,9 @@
   	$(document).ready(function(){
   		webGL();
   		
-  		console.log("threshold: {{threshold}}")
-  		console.log("MIN: {{minStats}}")
-  		console.log("MAX: {{maxStats}}")
+//   		console.log("threshold: {{threshold}}")
+//   		console.log("MIN: {{minStats}}")
+//   		console.log("MAX: {{maxStats}}")
   		
   		$("span#slider").slider({
   			animate : true,
@@ -99,15 +114,10 @@
 					<span id="slider"></span>
 				</td>
 				<td>
-					<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold()"/>
+					<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
 				</td>
 			</tr>
 		</table>
-		
-		</span>
-		<br/>
-		</span>
-
 	</div>
 	
 {% endblock %}

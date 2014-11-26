@@ -557,7 +557,7 @@ def create_context_chimera(volPath, threshold=None):
     context = {"chimeraHtml":chimeraHtml,
                "volPath":volPath, 
                "threshold": threshold, 
-               "jquery_ui_css": getResourceCss("jquery_ui")
+               "jquery_ui_css": getResourceCss("jquery_ui"),
                }
     
     return context
