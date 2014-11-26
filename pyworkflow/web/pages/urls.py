@@ -88,7 +88,7 @@ urlpatterns = patterns('',
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
     url(r'^jsmol/$', 'app.views_showj.jsmol'),
-    url(r'^chimera_headless/$', 'app.views_showj.chimera_headless'),
+    url(r'^get_chimera_html/$', 'app.views_showj.get_chimera_html'),
     
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),

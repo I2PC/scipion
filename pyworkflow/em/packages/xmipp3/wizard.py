@@ -135,14 +135,39 @@ class XmippBoxSizeWizard(Wizard):
 
     def _getBoxSize(self, protocol):
 
-        boxSize = 0
+        # Get input coordinates from protocol and if they have not value exit
+        inputCoords = protocol.getCoords()
+        if  inputCoords is None:
+            return 0
 
-        if issubclass(protocol.getClass(), XmippProtExtractParticles):
-            if protocol.inputCoordinates.hasValue():
-                boxSize = protocol.inputCoordinates.get().getBoxSize()
-        if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
-            if protocol.inputCoordinatesTiltedPairs.hasValue():
-                boxSize= protocol.inputCoordinatesTiltedPairs.get().getUntilted().getBoxSize()
+        # Get boxSize from coordinates and sampling input from associated micrographs
+        boxSize = inputCoords.getBoxSize()
+        samplingInput = inputCoords.getMicrographs().getSamplingRate()
+
+        # If downsampling type same as picking sampling does not change
+        if protocol.downsampleType.get() == SAME_AS_PICKING:
+            samplingFinal = samplingInput
+        else:
+            # In case is not same as picking get input micrographs and its sampling rate
+            if issubclass(protocol.getClass(), XmippProtExtractParticles):
+                inputMics = protocol.inputMicrographs.get()
+            if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
+                inputMics = inputCoords.getMicrographs()
+
+            samplingMics = inputMics.getSamplingRate()
+
+            if protocol.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                samplingFinal = samplingMics
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                samplingFinal = samplingMics*protocol.downFactor.get()
+
+        downFactor = samplingFinal/samplingInput
+
+        return int(boxSize/downFactor)
+
+
 
         return boxSize
 

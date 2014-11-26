@@ -37,6 +37,7 @@ from pyworkflow.em import *
 from layout_configuration import ColumnPropertiesEncoder
 from views_base import base_showj
 import pyworkflow.em.showj as sj
+import subprocess
 
 
 def loadDataSet(request, inputParams, firstTime):
@@ -498,7 +499,10 @@ def create_context_volume(request, inputParams, volPath, param_stats):
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
-        volPath = inputParams['volOld']   
+        # Using the .vol file
+        volPath = inputParams['volOld']
+        volPath = request.session['projectPath'] + "/" + volPath
+           
         context.update(create_context_chimera(volPath))
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
@@ -544,42 +548,68 @@ def create_context_astex(request, typeVolume, volPath):
     
     
 def create_context_chimera(volPath, threshold=None):
-    # Chimera Headless version must be in the evironment variables 
-    # For example:
-    # export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera
-
-    from subprocess import Popen, PIPE, STDOUT
-    p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    
+    # Control the threshold value
     if threshold == None:
         threshold = 0.1
     
-    # Build chimera command
-    outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-    f = open(outputHtmlFile+'.cmd', 'w')
-    f.write("""
+    chimeraHtml = chimera_headless(volPath, threshold)
+    
+    context = {"chimeraHtml":chimeraHtml,
+               "volPath":volPath, 
+               "threshold": threshold, 
+               "jquery_ui_css": getResourceCss("jquery_ui")
+               }
+    
+    return context
+
+def get_chimera_html(request):
+    if request.is_ajax():
+        volPath = request.GET.get('volPath')
+        threshold = request.GET.get('threshold')
+        chimeraHtml = chimera_headless(volPath, threshold)
+        return HttpResponse(chimeraHtml, mimetype='application/javascript')
+    else:
+        return HttpResponse("FAIL", mimetype='application/javascript')
+
+def chimera_headless(volPath, threshold):
+    """ Function that generate the visualization HTML with a 
+        'volPath' and a 'threshold' given by user.
+        Chimera Headless version must be in the evironment variables 
+        For example:
+        export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera """
+    
+    # Create or Modify the file to exportS
+    htmlFile = os.path.join(pw.WEB_RESOURCES, 'chimera', 'output.html')
+    outputHtmlFile = open(htmlFile, 'w+')
+    outputHtmlFile.close()
+    
+    # Build chimera command file
+    cmdFile = htmlFile + '.cmd'
+    outputCmdFile = open(cmdFile, 'w+')
+    outputCmdFile.write("""
     open %(volPath)s
     volume #0 level %(threshold)s
-    export format WebGL %(outputHtmlFile)s
+    export format WebGL %(htmlFile)s
     """ % locals())
-    f.close()
-    p = Popen([os.environ.get('CHIMERA_HEADLESS'), outputHtmlFile+'.cmd'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    outputCmdFile.close()
     
-    f = open(outputHtmlFile)
-    chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    # Execute command file in chimera headless
+    cmdToExec = [os.environ.get('CHIMERA_HEADLESS'), cmdFile]
+    import subprocess
+    subprocess.call(cmdToExec, shell=False)
     
-    return {"chimeraHtml":chimeraHtml,
-            "volPath":volPath, 
-            "threshold": threshold
-            }
+    # Extract information from HTML output file
+    outputHtmlFile = open(htmlFile, "r")
+    chimeraHtml = outputHtmlFile.read()
+    
+#     Format information
+    chimeraHtml = chimeraHtml.decode('string-escape').decode("utf-8").split("</html>")[1]
+    chimeraHtml = '<canvas id="molview" width="320" height="240"></canvas>' + chimeraHtml
 
-def chimera_headless(request):
-    volPath = request.GET.get('volPath', None)
-    threshold = request.GET.get('threshold', None)
-    context = create_context_chimera(volPath, threshold)
+    # Close file
+    outputHtmlFile.close()
     
-    return render_to_response('showj/chimera.html', context)
-    
+    return chimeraHtml
     
 def calculateThreshold(params):
     threshold = (params[2] + params[3])/2 if params != None else 1

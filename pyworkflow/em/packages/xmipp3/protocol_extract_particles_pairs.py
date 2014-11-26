@@ -357,4 +357,10 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         return methodsMsgs
 
+    def getCoords(self):
+        if self.inputCoordinatesTiltedPairs.hasValue():
+            return self.inputCoordinatesTiltedPairs.get().getUntilted()
+        else:
+            return None
+
     

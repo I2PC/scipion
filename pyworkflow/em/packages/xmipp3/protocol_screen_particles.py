@@ -30,33 +30,34 @@ This sub-package contains wrapper around Screen Particles Xmipp program
 
 from pyworkflow.object import String
 from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
-                                        LEVEL_EXPERT)
+                                        LEVEL_EXPERT, FloatParam)
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.utils.path import copyFile, replaceBaseExt
 
 from convert import writeSetOfParticles, readSetOfParticles
 
 
-# Automatic Particle rejection enum
-REJ_NONE = 0
-REJ_MAXZSCORE = 1
-REJ_PERCENTAGE =2
+
         
         
 class XmippProtScreenParticles(ProtProcessParticles):
     """ Classify particles according their similarity to the others in order to detect outliers """
     _label = 'screen particles'
-    
+
+    # Automatic Particle rejection enum
+    REJ_NONE = 0
+    REJ_MAXZSCORE = 1
+    REJ_PERCENTAGE =2
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         
         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
-                      label="Automatic particle rejection", default=REJ_NONE,
+                      label="Automatic particle rejection", default=self.REJ_NONE,
                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
                       help='How to automatically reject particles. It can be none (no rejection), '
                       'maxZscore (reject a particle if its Zscore [a similarity index] is larger than this value), '
                       'Percentage (reject a given percentage in each one of the screening criteria). ')
-        form.addParam('maxZscore', IntParam, default=3, condition='autoParRejection==1',
+        form.addParam('maxZscore', FloatParam, default=3, condition='autoParRejection==1',
                       label='Maximum Zscore', expertLevel=LEVEL_EXPERT,
                       help='Maximum Zscore.', validators=[Positive])      
         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
@@ -83,10 +84,10 @@ class XmippProtScreenParticles(ProtProcessParticles):
         writeSetOfParticles(self.inputParticles.get(), imagesMd)
         args = "-i Particles@%s --addToInput " % imagesMd
         
-        if self.autoParRejection == REJ_MAXZSCORE:
+        if self.autoParRejection == self.REJ_MAXZSCORE:
             args += "--zcut " + str(self.maxZscore.get())
         
-        elif self.autoParRejection == REJ_PERCENTAGE:
+        elif self.autoParRejection == self.REJ_PERCENTAGE:
             args += "--percent " + str(self.percentage.get())
 
         self.runJob("xmipp_image_sort_by_statistics", args)
