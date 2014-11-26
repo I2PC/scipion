@@ -32,7 +32,6 @@ import os
 from pyworkflow.protocol.params import FileParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.em.protocol import ProtImport
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.constants import ALIGN_3D
 
 from protocol_base import ProtRelionBase
 
@@ -77,8 +76,24 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         partSet = self._createParticles(dataFile)
         self._defineOutputs(outputParticles=partSet)
         firstParticle = partSet.getFirstItem()
-        if firstParticle.getMicId() is None:
-            self.warning("Micrograph ID was not set for particles!!!")
+        firstParticle.printAll()
+#        if firstParticle.getMicId() is None:
+#            print "no micIDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+#            if firstParticle.hasAttribute("_micrograph"):
+#                print "I have micrograph"
+#                #create micID: aggregate function, argument function, group by
+#                micIdList = partSet.aggregate(['count'],'_micrograph',['_micrograph'])
+#                micIdMap={}
+#                counter = 0;
+#                for mic in micIdList:
+#                    micIdMap[mic['_micrograph']]=counter
+#                    counter = counter +1
+#                for par in partSet:
+#                    par.setMicID(micIdMap[mic['_micrograph']])
+#    #               MDL_MICROGRAPH:        'rlnMicrographName'
+#            else:
+#                self.warning("Micrograph ID was not set for particles!!!")
+
         if not firstParticle.hasAlignment():
             self.warning("Alignment was not read from particles!!!")
         
@@ -176,12 +191,12 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         else:
             self.warning('Images binaries not found!!!')
             
+
     def _preprocessImageRow(self, img, imgRow):
         from convert import setupCTF, copyOrLinkFileName
         if self._imagesPath is not None:
             copyOrLinkFileName(imgRow, self._imagesPath, self._getExtraPath())
         setupCTF(imgRow, self.samplingRate.get())
-                
 #     def _preprocessRow(self, img, imgRow):
 #         from convert import setupCTF, prependToFileName
 #         if self._imagesPath is not None:
