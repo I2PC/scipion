@@ -32,7 +32,6 @@ from pyworkflow.em.protocol import *
 from pyworkflow.protocol.constants import LEVEL_EXPERT
 import xmipp
 from xmipp3 import ProjMatcher
-from convert import writeSetOfClasses2D, writeSetOfParticles
 
         
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
@@ -88,6 +87,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
+        from convert import writeSetOfClasses2D, writeSetOfParticles
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
             writeSetOfClasses2D(imgSet, imgsFn, writeParticles=False)
@@ -105,6 +105,7 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
     
     def createOutputStep(self, outImgsFn):
+        from convert import rowFromMd, rowToAlignment
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
             outSetClass2D = self._createSetOfClasses2D(imgSet.getImages())
@@ -116,9 +117,11 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                 
                 objId = self._getMetaDataObjId(ref, classesMd)
                 maxCC = Float(classesMd.getValue(xmipp.MDL_MAXCC, objId))
+                imgRow = rowFromMd(classesMd, objId)
                 
                 newRef = Particle()
                 newRef.copy(ref)
+                newRef.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newRef, '_xmipp_maxCC', maxCC)
                 
                 newClass2d.setObjId(class2d.getObjId())
@@ -144,7 +147,9 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                 
                 objId = self._getMetaDataObjId(img, imgsMd)
                 maxCC = Float(imgsMd.getValue(xmipp.MDL_MAXCC, objId))
+                imgRow = rowFromMd(imgsMd, objId)
                 
+                newAverage.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newAverage, '_xmipp_maxCC', maxCC)
                 outputSet.append(newAverage)
             

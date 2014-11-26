@@ -119,6 +119,7 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort zScoreResCov desc" % (outImgsFn), numberOfMpi=1)
     
     def createOutputStep(self, outImgsFn):
+        from convert import rowFromMd, rowToAlignment
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
             outSetClass2D = self._createSetOfClasses2D(imgSet.getImages())
@@ -133,9 +134,11 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                 zScoreResCov = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESCOV, objId))
                 zScoreResMean = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESMEAN, objId))
                 zScoreResVar = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESVAR, objId))
+                imgRow = rowFromMd(classesMd, objId)
                 
                 newRef = Particle()
                 newRef.copy(ref)
+                newRef.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newRef, '_xmipp_maxCC', maxCC)
                 setattr(newRef, '_xmipp_zScoreResCov', zScoreResCov)
                 setattr(newRef, '_xmipp_zScoreResMean', zScoreResMean)
@@ -167,7 +170,9 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
                 zScoreResCov = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESCOV, objId))
                 zScoreResMean = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESMEAN, objId))
                 zScoreResVar = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESVAR, objId))
+                imgRow = rowFromMd(imgsMd, objId)
                 
+                newAverage.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newAverage, '_xmipp_maxCC', maxCC)
                 setattr(newAverage, '_xmipp_zScoreResCov', zScoreResCov)
                 setattr(newAverage, '_xmipp_zScoreResMean', zScoreResMean)
