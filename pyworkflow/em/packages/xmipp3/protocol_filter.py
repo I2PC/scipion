@@ -39,32 +39,31 @@ from pyworkflow.em.constants import *
 from constants import *
 
 
-# Some Filter Modes constants to be used locally
-# the special cases of low pass, high pass and band pass
-# should preserve the em.constants values 0, 1 and 2 respectively
-# for properly working of the wizards
-#Fourier filters
-FM_LOW_PASS  = FILTER_LOW_PASS   #0
-FM_HIGH_PASS = FILTER_HIGH_PASS  #1
-FM_BAND_PASS = FILTER_BAND_PASS  #2
-FM_CTF       = 3
-# Real Space Filters
-FM_MEDIAN = 0
-#Wavelets decomposition base
-FM_DAUB4   = 0
-FM_DAUB12  = 1
-FM_DAUB20  = 2
-#Wavelet filters
-FM_REMOVE_SCALE      = 0
-FM_BAYESIAN          = 1
-FM_SOFT_THRESHOLDING = 2
-FM_ADAPTIVE_SOFT     = 3
-FM_CENTRAL           = 4
-
-
 class XmippProtFilter():
     """ Filter operations such as: Fourier or Gaussian. """
     tmpCTF = "ctf.xmd"
+
+    # Some Filter Modes constants to be used locally
+    # the special cases of low pass, high pass and band pass
+    # should preserve the em.constants values 0, 1 and 2 respectively
+    # for properly working of the wizards
+    #Fourier filters
+    FM_LOW_PASS  = FILTER_LOW_PASS   #0
+    FM_HIGH_PASS = FILTER_HIGH_PASS  #1
+    FM_BAND_PASS = FILTER_BAND_PASS  #2
+    FM_CTF       = 3
+    # Real Space Filters
+    FM_MEDIAN = 0
+    #Wavelets decomposition base
+    FM_DAUB4   = 0
+    FM_DAUB12  = 1
+    FM_DAUB20  = 2
+    #Wavelet filters
+    FM_REMOVE_SCALE      = 0
+    FM_BAYESIAN          = 1
+    FM_SOFT_THRESHOLDING = 2
+    FM_ADAPTIVE_SOFT     = 3
+    FM_CENTRAL           = 4
 
     def __init__(self, **args):
         self._program = "xmipp_transform_filter"
@@ -75,7 +74,7 @@ class XmippProtFilter():
                       default=FILTER_SPACE_FOURIER,
                       label="Filter space")
         form.addParam('filterModeFourier', EnumParam, choices=['low pass', 'high pass', 'band pass', 'ctf'],
-                      default=FM_BAND_PASS,
+                      default=self.FM_BAND_PASS,
                       condition='filterSpace == %d' % FILTER_SPACE_FOURIER,
                       label="Filter mode",
                       help='Depending on the filter mode some frequency (freq.) components\n'
@@ -88,13 +87,13 @@ class XmippProtFilter():
         )
 
         form.addParam('filterModeReal', EnumParam, choices=['median'],
-                      default=FM_MEDIAN,
+                      default=self.FM_MEDIAN,
                       condition='filterSpace == %d' % FILTER_SPACE_REAL,
                       label="Filter mode",
                       help='median: replace each pixel with the median of neighboring pixels.\n'
         )
         form.addParam('filterModeWavelets', EnumParam, choices=['daub4','daub12','daub20'],
-                      default=FM_DAUB4,
+                      default=self.FM_DAUB4,
                       condition='filterSpace == %d' % FILTER_SPACE_WAVELET,
                       label="Filter mode",
                       help='DAUB4: filter using the DAUB4 wavelet transform.\n '
@@ -103,19 +102,19 @@ class XmippProtFilter():
         #String that identifies filter in Fourier Space
         fourierCondition = 'filterSpace == %d and (%s)' % (FILTER_SPACE_FOURIER,
                                                            self.getModesCondition('filterModeFourier',
-                                                                                  FM_LOW_PASS,
-                                                                                  FM_HIGH_PASS,
-                                                                                  FM_BAND_PASS))
+                                                                                  self.FM_LOW_PASS,
+                                                                                  self.FM_HIGH_PASS,
+                                                                                  self.FM_BAND_PASS))
         #String that identifies filter in Real Space
         realCondition    = 'filterSpace == %d and (%s)' % (FILTER_SPACE_REAL,
                                                            self.getModesCondition('filterModeReal',
-                                                                                  FM_MEDIAN))
+                                                                                  self.FM_MEDIAN))
         #String that identifies filter in Real Space
         waveletCondition = 'filterSpace == %d and (%s)' % (FILTER_SPACE_WAVELET,
                                                            self.getModesCondition('filterModeWavelets',
-                                                                                  FM_DAUB4,
-                                                                                  FM_DAUB12,
-                                                                                  FM_DAUB20))
+                                                                                  self.FM_DAUB4,
+                                                                                  self.FM_DAUB12,
+                                                                                  self.FM_DAUB20))
         #fourier
 
         form.addParam('freqInAngstrom', BooleanParam, default=True,
@@ -129,12 +128,12 @@ class XmippProtFilter():
                             condition=fourierCondition + ' and freqInAngstrom',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
-                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
-                                                       , FM_HIGH_PASS),
+                      condition=self.getModesCondition('filterModeFourier',
+                                                       self.FM_BAND_PASS, self.FM_HIGH_PASS),
                       label='Lowest')
         line.addParam('highFreqA', FloatParam, default=10,
-                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
-                                                       , FM_LOW_PASS),
+                      condition=self.getModesCondition('filterModeFourier',
+                                                       self.FM_BAND_PASS, self.FM_LOW_PASS),
                       label='Highest')
 
         # Digital frequencies
@@ -142,12 +141,12 @@ class XmippProtFilter():
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqDig', DigFreqParam, default=0.02,
-                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
-                                                       , FM_HIGH_PASS),
+                      condition=self.getModesCondition('filterModeFourier',
+                                                       self.FM_BAND_PASS, self.FM_HIGH_PASS),
                       label='Lowest')
         line.addParam('highFreqDig', DigFreqParam, default=0.35,
-                      condition=self.getModesCondition('filterModeFourier',FM_BAND_PASS
-                                                       , FM_LOW_PASS),
+                      condition=self.getModesCondition('filterModeFourier',
+                                                       self.FM_BAND_PASS, self.FM_LOW_PASS),
                       label='Highest')
 
         form.addParam('freqDecay', FloatParam, default=0.02,
@@ -156,7 +155,7 @@ class XmippProtFilter():
                       help='Length of the amplitude decay in a raised cosine')
 
         form.addParam('inputCTF', PointerParam,
-                      condition='filterModeFourier == %d' % FM_CTF,
+                      condition='filterModeFourier == %d' % self.FM_CTF,
                       label='CTF Object',
                       pointerClass='CTFModel',
                       help='Object with CTF information')
@@ -167,7 +166,7 @@ class XmippProtFilter():
                                                           'soft_thresholding',
                                                           'adaptive_soft',
                                                           'central'],
-                      default=FM_REMOVE_SCALE,
+                      default=self.FM_REMOVE_SCALE,
                       condition='filterSpace == %d' % FILTER_SPACE_WAVELET,
                       label='mode',
                       help='filter mode to be applied in wavelet space')
@@ -181,72 +180,73 @@ class XmippProtFilter():
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
 
-        inputFn = self.inputFn
-        ctfModel = self._getTmpPath(self.tmpCTF)
-
         if self.filterSpace == FILTER_SPACE_FOURIER:
             if self.freqInAngstrom:
                 lowFreq = self.lowFreqA.get()
                 highFreq = self.highFreqA.get()
-                samplingStr = ' --sampling %f' % self.getInputSampling()
+                samplingStr = ' --sampling %f ' % self.getInputSampling()
             else:
                 lowFreq = self.lowFreqDig.get()
                 highFreq = self.highFreqDig.get()
                 samplingStr = ''
 
-            filterMode = self.filterModeFourier.get()
+            mode = self.filterModeFourier.get()
 
             freqDecay = self.freqDecay.get()
 
-            if filterMode == FM_LOW_PASS:
-                filterStr = "low_pass %(highFreq)f %(freqDecay)f "
-            elif filterMode == FM_HIGH_PASS:
-                filterStr = "high_pass %(lowFreq)f %(freqDecay)f "
-            elif filterMode == FM_BAND_PASS:
-                filterStr = "band_pass %(lowFreq)f %(highFreq)f %(freqDecay)f "
-            elif filterMode == FM_CTF:
-                filterStr = "ctf %(ctfModel)s "
-
+            if mode == self.FM_LOW_PASS:
+                filterStr = " low_pass %f %f " % (highFreq, freqDecay)
+            elif mode == self.FM_HIGH_PASS:
+                filterStr = " high_pass %f %f " % (lowFreq, freqDecay)
+            elif mode == self.FM_BAND_PASS:
+                filterStr = " band_pass %f %f %f " % (lowFreq, highFreq, freqDecay)
+            elif mode == self.FM_CTF:
+                ctfModel = self._getTmpPath(self.tmpCTF)
+                filterStr = " ctf %s " % ctfModel
+                # Save CTF model too
+                self._insertFunctionStep("convertCTFXmippStep", ctfModel)
             else:
-                raise Exception("Unknown fourier filter mode: %d" % filterMode)
+                raise Exception("Unknown fourier filter mode: %d" % mode)
 
-            args = (self._args + " --fourier " + filterStr + samplingStr ) % locals()
-
+            args = " --fourier " + filterStr + samplingStr
         elif self.filterSpace == FILTER_SPACE_REAL:
-            filterMode = self.filterModeReal.get()
-            if filterMode == FM_MEDIAN:
-                filterStr = "--median "
+            mode = self.filterModeReal.get()
+            if mode == self.FM_MEDIAN:
+                filterStr = " --median "
             else:
-                raise Exception("Unknown real filter mode: %d" % filterMode)
+                raise Exception("Unknown real filter mode: %d" % mode)
 
+            args = filterStr
         elif self.filterSpace == FILTER_SPACE_WAVELET:
             filterMode = self.filterModeWavelets.get()
-            filterStr = "--wavelets "
-            if filterMode == FM_DAUB4:
-                filterStr += "DAUB4 "
-            elif filterMode == FM_DAUB12:
-                filterStr += "DAUB12 "
-            elif filterMode == FM_DAUB20:
-                filterStr += "DAUB20 "
+            filterStr = " --wavelet "
+            if filterMode == self.FM_DAUB4:
+                filterStr += " DAUB4 "
+            elif filterMode == self.FM_DAUB12:
+                filterStr += " DAUB12 "
+            elif filterMode == self.FM_DAUB20:
+                filterStr += " DAUB20 "
             else:
                 raise Exception("Unknown wavelets filter mode: %d" % filterMode)
+
             waveletMode = self.waveletMode.get()
-            if waveletMode == FM_REMOVE_SCALE:
-                filterStr += "remove_scale "
-            elif waveletMode == FM_BAYESIAN:
+            if waveletMode == self.FM_REMOVE_SCALE:
+                filterStr += " remove_scale "
+            elif waveletMode == self.FM_BAYESIAN:
                 raise Exception("Bayesian filter not implemented")
-            elif waveletMode == FM_SOFT_THRESHOLDING:
-                filterStr += "soft_thresholding "
-            elif waveletMode == FM_ADAPTIVE_SOFT:
-                filterStr += "adaptive_soft "
-            elif waveletMode == FM_CENTRAL:
-                filterStr += "central "
+            elif waveletMode == self.FM_SOFT_THRESHOLDING:
+                filterStr += " soft_thresholding "
+            elif waveletMode == self.FM_ADAPTIVE_SOFT:
+                filterStr += " adaptive_soft "
+            elif waveletMode == self.FM_CENTRAL:
+                filterStr += " central "
+
+            args = filterStr
         else:
             raise Exception("Unknown filter space: %d" % self.filterSpace.get())
 
-        if filterMode == FM_CTF:
-            self._insertFunctionStep("convertCTFXmippStep", ctfModel)# save CTF model
-        self._insertFunctionStep("filterStep", args)
+        self._insertFunctionStep("filterStep",
+                                 (self._args % {'inputFn': self.inputFn}) + args)
 
     def getInputSampling(self):
         """ Function to return the sampling rate of input objects.
