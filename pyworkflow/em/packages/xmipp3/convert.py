@@ -429,16 +429,22 @@ def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
-    # Setup the micId if is integer value
+    # copy micId if available
+    # if not copy micrograph name if available
     try:
         if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
-        else:
-            # this is changed to get the micId from relion metadata micrograph name(rlnMicrographName)
-            micName = removeExt(partRow.getValue(xmipp.MDL_MICROGRAPH))
-            img.setMicId([int(s) for s in micName.split("_") if s.isdigit()][0])
-    except Exception:
-        pass    
+#        elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
+#            micName = partRow.getValue(xmipp.MDL_MICROGRAPH)
+#            img._micrograph = micName
+#            print "setting micname as", micName
+#            img.printAll()
+#            print "getAttributes1", img._micrograph
+#            print "getAttributes2", getattr(img,"_micrograph",'kk')
+#        else:
+#            print "WARNING: No micname"
+    except Exception as e:
+        print "Warning:", e.message
     return img
     
     
@@ -825,7 +831,7 @@ def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
     defocusGroupSet._xmippMd = String(fnDefocusGroup)
 
 
-def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeOnlyRepresentatives=False):    
+def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeParticles=True):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
         classes2DSet: the SetOfClasses2D instance.
@@ -839,7 +845,7 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeOnl
     for class2D in classes2DSet:        
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
-        if not writeOnlyRepresentatives:
+        if writeParticles:
             ref = class2D.getObjId()
             imagesFn = 'class%06d_images@%s' % (ref, filename)
             imagesMd = xmipp.MetaData()

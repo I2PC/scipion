@@ -39,7 +39,7 @@ class TestImportBase(BaseTest):
         
     
 class TestImportParticles(TestImportBase):
-    
+
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
@@ -50,51 +50,63 @@ class TestImportParticles(TestImportBase):
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'samplingRate': 2.1
-                }
-        
-        
+        }
+
+
         # Id's should be set increasing from 1 if ### is not in the 
         # pattern
         protMicImport = self.newProtocol(ProtImportParticles, **args)
         protMicImport.setObjLabel('from files')
         self.launchProtocol(protMicImport)
-        
+
         # Id's should be taken from filename    
         args['filesPattern'] = 'BPV_####_ptcls.hdf'
         protMicImport = self.newProtocol(ProtImportParticles, **args)
         protMicImport.setObjLabel('from files (with mic id)')
         self.launchProtocol(protMicImport)
 
-        return
-        # Import some Particles from EMX        
-        emxFn = self.dsEmx.getFile('coordinatesT1')
-        args['importFrom'] = ProtImportParticles.IMPORT_FROM_EMX
-        args['micrographsEMX'] = emxFn
-        protEmxImport = self.newProtocol(ProtImportParticles, **args)
-        protEmxImport.setObjLabel('from emx (with coords)')
-        self.launchProtocol(protEmxImport)
-    
     def test_fromEmx(self):
         """ Import an EMX file with Particles and defocus
         """
-        protEmxImport = self.newProtocol(ProtImportParticles,
-                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
-                                         emxFile=self.dsEmx.getFile('particles/particles.emx'),
-                                         magnification=10000,
-                                         samplingRate=2.46
-                                         )
-        protEmxImport.setObjLabel('from emx ')
+        args = {'importFrom': ProtImportParticles.IMPORT_FROM_EMX,
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 100,
+                'samplingRate': 2.46,
+                'magnification': 10000
+        }
+        args['emxFile'] = self.dsEmx.getFile('particles/particles.emx')
+        protEmxImport = self.newProtocol(ProtImportParticles, **args)
+        protEmxImport.setObjLabel('from emx (particles)')
         self.launchProtocol(protEmxImport)
-        
+
+        # Import some Particles from EMX
+        args['emxFile'] = self.dsEmx.getFile('coordinatesT1')
+        protEmxImport = self.newProtocol(ProtImportParticles, **args)
+        protEmxImport.setObjLabel('from emx (with coords)')
+        self.launchProtocol(protEmxImport)
+
     def test_fromXmipp(self):
         """ Import an EMX file with Particles and defocus
         """
         prot1 = self.newProtocol(ProtImportParticles,
-                                         importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
-                                         mdFile=self.dsXmipp.getFile('gold/xmipp_ml2d_images.xmd'),
-                                         magnification=10000,
-                                         samplingRate=1.
-                                         )
+                                 importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                 mdFile=self.dsXmipp.getFile('gold/xmipp_ml2d_images.xmd'),
+                                 magnification=10000,
+                                 samplingRate=1.
+        )
         prot1.setObjLabel('from xmipp (ml2d)')
         self.launchProtocol(prot1)
-        
+
+    def test_fromXmippWithMic(self):
+        """ Import an EMX file with Particles and defocus
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                 mdFile=self.dsXmipp.getFile('gold/images10.xmd'),
+                                 magnification=10000,
+                                 samplingRate=1.
+        )
+        prot1.setObjLabel('from xmipp (with mic id)')
+        self.launchProtocol(prot1)
+

@@ -458,3 +458,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             msg += " and a maximun ZScore value of %d\n" % zScoreMax
         
         self.methodsInfo.set(msg)
+
+    def getCoords(self):
+        if self.inputCoordinates.hasValue():
+            return self.inputCoordinates.get()
+        else:
+            return None
