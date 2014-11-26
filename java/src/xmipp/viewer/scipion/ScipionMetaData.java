@@ -22,8 +22,6 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ColumnInfo;
 
@@ -44,6 +42,7 @@ public class ScipionMetaData extends MetaData {
     private String[] blocks;
     private int enableds;
     Boolean checkTmp;
+    HashMap<String, String> properties;
     
     
 
@@ -58,12 +57,14 @@ public class ScipionMetaData extends MetaData {
         this.columns = columns;
         this.emobjects = emobjects;
         blocks = new String[]{getBlock()};
+        properties = new HashMap<String, String>();
     }
 
     public ScipionMetaData(String dbfile) {
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
+        properties = new HashMap<String, String>();
         loadData();
         if (isClassificationMd()) {
             String prefix;
@@ -157,7 +158,15 @@ public class ScipionMetaData extends MetaData {
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
-
+            String key, value;
+            query = "SELECT * FROM Properties;";
+            rs = stmt.executeQuery(query);
+            
+            while (rs.next()) {
+                key = rs.getString("key");
+                value = rs.getString("value");
+                properties.put(key, value);
+            }
 
             rs.close();
             stmt.close();
@@ -833,10 +842,10 @@ public class ScipionMetaData extends MetaData {
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
-//        if(!self.equals("Class2D") || self.equals("Class3D"))
-//            return false;
-        boolean contains = getColumnInfo("_alignment._matrix") != null;
-        return contains;
+        String value = properties.get("_alignment");
+        if (value == null)
+            return false;
+        return value.equals("1");
     }
     
     

@@ -749,73 +749,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		makeVisible(index);
 	}
 
-	public class Worker implements Runnable
-	{
-		public static final int STATS = 0;
-		public static final int PCA = 1;
-		public static final int FSC = 2;
-		public String message;
-		/** Constructor selecting operation */
-		private int op; // store operation
-		private MDRow[] images;
-
-		public Worker(int operation, MDRow[] images)
-		{
-			op = operation;
-			this.images = images;
-			if (images.length == 0)
-				throw new IllegalArgumentException("No images available");
-		}
-
-		public void run()
-		{
-			try
-			{
-				switch (op)
-				{
-				case STATS:
-					computeStatsImages(images);
-					break;
-//				case PCA:
-//					pca(images);
-//					break;
-//				case FSC:
-//					fsc(images);
-//					break;
-				}
-
-			}
-			catch (Exception e)
-			{
-				XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
-				showException(e);
-				return;
-
-			}
-			XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
-		}
-
-		public String getMessage()
-		{
-			switch (op)
-			{
-			case STATS:
-				return "Computing average and std images...";
-			case PCA:
-				return "Computing PCA...";
-			case FSC:
-				return "Computing FSC...";
-			}
-			return "";
-		}
-
-	}
+	
 
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation)
 	{
 
-		MetaData md;
+		MetaData imagesmd, md;
                 if(data.hasSelection())
                 {
                     int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
@@ -828,39 +768,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                 }
                 else
                     md = data.getMd();
-                    
                 
-                MDRow[] images = data.getImages(md);
-               
-		Worker w = new Worker(operation, images);
+                imagesmd = data.getImagesMd(md);
+		Worker w = new Worker(operation, imagesmd, this);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
-
 	}
 
-	private void computeStatsImages(MDRow[] images) throws Exception
-	{
-		ImageGeneric imgAvg = new ImageGeneric();
-		ImageGeneric imgStd = new ImageGeneric();
-                imgAvg.setDataType(ImageGeneric.Double);
-                imgStd.setDataType(ImageGeneric.Double);
-                
-		ImageGeneric.getStatsOnImages(images, imgAvg, imgStd, data.useGeo(), MDLabel.MDL_IMAGE);
-		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
-		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
-		imgAvg.destroy();
-		imgStd.destroy();
-
-		XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
-		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
-		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + data.getFileName());
-
-		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
-		winStd.setVisible(true);
-	}
-
+	
+	
 	private boolean openClassesDialog()
 	{
 		if (dlgClasses == null)
@@ -877,24 +794,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		int dot = filename.lastIndexOf(".");
 		return filename.substring(0, dot) + ext;
 	}
+        
 
-//	public void pca(MetaData imagesmd) throws Exception
-//	{
-//		ImageGeneric image = new ImageGeneric();
-//		imagesmd.getPCAbasis(image, data.getRenderLabel());
-//		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-//		imp.setTitle("PCA: " + data.getFileName());
-//		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
-//		imagesmd.destroy();
-//
-//	}
-//
-//	public void fsc(MetaData imagesmd) throws Exception
-//	{
-//		FSCJFrame frame = new FSCJFrame(data, imagesmd);
-//		XmippWindowUtil.centerWindows(frame, this);
-//		frame.setVisible(true);
-//	}
 
 	/***
 	 * Helper function to create toolbar toggle buttons

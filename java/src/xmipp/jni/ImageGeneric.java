@@ -317,8 +317,6 @@ public class ImageGeneric {
          */
         public native void applyGeoMatrix(String matrixString, boolean wrap);
         
-        /** Get the average and std images, result is left on input image */
-	public static native void getStatsOnImages(MDRow[] images, ImageGeneric imageAvg,
-			ImageGeneric imageStd, boolean applyGeo, int label);
+        
     
 }
