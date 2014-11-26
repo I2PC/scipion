@@ -486,6 +486,7 @@ def class2DToRow(class2D, classRow):
     n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     classRow.setValue(xmipp.MDL_REF, int(class2D.getObjId()))
+    classRow.setValue(xmipp.MDL_ITEM_ID, long(class2D.getObjId()))
     
         
 def ctfModelToRow(ctfModel, ctfRow):
