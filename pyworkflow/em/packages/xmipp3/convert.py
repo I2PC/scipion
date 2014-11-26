@@ -434,15 +434,15 @@ def rowToParticle(partRow, **kwargs):
     try:
         if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
-        elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
-            micName = partRow.getValue(xmipp.MDL_MICROGRAPH)
-            img._micrograph = micName
-            print "setting micname as", micName
-            img.printAll()
-            print "getAttributes1", img._micrograph
-            print "getAttributes2", getattr(img,"_micrograph",'kk')
-        else:
-            print "WARNING: No micname"
+#        elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
+#            micName = partRow.getValue(xmipp.MDL_MICROGRAPH)
+#            img._micrograph = micName
+#            print "setting micname as", micName
+#            img.printAll()
+#            print "getAttributes1", img._micrograph
+#            print "getAttributes2", getattr(img,"_micrograph",'kk')
+#        else:
+#            print "WARNING: No micname"
     except Exception as e:
         print "Warning:", e.message
     return img
