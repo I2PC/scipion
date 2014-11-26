@@ -50,6 +50,14 @@
 		$('.layout-inner > .north').resizable({handles: 's'});
 		$('.layout-outer > .west').resizable({handles: 'e',	stop: layout});
 		
+		$("div#westContainer").hide();
+		
+		$("div.ui-resizable-handle").click(function(){
+			$("div#westContainer").show();
+		}).mousemove(function (){
+			$("div#westContainer").show();
+		})
+		
 	});
 	
 	$(document).ready(function() {
@@ -201,4 +209,7 @@
 		</div>
 	</div>
 </div>
+<script>
+	
+</script>
 {% endblock %}
