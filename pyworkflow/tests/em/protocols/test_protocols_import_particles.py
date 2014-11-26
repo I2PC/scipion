@@ -65,8 +65,7 @@ class TestImportParticles(TestImportBase):
         protMicImport.setObjLabel('from files (with mic id)')
         self.launchProtocol(protMicImport)
 
-        return
-        # Import some Particles from EMX        
+        # Import some Particles from EMX
         emxFn = self.dsEmx.getFile('coordinatesT1')
         args['importFrom'] = ProtImportParticles.IMPORT_FROM_EMX
         args['micrographsEMX'] = emxFn
@@ -98,3 +97,15 @@ class TestImportParticles(TestImportBase):
         prot1.setObjLabel('from xmipp (ml2d)')
         self.launchProtocol(prot1)
         
+    def test_fromXmippWithMic(self):
+        """ Import an EMX file with Particles and defocus
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                         importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                         mdFile=self.dsXmipp.getFile('gold/images10.xmd'),
+                                         magnification=10000,
+                                         samplingRate=1.
+                                         )
+        prot1.setObjLabel('from xmipp (with mic id)')
+        self.launchProtocol(prot1)
+
