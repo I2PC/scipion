@@ -25,7 +25,9 @@
 # *
 # **************************************************************************
 
-import unittest, sys
+import sys
+import unittest
+from itertools import izip
 
 from pyworkflow.em import *
 from pyworkflow.tests import *
@@ -276,7 +278,7 @@ class TestXmippFilterVolumes(TestXmippBase):
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
-    def testFilterVolumes(self):
+    def testFilterVolumeSingle(self):
         print "\n", greenStr(" Filter singe volume ".center(75, '-'))
 
         def test(**kwargs):
@@ -286,6 +288,9 @@ class TestXmippFilterVolumes(TestXmippBase):
             self.proj.launchProtocol(prot, wait=True)
             self.assertIsNotNone(prot.outputVol,
                                  "There was a problem with filter volume")
+            self.assertTrue(prot.outputVol.equalAttributes(
+                self.protImport2.outputVolume, ignore=['_index', '_filename'],
+                verbose=True))
 
         fv = XmippProtFilterVolumes  # short notation
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
@@ -293,12 +298,30 @@ class TestXmippFilterVolumes(TestXmippBase):
         test(filterSpace=FILTER_SPACE_WAVELET,
              filterModeWavelets=fv.FM_DAUB12, waveletMode=fv.FM_REMOVE_SCALE)
 
-        print "Run filter on SetOfVolumes"
-        protFilterVolumes = XmippProtFilterVolumes(lowFreq=0.1, highFreq=0.25)
-        protFilterVolumes.inputVolumes.set(self.protImport1.outputVolumes)
-        self.proj.launchProtocol(protFilterVolumes, wait=True)
-        self.assertIsNotNone(protFilterVolumes.outputVol,
-                             "There was a problem with filter SetOfVolumes")
+    def testFilterSetOfVolumes(self):
+        print "\n", greenStr(" Filter set of volumes ".center(75, '-'))
+
+        def test(**kwargs):
+            print magentaStr("\n==> Input params: %s" % kwargs)
+            prot = XmippProtFilterVolumes(**kwargs)
+            vIn = self.protImport1.outputVolumes  # short notation
+            prot.inputVolumes.set(vIn)
+            self.proj.launchProtocol(prot, wait=True)
+            self.assertIsNotNone(prot.outputVol,
+                                 "There was a problem with filter volume")
+            self.assertTrue(prot.outputVol.equalAttributes(
+                self.protImport1.outputVolumes, ignore=['_mapperPath'],
+                verbose=True))
+            # Compare the individual volumes too.
+            self.assertTrue(prot.outputVol.equalItemAttributes(
+                self.protImport1.outputVolumes, ignore=['_index', '_filename'],
+                verbose=True))
+
+        fv = XmippProtFilterVolumes  # short notation
+        test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
+        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=fv.FM_MEDIAN)
+        test(filterSpace=FILTER_SPACE_WAVELET,
+             filterModeWavelets=fv.FM_DAUB12, waveletMode=fv.FM_REMOVE_SCALE)
 
 
 class TestXmippMaskVolumes(TestXmippBase):
