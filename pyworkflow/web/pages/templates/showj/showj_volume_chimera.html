@@ -1,65 +1,89 @@
 {% extends 'showj/showj_base.html' %} 
 {% block head %}
-<!-- TABLE STYLES 
-Overwrite general section property for volume view with Chimera-->
-<style type="text/css">
-section {
-  display: -webkit-box;
-  -webkit-box-orient: horizontal;
-  -webkit-box-pack: center;
-  -webkit-box-align: center;
- 
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-  -moz-box-pack: center;
-  -moz-box-align: center;
-  
-  display: box;
-  box-orient: horizontal;
-  box-pack: center;
-  box-align: center;
-}
-</style>
-
-<!-- JS -->
-<script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
-<script src="{{jquery_ui}}"></script>
-
-<!-- Init webgl -->
-<script type="text/javascript">
-$(document).ready(function(){
-	webGLStart();
-});
-</script>
-
-<script type="text/javascript">
-function updateThreshold(){
-	var threshold = $("input#thresholdValue").val();
-	if (threshold == undefined){
-		threshold = $("input#thresholdValue").attr("value");
-	}
-	
-	$.ajax({
-		type : "GET",
-		url : "/chimera_headless/?volPath={{volPath}}&threshold="+threshold,
-		dataType : "html",
-		async: false,
-		success : function(data) {
-			$("div#chimeraContent1").html(data);
+	<!-- Overwrite general section property for volume view with Chimera -->
+	<style type="text/css">
+		section {
+		  display: -webkit-box;
+		  -webkit-box-orient: horizontal;
+		  -webkit-box-pack: center;
+		  -webkit-box-align: center;
+		 
+		  display: -moz-box;
+		  -moz-box-orient: horizontal;
+		  -moz-box-pack: center;
+		  -moz-box-align: center;
+		  
+		  display: box;
+		  box-orient: horizontal;
+		  box-pack: center;
+		  box-align: center;
 		}
-	});	
-}
-</script>
+	</style>
+    <script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
+	<script src="{{jquery_ui}}"></script>
+  	<script type="text/javascript">
+  	function webGL(){
+	  	<!-- Init webgl -->
+  		webGLStart();
+  	}
+	
+  	function updateThreshold(){
+		var threshold = $("input#thresholdValue").val();
+		if (threshold == undefined){
+			threshold = $("input#thresholdValue").attr("value");
+		}
+		
+		$("div#chimeraContent").empty();
+		
+		$.ajax({
+			type : "GET",
+			url : "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
+			dataType : "html",
+			async: false,
+			success : function(data) {
+				$("div#chimeraContent").html(data);
+				webGL();
+			}
+		});	
+	}
 
+  	$(document).ready(function(){
+  		webGL();
+  	});
+	</script>
 {% endblock %}
 {% block content_menu %}{% endblock %}
 {% block content_view %}
+	<div id="params"> 
+		{% autoescape off %}
+		<div id="chimeraContent">
+			{{chimeraHtml}}
+		</div>
+		{% endautoescape %}
+		<span id="thresholdParams"> Threshold 
+		<input id="thresholdValue" type="text" value="{{threshold}}"/>
+		<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold()"/>
+		</span>
+	</div>
+	
 {% endblock %}
 
 {% block content_end_page %}
-	<div id="chimeraContent">	
-		{% include "showj/chimera.html" %}
-	</div>
-	<div id="chimeraContent1">	
-	</div>
+<div id="fallback" class="fallback"></div>
+<!-- <canvas id="molview" width="320" height="240"></canvas> -->
+
+<script>
+	if (!PhiloGL.hasWebGL()) {
+	  document.body.className = 'no-webgl';
+	  document.getElementById('fallback').innerHTML = ''
+	  + '<div style="margin:10px;">'
+	    + 'Your web browser does not support or is not configured for WebGL.'
+	    + '  See <a href="http://get.webgl.org/">WebGL Support</a>'
+	    + ' for more information.'
+	    + '</div>';
+	  }
+</script>
+	
+
 {% endblock %}
+
