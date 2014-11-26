@@ -90,27 +90,27 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParam('numIter', IntParam, default=10, expertLevel=LEVEL_EXPERT,
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
-        form.addParam('initialVolume', PointerParam, label="Initial volume",  
+        form.addParam('initialVolume', PointerParam, label="Initial volume",  expertLevel=LEVEL_EXPERT,
                       pointerClass='SetOfVolumes', allowsNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
                 
-        form.addParam('maxFreq', IntParam, default=5,
+        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
-        form.addParam('useSA', BooleanParam, default=False,
+        form.addParam('useSA', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
                       label='Combine simulated annealing and RANSAC', 
                       help='This option produces better results at a higher computational cost')
-        form.addParam('nIterRandom', IntParam, default=10, condition='useSA',
+        form.addParam('nIterRandom', IntParam, default=10, condition='useSA', expertLevel=LEVEL_EXPERT,
                       label='Number of simulated annealing iterations',
                       help='During the simulated annealing iterations, all those particles positively'
                         'contributing to the improvement of the volume are considered. In this way,' 
                         'the same image may participate several times from different projection '
                         'directions (but different weights) depending on whether it improves the'
                         'correlation with the volume or not')
-        form.addParam('rejection', IntParam, default=50, condition='useSA',
+        form.addParam('rejection', IntParam, default=50, condition='useSA', expertLevel=LEVEL_EXPERT,
                       label='Percentage of rejected particles',
                        help='At each iteration, the lowest correlated particles are'
                             'removed from the 3D reconstruction, although they may '

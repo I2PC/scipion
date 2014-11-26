@@ -27,18 +27,26 @@
 This sub-package contains wrapper around EMAN initialmodel program
 """
 
-from pyworkflow.em import *
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.utils import *
-from pyworkflow.em.packages.eman2.data import *
 import os
-from data import *
-from glob import glob
+
+from pyworkflow.protocol.params import (PointerParam, TextParam, IntParam,
+                                        LEVEL_ADVANCED)
+from pyworkflow.em.protocol import ProtInitialVolume
+from pyworkflow.em.data import SetOfClasses2D, Volume
+
 import eman2
 
 
 class EmanProtInitModel(ProtInitialVolume):
-    """No help?"""
+    """ 
+    This Protocol wraps *e2initialmodel.py* Eman2 program which
+    will take a set of class-averages/projections and build a set 
+    of 3-D models suitable for use as initial models in single 
+    particle reconstruction. The output set is theoretically sorted 
+    in order of quality (best one is numbered 1), though it's best 
+    to look at the other answers as well. 
+    """
+    
     _label = 'initial model'
      
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -48,23 +56,23 @@ class EmanProtInitModel(ProtInitialVolume):
         form.addParam('inputSet', PointerParam, 
                       pointerClass='SetOfClasses2D, SetOfAverages',# pointerCondition='hasRepresentatives',
                       label="Input averages", important=True, 
-                      help='Select the your classes average to build your 3D model.'
-                      'You can select SetOfAverages or SetOfClasses2D as input')
-        form.addParam('numberOfIterations', IntParam, default=8,
+                      help='Select the your class averages to build your 3D model.\n'
+                           'You can select SetOfAverages or SetOfClasses2D as input.')
+        form.addParam('symmetry', TextParam, default='c1',
+                      label='Symmetry group',
+                      help='Specify the symmetry.\nChoices are: c(n), d(n), h(n), tet, oct, icos')        
+        form.addParam('numberOfIterations', IntParam, default=8, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations to perform',
                       help='The total number of refinement to perform.')
-        form.addParam('numberOfModels', IntParam, default=10,
+        form.addParam('numberOfModels', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label='Number of different initial models',
                       help='The number of different initial models to generate in search of a good one.')
-        form.addParam('shrink', IntParam, default=1,expertLevel=LEVEL_ADVANCED,
+        form.addParam('shrink', IntParam, default=1, expertLevel=LEVEL_ADVANCED,
                       label='shrink',
                       help='Using a box-size >64 is not optimial for making initial models. '
                            'Suggest using this option to shrink the input particles by an '
                            'integer amount prior to recontruction.' 
                            'Default = 1, no shrinking')
-        form.addParam('symmetry', TextParam, default='c1',
-                      label='Point group symmetry',
-                      help='Specify the symmetry.Choices are: c(n), d(n), h(n), tet, oct, icos')        
         form.addParallelSection(threads=3, mpi=0)
  
     #--------------------------- INSERT steps functions --------------------------------------------  
@@ -89,7 +97,7 @@ class EmanProtInitModel(ProtInitialVolume):
     def createStackImgsStep(self):
         
         imgsFn = self._params['imgsFn']
-        if isinstance(self.inputSet.get(), SetOfClasses):
+        if isinstance(self.inputSet.get(), SetOfClasses2D):
             imgSet = self._createSetOfParticles("_averages")
             for i, cls in enumerate(self.inputSet.get()):
                 img = cls.getRepresentative()
@@ -109,7 +117,7 @@ class EmanProtInitModel(ProtInitialVolume):
         classes2DSet = self.inputSet.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
-        if isinstance(self.inputSet.get(), SetOfClasses):
+        if isinstance(self.inputSet.get(), SetOfClasses2D):
             volumes.setSamplingRate(classes2DSet.getImages().getSamplingRate())
         else:
             volumes.setSamplingRate(self.inputSet.get().getSamplingRate())
