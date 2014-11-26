@@ -179,7 +179,8 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      MODE: MODE_MD}))
+                                                      MODE: MODE_MD,
+                                                      RENDER: '_untilted._filename _tilted._filename'}))
             
         elif issubclass(cls, ParticlesTiltPair):          
             labels = 'id enabled _untilted._filename _tilted._filename'

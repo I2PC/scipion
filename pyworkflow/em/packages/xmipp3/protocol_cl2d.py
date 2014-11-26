@@ -191,7 +191,7 @@ class XmippProtCL2D(ProtClassify2D):
     def convertInputStep(self):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         if not self.randomInitialization:
-            writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeOnlyRepresentatives=True)
+            writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeParticles=False)
 
     def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """

@@ -200,6 +200,11 @@ addModule(
     tar='winpdb-1.4.8.tgz',
     default=False)
 
+addModule(
+    'ipython',
+    tar='ipython-2.1.0.tar.gz',
+    default=False)
+
 
 #  ************************************************************************
 #  *                                                                      *
