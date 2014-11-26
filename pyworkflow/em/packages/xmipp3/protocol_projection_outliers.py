@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains wrapper around Screen Classes Xmipp program
+This sub-package contains wrapper around Projection Outliers Xmipp program
 """
 
 from pyworkflow.em import *  
@@ -32,11 +32,12 @@ from pyworkflow.em.protocol import *
 from pyworkflow.protocol.constants import LEVEL_EXPERT
 import xmipp
 from xmipp3 import ProjMatcher
+from convert import writeSetOfClasses2D, writeSetOfParticles
 
         
-class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
+class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
     """Compares a set of classes or averages with the corresponding projections of a reference volume """
-    _label = 'screen classes'
+    _label = 'projection outliers'
     
     def __init__(self, **args):
         ProtAnalysis2D.__init__(self, **args)
@@ -52,6 +53,9 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
+        form.addParam('hasVolCTFCorrected', BooleanParam, default=False,
+                      label='Volume has been corrected by CTF?')        
+
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
@@ -78,16 +82,14 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         self._insertFunctionStep("convertStep", imgsFn)
         
         self._insertFunctionStep("projMatchStep", vol.getFileName(), angSampling, sym, imgsFn, anglesFn, self._getDimensions())
-        
-        # Reorganize output and produce difference images
         self._insertFunctionStep("joinStep", imgsFn, anglesFn)
-        self._insertFunctionStep("produceAlignedImagesStep", False, outImgsFn, imgsFn)
+        self._insertFunctionStep("produceAlignedImagesStep", self.hasVolCTFCorrected.get(), outImgsFn, imgsFn)
+        self._insertFunctionStep("evaluateStep", outImgsFn)
 #         self._insertFunctionStep("sortStep", outImgsFn)
         self._insertFunctionStep("createOutputStep", outImgsFn)
-    
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertStep(self, imgsFn):
-        from convert import writeSetOfClasses2D, writeSetOfParticles
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
             writeSetOfClasses2D(imgSet, imgsFn, writeParticles=False)
@@ -100,9 +102,21 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
             self.runJob("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
         else:
             self.runJob("xmipp_metadata_utilities", "-i Particles@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
-        
+    
+    def evaluateStep(self, outImgsFn):
+        # Evaluate each image
+        fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
+        stkAutoCorrelations = self._getExtraPath("autocorrelations.stk")
+        stkDiff = self._getExtraPath("diff.stk")
+        args1 = " -i %s -o %s --save_metadata_stack %s"
+        args2 = " -i %s --set merge %s"
+        outClasses = 'classes_aligned@' + outImgsFn
+        self.runJob("xmipp_image_residuals", args1 % (stkDiff, stkAutoCorrelations, fnAutoCorrelations), numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", args2 % (outClasses, fnAutoCorrelations), numberOfMpi=1)
+        cleanPath(fnAutoCorrelations)
+    
     def sortStep(self, outImgsFn):
-        self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
+        self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort zScoreResCov desc" % (outImgsFn), numberOfMpi=1)
     
     def createOutputStep(self, outImgsFn):
         from convert import rowFromMd, rowToAlignment
@@ -117,12 +131,18 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                 
                 objId = self._getMetaDataObjId(ref, classesMd)
                 maxCC = Float(classesMd.getValue(xmipp.MDL_MAXCC, objId))
+                zScoreResCov = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESCOV, objId))
+                zScoreResMean = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESMEAN, objId))
+                zScoreResVar = Float(classesMd.getValue(xmipp.MDL_ZSCORE_RESVAR, objId))
                 imgRow = rowFromMd(classesMd, objId)
                 
                 newRef = Particle()
                 newRef.copy(ref)
                 newRef.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newRef, '_xmipp_maxCC', maxCC)
+                setattr(newRef, '_xmipp_zScoreResCov', zScoreResCov)
+                setattr(newRef, '_xmipp_zScoreResMean', zScoreResMean)
+                setattr(newRef, '_xmipp_zScoreResVar', zScoreResVar)
                 
                 newClass2d.setObjId(class2d.getObjId())
                 newClass2d.setRepresentative(newRef)
@@ -147,10 +167,16 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                 
                 objId = self._getMetaDataObjId(img, imgsMd)
                 maxCC = Float(imgsMd.getValue(xmipp.MDL_MAXCC, objId))
+                zScoreResCov = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESCOV, objId))
+                zScoreResMean = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESMEAN, objId))
+                zScoreResVar = Float(imgsMd.getValue(xmipp.MDL_ZSCORE_RESVAR, objId))
                 imgRow = rowFromMd(imgsMd, objId)
                 
                 newAverage.setAlignment(rowToAlignment(imgRow, False, True))
                 setattr(newAverage, '_xmipp_maxCC', maxCC)
+                setattr(newAverage, '_xmipp_zScoreResCov', zScoreResCov)
+                setattr(newAverage, '_xmipp_zScoreResMean', zScoreResMean)
+                setattr(newAverage, '_xmipp_zScoreResVar', zScoreResVar)
                 outputSet.append(newAverage)
             
             self._defineOutputs(outputAverages=outputSet)

@@ -39,6 +39,7 @@ class TestXmippBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.particlesFn = cls.dataset.getFile('particles')
+        cls.volumesFn = cls.dataset.getFile('volumes')
     
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
@@ -54,6 +55,32 @@ class TestXmippBase(BaseTest):
         return cls.protImport
     
     @classmethod
+    def runImportAverages(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportAverages, 
+                                         filesPath=pattern, samplingRate=samplingRate, 
+                                         checkStack=checkStack)
+        print '_label: ', cls.protImport._label
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputAverages is None:
+            raise Exception('Import of averages: %s, failed. outputAverages is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
+    def runImportVolume(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportVolumes, 
+                                         filesPath=pattern, samplingRate=samplingRate, 
+                                         checkStack=checkStack)
+        print '_label: ', cls.protImport._label
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputVolume is None:
+            raise Exception('Import of volume: %s, failed. outputVolume is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
     def runCL2DAlign(cls, particles):
         cls.CL2DAlign = cls.newProtocol(XmippProtCL2DAlign, 
                                         maximumShift=2, numberOfIterations=2,
@@ -65,8 +92,8 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D, 
-                                           numberOfReferences=8, maxIters=4, doMlf=False,
-                                           numberOfMpi=2, numberOfThreads=2)
+                                           numberOfReferences=4, maxIters=3, doMlf=False,
+                                           numberOfMpi=3, numberOfThreads=2)
         cls.ProtClassify.inputParticles.set(particles)
         cls.launchProtocol(cls.ProtClassify)
         return cls.ProtClassify
@@ -246,6 +273,72 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask02.outputParticles, "There was a problem with apply user custom mask for particles")
         
 
+
+class TestXmippScreenParticles(TestXmippBase):
+    """This class check if the protocol to classify particles by their similarity to discard outliers work properly"""
+    @classmethod
+    def setUpClass(cls):
+        #setupTestProject(cls)
+        #TestXmippBase.setData('mda')
+        #cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.samplingRate = cls.protImport.outputParticles.getSamplingRate()
+        cls.size = 20
+    
+    def test_screenPart(self):
+        from itertools import izip
+        print 'Running Screen particles test'
+        xpsp = XmippProtScreenParticles  # short notation
+        # First test for check I/O. Input and Output SetOfParticles must be equal sized if not rejection is selected
+        print '--> Running Screen without rejection'
+        protScreenNone = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_NONE)
+        protScreenNone.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenNone)
+        self.assertIsNotNone(protScreenNone.outputParticles, 'Output has not been produced')
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenNone.outputParticles), len(self.protImport.outputParticles), "Input and Output Set Of Particles don't have same size")
+        print '\t --> Input/Output sets sizes are equal (%s)' % len(protScreenNone.outputParticles)
+        
+        for x, y in izip(self.protImport.outputParticles, protScreenNone.outputParticles):
+            print "\t      compare %s with %s" % (x, y)
+            self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
+            self.assertEqual(x.getSamplingRate(), y.getSamplingRate(), "Particle sampling rate differ")
+        print '\t --> Input/Output sets contain the same particles'
+        
+        # After this, we check for errors in method with particle rejection by ZScore
+        print "--> Running Screen with rejection to maxZScore upper than 2.6"
+        protScreenZScore = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
+                                      maxZscore=2.6)
+        protScreenZScore.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenZScore)
+        self.assertIsNotNone(protScreenZScore.outputParticles, "Output has not been produced")
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenZScore.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenZScore.outputParticles))
+        print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
+        
+        for x in protScreenZScore.outputParticles:
+            self.assertLess(x._xmipp_zScore.get(), 2.6, "Particle with id (%s) has a ZScore of %s, upper than suposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.6))
+        print '\t --> Output particles are below the ZScore threshold'
+        
+        # Finally, we check for errors in method with particle rejection by percentage
+        print "--> Running Screen with rejection of the 5% particles with the lowest ZScore"
+        protScreenPercentage = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
+                                      maxZscore=2.6)
+        protScreenPercentage.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenPercentage)
+        self.assertIsNotNone(protScreenPercentage.outputParticles, "Output has not been produced")
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenPercentage.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenPercentage.outputParticles))
+        print '\t --> Output set size is correct (%s)' % len(protScreenPercentage.outputParticles)
+        
+        for x, y in izip(protScreenZScore.outputParticles, protScreenPercentage.outputParticles):
+            print "\t      compare %s with %s" % (x, y)
+            self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
+        print '\t --> Particles rejected using maxZScore(2.6) method and percentage(5%) one are the same'
+
+
 class TestXmippPreprocessParticles(TestXmippBase):
     """This class check if the protocol to preprocess particles in Xmipp works properly."""
     @classmethod
@@ -410,6 +503,66 @@ class TestXmippKerdensom(TestXmippBase):
         xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
+
+
+class TestXmippProjectionOutliers(TestXmippBase):
+    """This class check if the protocol projection outliers in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+    
+    def test_ProjectionOutliersAverages(self):
+        print "Run ProjOutliers particles"
+        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
+    
+    def test_ProjectionOutliersClasses2D(self):
+        print "Run ProjOutliers for classes2D"
+        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.runClassify.outputClasses)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
+
+
+class TestXmippScreenClasses(TestXmippBase):
+    """This class check if the protocol screen classes in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+    
+    def test_ScreenClassesAverages(self):
+        print "Run ScreenClasses particles"
+        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Screen Classes")
+    
+    def test_ScreenClasses2D(self):
+        print "Run ScreenClasses for classes2D"
+        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.runClassify.outputClasses)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Screen Classes")
 
 
 if __name__ == "__main__":
