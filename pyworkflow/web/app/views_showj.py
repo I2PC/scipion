@@ -556,7 +556,8 @@ def create_context_chimera(volPath, threshold=None):
     
     context = {"chimeraHtml":chimeraHtml,
                "volPath":volPath, 
-               "threshold": threshold
+               "threshold": threshold, 
+               "jquery_ui_css": getResourceCss("jquery_ui")
                }
     
     return context
@@ -566,7 +567,6 @@ def get_chimera_html(request):
         volPath = request.GET.get('volPath')
         threshold = request.GET.get('threshold')
         chimeraHtml = chimera_headless(volPath, threshold)
-        print chimeraHtml
         return HttpResponse(chimeraHtml, mimetype='application/javascript')
     else:
         return HttpResponse("FAIL", mimetype='application/javascript')
@@ -604,7 +604,6 @@ def chimera_headless(volPath, threshold):
     
 #     Format information
     chimeraHtml = chimeraHtml.decode('string-escape').decode("utf-8").split("</html>")[1]
-    
     chimeraHtml = '<canvas id="molview" width="320" height="240"></canvas>' + chimeraHtml
 
     # Close file
