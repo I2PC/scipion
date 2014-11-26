@@ -29,7 +29,7 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
-import sys
+from itertools import izip
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -43,20 +43,19 @@ class Object(object):
     that will contains all base properties"""
     def __init__(self, value=None, **args):
         object.__init__(self)
-        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
-        self._objId =  args.get('objId', None) # Unique identifier of this object in some context
-        self._objParentId =  args.get('objParentId', None) # identifier of the parent object
-        self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
+        self._objIsPointer = args.get('objIsPointer', False) # True if will be treated as a reference for storage
+        self._objId = args.get('objId', None) # Unique identifier of this object in some context
+        self._objParentId = args.get('objParentId', None) # identifier of the parent object
+        self._objName = args.get('objName', '') # The name of the object will contains the whole path of ancestors
         self._objLabel = args.get('objLabel', '') # This will serve to label the objects
         self._objComment = args.get('objComment', '')
-        self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
-        self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
+        self._objTag = args.get('objTag', None) # This attribute serve to make some annotation on the object.
+        self._objDoStore = args.get('objDoStore', True) # True if this object will be stored from his parent
         self._objCreation = None
         self._objParent = None # Reference to parent object
         self._objEnabled = True
         self.set(value)
-    
-        
+
     def getClassName(self):
         return self.__class__.__name__
     
@@ -258,13 +257,16 @@ class Object(object):
             return object.__eq__(other)
         return self._objValue == other._objValue
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
-        for k, _ in self.getAttributes():
-            v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
+        for k, v1 in self.getAttributes():
+            #v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
+            # Skip comparison of attribute names in 'ignore' list
+            if k in ignore:
+                continue
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
-                comp = v1.equalAttributes(v2, verbose)
+                comp = v1.equalAttributes(v2, ignore=ignore, verbose=verbose)
             else:
                 comp = v1 == v2
             if not comp:
@@ -499,7 +501,7 @@ class Scalar(Object):
     def hasValue(self):        
         return self._objValue is not None
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
         return self._objValue == other._objValue
     
@@ -584,7 +586,7 @@ class Float(Scalar):
     def _convertValue(self, value):
         return float(value)
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
         # If both float has some value distinct of None
         # then we should compare the absolute value of difference 
@@ -1005,8 +1007,16 @@ class Set(OrderedObject):
     def hasRepresentative(self):
         """ Return true if have a representative image. """
         return self._representative is not None
-    
-    
+
+    def equalItemAttributes(self, other, ignore=[], verbose=False):
+        """Compare that all items in self and other
+        return True for equalAttributes.
+        """
+        return all(x.getObjId() == y.getObjId() and
+                   x.equalAttributes(y, ignore=ignore, verbose=verbose)
+                   for x, y in izip(self, other))
+
+
 def ObjectWrap(value):
     """This function will act as a simple Factory
     to create objects from Python basic types"""
