@@ -77,22 +77,22 @@ class ProtRelionImport(ProtImport, ProtRelionBase):
         self._defineOutputs(outputParticles=partSet)
         firstParticle = partSet.getFirstItem()
         firstParticle.printAll()
-        if firstParticle.getMicId() is None:
-            print "no micIDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-            if not firstParticle._micrograph is None:
-                print "I have micrograph"
-                #create micID: aggregate function, argument function, group by
-                micIdList = partSet.aggregate(['count'],'_micrograph',['_micrograph'])
-                micIdMap={}
-                counter = 0;
-                for mic in micIdList:
-                    micIdMap[mic['_micrograph']]=counter
-                    counter = counter +1
-                for par in partSet:
-                    par.setMicID(micIdMap[mic['_micrograph']])
-    #               MDL_MICROGRAPH:        'rlnMicrographName'
-            else:
-                self.warning("Micrograph ID was not set for particles!!!")
+#        if firstParticle.getMicId() is None:
+#            print "no micIDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+#            if firstParticle.hasAttribute("_micrograph"):
+#                print "I have micrograph"
+#                #create micID: aggregate function, argument function, group by
+#                micIdList = partSet.aggregate(['count'],'_micrograph',['_micrograph'])
+#                micIdMap={}
+#                counter = 0;
+#                for mic in micIdList:
+#                    micIdMap[mic['_micrograph']]=counter
+#                    counter = counter +1
+#                for par in partSet:
+#                    par.setMicID(micIdMap[mic['_micrograph']])
+#    #               MDL_MICROGRAPH:        'rlnMicrographName'
+#            else:
+#                self.warning("Micrograph ID was not set for particles!!!")
 
         if not firstParticle.hasAlignment():
             self.warning("Alignment was not read from particles!!!")
