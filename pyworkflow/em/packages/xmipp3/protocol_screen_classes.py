@@ -27,9 +27,14 @@
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
-from pyworkflow.em import *  
-from pyworkflow.em.protocol import *
+from pyworkflow.object import Float
 from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
+from pyworkflow.em.protocol import ProtAnalysis2D
+from pyworkflow.em.data import Class2D, SetOfClasses2D
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+
 import xmipp
 from xmipp3 import ProjMatcher
 
@@ -104,58 +109,33 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     def sortStep(self, outImgsFn):
         self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
     
-    def createOutputStep(self, outImgsFn):
-        from convert import rowFromMd, rowToAlignment
-        imgSet = self.inputSet.get()
-        if isinstance(imgSet, SetOfClasses2D):
-            outSetClass2D = self._createSetOfClasses2D(imgSet.getImages())
-            classesMd = xmipp.MetaData(outImgsFn)
-            
-            for class2d in imgSet:
-                newClass2d = Class2D()
-                ref = class2d.getRepresentative()
-                
-                objId = self._getMetaDataObjId(ref, classesMd)
-                maxCC = Float(classesMd.getValue(xmipp.MDL_MAXCC, objId))
-                imgRow = rowFromMd(classesMd, objId)
-                
-                newRef = Particle()
-                newRef.copy(ref)
-                newRef.setAlignment(rowToAlignment(imgRow, False, True))
-                setattr(newRef, '_xmipp_maxCC', maxCC)
-                
-                newClass2d.setObjId(class2d.getObjId())
-                newClass2d.setRepresentative(newRef)
-                newClass2d.copyInfo(class2d)
-                outSetClass2D.append(newClass2d)
-                
-                for img in class2d:
-                    newParticle = Particle()
-                    newParticle.copy(img)
-                    newClass2d.append(newParticle)
-                outSetClass2D.update(newClass2d)
-            self._defineOutputs(outputClasses=outSetClass2D)
-            self._defineTransformRelation(imgSet, outSetClass2D)
+    def updateItemMaxCC(self, item, row):
+        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
+        if isinstance(item, Class2D):
+            particle = item.getRepresentative()
         else:
+            particle = item
+        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
+                
+    def createOutputStep(self, outImgsFn):
+        inputSet = self.inputSet.get()
+        
+        if isinstance(inputSet, SetOfClasses2D):
+            outputSet = self._createSetOfClasses2D(inputSet.getImages())
+            outputName = 'outputClasses'
+        else: # SetOfAverages
             outputSet = self._createSetOfAverages()
-            imgsMd = xmipp.MetaData(outImgsFn)
-            outputSet.copyInfo(imgSet)
-
-            for img in imgSet:
-                newAverage = Particle()
-                newAverage.copy(img)
-                
-                objId = self._getMetaDataObjId(img, imgsMd)
-                maxCC = Float(imgsMd.getValue(xmipp.MDL_MAXCC, objId))
-                imgRow = rowFromMd(imgsMd, objId)
-                
-                newAverage.setAlignment(rowToAlignment(imgRow, False, True))
-                setattr(newAverage, '_xmipp_maxCC', maxCC)
-                outputSet.append(newAverage)
+            outputName = 'outputAverages'
             
-            self._defineOutputs(outputAverages=outputSet)
-            self._defineTransformRelation(imgSet, outputSet)
-    
+        md = xmipp.MetaData(outImgsFn)
+        outputSet.copyInfo(inputSet)
+        outputSet.copyItems(inputSet, 
+                            updateItemCallback=self.updateItemMaxCC,
+                            itemDataIterator=iterMdRows(md))
+
+        self._defineOutputs(**{outputName: outputSet})
+        self._defineTransformRelation(inputSet, outputSet)
+            
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
