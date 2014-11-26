@@ -1,9 +1,10 @@
 /* CSS Document */
 .layout-outer>.west {
 	padding: 5px 10px 20px 10px;
-	width: 25%;
-	min-width: 15%;
+	width: 0;
+/* 	min-width: 15%; */
 	max-width: 35%;
+	overflow-y: auto;
 	overflow-y: auto;
 	overflow-x: hidden;
 	background-color: white;

@@ -349,6 +349,7 @@ def service_projects(request):
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'hiddenTreeProt': True,
                }
     
     context = base_grid(request, context)
