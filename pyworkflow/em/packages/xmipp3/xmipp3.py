@@ -468,8 +468,8 @@ class ProjMatcher():
         # Write angles in the original file and sort
         MD=MetaData(fnAngles)
         for id in MD:
-            galleryReference = MD.getValue(MDL_REF,id)
-            MD.setValue(MDL_IMAGE_REF, "%05d@%s" % (galleryReference+1,fnGallery), id)
+            galleryReference = MD.getValue(xmipp.MDL_REF,id)
+            MD.setValue(xmipp.MDL_IMAGE_REF, "%05d@%s" % (galleryReference+1,fnGallery), id)
         MD.write(fnAngles)
         
     def produceAlignedImagesStep(self, volumeIsCTFCorrected, fn, images):
@@ -479,62 +479,58 @@ class ProjMatcher():
         MDin = MetaData(images)
         MDout = MetaData()
         n = 1
-        hasCTF = MDin.containsLabel(MDL_CTF_MODEL)
+        hasCTF = MDin.containsLabel(xmipp.MDL_CTF_MODEL)
         for i in MDin:
-            fnImg = MDin.getValue(MDL_IMAGE,i)
-            fnImgRef = MDin.getValue(MDL_IMAGE_REF,i)
-            maxCC = MDin.getValue(MDL_MAXCC,i)
-            rot =  MDin.getValue(MDL_ANGLE_ROT,i)
-            tilt = MDin.getValue(MDL_ANGLE_TILT,i)
-            psi =-1.*MDin.getValue(MDL_ANGLE_PSI,i)
-            flip = MDin.getValue(MDL_FLIP,i)
+            fnImg = MDin.getValue(xmipp.MDL_IMAGE,i)
+            fnImgRef = MDin.getValue(xmipp.MDL_IMAGE_REF,i)
+            maxCC = MDin.getValue(xmipp.MDL_MAXCC,i)
+            rot =  MDin.getValue(xmipp.MDL_ANGLE_ROT,i)
+            tilt = MDin.getValue(xmipp.MDL_ANGLE_TILT,i)
+            print "KKK", MDin.getValue(xmipp.MDL_ANGLE_PSI,i)
+            psi =-1.*MDin.getValue(xmipp.MDL_ANGLE_PSI,i)
+            flip = MDin.getValue(xmipp.MDL_FLIP,i)
             if flip:
                 psi = -psi
             eulerMatrix = Euler_angles2matrix(0.,0.,psi)
-            x = MDin.getValue(MDL_SHIFT_X,i)
-            y = MDin.getValue(MDL_SHIFT_Y,i)
+            x = MDin.getValue(xmipp.MDL_SHIFT_X,i)
+            y = MDin.getValue(xmipp.MDL_SHIFT_Y,i)
             shift = array([x, y, 0])
             shiftOut = dot(eulerMatrix, shift)
             [x,y,z]= shiftOut
             if flip:
                 x = -x
             id = MDout.addObject()
-            MDout.setValue(MDL_IMAGE, fnImg, id)
-            MDout.setValue(MDL_IMAGE_REF, fnImgRef, id)
-            MDout.setValue(MDL_IMAGE1, "%05d@%s"%(n,self._getExtraPath("diff.stk")), id)
+            MDout.setValue(xmipp.MDL_IMAGE, fnImg, id)
+            MDout.setValue(xmipp.MDL_IMAGE_REF, fnImgRef, id)
+            MDout.setValue(xmipp.MDL_IMAGE1, "%05d@%s"%(n, self._getExtraPath("diff.stk")), id)
             if hasCTF:
-                fnCTF = MDin.getValue(MDL_CTF_MODEL,i)
-                MDout.setValue(MDL_CTF_MODEL,fnCTF,id)
-            MDout.setValue(MDL_MAXCC, maxCC, id)
-            MDout.setValue(MDL_ANGLE_ROT, rot, id)
-            MDout.setValue(MDL_ANGLE_TILT, tilt, id)
-            MDout.setValue(MDL_ANGLE_PSI, psi, id)
-            MDout.setValue(MDL_SHIFT_X, x,id)
-            MDout.setValue(MDL_SHIFT_Y, y,id)
-            MDout.setValue(MDL_FLIP,flip,id)
-            MDout.setValue(MDL_ENABLED,1,id)
+                fnCTF = MDin.getValue(xmipp.MDL_CTF_MODEL,i)
+                MDout.setValue(xmipp.MDL_CTF_MODEL,fnCTF,id)
+            MDout.setValue(xmipp.MDL_MAXCC, maxCC, id)
+            MDout.setValue(xmipp.MDL_ANGLE_ROT, rot, id)
+            MDout.setValue(xmipp.MDL_ANGLE_TILT, tilt, id)
+            MDout.setValue(xmipp.MDL_ANGLE_PSI, psi, id)
+            MDout.setValue(xmipp.MDL_SHIFT_X, x,id)
+            MDout.setValue(xmipp.MDL_SHIFT_Y, y,id)
+            MDout.setValue(xmipp.MDL_FLIP,flip,id)
+            MDout.setValue(xmipp.MDL_ENABLED,1,id)
             n+=1
-        MDout.write(fnOut,MD_APPEND)
+        MDout.write(fnOut,xmipp.MD_APPEND)
         
         # Actually create the differences
         img = Image()
         imgRef = Image()
         if hasCTF and volumeIsCTFCorrected:
-            fnAcquisition = findAcquisitionInfo(fnOut)
-            if not fnAcquisition:
-                hasCTF = False
-            else:
-                mdAcquisition = MetaData(fnAcquisition)
-                Ts = mdAcquisition.getValue(MDL_SAMPLINGRATE,mdAcquisition.firstObject())
+            Ts = MDin.getValue(xmipp.MDL_SAMPLINGRATE, MDin.firstObject())
     
         for i in MDout:
             img.readApplyGeo(MDout,i)
-            imgRef.read(MDout.getValue(MDL_IMAGE_REF,i))
+            imgRef.read(MDout.getValue(xmipp.MDL_IMAGE_REF,i))
             if hasCTF and volumeIsCTFCorrected:
-                fnCTF = MDout.getValue(MDL_CTF_MODEL,i)
+                fnCTF = MDout.getValue(xmipp.MDL_CTF_MODEL,i)
                 imgRef.applyCTF(fnCTF,Ts)
                 img.convert2DataType(DT_DOUBLE)
             imgDiff = img-imgRef
-            imgDiff.write(MDout.getValue(MDL_IMAGE1,i))
+            imgDiff.write(MDout.getValue(xmipp.MDL_IMAGE1,i))
 
 

@@ -39,6 +39,7 @@ class TestXmippBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.particlesFn = cls.dataset.getFile('particles')
+        cls.volumesFn = cls.dataset.getFile('volumes')
     
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
@@ -54,6 +55,32 @@ class TestXmippBase(BaseTest):
         return cls.protImport
     
     @classmethod
+    def runImportAverages(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportAverages, 
+                                         filesPath=pattern, samplingRate=samplingRate, 
+                                         checkStack=checkStack)
+        print '_label: ', cls.protImport._label
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputAverages is None:
+            raise Exception('Import of averages: %s, failed. outputAverages is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
+    def runImportVolume(cls, pattern, samplingRate, checkStack=False):
+        """ Run an Import particles protocol. """
+        cls.protImport = cls.newProtocol(ProtImportVolumes, 
+                                         filesPath=pattern, samplingRate=samplingRate, 
+                                         checkStack=checkStack)
+        print '_label: ', cls.protImport._label
+        cls.launchProtocol(cls.protImport)
+        # check that input images have been imported (a better way to do this?)
+        if cls.protImport.outputVolume is None:
+            raise Exception('Import of volume: %s, failed. outputVolume is None.' % pattern)
+        return cls.protImport
+    
+    @classmethod
     def runCL2DAlign(cls, particles):
         cls.CL2DAlign = cls.newProtocol(XmippProtCL2DAlign, 
                                         maximumShift=2, numberOfIterations=2,
@@ -65,8 +92,8 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D, 
-                                           numberOfReferences=8, maxIters=4, doMlf=False,
-                                           numberOfMpi=2, numberOfThreads=2)
+                                           numberOfReferences=4, maxIters=3, doMlf=False,
+                                           numberOfMpi=3, numberOfThreads=2)
         cls.ProtClassify.inputParticles.set(particles)
         cls.launchProtocol(cls.ProtClassify)
         return cls.ProtClassify
@@ -394,6 +421,66 @@ class TestXmippRotSpectra(TestXmippBase):
         xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+
+
+class TestXmippProjectionOutliers(TestXmippBase):
+    """This class check if the protocol projection outliers in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+    
+    def test_ProjectionOutliersAverages(self):
+        print "Run ProjOutliers particles"
+        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Projection Outliers")
+    
+    def test_ProjectionOutliersClasses2D(self):
+        print "Run ProjOutliers for classes2D"
+        protProjOutl = self.newProtocol(XmippProtProjectionOutliers, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.runClassify.outputClasses)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Projection Outliers")
+
+
+class TestXmippScreenClasses(TestXmippBase):
+    """This class check if the protocol screen classes in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportPart = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+        cls.runClassify = cls.runClassify(cls.protImportPart.outputParticles)
+    
+    def test_ScreenClassesAverages(self):
+        print "Run ScreenClasses particles"
+        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.protImportAvgs.outputAverages)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputAverages, "There was a problem with Screen Classes")
+    
+    def test_ScreenClasses2D(self):
+        print "Run ScreenClasses for classes2D"
+        protProjOutl = self.newProtocol(XmippProtScreenClasses, 
+                                   symmetryGroup="c6", numberOfMpi=5)
+        protProjOutl.inputSet.set(self.runClassify.outputClasses)
+        protProjOutl.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protProjOutl)      
+        self.assertIsNotNone(protProjOutl.outputClasses, "There was a problem with Screen Classes")
 
 
 if __name__ == "__main__":
