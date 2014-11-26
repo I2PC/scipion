@@ -126,7 +126,10 @@ class XmippProtCL2DAlign(ProtAlign2D):
             summary.append("Output alignment not ready yet.")
         else:
             summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
-            #summary.append("Output Aligned Images: %s" % self.outputParticles.get())
+            if self.useReferenceImage:
+                summary.append("Aligned with reference image: %s" % self.referenceImage.get().getNameId())
+            else:
+                summary.append("Aligned with no reference image.")
         return summary
     
     def _citations(self):

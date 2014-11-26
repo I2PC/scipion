@@ -510,6 +510,7 @@ function updateTabs(id) {
 //				$("span#analyzeTool").show();
 				$("span#buttonAnalyzeResult").show();
 				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+//				$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+id +'")');
 			}
 			
 			//LOGS
@@ -629,8 +630,12 @@ function fillUL(type, list, ulId, icon) {
 			visualize_html += '</a>'
 
 			//Download File Object
-			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
-			'<i class="fa fa-save" style="margin-left:0px;"></i></a>'
+//			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
+//			'<i class="fa fa-save" style="margin-left:0px;"> Download</i></a>'
+			
+			// Update Tab Download Button
+			$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+list[i].id +'")');
+			
 		}
 		
 		// Edit Object

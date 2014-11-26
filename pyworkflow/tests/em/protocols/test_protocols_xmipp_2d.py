@@ -273,6 +273,72 @@ class TestXmippApplyMask2D(TestXmippBase):
         self.assertIsNotNone(protMask02.outputParticles, "There was a problem with apply user custom mask for particles")
         
 
+
+class TestXmippScreenParticles(TestXmippBase):
+    """This class check if the protocol to classify particles by their similarity to discard outliers work properly"""
+    @classmethod
+    def setUpClass(cls):
+        #setupTestProject(cls)
+        #TestXmippBase.setData('mda')
+        #cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+        cls.samplingRate = cls.protImport.outputParticles.getSamplingRate()
+        cls.size = 20
+    
+    def test_screenPart(self):
+        from itertools import izip
+        print 'Running Screen particles test'
+        xpsp = XmippProtScreenParticles  # short notation
+        # First test for check I/O. Input and Output SetOfParticles must be equal sized if not rejection is selected
+        print '--> Running Screen without rejection'
+        protScreenNone = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_NONE)
+        protScreenNone.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenNone)
+        self.assertIsNotNone(protScreenNone.outputParticles, 'Output has not been produced')
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenNone.outputParticles), len(self.protImport.outputParticles), "Input and Output Set Of Particles don't have same size")
+        print '\t --> Input/Output sets sizes are equal (%s)' % len(protScreenNone.outputParticles)
+        
+        for x, y in izip(self.protImport.outputParticles, protScreenNone.outputParticles):
+            print "\t      compare %s with %s" % (x, y)
+            self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
+            self.assertEqual(x.getSamplingRate(), y.getSamplingRate(), "Particle sampling rate differ")
+        print '\t --> Input/Output sets contain the same particles'
+        
+        # After this, we check for errors in method with particle rejection by ZScore
+        print "--> Running Screen with rejection to maxZScore upper than 2.6"
+        protScreenZScore = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
+                                      maxZscore=2.6)
+        protScreenZScore.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenZScore)
+        self.assertIsNotNone(protScreenZScore.outputParticles, "Output has not been produced")
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenZScore.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenZScore.outputParticles))
+        print '\t --> Output set size is correct (%s)' % len(protScreenZScore.outputParticles)
+        
+        for x in protScreenZScore.outputParticles:
+            self.assertLess(x._xmipp_zScore.get(), 2.6, "Particle with id (%s) has a ZScore of %s, upper than suposed threshold %s" % (x.getObjId(), x._xmipp_zScore.get(), 2.6))
+        print '\t --> Output particles are below the ZScore threshold'
+        
+        # Finally, we check for errors in method with particle rejection by percentage
+        print "--> Running Screen with rejection of the 5% particles with the lowest ZScore"
+        protScreenPercentage = self.newProtocol(xpsp, autoParRejection=xpsp.REJ_MAXZSCORE,
+                                      maxZscore=2.6)
+        protScreenPercentage.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protScreenPercentage)
+        self.assertIsNotNone(protScreenPercentage.outputParticles, "Output has not been produced")
+        print '\t --> Output is not None'
+        self.assertEqual(len(protScreenPercentage.outputParticles), 72, "Output Set Of Particles must be 72, but %s found" % len(protScreenPercentage.outputParticles))
+        print '\t --> Output set size is correct (%s)' % len(protScreenPercentage.outputParticles)
+        
+        for x, y in izip(protScreenZScore.outputParticles, protScreenPercentage.outputParticles):
+            print "\t      compare %s with %s" % (x, y)
+            self.assertEqual(x.getObjId(), y.getObjId(), "Particles differ")
+        print '\t --> Particles rejected using maxZScore(2.6) method and percentage(5%) one are the same'
+
+
 class TestXmippPreprocessParticles(TestXmippBase):
     """This class check if the protocol to preprocess particles in Xmipp works properly."""
     @classmethod
@@ -421,6 +487,22 @@ class TestXmippRotSpectra(TestXmippBase):
         xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+
+class TestXmippKerdensom(TestXmippBase):
+    """This class check if the protocol to calculate the kerdensom from particles in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+
+    def test_kerdensom(self):
+        print "Run Kerdensom"
+        xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
+        xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
+        self.launchProtocol(xmippProtKerdensom)
+        self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
 
 class TestXmippProjectionOutliers(TestXmippBase):

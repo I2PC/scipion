@@ -114,12 +114,12 @@
 			</a>
 		</span>
 <!-- 		BROWSE BUTTON -->
-		<span id="browseTool" style="display:none;">
-			<a id="browseTool" href="">
-				<i class="fa fa-folder-open" style="margin-right:5px"></i>
-				{{msg.LABEL_BROWSE}}
-			</a>
-		</span>
+<!-- 		<span id="browseTool" style="display:none;"> -->
+<!-- 			<a id="browseTool" href=""> -->
+<!-- 				<i class="fa fa-folder-open" style="margin-right:5px"></i> -->
+<!-- 				{{msg.LABEL_BROWSE}} -->
+<!-- 			</a> -->
+<!-- 		</span> -->
 <!-- 		STOP BUTTON -->
 		<span id="stopTool" style="display:none;">
 			<a id="stopTool" href="">
@@ -140,12 +140,18 @@
 <div class="tabContaier" id="tabs" style="height:100%;overflow-y:auto;">
 	<div id="listTabsHeader">
 		<span id="buttonAnalyzeResult" style="display:None;">
+			<a id="downloadTool" class="btn buttonGrey" style="border:1px solid black;color:black;"href="">
+				<i class="fa fa-save" style="margin-right:5px">
+				</i>
+				Download Results
+			</a>
 			<a id="analyzeTool" class="btn buttonRed" href="">
 				<i class="fa fa-eye" style="margin-right:5px">
 				</i>
 				{{msg.LABEL_ANALYZE}}
 			</a>
 		</span>
+		
 		<ul class="listTabs" id="tabs">
 			<li><a href="#tab-data">{{msg.LABEL_SUMMARY}}</a></li>
 			<li><a href="#tab-methods">{{msg.LABEL_METHODS}}</a></li>
