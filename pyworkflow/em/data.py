@@ -527,6 +527,35 @@ class EMSet(Set, EMObject):
         for some generic operations on sets.
         """
         pass
+    
+    def clone(self):
+        """ Override the clone defined in Object
+        to avoid copying _mapperPath property
+        """
+        pass
+    
+    def copyItems(self, otherSet, 
+                  updateItemCallback=None, 
+                  itemDataIterator=None,
+                  copyDisabled=False):
+        """ Copy items from another set.
+        If the updateItemCallback is passed, it will be 
+        called with each item (and optionally with a data row).
+        This is a place where items can be updated while copying.
+        This is useful to set new attributes or update values
+        for each item.
+        """
+        for item in otherSet:
+            # copy items if enabled or copyDisabled=True
+            if copyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                self.append(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row
   
   
 class SetOfImages(EMSet):
@@ -1120,6 +1149,11 @@ class Class2D(SetOfParticles):
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
+    def clone(self):
+        clone = self.getClass()()
+        clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
+        return clone
+        
     
 class Class3D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
@@ -1131,7 +1165,12 @@ class Class3D(SetOfParticles):
         from other set of micrographs to current one.
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
-
+        
+    def clone(self):
+        clone = self.getClass()()
+        clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
+        return clone
+        
 
 class ClassVol(SetOfVolumes):
     """ Represent a Class that groups Volume objects.
@@ -1216,7 +1255,36 @@ class SetOfClasses(EMSet):
                 for img in cls:
                     if img.isEnabled():                
                         newCls.append(img)
-                self.update(newCls)  
+                self.update(newCls)
+                
+    
+    def copyItems(self, otherSet, 
+                  updateItemCallback=None, 
+                  itemDataIterator=None,
+                  copyDisabled=False):
+        """ Copy items from another set.
+        If the updateItemCallback is passed, it will be 
+        called with each item (and optionally with a data row).
+        This is a place where items can be updated while copying.
+        This is useful to set new attributes or update values
+        for each item.
+        """
+        for item in otherSet:
+            # copy items if enabled or copyDisabled=True
+            if copyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                self.append(newItem)
+                # copy items inside the class
+                newItem.copyItems(item, copyDisabled=copyDisabled)
+                self.update(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row
+                
+
                                       
 
 class SetOfClasses2D(SetOfClasses):
