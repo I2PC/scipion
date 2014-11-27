@@ -1327,8 +1327,7 @@ public class GalleryData {
         ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
         int index = 0;
         String imagepath;
-        // md.print();
-        System.out.println(useGeo);
+
         for (long id : md.findObjects()) {
             if (isEnabled(index)) {
                 

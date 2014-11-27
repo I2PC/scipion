@@ -57,14 +57,12 @@ public class ScipionMetaData extends MetaData {
         this.columns = columns;
         this.emobjects = emobjects;
         blocks = new String[]{getBlock()};
-        properties = new HashMap<String, String>();
     }
 
     public ScipionMetaData(String dbfile) {
         this.filename = dbfile;
         columns = new ArrayList<ColumnInfo>();
         emobjects = new ArrayList<EMObject>();
-        properties = new HashMap<String, String>();
         loadData();
         if (isClassificationMd()) {
             String prefix;
@@ -158,8 +156,9 @@ public class ScipionMetaData extends MetaData {
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
-            if (preffix == null)
+            if (preffix == null || preffix.equals(""))
             {
+                properties = new HashMap<String, String>();
                 String key, value;
                 query = "SELECT * FROM Properties;";
                 rs = stmt.executeQuery(query);
@@ -845,7 +844,13 @@ public class ScipionMetaData extends MetaData {
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
+        if(properties == null)
+        {
+            if (parent == null) return false; else return parent.containsGeometryInfo();
+        }
+        
         String value = properties.get("_alignment");
+
         if (value == null)
             return false;
         return value.equals("1");

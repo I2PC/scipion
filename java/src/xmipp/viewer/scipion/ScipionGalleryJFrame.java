@@ -415,7 +415,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try
         {
-            String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
+            String[] args = new String[]{"--python", python, scripts, "--project",projectid, inputid, ""};
             ScipionParams params = new ScipionParams(args);
             new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
         }
