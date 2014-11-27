@@ -110,3 +110,14 @@ class TestImportParticles(TestImportBase):
         prot1.setObjLabel('from xmipp (with mic id)')
         self.launchProtocol(prot1)
 
+    def test_fromRelion(self):
+        """ Import an EMX file with Particles and defocus
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                 starFile='/home/josem/work/data/franklab2014/relion_classify_run/classify_cip_ct36_it038_few_data.star',
+                                 magnification=10000,
+                                 samplingRate=1.
+        )
+        prot1.setObjLabel('from relion')
+        self.launchProtocol(prot1)
