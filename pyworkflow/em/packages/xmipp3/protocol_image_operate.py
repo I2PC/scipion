@@ -30,7 +30,7 @@ import os
 import xmipp
 from pyworkflow.protocol.params import FileParam, EnumParam, PointerParam
 from pyworkflow.em import *
-from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
+from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.properties import Message
 from convert import writeSetOfParticles, writeSetOfVolumes
 
@@ -125,6 +125,7 @@ class XmippProtImageOperate():
             args += ' %d' % val
         self._insertFunctionStep("operationStep", args)
 
+
 class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles, XmippProtImageOperate):
     """ Apply an operation to two sets of particles  """
     _label = 'calculator'
@@ -172,6 +173,7 @@ class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles
                 if N1 != N2:
                     errors.append("The number of images in two operands are not the same")
         return errors
+
 
 class XmippProtImageOperateVolumes(ProtOperateVolumes, XmippProcessVolumes, XmippProtImageOperate):
     """ Apply an operation to two sets of volumes """

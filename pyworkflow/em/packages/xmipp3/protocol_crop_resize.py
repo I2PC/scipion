@@ -28,7 +28,7 @@
 
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
-from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
+from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.em.constants import *
 from constants import *
 
@@ -202,13 +202,12 @@ class XmippProtResize():
         return samplingRate
 
 
-class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippProcessParticles):
+class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
     """ Crop or resize a set of particles """
     _label = 'crop/resize particles'
     _inputLabel = 'particles'
     
     def __init__(self, **args):
-        ProtProcessParticles.__init__(self, **args)
         XmippProtResize.__init__(self)
         XmippProcessParticles.__init__(self)
     
@@ -269,13 +268,12 @@ class XmippProtCropResizeParticles(ProtProcessParticles, XmippProtResize, XmippP
         return samplingRate
 
 
-class XmippProtCropResizeVolumes(ProtPreprocessVolumes, XmippProtResize, XmippProcessVolumes):
+class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
     """ Crop or resize a set of volumes """
     _label = 'crop/resize volumes'
     _inputLabel = 'volumes'
     
     def __init__(self, **args):
-        ProtPreprocessVolumes.__init__(self, **args)
         XmippProtResize.__init__(self, **args)
         XmippProcessVolumes.__init__(self)
     

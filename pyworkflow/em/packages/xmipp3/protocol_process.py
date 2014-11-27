@@ -27,7 +27,7 @@
 This sub-package contains classes to use in common processing operations of SetOfParticles, Volume or SetOfVolumes
 """
 
-from pyworkflow.em.protocol import EMProtocol  
+from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
 from convert import (writeSetOfParticles, readSetOfParticles, 
                      writeSetOfVolumes, readSetOfVolumes,
@@ -35,17 +35,14 @@ from convert import (writeSetOfParticles, readSetOfParticles,
 
 
 
-class XmippProcess(EMProtocol):
-    """ Class to create a base template for Xmipp protocol that share
-    a common structure: build a commmand line and call a program. """
+class XmippProcessParticles(ProtProcessParticles):
+    """ Class to create a base template for Xmipp protocols 
+    that process SetOfParticles
+    """
     def __init__(self):
+        ProtProcessParticles.__init__(self)
         self._args = "-i %(inputFn)s"
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def convertInputStep(self):
-        """ convert if necessary"""
-        pass
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._defineFilenames()
@@ -66,15 +63,7 @@ class XmippProcess(EMProtocol):
         after the population of output elements.
         """
         pass
-
-
-class XmippProcessParticles(XmippProcess):
-    """ Class to create a base template for Xmipp protocols 
-    that process SetOfParticles
-    """
-    def __init__(self):
-        XmippProcess.__init__(self)
-        
+            
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self):
         """ convert if necessary"""
@@ -101,13 +90,37 @@ class XmippProcessParticles(XmippProcess):
         self.outputMd = self._getExtraPath('output_images.xmd')
         self.outputStk = self._getExtraPath('output_images.stk')
 
-class XmippProcessVolumes(XmippProcess):
+
+
+class XmippProcessVolumes(ProtPreprocessVolumes):
     """ Class to create a base template for Xmipp protocols that process 
     both volume or a SetOfVolumes objects 
     """
     def __init__(self):
-        XmippProcess.__init__(self)
-    
+        ProtPreprocessVolumes.__init__(self)
+        self._args = "-i %(inputFn)s"
+
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        self._defineFilenames()
+        self._insertFunctionStep("convertInputStep")
+        self._insertProcessStep()
+        self._insertFunctionStep('createOutputStep')
+        
+    def _preprocessOutput(self, output):
+        """ This function should be implemented
+        if some additional modifications needs to be done
+        before population of the output elements.
+        """
+        pass  
+      
+    def _postprocessOutput(self, output):
+        """ This function should be implemented
+        if some additional modifications needs to be done
+        after the population of output elements.
+        """
+        pass
+        
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self):
         """ convert if necessary"""

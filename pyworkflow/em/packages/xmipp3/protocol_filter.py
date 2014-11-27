@@ -33,7 +33,7 @@ from pyworkflow.protocol.params import FloatParam, EnumParam, DigFreqParam
 from pyworkflow.em import *
 from pyworkflow.utils import *
 import xmipp
-from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
+from protocol_process import XmippProcessParticles, XmippProcessVolumes
 
 from pyworkflow.em.constants import *
 from constants import *
