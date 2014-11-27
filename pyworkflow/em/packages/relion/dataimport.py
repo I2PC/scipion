@@ -135,6 +135,6 @@ class RelionImport():
     def _preprocessImageRow(self, img, imgRow):
         from convert import setupCTF, copyOrLinkFileName
         if self._imgPath is not None:
-            copyOrLinkFileName(imgRow, self._imagesPath, self.protocol._getExtraPath())
+            copyOrLinkFileName(imgRow, self._imgPath, self.protocol._getExtraPath())
         setupCTF(imgRow, self.protocol.samplingRate.get())
         
