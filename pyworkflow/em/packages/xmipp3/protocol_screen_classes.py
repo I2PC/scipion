@@ -109,21 +109,13 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     def sortStep(self, outImgsFn):
         self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
     
-    def updateItemMaxCC(self, item, row):
-        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
-        if isinstance(item, Class2D):
-            particle = item.getRepresentative()
-        else:
-            particle = item
-        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
-                
     def createOutputStep(self, outImgsFn):
         inputSet = self.inputSet.get()
-        
         if isinstance(inputSet, SetOfClasses2D):
             outputSet = self._createSetOfClasses2D(inputSet.getImages())
             outputName = 'outputClasses'
         else: # SetOfAverages
+            inputSet.setAlignment3D()
             outputSet = self._createSetOfAverages()
             outputName = 'outputAverages'
             
@@ -170,4 +162,26 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         else:
             xDim = imgSet.getDim()[0]
         return xDim
-
+    
+    def updateItemMaxCC(self, item, row):
+        from convert import locationToXmipp
+        # ToDo: uncomment this lines when the output metadata has ITEM_ID
+#         if item.getObjId() != row.getValue(xmipp.MDL_ITEM_ID):
+#             raise Exception("The objId is not equal to ITEM_ID. Please, sort the metadata.")
+        if isinstance(item, Class2D):
+            img = item.getRepresentative()
+            index, fn = img.getLocation()
+        else:
+            index, fn = item.getLocation()
+            
+        objLoc = locationToXmipp(index, fn)
+        mdLoc = row.getValue(xmipp.MDL_IMAGE)
+        if objLoc != mdLoc:
+            raise Exception("The the image isn't the same. Please, sort the metadata.")
+        
+        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
+        if isinstance(item, Class2D):
+            particle = item.getRepresentative()
+        else:
+            particle = item
+        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
