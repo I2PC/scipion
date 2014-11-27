@@ -118,8 +118,10 @@ class XmippImport():
         if not row.containsLabel(label):
             raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
                                                                          self._mdFile))
-            
-        self._imgPath = findRootFrom(self._mdFile, row.getValue(label))
+
+        # take only the filename part after the @
+        index, fn = xmippToLocation(row.getValue(label))
+        self._imgPath = findRootFrom(self._mdFile, fn)
         
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._mdFile)
