@@ -46,7 +46,7 @@ class XmippPreprocessHelper():
     
     #--------------------------- DEFINE param functions --------------------------------------------
     @staticmethod
-    def _defineProcessParams(cls, form):
+    def _defineProcessParams(form):
         # Invert Contrast
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 
@@ -76,7 +76,7 @@ class XmippPreprocessHelper():
     
     #--------------------------- INSERT steps functions --------------------------------------------
     @staticmethod
-    def _insertCommonSteps(cls, protocol, changeInserts):
+    def _insertCommonSteps(protocol, changeInserts):
         if protocol.doInvert:
             args = protocol._argsInvert()
             if protocol.isFirstStep:
@@ -91,12 +91,12 @@ class XmippPreprocessHelper():
     
     #--------------------------- UTILS functions ---------------------------------------------------
     @staticmethod
-    def _argsCommonInvert(cls):
+    def _argsCommonInvert():
         args = ' --mult -1'
         return args
     
     @staticmethod
-    def _argsCommonThreshold(cls, protocol):
+    def _argsCommonThreshold(protocol):
         args = " --select below %f" % protocol.threshold.get()
         fillStr = protocol.getEnumText('fillType')
         args += " --substitute %s " % fillStr
