@@ -106,7 +106,7 @@ class XmippPreprocessHelper():
         return args
 
 
-class XmippProtPreprocessParticles(XmippProcessParticles):
+class XmippProtPreprocessParticles(XmippProcessParticles,XmippPreprocessHelper):
     """ Preprocess a set of particles. You can remove dust, normalize, apply threshold, etc """
     _label = 'preprocess particles'
 
@@ -298,7 +298,8 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += XmippPreprocessHelper._argsCommonInvert()
+        #args += XmippPreprocessHelper._argsCommonInvert()
+        args += self._argsCommonInvert()
         return args
     
     def _argsThreshold(self):
@@ -386,8 +387,9 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         form.addParam('backRadius', FloatParam, default=-1,
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
-        XmippPreprocessHelper._defineProcessParams(form)
-        
+        #XmippPreprocessHelper._defineProcessParams(form)
+        self._defineProcessParams(form)
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
@@ -432,8 +434,9 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 self.isFirstStep = False
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
-        XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
-    
+        #XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
+        self._insertCommonSteps(self, changeInserts)
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
