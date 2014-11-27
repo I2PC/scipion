@@ -34,7 +34,7 @@ from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
-
+from pyworkflow.em.packages.xmipp3.protocol_crop_resize import XmippResizeHelper as xrh
 
 
 # Some utility functions to import particles that are used
@@ -437,20 +437,32 @@ class TestXmippFilterParticles(TestXmippBase):
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))
 
-        def test(**kwargs):
+        def test(parts=self.protImport.outputParticles, **kwargs):
+            "Launch XmippProtFilterParticles on parts and check results."
             print magentaStr("\n==> Input params: %s" % kwargs)
             prot = self.newProtocol(XmippProtFilterParticles, **kwargs)
-            prot.inputParticles.set(self.protImport.outputParticles)
+            prot.inputParticles.set(parts)
             self.launchProtocol(prot)
             self.assertIsNotNone(prot.outputParticles,
                                  "There was a problem with filter particles")
             self.assertTrue(prot.outputParticles.equalAttributes(
-                self.protImport.outputParticles, ignore=['_mapperPath'],
-                verbose=True))
+                parts, ignore=['_mapperPath'], verbose=True))
+            # Compare the individual particles too.
+            self.assertTrue(prot.outputParticles.equalItemAttributes(
+                parts, ignore=['_filename', '_index'], verbose=True))
 
+        # Check a few different cases.
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
         test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
-        test(filterSpace=FILTER_SPACE_WAVELET,
+        # For wavelets, we need the input's size to be a power of 2
+        print magentaStr("\n==> Resizing particles to 256 pixels")
+        protResize = self.newProtocol(XmippProtCropResizeParticles,
+                                      doResize=True,
+                                      resizeOption=xrh.RESIZE_DIMENSIONS,
+                                      resizeDim=256)
+        protResize.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protResize)
+        test(parts=protResize.outputParticles, filterSpace=FILTER_SPACE_WAVELET,
              filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
 
