@@ -100,7 +100,8 @@ class XmippImport():
         # but fixing the filenames with new ones (linked or copy to extraDir)
         readSetOfParticles(self._mdFile, partSet, 
                            preprocessImageRow=self._preprocessParticleRow, 
-                           readAcquisition=False)
+                           readAcquisition=False, is2D=self.is2D,
+                           isInverseTransform=True)
         if self._micIdOrName:
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
         self.protocol._defineOutputs(outputParticles=partSet)
@@ -118,8 +119,10 @@ class XmippImport():
         if not row.containsLabel(label):
             raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
                                                                          self._mdFile))
-            
-        self._imgPath = findRootFrom(self._mdFile, row.getValue(label))
+
+        # take only the filename part after the @
+        index, fn = xmippToLocation(row.getValue(label))
+        self._imgPath = findRootFrom(self._mdFile, fn)
         
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._mdFile)
@@ -128,6 +131,9 @@ class XmippImport():
             self._ctfPath = findRootFrom(self._mdFile, row.getValue(xmipp.MDL_CTF_MODEL))
         else:
             self._ctfPath = None # means no CTF info from micrographs metadata
+
+        # Check if the particles have 2d or 3d alignment
+        self.is2D = not row.containsLabel(xmipp.MDL_ANGLE_TILT)
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
@@ -194,8 +200,7 @@ class XmippImport():
         if self._imgPath:
             # Create a link or copy files to extraPath
             # and update the Row properly
-            imgFn = imgRow.getValue(xmipp.xmipp.MDL_IMAGE)
-            index, fn = xmippToLocation(imgFn)
+            index, fn = xmippToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
             imgBase = basename(fn)
             imgDst = self.protocol._getExtraPath(imgBase)
             if not exists(imgDst):

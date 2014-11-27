@@ -282,6 +282,7 @@ class TestXmippFilterVolumes(TestXmippBase):
         print "\n", greenStr(" Filter singe volume ".center(75, '-'))
 
         def test(**kwargs):
+            "Launch XmippProtFilterVolumes on single volume and check results."
             print magentaStr("\n==> Input params: %s" % kwargs)
             prot = XmippProtFilterVolumes(**kwargs)
             prot.inputVolumes.set(self.protImport2.outputVolume)
@@ -292,6 +293,7 @@ class TestXmippFilterVolumes(TestXmippBase):
                 self.protImport2.outputVolume, ignore=['_index', '_filename'],
                 verbose=True))
 
+        # Check a few different cases.
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
         test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
         test(filterSpace=FILTER_SPACE_WAVELET,
@@ -301,6 +303,7 @@ class TestXmippFilterVolumes(TestXmippBase):
         print "\n", greenStr(" Filter set of volumes ".center(75, '-'))
 
         def test(**kwargs):
+            "Launch XmippProtFilterVolumes on set of volumes and check results."
             print magentaStr("\n==> Input params: %s" % kwargs)
             prot = XmippProtFilterVolumes(**kwargs)
             vIn = self.protImport1.outputVolumes  # short notation
@@ -316,6 +319,7 @@ class TestXmippFilterVolumes(TestXmippBase):
                 self.protImport1.outputVolumes, ignore=['_index', '_filename'],
                 verbose=True))
 
+        # Check a few different cases.
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
         test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
         test(filterSpace=FILTER_SPACE_WAVELET,

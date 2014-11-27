@@ -495,3 +495,6 @@ class XmippProtRansac(ProtInitialVolume):
                 
         msg = msg1 + msg2
         self.summaryInfo.set(msg)
+
+    def _citations(self):
+        return ['Vargas2014']

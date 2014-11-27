@@ -34,7 +34,7 @@ from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
-
+from pyworkflow.em.packages.xmipp3.protocol_crop_resize import XmippResizeHelper as xrh
 
 
 # Some utility functions to import particles that are used
@@ -44,6 +44,7 @@ class TestXmippBase(BaseTest):
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.particlesFn = cls.dataset.getFile('particles')
+        cls.particlesDir = cls.dataset.getFile('particlesDir')
         cls.volumesFn = cls.dataset.getFile('volumes')
     
     @classmethod
@@ -62,15 +63,15 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runImportAverages(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
-        cls.protImport = cls.newProtocol(ProtImportAverages, 
+        cls.protImportAvg = cls.newProtocol(ProtImportAverages,
                                          filesPath=pattern, samplingRate=samplingRate, 
                                          checkStack=checkStack)
-        print '_label: ', cls.protImport._label
-        cls.launchProtocol(cls.protImport)
+        print '_label: ', cls.protImportAvg._label
+        cls.launchProtocol(cls.protImportAvg)
         # check that input images have been imported (a better way to do this?)
-        if cls.protImport.outputAverages is None:
+        if cls.protImportAvg.outputAverages is None:
             raise Exception('Import of averages: %s, failed. outputAverages is None.' % pattern)
-        return cls.protImport
+        return cls.protImportAvg
     
     @classmethod
     def runImportVolume(cls, pattern, samplingRate, checkStack=False):
@@ -436,20 +437,32 @@ class TestXmippFilterParticles(TestXmippBase):
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))
 
-        def test(**kwargs):
+        def test(parts=self.protImport.outputParticles, **kwargs):
+            "Launch XmippProtFilterParticles on parts and check results."
             print magentaStr("\n==> Input params: %s" % kwargs)
             prot = self.newProtocol(XmippProtFilterParticles, **kwargs)
-            prot.inputParticles.set(self.protImport.outputParticles)
+            prot.inputParticles.set(parts)
             self.launchProtocol(prot)
             self.assertIsNotNone(prot.outputParticles,
                                  "There was a problem with filter particles")
             self.assertTrue(prot.outputParticles.equalAttributes(
-                self.protImport.outputParticles, ignore=['_mapperPath'],
-                verbose=True))
+                parts, ignore=['_mapperPath'], verbose=True))
+            # Compare the individual particles too.
+            self.assertTrue(prot.outputParticles.equalItemAttributes(
+                parts, ignore=['_filename', '_index'], verbose=True))
 
+        # Check a few different cases.
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
         test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
-        test(filterSpace=FILTER_SPACE_WAVELET,
+        # For wavelets, we need the input's size to be a power of 2
+        print magentaStr("\n==> Resizing particles to 256 pixels")
+        protResize = self.newProtocol(XmippProtCropResizeParticles,
+                                      doResize=True,
+                                      resizeOption=xrh.RESIZE_DIMENSIONS,
+                                      resizeDim=256)
+        protResize.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protResize)
+        test(parts=protResize.outputParticles, filterSpace=FILTER_SPACE_WAVELET,
              filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
 
@@ -479,15 +492,37 @@ class TestXmippCL2D(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesDir + '/img00007[1-4].spi', 3.5)
     
     def test_cl2d(self):
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D, 
+        # Run CL2D with random class and core analysis
+        protCL2DRandomCore = self.newProtocol(XmippProtCL2D,
                                    numberOfReferences=2, numberOfInitialReferences=1, 
                                    numberOfIterations=4, numberOfMpi=2)
-        protCL2D.inputParticles.set(self.protImport.outputParticles)
-        self.launchProtocol(protCL2D)      
-        self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
+        protCL2DRandomCore.inputParticles.set(self.protImport.outputParticles)
+        protCL2DRandomCore.setObjLabel("CL2D with random class and core analysis")
+        self.launchProtocol(protCL2DRandomCore)
+        self.assertIsNotNone(protCL2DRandomCore.outputClasses, "There was a problem with CL2D with random class and core analysis")
+
+        # Run CL2D with random class and no core analysis
+        protCL2DRandomNoCore = self.newProtocol(XmippProtCL2D,
+                                   numberOfReferences=2, numberOfInitialReferences=1,
+                                   doCore=False, numberOfIterations=4, numberOfMpi=2)
+        protCL2DRandomNoCore.inputParticles.set(self.protImport.outputParticles)
+        protCL2DRandomNoCore.setObjLabel("CL2D with random class and no core analysis")
+        self.launchProtocol(protCL2DRandomNoCore)
+        self.assertIsNotNone(protCL2DRandomNoCore.outputClasses, "There was a problem with CL2D with random class and no core analysis")
+
+        # Run CL2D with initial classes and core analysis
+        protCL2DInitialCore = self.newProtocol(XmippProtCL2D,
+                                   numberOfReferences=4, randomInitialization=False,
+                                   numberOfIterations=4, numberOfMpi=2)
+        protCL2DInitialCore.inputParticles.set(self.protImport.outputParticles)
+        protCL2DInitialCore.initialClasses.set(self.protImportAvgs.outputAverages)
+        protCL2DInitialCore.setObjLabel("CL2D with initial class and core analysis")
+        self.launchProtocol(protCL2DInitialCore)
+        self.assertIsNotNone(protCL2DInitialCore.outputClasses, "There was a problem with CL2D with initial class and core analysis")
 
 
 class TestXmippProtCL2DAlign(TestXmippBase):
@@ -500,12 +535,29 @@ class TestXmippProtCL2DAlign(TestXmippBase):
     
     def test_xmippProtCL2DAlign(self):
         print "Run Only Align"
-        CL2DAlign = self.newProtocol(XmippProtCL2DAlign, 
+        # Run test without image reference
+        CL2DAlignNoRef = self.newProtocol(XmippProtCL2DAlign,
                                     maximumShift=5, numberOfIterations=5,
                                     numberOfMpi=4, numberOfThreads=1, useReferenceImage=False)
-        CL2DAlign.inputParticles.set(self.protImport.outputParticles)
-        self.launchProtocol(CL2DAlign)
-        self.assertIsNotNone(CL2DAlign.outputParticles, "There was a problem with Only align2d")    
+        CL2DAlignNoRef.setObjLabel("CL2D Align without reference")
+        CL2DAlignNoRef.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(CL2DAlignNoRef)
+        # Check that output is generated
+        self.assertIsNotNone(CL2DAlignNoRef.outputParticles, "There was a problem generating output particles")
+        # Check that it has alignment matrix
+        self.assertTrue(CL2DAlignNoRef.outputParticles.hasAlignment2D(), "Output particles do not have alignment 2D")
+
+        CL2DAlignRef = self.newProtocol(XmippProtCL2DAlign,
+                                    maximumShift=5, numberOfIterations=5,
+                                    numberOfMpi=4, numberOfThreads=1, useReferenceImage=True)
+        CL2DAlignRef.setObjLabel("CL2D Align with reference")
+        CL2DAlignRef.inputParticles.set(self.protImport.outputParticles)
+        CL2DAlignRef.referenceImage.set(CL2DAlignNoRef.outputAverage)
+        self.launchProtocol(CL2DAlignRef)
+        # Check that output is generated
+        self.assertIsNotNone(CL2DAlignRef.outputParticles, "There was a problem generating output particles")
+        # Check that it has alignment matrix
+        self.assertTrue(CL2DAlignRef.outputParticles.hasAlignment2D(), "Output particles do not have alignment 2D")
 
 
 class TestXmippRotSpectra(TestXmippBase):
