@@ -298,7 +298,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonInvert()
+        args += XmippPreprocessHelper._argsCommonInvert()
         return args
     
     def _argsThreshold(self):
@@ -306,7 +306,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonThreshold()
+        args += XmippPreprocessHelper._argsCommonThreshold(self)
         return args
     
     def _getSize(self):
@@ -598,7 +598,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonInvert()
+        args += XmippPreprocessHelper._argsCommonInvert()
         return args
     
     def _argsThreshold(self):
@@ -609,7 +609,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonThreshold()
+        args += XmippPreprocessHelper._argsCommonThreshold(self)
         return args
 
     def _validate(self):
