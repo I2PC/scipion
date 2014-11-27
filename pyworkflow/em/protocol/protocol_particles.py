@@ -71,9 +71,11 @@ class ProtFilterParticles(ProtProcessParticles):
     """Base class for filters on particles of type ProtPreprocessParticles"""
     pass
 
+
 class ProtOperateParticles(ProtProcessParticles):
     """Base class for operations on particles of type ProtPreprocessParticles"""
     pass
+
 
 class ProtMaskParticles(ProtProcessParticles):
     """ This is the base for the branch of mask, 

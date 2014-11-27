@@ -67,12 +67,11 @@ class ProtImportParticles(ProtImportImages):
                            "It is usually a images.xmd_ file result\n"
                            "from Xmipp protocols execution.")
         
-        form.addParam('dataStarFile', FileParam,
+        form.addParam('starFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
-                      label='Particles metadata file',
-                      help="Select the particles Xmipp metadata file.\n"
-                           "It is usually a images.xmd_ file result\n"
-                           "from Xmipp protocols execution.")
+                      label='Star file',
+                      help="Select a *_data.star file from a.\n"
+                           "previous Relion execution.")
         
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
@@ -100,6 +99,10 @@ class ProtImportParticles(ProtImportImages):
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
+        elif self.importFrom == self.IMPORT_FROM_RELION:
+            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            self.importFilePath = self.starFile.get('').strip()
+            return RelionImport(self, self.starFile.get())
         else:
             self.importFilePath = ''
             return None 

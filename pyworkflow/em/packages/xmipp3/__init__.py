@@ -69,7 +69,6 @@ from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_filter import XmippProtFilterParticles
 from protocol_filter import XmippProtFilterVolumes
 from protocol_helical_parameters import XmippProtHelicalParameters
-from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_mask import XmippProtMaskParticles
 from protocol_mask import XmippProtMaskVolumes

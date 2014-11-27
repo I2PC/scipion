@@ -29,11 +29,11 @@ import sys
 import unittest
 from itertools import izip
 
-from pyworkflow.em import *
-from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
-
 from pyworkflow.utils import redStr, greenStr, magentaStr
+from pyworkflow.tests import *
+from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
 
 
 class TestXmippBase(BaseTest):
@@ -292,11 +292,10 @@ class TestXmippFilterVolumes(TestXmippBase):
                 self.protImport2.outputVolume, ignore=['_index', '_filename'],
                 verbose=True))
 
-        fv = XmippProtFilterVolumes  # short notation
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
-        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=fv.FM_MEDIAN)
+        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
         test(filterSpace=FILTER_SPACE_WAVELET,
-             filterModeWavelets=fv.FM_DAUB12, waveletMode=fv.FM_REMOVE_SCALE)
+             filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
     def testFilterSetOfVolumes(self):
         print "\n", greenStr(" Filter set of volumes ".center(75, '-'))
@@ -317,11 +316,10 @@ class TestXmippFilterVolumes(TestXmippBase):
                 self.protImport1.outputVolumes, ignore=['_index', '_filename'],
                 verbose=True))
 
-        fv = XmippProtFilterVolumes  # short notation
         test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
-        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=fv.FM_MEDIAN)
+        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
         test(filterSpace=FILTER_SPACE_WAVELET,
-             filterModeWavelets=fv.FM_DAUB12, waveletMode=fv.FM_REMOVE_SCALE)
+             filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
 
 class TestXmippMaskVolumes(TestXmippBase):

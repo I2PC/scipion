@@ -30,21 +30,23 @@ This sub-package contains wrapper around XmippProtPreprocessVolumes protocol
 from pyworkflow.em import *  
 from pyworkflow.utils import *  
 import xmipp
-from protocol_process import XmippProcess, XmippProcessParticles, XmippProcessVolumes
+from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import *
 from constants import *
 from convert import locationToXmipp
 
 
-class XmippPreprocess():
-    """ This class has the common functions to preprocess objects like SetOfParticles, Volume or SetOfVolumes. """
-    
-    def __init__(self, **args):
-        pass
+
+class XmippPreprocessHelper():
+    """ 
+    Helper class that contains some Protocol utilities methods
+    used by both  XmippProtPreprocessParticles and XmippProtPreprocessVolumes.
+    """
     
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineProcessParams(self, form):
+    @classmethod
+    def _defineProcessParams(cls, form):
         # Invert Contrast
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 
@@ -73,42 +75,38 @@ class XmippPreprocess():
                       help=' Substitute selected pixels by this value.')
     
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertCommonSteps(self, changeInserts):
-        if self.doInvert:
-            args = self._argsInvert()
-            if self.isFirstStep:
-                self.isFirstStep = False
-            self._insertFunctionStep("invertStep", args, changeInserts)
+    @classmethod
+    def _insertCommonSteps(cls, protocol, changeInserts):
+        if protocol.doInvert:
+            args = protocol._argsInvert()
+            if protocol.isFirstStep:
+                protocol.isFirstStep = False
+            protocol._insertFunctionStep("invertStep", args, changeInserts)
         
-        if self.doThreshold:
-            args = self._argsThreshold()
-            if self.isFirstStep:
-                self.isFirstStep = False
-            self._insertFunctionStep("thresholdStep", args, changeInserts)
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def invertStep(self, args, changeInserts):
-        self.runJob('xmipp_image_operate', args)
-    
-    def thresholdStep(self, args, changeInserts):
-        self.runJob("xmipp_transform_threshold", args)
+        if protocol.doThreshold:
+            args = protocol._argsThreshold()
+            if protocol.isFirstStep:
+                protocol.isFirstStep = False
+            protocol._insertFunctionStep("thresholdStep", args, changeInserts)
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _argsCommonInvert(self):
+    @classmethod
+    def _argsCommonInvert(cls):
         args = ' --mult -1'
         return args
     
-    def _argsCommonThreshold(self):
-        args = " --select below %f" % self.threshold.get()
-        fillStr = self.getEnumText('fillType')
+    @classmethod
+    def _argsCommonThreshold(cls, protocol):
+        args = " --select below %f" % protocol.threshold.get()
+        fillStr = protocol.getEnumText('fillType')
         args += " --substitute %s " % fillStr
         
-        if self.fillType == MASK_FILL_VALUE:
-            args += " %f" % self.fillValue.get()
+        if protocol.fillType == MASK_FILL_VALUE:
+            args += " %f" % protocol.fillValue.get()
         return args
 
 
-class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, XmippPreprocess):
+class XmippProtPreprocessParticles(XmippProcessParticles):
     """ Preprocess a set of particles. You can remove dust, normalize, apply threshold, etc """
     _label = 'preprocess particles'
 
@@ -117,10 +115,8 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
     
-    def __init__(self, **args):
-        ProtProcessParticles.__init__(self, **args)
-        XmippProcessParticles.__init__(self)
-        XmippPreprocess.__init__(self, **args)
+    def __init__(self, **kwargs):
+        XmippProcessParticles.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -152,7 +148,7 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
                       'is set to 1. Radius for background circle definition (in pix.). '
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
-        XmippPreprocess._defineProcessParams(self, form)
+        XmippPreprocessHelper._defineProcessParams(form)
 #         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
 #                       label="Automatic particle rejection", default=REJ_NONE,
 #                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
@@ -184,12 +180,18 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
                 self.isFirstStep = False
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
-        self._insertCommonSteps(changeInserts)
+        XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
         
 #         if self.getEnumText('autoParRejection') != 'None':
 #             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
     
@@ -315,13 +317,12 @@ class XmippProtPreprocessParticles(ProtProcessParticles, XmippProcessParticles, 
     
     def _getSize(self):
         """ get the size of SetOfParticles object"""
-
         Xdim = self.inputParticles.get().getDimensions()[0]
         size = int(Xdim/2)
         return size
 
 
-class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, XmippPreprocess):
+class XmippProtPreprocessVolumes(XmippProcessVolumes):
     """ Protocol for Xmipp-based preprocess for volumes """
     _label = 'preprocess volumes'
     
@@ -336,10 +337,8 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
     SEG_AUTO=3
 
 
-    def __init__(self, **args):
-        ProtPreprocessVolumes.__init__(self, **args)
-        XmippProcessVolumes.__init__(self)
-        XmippPreprocess.__init__(self, **args)
+    def __init__(self, **kwargs):
+        XmippProcessVolumes.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -393,13 +392,15 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         form.addParam('backRadius', FloatParam, default=-1,
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
-        XmippPreprocess._defineProcessParams(self, form)
+        XmippPreprocessHelper._defineProcessParams(form)
         
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
-        changeInserts = [self.doChangeHand, self.doRandomize, self.doSymmetrize, self.doAdjust, self.doSegment, self.doInvert, self.doNormalize, self.doThreshold]
+        changeInserts = [self.doChangeHand, self.doRandomize, self.doSymmetrize, 
+                         self.doAdjust, self.doSegment, self.doInvert, self.doNormalize, 
+                         self.doThreshold]
 
         if self.doChangeHand:
             args = self._argsChangeHand()
@@ -421,9 +422,6 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         
         if self.doAdjust:
             args = self._argsAdjust()
-            
-            print "ARGS: ", args
-            
             self._insertFunctionStep("adjustStep", args, changeInserts)
             if self.isFirstStep:
                 self.isFirstStep = False
@@ -440,9 +438,21 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
                 self.isFirstStep = False
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
-        self._insertCommonSteps(changeInserts)
+        XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
+    def removeDustStep(self, args, changeInserts):
+        self.runJob('xmipp_transform_filter', args)
+    
+    def normalizeStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_normalize", args % locals())
+        
     def changeHandStep(self, args, changeInserts):
         self.runJob("xmipp_transform_mirror", args)
     
@@ -486,9 +496,6 @@ class XmippProtPreprocessVolumes(ProtPreprocessVolumes, XmippProcessVolumes, Xmi
         if exists(fnMask):
             self.runJob("xmipp_transform_mask", maskArgs)
             cleanPath(fnMask)
-    
-    def normalizeStep(self, args, changeInserts):
-        self.runJob("xmipp_transform_normalize", args)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _argsChangeHand(self):

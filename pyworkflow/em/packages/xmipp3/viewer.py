@@ -48,13 +48,13 @@ from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_helical_parameters import XmippProtHelicalParameters
-from protocol_identify_outliers import XmippProtIdentifyOutliers
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick import XmippProtParticlePicking
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
+from protocol_projection_outliers import XmippProtProjectionOutliers
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
@@ -83,10 +83,10 @@ class XmippViewer(Viewer):
                 SetOfNormalModes, 
                 XmippParticlePickingAutomatic, 
                 XmippProtExtractParticlesPairs, 
-                XmippProtIdentifyOutliers, 
                 XmippProtKerdensom, 
                 XmippProtParticlePicking, 
-                XmippProtParticlePickingPairs, 
+                XmippProtParticlePickingPairs,
+                XmippProtProjectionOutliers, 
                 XmippProtRotSpectra, 
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
@@ -296,10 +296,41 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get()})
-
-        elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
-            self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
-
+        
+        elif issubclass(cls, XmippProtScreenClasses):
+            if isinstance(obj.inputSet.get(), SetOfClasses2D):
+                fn = obj.outputClasses
+                labels = 'id enabled _size _representative._index _representative._filename _xmipp_maxCC'
+                labelRender = "_representative._filename"
+                self._visualize(fn, viewParams={ORDER: labels, 
+                                                          VISIBLE: labels, 
+                                                          'sortby': '_xmipp_maxCC des', RENDER:labelRender})
+            else:
+                fn = obj.outputAverages.getFileName()
+                labels = 'id enabled _index _filename _xmipp_maxCC _alignment._matrix'
+                labelRender = "_filename"
+                self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
+                                              viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, 
+                                                      'sortby': '_xmipp_maxCC des', RENDER:labelRender}))
+        
+        elif issubclass(cls, XmippProtProjectionOutliers):
+            if isinstance(obj.inputSet.get(), SetOfClasses2D):
+                fn = obj.outputClasses
+                labels = 'id enabled _size _representative._index _representative._filename _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar'
+                labelRender = "_representative._filename"
+                self._visualize(fn, viewParams={ORDER: labels, 
+                                                          VISIBLE: labels, 
+                                                          'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender})
+            else:
+                fn = obj.outputAverages.getFileName()
+                labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _alignment._matrix'
+                labelRender = "_filename"
+                self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
+                                              viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, 
+                                                      'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender}))
+            
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
