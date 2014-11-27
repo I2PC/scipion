@@ -103,12 +103,15 @@ class XmippProtScreenParticles(ProtProcessParticles):
 
     #--------------------------- INFO functions --------------------------------------------                
     def _summary(self):
+        import os
         summary = []
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
-            summary.append("Output particles: %s" % self.outputParticles.get())
+            zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
+            summary.append("The minimum ZScore is %s" % min(zscores))
+            summary.append("The maximum ZScore is %s" % max(zscores))
+            summary.append("The mean ZScore is %s" % (sum(zscores)*1.0/len(self.outputParticles)))
         return summary
     
     def _validate(self):
@@ -118,6 +121,17 @@ class XmippProtScreenParticles(ProtProcessParticles):
         return []
     
     def _methods(self):
-        pass
-    
+        methods = []
+        outParticles = len(self.outputParticles) if self.outputParticles is not None else None
+        particlesRejected = len(self.inputParticles.get())-outParticles if outParticles is not None else None
+        particlesRejectedText = ' ('+str(particlesRejected)+')' if particlesRejected is not None else ''
+        rejectionText = [
+                         '',# REJ_NONE
+                         ' and removing those not reaching %s%s' % (str(self.maxZscore.get()), particlesRejectedText),# REJ_MAXZSCORE
+                         ' and removing worst %s percent%s' % (str(self.percentage.get()), particlesRejectedText)# REJ_PERCENTAGE
+                         ]
+        methods.append('An input dataset of %s particles was sorted by'
+                       ' its ZScore using xmipp_image_sort_by_statistics'
+                       ' program%s. ' % (len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
+        return methods
     
