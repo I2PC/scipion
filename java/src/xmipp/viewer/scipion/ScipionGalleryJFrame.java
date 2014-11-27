@@ -114,7 +114,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         
         buttonspn.add(closebt);
-        if(!XmippWindowUtil.isScipion())
+        if(!XmippWindowUtil.isScipionCmd())
             return;
             
         if (type != null) {

@@ -35,7 +35,7 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
-            if(XmippWindowUtil.isScipion())
+            if(XmippWindowUtil.isScipionCmd())
             {
                 ppicker.setPython(params.python);
                 ppicker.setScipionScript(params.script);

@@ -1505,7 +1505,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemEnabled(MD_SAVE_SELECTION, isCol);
 			setItemEnabled(MD_FIND_REPLACE, isCol && !galMode);
 			reslicebt.setEnabled(volMode);
-                        //setItemVisible(METADATA, !isscipion);
+                        setItemVisible(METADATA, !isscipion);
                         addDisplayLabelItems();
                         addRenderImageColumnItems();
 		}// function update
@@ -1831,9 +1831,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                         row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-			setItemVisible(SET_CLASS, data.isClassificationMd());
+                        boolean isscipion = data instanceof ScipionGalleryData;
+			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
-			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
+			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
                         setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			// Update menu items status depending on item.

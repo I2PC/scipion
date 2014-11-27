@@ -51,7 +51,7 @@ public class XmippWindowUtil
             isScipion = value;
         }
         
-        public static boolean isScipion()
+        public static boolean isScipionCmd()
         {
             return isScipion;
         }
@@ -122,7 +122,7 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!isScipion())
+                if(!isScipionCmd())
                     btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
