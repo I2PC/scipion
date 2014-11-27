@@ -200,9 +200,25 @@ addModule(
     tar='winpdb-1.4.8.tgz',
     default=False)
 
+pyzmq = addModule(
+    'pyzmq',
+    tar='pyzmq-2.2.0.1.tar.gz',
+    default=False)
+
+jinja2 = addModule(
+    'jinja2',
+    tar='Jinja2-2.7.3.tar.gz',
+    default=False)
+
+tornado = addModule(
+    'tornado',
+    tar='tornado-4.0.2.tar.gz',
+    default=False)
+
 addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
+    deps=[pyzmq, jinja2, tornado],
     default=False)
 
 
