@@ -47,7 +47,6 @@ public class Worker implements Runnable
                         
 
                         imagesmd = getImagesMd(md, renderLabel);
-                        imagesmd.print();
 			if (imagesmd.findObjects().length == 0)
 				throw new IllegalArgumentException("No images available");
                         

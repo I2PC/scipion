@@ -275,7 +275,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		if (changed) {
 			data.renderImages = value;
 			calculateCellSize();
-			fireTableStructureChanged();
+			fireTableDataChanged();
 		}
 	}
 
@@ -295,7 +295,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
-			cellDim.setSize(100, font_height + 5);
+			cellDim.setSize(200, font_height + 5);
 		}
 	}
 
