@@ -253,6 +253,7 @@ def project_content(request):
     
     context = {'projectName': projectName,
                'mode': mode,
+               'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),

@@ -89,21 +89,23 @@ class XmippResizeHelper():
                       condition='doWindow',
                       default=1,
                       label="Window operation", display=EnumParam.DISPLAY_COMBO,
-                      help='Select how do you want to change the size of the particles. \n '
-                      '_resize_: you will provide the new size (in pixels) for your particles. \n '
-                      '_crop_: you choose how many pixels you want to crop from each border. \n ')
+                      help='Select how to change the size of the particles.\n'
+                      '_resize_: provide the new size (in pixels) for your particles.\n'
+                      '_crop_: choose how many pixels to crop from each border.\n')
         form.addParam('cropSize', IntParam, default=0,
                       condition='doWindow and windowOperation == 0',
                       label='Crop size (px)',
-                      help='This is the amount of pixels cropped in each border. \n '
+                      help='Amount of pixels cropped from each border.\n'
                            'e.g: if you set 10 pixels, the dimensions of the\n'
                            'object (SetOfParticles, Volume or SetOfVolumes) will be\n'
-                           'reduce in 20 pixels (2 borders * 10 pixels)')
+                           'reduced in 20 pixels (2 borders * 10 pixels)')
         form.addParam('windowSize', IntParam, default=0,
                       condition='doWindow and windowOperation == 1',
                       label='Window size (px)',
-                      help='This is the size in pixels of the particle images.')
-                
+                      help='Size in pixels of the output object. It will be '
+                           'expanded or cutted in all directions such that the '
+                           'origin remains the same.')
+
     #--------------------------- INSERT steps functions --------------------------------------------
     @classmethod
     def _insertProcessStep(cls, protocol):
@@ -175,19 +177,16 @@ class XmippResizeHelper():
     
     @classmethod
     def _windowCommonArgs(cls, protocol):
-        dim = protocol._getSetSize()
-        if protocol.getEnumText('windowOperation') == "crop":
-            cropSize = protocol.cropSize.get() * 2
-            windowSize = dim - cropSize
-            args = " --crop %(cropSize)s "
-        else:
+        op = protocol.getEnumText('windowOperation')
+        if op == "crop":
+            cropSize2 = protocol.cropSize.get() * 2
+            protocol.newWindowSize = protocol._getSetSize() - cropSize2
+            return " --crop %d " % cropSize2
+        elif op == "window":
             windowSize = protocol.windowSize.get()
-            args = " --size %(windowSize)s"
-        
-        protocol.newWindowSize = windowSize
-        
-        return args % locals()
-    
+            protocol.newWindowSize = windowSize
+            return " --size %d " % windowSize
+
 
 def _getSize(imgSet):
     """ get the size of an object"""
