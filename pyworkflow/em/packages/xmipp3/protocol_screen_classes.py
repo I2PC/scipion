@@ -170,13 +170,4 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
         else:
             xDim = imgSet.getDim()[0]
         return xDim
-    
-    def _getMetaDataObjId(self, image, md):
-        from convert import locationToXmipp
-        
-        for objId in md:
-            index, filename = image.getLocation()
-            imgLoc = locationToXmipp(index, filename)
-            locMd = md.getValue(xmipp.MDL_IMAGE, objId)
-            if imgLoc == locMd:
-                return objId
+

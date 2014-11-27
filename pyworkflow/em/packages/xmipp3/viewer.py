@@ -297,9 +297,6 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get()})
 
-        elif issubclass(cls, XmippProtScreenClasses) or issubclass(cls, XmippProtIdentifyOutliers):
-            self._views.append(DataView(obj.getVisualizeInfo().get(), viewParams={'mode': 'metadata'}))
-
         elif issubclass(cls, XmippProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())

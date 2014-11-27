@@ -1257,7 +1257,6 @@ class SetOfClasses(EMSet):
                         newCls.append(img)
                 self.update(newCls)
                 
-    
     def copyItems(self, otherSet, 
                   updateItemCallback=None, 
                   itemDataIterator=None,
@@ -1284,8 +1283,6 @@ class SetOfClasses(EMSet):
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
                 
-
-                                      
 
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """
