@@ -461,16 +461,18 @@ public class ScipionGalleryData extends GalleryData {
             ScipionParams params = (ScipionParams)parameters;
             String pathToMd = filename.replace(XmippStringUtils.getFileExtension(filename), ".xmd");
             String[] cmd = new String[]{params.python, params.getSqliteToMdScript() , filename, pathToMd};
-            System.out.println(Arrays.toString(cmd));
             String output = XmippWindowUtil.executeCommand(cmd, true);
             System.out.println(output);
-            MetaData md = new MetaData(pathToMd);
-            return md;
+            MetaData xmippmd = new MetaData(pathToMd);
+            return xmippmd;
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         } 
         
     }
+    
+    
+
     
 }

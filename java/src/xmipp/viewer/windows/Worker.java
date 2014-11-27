@@ -11,9 +11,14 @@ import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.scipion.ScipionGalleryData;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 /**
  *
@@ -29,14 +34,23 @@ public class Worker implements Runnable
 		private int op; // store operation
 		private MetaData imagesmd;
                 private GalleryJFrame frame = null;
+                private int renderLabel;
 
-		public Worker(int operation, MetaData imagesmd, GalleryJFrame frame)
+		public Worker(int operation, MetaData md, GalleryJFrame frame)
 		{
+                        this.frame = frame;
+                        
 			op = operation;
-			this.imagesmd = imagesmd;
+                        renderLabel = frame.data.getRenderLabel();
+                        if(frame.data instanceof ScipionGalleryData)
+                            renderLabel = getFirstXmippRenderLabel(md);
+                        
+
+                        imagesmd = getImagesMd(md, renderLabel);
+                        imagesmd.print();
 			if (imagesmd.findObjects().length == 0)
 				throw new IllegalArgumentException("No images available");
-                        this.frame = frame;
+                        
 		}
 
 		public void run()
@@ -46,13 +60,13 @@ public class Worker implements Runnable
 				switch (op)
 				{
 				case STATS:
-					computeStatsImages(imagesmd);
+					computeStatsImages();
 					break;
 				case PCA:
-					pca(imagesmd);
+					pca();
 					break;
 				case FSC:
-					fsc(imagesmd);
+					fsc();
 					break;
 				}
 				imagesmd.destroy();
@@ -81,12 +95,12 @@ public class Worker implements Runnable
 			return "";
 		}
                 
-                private void computeStatsImages(MetaData imagesmd) throws Exception
+                private void computeStatsImages() throws Exception
                 {
                         ImageGeneric imgAvg = new ImageGeneric();
                         ImageGeneric imgStd = new ImageGeneric();
 
-                        imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), frame.data.getRenderLabel());
+                        imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), renderLabel);
                         ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
                         ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
                         imgAvg.destroy();
@@ -102,10 +116,10 @@ public class Worker implements Runnable
                         imagesmd.destroy();
                 }
 
-                public void pca(MetaData imagesmd) throws Exception
+                public void pca() throws Exception
                 {
                         ImageGeneric image = new ImageGeneric();
-                        imagesmd.getPCAbasis(image, frame.data.getRenderLabel());
+                        imagesmd.getPCAbasis(image, renderLabel);
                         ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
                         imp.setTitle("PCA: " + frame.data.getFileName());
                         ImagesWindowFactory.openXmippImageWindow(frame, imp, false);
@@ -113,11 +127,52 @@ public class Worker implements Runnable
 
                 }
 
-                public void fsc(MetaData imagesmd) throws Exception
+                public void fsc() throws Exception
                 {
                         FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
                         XmippWindowUtil.centerWindows(fscframe, frame);
                         fscframe.setVisible(true);
+                }
+                
+                public int getFirstXmippRenderLabel(MetaData xmippmd) {
+                    
+                    int[] labels = xmippmd.getActiveLabels();
+                    for(int i = 0; i < labels.length; i ++)
+                        if(MetaData.isImage(labels[i]))
+                        {
+                            System.out.println(MetaData.getLabelName(labels[i]));
+                            return labels[i];
+                        }
+                    throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Xmipp render label"));
+                }
+                
+                
+                public MetaData getImagesMd(MetaData md, int idlabel) {
+                    
+                    MDRow mdRow = new MDRow();
+                    MetaData imagesmd = new MetaData();
+                    int index = 0;
+                    String imagepath;
+                    long id2;
+                    for (long id : md.findObjects()) {
+                        if (frame.data.isEnabled(index)) {
+                            imagepath = md.getValueString(idlabel, id, true);
+                            System.out.println(imagepath);
+                            if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                                id2 = imagesmd.addObject();
+                                if (frame.data.useGeo()) {
+                                    md.getRow(mdRow, id);
+                                    mdRow.setValueString(idlabel, imagepath);
+                                    imagesmd.setRow(mdRow, id2);
+                                } else {
+                                    imagesmd.setValueString(idlabel, imagepath, id2);
+                                }
+                            }
+                        }
+                        index++;
+                    }
+                    mdRow.destroy();
+                    return imagesmd;
                 }
 
 	}

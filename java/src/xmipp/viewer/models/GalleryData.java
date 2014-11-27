@@ -144,7 +144,8 @@ public class GalleryData {
             tmpfile = filename.replace(ext, ext2);
         return tmpfile;
     }
-    
+
+      
 
     public enum Mode {
 
@@ -1279,40 +1280,7 @@ public class GalleryData {
         return null;
     }
 
-    public MetaData getImagesMd(MetaData md) {
-        int idlabel = getRenderLabel();
-        if (md == null) {
-            return null;
-        }
-        if (!md.containsLabel(idlabel)) {
-            return null;
-        }
-
-        MDRow mdRow = new MDRow();
-        MetaData imagesmd = new MetaData();
-        int index = 0;
-        String imagepath;
-        long id2;
-        // md.print();
-        for (long id : md.findObjects()) {
-            if (isEnabled(index)) {
-                imagepath = md.getValueString(idlabel, id, true);
-                if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                    id2 = imagesmd.addObject();
-                    if (useGeo) {
-                        md.getRow(mdRow, id);
-                        mdRow.setValueString(idlabel, imagepath);
-                        imagesmd.setRow(mdRow, id2);
-                    } else {
-                        imagesmd.setValueString(idlabel, imagepath, id2);
-                    }
-                }
-            }
-            index++;
-        }
-        mdRow.destroy();
-        return imagesmd;
-    }
+    
     
     public MDRow[] getImages(MetaData md) {
         int idlabel = getRenderLabel();

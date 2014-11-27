@@ -755,7 +755,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	public void runInBackground(int operation)
 	{
 
-		MetaData imagesmd, md;
+		MetaData md;
                 if(data.hasSelection())
                 {
                     int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
@@ -769,8 +769,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                 else
                     md = data.getMd();
                 
-                imagesmd = data.getImagesMd(md);
-		Worker w = new Worker(operation, imagesmd, this);
+                
+		Worker w = new Worker(operation, md, this);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
