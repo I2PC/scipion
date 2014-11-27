@@ -27,11 +27,13 @@
 # **************************************************************************
 
 import unittest, sys
-from pyworkflow.em import *
-from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
 
 from pyworkflow.utils import redStr, greenStr, magentaStr
+from pyworkflow.tests import *
+from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
+
 
 
 # Some utility functions to import particles that are used

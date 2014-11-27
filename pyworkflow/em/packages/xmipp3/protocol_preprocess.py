@@ -115,8 +115,8 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
     
-    def __init__(self, **args):
-        XmippProcessParticles.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessParticles.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -331,8 +331,8 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     SEG_AUTO=3
 
 
-    def __init__(self, **args):
-        XmippProcessVolumes.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessVolumes.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

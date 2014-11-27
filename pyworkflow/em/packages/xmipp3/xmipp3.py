@@ -486,7 +486,6 @@ class ProjMatcher():
             maxCC = MDin.getValue(xmipp.MDL_MAXCC,i)
             rot =  MDin.getValue(xmipp.MDL_ANGLE_ROT,i)
             tilt = MDin.getValue(xmipp.MDL_ANGLE_TILT,i)
-            print "KKK", MDin.getValue(xmipp.MDL_ANGLE_PSI,i)
             psi =-1.*MDin.getValue(xmipp.MDL_ANGLE_PSI,i)
             flip = MDin.getValue(xmipp.MDL_FLIP,i)
             if flip:
