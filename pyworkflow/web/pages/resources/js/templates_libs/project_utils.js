@@ -147,6 +147,10 @@ function goToProjectForm() {
 
 function goToProject(elm) {
 	var code = elm.val();
+	
+	// remove the blank spaces
+	code = code.replace(/\s+/g, '');
+	
 	var URL = getSubDomainURL() + "/check_project_id/?code=" + code
 	$.ajax({
 		type : "GET",

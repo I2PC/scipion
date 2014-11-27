@@ -41,7 +41,6 @@ from pyworkflow.utils import *
 from pyworkflow.gui import getImage, getPILImage
 from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
 
-
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
             'logo_scipion_small': 'scipion_logo.png',
@@ -132,6 +131,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jsplumb': 'jsPlumb.js',
           'messi': 'messi.js',
           'raphael': 'raphael.js',
+          'philogl': 'PhiloGL-1.3.0.js',
           
           #JSmol
           'jsmol': 'jsmol/JSmol.min.js',
