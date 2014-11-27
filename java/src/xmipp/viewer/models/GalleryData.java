@@ -54,6 +54,7 @@ import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -1708,7 +1709,8 @@ public class GalleryData {
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
-
+        if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
+                return MetaData.isImage(ci.label);
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
