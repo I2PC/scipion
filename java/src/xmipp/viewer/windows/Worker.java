@@ -140,7 +140,6 @@ public class Worker implements Runnable
                     for(int i = 0; i < labels.length; i ++)
                         if(MetaData.isImage(labels[i]))
                         {
-                            System.out.println(MetaData.getLabelName(labels[i]));
                             return labels[i];
                         }
                     throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Xmipp render label"));
