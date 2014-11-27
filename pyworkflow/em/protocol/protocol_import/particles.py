@@ -30,7 +30,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from os.path import exists
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, FileParam
+from pyworkflow.protocol.params import FloatParam, FileParam, BooleanParam
 
 from images import ProtImportImages
 
