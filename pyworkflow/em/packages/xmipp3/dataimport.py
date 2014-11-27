@@ -196,8 +196,7 @@ class XmippImport():
         if self._imgPath:
             # Create a link or copy files to extraPath
             # and update the Row properly
-            imgFn = imgRow.getValue(xmipp.xmipp.MDL_IMAGE)
-            index, fn = xmippToLocation(imgFn)
+            index, fn = xmippToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
             imgBase = basename(fn)
             imgDst = self.protocol._getExtraPath(imgBase)
             if not exists(imgDst):
