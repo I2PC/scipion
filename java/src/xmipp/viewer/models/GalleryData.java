@@ -135,6 +135,15 @@ public class GalleryData {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public String getTmpFile(String suffix) {
+        String ext = XmippStringUtils.getFileExtension(filename);
+        String ext2 = suffix + ext;
+        String tmpfile = filename;
+        if(!filename.endsWith(ext2))
+            tmpfile = filename.replace(ext, ext2);
+        return tmpfile;
+    }
     
 
     public enum Mode {

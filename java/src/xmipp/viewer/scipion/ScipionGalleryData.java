@@ -22,6 +22,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -457,6 +458,25 @@ public class ScipionGalleryData extends GalleryData {
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         } 
+    }
+    
+    public MetaData getMd()
+    {
+        
+        try {
+            ScipionParams params = (ScipionParams)parameters;
+            String pathToMd = filename.replace(XmippStringUtils.getFileExtension(filename), ".xmd");
+            String[] cmd = new String[]{params.python, params.getSqliteToMdScript() , filename, pathToMd};
+            System.out.println(Arrays.toString(cmd));
+            String output = XmippWindowUtil.executeCommand(cmd, true);
+            System.out.println(output);
+            MetaData md = new MetaData(pathToMd);
+            return md;
+        } catch (Exception ex) {
+            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        } 
+        
     }
     
 }

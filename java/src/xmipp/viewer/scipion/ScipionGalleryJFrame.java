@@ -85,7 +85,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             String filename = data.getFileName();
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
-            sqlitefile = ((ScipionMetaData)data.getMd()).getTmpFile();
+            sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             other = parameters.other;

@@ -158,14 +158,17 @@ public class ScipionMetaData extends MetaData {
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
-            String key, value;
-            query = "SELECT * FROM Properties;";
-            rs = stmt.executeQuery(query);
-            
-            while (rs.next()) {
-                key = rs.getString("key");
-                value = rs.getString("value");
-                properties.put(key, value);
+            if (preffix == null)
+            {
+                String key, value;
+                query = "SELECT * FROM Properties;";
+                rs = stmt.executeQuery(query);
+
+                while (rs.next()) {
+                    key = rs.getString("key");
+                    value = rs.getString("value");
+                    properties.put(key, value);
+                }
             }
 
             rs.close();
@@ -1071,14 +1074,7 @@ public class ScipionMetaData extends MetaData {
         
     }
     
-    public String getTmpFile() {
-            String ext = XmippStringUtils.getFileExtension(filename);
-            String ext2 = "_selection" + ext;
-            String sqlitefile = filename;
-            if(!filename.endsWith(ext2))
-                sqlitefile = filename.replace(ext, ext2);
-            return sqlitefile;
-    }
+    
         
 
     protected Connection getConnection() throws ClassNotFoundException, SQLException
@@ -1170,5 +1166,7 @@ public class ScipionMetaData extends MetaData {
           }
 
     }
+    
+    
    
 }
