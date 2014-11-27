@@ -186,6 +186,12 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
 #             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
     
@@ -435,6 +441,12 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
 
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
     
