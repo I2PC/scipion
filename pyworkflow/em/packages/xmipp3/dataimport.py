@@ -100,7 +100,8 @@ class XmippImport():
         # but fixing the filenames with new ones (linked or copy to extraDir)
         readSetOfParticles(self._mdFile, partSet, 
                            preprocessImageRow=self._preprocessParticleRow, 
-                           readAcquisition=False)
+                           readAcquisition=False, is2D=self.is2D,
+                           isInverseTransform=True)
         if self._micIdOrName:
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
         self.protocol._defineOutputs(outputParticles=partSet)
@@ -130,6 +131,12 @@ class XmippImport():
             self._ctfPath = findRootFrom(self._mdFile, row.getValue(xmipp.MDL_CTF_MODEL))
         else:
             self._ctfPath = None # means no CTF info from micrographs metadata
+
+        # Check if the particles have 2d or 3d alignment
+        if row.containsLabel(xmipp.MDL_ANGLE_TILT):
+            self.is2D = False
+        else:
+            self.is2D = True
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
