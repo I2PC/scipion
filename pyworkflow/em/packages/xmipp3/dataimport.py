@@ -133,10 +133,7 @@ class XmippImport():
             self._ctfPath = None # means no CTF info from micrographs metadata
 
         # Check if the particles have 2d or 3d alignment
-        if row.containsLabel(xmipp.MDL_ANGLE_TILT):
-            self.is2D = False
-        else:
-            self.is2D = True
+        self.is2D = not row.containsLabel(xmipp.MDL_ANGLE_TILT)
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
