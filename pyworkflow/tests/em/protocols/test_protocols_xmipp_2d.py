@@ -31,6 +31,8 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
+from pyworkflow.utils import redStr, greenStr, magentaStr
+
 
 # Some utility functions to import particles that are used
 # in several tests.
@@ -416,6 +418,30 @@ class TestXmippCropResizeParticles(TestXmippBase):
         self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*2)
         # Since we have done windowing operation, the dimensions should be the same
         self.assertEquals(input.getDim(), output.getDim())
+
+
+class TestXmippFilterParticles(TestXmippBase):
+    """Check the proper behavior of Xmipp's filter particles protocol."""
+
+    @classmethod
+    def setUpClass(cls):
+        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        setupTestProject(cls)
+        TestXmippBase.setData('xmipp_tutorial')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
+
+    def test_filterParticles(self):
+        print "\n", greenStr(" Filter Particles ".center(75, '-'))
+        # TODO: this
+        #print magentaStr("\n==> Input params: %s" % kwargs)
+        prot = self.newProtocol(XmippProtFilterParticles,
+                                filterSpace=FILTER_SPACE_FOURIER,
+                                lowFreq=0.1, highFreq=0.25)
+        prot.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputParticles,
+                             "There was a problem with filter particles")
+
 
 class TestXmippML2D(TestXmippBase):
     """This class check if the protocol to classify with ML2D in Xmipp works properly."""
