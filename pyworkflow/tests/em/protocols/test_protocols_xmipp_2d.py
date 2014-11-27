@@ -26,7 +26,8 @@
 # *
 # **************************************************************************
 
-import unittest, sys
+import sys
+import unittest
 
 from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
@@ -434,15 +435,22 @@ class TestXmippFilterParticles(TestXmippBase):
 
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))
-        # TODO: this
-        #print magentaStr("\n==> Input params: %s" % kwargs)
-        prot = self.newProtocol(XmippProtFilterParticles,
-                                filterSpace=FILTER_SPACE_FOURIER,
-                                lowFreq=0.1, highFreq=0.25)
-        prot.inputParticles.set(self.protImport.outputParticles)
-        self.launchProtocol(prot)
-        self.assertIsNotNone(prot.outputParticles,
-                             "There was a problem with filter particles")
+
+        def test(**kwargs):
+            print magentaStr("\n==> Input params: %s" % kwargs)
+            prot = self.newProtocol(XmippProtFilterParticles, **kwargs)
+            prot.inputParticles.set(self.protImport.outputParticles)
+            self.launchProtocol(prot)
+            self.assertIsNotNone(prot.outputParticles,
+                                 "There was a problem with filter particles")
+            self.assertTrue(prot.outputParticles.equalAttributes(
+                self.protImport.outputParticles, ignore=['_mapperPath'],
+                verbose=True))
+
+        test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
+        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
+        test(filterSpace=FILTER_SPACE_WAVELET,
+             filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
 
 class TestXmippML2D(TestXmippBase):
