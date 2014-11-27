@@ -42,6 +42,7 @@ class RelionImport():
         self.protocol = protocol
         self._starFile = starFile
         self.copyOrLink = protocol.getCopyOrLink()
+        self.ignoreIds = protocol.ignoreIdColumn.get()
             
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
@@ -65,7 +66,8 @@ class RelionImport():
         # but fixing the filenames with new ones (linked or copy to extraDir)
         from convert import readSetOfParticles
         readSetOfParticles(self._starFile, partSet, 
-                           preprocessImageRow=self._preprocessImageRow, 
+                           preprocessImageRow=self._preprocessImageRow,
+                           postprocessImageRow=self._postprocessImageRow,
                            readAcquisition=False, is2D=self.is2D,
                            isInverseTransform=True)
         if self._micIdOrName:
@@ -138,3 +140,6 @@ class RelionImport():
             copyOrLinkFileName(imgRow, self._imgPath, self.protocol._getExtraPath())
         setupCTF(imgRow, self.protocol.samplingRate.get())
         
+    def _postprocessImageRow(self, img, imgRow):
+        if self.ignoreIds:
+            img.setObjId(None) # Force to generate a new id in Set
