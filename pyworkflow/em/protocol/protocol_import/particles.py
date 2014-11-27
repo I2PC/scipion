@@ -73,8 +73,7 @@ class ProtImportParticles(ProtImportImages):
                       help="Select a *_data.star file from a.\n"
                            "previous Relion execution.")
         form.addParam('ignoreIdColumn', BooleanParam, default=False,
-                      condition='(importFrom == %d or importFrom == %d)' % (self.IMPORT_FROM_XMIPP3,
-                                                                            self.IMPORT_FROM_RELION),
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Ignore ID column?',
                       help="Set this option to True to regenerate \n"
                            "the id's of the particles. By default \n"
