@@ -20,6 +20,14 @@
 	.ui-state-active .ui-tabs-anchor{
 		color: white !important;
 	} 
+	
+	{% if mode != 'service' %}
+	.layout-outer>.west {
+	/* 	Mode default */
+		overflow-y: auto;
+		width: 20%;
+	}
+	{% endif %}
 </style>
 
 <!-- JS Libs -->
