@@ -22,13 +22,8 @@ PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
 
 
 def main():
-    # Hack: if no parameters given at all, do as before, run only paths=model
-    if sys.argv[1:] == ['--run']:
-        print 'No explicit paths given, running only tests in --paths=model'
-        sys.argv.append('--paths=model')
-
     parser = argparse.ArgumentParser(description=__doc__)
-    g = parser.add_mutually_exclusive_group(required=True)
+    g = parser.add_mutually_exclusive_group()
     g.add_argument('--run', action='store_true', help='run the selected tests')
     g.add_argument('--show', action='store_true', help='show available tests')
     add = parser.add_argument  # shortcut
@@ -40,18 +35,33 @@ def main():
         help='pattern for the files that will be used in the tests')
     add('--mode', default='modules', choices=['modules', 'classes', 'all'],
         help='how much detail to give in show mode')
+    add('tests', metavar='TEST', nargs='*',
+        help='test case from string identifier (module, class or callable)')
     args = parser.parse_args()
+
+    if not args.run and not args.show and not args.tests:
+        sys.exit(parser.format_help())
 
     # If 'case' is given, 'path' and 'pattern' are (re-)written from it
     if args.case:
         print 'Using paths and pattern for given case "%s"' % args.case
         args.paths, args.pattern = PATH_PATTERN[args.case]
 
-    tests = discoverTests(args.paths.split(), args.pattern)
+    if args.tests:
+        tests = unittest.TestSuite()
+        for t in args.tests:
+            prefix = ('' if t.startswith('tests.') else 'tests.')
+            try:
+                tests.addTests(unittest.defaultTestLoader.loadTestsFromName(
+                    '%s%s%s' % ('pyworkflow.', prefix, t)))
+            except Exception as e:
+                print 'Cannot find test %s -- skipping' % t
+    else:
+        tests = discoverTests(args.paths.split(), args.pattern)
 
     if args.show:
         printTests(tests, args.mode)
-    elif args.run:
+    elif args.run or args.tests:
         runTests(tests)
 
 

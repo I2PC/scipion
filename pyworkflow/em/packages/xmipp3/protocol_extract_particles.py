@@ -85,31 +85,31 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       condition='downsampleType != 0',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
-        
+
         form.addParam('ctfRelations', RelationParam, allowsNull=True,
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
-                      label='CTF estimation', 
+                      label='CTF estimation',
                       help='Choose some CTF estimation related to input micrographs. \n'
                            'CTF estimation is need if you want to do phase flipping or \n'
-                           'you want to associate CTF information to the particles.')     
+                           'you want to associate CTF information to the particles.')
 
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
-                      help='In pixels. The box size is the size of the boxed particles, ' 
+                      help='In pixels. The box size is the size of the boxed particles, '
                       'actual particles may be smaller than this.')
-        
-        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
-                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO,
-                      label='Automatic particle rejection',
-                      help='How to automatically reject particles. It can be none (no rejection),'
-                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
-                      'Percentage (reject a given percentage in each one of the screening criteria).', 
-                      expertLevel=LEVEL_ADVANCED)
 
         form.addParam('doSort', BooleanParam, default=False,
                       label='Perform sort by statistics',
                       help='Perform sort by statistics to add zscore info to particles.')
-        
+
+        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'],
+                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO, condition='doSort==True',
+                      label='Automatic particle rejection',
+                      help='How to automatically reject particles. It can be none (no rejection),'
+                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
+                      'Percentage (reject a given percentage in each one of the screening criteria).',
+                      expertLevel=LEVEL_ADVANCED)
+
         form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
                       condition='rejectionMethod==%d' % REJECT_MAXZSCORE,
                       label='Maximum Zscore',
@@ -346,7 +346,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 args += " --percent " + str(percentage)
 
             self.runJob("xmipp_image_sort_by_statistics", args % locals())
-
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
