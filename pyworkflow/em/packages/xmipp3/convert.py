@@ -317,10 +317,10 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
         
-    if kwargs.get('writeAlignment', True) and img.hasAlignment():
+    if kwargs.get('writeAlignment', True) and img.hasTransfrom():
         is2D = kwargs.get('is2D', True)
         inverseTransform = kwargs.get('inverseTransform', True)
-        alignmentToRow(img.getAlignment(), imgRow, is2D, inverseTransform)
+        alignmentToRow(img.getTransform(), imgRow, is2D, inverseTransform)
         
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
@@ -356,7 +356,7 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     if kwargs.get('readAlignment', True):
         is2D = kwargs.get('is2D', True)
         inverseTransform = kwargs.get('inverseTransform', True)
-        img.setAlignment(rowToAlignment(imgRow, is2D, inverseTransform))
+        img.setTransform(rowToAlignment(imgRow, is2D, inverseTransform))
         
     if kwargs.get('readAcquisition', True):
         img.setAcquisition(rowToAcquisition(imgRow))
@@ -773,6 +773,8 @@ def setOfMicrographsToMd(imgSet, md, **kwargs):
 
 
 def writeSetOfParticles(imgSet, filename, blockName='Particles', **kwargs):
+    if not 'is2D' in kwargs or kwargs['is2D'] is None:
+        kwargs['is2D']=imgSet.getAlignment()
     writeSetOfImages(imgSet, filename, particleToRow, blockName, **kwargs)
 
 

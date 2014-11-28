@@ -34,7 +34,7 @@ from pyworkflow.utils.path import (copyFile, createLink, makePath, cleanPath,
                                    replaceBaseExt)
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
 from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
-                                Coordinate, Alignment,
+                                Coordinate, #Alignment,
                                 SetOfMicrographs, SetOfCoordinates, 
                                 SetOfParticles)
 import emxlib

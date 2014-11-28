@@ -42,6 +42,8 @@ class XmippProcessParticles(ProtProcessParticles):
     def __init__(self, **kwargs):
         ProtProcessParticles.__init__(self, **kwargs)
         self._args = "-i %(inputFn)s"
+        self.is2D=True
+        self.inverseTransform=False
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -67,8 +69,9 @@ class XmippProcessParticles(ProtProcessParticles):
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self):
         """ convert if necessary"""
-        writeSetOfParticles(self.inputParticles.get(), self.inputFn)
-
+        writeSetOfParticles(self.inputParticles.get(), self.inputFn,
+                            is2D=self.inputParticles.getIs2D())
+        #TODO: ignore geometry
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
         imgSet = self._createSetOfParticles()
@@ -78,6 +81,7 @@ class XmippProcessParticles(ProtProcessParticles):
         self._preprocessOutput(imgSet)
         # is2D is only used if hasAlignment is true
         # if is2D=false --> you are in 3D
+        #TODO copy align from inputParticles to imgset
         readSetOfParticles(self.outputMd, imgSet,is2D=imgSet.hasAlignment2D())
         self._postprocessOutput(imgSet)
         

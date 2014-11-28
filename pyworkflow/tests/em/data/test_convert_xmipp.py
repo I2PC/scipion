@@ -91,10 +91,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
+SHOW_IMAGES  = False#True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = False#True # Remove the output temporary files
 PRINT_MATRIX = False
-PRINT_FILES = False#False
+PRINT_FILES  = False#False
 
 
 def runXmippProgram(cmd):
@@ -163,7 +163,7 @@ class TestConvertBase(BaseTest):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()

@@ -51,7 +51,10 @@ FILTER_HIGH_PASS = 1
 FILTER_BAND_PASS = 2
 FILTER_GAUSSIAN = 3
 
-#Alignment
-ALIGN_NONE = 0
-ALIGN_2D   = 1
-ALIGN_3D   = 2
+# Transform
+ALIGN_NONE = 'None'
+ALIGN_2D   = '2D'         # 2D image alignment
+ALIGN_3D   = '3D'         # 3D map alignment
+ALIGN_PROJ = 'Projection' # relate projections with 3d map
+
+ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]

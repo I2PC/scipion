@@ -276,11 +276,11 @@ class Image(EMObject):
         self._samplingRate = Float()
         self._ctfModel = None
         self._acquisition = None
-        # Both alignment and project are transformation matrices
-        # that are used in 2d and 3d, respectively
-        self._alignment = None
-        self._projection = None
-        
+        # _transform property will store the transformation matrix
+        # this matrix can be used for 2D/3D alignment or
+        # to represent projection directions
+        self._transform = None
+
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
         return self._samplingRate.get()
@@ -376,24 +376,15 @@ class Image(EMObject):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
-    def hasAlignment(self):
-        return self._alignment is not None
+    def hasTransfrom(self):
+        return self._transform is not None
     
-    def getAlignment(self):
-        return self._alignment
+    def getTransform(self):
+        return self._transform
     
-    def setAlignment(self, newAlignment):
-        self._alignment = newAlignment
+    def setTransform(self, newTransform):
+        self._transform = newTransform
 
-    def hasProjection(self):
-        return self._projection is not None
-    
-    def getProjection(self):
-        return self._projection
-    
-    def setProjection(self, newProjection):
-        self._projection = newProjection
-        
     def __str__(self):
         """ String representation of an Image. """
         dim = self.getDim()
@@ -569,7 +560,7 @@ class SetOfImages(EMSet):
         self._hasCtf = Boolean(args.get('ctf', False))
         #self._hasAlignment = Boolean(args.get('alignmet', False))
         #self._hasProjection = Boolean(False)
-        self._alignment = Integer(ALIGN_NONE)
+        self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
@@ -600,16 +591,25 @@ class SetOfImages(EMSet):
     def hasAlignment3D(self):
         return self._alignment == ALIGN_3D
 
+    def hasAlignmentProj(self):
+        return self._alignment == ALIGN_PROJ
+
+    def getAlignment(self):
+        return self._alignment.get()
+
     def setAlignment(self, value):
-        if value < ALIGN_NONE or value > ALIGN_3D:
-            raise Exception('Invalid alignment value')
+        if not value in ALIGNMENTS:
+            raise Exception('Invalid alignment value: "%s"' % value)
         self._alignment.set(value)
         
     def setAlignment2D(self):
         self.setAlignment(ALIGN_2D)
         
     def setAlignment3D(self):
-        self.setAlignment(ALIGN_3D)    
+        self.setAlignment(ALIGN_3D)
+
+    def setAlignmentProj(self):
+        self.setAlignment(ALIGN_PROJ)
     
         
 #    def hasProjection(self):
@@ -1082,59 +1082,6 @@ class Transform(EMObject):
         m = self.getMatrix()
         m *= factor
         m[3, 3] = 1.
-    
-class Alignment(Transform):
-    """ Transform used for 2D alignment against a reference. """
-    pass
-
-
-class SetOfAlignment(EMSet):
-    """ An Alignment is an particular type of Transform.
-    A set of transform is usually the result of alignment or multi-reference
-    alignment of a SetOfParticles. Each Transformation modifies the original
-    image to be the same of a given reference.
-    """
-    ITEM_TYPE = Alignment
-
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._particlesPointer = Pointer()
-        self._is2D = Boolean(True)
-
-    def getParticles(self):
-        """ Return the SetOfParticles from which the SetOfAligment was obtained. """
-        return self._particlesPointer.get()
-    
-    def setParticles(self, particles):
-        """ Set the SetOfParticles associated with this SetOfAlignment..
-         """
-        self._particlesPointer.set(particles)
-
-    def set2D(self):
-        """ Mark the alignment as 2D transform. """
-        self._is2D.set(True)
-
-    def set3D(self):
-        """ Mark the alignment as 3D transform. """
-        self._is2D.set(False)
-
-    def is2D(self):
-        return self._is2D.get()
-
-    def is3D(self):
-        return not self.is2D()
-
-
-class TransformParams(object):
-    """ Class to store transform parameters in the way
-    expected by Xmipp/Spider.
-    """
-    def __init__(self, **args):
-        defaults = {'shiftX': 0., 'shiftY': 0., 'shiftZ': 0.,
-                    'angleRot': 0., 'angleTilt': 0., 'anglePsi': 0.,
-                    'scale': 1., 'mirror': False}.update(args)
-        for k, v in defaults.iteritems():
-            setattr(self, k, v)
 
 
 class Class2D(SetOfParticles):
