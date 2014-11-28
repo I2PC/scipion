@@ -63,7 +63,6 @@ class TestBasic(BaseTest):
         row.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 45.)
         
         ctf = rowToCtfModel(row)
-        ctf.printAll()        
         # Check that the ctf object was properly set
         self.assertTrue(ctf.equalAttributes(self.getCTF(2520., 2510., 45.)))
         # Check when the EMX standarization takes place
@@ -92,9 +91,9 @@ class TestBasic(BaseTest):
 
 
 SHOW_IMAGES  = False#True # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = False#True # Remove the output temporary files
+CLEAN_IMAGES = True # Remove the output temporary files
 PRINT_MATRIX = False
-PRINT_FILES  = False#False
+PRINT_FILES  = False
 
 
 def runXmippProgram(cmd):
@@ -126,6 +125,8 @@ class TestConvertBase(BaseTest):
         print "*" * 80
         print "* Launching test: ", fileKey
         print "*" * 80
+        
+        is2D = alignType == ALIGN_2D
 
         stackFn = self.dataset.getFile(fileKey)
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
@@ -147,7 +148,10 @@ class TestConvertBase(BaseTest):
             print "OUTPUT:      ", outputFn
             print "GOLD:        ", goldFn
 
-        partSet = SetOfParticles(filename=partFn1)
+        if is2D:
+            partSet = SetOfParticles(filename=partFn1)
+        else:
+            partSet = SetOfVolumes(filename=partFn1)
             
         partSet.setAcquisition(Acquisition(voltage=300,
                                   sphericalAberration=2,
@@ -167,14 +171,19 @@ class TestConvertBase(BaseTest):
 
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
-        writeSetOfVolumes(partSet, mdFn, alignType=alignType)
-        
+        if is2D:
+            writeSetOfParticles(partSet, mdFn, alignType=alignType)
+            partSet2 = SetOfParticles(filename=partFn2)
+        else:
+            writeSetOfVolumes(partSet, mdFn, alignType=alignType)
+            partSet2 = SetOfVolumes(filename=partFn2)
         # Let's create now another SetOfImages reading back the written
         # Xmipp metadata and check one more time.
-        partSet2 = SetOfParticles(filename=partFn2)
         partSet2.copyInfo(partSet)
-
-        readSetOfParticles(mdFn, partSet2, alignType=alignType)
+        if is2D:
+            readSetOfParticles(mdFn, partSet2, alignType=alignType)
+        else:
+            readSetOfVolumes(mdFn, partSet2, alignType=alignType)
 
         partSet2.write()
 
@@ -195,7 +204,8 @@ class TestConvertBase(BaseTest):
             runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
 
         if os.path.exists(goldFn):
-            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
+            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001), 
+                            "Different data files:\n>%s\n<%s" % (goldFn, outputFn))
         else:
             print colorText.RED + colorText.BOLD + "WARNING: Gold file '%s' missing!!!" % goldFn + colorText.END
 
@@ -398,7 +408,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchTest('alignShiftRot3D', mList, alignType=ALIGN_2D)
+        self.launchTest('alignShiftRot3D', mList, alignType=ALIGN_3D)
 
     def test_alignRotOnly(self):
         """ Check that for a given alignment object,
@@ -720,7 +730,26 @@ class TestSetConvert(BaseTest):
         readSetOfParticles(mdFile, partSet)
         partSet.write()
         
-        partSet.printAll()
+        # Check at least that 2D alignment info was read
+        self.assertTrue(partSet.hasAlignment2D())
+        for particle in partSet:
+            self.assertTrue(particle.hasTransform())
+            t = particle.getTransform()
+            self.assertIsNotNone(t)
+            #print t
+        
+        # Read particles from the same metadata, but now
+        # ignoring the alignment information explicitly
+        sqliteFile2 = self.getOutputPath("particles_aligned2.sqlite")
+        partSet2 = SetOfParticles(filename=sqliteFile2) 
+        readSetOfParticles(mdFile, partSet2, alignType=ALIGN_NONE)
+        
+        self.assertFalse(partSet2.hasAlignment())
+        for particle2 in partSet2:
+            self.assertFalse(particle2.hasTransform())
+            t2 = particle2.getTransform()
+            self.assertIsNone(t2)        
+        
         
     def test_alignedParticlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
@@ -732,18 +761,15 @@ class TestSetConvert(BaseTest):
                                           sphericalAberration=0.1,
                                           amplitudeContrast=0.1))
         
-        partSet.printAll()
         md = xmipp.MetaData()
-        setOfParticlesToMd(partSet, md)
+        setOfParticlesToMd(partSet, md, alignType=ALIGN_2D)
         
         # test that the metadata contains some geometry labels
         self.assertTrue(md.containsLabel(xmipp.MDL_SHIFT_X))
         fn = self.getOutputPath("aligned_particles.xmd")
         #print "Aligned particles written to: ", fn
         #md.write(fn)
-        
         #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
-
         
     def test_particlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """

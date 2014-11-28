@@ -376,7 +376,7 @@ class Image(EMObject):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
-    def hasTransfrom(self):
+    def hasTransform(self):
         return self._transform is not None
     
     def getTransform(self):

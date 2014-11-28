@@ -1099,7 +1099,7 @@ def rowToAlignment(alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
         """
     is2D = alignType == ALIGN_2D
-    inverseTransform = alignType != ALIGN_PROJ
+    inverseTransform = alignType == ALIGN_PROJ
     
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Transform()
@@ -1138,7 +1138,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
                           -> for xmipp implies alignment
     """
     is2D = alignType == ALIGN_2D
-    inverseTransform = alignType != ALIGN_PROJ
+    inverseTransform = alignType == ALIGN_PROJ
     
     shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(), inverseTransform)
 
