@@ -317,11 +317,13 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
         
-    if kwargs.get('writeAlignment', True) and img.hasTransfrom():
-        is2D = kwargs.get('is2D', True)
-        inverseTransform = kwargs.get('inverseTransform', True)
-        alignmentToRow(img.getTransform(), imgRow, is2D, inverseTransform)
-        
+    # alignment is mandatory at this point, it shoud be check
+    # and detected defaults if not passed at readSetOf.. level
+    alignType = kwargs.get('alignType') 
+    
+    if alignType != ALIGN_NONE:
+        alignmentToRow(img.getTransform(), imgRow, alignType)
+                
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
     
@@ -353,10 +355,12 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(imgRow))
         
-    if kwargs.get('readAlignment', True):
-        is2D = kwargs.get('is2D', True)
-        inverseTransform = kwargs.get('inverseTransform', True)
-        img.setTransform(rowToAlignment(imgRow, is2D, inverseTransform))
+    # alignment is mandatory at this point, it shoud be check
+    # and detected defaults if not passed at readSetOf.. level
+    alignType = kwargs.get('alignType') 
+    
+    if alignType != ALIGN_NONE:
+        img.setTransform(rowToAlignment(imgRow, alignType))
         
     if kwargs.get('readAcquisition', True):
         img.setAcquisition(rowToAcquisition(imgRow))
@@ -685,34 +689,30 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """    
     imgMd = xmipp.MetaData(filename)
-    # This patch is just to avoid removing disabled images
-    # after extracting particles from frames.
+    # By default remove disabled items from metadata
+    # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
         imgMd.removeDisabled()
-    # Read the sampling rate from the acquisition info file if exists
-    
-    acqFile = join(dirname(filename), 'acquisition_info.xmd')
-    if exists(acqFile):
-        md = RowMetaData(acqFile)
-        samplingRate = md.getValue(xmipp.MDL_SAMPLINGRATE)
-        imgSet.setSamplingRate(samplingRate)
-    else:
-        pass # TODO: what to do if not exists
+        
+    # If the type of alignment is not sent throught the kwargs
+    # try to deduced from the metadata labels
+    if 'alignType' not in kwargs:
+        imgRow = rowFromMd(imgMd, imgMd.firstObject())
+        if _containsAny(imgRow, ALIGNMENT_DICT):
+            if imgRow.containsLabel(xmipp.MDL_ANGLE_TILT):
+                kwargs['alignType'] = ALIGN_PROJ
+            else:
+                kwargs['alignType'] = ALIGN_2D
+        else:
+            kwargs['alignType'] = ALIGN_NONE
     
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
         img = rowToFunc(imgRow, **kwargs)
         imgSet.append(img)
         
-    hasCtf = img.hasCTF()
-    hasTransfrom = img.hasTransfrom()
-        
-    imgSet.setHasCTF(hasCtf)
-    if hasTransfrom:
-        if kwargs.get('is2D', True):
-            imgSet.setAlignment2D()
-        else:
-            imgSet.setAlignment3D()
+    imgSet.setHasCTF(img.hasCTF())
+    imgSet.setAlignment(kwargs['alignType'])
         
 
 def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
@@ -723,6 +723,10 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
         rowFunc: this function can be used to setup the row before 
             adding to metadata.
     """
+    
+    if 'alignType' not in kwargs:
+        kwargs['alignType'] = imgSet.getAlignment()
+        
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
@@ -753,6 +757,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
             adding to metadata.
     """
     md = xmipp.MetaData()
+        
     setOfImagesToMd(imgSet, md, imgToFunc, **kwargs)
     md.write('%s@%s' % (blockName, filename))
         
@@ -770,8 +775,6 @@ def setOfMicrographsToMd(imgSet, md, **kwargs):
 
 
 def writeSetOfParticles(imgSet, filename, blockName='Particles', **kwargs):
-    if not 'is2D' in kwargs or kwargs['is2D'] is None:
-        kwargs['is2D']=imgSet.getAlignment()
     writeSetOfImages(imgSet, filename, particleToRow, blockName, **kwargs)
 
 
@@ -1089,15 +1092,15 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
     return M
 
 
-def _setAlignmentParam(alignmentRow, label, alignment, paramName):
-    """ Check if the row contains a label and set as an alignment parameter. """
-    
-def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
+def rowToAlignment(alignmentRow, alignType):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
         """
+    is2D = alignType == ALIGN_2D
+    inverseTransform = alignType != ALIGN_PROJ
+    
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
         alignment = Transform()
         angles = numpy.zeros(3)
@@ -1127,16 +1130,17 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
     return alignment
 
 
-def alignmentToRow(alignment, alignmentRow,
-                   is2D=True, inverseTransform=False):
+def alignmentToRow(alignment, alignmentRow, alignType):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
-    matrix = alignment.getMatrix()
-    shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
+    is2D = alignType == ALIGN_2D
+    inverseTransform = alignType != ALIGN_PROJ
+    
+    shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(), inverseTransform)
 
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
@@ -1150,7 +1154,7 @@ def alignmentToRow(alignment, alignmentRow,
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
     alignmentRow.setValue(xmipp.MDL_FLIP, flip)
-    #alignmentRow.setValue(xmipp.MDL_FLIP, True)
+
 
 def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
                             classLabel, classFnTemplate, iter, preprocessImageRow=None):

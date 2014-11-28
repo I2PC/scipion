@@ -399,7 +399,7 @@ class Object(object):
         """Print object and all its attributes.
         Mainly for debugging"""
         tab = ' ' * (level*3)
-        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
+        idStr = '' #' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
         if name is None:
             print tab, self.getClassName(), idStr
         else:
