@@ -84,11 +84,12 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
 
 def rowToAlignment(alignmentRow, samplingRate):
     """
-    Return an Alignment object from a given parFile row.
+    Return an Transform object representing the Alignment
+    from a given parFile row.
     """
     angles = numpy.zeros(3)
     shifts = numpy.zeros(3)
-    alignment = Alignment()
+    alignment = Transform()
     # PSI   THETA     PHI       SHX       SHY
     angles[0] = float(alignmentRow.get('PSI'))
     angles[1] = float(alignmentRow.get('THETA'))
@@ -125,9 +126,6 @@ def rowToCtfModel(ctfRow, ctfModel):
     defocusV = float(ctfRow.get('DF2'))
     defocusAngle = float(ctfRow.get('ANGAST'))
     ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
-
-
-
 
 
 #-------------- Old fuctions (before using EMX matrix for alignment) ------

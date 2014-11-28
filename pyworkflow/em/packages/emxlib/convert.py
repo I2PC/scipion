@@ -30,11 +30,10 @@ This module implement the import/export of Micrographs and Particles to EMX
 from __future__ import print_function
 from os.path import join, dirname, basename, exists
 
-from pyworkflow.utils.path import (copyFile, createLink, makePath, cleanPath, 
-                                   replaceBaseExt)
+from pyworkflow.utils.path import createLink, makePath, cleanPath, replaceBaseExt
 from pyworkflow.em.convert import ImageHandler, NO_INDEX
 from pyworkflow.em.data import (Micrograph, CTFModel, Particle, 
-                                Coordinate, #Alignment,
+                                Coordinate, Transform,
                                 SetOfMicrographs, SetOfCoordinates, 
                                 SetOfParticles)
 import emxlib
@@ -425,7 +424,7 @@ def _particlesFromEmx(protocol
                 part.setLocation(newLoc)
                 
                 if partSet.hasAlignment():
-                    transform = Alignment()
+                    transform = Transform()
                     _transformFromEmx(emxParticle, part, transform)
                     part.setAlignment(transform)
             else:
