@@ -53,6 +53,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		cols = visibleLabels.size();
 		rows = n;
 		renderer.hackBorders = false;
+                
 	}
 
 	@Override

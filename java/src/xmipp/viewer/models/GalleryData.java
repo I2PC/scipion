@@ -358,15 +358,9 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
-                imageFn = Filename.findImagePath(
-                        md.getValueString(renderLabel, ids[i]), filename, true);
-
-				// DEBUG.printFormat("imageFn1: %s", imageFn);
-
-                // imageFn = Filename.fixPath(md.getValueString(renderLabel,
-                // ids[i]), filename, false);
-                // DEBUG.printFormat("imageFn2: %s", imageFn);
-                // if (imageFn != null){
+                imageFn = md.getValueString(renderLabel, ids[i]);
+                if(imageFn != null)
+                    imageFn = Filename.findImagePath(imageFn , filename, true);
                 if (imageFn != null) {
                     try {
                         image = new ImageGeneric(imageFn);
@@ -470,10 +464,10 @@ public class GalleryData {
                     labelids.length);
             ciFirstRender = null;
             ColumnInfo ciFirstRenderVisible = null;
-            int inputRenderLabel = MDLabel.MDL_UNDEFINED;
+            String inputRenderLabel = "";
 
             if (!renderLabel.equalsIgnoreCase("first")) {
-                inputRenderLabel = MetaData.str2Label(renderLabel);
+                inputRenderLabel = renderLabel;
             }
             String sampleImage;
             ColumnInfo auxRender = null;
@@ -492,17 +486,24 @@ public class GalleryData {
                     ci.visible = isVisibleLabel(ci);
                 }
                 newLabels.add(ci);
-                if (inputRenderLabel == labelids[i] && ci.render) {//render label specified and included on renders
+                if (inputRenderLabel.equals(ci.labelName) && ci.render) {//render label specified and included on renders
                     ciFirstRender = ci;
                     if (ci.visible) {
                         ciFirstRenderVisible = ci;
                     }
                 }
-                sampleImage = getSampleImage(ci);
-                if (ciFirstRender == null && ci.allowRender &&  sampleImage != null)
-                    ciFirstRender = ci;
-                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible && sampleImage != null) 
-                    ciFirstRenderVisible = ci;
+                
+
+                if (ciFirstRender == null && ci.allowRender)
+                {
+                    sampleImage = getSampleImage(ci);
+                    if(sampleImage != null)
+                    {
+                        ciFirstRender = ci;
+                        if (ciFirstRenderVisible == null && ci.visible) 
+                            ciFirstRenderVisible = ci;
+                    }
+                }
             }
             if(ciFirstRender == null)
                 ciFirstRender = ciFirstRenderVisible = auxRender;//if there are no images found render none image on gallery mode
@@ -537,12 +538,13 @@ public class GalleryData {
         String imageFn, mddir = md.getBaseDir();
         for (int i = 0; i < ids.length; ++i)
         {
-                imageFn = getValueFromLabel(i, ci.label);
+            imageFn = getValueFromLabel(i, ci.label);
+            if(imageFn != null)
+            {
                 imageFn = Filename.findImagePath(imageFn, mddir, true);
                 if (imageFn != null && Filename.exists(imageFn))
-                {
                        return imageFn;
-                }
+            }
         }
         return null;
     }
@@ -1430,6 +1432,9 @@ public class GalleryData {
                 }
         }      
         selection[index] = isselected;
+        if (numberOfVols > 0)
+            selectedVolFn = isselected? volumes[index]: volumes[0];
+            
     }
     public int size() {
         return ids.length;

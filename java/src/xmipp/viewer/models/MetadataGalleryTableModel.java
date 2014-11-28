@@ -157,6 +157,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                             catch (Exception e)
                             {
                                     dim = null;
+                                    e.printStackTrace();
                             }
 		}
 
