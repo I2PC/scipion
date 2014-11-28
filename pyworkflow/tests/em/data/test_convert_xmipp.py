@@ -218,7 +218,7 @@ class TestAlignment(TestConvertBase):
     
     def test_isInverse(self):
         def _testInv(matrixList):
-            a = Alignment(matrixList)
+            a = Transform(matrixList)
             
             row = XmippMdRow()
             alignmentToRow(a, row, is2D=True, inverseTransform=False)
@@ -313,7 +313,7 @@ class TestAlignment(TestConvertBase):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()

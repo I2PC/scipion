@@ -700,7 +700,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         pass # TODO: what to do if not exists
     
     hasCtf = False
-    hasAlignment = False
+    hasTransfrom = False
     
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
@@ -708,10 +708,10 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         print img.printAll()
         imgSet.append(img)
         hasCtf = img.hasCTF()
-        hasAlignment = img.hasAlignment()
+        hasTransfrom = img.hasTransfrom()
         
     imgSet.setHasCTF(hasCtf)
-    if hasAlignment:
+    if hasTransfrom:
         if kwargs.get('is2D', True):
             imgSet.setAlignment2D()
         else:
@@ -1102,7 +1102,7 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
     invTransform == True  -> for xmipp implies projection
         """
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
-        alignment = Alignment()
+        alignment = Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
         angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
