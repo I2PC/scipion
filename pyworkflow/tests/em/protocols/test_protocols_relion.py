@@ -27,6 +27,8 @@
 import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
+from pyworkflow.em.packages.relion import *
+from pyworkflow.em.packages.xmipp3 import XmippProtPreprocessParticles
 
 
 # Some utility functions to import micrographs that are used
