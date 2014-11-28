@@ -699,16 +699,13 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
     else:
         pass # TODO: what to do if not exists
     
-    hasCtf = False
-    hasTransfrom = False
-    
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
         img = rowToFunc(imgRow, **kwargs)
-        print img.printAll()
         imgSet.append(img)
-        hasCtf = img.hasCTF()
-        hasTransfrom = img.hasTransfrom()
+        
+    hasCtf = img.hasCTF()
+    hasTransfrom = img.hasTransfrom()
         
     imgSet.setHasCTF(hasCtf)
     if hasTransfrom:
