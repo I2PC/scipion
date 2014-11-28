@@ -264,8 +264,9 @@ class TestXmippExtractParticles(TestXmippBase):
     def setUpClass(cls):
         setupTestProject(cls)
         TestXmippBase.setData()
+        cls.DOWNSAMPLING = 5.0
         cls.protImport = cls.runImportMicrographBPV(cls.micsFn)
-        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 5)
+        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, cls.DOWNSAMPLING)
         
         cls.protCTF = XmippProtCTFMicrographs(minDefocus=1.8, maxDefocus=2.8, numberOfThreads=3)         
         cls.protCTF.inputMicrographs.set(cls.protDown.outputMicrographs)        
@@ -280,7 +281,8 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.setObjLabel("extract-same as picking")
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/protExtract.inputMicrographs.get().getSamplingRate(), self.DOWNSAMPLING, 1, "There was a problem generating the output.")
     
     def testExtractOriginal(self):
         print "Run extract particles with downsampling factor equal to the original micrographs"
@@ -289,12 +291,13 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-original")
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-        
-    
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        self.assertEqual(protExtract.outputParticles.getSamplingRate(), protExtract.inputMicrographs.get().getSamplingRate(), "Output sampling rate should be equal to input sampling rate.")
+
     def testExtractOther(self):
         print "Run extract particles with downsampling factor equal to other"
-        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=OTHER, downFactor=3,doFlip=False)
+        downFactor=3.0
+        protExtract = XmippProtExtractParticles(boxSize=183, downsampleType=OTHER, downFactor=downFactor,doFlip=False)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
         micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
@@ -303,17 +306,32 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
         protExtract.setObjLabel("extract-other")
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        print downFactor
+        print protExtract.outputParticles.getSamplingRate()/ protExtract.inputMicrographs.get().getSamplingRate()
+        self.assertAlmostEqual(protExtract.outputParticles.getSamplingRate()/ protExtract.inputMicrographs.get().getSamplingRate(), downFactor, 1, "There was a problem generating the output.")
         for particle in protExtract.outputParticles:
             self.assertTrue(particle.getCoordinate().getMicId() in micsId)
     
     def testExtractCTF(self):
         print "Run extract particles with CTF"#        
-        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=ORIGINAL,doFlip=True)
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING,doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
         protExtract.setObjLabel("extract-ctf")
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles") 
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        self.assertTrue(protExtract.outputParticles.hasCTF(), "Output does not have CTF.")
 
+    def testExtractSort(self):
+        print "Run extract particles with sort by statistics"#
+        protExtract = XmippProtExtractParticles(boxSize=110, downsampleType=SAME_AS_PICKING,doFlip=True,
+                                                doSort=True,rejectionMethod=1, maxZscore=2)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
+        protExtract.ctfRelations.set(self.protCTF.outputCTF)
+        protExtract.setObjLabel("extract-sort")
+        self.proj.launchProtocol(protExtract, wait=True)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
+        self.assertTrue(protExtract.outputParticles.getSize() == 276, "Output particles were not correctly sorted.")
