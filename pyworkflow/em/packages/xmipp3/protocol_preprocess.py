@@ -49,14 +49,14 @@ class XmippPreprocessHelper():
     def _defineProcessParams(cls, form):
         # Invert Contrast
         form.addParam('doInvert', BooleanParam, default=False,
-                      label='Invert contrast', 
+                      label='Invert contrast',
                       help='Invert the contrast if your particles are black over a white background.')
         # Threshold
         form.addParam('doThreshold', BooleanParam, default=False,
-                      label="Threshold", 
+                      label="Threshold",
                       help='Remove voxels below a certain value.')
         form.addParam('thresholdType', EnumParam, condition='doThreshold',
-                      choices=['abs_below', 'below', 'above'], 
+                      choices=['abs_below', 'below', 'above'],
                       default=MASK_FILL_VALUE,
                       label="Fill with ", display=EnumParam.DISPLAY_COMBO,
                       help='Select how are you going to fill the pixel values outside the mask. ')
@@ -64,7 +64,7 @@ class XmippPreprocessHelper():
                       label="Threshold value", condition='doThreshold',
                       help='Grey value below which all voxels should be set to 0.')
         form.addParam('fillType', EnumParam, condition='doThreshold',
-                      choices=['value', 'binarize', 'avg'], 
+                      choices=['value', 'binarize', 'avg'],
                       default=FILL_VALUE,
                       label="Substitute by", display=EnumParam.DISPLAY_COMBO,
                       help='If you select: value: Selected are substitute by a desired value.\n'
@@ -73,7 +73,7 @@ class XmippPreprocessHelper():
         form.addParam('fillValue', IntParam, default=0, condition='doThreshold and fillType == %d'  % FILL_VALUE,
                       label='Fill value',
                       help=' Substitute selected pixels by this value.')
-    
+
     #--------------------------- INSERT steps functions --------------------------------------------
     @classmethod
     def _insertCommonSteps(cls, protocol, changeInserts):
@@ -82,13 +82,13 @@ class XmippPreprocessHelper():
             if protocol.isFirstStep:
                 protocol.isFirstStep = False
             protocol._insertFunctionStep("invertStep", args, changeInserts)
-        
+
         if protocol.doThreshold:
             args = protocol._argsThreshold()
             if protocol.isFirstStep:
                 protocol.isFirstStep = False
             protocol._insertFunctionStep("thresholdStep", args, changeInserts)
-    
+
     #--------------------------- UTILS functions ---------------------------------------------------
     @classmethod
     def _argsCommonInvert(cls):
@@ -115,8 +115,8 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
     
-    def __init__(self, **args):
-        XmippProcessParticles.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessParticles.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -186,6 +186,12 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
 #             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
     
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
     
@@ -298,7 +304,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonInvert()
+        args += XmippPreprocessHelper._argsCommonInvert()
         return args
     
     def _argsThreshold(self):
@@ -306,7 +312,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonThreshold()
+        args += XmippPreprocessHelper._argsCommonThreshold(self)
         return args
     
     def _getSize(self):
@@ -331,8 +337,8 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     SEG_AUTO=3
 
 
-    def __init__(self, **args):
-        XmippProcessVolumes.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessVolumes.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -387,7 +393,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       label="Mask Radius", condition='doNormalize',
                       help='In pixels. Set to -1 for half of the size of the volume.')
         XmippPreprocessHelper._defineProcessParams(form)
-        
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
         self.isFirstStep = True
@@ -433,8 +439,14 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
             self._insertFunctionStep("normalizeStep", args, changeInserts)
         
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
-    
+
     #--------------------------- STEPS functions ---------------------------------------------------
+    def invertStep(self, args, changeInserts):
+        self.runJob('xmipp_image_operate', args)
+    
+    def thresholdStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_threshold", args)
+        
     def removeDustStep(self, args, changeInserts):
         self.runJob('xmipp_transform_filter', args)
     
@@ -598,7 +610,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonInvert()
+        args += XmippPreprocessHelper._argsCommonInvert()
         return args
     
     def _argsThreshold(self):
@@ -609,7 +621,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._argsCommonThreshold()
+        args += XmippPreprocessHelper._argsCommonThreshold(self)
         return args
 
     def _validate(self):

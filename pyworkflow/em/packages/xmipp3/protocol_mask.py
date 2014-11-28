@@ -157,6 +157,7 @@ class XmippProtMask():
 
         return messages
         
+        
 class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProtMask, XmippGeometricalMask2D):
     """ Apply mask to a set of particles """
     _label = 'apply 2d mask'
@@ -165,10 +166,10 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
     MASK_CLASSNAME = 'Mask'
     GEOMETRY_BASECLASS = XmippGeometricalMask2D
     
-    def __init__(self, **args):
-        ProtMaskParticles.__init__(self, **args)
-        XmippProcessParticles.__init__(self)
-        XmippProtMask.__init__(self, **args)
+    def __init__(self, **kwargs):
+        ProtMaskParticles.__init__(self, **kwargs)
+        XmippProcessParticles.__init__(self, **kwargs)
+        XmippProtMask.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -194,6 +195,7 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
 
         return messages
     
+    
 class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, XmippGeometricalMask3D):
     """ Apply mask to a volume """
     _label = 'apply 3d mask'
@@ -202,10 +204,10 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
     MASK_CLASSNAME = 'VolumeMask'
     GEOMETRY_BASECLASS = XmippGeometricalMask3D
     
-    def __init__(self, **args):
-        ProtMaskVolumes.__init__(self, **args)
-        XmippProcessVolumes.__init__(self)
-        XmippProtMask.__init__(self, **args)
+    def __init__(self, **kwargs):
+        ProtMaskVolumes.__init__(self, **kwargs)
+        XmippProcessVolumes.__init__(self, **kwargs)
+        XmippProtMask.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

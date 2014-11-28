@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
                                         StringParam, FloatParam, 
                                         LEVEL_ADVANCED, LEVEL_EXPERT,
     BooleanParam)
-from pyworkflow.em.protocol import ProtClassify2D
+from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
 
 from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
 
@@ -80,7 +80,7 @@ class XmippProtCL2D(ProtClassify2D):
                       label='Random initialization of references:',
                       help="Initialize randomly the first references. If you don't initialize randomly, you must supply a set of initial classes")
         form.addParam('initialClasses', PointerParam, label="Initial classes", condition="not randomInitialization",
-                      pointerClass='SetOfClasses',
+                      pointerClass='SetOfClasses2D, SetOfAverages',
                       help='Set of initial classes to start the classification')        
         form.addParam('numberOfInitialReferences', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
                       label='Number of initial references:', condition="randomInitialization",
@@ -132,16 +132,16 @@ class XmippProtCL2D(ProtClassify2D):
     #--------------------------- INSERT steps functions --------------------------------------------                
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
-        
+
         # Convert input images if necessary
-        self.imgsFn = self._getExtraPath('images.xmd') 
-        self.initialClassesFn = self._getExtraPath('initialClasses.xmd') 
-        self._insertFunctionStep('convertInputStep')    
-        
+        self.imgsFn = self._getExtraPath('images.xmd')
+        self.initialClassesFn = self._getExtraPath('initialClasses.xmd')
+        self._insertFunctionStep('convertInputStep')
+
         # Prepare arguments to call program: xmipp_classify_CL2D
-        self._params = {'imgsFn': self.imgsFn, 
+        self._params = {'imgsFn': self.imgsFn,
                         'extraDir': self._getExtraPath(),
-                        'nref': self.numberOfReferences.get(), 
+                        'nref': self.numberOfReferences.get(),
                         'nref0': self.numberOfInitialReferences.get(),
                         'iter': self.numberOfIterations.get(),
                         'extraParams': self.extraParams.get(''),
@@ -149,7 +149,7 @@ class XmippProtCL2D(ProtClassify2D):
                         'thPCAZscore': self.thPCAZscore.get(),
                         'tolerance': self.tolerance.get(),
                         'initialClassesFn': self.initialClassesFn
-                      }
+        }
         args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
         if self.comparisonMethod == CMP_CORRELATION:
             args += ' --distance correlation'
@@ -161,16 +161,21 @@ class XmippProtCL2D(ProtClassify2D):
             args += ' --ref0 %(initialClassesFn)s'
         if self.extraParams.hasValue():
             args += ' %(extraParams)s'
-    
+
         self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
-        
+
+        #TODO: Added this If. Check with COSS error if makes sense.
+        #Also, if conditions below are enough to validate that classes core and stable core are not empty
+        if not self.randomInitialization:
+            self.numberOfInitialReferences.set(self.initialClasses.get().getSize())
+
         # Analyze cores and stable cores
         if self.numberOfReferences > self.numberOfInitialReferences and self.doCore:
             program = "xmipp_classify_CL2D_core_analysis"
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
-            
+
             if self.numberOfReferences > (2 * self.numberOfInitialReferences.get()) and self.doStableCore: # Number of levels should be > 2
                 # stable core analysis
                 self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
@@ -191,7 +196,10 @@ class XmippProtCL2D(ProtClassify2D):
     def convertInputStep(self):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn)
         if not self.randomInitialization:
-            writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeParticles=False)
+            if isinstance(self.initialClasses.get(), SetOfClasses2D):
+                writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeParticles=False)
+            else:
+                writeSetOfParticles(self.initialClasses.get(),self.initialClassesFn)
 
     def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
@@ -244,6 +252,9 @@ class XmippProtCL2D(ProtClassify2D):
             validateMsgs.append('Mpi needs to be greater than 1.')
         if self.numberOfInitialReferences > self.numberOfReferences:
             validateMsgs.append('The number of final references cannot be smaller than the number of initial references')
+        if isinstance(self.initialClasses.get(), SetOfClasses2D):
+            if not self.initialClasses.get().hasRepresentatives():
+                validateMsgs.append("The input classes should have representatives.")
         return validateMsgs
     
     def _citations(self):

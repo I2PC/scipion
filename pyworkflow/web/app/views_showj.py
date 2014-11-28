@@ -558,6 +558,7 @@ def create_context_chimera(volPath, threshold=None):
                "volPath":volPath, 
                "threshold": threshold, 
                "jquery_ui_css": getResourceCss("jquery_ui"),
+               "philogl": getResourceJs("philogl"),
                }
     
     return context

@@ -26,38 +26,33 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em import *  
-from pyworkflow.utils import *  
+from pyworkflow.protocol.params import BooleanParam, EnumParam, FloatParam, IntParam
+from pyworkflow.em.data import Volume
+
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
-from pyworkflow.em.constants import *
-from constants import *
-
-RESIZE_SAMPLINGRATE = 0
-RESIZE_DIMENSIONS = 1
-RESIZE_FACTOR = 2
-RESIZE_PYRAMID = 3
 
 
 
-class XmippProtResize():
-    """ This class implement the common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
+class XmippResizeHelper():
+    """ Common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
     """
-    _inputLabel = None # This should be 'particles' or 'volumes'
-    
-    def __init__(self, **args):
-        self._programWindow = "xmipp_transform_window"
-        self._programResize = "xmipp_image_resize"
-    
+
+    RESIZE_SAMPLINGRATE = 0
+    RESIZE_DIMENSIONS = 1
+    RESIZE_FACTOR = 2
+    RESIZE_PYRAMID = 3
+
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineProcessParams(self, form):
+    @classmethod
+    def _defineProcessParams(cls, protocol, form):
         # Resize operation
         form.addParam('doResize', BooleanParam, default=False,
-                      label='Resize %s?' % self._inputLabel,
+                      label='Resize %s?' % protocol._inputLabel,
                       help='If you set to *Yes*, you should provide a resize option.')
         form.addParam('resizeOption', EnumParam,
                       choices=['Sampling Rate', 'Dimensions', 'Factor', 'Pyramid'],
                       condition='doResize',
-                      default=RESIZE_SAMPLINGRATE,
+                      default=cls.RESIZE_SAMPLINGRATE,
                       label="Resize option", display=EnumParam.DISPLAY_COMBO,
                       help='Select an option to resize the images: \n '
                       '_Sampling Rate_: Set the desire sampling rate to resize. \n'
@@ -65,23 +60,23 @@ class XmippProtResize():
                       '_Factor_: Set a resize factor to resize. \n '
                       '_Pyramid_: Use positive level value to expand and negative to reduce. \n')
         form.addParam('resizeSamplingRate', FloatParam, default=1.0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_SAMPLINGRATE),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_SAMPLINGRATE,
                       label='Resize sampling rate (A/px)',
                       help='Set the new output sampling rate.')
         form.addParam('doFourier', BooleanParam, default=False,
-                      condition='doResize and resizeOption==%d' % (RESIZE_DIMENSIONS),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
                       label='Use fourier method to resize?',
                       help='If you set to *True*, the final dimensions must be lower than the original ones.')
         form.addParam('resizeDim', IntParam, default=0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_DIMENSIONS),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
                       label='New image size (px)',
                       help='Size in pixels of the particle images <x> <y=x> <z=x>.')
         form.addParam('resizeFactor', FloatParam, default=0.5,
-                      condition='doResize and resizeOption==%d' % (RESIZE_FACTOR),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_FACTOR,
                       label='Resize factor',
                       help='New size is the old one x resize factor.')
         form.addParam('resizeLevel', IntParam, default=0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_PYRAMID),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_PYRAMID,
                       label='Pyramid level',
                       help='Use positive value to expand and negative to reduce.')
         # Window operation
@@ -93,129 +88,141 @@ class XmippProtResize():
                       condition='doWindow',
                       default=1,
                       label="Window operation", display=EnumParam.DISPLAY_COMBO,
-                      help='Select how do you want to change the size of the particles. \n '
-                      '_resize_: you will provide the new size (in pixels) for your particles. \n '
-                      '_crop_: you choose how many pixels you want to crop from each border. \n ')
+                      help='Select how to change the size of the particles.\n'
+                      '_cls.RESIZE_: provide the new size (in pixels) for your particles.\n'
+                      '_crop_: choose how many pixels to crop from each border.\n')
         form.addParam('cropSize', IntParam, default=0,
                       condition='doWindow and windowOperation == 0',
                       label='Crop size (px)',
-                      help='This is the amount of pixels cropped in each border. \n '
+                      help='Amount of pixels cropped from each border.\n'
                            'e.g: if you set 10 pixels, the dimensions of the\n'
                            'object (SetOfParticles, Volume or SetOfVolumes) will be\n'
-                           'reduce in 20 pixels (2 borders * 10 pixels)')
+                           'reduced in 20 pixels (2 borders * 10 pixels)')
         form.addParam('windowSize', IntParam, default=0,
                       condition='doWindow and windowOperation == 1',
                       label='Window size (px)',
-                      help='This is the size in pixels of the particle images.')
-                
+                      help='Size in pixels of the output object. It will be '
+                           'expanded or cutted in all directions such that the '
+                           'origin remains the same.')
+
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertProcessStep(self):
+    @classmethod
+    def _insertProcessStep(cls, protocol):
         isFirstStep = True
         
-        if self.doResize:
+        if protocol.doResize:
             isFirstStep = False
-            args = self._resizeArgs()
-            self._insertFunctionStep("resizeStep", args)
+            args = protocol._resizeArgs()
+            protocol._insertFunctionStep("resizeStep", args)
             
-        if self.doWindow:
-            args = self._windowArgs(isFirstStep)
-            self._insertFunctionStep("windowStep", args)
+        if protocol.doWindow:
+            args = protocol._windowArgs(isFirstStep)
+            protocol._insertFunctionStep("windowStep", args)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def resizeStep(self, args):
-        self.runJob(self._programResize, args)
+        self.runJob("xmipp_image_resize", args)
     
     def windowStep(self, args):
-        self.runJob(self._programWindow, args)
+        self.runJob("xmipp_transform_window", args)
     
     #--------------------------- INFO functions ----------------------------------------------------
-    def _validate(self):
+    @classmethod
+    def _validate(cls, protocol):
         errors = []
         
-        if self.doResize and self.resizeOption == RESIZE_SAMPLINGRATE and self.doFourier:
+        if protocol.doResize and protocol.resizeOption == cls.RESIZE_SAMPLINGRATE and protocol.doFourier:
 #             imgSet = self.inputParticles.get()
-            size = self._getSetSize()
-            if self.resizeDim > size:
+            size = protocol._getSetSize()
+            if protocol.resizeDim > size:
                 errors.append('Fourier resize method cannot be used to increase the dimensions')
                 
         return errors
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _resizeCommonArgs(self):
-        samplingRate = self._getSetSampling()
-        inputFn = self.inputFn
+    @classmethod
+    def _resizeCommonArgs(cls, protocol):
+        samplingRate = protocol._getSetSampling()
+        inputFn = protocol.inputFn
         
-        if self.resizeOption == RESIZE_SAMPLINGRATE:
-            newSamplingRate = self.resizeSamplingRate.get()
+        if protocol.resizeOption == cls.RESIZE_SAMPLINGRATE:
+            newSamplingRate = protocol.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
-            self.samplingRate = newSamplingRate
-            args = self._args + " --factor %(factor)f"
+            protocol.samplingRate = newSamplingRate
+            args = protocol._args + " --factor %(factor)f"
         
-        elif self.resizeOption == RESIZE_DIMENSIONS:
-            size = self.resizeDim.get()
-            dim = self._getSetSize()
-            self.samplingRate = (samplingRate * float(dim) / float(size))
+        elif protocol.resizeOption == cls.RESIZE_DIMENSIONS:
+            size = protocol.resizeDim.get()
+            dim = protocol._getSetSize()
+            protocol.samplingRate = (samplingRate * float(dim) / float(size))
             
-            if self.doFourier:
-                args = self._args + " --fourier %(size)d"
+            if protocol.doFourier:
+                args = protocol._args + " --fourier %(size)d"
             else:
-                args = self._args + " --dim %(size)d"
+                args = protocol._args + " --dim %(size)d"
             
-        elif self.resizeOption == RESIZE_FACTOR:
-            factor = self.resizeFactor.get()                                               
-            self.samplingRate = samplingRate / factor
-            args = self._args + " --factor %(factor)f"
+        elif protocol.resizeOption == cls.RESIZE_FACTOR:
+            factor = protocol.resizeFactor.get()                                               
+            protocol.samplingRate = samplingRate / factor
+            args = protocol._args + " --factor %(factor)f"
         
         else:
-            level = self.resizeLevel.get()
+            level = protocol.resizeLevel.get()
             factor = pow(2, level)
-            self.samplingRate = samplingRate / factor
-            args = self._args + " --pyramid %(level)d"
+            protocol.samplingRate = samplingRate / factor
+            args = protocol._args + " --pyramid %(level)d"
             
         return args % locals()
     
-    def _windowCommonArgs(self):
-        dim = self._getSetSize()
-        if self.getEnumText('windowOperation') == "crop":
-            cropSize = self.cropSize.get() * 2
-            windowSize = dim - cropSize
-            args = " --crop %(cropSize)s "
-        else:
-            windowSize = self.windowSize.get()
-            args = " --size %(windowSize)s"
-        
-        self.newWindowSize = windowSize
-        
-        return args % locals()
-    
-    def _getSize(self, imgSet):
-        """ get the size of an object"""
-        if isinstance(imgSet, Volume):
-            Xdim = imgSet.getDim()[0]
-        else:
-            Xdim = imgSet.getDimensions()[0]
-        return Xdim
-    
-    def _getSampling(self, imgSet):
-        """ get the sampling rate of an object"""
-        samplingRate = imgSet.getSamplingRate()
-        return samplingRate
+    @classmethod
+    def _windowCommonArgs(cls, protocol):
+        op = protocol.getEnumText('windowOperation')
+        if op == "crop":
+            cropSize2 = protocol.cropSize.get() * 2
+            protocol.newWindowSize = protocol._getSetSize() - cropSize2
+            return " --crop %d " % cropSize2
+        elif op == "window":
+            windowSize = protocol.windowSize.get()
+            protocol.newWindowSize = windowSize
+            return " --size %d " % windowSize
 
 
-class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
+def _getSize(imgSet):
+    """ get the size of an object"""
+    if isinstance(imgSet, Volume):
+        Xdim = imgSet.getDim()[0]
+    else:
+        Xdim = imgSet.getDimensions()[0]
+    return Xdim
+
+def _getSampling(imgSet):
+    """ get the sampling rate of an object"""
+    samplingRate = imgSet.getSamplingRate()
+    return samplingRate
+
+
+class XmippProtCropResizeParticles(XmippProcessParticles):
     """ Crop or resize a set of particles """
     _label = 'crop/resize particles'
     _inputLabel = 'particles'
     
-    def __init__(self, **args):
-        XmippProtResize.__init__(self)
-        XmippProcessParticles.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessParticles.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
-        XmippProtResize._defineProcessParams(self, form)
+        XmippResizeHelper._defineProcessParams(self, form)
+        
+    def _insertProcessStep(self):
+        XmippResizeHelper._insertProcessStep(self)
      
     #--------------------------- STEPS functions ---------------------------------------------------
+    def resizeStep(self, args):
+        self.runJob("xmipp_image_resize", args)
+    
+    def windowStep(self, args):
+        self.runJob("xmipp_transform_window", args)
+        
     def _preprocessOutput(self, output):
         """ We need to update the sampling rate of the 
         particles if the Resize option was used.
@@ -230,8 +237,8 @@ class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
         else:
-            sampling = self._getSampling(self.outputParticles)
-            size = self._getSize(self.outputParticles)
+            sampling = _getSampling(self.outputParticles)
+            size = _getSize(self.outputParticles)
             if self.doResize:
                 summary.append("The sampling rate of the output particles are: %0.3f" % sampling)
             if self.doWindow.get():
@@ -241,9 +248,12 @@ class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
                     summary.append("*Window operation*: New size %s" % size)
         return summary
     
+    def _validate(self):
+        return XmippResizeHelper._validate(self)
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _resizeArgs(self):
-        args = self._resizeCommonArgs()
+        args = XmippResizeHelper._resizeCommonArgs(self)
         args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
         return args
     
@@ -252,35 +262,37 @@ class XmippProtCropResizeParticles(XmippProtResize, XmippProcessParticles):
             args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._windowCommonArgs()
+        args += XmippResizeHelper._windowCommonArgs(self)
         return args
     
     def _getSetSize(self):
         """ get the size of SetOfParticles object"""
         imgSet = self.inputParticles.get()
-        size = self._getSize(imgSet)
+        size = _getSize(imgSet)
         return size
     
     def _getSetSampling(self):
         """ get the sampling rate of SetOfParticles object"""
         imgSet = self.inputParticles.get()
-        samplingRate = self._getSampling(imgSet)
+        samplingRate = _getSampling(imgSet)
         return samplingRate
 
 
-class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
+class XmippProtCropResizeVolumes(XmippProcessVolumes):
     """ Crop or resize a set of volumes """
     _label = 'crop/resize volumes'
     _inputLabel = 'volumes'
     
-    def __init__(self, **args):
-        XmippProtResize.__init__(self, **args)
-        XmippProcessVolumes.__init__(self)
+    def __init__(self, **kwargs):
+        XmippProcessVolumes.__init__(self, **kwargs)
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
-        XmippProtResize._defineProcessParams(self, form)
-    
+        XmippResizeHelper._defineProcessParams(self, form)
+        
+    def _insertProcessStep(self):
+        XmippResizeHelper._insertProcessStep(self)
+        
     #--------------------------- STEPS functions ---------------------------------------------------
     def createOutputStep(self):
         volSet = self.inputVolumes.get()
@@ -312,8 +324,8 @@ class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
         if not hasattr(self, 'outputVol'):
             summary.append("Output volume(s) not ready yet.") 
         else:
-            sampling = self._getSampling(self.outputVol)
-            size = self._getSize(self.outputVol)
+            sampling = _getSampling(self.outputVol)
+            size = _getSize(self.outputVol)
             if self.doResize:
                 summary.append("The sampling rate of the output voume(s) are: %0.3f" % sampling)
             if self.doWindow.get():
@@ -323,9 +335,12 @@ class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
                     summary.append("*Window operation*: New size %d" % size)
         return summary
     
+    def _validate(self):
+        return XmippResizeHelper._validate(self)
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _resizeArgs(self):
-        args = self._resizeCommonArgs()
+        args = XmippResizeHelper._resizeCommonArgs(self)
         if self._isSingleInput():
             args += " -o %s" % self.outputStk
         else:
@@ -340,17 +355,17 @@ class XmippProtCropResizeVolumes(XmippProtResize, XmippProcessVolumes):
                 args = "-i %s -o %s --save_metadata_stack %s --keep_input_columns" % (self.inputFn, self.outputStk, self.outputMd)
         else:
             args = "-i %s" % self.outputStk
-        args += self._windowCommonArgs()
+        args += XmippResizeHelper._windowCommonArgs(self)
         return args
     
     def _getSetSize(self):
         """ get the size of either Volume or SetOfVolumes objects"""
         imgSet = self.inputVolumes.get()
-        size = self._getSize(imgSet)
+        size = _getSize(imgSet)
         return size
     
     def _getSetSampling(self):
         """ get the sampling rate of either Volume or SetOfVolumes objects"""
         imgSet = self.inputVolumes.get()
-        samplingRate = self._getSampling(imgSet)
+        samplingRate = _getSampling(imgSet)
         return samplingRate

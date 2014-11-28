@@ -1,13 +1,19 @@
 /* CSS Document */
 .layout-outer>.west {
 	padding: 5px 10px 20px 10px;
-	width: 0;
 /* 	min-width: 15%; */
 	max-width: 35%;
-	overflow-y: auto;
-	overflow-y: auto;
 	overflow-x: hidden;
 	background-color: white;
+	
+	
+/* 	Mode default */
+	/* 	overflow-y: auto; */
+	/* 	width: 20%; */
+	
+/* 	Mode service */
+	width: 0px;
+	overflow-y: hidden;
 }
 
 .layout-outer>.center {

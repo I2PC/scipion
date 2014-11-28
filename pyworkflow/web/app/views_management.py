@@ -70,10 +70,13 @@ def doUpload(request):
         newdoc = Document(docfile = file_new)
         newdoc.save()
     
+        fn = file_new.name
+        fn = fn.replace (" ", "_")
+    
         #Move the file to the new folder
-        src = os.path.join(django_settings.FILE_UPLOAD_TEMP_DIR, 'uploads', file_new.name)
+        src = os.path.join(django_settings.FILE_UPLOAD_TEMP_DIR, 'uploads', fn)
         path = os.path.join(request.session['projectPath'],'Uploads')
-        target = os.path.join(path, file_new.name)
+        target = os.path.join(path, fn)
         if os.path.exists(target):
             os.remove(target)
         shutil.move(src, path)
@@ -83,6 +86,8 @@ def doUpload(request):
             
     return upload(request, form)
 
+
+# """ File Browser Utils """
 
 def getPath(request):
     # action = request.GET.get('action')

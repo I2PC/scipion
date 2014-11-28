@@ -705,6 +705,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
         img = rowToFunc(imgRow, **kwargs)
+        print img.printAll()
         imgSet.append(img)
         hasCtf = img.hasCTF()
         hasAlignment = img.hasAlignment()

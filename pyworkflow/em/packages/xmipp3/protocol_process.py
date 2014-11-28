@@ -39,8 +39,8 @@ class XmippProcessParticles(ProtProcessParticles):
     """ Class to create a base template for Xmipp protocols 
     that process SetOfParticles
     """
-    def __init__(self):
-        ProtProcessParticles.__init__(self)
+    def __init__(self, **kwargs):
+        ProtProcessParticles.__init__(self, **kwargs)
         self._args = "-i %(inputFn)s"
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -96,8 +96,8 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
     """ Class to create a base template for Xmipp protocols that process 
     both volume or a SetOfVolumes objects 
     """
-    def __init__(self):
-        ProtPreprocessVolumes.__init__(self)
+    def __init__(self, **kwargs):
+        ProtPreprocessVolumes.__init__(self, **kwargs)
         self._args = "-i %(inputFn)s"
 
     #--------------------------- INSERT steps functions --------------------------------------------
