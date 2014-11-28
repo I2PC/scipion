@@ -25,8 +25,7 @@
 
 from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.emxlib import ProtEmxImport
-
+from pyworkflow.em.protocol import ProtImportParticles
 
 class TestEmxBase(BaseTest):
     @classmethod
@@ -38,12 +37,16 @@ class TestEmxBase(BaseTest):
         """ Import an EMX file with just one micrograph 
         and a few coordinates.
         """
-        emxFn = self.dataset.getFile('coordinatesT1')
-        protEmxImport = self.newProtocol(ProtEmxImport,
-                                         inputEMX=emxFn,
-                                         amplitudeContrast=0.1,
-                                         sphericalAberration=2.,
-                                         voltage=100)
+        args = {'importFrom': ProtImportParticles.IMPORT_FROM_EMX,
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 100,
+                'samplingRate': 2.46,
+                'magnification': 10000
+        }
+        args['emxFile'] = self.dataset.getFile('coordinatesT1')
+        protEmxImport   = self.newProtocol(ProtImportParticles, **args)
+        protEmxImport.setObjLabel('from emx (coordinatesT1)')
         self.launchProtocol(protEmxImport)
 
         # Reference coordinates
@@ -55,7 +58,7 @@ class TestEmxBase(BaseTest):
         that has defocus
         """
         emxFn = self.dataset.getFile('defocusParticleT2')
-        protEmxImport = self.newProtocol(ProtEmxImport, 
+        protEmxImport = self.newProtocol(ProtEmxImport,
                                          inputEMX=emxFn
                                          )
         self.launchProtocol(protEmxImport)

@@ -41,7 +41,7 @@ class ProtImportParticles(ProtImportImages):
     _label = 'import particles'
     _outputClassName = 'SetOfParticles'
 
-    IMPORT_FROM_EMX = 1
+    IMPORT_FROM_EMX    = 1
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_RELION = 3
 
