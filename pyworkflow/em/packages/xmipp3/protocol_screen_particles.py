@@ -2,6 +2,7 @@
 # *
 # * Authors:     Laura del Cano (laura.cano@cnb.csic.es)
 # *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *              I. Foche (ifoche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -82,7 +83,6 @@ class XmippProtScreenParticles(ProtProcessParticles):
     def sortImages(self, inputId):
         imagesMd = self._getPath('images.xmd')
         writeSetOfParticles(self.inputParticles.get(), imagesMd)
-        copyFile(imagesMd, imagesMd.replace('.xmd', '_backup.xmd'))
         args = "-i Particles@%s --addToInput " % imagesMd
         
         if self.autoParRejection == self.REJ_MAXZSCORE:
