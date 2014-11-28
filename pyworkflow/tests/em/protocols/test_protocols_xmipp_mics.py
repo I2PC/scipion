@@ -197,9 +197,9 @@ class TestXmippCTFEstimation(TestXmippBase):
         print protCTF.outputCTF.printAll()
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         ctfModel = protCTF.outputCTF.getFirstItem()
-        self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(),55.256, places=2)
+        self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, delta=50)
+        self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, delta=50)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(),55.256, delta=1)
 
 
 class TestXmippCTFRestimation(TestXmippBase):
