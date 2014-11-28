@@ -66,7 +66,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", important=True,
                       pointerClass='SetOfCoordinates',
                       help='Select the SetOfCoordinates ')
         
@@ -105,6 +105,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       ' maxZscore (reject a particle if its Zscore is larger than this value), '
                       'Percentage (reject a given percentage in each one of the screening criteria).', 
                       expertLevel=LEVEL_ADVANCED)
+
+        form.addParam('doSort', BooleanParam, default=False,
+                      label='Perform sort by statistics',
+                      help='Perform sort by statistics to add zscore info to particles.')
         
         form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
                       condition='rejectionMethod==%d' % REJECT_MAXZSCORE,
@@ -331,16 +335,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #imgsXmd.sort(xmipp.MDL_IMAGE)
         imgsXmd.write(fnImages)
 
-        # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
-        args="-i %(fnImages)s --addToInput"
-        if self.rejectionMethod == REJECT_MAXZSCORE:
-            maxZscore = self.maxZscore.get()
-            args += " --zcut " + str(maxZscore)
-        elif self.rejectionMethod == REJECT_PERCENTAGE:
-            percentage = self.percentage.get()
-            args += " --percent " + str(percentage)
-        
-        self.runJob("xmipp_image_sort_by_statistics", args % locals())
+        # IF selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
+        if self.doSort:
+            args="-i %(fnImages)s --addToInput"
+            if self.rejectionMethod == REJECT_MAXZSCORE:
+                maxZscore = self.maxZscore.get()
+                args += " --zcut " + str(maxZscore)
+            elif self.rejectionMethod == REJECT_PERCENTAGE:
+                percentage = self.percentage.get()
+                args += " --percent " + str(percentage)
+
+            self.runJob("xmipp_image_sort_by_statistics", args % locals())
+
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
