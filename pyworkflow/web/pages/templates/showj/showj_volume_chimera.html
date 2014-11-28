@@ -56,7 +56,6 @@
 		if (threshold == undefined){
 			threshold = $("input#thresholdValue").attr("value");
 		}
-		$("div#chimeraContent").empty();
 		
 		$.ajax({
 			type : "GET",
@@ -64,6 +63,7 @@
 			dataType : "html",
 // 			async: false,
 			success : function(data) {
+				$("div#chimeraContent").empty();
 				$("div#chimeraContent").html(data);
 				webGL();
 				removeWait();
@@ -82,8 +82,8 @@
   			animate : true,
   			range: "min",
   			value: {{threshold}},
-  			min: -10,
-  			max: +10,
+  			min: -2,
+  			max: +2,
   			step: 0.01,
   			slide : function(event, ui) {
   				$("#thresholdValue").val(ui.value);

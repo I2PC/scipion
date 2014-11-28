@@ -302,7 +302,7 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
             return []  # nothing to check
 
         for n in self.inputParticles.get().getDim():
-            while n != 1:
+            while n > 1:  # check if math.log(n, 2) is int, more rudimentary
                 if n % 2 != 0:
                     return ["To use the wavelet filter, the input particles",
                             "must have dimensions which are a power of 2,",
@@ -347,7 +347,7 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
             return []  # nothing to check
 
         for n in self.inputVolumes.get().getDim():
-            while n != 1:
+            while n > 1:  # check if math.log(n, 2) is int, more rudimentary
                 if n % 2 != 0:
                     return ["To use the wavelet filter, the input volumes",
                             "must have dimensions which are a power of 2,"

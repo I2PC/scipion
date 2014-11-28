@@ -191,7 +191,7 @@ class CTFModel(EMObject):
         # following the EMX standard
         self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
         
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
         CTF objects, now ignoring the psdFile.
         """
