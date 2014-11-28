@@ -726,6 +726,21 @@ class TestSetConvert(BaseTest):
         writeSetOfMicrographs(micSet, self.getOutputPath("micrographs.xmd"))
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
+        
+    def test_alignedParticlesFromMd(self):
+        """ Read an Xmipp metadata containing Alignment information. """
+
+        mdFile = self.dataset.getFile('gold/xmipp_ml2d_images.xmd')
+        sqliteFile = self.getOutputPath("particles_aligned.sqlite")
+        print "Input metadata: ", mdFile
+        print "Output sqlite: ", sqliteFile
+        
+        partSet = SetOfParticles(filename=sqliteFile)        
+        readSetOfParticles(mdFile, partSet)
+        partSet.write()
+        
+        partSet.printAll()
+        
     def test_alignedParticlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
         fn = self.dataset.getFile('aligned_particles')
