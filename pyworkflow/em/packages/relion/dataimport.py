@@ -28,6 +28,7 @@ This module contains the protocol for 3d classification with relion.
 """
 
 import os
+from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
 import xmipp
@@ -41,6 +42,7 @@ class RelionImport():
         self.protocol = protocol
         self._starFile = starFile
         self.copyOrLink = protocol.getCopyOrLink()
+        self.ignoreIds = protocol.ignoreIdColumn.get()
             
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
@@ -64,8 +66,10 @@ class RelionImport():
         # but fixing the filenames with new ones (linked or copy to extraDir)
         from convert import readSetOfParticles
         readSetOfParticles(self._starFile, partSet, 
-                           preprocessImageRow=self._preprocessImageRow, 
-                           readAcquisition=False)
+                           preprocessImageRow=self._preprocessImageRow,
+                           postprocessImageRow=self._postprocessImageRow,
+                           readAcquisition=False, is2D=self.is2D,
+                           isInverseTransform=True)
         if self._micIdOrName:
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
         self.protocol._defineOutputs(outputParticles=partSet)
@@ -111,11 +115,15 @@ class RelionImport():
         if not row.containsLabel(label):
             raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
                                                                          self._starFile))
-            
-        self._imgPath = findRootFrom(self._starFile, row.getValue(label))
+
+        index, fn = relionToLocation(row.getValue(label))
+        self._imgPath = findRootFrom(self._starFile, fn)
         
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
+
+        # Check if the particles have 2d or 3d alignment
+        self.is2D = not row.containsLabel(xmipp.RLN_ORIENT_TILT)
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
@@ -129,6 +137,9 @@ class RelionImport():
     def _preprocessImageRow(self, img, imgRow):
         from convert import setupCTF, copyOrLinkFileName
         if self._imgPath is not None:
-            copyOrLinkFileName(imgRow, self._imagesPath, self.protocol._getExtraPath())
+            copyOrLinkFileName(imgRow, self._imgPath, self.protocol._getExtraPath())
         setupCTF(imgRow, self.protocol.samplingRate.get())
         
+    def _postprocessImageRow(self, img, imgRow):
+        if self.ignoreIds:
+            img.setObjId(None) # Force to generate a new id in Set

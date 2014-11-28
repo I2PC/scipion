@@ -26,8 +26,8 @@
 		}
 		
 	</style>
-    <script type="text/javascript" src="http://www.cgl.ucsf.edu/chimera/webgl/PhiloGL-1.3.0.js"></script>
 	<script src="{{jquery_ui}}"></script>
+	<script src="{{philogl}}"></script>
 	<link rel="stylesheet" href="{{jquery_ui_css}}">
 	<link rel="stylesheet" href="{{messi_css}}">
   	<script type="text/javascript">
@@ -104,20 +104,14 @@
 		</div>
 		{% endautoescape %}
 		
-		<table id="thresholdParams">
-			<tr>
-				<td>
-					Threshold
-				</td>
-				<td>
-					<input id="thresholdValue" type="text" value="{{threshold}}" style="width:11.2em;text-align:center;"/>
-					<span id="slider"></span>
-				</td>
-				<td>
-					<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
-				</td>
-			</tr>
-		</table>
+		<div id="thresholdParams">
+			Threshold
+			<input id="thresholdValue" type="text" value="{{threshold}}" style="width:11.2em;text-align:center;"/>
+			<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
+		</div>
+		<div>
+			<span id="slider"></span>
+		</div>
 	</div>
 	
 {% endblock %}

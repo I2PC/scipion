@@ -57,10 +57,13 @@ def findRootFrom(referenceFile, searchFile):
     and 'searchFile' is an image to be found from the metadata.
     Return None if the path is not found.
     """
+    print "referenceFile:", referenceFile
     absPath = os.path.dirname(os.path.abspath(referenceFile))
     
     while absPath is not None and absPath != '/':
+        print "checking: ", os.path.join(absPath, searchFile)
         if os.path.exists(os.path.join(absPath, searchFile)):
+            print " >>>> found!!!"
             return absPath #os.path.relpath(absPath)
         absPath = os.path.dirname(absPath)
         

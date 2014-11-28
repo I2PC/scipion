@@ -30,7 +30,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from os.path import exists
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, FileParam
+from pyworkflow.protocol.params import FloatParam, FileParam, BooleanParam
 
 from images import ProtImportImages
 
@@ -72,6 +72,15 @@ class ProtImportParticles(ProtImportImages):
                       label='Star file',
                       help="Select a *_data.star file from a.\n"
                            "previous Relion execution.")
+        form.addParam('ignoreIdColumn', BooleanParam, default=False,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
+                      label='Ignore ID column?',
+                      help="Set this option to True to regenerate \n"
+                           "the id's of the particles. By default \n"
+                           "it is read from metadata file.        \n"
+                           "This option can be useful when merging\n"
+                           "different metadatas and id's are not  \n"
+                           "longer unique.")
         
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)

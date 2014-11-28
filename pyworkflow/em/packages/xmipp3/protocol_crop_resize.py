@@ -32,16 +32,15 @@ from pyworkflow.em.data import Volume
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 
 
-RESIZE_SAMPLINGRATE = 0
-RESIZE_DIMENSIONS = 1
-RESIZE_FACTOR = 2
-RESIZE_PYRAMID = 3
-
-
 
 class XmippResizeHelper():
-    """ This class implement the common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
+    """ Common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
     """
+
+    RESIZE_SAMPLINGRATE = 0
+    RESIZE_DIMENSIONS = 1
+    RESIZE_FACTOR = 2
+    RESIZE_PYRAMID = 3
 
     #--------------------------- DEFINE param functions --------------------------------------------
     @classmethod
@@ -53,7 +52,7 @@ class XmippResizeHelper():
         form.addParam('resizeOption', EnumParam,
                       choices=['Sampling Rate', 'Dimensions', 'Factor', 'Pyramid'],
                       condition='doResize',
-                      default=RESIZE_SAMPLINGRATE,
+                      default=cls.RESIZE_SAMPLINGRATE,
                       label="Resize option", display=EnumParam.DISPLAY_COMBO,
                       help='Select an option to resize the images: \n '
                       '_Sampling Rate_: Set the desire sampling rate to resize. \n'
@@ -61,23 +60,23 @@ class XmippResizeHelper():
                       '_Factor_: Set a resize factor to resize. \n '
                       '_Pyramid_: Use positive level value to expand and negative to reduce. \n')
         form.addParam('resizeSamplingRate', FloatParam, default=1.0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_SAMPLINGRATE),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_SAMPLINGRATE,
                       label='Resize sampling rate (A/px)',
                       help='Set the new output sampling rate.')
         form.addParam('doFourier', BooleanParam, default=False,
-                      condition='doResize and resizeOption==%d' % (RESIZE_DIMENSIONS),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
                       label='Use fourier method to resize?',
                       help='If you set to *True*, the final dimensions must be lower than the original ones.')
         form.addParam('resizeDim', IntParam, default=0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_DIMENSIONS),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
                       label='New image size (px)',
                       help='Size in pixels of the particle images <x> <y=x> <z=x>.')
         form.addParam('resizeFactor', FloatParam, default=0.5,
-                      condition='doResize and resizeOption==%d' % (RESIZE_FACTOR),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_FACTOR,
                       label='Resize factor',
                       help='New size is the old one x resize factor.')
         form.addParam('resizeLevel', IntParam, default=0,
-                      condition='doResize and resizeOption==%d' % (RESIZE_PYRAMID),
+                      condition='doResize and resizeOption==%d' % cls.RESIZE_PYRAMID,
                       label='Pyramid level',
                       help='Use positive value to expand and negative to reduce.')
         # Window operation
@@ -90,7 +89,7 @@ class XmippResizeHelper():
                       default=1,
                       label="Window operation", display=EnumParam.DISPLAY_COMBO,
                       help='Select how to change the size of the particles.\n'
-                      '_resize_: provide the new size (in pixels) for your particles.\n'
+                      '_cls.RESIZE_: provide the new size (in pixels) for your particles.\n'
                       '_crop_: choose how many pixels to crop from each border.\n')
         form.addParam('cropSize', IntParam, default=0,
                       condition='doWindow and windowOperation == 0',
@@ -132,7 +131,7 @@ class XmippResizeHelper():
     def _validate(cls, protocol):
         errors = []
         
-        if protocol.doResize and protocol.resizeOption == RESIZE_SAMPLINGRATE and protocol.doFourier:
+        if protocol.doResize and protocol.resizeOption == cls.RESIZE_SAMPLINGRATE and protocol.doFourier:
 #             imgSet = self.inputParticles.get()
             size = protocol._getSetSize()
             if protocol.resizeDim > size:
@@ -146,13 +145,13 @@ class XmippResizeHelper():
         samplingRate = protocol._getSetSampling()
         inputFn = protocol.inputFn
         
-        if protocol.resizeOption == RESIZE_SAMPLINGRATE:
+        if protocol.resizeOption == cls.RESIZE_SAMPLINGRATE:
             newSamplingRate = protocol.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
             protocol.samplingRate = newSamplingRate
             args = protocol._args + " --factor %(factor)f"
         
-        elif protocol.resizeOption == RESIZE_DIMENSIONS:
+        elif protocol.resizeOption == cls.RESIZE_DIMENSIONS:
             size = protocol.resizeDim.get()
             dim = protocol._getSetSize()
             protocol.samplingRate = (samplingRate * float(dim) / float(size))
@@ -162,7 +161,7 @@ class XmippResizeHelper():
             else:
                 args = protocol._args + " --dim %(size)d"
             
-        elif protocol.resizeOption == RESIZE_FACTOR:
+        elif protocol.resizeOption == cls.RESIZE_FACTOR:
             factor = protocol.resizeFactor.get()                                               
             protocol.samplingRate = samplingRate / factor
             args = protocol._args + " --factor %(factor)f"
