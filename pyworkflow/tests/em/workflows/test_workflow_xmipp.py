@@ -243,10 +243,16 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
+        print "Run Screen Particles"
+        protScreen = self.newProtocol(XmippProtScreenParticles, autoParRejection=XmippProtScreenParticles.REJ_MAXZSCORE, maxZscore=3.0)
+        protScreen.inputParticles.set(protExtract.outputParticles)
+        self.launchProtocol(protScreen)
+        self.assertIsNotNone(protScreen.outputParticles, "There was a problem with Screen Particles")
+        
         print "Run ML2D"
         protML2D = self.newProtocol(XmippProtML2D, numberOfReferences=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
-        protML2D.inputParticles.set(protExtract.outputParticles)
+        protML2D.inputParticles.set(protScreen.outputParticles)
         self.launchProtocol(protML2D)        
         self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
         self.validateFiles('protML2D', protML2D)
@@ -280,6 +286,7 @@ class TestXmippWorkflow(TestWorkflow):
         xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+        
 
 
 if __name__ == "__main__":
