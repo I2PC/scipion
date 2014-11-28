@@ -190,7 +190,7 @@ class TestConvertBase(BaseTest):
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print 'm1:\n', m1
@@ -337,7 +337,7 @@ class TestAlignment(TestConvertBase):
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print  >> sys.stderr, 'm1:\n', m1

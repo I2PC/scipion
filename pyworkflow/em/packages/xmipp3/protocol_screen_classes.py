@@ -184,4 +184,4 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
             particle = item.getRepresentative()
         else:
             particle = item
-        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
+        particle.setTransform(rowToAlignment(row, is2D=False, inverseTransform=True))

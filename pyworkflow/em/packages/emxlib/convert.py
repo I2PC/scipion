@@ -426,7 +426,7 @@ def _particlesFromEmx(protocol
                 if partSet.hasAlignment():
                     transform = Transform()
                     _transformFromEmx(emxParticle, part, transform)
-                    part.setAlignment(transform)
+                    part.setTransform(transform)
             else:
                 _coordinateFromEmx(emxParticle, part)
                 

@@ -169,7 +169,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         for i, img in enumerate(inputSet):
             img.setLocation(i+1, self._getPath('particles.mrcs'))
             if self.doScale and inputSet.hasAlignment():
-                a = img.getAlignment()
+                a = img.getTransform()
                 m = a.getMatrix()
                 # Check if for scale we only need to scale shifts
                 m[0, 3] *= 1/scaleFactor

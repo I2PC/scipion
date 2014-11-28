@@ -75,7 +75,7 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
     samplingRate = inputSet.getSamplingRate()
     parFile = FrealignParFile(parFileName)
     for particle, row in izip(inputSet, parFile):
-        particle.setAlignment(rowToAlignment(row, samplingRate))
+        particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
         rowToCtfModel(row, particle.getCTF())

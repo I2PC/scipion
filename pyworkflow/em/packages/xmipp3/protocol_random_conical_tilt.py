@@ -160,7 +160,7 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
             pairRow.setValue(xmipp.MDL_REF, 1)
 
-            alignment = img.getAlignment()
+            alignment = img.getTransform()
             
 #             pairRow.setValue(xmipp.MDL_FLIP, False)
 #             pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)

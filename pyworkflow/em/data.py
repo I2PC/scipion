@@ -191,7 +191,7 @@ class CTFModel(EMObject):
         # following the EMX standard
         self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
         
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
         CTF objects, now ignoring the psdFile.
         """
@@ -611,13 +611,6 @@ class SetOfImages(EMSet):
     def setAlignmentProj(self):
         self.setAlignment(ALIGN_PROJ)
     
-        
-#    def hasProjection(self):
-#        return self._hasProjection.get()
-    
-#    def setHasProjection(self, value):
-#        self._hasProjection.set(value)
-        
     def isPhaseFlipped(self):
         return self._isPhaseFlipped.get()
     
