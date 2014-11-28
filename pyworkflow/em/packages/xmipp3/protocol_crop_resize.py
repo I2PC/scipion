@@ -34,7 +34,7 @@ from protocol_process import XmippProcessParticles, XmippProcessVolumes
 
 
 class XmippResizeHelper():
-    """ This class implement the common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
+    """ Common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
     """
 
     RESIZE_SAMPLINGRATE = 0

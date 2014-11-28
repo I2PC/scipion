@@ -32,6 +32,7 @@ Protocols for particles filter operations.
 from pyworkflow.object import Float
 from pyworkflow.protocol.params import (
     FloatParam, EnumParam, DigFreqParam, BooleanParam, PointerParam)
+from pyworkflow.em.data import ImageDim
 from pyworkflow.em.constants import FILTER_LOW_PASS, FILTER_HIGH_PASS, FILTER_BAND_PASS
 from pyworkflow.em.protocol import ProtFilterParticles, ProtFilterVolumes
 from pyworkflow.em.packages.xmipp3.constants import (
@@ -296,6 +297,20 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
     def getInputSampling(self):
         return self.inputParticles.get().getSamplingRate()
 
+    def _validate(self):
+        if self.filterSpace != FILTER_SPACE_WAVELET:
+            return []  # nothing to check
+
+        for n in self.inputParticles.get().getDim():
+            while n != 1:
+                if n % 2 != 0:
+                    return ["To use the wavelet filter, the input particles",
+                            "must have dimensions which are a power of 2,",
+                            "but their dimensions are %s." %
+                            ImageDim(*self.inputParticles.get().getDim())]
+                n /= 2
+        return []
+
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
     """ Apply Fourier filters to a set of volumes """
@@ -326,3 +341,17 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
 
     def getInputSampling(self):
         return self.inputVolumes.get().getSamplingRate()
+
+    def _validate(self):
+        if self.filterSpace != FILTER_SPACE_WAVELET:
+            return []  # nothing to check
+
+        for n in self.inputVolumes.get().getDim():
+            while n != 1:
+                if n % 2 != 0:
+                    return ["To use the wavelet filter, the input volumes",
+                            "must have dimensions which are a power of 2,"
+                            "but their dimensions are %s." %
+                            ImageDim(*self.inputVolumes.get().getDim())]
+                n /= 2
+        return []
