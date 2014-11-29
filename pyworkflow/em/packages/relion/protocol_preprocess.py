@@ -24,13 +24,14 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em import *
-from pyworkflow.em.packages.relion.convert import convertBinaryFiles
-from pyworkflow.utils import trace
-from pyworkflow.protocol.params import Positive
+from glob import glob
 
-from convert import writeSetOfParticles, readSetOfParticles
-from protocol_base import ProtRelionBase
+from pyworkflow.utils.path import moveFile
+from pyworkflow.em.protocol.protocol_particles import ProtProcessParticles
+from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam, IntParam, Positive
+
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
+from pyworkflow.em.packages.relion.convert import writeSetOfParticles
 
 
 class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
@@ -98,13 +99,15 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                       condition='doWindow',
                       label='Window size (px)',
                       help='New particles windows size (in pixels).')  
+        
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
         self._insertFunctionStep("convertInputStep")
         self._insertFunctionStep('processStep')
         self._insertFunctionStep('createOutputStep')
-        
+    
+    #--------------------------- STEPS functions --------------------------------------------
     def convertInputStep(self):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
@@ -115,8 +118,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                             outputDir=self._getExtraPath(),
                             writeAlignment=False,
                             postprocessImageRow=self._postprocessImageRow)
-
-
+    
     def processStep(self):
         # Enter here to generate the star file or to preprocess the images
         
@@ -159,13 +161,10 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         imgSet.copyInfo(inputSet)
         if self.doScale:
             oldSampling = inputSet.getSamplingRate()
-            xdim = inputSet.getDim()[0]
-            scaleFactor = xdim/float(self.scaleSize.get())
+            scaleFactor = self._getScaleFactor(inputSet)
             newSampling = oldSampling * scaleFactor
             imgSet.setSamplingRate(newSampling)
-
-        #readSetOfParticles(self._getPath('particles.star'), imgSet,
-        #                   preprocessImageRow=self._preprocessImageRow)
+        
         for i, img in enumerate(inputSet):
             img.setLocation(i+1, self._getPath('particles.mrcs'))
             if self.doScale and inputSet.hasAlignment():
@@ -175,6 +174,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
                 m[0, 3] *= 1/scaleFactor
                 m[1, 3] *= 1/scaleFactor
             imgSet.append(img)
+        
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(inputSet, imgSet)
 
@@ -242,11 +242,6 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
             radius = xdim / 2
         return radius
     
-    def _preprocessImageRow(self, img, imgRow):
-        from convert import setupCTF, prependToFileName
-        prependToFileName(imgRow, self._getPath())
-        setupCTF(imgRow, self.inputParticles.get().getSamplingRate())
-    
     def _postprocessImageRow(self, img, imgRow):
         """ Since relion_preprocess will runs in its working directory
         we need to modify the default image path (from project dir)
@@ -254,3 +249,9 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         """
         from convert import relativeFromFileName
         relativeFromFileName(imgRow, self._getPath())
+    
+    def _getScaleFactor(self, inputSet):
+        xdim = inputSet.getDim()[0]
+        scaleFactor = xdim/float(self.scaleSize.get())
+        return scaleFactor
+        

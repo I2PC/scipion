@@ -2,6 +2,7 @@
 # *
 # * Authors:     Laura del Cano (laura.cano@cnb.csic.es)
 # *              Jose Gutierrez (jose.gutierrez@cnb.csic.es)
+# *              I. Foche (ifoche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -41,7 +42,7 @@ from convert import writeSetOfParticles, readSetOfParticles
         
         
 class XmippProtScreenParticles(ProtProcessParticles):
-    """ Classify particles according their similarity to the others in order to detect outliers """
+    """ Classify particles according their similarity to the others in order to detect outliers. """
     _label = 'screen particles'
 
     # Automatic Particle rejection enum
@@ -62,7 +63,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                       help='Maximum Zscore.', validators=[Positive])      
         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
-                      help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
+                      help='The worse percentage of particles according to metadata labels: ZScoreShape1, ZScoreShape2, ZScoreSNR1, ZScoreSNR2, ZScoreHistogram are automatically disabled. Therefore, the total number of disabled particles belongs to [percetage, 5*percentage]', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
         form.addParallelSection(threads=0, mpi=0)
         
         
@@ -118,20 +119,21 @@ class XmippProtScreenParticles(ProtProcessParticles):
         pass
         
     def _citations(self):
-        return []
+        return ['Vargas2013b']
     
     def _methods(self):
         methods = []
-        outParticles = len(self.outputParticles) if self.outputParticles is not None else None
-        particlesRejected = len(self.inputParticles.get())-outParticles if outParticles is not None else None
-        particlesRejectedText = ' ('+str(particlesRejected)+')' if particlesRejected is not None else ''
-        rejectionText = [
-                         '',# REJ_NONE
-                         ' and removing those not reaching %s%s' % (str(self.maxZscore.get()), particlesRejectedText),# REJ_MAXZSCORE
-                         ' and removing worst %s percent%s' % (str(self.percentage.get()), particlesRejectedText)# REJ_PERCENTAGE
-                         ]
-        methods.append('An input dataset of %s particles was sorted by'
-                       ' its ZScore using xmipp_image_sort_by_statistics'
-                       ' program%s. ' % (len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
+        if hasattr(self, 'outputParticles'):
+            outParticles = len(self.outputParticles) if self.outputParticles is not None else None
+            particlesRejected = len(self.inputParticles.get())-outParticles if outParticles is not None else None
+            particlesRejectedText = ' ('+str(particlesRejected)+')' if particlesRejected is not None else ''
+            rejectionText = [
+                             '',# REJ_NONE
+                             ' and removing those not reaching %s%s' % (str(self.maxZscore.get()), particlesRejectedText),# REJ_MAXZSCORE
+                             ' and removing worst %s percent%s' % (str(self.percentage.get()), particlesRejectedText)# REJ_PERCENTAGE
+                             ]
+            methods.append('An input dataset of %s particles was sorted by'
+                           ' its ZScore using xmipp_image_sort_by_statistics'
+                           ' program%s. ' % (len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
         return methods
     

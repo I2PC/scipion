@@ -97,7 +97,7 @@ class ProtImportVolumes(ProtImportImages):
     #--------------------------- INFO functions ----------------------------------------------------
     
     def _getVolMessage(self):
-        if self.hasAttribute('outputVol'):
+        if self.hasAttribute('outputVolume'):
             return "*one* volume"
         else:
             return "*%d* volumes" % self.outputVolumes.getSize()

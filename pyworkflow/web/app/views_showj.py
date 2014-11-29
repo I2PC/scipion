@@ -2,7 +2,6 @@
 # *
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *             Adrian Quintana (aquintana@cnb.csic.es)
-# *             
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -195,7 +194,12 @@ def setRenderingOptions(request, dataset, table, inputParams):
                     elif oldMode == 'table':
                         # New Functionality used to render elements selected in table mode for volumes
                         lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
-                        index = int(lastItemSelected)-1
+                        if len(lastItemSelected) > 0:
+                            index = int(lastItemSelected)-1
+                        else:
+                            # To avoid exceptions without selected item between transitions
+                            index = 0
+                        
                         _imageVolName = table.getValueFromIndex(index, label)
                         inputParams[sj.VOL_SELECTED] = _imageVolName
             
@@ -558,6 +562,7 @@ def create_context_chimera(volPath, threshold=None):
                "volPath":volPath, 
                "threshold": threshold, 
                "jquery_ui_css": getResourceCss("jquery_ui"),
+               "philogl": getResourceJs("philogl"),
                }
     
     return context

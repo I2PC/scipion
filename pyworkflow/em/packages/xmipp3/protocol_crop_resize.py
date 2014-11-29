@@ -34,7 +34,7 @@ from protocol_process import XmippProcessParticles, XmippProcessVolumes
 
 
 class XmippResizeHelper():
-    """ This class implement the common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
+    """ Common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
     """
 
     RESIZE_SAMPLINGRATE = 0
@@ -294,6 +294,12 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         XmippResizeHelper._insertProcessStep(self)
         
     #--------------------------- STEPS functions ---------------------------------------------------
+    def resizeStep(self, args):
+        self.runJob("xmipp_image_resize", args)
+
+    def windowStep(self, args):
+        self.runJob("xmipp_transform_window", args)
+
     def createOutputStep(self):
         volSet = self.inputVolumes.get()
         if self._isSingleInput():
