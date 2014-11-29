@@ -1048,6 +1048,13 @@ class Matrix(Scalar):
     def __str__(self):
         return np.array_str(self._matrix)
     
+    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
+        """ Override the default behaviour of copy
+        to also copy array data.
+        """
+        self.setMatrix(np.copy(other.getMatrix()))
+        self._objValue = other._objValue
+    
         
 class Transform(EMObject):
     """ This class will contain a transformation matrix
@@ -1075,6 +1082,9 @@ class Transform(EMObject):
         m = self.getMatrix()
         m *= factor
         m[3, 3] = 1.
+        
+    def scaleShifts(self, factor):
+        pass
 
 
 class Class2D(SetOfParticles):
