@@ -315,7 +315,10 @@ class Project(object):
     def newProtocol(self, protocolClass, **kwargs):
         """ Create a new protocol from a given class. """
         newProt = protocolClass(project=self, **kwargs)
-        self.__setProtocolLabel(newProt)
+        # Only set a default label to the protocol if is was not
+        # set throught the kwargs
+        if not newProt.getObjLabel():
+            self.__setProtocolLabel(newProt)
         
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
