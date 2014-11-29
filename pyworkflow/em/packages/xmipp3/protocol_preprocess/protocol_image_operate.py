@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import FileParam, EnumParam, PointerParam
 from pyworkflow.em import *
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.properties import Message
-from convert import writeSetOfParticles, writeSetOfVolumes
+from ..convert import writeSetOfParticles, writeSetOfVolumes
 
 # Operands enum
 OP_PLUS = 0
@@ -75,6 +75,7 @@ operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
 
 class XmippProtImageOperate():
     """ Some image operations such as: Dot product or Summation. """
+    _label = 'image operate'
 
     def __init__(self,_isParticle, **args):
         self._program = "xmipp_image_operate"

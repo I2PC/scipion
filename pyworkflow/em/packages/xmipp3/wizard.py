@@ -36,15 +36,14 @@ import xmipp
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
-from protocol_filter import XmippProtFilterParticles, XmippProtFilterVolumes
-from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
+from protocol_preprocess import (XmippProtFilterParticles, XmippProtFilterVolumes,
+                                 XmippProtMaskParticles, XmippProtMaskVolumes)
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
 

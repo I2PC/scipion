@@ -29,9 +29,9 @@ This sub-package contains classes to use in common processing operations of SetO
 
 from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
-from convert import (writeSetOfParticles, readSetOfParticles, 
-                     writeSetOfVolumes, readSetOfVolumes,
-                     getImageLocation)
+from pyworkflow.em.packages.xmipp3.convert import (
+     getImageLocation, readSetOfParticles, readSetOfVolumes, 
+     writeSetOfParticles, writeSetOfVolumes)
 
 
 
