@@ -123,13 +123,24 @@ class ProtImportParticles(ProtImportImages):
         ci = self.getImportClass()
         ci.importParticles()
         
-        size = self.outputParticles.getSize()
-        sampling = self.outputParticles.getSamplingRate()
-        summary = "Import of *%d* Particles from %s file:\n" % (size, self.getEnumText('importFrom'))
+        summary = "Import from *%s* file:\n" % self.getEnumText('importFrom')
         summary += self.importFilePath + '\n'
-        summary += "Sampling rate : *%0.2f* A/px\n\n" % sampling
+        
+        if self.hasAttribute('outputParticles'):
+            particles = self.outputParticles
+            summary += '   Particles: *%d* (ctf=%s, alignment=%s)\n' % (particles.getSize(),
+                                                                        particles.hasCTF(),
+                                                                        particles.getAlignment())
+                                                                      
+        if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
+            summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
+            
+        if self.hasAttribute('outputMicrographs'): # EMX files can contain only Coordinates information
+            summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
+        
         if self.copyFiles:
-            summary += 'WARNING: Binary files copied into project (extra disk space)'
+            summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
+            
         self.summaryVar.set(summary)
         
     def loadAcquisitionInfo(self):
