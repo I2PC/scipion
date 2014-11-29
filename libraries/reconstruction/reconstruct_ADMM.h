@@ -30,6 +30,8 @@
 #include <data/matrix1d.h>
 #include <data/xmipp_fftw.h>
 #include <data/ctf.h>
+#include <data/mask.h>
+#include <data/symmetries.h>
 
 /**@defgroup ReconstructADMMProgram Reconstruct Alternating Direction Method of Multipliers
    @ingroup ReconsLibrary */
@@ -84,6 +86,9 @@ public:
 	int Ncgiter; // Number of conjugate gradient iterations
 	int Nadmmiter; // Number of ADMM iterations
 	bool positivity; // Positivity constraint
+	bool applyMask;
+	Mask mask; // Mask
+	String symmetry;
 public:
     void defineParams();
     void readParams();
@@ -140,6 +145,7 @@ public:
 
 	MultidimArray<double> ux, uy, uz, dx, dy, dz, ud;
 	MultidimArray< std::complex<double> > fourierLx, fourierLy, fourierLz;
+	SymList SL;
 };
 
 //@}

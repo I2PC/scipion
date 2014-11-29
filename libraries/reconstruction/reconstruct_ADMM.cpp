@@ -24,6 +24,15 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+/* TODO:
+ * - Add mask
+ * - Mirrors
+ * - Default parameters
+ * - Multiresolution
+ * - Symmetry
+ * - Parallelization
+ */
+
 #include "reconstruct_ADMM.h"
 #include <data/metadata_extension.h>
 
@@ -47,6 +56,9 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" [--cgiter <N=3>]: Conjugate Gradient iterations");
     addParamsLine(" [--admmiter <N=30>]: ADMM iterations");
     addParamsLine(" [--positivity]: Positivity constraint");
+    addParamsLine(" [--sym <s=c1>]: Symmetry constraint");
+
+    mask.defineParams(this,INT_MASK);
 }
 
 void ProgReconsADMM::readParams()
@@ -71,12 +83,47 @@ void ProgReconsADMM::readParams()
 	Ncgiter=getIntParam("--cgiter");
 	Nadmmiter=getIntParam("--admmiter");
 	positivity=checkParam("--positivity");
+
+	applyMask=checkParam("--mask");
+	if (applyMask)
+		mask.readParams(this);
+	SL.readSymmetryFile(getParam("--sym"));
 }
 
 void ProgReconsADMM::produceSideInfo()
 {
 	// Read input images
 	mdIn.read(fnIn);
+
+	// Symmetrize input images
+	Matrix2D<double> Lsym(3,3), Rsym(3,3);
+	MetaData mdSym;
+	MDRow row;
+	double rot, tilt, psi, newrot, newtilt, newpsi;
+	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+	{
+		mdIn.getRow(row,__iter.objId);
+		row.getValue(MDL_ANGLE_ROT,rot);
+		row.getValue(MDL_ANGLE_TILT,tilt);
+		row.getValue(MDL_ANGLE_PSI,psi);
+		mdSym.addRow(row);
+		for (int isym = 0; isym < SL.symsNo(); isym++)
+		{
+			SL.getMatrices(isym, Lsym, Rsym, false);
+			Euler_apply_transf(Lsym,Rsym,rot,tilt,psi,newrot,newtilt,newpsi);
+			row.setValue(MDL_ANGLE_ROT,newrot);
+			row.setValue(MDL_ANGLE_TILT,newtilt);
+			row.setValue(MDL_ANGLE_PSI,newpsi);
+			mdSym.addRow(row);
+		}
+	}
+	mdIn=mdSym;
+	mdSym.clear();
+
+	// Prepare kernel
+	if (kernelShape=="KaiserBessel")
+		kernel.initializeKernel(alpha,a,0.01);
+	kernel.convolveKernelWithItself();
 
 	// Get Htb reconstruction
 	if (fnHtb=="")
@@ -89,21 +136,16 @@ void ProgReconsADMM::produceSideInfo()
 
 	// Adjust regularization weights
 	double Nimgs=mdIn.size();
-	double VHtb_norm=sqrt(CHtb().sum2()/MULTIDIM_SIZE(CHtb()));
-	mu*=Nimgs/XSIZE(CHtb())*VHtb_norm;
-	lambda*=Nimgs/XSIZE(CHtb())*VHtb_norm;
-	lambda1*=Nimgs/XSIZE(CHtb());
+	double CHtb_norm=sqrt(CHtb().sum2()/MULTIDIM_SIZE(CHtb()));
+	//COSS mu*=Nimgs/XSIZE(CHtb())*CHtb_norm;
+	//COSS lambda*=Nimgs/XSIZE(CHtb())*CHtb_norm;
+	//COSS lambda1*=Nimgs/XSIZE(CHtb());
 
 	// Get first volume
 	if (fnFirst=="")
 		Ck().initZeros(CHtb());
 	else
 		Ck.read(fnFirst);
-
-	// Prepare kernel
-	if (kernelShape=="KaiserBessel")
-		kernel.initializeKernel(alpha,a,0.01);
-	kernel.convolveKernelWithItself();
 
 	// Compute H'*K*H+mu*L^T*L+lambda_1 I
 	computeHtKH();
@@ -131,6 +173,10 @@ void ProgReconsADMM::produceSideInfo()
 
 	ud=ux;
 	transformerL.setReal(ud);
+
+	// Prepare mask
+	if (applyMask)
+		mask.generate_mask(CHtb());
 }
 
 void ProgReconsADMM::show()
@@ -485,6 +531,9 @@ void ProgReconsADMM::applyConjugateGradient()
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(p)
 			DIRECT_MULTIDIM_ELEM(p,n)  = DIRECT_MULTIDIM_ELEM(r,n)+beta*DIRECT_MULTIDIM_ELEM(p,n);
 
+		if (applyMask)
+			mask.apply_mask(mVk,mVk);
+
 //		Image<double> save;
 //		save()=Vk();
 //		save.write("PPPVk.vol");
@@ -495,11 +544,14 @@ void ProgReconsADMM::applyConjugateGradient()
 
 void ProgReconsADMM::doPOCSProjection()
 {
+	if (applyMask)
+		mask.apply_mask(CHtb(),CHtb());
+
 	if (positivity)
 	{
 		Ck().threshold("below",0.,0.);
 #ifdef NEVERDEFINED
-		MultidimArray<double> smallKernel3D(2*a+1,2*a+1,2*a+1);
+		MultidimArray<double> smallKernel3D(generate_mask2*a+1,2*a+1,2*a+1);
 		smallKernel3D.setXmippOrigin();
 		kernel.computeKernel3D(smallKernel3D);
 		smallKernel3D/=sqrt(smallKernel3D.sum2());
@@ -544,9 +596,9 @@ void ProgReconsADMM::updateUD()
 		threshold=lambda/mu;
 	else
 		threshold=0;
-	std::cout << "lambda=" << lambda << std::endl;
-	std::cout << "mu=" << mu << std::endl;
-	std::cout << "Threshold=" << threshold << std::endl;
+//	std::cout << "lambda=" << lambda << std::endl;
+//	std::cout << "mu=" << mu << std::endl;
+//	std::cout << "Threshold=" << threshold << std::endl;
 	MultidimArray<double> LCk;
 
 	// Update gradient and Lagrange parameters
