@@ -22,44 +22,49 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************/
 
+import os
+from itertools import izip
 
-from pyworkflow.em import *
-from pyworkflow.tests import *
-from pyworkflow.em.protocol import ProtImportParticles
+import pyworkflow.tests as tests
+from pyworkflow.em.data import SetOfCoordinates, SetOfMicrographs
+from pyworkflow.em.protocol import ProtImportMicrographs, ProtImportParticles
 
-class TestEmxBase(BaseTest):
+
+
+class TestEmxBase(tests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('emx')
+        tests.setupTestProject(cls)
+        cls.dataset = tests.DataSet.getDataSet('emx')
     
     def test_coodinatesTest1(self):
         """ Import an EMX file with just one micrograph 
         and a few coordinates.
         """
-        args = {'importFrom': ProtImportParticles.IMPORT_FROM_EMX,
-                'amplitudConstrast': 0.1,
-                'sphericalAberration': 2.,
-                'voltage': 100,
-                'samplingRate': 2.46,
-                'magnification': 10000
-        }
-        args['emxFile'] = self.dataset.getFile('coordinatesT1')
-        protEmxImport   = self.newProtocol(ProtImportParticles, **args)
-        protEmxImport.setObjLabel('from emx (coordinatesT1)')
+        protEmxImport   = self.newProtocol(ProtImportParticles, 
+                                           objLabel='from emx (coordinatesT1)',
+                                           importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                           emxFile=self.dataset.getFile('coordinatesT1'),
+                                           voltage=100,
+                                           magnification=10000,
+                                           samplingRate=2.46)
         self.launchProtocol(protEmxImport)
 
         # Reference coordinates
         coords = SetOfCoordinates(filename=self.dataset.getFile('coordinatesGoldT1'))
-        BaseTest.compareSets(self, protEmxImport.outputCoordinates, coords)
+        tests.BaseTest.compareSets(self, protEmxImport.outputCoordinates, coords)
         
     def test_particleImportDefocus(self):
         """ Import an EMX file with a stack of particles
         that has defocus
         """
         emxFn = self.dataset.getFile('defocusParticleT2')
-        protEmxImport = self.newProtocol(ProtEmxImport,
-                                         inputEMX=emxFn
+        protEmxImport = self.newProtocol(ProtImportParticles,
+                                         objLabel='emx - import ctf',
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         magnification=10000,
+                                         samplingRate=2.8
                                          )
         self.launchProtocol(protEmxImport)
         micFn = self.dataset.getFile('micrographsGoldT2')
@@ -70,15 +75,18 @@ class TestEmxBase(BaseTest):
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
-            self.assertTrue(mic1.equalAttributes(mic2))
+            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
 
     def test_micrographImport(self):
         """ Import an EMX file with micrographs and defocus
         """
         emxFn = self.dataset.getFile('emxMicrographCtf1')
-        protEmxImport = self.newProtocol(ProtEmxImport,
+        protEmxImport = self.newProtocol(ProtImportMicrographs,
                                          objLabel='emx - import mics',
-                                         inputEMX=emxFn
+                                         importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
+                                         magnification=10000,
+                                         samplingRate=2.46,
                                          )
         self.launchProtocol(protEmxImport)
         micFn =self.dataset.getFile('emxMicrographCtf1Gold')
@@ -89,17 +97,17 @@ class TestEmxBase(BaseTest):
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))
             mic2.setFileName(os.path.basename(mic2.getFileName()))
-            self.assertTrue(mic1.equalAttributes(mic2))
+            self.assertTrue(mic1.equalAttributes(mic2, verbose=True))
             
  
     def test_particlesAlignment(self):
         """ Import an EMX file with particles and alignment information.
         """
         emxFn = self.dataset.getFile('alignment/Test1/images.emx')
-        protEmxImport = self.newProtocol(ProtEmxImport,
+        protEmxImport = self.newProtocol(ProtImportParticles,
                                          objLabel='emx: import alignment',
-                                         inputEMX=emxFn,
-                                         provideAcquisition=True,
+                                         importFrom=ProtImportParticles.IMPORT_FROM_EMX,
+                                         emxFile=emxFn,
                                          samplingRate=1.,
                                          amplitudeContrast=2.,
                                          sphericalAberration=0.1,
