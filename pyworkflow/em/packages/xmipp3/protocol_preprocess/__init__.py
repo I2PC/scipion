@@ -24,9 +24,11 @@
 # *
 # **************************************************************************
 
+from protocol_crop_resize import XmippResizeHelper
 from protocol_crop_resize import XmippProtCropResizeParticles
 from protocol_crop_resize import XmippProtCropResizeVolumes
 
+from protocol_filter import XmippFilterHelper
 from protocol_filter import XmippProtFilterParticles
 from protocol_filter import XmippProtFilterVolumes
 

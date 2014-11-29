@@ -33,8 +33,8 @@ from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
-from pyworkflow.em.packages.xmipp3.protocol_crop_resize import XmippResizeHelper as xrh
+from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
+from pyworkflow.em.packages.xmipp3 import XmippResizeHelper as xrh
 
 
 # Some utility functions to import particles that are used
@@ -131,7 +131,9 @@ class TestXmippCreateMask2D(TestXmippBase):
                                      size= self.size, 
                                      geo=1, boxSize=-1 )
         protMask2.setObjLabel('box mask')
+        print "launching protMask2"
         self.launchProtocol(protMask2)
+        print "assert...."
         self.assertIsNotNone(protMask2.outputMask, "There was a problem with create boxed mask for particles")
     
     def testCreateCrownMask(self):
