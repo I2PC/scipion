@@ -32,6 +32,7 @@ from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from ..convert import writeSetOfParticles, xmippToLocation
+from ..convert import writeSetOfVolumes, readSetOfVolumes, getImageLocation
 import xmipp
 
 
