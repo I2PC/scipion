@@ -53,6 +53,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		cols = visibleLabels.size();
 		rows = n;
 		renderer.hackBorders = false;
+                
 	}
 
 	@Override
@@ -245,8 +246,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return true;
 			}
 		} catch (Exception e) {
-                        e.printStackTrace();
-                        XmippDialog.showError(null, e.getMessage());
+                        if(e.getMessage() == null)
+                            e.printStackTrace();
+                        else
+                            XmippDialog.showError(null, e.getMessage());
 			
 		}
 		return false;
@@ -273,7 +276,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		if (changed) {
 			data.renderImages = value;
 			calculateCellSize();
-			fireTableStructureChanged();
+			fireTableDataChanged();
 		}
 	}
 
@@ -293,7 +296,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			font_height = renderer.getFontMetrics(renderer.getFont())
 					.getHeight();
 			font_height += renderer.getIconTextGap(); // Adds the extra gap.
-			cellDim.setSize(100, font_height + 5);
+			cellDim.setSize(200, font_height + 5);
 		}
 	}
 

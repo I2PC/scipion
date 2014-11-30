@@ -273,7 +273,7 @@ public:
         // Initialize the parameters for optical flow structure
         d_calc.numLevels=6;
         d_calc.pyrScale=0.5;
-        d_calc.fastPyramids=false;
+        d_calc.fastPyramids=true;
         d_calc.winSize=winSize;
         d_calc.numIters=1;
         d_calc.polyN=5;

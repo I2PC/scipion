@@ -26,7 +26,6 @@
 
 package xmipp.viewer.windows;
 
-import ij.ImagePlus;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -67,7 +66,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -88,8 +86,6 @@ import javax.swing.table.JTableHeader;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.Tool;
 import xmipp.ij.commons.XmippApplication;
-import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -747,73 +743,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		makeVisible(index);
 	}
 
-	public class Worker implements Runnable
-	{
-		public static final int STATS = 0;
-		public static final int PCA = 1;
-		public static final int FSC = 2;
-		public String message;
-		/** Constructor selecting operation */
-		private int op; // store operation
-		private MetaData imagesmd;
-
-		public Worker(int operation, MetaData imagesmd)
-		{
-			op = operation;
-			this.imagesmd = imagesmd;
-			if (imagesmd.findObjects().length == 0)
-				throw new IllegalArgumentException("No images available");
-		}
-
-		public void run()
-		{
-			try
-			{
-				switch (op)
-				{
-				case STATS:
-					computeStatsImages(imagesmd);
-					break;
-				case PCA:
-					pca(imagesmd);
-					break;
-				case FSC:
-					fsc(imagesmd);
-					break;
-				}
-				imagesmd.destroy();
-			}
-			catch (Exception e)
-			{
-				XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
-				showException(e);
-				return;
-
-			}
-			XmippWindowUtil.releaseGUI(GalleryJFrame.this.getRootPane());
-		}
-
-		public String getMessage()
-		{
-			switch (op)
-			{
-			case STATS:
-				return "Computing average and std images...";
-			case PCA:
-				return "Computing PCA...";
-			case FSC:
-				return "Computing FSC...";
-			}
-			return "";
-		}
-
-	}
+	
 
 	/** Function to create and launch the worker, blocking the gui */
 	public void runInBackground(int operation)
 	{
 
-		MetaData imagesmd, md;
+		MetaData md;
                 if(data.hasSelection())
                 {
                     int result = XmippDialog.showQuestionYesNoCancel(this, "This operation processes all images by default. Would you like to use selection instead?");
@@ -826,37 +762,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                 }
                 else
                     md = data.getMd();
-                    
                 
-                imagesmd = data.getImagesMd(md);
-		Worker w = new Worker(operation, imagesmd);
+                
+		Worker w = new Worker(operation, md, this);
 		XmippWindowUtil.blockGUI(this, w.getMessage());
 		Thread thr = new Thread(w);
 		thr.start();
-
 	}
 
-	private void computeStatsImages(MetaData imagesmd) throws Exception
-	{
-		ImageGeneric imgAvg = new ImageGeneric();
-		ImageGeneric imgStd = new ImageGeneric();
-
-		imagesmd.getStatsImages(imgAvg, imgStd, data.useGeo(), data.getRenderLabel());
-		ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
-		ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
-		imgAvg.destroy();
-		imgStd.destroy();
-
-		XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + data.getFileName());
-		XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, this);
-		winAvg.setVisible(true);
-		XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + data.getFileName());
-
-		XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, this);
-		winStd.setVisible(true);
-		imagesmd.destroy();
-	}
-
+	
+	
 	private boolean openClassesDialog()
 	{
 		if (dlgClasses == null)
@@ -873,24 +788,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		int dot = filename.lastIndexOf(".");
 		return filename.substring(0, dot) + ext;
 	}
+        
 
-	public void pca(MetaData imagesmd) throws Exception
-	{
-		ImageGeneric image = new ImageGeneric();
-		imagesmd.getPCAbasis(image, data.getRenderLabel());
-		ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
-		imp.setTitle("PCA: " + data.getFileName());
-		ImagesWindowFactory.openXmippImageWindow(this, imp, false);
-		imagesmd.destroy();
-
-	}
-
-	public void fsc(MetaData imagesmd) throws Exception
-	{
-		FSCJFrame frame = new FSCJFrame(data, imagesmd);
-		XmippWindowUtil.centerWindows(frame, this);
-		frame.setVisible(true);
-	}
 
 	/***
 	 * Helper function to create toolbar toggle buttons
@@ -1542,13 +1441,16 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				addItem(DISPLAY_RESLICE_VIEWS[i], reslices[i]);
                         addItem(DISPLAY_COLUMNS, "Columns ...", "columns.gif");
-			// Metadata operations
-			addItem(METADATA, "Metadata");
-                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
-			addItem(STATS, "Statistics");
+                        
+                        addItem(STATS, "Statistics");
 			addItem(STATS_AVGSTD, "Avg & Std images");
 			addItem(STATS_PCA, "PCA");
 			addItem(STATS_FSC, "FSC");
+                        
+			// Metadata operations
+			addItem(METADATA, "Metadata");
+                        addItem(DISPLAY_NORMALIZE, "Global normalization", null, "control released N");
+			
 			addItem(MD_PLOT, "Plot", "plot.png");
 			addItem(MD_CLASSES, "Classes");
 			addItem(MD_EDIT_COLS, "Edit labels", "edit.gif");
@@ -1923,9 +1825,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                         row = table.rowAtPoint(location);
 			col = table.columnAtPoint(location);
-			setItemVisible(SET_CLASS, data.isClassificationMd());
+                        boolean isscipion = data instanceof ScipionGalleryData;
+			setItemVisible(SET_CLASS, data.isClassificationMd() && !isscipion);
 			// This item visibility depends on current selection
-			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0);
+			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
                         setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
 			// Update menu items status depending on item.

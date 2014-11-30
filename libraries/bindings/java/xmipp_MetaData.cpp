@@ -815,6 +815,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
 }
 
 
+
 JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getPCAbasis
 (JNIEnv *env, jobject jmetadata, jobject jbasis, jint label)
 {

@@ -50,11 +50,11 @@ import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippStringUtils;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
 import xmipp.viewer.ctf.CTFRecalculateImageWindow;
 import xmipp.viewer.ctf.EstimateFromCTFTask;
 import xmipp.viewer.ctf.TasksEngine;
+import xmipp.viewer.scipion.ScipionMetaData;
 import xmipp.viewer.windows.AddObjectJDialog;
 import xmipp.viewer.windows.GalleryJFrame;
 import xmipp.viewer.windows.SaveJDialog;
@@ -136,7 +136,17 @@ public class GalleryData {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    public String getTmpFile(String suffix) {
+        String ext = XmippStringUtils.getFileExtension(filename);
+        String ext2 = suffix + ext;
+        String tmpfile = filename;
+        if(!filename.endsWith(ext2))
+            tmpfile = filename.replace(ext, ext2);
+        return tmpfile;
+    }
+
+      
 
     public enum Mode {
 
@@ -348,15 +358,9 @@ public class GalleryData {
 			// Try to find at least one image to render
             // and take dimensions from that
             for (int i = 0; i < ids.length && image == null; ++i) {
-                imageFn = Filename.findImagePath(
-                        md.getValueString(renderLabel, ids[i]), filename, true);
-
-				// DEBUG.printFormat("imageFn1: %s", imageFn);
-
-                // imageFn = Filename.fixPath(md.getValueString(renderLabel,
-                // ids[i]), filename, false);
-                // DEBUG.printFormat("imageFn2: %s", imageFn);
-                // if (imageFn != null){
+                imageFn = md.getValueString(renderLabel, ids[i]);
+                if(imageFn != null)
+                    imageFn = Filename.findImagePath(imageFn , filename, true);
                 if (imageFn != null) {
                     try {
                         image = new ImageGeneric(imageFn);
@@ -460,12 +464,13 @@ public class GalleryData {
                     labelids.length);
             ciFirstRender = null;
             ColumnInfo ciFirstRenderVisible = null;
-            int inputRenderLabel = MDLabel.MDL_UNDEFINED;
+            String inputRenderLabel = "";
 
             if (!renderLabel.equalsIgnoreCase("first")) {
-                inputRenderLabel = MetaData.str2Label(renderLabel);
+                inputRenderLabel = renderLabel;
             }
-
+            String sampleImage;
+            ColumnInfo auxRender = null;
             for (int i = 0; i < labelids.length; ++i) {
                 ci = initColumnInfo(labelids[i]);
                 if (labels != null) {
@@ -476,23 +481,36 @@ public class GalleryData {
                     }
                 } else {
                     ci.render = isRenderLabel(ci);
+                    if(ci.render)
+                        auxRender = ci;
                     ci.visible = isVisibleLabel(ci);
                 }
                 newLabels.add(ci);
-                if (inputRenderLabel == labelids[i] && ci.render) {//render label specified and included on renders
+                if (inputRenderLabel.equals(ci.labelName) && ci.render) {//render label specified and included on renders
                     ciFirstRender = ci;
                     if (ci.visible) {
                         ciFirstRenderVisible = ci;
                     }
                 }
+                
+
                 if (ciFirstRender == null && ci.allowRender)
-                    ciFirstRender = ci;
-                if (ciFirstRenderVisible == null && ci.allowRender && ci.visible) 
-                    ciFirstRenderVisible = ci;
+                {
+                    sampleImage = getSampleImage(ci);
+                    if(sampleImage != null)
+                    {
+                        ciFirstRender = ci;
+                        if (ciFirstRenderVisible == null && ci.visible) 
+                            ciFirstRenderVisible = ci;
+                    }
+                }
             }
+            if(ciFirstRender == null)
+                ciFirstRender = ciFirstRenderVisible = auxRender;//if there are no images found render none image on gallery mode
             if (ciFirstRenderVisible != null) {
                 ciFirstRender = ciFirstRenderVisible;
             }
+            
             // Add MDL_ENABLED if not present
             if (!md.containsLabel(MDLabel.MDL_ENABLED) && (md.containsLabel(MDLabel.MDL_IMAGE) || md.containsLabel(MDLabel.MDL_MICROGRAPH))) {
                 newLabels.add(0, new ColumnInfo(MDLabel.MDL_ENABLED));
@@ -502,6 +520,7 @@ public class GalleryData {
                 }
                 // hasMdChanges = true;
             }
+            
 
             labels = newLabels;
             orderLabels();
@@ -513,6 +532,22 @@ public class GalleryData {
             e.printStackTrace();
         }
     }// function loadLabels
+    
+    public String getSampleImage(ColumnInfo ci)
+    {
+        String imageFn, mddir = md.getBaseDir();
+        for (int i = 0; i < ids.length; ++i)
+        {
+            imageFn = getValueFromLabel(i, ci.label);
+            if(imageFn != null)
+            {
+                imageFn = Filename.findImagePath(imageFn, mddir, true);
+                if (imageFn != null && Filename.exists(imageFn))
+                       return imageFn;
+            }
+        }
+        return null;
+    }
     
     public ColumnInfo initColumnInfo(int label)
     {
@@ -1248,7 +1283,9 @@ public class GalleryData {
         return null;
     }
 
-    public MetaData getImagesMd(MetaData md) {
+    
+    
+    public MDRow[] getImages(MetaData md) {
         int idlabel = getRenderLabel();
         if (md == null) {
             return null;
@@ -1257,30 +1294,34 @@ public class GalleryData {
             return null;
         }
 
-        MDRow mdRow = new MDRow();
-        MetaData imagesmd = new MetaData();
+        MDRow mdRow = null;
+        ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
         int index = 0;
         String imagepath;
-        long id2;
-        // md.print();
+
         for (long id : md.findObjects()) {
             if (isEnabled(index)) {
+                
                 imagepath = md.getValueString(idlabel, id, true);
                 if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                    id2 = imagesmd.addObject();
+                    mdRow = new MDRow();
+                    
                     if (useGeo) {
+                        
                         md.getRow(mdRow, id);
                         mdRow.setValueString(idlabel, imagepath);
-                        imagesmd.setRow(mdRow, id2);
+                        
                     } else {
-                        imagesmd.setValueString(idlabel, imagepath, id2);
+                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
                     }
+                    
+                    imagesmd.add(mdRow);
                 }
             }
             index++;
         }
-        mdRow.destroy();
-        return imagesmd;
+
+        return imagesmd.toArray(new MDRow[]{});
     }
 
     public String getFileInfo() {
@@ -1391,6 +1432,9 @@ public class GalleryData {
                 }
         }      
         selection[index] = isselected;
+        if (numberOfVols > 0)
+            selectedVolFn = isselected? volumes[index]: volumes[0];
+            
     }
     public int size() {
         return ids.length;
@@ -1670,7 +1714,8 @@ public class GalleryData {
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
-
+        if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
+                return MetaData.isImage(ci.label);
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {

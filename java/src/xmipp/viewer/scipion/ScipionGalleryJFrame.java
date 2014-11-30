@@ -85,7 +85,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             inputid = parameters.inputid;
             String filename = data.getFileName();
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
-            sqlitefile = ((ScipionMetaData)data.getMd()).getTmpFile();
+            sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "ProtUserSubset");
             other = parameters.other;
@@ -114,7 +114,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         
         buttonspn.add(closebt);
-        if(!XmippWindowUtil.isScipion())
+        if(!XmippWindowUtil.isScipionCmd())
             return;
             
         if (type != null) {
@@ -253,7 +253,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         int size = ((ScipionGalleryData)data).getEnabledCount();
                         
         if (confirmCreate("Representatives", size)) {
-            String output = isClass2D()? "SetOfParticles,Representatives":"SetOfVolumes,Representatives";
+            String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
             String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
             createSubset(command, "Creating set ...");
 
@@ -415,7 +415,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try
         {
-            String[] args = new String[]{"--scipion", python, scripts, projectid, inputid, ""};
+            String[] args = new String[]{"--python", python, scripts, "--project",projectid, inputid, ""};
             ScipionParams params = new ScipionParams(args);
             new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
         }

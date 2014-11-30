@@ -29,6 +29,7 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.XmippMessage;
 
 public class ImagePlusLoader {
 
@@ -60,7 +61,7 @@ public class ImagePlusLoader {
     }
 
     public ImagePlusLoader(String fileName, ImagePlus imp, ImageGeneric ig, boolean useGeo, boolean wrap, int index) {
-
+        
         if (fileName != null) {
             String path = Filename.findImagePath(fileName, null, true);//check if file exists dismissing preffix and suffix
             existsfile = path != null;
@@ -68,7 +69,12 @@ public class ImagePlusLoader {
         if (existsfile) 
             impreader = new ImagePlusFromFile(fileName, imp, ig);
         else 
+        {
+
+            if(fileName != null)
+                throw new IllegalArgumentException(XmippMessage.getPathNotExistsMsg(fileName));
             impreader = new ImagePlusNotFromFile(imp, ig);
+        }
 //        
         impreader.setIndex(index);
         impreader.setUseGeometry(useGeo);

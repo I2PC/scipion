@@ -103,6 +103,9 @@ public class JMetaDataIO {
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_AUTOPICKPERCENT)));
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_TEMPLATES)));
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_STATE)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_MANUALPARTICLES_SIZE)));
+                    out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_PICKING_AUTOPARTICLES_SIZE)));
+                    
                     String vformat = "%20s";
                     out.write(String.format(vformat, picker.getMicrograph().getName()));
                     out.write(String.format(vformat, picker.getColor().getRGB()));
@@ -110,6 +113,8 @@ public class JMetaDataIO {
                     out.write(String.format(vformat, picker.getAutopickpercent()));
                     out.write(String.format(vformat, picker.getTemplatesNumber()));
                     out.write(String.format(vformat, picker.getMode().toString()));
+                    out.write(String.format(vformat, picker.getManualParticlesNumber()));
+                    out.write(String.format(vformat, picker.getAutomaticParticlesNumber()));
                     out.newLine();
                     out.write("data_filters\nloop_\n");
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MACRO_CMD)));

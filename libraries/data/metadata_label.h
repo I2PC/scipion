@@ -284,6 +284,8 @@ enum MDLabel
     MDL_PICKING_MICROGRAPH_STATE, ///< Micrograph state for particle picking
     MDL_PICKING_AUTOPICKPERCENT,
     MDL_PICKING_PARTICLE_SIZE, ///< Particle size for particle picking
+    MDL_PICKING_AUTOPARTICLES_SIZE, ///< Number of automatic particles picked
+    MDL_PICKING_MANUALPARTICLES_SIZE, ///< Number of manual particles picked
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
     MDL_POINTSASYMETRICUNIT, /// < Number of non-redundant projections directions (size_t)
 
@@ -878,7 +880,11 @@ enum MDLabel
     BSOFT_LAYERLINE_AMP,
     BSOFT_LAYERLINE_FOM,
     BSOFT_LAYERLINE_SELECT,
-
+    BSOFT_SYMMETRY_INT_TABLES_NUMBER,
+    BSOFT_SYMMETRY_SPACE_GROUP_NAME_H_M,
+    BSOFT_SYMMETRY_CELL_SETTING,
+    BSOFT_SYMMETRY_EQUIV_ID,
+    BSOFT_SYMMETRY_EQUIV_POS_AS_XYZ,
 
     MDL_LAST_LABEL  // **** NOTE ****: Do keep this label always at the end,it is here for looping purposes
 };//close enum Label
@@ -1026,8 +1032,9 @@ public:
             } os << d;
 
 #define INT2STREAM(i) \
-        if (withFormat) os << std::setw(10); \
+        if (withFormat) os << std::setw(20); \
         os << i;
+        //this must have 20 since SIZE_MAX = 18446744073709551615 size
 
     void toStream(std::ostream &os, bool withFormat = false, bool isSql=false, bool escape=true) const;
     String toString(bool withFormat = false, bool isSql=false) const;
@@ -1573,6 +1580,8 @@ private:
         MDL::addLabel(MDL_PICKING_PARTICLE_SIZE, LABEL_INT, "particleSize");
         MDL::addLabel(MDL_PICKING_AUTOPICKPERCENT, LABEL_INT, "autopickPercent");
         MDL::addLabel(MDL_PICKING_TEMPLATES, LABEL_INT, "templatesNum");
+        MDL::addLabel(MDL_PICKING_AUTOPARTICLES_SIZE, LABEL_INT, "autoParticlesNum");
+        MDL::addLabel(MDL_PICKING_MANUALPARTICLES_SIZE, LABEL_INT, "manualParticlesNum");
 
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax");
         MDL::addLabelAlias(MDL_PMAX, "Pmax");
@@ -2139,10 +2148,10 @@ private:
         MDL::addLabel(BSOFT_PARTICLE_CMP_CC, LABEL_STRING, "particle.cmp_cc");
         MDL::addLabel(BSOFT_PARTICLE_RFACTORAB, LABEL_STRING, "particle.rfactorab");
         MDL::addLabel(BSOFT_PARTICLE_COVERAGE, LABEL_STRING, "particle.coverage");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE, LABEL_STRING, "particle.box_size");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_X, LABEL_STRING, "particle.box_size_x");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Y, LABEL_STRING, "particle.box_size_y");
-        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Z, LABEL_STRING, "particle.box_size_z");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE, LABEL_DOUBLE, "particle.box_size");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_X, LABEL_DOUBLE, "particle.box_size_x");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Y, LABEL_DOUBLE, "particle.box_size_y");
+        MDL::addLabel(BSOFT_PARTICLE_BOX_SIZE_Z, LABEL_DOUBLE, "particle.box_size_z");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS, LABEL_STRING, "particle.box_radius");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS_X, LABEL_STRING, "particle.box_radius_x");
         MDL::addLabel(BSOFT_PARTICLE_BOX_RADIUS_Y, LABEL_STRING, "particle.box_radius_y");
@@ -2208,7 +2217,11 @@ private:
         MDL::addLabel(BSOFT_LAYERLINE_FOM, LABEL_STRING, "layer_line.fom");
         MDL::addLabel(BSOFT_LAYERLINE_SELECT, LABEL_STRING, "layer_line.select");
 
-
+        MDL::addLabel(BSOFT_SYMMETRY_INT_TABLES_NUMBER, LABEL_INT, "symmetry.Int_Tables_number");
+        MDL::addLabel(BSOFT_SYMMETRY_SPACE_GROUP_NAME_H_M, LABEL_STRING, "symmetry.space_group_name_H-M");
+        MDL::addLabel(BSOFT_SYMMETRY_CELL_SETTING, LABEL_STRING, "symmetry.cell_setting");
+        MDL::addLabel(BSOFT_SYMMETRY_EQUIV_ID, LABEL_INT, "symmetry_equiv.id");
+        MDL::addLabel(BSOFT_SYMMETRY_EQUIV_POS_AS_XYZ, LABEL_STRING, "symmetry_equiv.pos_as_xyz");
 
         //Create an static empty header for image initialization
         MDL::emptyHeader.resetGeo();

@@ -22,6 +22,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
+import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -324,18 +325,12 @@ public class ScipionGalleryData extends GalleryData {
     
     public Geometry getGeometry(long id)
         {
-            if (!containsGeometryInfo()) //FIXME: Now not reading any geometry!!!
+            if (!containsGeometryInfo()) 
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-//            Double shiftx, shifty, psiangle;
-//            shiftx = emo.getValueDouble("_alignment._xmipp_shiftX");
-//            shifty = emo.getValueDouble("_alignment._xmipp_shiftY");
-//            psiangle =  emo.getValueDouble("_alignment._xmipp_anglePsi");
-//            Boolean flip = emo.getValueBoolean("_alignment._xmipp_flip") ;
-//            return new Geometry(shiftx, shifty, psiangle, flip);
 
-
-            String matrix = (String)emo.getValue("_alignment._matrix");
+            String column = isClassificationMd()? "_representative._alignment._matrix" : "_alignment._matrix";
+            String matrix = (String)emo.getValue(column);
             return new Geometry(matrix);
         }
 
@@ -406,9 +401,10 @@ public class ScipionGalleryData extends GalleryData {
      /**
      * Return true if current file is a rotspectra classes
      */
-    public boolean isRotSpectraMd() {
-        if (filename != null) {
-            GalleryData.RotSpectra rs = getRotSpectra();
+    public boolean isRotSpectraMd() 
+    {
+        GalleryData.RotSpectra rs = getRotSpectra();
+        if (rs != null) {
             boolean filesExist =  Filename.exists(rs.fnVectors) && Filename.exists(rs.fnVectorsData);
             
             if (isClassificationMd() && filesExist) {
@@ -423,6 +419,8 @@ public class ScipionGalleryData extends GalleryData {
     public GalleryData.RotSpectra getRotSpectra()
     {
         String dir = getExtraPath();
+        if(dir == null)
+            return null;
         String fnClasses = Filename.join(dir, "kerdensom_classes.xmd");
         String fnVectors = Filename.join(dir, "kerdensom_vectors.xmd");
         String fnVectorsData = Filename.join(dir, "kerdensom_vectors.vec");
@@ -434,6 +432,8 @@ public class ScipionGalleryData extends GalleryData {
         if(filename == null)
             return null;
         String dir = new File(filename).getParent();
+        if(dir == null)
+            return null;
         return Filename.join(dir, "extra");
     }
     
@@ -447,11 +447,32 @@ public class ScipionGalleryData extends GalleryData {
     public void runObjectCommand(int index, String objectCommand) {
         try {
             ScipionParams params = (ScipionParams)parameters;
-            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.inputid, String.valueOf(getId(index))};
+            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.other, String.valueOf(getId(index))};
             XmippWindowUtil.executeCommand(cmd, false);
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
+    
+    public MetaData getMd()
+    {
+        
+        try {
+            ScipionParams params = (ScipionParams)parameters;
+            String pathToMd = filename.replace(XmippStringUtils.getFileExtension(filename), ".xmd");
+            String[] cmd = new String[]{params.python, params.getSqliteToMdScript() , filename, ((ScipionMetaData)md).getPreffix(), pathToMd};
+            String output = XmippWindowUtil.executeCommand(cmd, true);
+            System.out.println(output);
+            MetaData xmippmd = new MetaData(pathToMd);
+            return xmippmd;
+        } catch (Exception ex) {
+            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        } 
+        
+    }
+    
+    
+
     
 }

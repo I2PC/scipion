@@ -400,6 +400,58 @@ xmipp_compareTwoFiles(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+PyObject *
+xmipp_bsoftRemoveLoopBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename1, *filename2;
+    if (PyArg_ParseTuple(args, "OO", &filename1, &filename2))
+    {
+        try
+        {
+            PyObject * pyStr1 = PyObject_Str(filename1);
+            PyObject * pyStr2 = PyObject_Str(filename2);
+            char * str1 = PyString_AsString(pyStr1);
+            char * str2 = PyString_AsString(pyStr2);
+            bsoftRemoveLoopBlock(str1, str2);
+            Py_DECREF(pyStr1);
+            Py_DECREF(pyStr2);
+			Py_RETURN_TRUE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+
+PyObject *
+xmipp_bsoftRestoreLoopBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename1, *filename2;
+    if (PyArg_ParseTuple(args, "OO", &filename1, &filename2))
+    {
+        try
+        {
+            PyObject * pyStr1 = PyObject_Str(filename1);
+            PyObject * pyStr2 = PyObject_Str(filename2);
+            char * str1 = PyString_AsString(pyStr1);
+            char * str2 = PyString_AsString(pyStr2);
+            bsoftRestoreLoopBlock(str1, str2);
+            Py_DECREF(pyStr1);
+            Py_DECREF(pyStr2);
+			Py_RETURN_TRUE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 PyObject *
 xmipp_compareTwoImageTolerance(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -1000,6 +1052,10 @@ xmipp_methods[] =
           "return false if the image has repeated pixels at some corner" },
         { "compareTwoFiles", (PyCFunction) xmipp_compareTwoFiles, METH_VARARGS,
           "return true if both files are identical" },
+        { "bsoftRemoveLoopBlock", (PyCFunction) xmipp_bsoftRemoveLoopBlock, METH_VARARGS,
+          "convert bsoft star files to xmipp star files" },
+        { "bsoftRestoreLoopBlock", (PyCFunction) xmipp_bsoftRestoreLoopBlock, METH_VARARGS,
+          "convert xmipp star files to bsoft star files" },
         { "compareTwoImageTolerance", (PyCFunction) xmipp_compareTwoImageTolerance, METH_VARARGS,
           "return true if both images are very similar" },
         { "readMetaDataWithTwoPossibleImages", (PyCFunction) xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,

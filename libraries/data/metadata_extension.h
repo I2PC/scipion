@@ -11,7 +11,16 @@
 #include "xmipp_filename.h"
 #include "xmipp_image.h"
 #include "metadata.h"
+#include <stdlib.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
+#define BLOCKROW 1
+#define BLOCKCOLUNM 2
+#define BLOCKMIXED 3
+#define BLOCKDIFFERENCE 30
 /** @defgroup MetaDataExtension Extension to Metadata Stuff
  * @ingroup DataLibrary
  * @{
@@ -20,6 +29,9 @@
  * Note that the mean and stddev are images, not values.*/
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
                    double& _max, bool apply_geo, MDLabel image_label=MDL_IMAGE);
+
+void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, double& _min,
+                   double& _max, bool apply_geo, MDLabel image_label);
 
 /** Get the average of a Metadata applying the header.
  * The MD is not cleaned from disabled images (this option makes the call faster).
@@ -75,6 +87,16 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
  */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
                               MDLabel label, bool skipFirstBlock);
+
+/**convert bsoft metadas to xmipp style
+ *
+ */
+void bsoftRemoveLoopBlock(const FileName &_inFile, const FileName &block);
+
+/** undo bsoftRemoveLoopBlock actions
+ *
+ */
+void bsoftRestoreLoopBlock(const FileName &_inFile, const FileName &block);
 
 //@}
 

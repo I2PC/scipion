@@ -22,8 +22,6 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippQuestionDialog;
 import xmipp.utils.XmippStringUtils;
 import xmipp.viewer.models.ColumnInfo;
 
@@ -44,6 +42,7 @@ public class ScipionMetaData extends MetaData {
     private String[] blocks;
     private int enableds;
     Boolean checkTmp;
+    HashMap<String, String> properties;
     
     
 
@@ -157,7 +156,19 @@ public class ScipionMetaData extends MetaData {
                 ci = new ColumnInfo(labelscount, name, alias, type, allowRender, false);
                 columns.add(ci);
             }
+            if (preffix == null || preffix.equals(""))
+            {
+                properties = new HashMap<String, String>();
+                String key, value;
+                query = "SELECT * FROM Properties;";
+                rs = stmt.executeQuery(query);
 
+                while (rs.next()) {
+                    key = rs.getString("key");
+                    value = rs.getString("value");
+                    properties.put(key, value);
+                }
+            }
 
             rs.close();
             stmt.close();
@@ -833,10 +844,16 @@ public class ScipionMetaData extends MetaData {
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
-//        if(!self.equals("Class2D") || self.equals("Class3D"))
-//            return false;
-        boolean contains = getColumnInfo("_alignment._matrix") != null;
-        return contains;
+        if(properties == null)
+        {
+            if (parent == null) return false; else return parent.containsGeometryInfo();
+        }
+        
+        String value = properties.get("_alignment");
+
+        if (value == null)
+            return false;
+        return value.equals("1");
     }
     
     
@@ -1062,14 +1079,7 @@ public class ScipionMetaData extends MetaData {
         
     }
     
-    public String getTmpFile() {
-            String ext = XmippStringUtils.getFileExtension(filename);
-            String ext2 = "_selection" + ext;
-            String sqlitefile = filename;
-            if(!filename.endsWith(ext2))
-                sqlitefile = filename.replace(ext, ext2);
-            return sqlitefile;
-    }
+    
         
 
     protected Connection getConnection() throws ClassNotFoundException, SQLException
@@ -1161,5 +1171,7 @@ public class ScipionMetaData extends MetaData {
           }
 
     }
+    
+    
    
 }

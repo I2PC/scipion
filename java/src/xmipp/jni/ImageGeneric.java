@@ -316,5 +316,7 @@ public class ImageGeneric {
          * binding in its string representation read from the sqlite file.
          */
         public native void applyGeoMatrix(String matrixString, boolean wrap);
+        
+        
     
 }

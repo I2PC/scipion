@@ -392,7 +392,23 @@ public class TiltPairPicker extends ParticlePicker
     public int getParticlesCount() {
         return getUntiltedNumber();
             
-            
     }
+    
+    @Override
+	protected synchronized void saveConfig(MetaData md, long id)
+	{
+		try
+		{
+			super.saveConfig(md, id);
+			md.setValueInt(MDLabel.MDL_PICKING_MANUALPARTICLES_SIZE, getParticlesCount(), id);
+
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 }// class TiltPairPicker

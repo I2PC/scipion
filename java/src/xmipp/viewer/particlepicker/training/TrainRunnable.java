@@ -47,11 +47,8 @@ public class TrainRunnable implements Runnable
 		{
 			try
 			{
-                                System.out.println("Training");
-                                System.out.println(rectangle);
 				classifier.train(trainInput, (int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());// should remove training
 				micrograph.setAutopickpercent(picker.getAutopickpercent());
-                                System.out.println("Autopicking");
 				autopickRows = classifier.autopick(micrograph.getFile(), micrograph.getAutopickpercent());
 				picker.loadParticles(micrograph, autopickRows);
                                 picker.saveData(micrograph);
