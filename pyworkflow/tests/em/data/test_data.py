@@ -252,6 +252,13 @@ class TestTransform(BaseTest):
         t2 = t.clone()
         m2 = t2.getMatrix()
         self.assertTrue(np.allclose(m, m2, rtol=1e-2)) 
+        
+        p = Particle()
+        p.setTransform(t)
+        
+        p2 = p.clone()
+        m3 = p2.getTransform().getMatrix()
+        self.assertTrue(np.allclose(m, m3, rtol=1e-2)) 
 
 
 if __name__ == '__main__':
