@@ -1083,8 +1083,11 @@ class Transform(EMObject):
         m *= factor
         m[3, 3] = 1.
         
-    def scaleShifts(self, factor):
-        pass
+    def scaleShifts2D(self, factor):
+        m = self.getMatrix()
+        m *= factor
+        m[0, 3] *= factor
+        m[1, 3] *= factor
 
 
 class Class2D(SetOfParticles):
