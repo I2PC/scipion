@@ -222,7 +222,7 @@ class XmippViewer(Viewer):
                
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
-            labels = 'id enabled _filename '
+            labels = 'id enabled comment _filename '
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, RENDER: '_filename'}))
         

@@ -495,8 +495,8 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     threshold = calculateThreshold(param_stats)
     
     context = {"threshold":threshold,
-               'minStats':param_stats[2] if param_stats != None else 1,
-               'maxStats':param_stats[3] if param_stats != None else 1 }
+               'minStats':round(param_stats[2], 3) if param_stats != None else 1,
+               'maxStats':round(param_stats[3], 3) if param_stats != None else 1 }
     
     if inputParams[sj.MODE] == sj.MODE_VOL_ASTEX:
         context.update(create_context_astex(request, inputParams[sj.VOL_TYPE], volPath))
@@ -592,6 +592,9 @@ def chimera_headless(volPath, threshold):
     # Build chimera command file
     cmdFile = htmlFile + '.cmd'
     outputCmdFile = open(cmdFile, 'w+')
+    
+    print "PATH TO OPEN:", volPath
+    
     outputCmdFile.write("""
     open %(volPath)s
     volume #0 level %(threshold)s
