@@ -173,9 +173,7 @@ class XmippFilterHelper():
 
     @classmethod
     def getModesCondition(cls, filterMode, *filterModes):
-        command = ' or '.join('%s==%d' % (filterMode,fm) for fm in filterModes)
-        #print("command", command)
-        return command
+        return ' or '.join('%s==%d' % (filterMode,fm) for fm in filterModes)
     #        return ' or '.join(['%s==%d' % (fmKey,fmValue) for fmKey,fmValue in zip(filterMode,filterModes)])
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -247,8 +245,8 @@ class XmippFilterHelper():
         else:
             raise Exception("Unknown filter space: %d" % protocol.filterSpace.get())
 
-        protocol._insertFunctionStep("filterStep",
-                                 (protocol._args % {'inputFn': protocol.inputFn}) + args)
+        command = (protocol._args % {'inputFn': protocol.inputFn}) + args
+        protocol._insertFunctionStep("filterStep", command)
 
     def getInputSampling(self):
         """ Function to return the sampling rate of input objects.
