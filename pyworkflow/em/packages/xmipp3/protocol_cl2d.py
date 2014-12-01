@@ -57,8 +57,8 @@ IMAGES_PER_CLASS = 200
         
 class XmippProtCL2D(ProtClassify2D):
     """ Classifies a set of images using a clustering algorithm 
-            aiming at subdividing the original dataset
-             into a given number of subclasses """
+            to subdivide the original dataset
+             into a given number of classes """
     
     _label = 'cl2d'
     
@@ -272,6 +272,7 @@ class XmippProtCL2D(ProtClassify2D):
         summary = []
         summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
                                                                               self.numberOfClasses.get()))
+        #summary.append('- Used a _clustering_ algorithm to subdivide the original dataset into the given number of classes')
 
         levelFiles = self._getLevelMdFiles()
         if levelFiles:
@@ -286,9 +287,9 @@ class XmippProtCL2D(ProtClassify2D):
     def _methods(self):
         strline=''
         if hasattr(self, 'outputClasses'):
-            strline+='We classified %d particles from the %s set of particles into %d classes using CL2D [Sorzano2010a]. '%\
-                           (self.inputParticles.get().getSize(),self.inputParticles.get().getNameId(),self.numberOfClasses.get())
-            strline+='We used the the %s method to compare images and %s clustering criterion. '%\
+            strline+='We classified %d particles  into %d classes using CL2D [Sorzano2010a]. '%\
+                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+            strline+='%s method was used to compare images and %s clustering criterion. '%\
                            (self.getEnumText('comparisonMethod'),self.getEnumText('clusteringMethod'))
             if self.doCore:
                 strline+='We calculated the class cores'
