@@ -76,17 +76,17 @@ class XmippProtML2D(ProtClassify2D):
                        help='Select the input images from the project.')        
         group.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate classes?',
-                      help='If you set to *No*, you should provide references images'
+                      help='If you set to *No*, you should provide class images'
                            'If *Yes*, the default generation is done by averaging'
                            'subsets of the input images. (less bias introduced)')
         group.addParam('numberOfClasses', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of classes:',
-                      help='Number of references to be generated.')
+                      help='Number of classes to be generated.')
         group.addParam('inputReferences', PointerParam, allowsNull=True,
                        condition='not doGenerateReferences',
                       label="Class image(s)",
                       pointerClass='SetOfParticles',
-                      help='Image(s) that will serve as initial 2D references')
+                      help='Image(s) that will serve as initial 2D classes')
         
         form.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
