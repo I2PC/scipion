@@ -240,7 +240,7 @@ class XmippProtCL2D(ProtClassify2D):
         lastMdFn = levelMdFiles[-1]
         inputParticles = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
-        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted', inverseTransform=False, is2D=True)
+        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes_sorted')
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
         self._defineSourceRelation(inputParticles, classes2DSet)

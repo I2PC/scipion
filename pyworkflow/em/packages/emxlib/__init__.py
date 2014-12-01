@@ -31,5 +31,6 @@ emx.py : which is the EMX library provided at:
 convert.py : which provides conversions between EMObjects and EMX objects.
 """
 from convert import importData, exportData
+#TODO: why this assimetry: EmxImport, ProtEmxExport
 from dataimport import EmxImport, ProtEmxExport
 from viewer import EMXViewer

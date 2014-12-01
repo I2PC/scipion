@@ -41,16 +41,16 @@ RELATION_PARENTS = 1
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__init__(self)
-        self._objIsPointer = args.get('objIsPointer', False) # True if will be treated as a reference for storage
-        self._objId = args.get('objId', None) # Unique identifier of this object in some context
-        self._objParentId = args.get('objParentId', None) # identifier of the parent object
-        self._objName = args.get('objName', '') # The name of the object will contains the whole path of ancestors
-        self._objLabel = args.get('objLabel', '') # This will serve to label the objects
-        self._objComment = args.get('objComment', '')
-        self._objTag = args.get('objTag', None) # This attribute serve to make some annotation on the object.
-        self._objDoStore = args.get('objDoStore', True) # True if this object will be stored from his parent
+        self._objIsPointer = kwargs.get('objIsPointer', False) # True if will be treated as a reference for storage
+        self._objId = kwargs.get('objId', None) # Unique identifier of this object in some context
+        self._objParentId = kwargs.get('objParentId', None) # identifier of the parent object
+        self._objName = kwargs.get('objName', '') # The name of the object will contains the whole path of ancestors
+        self._objLabel = kwargs.get('objLabel', '') # This will serve to label the objects
+        self._objComment = kwargs.get('objComment', '')
+        self._objTag = kwargs.get('objTag', None) # This attribute serve to make some annotation on the object.
+        self._objDoStore = kwargs.get('objDoStore', True) # True if this object will be stored from his parent
         self._objCreation = None
         self._objParent = None # Reference to parent object
         self._objEnabled = True
@@ -399,7 +399,7 @@ class Object(object):
         """Print object and all its attributes.
         Mainly for debugging"""
         tab = ' ' * (level*3)
-        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
+        idStr = '' #' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
         if name is None:
             print tab, self.getClassName(), idStr
         else:
@@ -423,9 +423,9 @@ class OrderedObject(Object):
     """This is based on Object, but keep the list
     of the attributes to store in the same order
     of insertion, this can be useful where order matters"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__setattr__(self, '_attributes', [])
-        Object.__init__(self, value, **args)
+        Object.__init__(self, value, **kwargs)
 
     def __attrPointed(self, name, value):
         """ Check if a value is already pointed by other
@@ -465,12 +465,12 @@ class OrderedObject(Object):
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
     access to the attributes, they need to be defined with addAttribute"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__setattr__(self, '_attributes', {})
-        Object.__init__(self, value, **args)
+        Object.__init__(self, value, **kwargs)
         
-    def addAttribute(self, name, attrClass, **args):
-        self._attributes[name] = attrClass(**args)
+    def addAttribute(self, name, attrClass, **kwargs):
+        self._attributes[name] = attrClass(**kwargs)
            
     def __setattr__(self, name, value):
         if name in self._attributes:
@@ -624,8 +624,8 @@ class Boolean(Scalar):
     
 class Pointer(Object):
     """Reference object to other one"""
-    def __init__(self, value=None, **args):
-        Object.__init__(self, value, objIsPointer=True, **args)
+    def __init__(self, value=None, **kwargs):
+        Object.__init__(self, value, objIsPointer=True, **kwargs)
         # The _extended attribute will be used to point to attributes of a pointed object
         # or the id of an item inside a set
         self._extended = String() 
@@ -695,8 +695,8 @@ class List(Object, list):
     ITEM_PREFIX = '__item__'
     
     """Class to store a list of objects"""
-    def __init__(self, **args):
-        Object.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Object.__init__(self, **kwargs)
         list.__init__(self)
         
     def __getattr__(self, name):
@@ -825,8 +825,8 @@ class CsvList(Scalar, list):
         
 class Array(Object):
     """Class for holding fixed len array"""
-    def __init__(self, size=10, **args):
-        Object.__init__(self, size, **args)
+    def __init__(self, size=10, **kwargs):
+        Object.__init__(self, size, **kwargs)
         
     def set(self, size):
         """Set the array size"""
@@ -855,9 +855,9 @@ class Set(OrderedObject):
     ITEM_TYPE = None # This property should be defined to know the item type
     
     def __init__(self, filename=None, prefix='', 
-                 mapperClass=None, classesDict=None, **args):
+                 mapperClass=None, classesDict=None, **kwargs):
         # Use the object value to store the filename
-        OrderedObject.__init__(self, **args)
+        OrderedObject.__init__(self, **kwargs)
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images  

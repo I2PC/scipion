@@ -63,7 +63,6 @@ class TestBasic(BaseTest):
         row.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, 45.)
         
         ctf = rowToCtfModel(row)
-        ctf.printAll()        
         # Check that the ctf object was properly set
         self.assertTrue(ctf.equalAttributes(self.getCTF(2520., 2510., 45.)))
         # Check when the EMX standarization takes place
@@ -91,10 +90,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES = False#True # Launch xmipp_showj to open intermediate results
-CLEAN_IMAGES = False#True # Remove the output temporary files
+SHOW_IMAGES  = False#True # Launch xmipp_showj to open intermediate results
+CLEAN_IMAGES = True # Remove the output temporary files
 PRINT_MATRIX = False
-PRINT_FILES = False#False
+PRINT_FILES  = False
 
 
 def runXmippProgram(cmd):
@@ -114,8 +113,7 @@ class TestConvertBase(BaseTest):
         cls.dataset = DataSet.getDataSet('emx')
 
 
-    def launchTest(self, fileKey, mList,
-                   is2D=True, inverseTransform=False, **kwargs):
+    def launchTest(self, fileKey, mList, alignType=None, **kwargs):
         """ Helper function to launch similar alignment tests
         give the EMX transformation matrix.
         Params:
@@ -127,6 +125,8 @@ class TestConvertBase(BaseTest):
         print "*" * 80
         print "* Launching test: ", fileKey
         print "*" * 80
+        
+        is2D = alignType == ALIGN_2D
 
         stackFn = self.dataset.getFile(fileKey)
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
@@ -152,6 +152,7 @@ class TestConvertBase(BaseTest):
             partSet = SetOfParticles(filename=partFn1)
         else:
             partSet = SetOfVolumes(filename=partFn1)
+            
         partSet.setAcquisition(Acquisition(voltage=300,
                                   sphericalAberration=2,
                                   amplitudeContrast=0.1,
@@ -163,7 +164,7 @@ class TestConvertBase(BaseTest):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()
@@ -171,26 +172,25 @@ class TestConvertBase(BaseTest):
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
         if is2D:
-            writeSetOfParticles(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+            writeSetOfParticles(partSet, mdFn, alignType=alignType)
+            partSet2 = SetOfParticles(filename=partFn2)
         else:
-            writeSetOfVolumes(partSet, mdFn, is2D=is2D, inverseTransform=inverseTransform)
+            writeSetOfVolumes(partSet, mdFn, alignType=alignType)
+            partSet2 = SetOfVolumes(filename=partFn2)
         # Let's create now another SetOfImages reading back the written
         # Xmipp metadata and check one more time.
-        partSet2 = SetOfParticles(filename=partFn2)
         partSet2.copyInfo(partSet)
         if is2D:
-            readSetOfParticles(mdFn, partSet2, is2D=is2D,
-                               inverseTransform=( inverseTransform))
+            readSetOfParticles(mdFn, partSet2, alignType=alignType)
         else:
-            readSetOfParticles(mdFn, partSet2, is2D=is2D,
-                               inverseTransform= inverseTransform)
+            readSetOfVolumes(mdFn, partSet2, alignType=alignType)
 
         partSet2.write()
 
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print 'm1:\n', m1
@@ -204,7 +204,8 @@ class TestConvertBase(BaseTest):
             runXmippProgram('xmipp_showj -i %(outputFn)s' % locals())
 
         if os.path.exists(goldFn):
-            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001))
+            self.assertTrue(ImageHandler().compareData(goldFn, outputFn, tolerance=0.001), 
+                            "Different data files:\n>%s\n<%s" % (goldFn, outputFn))
         else:
             print colorText.RED + colorText.BOLD + "WARNING: Gold file '%s' missing!!!" % goldFn + colorText.END
 
@@ -218,14 +219,14 @@ class TestAlignment(TestConvertBase):
     
     def test_isInverse(self):
         def _testInv(matrixList):
-            a = Alignment(matrixList)
+            a = Transform(matrixList)
             
             row = XmippMdRow()
-            alignmentToRow(a, row, is2D=True, inverseTransform=False)
+            alignmentToRow(a, row, alignType=ALIGN_2D)
             print "isInv=False, row", row      
             
             row2 = XmippMdRow()
-            alignmentToRow(a, row2, is2D=True, inverseTransform=True)
+            alignmentToRow(a, row2, alignType=ALIGN_2D)
             print "isInv=True, row2", row2
           
         _testInv([[1.0, 0.0, 0.0, 20.0],
@@ -266,8 +267,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchTest('alignShiftRotExp', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignShiftRotExp', mList, alignType=ALIGN_2D)
 
     def test_alignShiftRotflip(self):#Why is this call flip, ROB
         """ Check that for a given alignment object,
@@ -313,21 +313,20 @@ class TestAlignment(TestConvertBase):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()
 
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
-        writeSetOfParticles(partSet, mdFn, is2D=True, inverseTransform=False)
+        writeSetOfParticles(partSet, mdFn, alignType=ALIGN_2D)
 
         # Let's create now another SetOfImages reading back the written
         # Xmipp metadata and check one more time.
         partSet2 = SetOfParticles(filename=partFn2)
         partSet2.copyInfo(partSet)
-        readSetOfParticles(mdFn, partSet2, is2D=True,
-                               inverseTransform=False)
+        readSetOfParticles(mdFn, partSet2, alignType=ALIGN_2D)
 
         ##partSet2.write()
         #TODO_rob: I do not know how to make an assert here
@@ -337,7 +336,7 @@ class TestAlignment(TestConvertBase):
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print  >> sys.stderr, 'm1:\n', m1
@@ -368,8 +367,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchTest('alignFlip', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignFlip', mList, alignType=ALIGN_2D)
 
     def test_alignFlip2(self):
         """ Check that for a given alignment object,
@@ -388,8 +386,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchTest('alignFlip2', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignFlip2', mList, alignType=ALIGN_2D)
 
     def test_alignShiftRot3D(self):
         """ Check that for a given alignment object,
@@ -411,8 +408,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchTest('alignShiftRot3D', mList,
-                         is2D=False, inverseTransform=False)
+        self.launchTest('alignShiftRot3D', mList, alignType=ALIGN_3D)
 
     def test_alignRotOnly(self):
         """ Check that for a given alignment object,
@@ -435,8 +431,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchTest('alignRotOnly', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignRotOnly', mList, alignType=ALIGN_2D)
 
     def test_alignRotOnly3D(self):
         """ Check that for a given alignment object,
@@ -460,8 +455,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchTest('alignRotOnly3D', mList,
-                         is2D=False, inverseTransform=False)
+        self.launchTest('alignRotOnly3D', mList, alignType=ALIGN_3D)
 
 
     def test_alignShiftOnly(self):
@@ -486,8 +480,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchTest('alignShiftOnly', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignShiftOnly', mList, alignType=ALIGN_2D)
 
     def test_alignShiftOnly3D(self):
         """ Check that for a given alignment object,
@@ -516,8 +509,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
         
-        self.launchTest('alignShiftOnly3D', mList,
-                         is2D=False, inverseTransform=False)
+        self.launchTest('alignShiftOnly3D', mList, alignType=ALIGN_3D)
         
     def test_alignShiftRot(self):
         """ Check that for a given alignment object,
@@ -544,8 +536,7 @@ class TestAlignment(TestConvertBase):
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
 
-        self.launchTest('alignShiftRot', mList,
-                         is2D=True, inverseTransform=False)
+        self.launchTest('alignShiftRot', mList, alignType=ALIGN_2D)
 
 
 class TestReconstruct(TestConvertBase):
@@ -597,8 +588,7 @@ class TestReconstruct(TestConvertBase):
                   [0., 0., 0., 1.]]
                 ]
 
-        self.launchTest('reconstRotOnly', mList,
-                     is2D=False, inverseTransform=True)
+        self.launchTest('reconstRotOnly', mList, alignType=ALIGN_PROJ)
 
     def test_reconstRotandShift(self):
         """ Check that for a given alignment object,
@@ -645,8 +635,7 @@ class TestReconstruct(TestConvertBase):
                   [0., 0., 0., 1.]]
                 ]
 
-        self.launchTest('reconstRotandShift', mList,
-                     is2D=False, inverseTransform=True)
+        self.launchTest('reconstRotandShift', mList, alignType=ALIGN_PROJ)
 
     
 class TestSetConvert(BaseTest):
@@ -664,11 +653,13 @@ class TestSetConvert(BaseTest):
         the particle picking. 
         """
         fn = self.dataset.getFile('images10')
+        print "Input metadata: ", fn
         partSet = SetOfParticles(filename=self.getOutputPath('particles_coord.sqlite'))
         readSetOfParticles(fn, partSet)
         
         self.assertEquals(partSet.getSize(), 10)
         self.assertTrue(partSet.hasCTF())
+        self.assertEquals(partSet.getAlignment(), ALIGN_NONE)
         
         for img in partSet:
             self.assertTrue(img.getCoordinate() is not None)    
@@ -726,27 +717,59 @@ class TestSetConvert(BaseTest):
         writeSetOfMicrographs(micSet, self.getOutputPath("micrographs.xmd"))
         self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
         
+        
+    def test_alignedParticlesFromMd(self):
+        """ Read an Xmipp metadata containing Alignment information. """
+
+        mdFile = self.dataset.getFile('gold/xmipp_ml2d_images.xmd')
+        sqliteFile = self.getOutputPath("particles_aligned.sqlite")
+        print "Input metadata: ", mdFile
+        print "Output sqlite: ", sqliteFile
+        
+        partSet = SetOfParticles(filename=sqliteFile)        
+        readSetOfParticles(mdFile, partSet)
+        partSet.write()
+        
+        # Check at least that 2D alignment info was read
+        self.assertTrue(partSet.hasAlignment2D())
+        for particle in partSet:
+            self.assertTrue(particle.hasTransform())
+            t = particle.getTransform()
+            self.assertIsNotNone(t)
+            #print t
+        
+        # Read particles from the same metadata, but now
+        # ignoring the alignment information explicitly
+        sqliteFile2 = self.getOutputPath("particles_aligned2.sqlite")
+        partSet2 = SetOfParticles(filename=sqliteFile2) 
+        readSetOfParticles(mdFile, partSet2, alignType=ALIGN_NONE)
+        
+        self.assertFalse(partSet2.hasAlignment())
+        for particle2 in partSet2:
+            self.assertFalse(particle2.hasTransform())
+            t2 = particle2.getTransform()
+            self.assertIsNone(t2)        
+        
+        
     def test_alignedParticlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """
         fn = self.dataset.getFile('aligned_particles')
-        print "Converting sqlite: %s" % fn
-        imgSet = SetOfParticles(filename=fn) 
-        imgSet.setAcquisition(Acquisition(magnification=60000,
+        print "Input sqlite: %s" % fn
+        partSet = SetOfParticles(filename=fn) 
+        partSet.setAcquisition(Acquisition(magnification=60000,
                                           voltage=300,
                                           sphericalAberration=0.1,
                                           amplitudeContrast=0.1))
         
         md = xmipp.MetaData()
-        setOfParticlesToMd(imgSet, md)
+        setOfParticlesToMd(partSet, md, alignType=ALIGN_2D)
         
         # test that the metadata contains some geometry labels
         self.assertTrue(md.containsLabel(xmipp.MDL_SHIFT_X))
         fn = self.getOutputPath("aligned_particles.xmd")
         #print "Aligned particles written to: ", fn
         #md.write(fn)
-        
         #self.assertEqual(mdScipion, mdXmipp, "metadata are not the same")
-
         
     def test_particlesToMd(self):
         """ Test the convertion of a SetOfParticles to Xmipp metadata. """

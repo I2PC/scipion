@@ -33,7 +33,7 @@ from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
+from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
 
 
 class TestXmippBase(BaseTest):

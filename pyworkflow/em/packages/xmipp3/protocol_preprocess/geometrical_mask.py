@@ -28,8 +28,8 @@
 This sub-package contains protocols for creating masks.
 """
 
-from pyworkflow.em import *  
-from constants import *
+from pyworkflow.protocol.params import IntParam, EnumParam, FloatParam
+from ..constants import *
 
 
 class XmippGeometricalMask3D:
@@ -68,7 +68,7 @@ class XmippGeometricalMask3D:
 
     def argsForTransformMask(self,size):
         # Create empty volume file with desired dimensions
-        geo=self.geo.get()
+        geo = self.geo.get()
         
         # Create the mask
         args = '--mask '
@@ -87,19 +87,19 @@ class XmippGeometricalMask3D:
         elif geo == MASK3D_BOX:
             b = self.boxSize.get()
             if b==-1:
-                b=size/2
+                b = size/2
             args += 'rectangular %d %d %d' % (-b, -b, -b)
         elif geo == MASK3D_CROWN:
             args += 'crown %d %d' % (iR, oR)
         elif geo == MASK3D_CYLINDER:
-            height=self.height.get()
+            height = self.height.get()
             if height==-1:
-                height=size
+                height = size
             args += 'cylinder %d %d' % (r, -height)
         elif geo == MASK3D_GAUSSIAN:
-            sigma=self.sigma.get()
+            sigma = self.sigma.get()
             if sigma==-1:
-                sigma=size/6.0
+                sigma = size/6.0
             args += 'gaussian %f' % -sigma                        
         elif geo == MASK3D_RAISED_COSINE:
             args += 'raised_cosine %d %d' % (iR, oR)
@@ -111,40 +111,40 @@ class XmippGeometricalMask3D:
     
     def summary(self):
         messages = []      
-        geo=self.geo.get()
-        if geo==MASK3D_SPHERE:
+        geo = self.geo.get()
+        if geo == MASK3D_SPHERE:
             messages.append("   Sphere of radius %d"%self.radius.get())
-        elif geo==MASK3D_BOX:
+        elif geo == MASK3D_BOX:
             messages.append("   Box of size %d"%self.boxSize.get())
-        elif geo==MASK3D_CROWN:
+        elif geo == MASK3D_CROWN:
             messages.append("   Crown between %d and %d"%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK3D_CYLINDER:
+        elif geo == MASK3D_CYLINDER:
             messages.append("   Cylinder of radius %f and height %f"%(self.radius.get(),self.height.get()))
-        elif geo==MASK3D_GAUSSIAN:
+        elif geo == MASK3D_GAUSSIAN:
             messages.append("   Gaussian of sigma %f"%(self.sigma.get()))
-        elif geo==MASK3D_RAISED_COSINE:
+        elif geo == MASK3D_RAISED_COSINE:
             messages.append("   Raised cosine between %f and %f"%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK3D_RAISED_CROWN:
+        elif geo == MASK3D_RAISED_CROWN:
             messages.append("   Raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages
 
     def methods(self):
         messages = []      
-        geo=self.geo.get()
-        if geo==MASK3D_SPHERE:
+        geo = self.geo.get()
+        if geo == MASK3D_SPHERE:
             messages.append("The mask represented a sphere of radius %d. "%self.radius.get())
-        elif geo==MASK3D_BOX:
+        elif geo == MASK3D_BOX:
             messages.append("The mask represented a box of size %d. "%self.boxSize.get())
-        elif geo==MASK3D_CROWN:
+        elif geo == MASK3D_CROWN:
             messages.append("The mask represented a crown between %d and %d. "%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK3D_CYLINDER:
+        elif geo == MASK3D_CYLINDER:
             messages.append("The mask represented a cylinder of radius %f and height %f. "%(self.radius.get(),self.height.get()))
-        elif geo==MASK3D_GAUSSIAN:
+        elif geo == MASK3D_GAUSSIAN:
             messages.append("The mask represented a Gaussian of sigma %f. "%(self.sigma.get()))
-        elif geo==MASK3D_RAISED_COSINE:
+        elif geo == MASK3D_RAISED_COSINE:
             messages.append("The mask represented a raised cosine between %f and %f. "%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK3D_RAISED_CROWN:
+        elif geo == MASK3D_RAISED_CROWN:
             messages.append("The mask represented a raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages
@@ -203,14 +203,14 @@ class XmippGeometricalMask2D:
         elif geo == MASK2D_BOX:
             b = self.boxSize.get()
             if b==-1:
-                b=size/2
+                b = size/2
             args += 'rectangular %d %d' % (-b, -b)
         elif geo == MASK2D_CROWN:
             args += 'crown %d %d' % (iR, oR)
         elif geo == MASK2D_GAUSSIAN:
-            sigma=self.sigma.get()
+            sigma = self.sigma.get()
             if sigma==-1:
-                sigma=size/6.0
+                sigma = size/6.0
             args += 'gaussian %f' % -sigma                        
         elif geo == MASK2D_RAISED_COSINE:
             args += 'raised_cosine %d %d' % (iR, oR)
@@ -222,36 +222,36 @@ class XmippGeometricalMask2D:
     
     def summary(self):
         messages = []      
-        geo=self.geo.get()
-        if geo==MASK2D_CIRCULAR:
+        geo = self.geo.get()
+        if geo == MASK2D_CIRCULAR:
             messages.append("   Circle of radius %d"%self.radius.get())
-        elif geo==MASK2D_BOX:
+        elif geo == MASK2D_BOX:
             messages.append("   Box of size %d"%self.boxSize.get())
-        elif geo==MASK2D_CROWN:
+        elif geo == MASK2D_CROWN:
             messages.append("   Crown between %d and %d"%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK2D_GAUSSIAN:
+        elif geo == MASK2D_GAUSSIAN:
             messages.append("   Gaussian of sigma %f"%(self.sigma.get()))
-        elif geo==MASK2D_RAISED_COSINE:
+        elif geo == MASK2D_RAISED_COSINE:
             messages.append("   Raised cosine between %f and %f"%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK2D_RAISED_CROWN:
+        elif geo == MASK2D_RAISED_CROWN:
             messages.append("   Raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages
 
     def methods(self):
         messages = []      
-        geo=self.geo.get()
-        if geo==MASK2D_CIRCULAR:
+        geo = self.geo.get()
+        if geo == MASK2D_CIRCULAR:
             messages.append("The mask represented a sphere of radius %d. "%self.radius.get())
-        elif geo==MASK2D_BOX:
+        elif geo == MASK2D_BOX:
             messages.append("The mask represented a box of size %d. "%self.boxSize.get())
-        elif geo==MASK2D_CROWN:
+        elif geo == MASK2D_CROWN:
             messages.append("The mask represented a crown between %d and %d. "%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK2D_GAUSSIAN:
+        elif geo == MASK2D_GAUSSIAN:
             messages.append("The mask represented a Gaussian of sigma %f. "%(self.sigma.get()))
-        elif geo==MASK2D_RAISED_COSINE:
+        elif geo == MASK2D_RAISED_COSINE:
             messages.append("The mask represented a raised cosine between %f and %f. "%(self.innerRadius.get(),self.outerRadius.get()))
-        elif geo==MASK2D_RAISED_CROWN:
+        elif geo == MASK2D_RAISED_CROWN:
             messages.append("The mask represented a raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages

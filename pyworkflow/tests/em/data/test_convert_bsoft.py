@@ -176,7 +176,7 @@ class TestConvertBase(BaseTest):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()
@@ -203,7 +203,7 @@ class TestConvertBase(BaseTest):
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print 'm1:\n', m1
@@ -231,7 +231,7 @@ class TestAlignment(TestConvertBase):
     
     def test_isInverse(self):
         def _testInv(matrixList):
-            a = Alignment(matrixList)
+            a = Transform(matrixList)
             
             row = XmippMdRow()
             alignmentToRow(a, row, is2D=True, inverseTransform=False)
@@ -326,7 +326,7 @@ class TestAlignment(TestConvertBase):
         for i, a in enumerate(aList):
             p = Particle()
             p.setLocation(i+1, stackFn)
-            p.setAlignment(Alignment(a))
+            p.setTransform(Transform(a))
             partSet.append(p)
         # Write out the .sqlite file and check that are correctly aligned
         partSet.write()
@@ -350,7 +350,7 @@ class TestAlignment(TestConvertBase):
         if PRINT_MATRIX:
             for i, img in enumerate(partSet2):
                 m1 = aList[i]
-                m2 = img.getAlignment().getMatrix()
+                m2 = img.getTransform().getMatrix()
                 print "-"*5
                 print img.getFileName(), img.getIndex()
                 print  >> sys.stderr, 'm1:\n', m1

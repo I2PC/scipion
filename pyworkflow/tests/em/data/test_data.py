@@ -240,7 +240,25 @@ class TestTransform(BaseTest):
         self.assertAlmostEqual(m[1, 3], 2)
         self.assertAlmostEqual(m[3, 3], 1)
 
-        print t.getMatrix()
+    def test_clone(self):
+        """ Check that cloning the Transform will 
+        also copy the values of underlying numpy matrix.
+        """
+        t = Transform()
+        m = t.getMatrix()
+        m[0, 3] = 2
+        m[1, 3] = 4
+        
+        t2 = t.clone()
+        m2 = t2.getMatrix()
+        self.assertTrue(np.allclose(m, m2, rtol=1e-2)) 
+        
+        p = Particle()
+        p.setTransform(t)
+        
+        p2 = p.clone()
+        m3 = p2.getTransform().getMatrix()
+        self.assertTrue(np.allclose(m, m3, rtol=1e-2)) 
 
 
 if __name__ == '__main__':
