@@ -12,7 +12,7 @@ import argparse
 import unittest
 
 import pyworkflow as pw
-from pyworkflow.utils import redStr
+from pyworkflow.utils.utils import redStr
 from pyworkflow.tests import GTestResult
 
 
