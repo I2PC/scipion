@@ -500,7 +500,7 @@ class TestXmippCL2D(TestXmippBase):
         print "Run CL2D"
         # Run CL2D with random class and core analysis
         protCL2DRandomCore = self.newProtocol(XmippProtCL2D,
-                                   numberOfClasses=2, numberOfInitialReferences=1,
+                                   numberOfClasses=2, numberOfInitialClasses=1,
                                    numberOfIterations=4, numberOfMpi=2)
         protCL2DRandomCore.inputParticles.set(self.protImport.outputParticles)
         protCL2DRandomCore.setObjLabel("CL2D with random class and core analysis")
@@ -509,7 +509,7 @@ class TestXmippCL2D(TestXmippBase):
 
         # Run CL2D with random class and no core analysis
         protCL2DRandomNoCore = self.newProtocol(XmippProtCL2D,
-                                   numberOfClasses=2, numberOfInitialReferences=1,
+                                   numberOfClasses=2, numberOfInitialClasses=1,
                                    doCore=False, numberOfIterations=4, numberOfMpi=2)
         protCL2DRandomNoCore.inputParticles.set(self.protImport.outputParticles)
         protCL2DRandomNoCore.setObjLabel("CL2D with random class and no core analysis")

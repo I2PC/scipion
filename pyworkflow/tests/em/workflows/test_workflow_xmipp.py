@@ -258,7 +258,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=2, numberOfInitialReferences=1,
+        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=2, numberOfInitialClasses=1,
                                  numberOfIterations=4, numberOfMpi=2)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protCL2D)        

@@ -182,7 +182,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         # Classify using Xmipp CL2D
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=10, numberOfInitialReferences=1,
+        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=10, numberOfInitialClasses=1,
                                  numberOfIterations=3, numberOfMpi=2)
         protCL2D.inputParticles.set(protExtract.outputParticlesTiltPair.getUntilted())
         self.launchProtocol(protCL2D)        
