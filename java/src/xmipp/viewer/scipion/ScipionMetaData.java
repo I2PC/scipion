@@ -849,11 +849,12 @@ public class ScipionMetaData extends MetaData {
             if (parent == null) return false; else return parent.containsGeometryInfo();
         }
         
-        String value = properties.get("_transform");
+        String value = properties.get("_alignment");
 
         if (value == null)
             return false;
-        return value.equals("1");
+        
+        return value.equals("2D");
     }
     
     
