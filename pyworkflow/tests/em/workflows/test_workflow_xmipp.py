@@ -250,7 +250,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protScreen.outputParticles, "There was a problem with Screen Particles")
         
         print "Run ML2D"
-        protML2D = self.newProtocol(XmippProtML2D, numberOfReferences=1, maxIters=4, doMlf=True,
+        protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=1, maxIters=4, doMlf=True,
                                  numberOfMpi=2, numberOfThreads=1)
         protML2D.inputParticles.set(protScreen.outputParticles)
         self.launchProtocol(protML2D)        
@@ -258,7 +258,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D, numberOfReferences=2, numberOfInitialReferences=1, 
+        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=2, numberOfInitialReferences=1,
                                  numberOfIterations=4, numberOfMpi=2)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protCL2D)        
