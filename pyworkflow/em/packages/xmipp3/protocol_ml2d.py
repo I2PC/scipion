@@ -76,9 +76,9 @@ class XmippProtML2D(ProtClassify2D):
                        help='Select the input images from the project.')        
         group.addParam('doGenerateReferences', BooleanParam, default=True,
                       label='Generate classes?',
-                      help='If you set to *No*, you should provide class images'
-                           'If *Yes*, the default generation is done by averaging'
-                           'subsets of the input images. (less bias introduced)')
+                      help='If you set to *No*, you should provide class images.\n'
+                           'If *Yes*, the default generation is done by averaging\n'
+                           'subsets of the input images (less bias introduced).')
         group.addParam('numberOfClasses', IntParam, default=3, condition='doGenerateReferences',
                       label='Number of classes:',
                       help='Number of classes to be generated.')
@@ -94,14 +94,14 @@ class XmippProtML2D(ProtClassify2D):
         group = form.addGroup('ML-Fourier', condition='doMlf')
         group.addParam('doCorrectAmplitudes', BooleanParam, default=True,
                       label='Use CTF-amplitude correction?',
-                      help='If set to *Yes*, the input images file should contains'
+                      help='If set to *Yes*, the input images file should contains.\n'
                            'If set to *No*, provide the images pixel size in Angstrom.')
         group.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
         group.addParam('highResLimit', IntParam, default=20,
                       label='High-resolution limit (Ang)',
-                      help='No frequencies higher than this limit will be taken into account.'
+                      help='No frequencies higher than this limit will be taken into account.\n'
                            'If zero is given, no limit is imposed.')
         
         form.addSection(label='Advanced')
