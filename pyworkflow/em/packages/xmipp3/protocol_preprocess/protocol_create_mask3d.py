@@ -28,9 +28,10 @@
 This sub-package contains protocols for creating 3D masks.
 """
 
-from convert import getImageLocation
 from pyworkflow.em import *  
-from constants import *
+
+from ..convert import getImageLocation
+from ..constants import *
 from geometrical_mask import *
 
 SOURCE_VOLUME=0

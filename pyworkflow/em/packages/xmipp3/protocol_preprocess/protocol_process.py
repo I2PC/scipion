@@ -27,11 +27,13 @@
 This sub-package contains classes to use in common processing operations of SetOfParticles, Volume or SetOfVolumes
 """
 
+from pyworkflow.em.constants import ALIGN_NONE
 from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes
 from pyworkflow.em.data import Volume
-from convert import (writeSetOfParticles, readSetOfParticles, 
-                     writeSetOfVolumes, readSetOfVolumes,
-                     getImageLocation)
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+from ..convert import writeSetOfParticles, xmippToLocation
+from ..convert import writeSetOfVolumes, readSetOfVolumes, getImageLocation
+import xmipp
 
 
 
@@ -63,26 +65,44 @@ class XmippProcessParticles(ProtProcessParticles):
         after the population of output elements.
         """
         pass
+    
+    def _updateItem(self, item, row):
+        """ Implement this function to do some
+        update actions over each single item
+        that will be stored in the output Set.
+        """
+        # By default update the item location (index, filename)
+        # with the new binary data location (after preprocessing)
+        newFn = row.getValue(xmipp.MDL_IMAGE)
+        newLoc = xmippToLocation(newFn)
+        item.setLocation(newLoc)
             
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self):
         """ convert if necessary"""
-        writeSetOfParticles(self.inputParticles.get(), self.inputFn)
-
+        # By default the prepocess protocol will ignore geometry
+        # info and apply the operation on the binary data only.
+        # then the new location (index, filename) is the most
+        # common property to update in the single items.
+        writeSetOfParticles(self.inputParticles.get(), self.inputFn, 
+                            alignType=ALIGN_NONE)
+        
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(inputSet)
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputSet)
 
-
-        self._preprocessOutput(imgSet)
-        # is2D is only used if hasAlignment is true
-        # if is2D=false --> you are in 3D
-        readSetOfParticles(self.outputMd, imgSet,is2D=imgSet.hasAlignment2D())
-        self._postprocessOutput(imgSet)
+        self._preprocessOutput(outputSet)
         
-        self._defineOutputs(outputParticles=imgSet)
-        self._defineTransformRelation(inputSet, imgSet)
+        outputSet.copyInfo(inputSet)
+        outputSet.copyItems(inputSet, 
+                            updateItemCallback=self._updateItem,
+                            itemDataIterator=iterMdRows(self.outputMd))
+        #readSetOfParticles(self.outputMd, outputSet)
+        self._postprocessOutput(outputSet)
+        
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineTransformRelation(inputSet, outputSet)
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _defineFilenames(self):

@@ -33,7 +33,7 @@ from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.protocol_filter import XmippFilterHelper as xfh
+from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
 
 
 class TestXmippBase(BaseTest):
@@ -70,7 +70,7 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D,
-                                           numberOfReferences=8, maxIters=4, doMlf=False,
+                                           numberOfClasses=8, maxIters=4, doMlf=False,
                                            numberOfMpi=2, numberOfThreads=2)
         cls.ProtClassify.inputParticles.set(particles)
         cls.launchProtocol(cls.ProtClassify)

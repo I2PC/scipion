@@ -29,6 +29,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam,
 from pyworkflow.em.data import Volume 
 from pyworkflow.em.protocol import ProtReconstruct3D
 from pyworkflow.em.packages.relion.convert import convertBinaryFiles
+from pyworkflow.em.constants import ALIGN_PROJ
 
 class ProtRelionReconstruct(ProtReconstruct3D):
     """    
@@ -165,9 +166,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
         print "Before filesMapping"
         filesMapping = convertBinaryFiles(imgSet, self._getTmpPath())
         # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet,imgStar,filesMapping,
-                            is2D=False, isInverseTransform=True,
-                            writeAlignment=True)
+        writeSetOfParticles(imgSet,imgStar,filesMapping, alignType=ALIGN_PROJ)
 
     def createOutputStep(self):
         imgSet = self.inputParticles.get()

@@ -126,6 +126,7 @@ class EmxImport():
         errors = []
         # Check that input EMX file exist
         if not exists(emxFile):
+                print
                 errors.append("Input EMX file doesn't exists:\n*%s*" % emxFile)
         else:
             self._loadEmxInfo()   

@@ -272,7 +272,7 @@ class TestMixedBPV2(TestWorkflow):
         self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
         
         print "Run ML2D"
-        protML2D = self.newProtocol(XmippProtML2D, numberOfReferences=8, maxIters=2, 
+        protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=8, maxIters=2,
                                  numberOfMpi=2, numberOfThreads=2)
         protML2D.inputParticles.set(protCropResize.outputParticles)
         self.launchProtocol(protML2D)        

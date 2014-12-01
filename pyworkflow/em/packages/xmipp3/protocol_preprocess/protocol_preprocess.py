@@ -33,8 +33,9 @@ import xmipp
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import *
-from constants import *
-from convert import locationToXmipp
+
+from ..constants import *
+from ..convert import locationToXmipp
 
 
 
@@ -149,18 +150,6 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
                       'If this value is 0, then half the box size is used.', 
                       expertLevel=LEVEL_ADVANCED)
         XmippPreprocessHelper._defineProcessParams(form)
-#         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
-#                       label="Automatic particle rejection", default=REJ_NONE,
-#                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
-#                       help='How to automatically reject particles. It can be none (no rejection), '
-#                       'maxZscore (reject a particle if its Zscore is larger than this value), '
-#                       'Percentage (reject a given percentage in each one of the screening criteria). ')
-#         form.addParam('maxZscore', IntParam, default=3, condition='autoParRejection==1',
-#                       label='Maximum Zscore', expertLevel=LEVEL_EXPERT,
-#                       help='Maximum Zscore.', validators=[Positive])      
-#         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
-#                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
-#                       help='Percentage.', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])        
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertProcessStep(self):
@@ -182,9 +171,6 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
         
         XmippPreprocessHelper._insertCommonSteps(self, changeInserts)
         
-#         if self.getEnumText('autoParRejection') != 'None':
-#             self._insertFunctionStep("rejectionStep", outputFn, outputMd)
-    
     #--------------------------- STEPS functions ---------------------------------------------------
     def invertStep(self, args, changeInserts):
         self.runJob('xmipp_image_operate', args)
@@ -200,39 +186,7 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
     
     def sortImages(self, outputFn, outputMd):
         pass
-#         from xmipp import MetaDataInfo
-#         #(Xdim, Ydim, Zdim, Ndim, _) = MetaDataInfo(inputFile)
-#         args=""
-#         # copy file to run path
-#         self.outputMd = String(self._getPath(replaceBaseExt(inputFile, 'xmd')))
-#         self.outputMd._objDoStore = True
-#         if inputFile != self.outputMd.get():
-#             copyFile(inputFile, self.outputMd.get())
-#         if self.autoParRejection.get()==REJ_MAXZSCORE:
-#             args+=" --zcut "+str(self.maxZscore.get())
-#         elif self.autoParRejection.get()==REJ_PERCENTAGE:
-#             args+=" --percent "+str(self.percentage.get())
-#         #if Ndim > 0:
-#         self.runJob("xmipp_image_sort_by_statistics", "-i " + self.outputMd.get() + " --addToInput"+args)
-#     
-#     def convertInputStep(self):
-#         """ convert if necessary"""
-#         imgSet = self.inputParticles.get()
-#         imgSet.writeStack(self.outputStk)
-#     
-#     def createOutputStep(self):
-#         inImgSet = self.inputParticles.get()
-#         outImgSet = self._createSetOfParticles()
-#         outImgSet.copyInfo(inImgSet)
-#         
-#         for i, img in enumerate(inImgSet):
-#             j = i + 1
-#             img.setLocation(j, self.outputStk)
-#             outImgSet.append(img)
-#         
-#         self._defineOutputs(outputParticles=outImgSet)
-#         self._defineTransformRelation(inImgSet, self.outputParticles)
-#     
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         validateMsgs = []

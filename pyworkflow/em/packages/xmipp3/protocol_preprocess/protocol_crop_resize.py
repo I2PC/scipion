@@ -148,13 +148,13 @@ class XmippResizeHelper():
         if protocol.resizeOption == cls.RESIZE_SAMPLINGRATE:
             newSamplingRate = protocol.resizeSamplingRate.get()
             factor = samplingRate / newSamplingRate
-            protocol.samplingRate = newSamplingRate
             args = protocol._args + " --factor %(factor)f"
         
         elif protocol.resizeOption == cls.RESIZE_DIMENSIONS:
             size = protocol.resizeDim.get()
             dim = protocol._getSetSize()
-            protocol.samplingRate = (samplingRate * float(dim) / float(size))
+            factor = float(size) / float(dim)
+            newSamplingRate = samplingRate / factor
             
             if protocol.doFourier:
                 args = protocol._args + " --fourier %(size)d"
@@ -163,15 +163,18 @@ class XmippResizeHelper():
             
         elif protocol.resizeOption == cls.RESIZE_FACTOR:
             factor = protocol.resizeFactor.get()                                               
-            protocol.samplingRate = samplingRate / factor
+            newSamplingRate = samplingRate / factor
             args = protocol._args + " --factor %(factor)f"
         
         else:
             level = protocol.resizeLevel.get()
             factor = pow(2, level)
-            protocol.samplingRate = samplingRate / factor
+            newSamplingRate = samplingRate / factor
             args = protocol._args + " --pyramid %(level)d"
             
+        protocol.samplingRate = newSamplingRate
+        protocol.factor = factor
+        
         return args % locals()
     
     @classmethod
@@ -227,8 +230,20 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         """ We need to update the sampling rate of the 
         particles if the Resize option was used.
         """
+        self.inputHasAlign = self.inputParticles.get().hasAlignment()
+        
         if self.doResize:
             output.setSamplingRate(self.samplingRate)
+            
+    def _updateItem(self, item, row):
+        """ Update also the sampling rate and 
+        the alignment if needed.
+        """
+        XmippProcessParticles._updateItem(self, item, row)
+        if self.doResize:
+            item.setSamplingRate(self.samplingRate)
+            if self.inputHasAlign:
+                item.getTransform().scaleShifts2D(1./self.factor)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

@@ -55,7 +55,7 @@ class XmippML2DViewer(ProtocolViewer):
         group = form.addGroup('Overall results')
         group.addParam('classesToShow', EnumParam, choices=ITER_CHOICES,
                       default=ITER_LAST, display=EnumParam.DISPLAY_LIST,
-                      label="Visualize 2D references from iter", 
+                      label="Visualize 2D classes from iter",
                       help="Select from which iteration do you want to visualize classes")
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
                       label="Iter selection",
@@ -77,7 +77,7 @@ class XmippML2DViewer(ProtocolViewer):
                        help='Should approach to zero when convergence.')      
         group.addParam('doShowMirror', BooleanParam, default=False,
                        label="Show mirror fraction for last iteration?", 
-                       help='he the mirror fraction of each reference in last iteration.')      
+                       help='he the mirror fraction of each class in last iteration.')
         
     
     def _getVisualizeDict(self):
@@ -194,7 +194,7 @@ def createPlots(protML, selectedPlots):
         nrefs = len(mirrors)
         ind = arange(1, nrefs + 1)
         width = 0.85
-        a = xplotter.createSubPlot('Mirror fractions on last iteration', 'references', 'mirror fraction')
+        a = xplotter.createSubPlot('Mirror fractions on last iteration', 'classes', 'mirror fraction')
         a.set_xticks(ind + 0.45)
         a.xaxis.set_major_formatter(FormatStrFormatter('%1.0f'))
         a.bar(ind, mirrors, width, color='b')

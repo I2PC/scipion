@@ -53,8 +53,8 @@ class Step(OrderedObject):
     and define a run method.
     """
     
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
+    def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         self._prerequisites = CsvList() # which steps needs to be done first
         self.status = String()
         self.initTime = String()
@@ -179,20 +179,20 @@ class FunctionStep(Step):
     """ This is a Step wrapper around a normal function
     This class will ease the insertion of Protocol function steps
     through the function _insertFunctionStep"""
-    def __init__(self, func=None, funcName=None, *funcArgs, **args):
+    def __init__(self, func=None, funcName=None, *funcArgs, **kwargs):
         """ 
          Params:
             func: the function that will be executed.
             funcName: the name assigned to that function (will be stored)
             *funcArgs: argument list passed to the function (serialized and stored)
-            **args: extra parameters.
+            **kwargs: extra parameters.
         """ 
         Step.__init__(self)
         self._func = func # Function should be set before run
         self._args = funcArgs
         self.funcName = String(funcName)
         self.argsStr = String(pickle.dumps(funcArgs))
-        self.setInteractive(args.get('interactive', False))
+        self.setInteractive(kwargs.get('interactive', False))
         
     def _runFunc(self):
         """ Return the possible result files after running the function. """
@@ -236,7 +236,7 @@ class RunJobStep(FunctionStep):
     The runJob function should be provided by the protocol
     when inserting a new RunJobStep"""
      
-    def __init__(self, runJobFunc=None, programName=None, arguments=None, resultFiles=[], **args):
+    def __init__(self, runJobFunc=None, programName=None, arguments=None, resultFiles=[], **kwargs):
         FunctionStep.__init__(self, runJobFunc, 'runJob', programName, arguments)
         # Number of mpi and threads used to run the program
         self.__runJob = runJobFunc # Store the current function to run the job
@@ -260,8 +260,8 @@ class RunJobStep(FunctionStep):
 class StepSet(Set):
     """ Special type of Set for storing steps. """
     def __init__(self, filename=None, prefix='', 
-                 mapperClass=None, **args):
-        Set.__init__(self, filename, prefix, mapperClass, classesDict=globals(), **args)
+                 mapperClass=None, **kwargs):
+        Set.__init__(self, filename, prefix, mapperClass, classesDict=globals(), **kwargs)
         
                 
 class Protocol(Step):
@@ -269,16 +269,16 @@ class Protocol(Step):
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed
     """    
-    def __init__(self, **args):
-        Step.__init__(self, **args)        
+    def __init__(self, **kwargs):
+        Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed
-        self.workingDir = String(args.get('workingDir', '.')) # All generated filePaths should be inside workingDir
-        self.mapper = args.get('mapper', None)
+        self.workingDir = String(kwargs.get('workingDir', '.')) # All generated filePaths should be inside workingDir
+        self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
         self._definition = Form()
         self._defineParams(self._definition)
-        self._createVarsFromDefinition(**args)
+        self._createVarsFromDefinition(**kwargs)
         self.__stdOut = None
         self.__stdErr = None
         self.__fOut = None
@@ -286,7 +286,7 @@ class Protocol(Step):
         self._log = None
         self._buffer = ''  # text buffer for reading log files
         # Project to which the protocol belongs
-        self.__project = args.get('project', None)
+        self.__project = kwargs.get('project', None)
         # Filename templates dict that will be used by _getFileName
         self.__filenamesDict = {}
         
@@ -300,23 +300,23 @@ class Protocol(Step):
         if not self.allowThreads:
             self.numberOfThreads = Integer(1)
         
-        # Check if MPI or threads are passed in **args, mainly used in tests
-        if 'numberOfMpi' in args:
-            self.numberOfMpi.set(args.get('numberOfMpi'))
+        # Check if MPI or threads are passed in **kwargs, mainly used in tests
+        if 'numberOfMpi' in kwargs:
+            self.numberOfMpi.set(kwargs.get('numberOfMpi'))
         
-        if 'numberOfThreads' in args:
-            self.numberOfThreads.set(args.get('numberOfThreads'))            
+        if 'numberOfThreads' in kwargs:
+            self.numberOfThreads.set(kwargs.get('numberOfThreads'))            
         
         if not hasattr(self, 'hostName'):
-            self.hostName = String(args.get('hostName', 'localhost'))
+            self.hostName = String(kwargs.get('hostName', 'localhost'))
         
         # Maybe this property can be inferred from the 
         # prerequisites of steps, but is easier to keep it
         self.stepsExecutionMode = STEPS_SERIAL
         # Expert level
-        self.expertLevel = Integer(args.get('expertLevel', LEVEL_NORMAL))
+        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
         # Run mode
-        self.runMode = Integer(args.get('runMode', MODE_RESUME))
+        self.runMode = Integer(kwargs.get('runMode', MODE_RESUME))
         # Use queue system?
         self._useQueue = Boolean(False)
         
@@ -340,21 +340,21 @@ class Protocol(Step):
                 attrList.append(key)
             setattr(self, key, value)
         
-    def _defineInputs(self, **args):
+    def _defineInputs(self, **kwargs):
         """ This function should be used to define
         those attributes considered as Input""" 
-        self._storeAttributes(self._inputs, args)
+        self._storeAttributes(self._inputs, kwargs)
         
-    def _defineOutputs(self, **args):
+    def _defineOutputs(self, **kwargs):
         """ This function should be used to specify
         expected outputs""" 
         
-        for k, v in args.iteritems():
+        for k, v in kwargs.iteritems():
             if hasattr(self, k):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
             
-        self._storeAttributes(self._outputs, args)
+        self._storeAttributes(self._outputs, kwargs)
         
     def getProject(self):
         return self.__project
@@ -446,16 +446,16 @@ class Protocol(Step):
         for paramName, _ in self.iterDefinitionAttributes():
             self.copyAttributes(other, paramName)
         
-    def _createVarsFromDefinition(self, **args):
+    def _createVarsFromDefinition(self, **kwargs):
         """ This function will setup the protocol instance variables
         from the Protocol Class definition, taking into account
         the variable type and default values.
         """
         if hasattr(self, '_definition'):
             for paramName, param in self._definition.iterParams():
-                # Create the var with value comming from args or from 
+                # Create the var with value comming from kwargs or from 
                 # the default param definition
-                var = param.paramClass(value=args.get(paramName, param.default.get()))
+                var = param.paramClass(value=kwargs.get(paramName, param.default.get()))
                 setattr(self, paramName, var)
         else:
             print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
@@ -510,13 +510,13 @@ class Protocol(Step):
         """
         pass
     
-    def __insertStep(self, step, **args):
+    def __insertStep(self, step, **kwargs):
         """ Insert a new step in the list. 
         Params:
-         **args:
+         **kwargs:
             prerequisites: a list with the steps index that need to be done 
                            previous than the current one."""
-        prerequisites = args.get('prerequisites', None)
+        prerequisites = kwargs.get('prerequisites', None)
         
         if prerequisites is None:
             if len(self._steps):

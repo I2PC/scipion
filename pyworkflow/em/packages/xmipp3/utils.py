@@ -62,6 +62,10 @@ def isMdEmpty(filename):
 
 def iterMdRows(md):
     """ Iterate over the rows of the given metadata. """
+    # If md is string, take as filename and create the metadata
+    if isinstance(md, basestring):
+        md = xmipp.MetaData(md)
+        
     row = XmippMdRow()
     
     for objId in md:

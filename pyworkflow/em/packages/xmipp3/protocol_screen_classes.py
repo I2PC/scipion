@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import ALIGN_PROJ
 """
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
@@ -184,4 +185,4 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
             particle = item.getRepresentative()
         else:
             particle = item
-        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
+        particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))

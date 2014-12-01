@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import ALIGN_2D
 """
 This sub-package contains the XmippRCT protocol
 """
@@ -160,7 +161,7 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
             pairRow.setValue(xmipp.MDL_REF, 1)
 
-            alignment = img.getAlignment()
+            alignment = img.getTransform()
             
 #             pairRow.setValue(xmipp.MDL_FLIP, False)
 #             pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)
@@ -169,8 +170,7 @@ class XmippProtRCT(ProtInitialVolume):
 
             # Scale alignment by scaleFactor
             alignment.scale(scaleFactor)
-            alignmentToRow(alignment, pairRow, is2D=True, inverseTransform=False)
-                                                           #/////////////////////
+            alignmentToRow(alignment, pairRow, alignType=ALIGN_2D)
                                
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]

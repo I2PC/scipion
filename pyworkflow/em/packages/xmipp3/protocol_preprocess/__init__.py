@@ -23,38 +23,23 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This modules contains constants related to EM
-"""
-#------------------ Constants values --------------------------------------
 
-NO_INDEX = 0  # This is the index value for single images
-    
+from protocol_crop_resize import XmippResizeHelper
+from protocol_crop_resize import XmippProtCropResizeParticles
+from protocol_crop_resize import XmippProtCropResizeVolumes
 
-# Sampling rate input modes
-SAMPLING_FROM_IMAGE = 0
-SAMPLING_FROM_SCANNER = 1
+from protocol_filter import XmippFilterHelper
+from protocol_filter import XmippProtFilterParticles
+from protocol_filter import XmippProtFilterVolumes
 
-# This is the name for track which data is the source of others
-RELATION_SOURCE = 'relation_datasource'
-RELATION_TRANSFORM = 'relation_transform'
-RELATION_CTF = 'relation_ctf'
+from protocol_mask import XmippProtMaskParticles
+from protocol_mask import XmippProtMaskVolumes
 
-UNIT_PIXEL = 'px'
-UNIT_PIXEL_FOURIER = '1/px'
-UNIT_ANGSTROM = 'A'
-UNIT_ANGSTROM_FOURIER = '1/A'
+from protocol_preprocess import XmippProtPreprocessParticles
+from protocol_preprocess import XmippProtPreprocessVolumes
 
-# Fourier Filter options
-FILTER_LOW_PASS = 0
-FILTER_HIGH_PASS = 1
-FILTER_BAND_PASS = 2
-FILTER_GAUSSIAN = 3
+from protocol_image_operate import XmippProtImageOperateParticles
+from protocol_image_operate import XmippProtImageOperateVolumes
 
-# Transform
-ALIGN_NONE = 'None'
-ALIGN_2D   = '2D'         # 2D image alignment
-ALIGN_3D   = '3D'         # 3D map alignment
-ALIGN_PROJ = 'Projection' # relate projections with 3d map
-
-ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
+from protocol_create_mask3d import XmippProtCreateMask3D
+from protocol_create_mask2d import XmippProtCreateMask2D
