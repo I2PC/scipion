@@ -353,3 +353,50 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
                             ImageDim(*self.inputVolumes.get().getDim())]
                 n /= 2
         return []
+
+    def _summary(self):
+        if not hasattr(self, "outputVol"):
+            return ["Protocol has not finished yet."]
+
+        if hasattr(self.outputVol, "getSize"):
+            summary = ["Filtered %d volumes using:" % self.outputVol.getSize()]
+        else:
+            summary = ["Filtered one volume using:"]
+
+        def add(x): summary.append('  ' + x)  # short notation
+        cls = XmippFilterHelper
+        if self.filterSpace == FILTER_SPACE_FOURIER:
+            add('Space: *Fourier*')
+            if self.freqInAngstrom:
+                lowFreq = self.lowFreqA.get()
+                highFreq = self.highFreqA.get()
+            else:
+                lowFreq = self.lowFreqDig.get()
+                highFreq = self.highFreqDig.get()
+            mode = self.filterModeFourier.get()
+            if mode == cls.FM_LOW_PASS:
+                add('Mode: *Low-pass* ( freq > *%g* A )' % highFreq)
+            elif mode == cls.FM_HIGH_PASS:
+                add('Mode: *High-pass* ( freq < *%g* A )' % lowFreq)
+            elif mode == cls.FM_BAND_PASS:
+                add('Mode: *Band-pass* ( *%g* A < freq < *%g* A )' % (highFreq, lowFreq))
+            add('Frequency Decay: *%g* A' % self.freqDecay.get())
+        elif self.filterSpace == FILTER_SPACE_REAL:
+            add('Mode: *Median*')
+        elif self.filterSpace == FILTER_SPACE_WAVELET:
+            add('Space: *Wavelet*')
+            filterMode = self.filterModeWavelets.get()
+            if   filterMode == cls.FM_DAUB4:   add('Wavelet: *Daubechies 4*')
+            elif filterMode == cls.FM_DAUB12:  add('Wavelet: *Daubechies 12*')
+            elif filterMode == cls.FM_DAUB20:  add('Wavelet: *Daubechies 20*')
+
+            fm = self.waveletMode.get()
+            if   fm == cls.FM_REMOVE_SCALE:       add('Mode: *Remove scale*')
+            elif fm == cls.FM_SOFT_THRESHOLDING:  add('Mode: *Soft thresholding*')
+            elif fm == cls.FM_ADAPTIVE_SOFT:      add('Mode: *Adaptive soft*')
+            elif fm == cls.FM_CENTRAL:            add('Mode: *Central*')
+
+        return summary
+
+    def _methods(self):
+        return ["We filtered the volume(s) using Xmipp [Sorzano2007a]."]
