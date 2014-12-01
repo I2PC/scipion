@@ -329,7 +329,7 @@ public class ScipionGalleryData extends GalleryData {
                 return null;
             ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
 
-            String column = isClassificationMd()? "_representative._alignment._matrix" : "_alignment._matrix";
+            String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
             String matrix = (String)emo.getValue(column);
             return new Geometry(matrix);
         }
