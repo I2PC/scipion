@@ -199,7 +199,7 @@ public class GalleryData {
         useGeo = wrap = false;
         displayLabels = null;
         mode = Mode.GALLERY_MD;
-        
+        this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
         
         if(parameters.getBlock() == null)
@@ -209,7 +209,7 @@ public class GalleryData {
         
             setRenderLabels(parameters.renderLabels);
             setRenderLabel(parameters.getRenderLabel());
-            this.renderImages = (getRenderLabels() != null && !renderLabel.equals("first"));
+            
             sortby = parameters.sortby;
             setVisibleLabels(parameters.visibleLabels);
             setOrderLabels(parameters.orderLabels);
@@ -1714,8 +1714,9 @@ public class GalleryData {
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
+
         if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
-                return MetaData.isImage(ci.label);
+                return MetaData.isImage(ci.label) && ci.visible;
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {

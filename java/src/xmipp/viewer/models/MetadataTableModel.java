@@ -134,7 +134,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
                                 String str = md.getValueString(label, data.ids[row]);
-                                if(ci.labelName.equals("_transform._matrix"))
+                                if (ci.labelName.contains("_transform._matrix"))
                                     return String.format("<html>%s</html>", formatNumbers(str).replace("],", "]<br>"));
                                 
 				return str;
