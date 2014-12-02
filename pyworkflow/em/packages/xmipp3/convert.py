@@ -337,9 +337,8 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     postprocessImageRow = kwargs.get('postprocessImageRow', None)
     if postprocessImageRow:
         postprocessImageRow(img, imgRow)
+
     
-from rpdb2 import start_embedded_debugger    
-        
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     """ Create an Image from a row of a metadata. """
     img = imgClass()
@@ -358,9 +357,6 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
         img.setClassId(imgRow.getValue(xmipp.MDL_REF))
     elif imgRow.containsLabel(xmipp.MDL_REF3D):
         img.setClassId(imgRow.getValue(xmipp.MDL_REF3D))
-    
-    print "imgRow: ", imgRow
-    #start_embedded_debugger('a')
     
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(imgRow))
