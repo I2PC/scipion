@@ -601,10 +601,8 @@ def chimera_headless(volPath, threshold):
     outputCmdFile.close()
     
     # Execute command file in chimera headless
-    cmdToExec = [os.environ.get('CHIMERA_HEADLESS'), cmdFile]
+    cmdToExec = [os.environ.get('CHIMERA_HEADLESS')+"/bin/chimera", cmdFile]
     import subprocess
-    
-    print 'cmdToExec: ', cmdToExec
     subprocess.call(cmdToExec, shell=False)
     
     # Extract information from HTML output file
