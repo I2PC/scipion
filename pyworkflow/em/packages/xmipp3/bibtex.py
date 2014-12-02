@@ -355,6 +355,16 @@ pages = "171-193",
   doi                      = "http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf"
 }
 
+@article{Sorzano2015,
+author = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-Trevin,  J. M. and Oton, J. and Alvarez-Cabrera, A. L. and Abrishami, V. and Sesmero, E. and Marabini, R. and Carazo, J. M.},
+title = {A Statistical approach to the initial volume problem in Single Particle Analysis by Electron Microscopy},
+journal = "(under review)",
+year = {2015},
+volume = {0},
+pages = {0},
+doi = "http://biocomp.cnb.csic.es/~coss"
+}
+
 @article{Vargas2013a,
 author = {Vargas, J. and Otón, J. and Marabini, R. and Jonic, S. and {de la
   Rosa-Trevín}, J. M. and et.al.},
