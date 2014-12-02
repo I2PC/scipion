@@ -346,6 +346,8 @@ void ProgReconstructSignificant::run()
 	Matrix1D<double> dir1, dir2;
     for (iter=1; iter<=Niter; iter++)
     {
+    	if (rank==0)
+    		std::cout << "\nIteration " << iter << std::endl;
     	// Generate projections from the different volumes
     	generateProjections();
 
@@ -363,7 +365,7 @@ void ProgReconstructSignificant::run()
     	// Reweight according to each direction
     	if (rank==0)
     	{
-    		std::cout << "Readjusting weights ..." << std::endl;
+    		std::cerr << "Readjusting weights ..." << std::endl;
     		init_progress_bar(Nvols);
 			for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
 			{
@@ -412,7 +414,7 @@ void ProgReconstructSignificant::run()
 						double cdfThis=DIRECT_A1D_ELEM(cdfccdir,nImg);
 						if ((cdfThis>=oneAlpha || !strict) && DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)>0)
 						{
-							std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
+							// std::cout << "Neighborhood " << nDir << " accepts image " << nImg << " with weight " << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir) << "*" << ccimg << "*" << iBestCorr << "*" << cdfThis << "=" << DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*ccimg*iBestCorr*cdfThis << std::endl;
 							DIRECT_A3D_ELEM(weight,nImg,nVolume,nDir)*=ccimg*iBestCorr*cdfThis;
 						}
 						else
@@ -480,7 +482,14 @@ void ProgReconstructSignificant::run()
 					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
 				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
-				//deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+				deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+				if (iter>=1 && !keepIntermediateVolumes)
+				{
+					deleteFile(formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+				}
 			}
 
 			if (verbose>=2)
@@ -507,6 +516,7 @@ void ProgReconstructSignificant::reconstructCurrent()
 {
 	if (rank==0)
 		std::cerr << "Reconstructing volumes ..." << std::endl;
+	MetaData MD;
 	for (size_t nVolume=0; nVolume<mdInit.size(); ++nVolume)
 	{
 		if ((nVolume+1)%Nprocessors!=rank)
@@ -515,11 +525,21 @@ void ProgReconstructSignificant::reconstructCurrent()
 		FileName fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 		if (!fnAngles.exists())
 			continue;
+		MD.read(fnAngles);
+		std::cout << "Volume " << nVolume << ": number of images=" << MD.size() << std::endl;
 		FileName fnVolume=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter,nVolume);
 		String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
 		if (system(cmd.c_str())==-1)
 			REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+
+		if (fnSym!="c1")
+		{
+			args=formatString("-i %s --sym %s -v 0",fnVolume.c_str(),fnSym.c_str());
+			cmd=(String)"xmipp_transform_symmetrize "+args;
+			if (system(cmd.c_str())==-1)
+				REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+		}
 
 		args=formatString("-i %s --mask circular %d -v 0",fnVolume.c_str(),-Xdim/2);
 		cmd=(String)"xmipp_transform_mask "+args;
@@ -589,8 +609,10 @@ void ProgReconstructSignificant::produceSideinfo()
 	getImageSize(mdIn,Xdim,Ydim,Zdim,Ndim);
 
 	// If there is not any input volume, create a random one
+	bool deleteInit=false;
 	if (fnInit=="")
 	{
+		deleteInit=true;
 		MetaData mdAux;
 		for (int n=0; n<Nvolumes; ++n)
 		{
@@ -614,6 +636,8 @@ void ProgReconstructSignificant::produceSideinfo()
 				String cmd=(String)"xmipp_reconstruct_fourier "+args;
 				if (system(cmd.c_str())==-1)
 					REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
+				if (!keepIntermediateVolumes)
+					deleteFile(fnAngles);
 
 				// Symmetrize with many different possibilities to have a spherical volume
 				args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
@@ -663,4 +687,6 @@ void ProgReconstructSignificant::produceSideinfo()
 
 	iter=0;
 	synchronize();
+	if (deleteInit && rank==0)
+		deleteFile(fnInit);
 }
