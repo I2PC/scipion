@@ -128,7 +128,7 @@ class TestImportMicrographs(TestImportBase):
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
                                          mdFile=micsMd,
                                          magnification=10000,
-                                         samplingRate=1.
+                                         samplingRate=1.237
                                          )
         prot1.setObjLabel('from xmipp (no-ctf)')
         self.launchProtocol(prot1)
@@ -141,7 +141,7 @@ class TestImportMicrographs(TestImportBase):
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
                                          mdFile=micsMd,
                                          magnification=10000,
-                                         samplingRate=1.
+                                         samplingRate=1.237
                                          )
         prot2.setObjLabel('from xmipp (ctf)')
         self.launchProtocol(prot2)
