@@ -92,8 +92,10 @@ $(document).ready(function() {
 			        "bFilter": true,
 			        "bInfo": true,
 			        "bAutoWidth": true,
-// 			        "sDom": 'Rl<"#displayTableContainer">frtip', 
-			        "sDom": 'Rlfrtip', 
+			        
+					// Used to show/hide the datatable colums configuration			        
+			        "sDom": 'Rl<"#displayTableContainer">frtip',
+			        
 			        "iDisplayLength": 50,
 			        "oLanguage": {
 			            "sLengthMenu": 'Display <select>'+
@@ -146,7 +148,8 @@ $(document).ready(function() {
 		    	    }
 			    });
 	
-	$("#displayTableContainer").html("<a href='#' onclick='showTableConfig()'>{{msg.LABEL_DISPLAY_TABLE_CONFIG}}</a>")
+	var configButton ="<a href='#' onclick='showTableConfig()'><input type='button' class='btn buttonGrey' value='{{msg.LABEL_DISPLAY_TABLE_CONFIG}}'/></a>"
+	$("#displayTableContainer").html(configButton)
 	
 	{% if dataset.getTable.hasEnabledColumn %}
 		initializeMultipleSelectionTool()

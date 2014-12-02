@@ -593,8 +593,6 @@ def chimera_headless(volPath, threshold):
     cmdFile = htmlFile + '.cmd'
     outputCmdFile = open(cmdFile, 'w+')
     
-    print "PATH TO OPEN:", volPath
-    
     outputCmdFile.write("""
     open %(volPath)s
     volume #0 level %(threshold)s
