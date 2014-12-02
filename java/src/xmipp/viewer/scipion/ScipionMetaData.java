@@ -69,10 +69,13 @@ public class ScipionMetaData extends MetaData {
             haschilds = true;
             List<String> childblocks = new ArrayList<String>();
             for (EMObject emo : emobjects) {
-                prefix = String.format("Class%03d_", emo.getId());
-                emo.childmd = new ScipionMetaData(dbfile, prefix);
-                emo.childmd.setParent(this);
-                childblocks.add(emo.childmd.getBlock());
+                if((Integer)emo.getValue("_size") != 0)
+                {
+                    prefix = String.format("Class%03d_", emo.getId());
+                    emo.childmd = new ScipionMetaData(dbfile, prefix);
+                    emo.childmd.setParent(this);
+                    childblocks.add(emo.childmd.getBlock());
+                }
             }
         
          
@@ -139,7 +142,6 @@ public class ScipionMetaData extends MetaData {
             
             String query = String.format("SELECT * FROM %sClasses;", preffix);
             rs = stmt.executeQuery(query);
-            
             while (rs.next()) {
                 name = rs.getString("label_property");
                 alias = rs.getString("column_name");
