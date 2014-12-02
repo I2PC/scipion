@@ -111,7 +111,7 @@ class TestImportParticles(TestImportBase):
         prot1.setObjLabel('from xmipp (with mic id)')
         self.launchProtocol(prot1)
 
-    def test_fromRelion(self):
+    def test_fromRelionRefine3D(self):
         """ Import an EMX file with Particles and defocus
         """
         prot1 = self.newProtocol(ProtImportParticles,
@@ -119,6 +119,30 @@ class TestImportParticles(TestImportBase):
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
                                  starFile=self.dsRelion.getFile('import/case2/relion_it015_data.star'),
                                  magnification=10000,
-                                 samplingRate=7.
+                                 samplingRate=7.08
                                  )
         self.launchProtocol(prot1)
+ 
+    def test_fromRelionClassify2D(self):
+        """ Import an EMX file with Particles and defocus
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from relion (classify 2d)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                 starFile=self.dsRelion.getFile('import/classify2d/extra/relion_it015_data.star'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)       
+ 
+    def test_fromRelionClassify3D(self):
+        """ Import an EMX file with Particles and defocus
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from relion (classify 3d)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                 starFile=self.dsRelion.getFile('import/classify3d/extra/relion_it015_data.star'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)         
