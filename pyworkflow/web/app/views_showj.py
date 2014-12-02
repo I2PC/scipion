@@ -559,8 +559,8 @@ def create_context_chimera(volPath, threshold=None):
     
     chimeraHtml = chimera_headless(volPath, threshold)
     
-    context = {"chimeraHtml":chimeraHtml,
-               "volPath":volPath, 
+    context = {"chimeraHtml": chimeraHtml,
+               "volPath": volPath, 
                "threshold": threshold, 
                "jquery_ui_css": getResourceCss("jquery_ui"),
                "philogl": getResourceJs("philogl"),
@@ -593,8 +593,6 @@ def chimera_headless(volPath, threshold):
     cmdFile = htmlFile + '.cmd'
     outputCmdFile = open(cmdFile, 'w+')
     
-    print "PATH TO OPEN:", volPath
-    
     outputCmdFile.write("""
     open %(volPath)s
     volume #0 level %(threshold)s
@@ -605,6 +603,8 @@ def chimera_headless(volPath, threshold):
     # Execute command file in chimera headless
     cmdToExec = [os.environ.get('CHIMERA_HEADLESS'), cmdFile]
     import subprocess
+    
+    print 'cmdToExec: ', cmdToExec
     subprocess.call(cmdToExec, shell=False)
     
     # Extract information from HTML output file
