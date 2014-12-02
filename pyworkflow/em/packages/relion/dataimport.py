@@ -152,7 +152,7 @@ class RelionImport():
         if os.path.exists(modelStarFile):
             self._modelStarFile = modelStarFile
         else:
-            modelHalfStarFile = self._starFile.replace('_data.star', 'half1_model.star')
+            modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
             if os.path.exists(modelHalfStarFile):
                 self._modelStarFile = modelHalfStarFile
             else:
