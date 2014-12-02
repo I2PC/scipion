@@ -352,6 +352,11 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     index, filename = xmippToLocation(imgRow.getValue(imgLabel))
     img.setLocation(index, filename)
     
+    if imgRow.containsLabel(xmipp.MDL_REF):
+        img.setClassId(imgRow.getValue(xmipp.MDL_REF))
+    elif imgRow.containsLabel(xmipp.MDL_REF3D):
+        img.setClassId(imgRow.getValue(xmipp.MDL_REF3D))
+    
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(imgRow))
         
@@ -1156,8 +1161,40 @@ def alignmentToRow(alignment, alignmentRow, alignType):
     alignmentRow.setValue(xmipp.MDL_FLIP, flip)
 
 
-def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
+def fillClasses(clsSet, updateClassCallback=None):
+    """ Give an empty SetOfClasses (either 2D or 3D).
+    Iterate over the input images and append to the corresponding class.
+    It is important that each image has the classId properly set.
+    """
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    inputImages = clsSet.getImages()
+    
+    for img in inputImages:
+        ref = img.getClassId()
+        if ref is None:
+            raise Exception('Particle classId is None!!!')
+        
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            classItem = clsSet.ITEM_TYPE(objId=ref)
+            rep = clsSet.REP_TYPE()
+            classItem.setRepresentative(rep)            
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputImages)
+            classItem.setAcquisition(inputImages.getAcquisition())
+            if updateClassCallback is not None:
+                updateClassCallback(classItem)
+            clsSet.append(classItem)
+        else:
+            classItem = clsDict[ref] # Try to get the class set given its ref number
+        classItem.append(img)
+        
+    for classItem in clsDict.values():
+        clsSet.update(classItem)
+    
+    
+#FIXME: USE THIS FUNCTION AS THE WAY TO CREATE CLASSES, REMOVE THE NEXT ONE
+def createClassesFromImages2(inputImages, inputMd, classesFn, ClassType, 
+                            classLabel, getClassFn=None, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1177,30 +1214,37 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
     else:
         tmpDir = os.path.dirname(inputMd)
     rootDir = tmpDir
-    md = xmipp.MetaData(inputMd)
+    #md = xmipp.MetaData(inputMd)
     clsDict = {} # Dictionary to store the (classId, classSet) pairs
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
     hasCtf = inputImages.hasCTF()
     
-    for objId in md:
-        ref = md.getValue(classLabel, objId)
+    for img in inputImages:
+        ref = img.getClassId()
+        if ref is None:
+            raise Exception('Particle classId is None!!!')
+        
         if not ref in clsDict: # Register a new class set if the ref was not found.
-            cls = clsSet.ITEM_TYPE(objId=ref)
-            refFn = classFnTemplate % locals()
+            classItem = clsSet.ITEM_TYPE(objId=ref)
+            if getClassFn is None:
+                refFn = ''
+            else:
+                refFn = getClassFn(ref)
             refLocation = xmippToLocation(refFn)
             rep = clsSet.REP_TYPE()
             rep.setLocation(refLocation)
-            cls.setRepresentative(rep)
+            classItem.setRepresentative(rep)
             
-            clsDict[ref] = cls
-            cls.copyInfo(inputImages)
-            cls.setAcquisition(inputImages.getAcquisition())
-            clsSet.append(cls)
-        classItem = clsDict[ref] # Try to get the class set given its ref number
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputImages)
+            classItem.setAcquisition(inputImages.getAcquisition())
+            clsSet.append(classItem)
+        else:
+            classItem = clsDict[ref] # Try to get the class set given its ref number
         # Set images attributes from the md row values
-        imgRow = rowFromMd(md, objId)
-        img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
+        #imgRow = rowFromMd(md, objId)
+        #img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
         
         classItem.append(img)
         
@@ -1208,4 +1252,28 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         clsSet.update(classItem)
         
     clsSet.write()
+    return clsSet
+    
+#FIXME: remove this function and use previous one
+def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
+                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
+    """ From an intermediate X.xmd file produced by xmipp, create
+    the set of classes in which those images are classified.
+    Params:
+        inputImages: the SetOfImages that were initially classified by relion. 
+        inputMd: the filename metadata.
+        classesFn: filename where to write the classes.
+        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        classLabel: label that is the class reference.
+        classFnTemplate: the template to get the classes averages filenames
+        iter: the iteration number, just used in Class template
+    """
+    # We asume here that the volumes (classes3d) are in the same folder than imgsFn
+    # rootDir here is defined to be used expanding locals()
+    def getClassFn(ref):
+        return classFnTemplate % locals()  
+    
+    createClassesFromImages2(inputImages, inputMd, classesFn, ClassType, classLabel, 
+                             getClassFn=classFnTemplate, 
+                             preprocessImageRow=preprocessImageRow)
     
