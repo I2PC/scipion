@@ -601,7 +601,7 @@ def chimera_headless(volPath, threshold):
     outputCmdFile.close()
     
     # Execute command file in chimera headless
-    cmdToExec = [os.environ.get('CHIMERA_HEADLESS')+"/bin/chimera", cmdFile]
+    cmdToExec = [os.environ.get('CHIMERA_HEADLESS_HOME')+"/bin/chimera", cmdFile]
     import subprocess
     subprocess.call(cmdToExec, shell=False)
     
