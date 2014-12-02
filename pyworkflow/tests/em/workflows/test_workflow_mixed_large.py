@@ -67,7 +67,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
+        protCL2D = XmippProtCL2D(numberOfClasses=32, numberOfInitialClasses=4,
                                  numberOfIterations=2, numberOfMpi=16)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         protCL2D.setObjLabel('CL2D')

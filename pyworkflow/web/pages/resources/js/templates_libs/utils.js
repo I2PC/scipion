@@ -108,7 +108,7 @@ function detectWebBrowser(){
 	    // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
 		res = "opera";
 	}
-	else if(typeof InstallTrigger !== 'undefined'){
+	if(typeof InstallTrigger !== 'undefined'){
 		// Firefox 1.0+
 		res = "firefox";
 	}
@@ -116,7 +116,7 @@ function detectWebBrowser(){
 		// At least Safari 3+: "[object HTMLElementConstructor]"
 		res = "safari"; 
 	}
-	else if(!!window.chrome && !isOpera){
+	else if(!!window.chrome){
 		// Chrome 1+
 		res = "chrome";
 	}
@@ -128,23 +128,27 @@ function detectWebBrowser(){
 	return res;
 }
 
-
 function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
+	
 	var URL = getSubDomainURL() + URL
 	var popup_width = 600;
 	var popup_height = 500;
 	var day = new Date();
-	id = day.getTime();
-	eval("page"
-			+ id
-			+ " = window.open(URL, '"
-			+ id
-			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+popup_width+',height='+popup_height+'');");
+	var id = day.getTime();
 	
-//	var newTab = safari.self.browserWindow.openTab();
+	if(detectWebBrowser()=="safari"){
+		window.location.href = URL;
+	}
+	else{
+		eval("page"
+				+ id
+				+ " = window.open(URL, '"
+				+ id
+				+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+popup_width+',height='+popup_height+'');");
+	}
 }
 
 function customPopup(URL, widthValue, heightValue) {
@@ -155,11 +159,17 @@ function customPopup(URL, widthValue, heightValue) {
 	var URL = getSubDomainURL() + URL
 	var day = new Date();
 	var id = day.getTime();
-	eval("page"
-			+ id
-			+ " = window.open(URL, '"
-			+ id
-			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
+	
+	if(detectWebBrowser()=="safari"){
+		newTab.location.href = URL;
+	}
+	else{
+		eval("page"
+				+ id
+				+ " = window.open(URL, '"
+				+ id
+				+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
+	}
 }
 
 function customPopupFileHTML(html, title, widthValue, heightValue) {

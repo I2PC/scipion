@@ -106,6 +106,8 @@ function setImageSize(refreshElement){
 	
 	/* Check if zoom in pixel */
 	if (zoom_element.val().indexOf('px')!=-1){
+		console.log("zoom in px")
+		
 		/*  Get zoom value*/			
 		zoom_val=parseInt(zoom_element.val().split('px')[0])
 		
@@ -119,6 +121,7 @@ function setImageSize(refreshElement){
 		}
 	}else{
 		zoom_val_perc=zoom_element.val()
+		
 		if (imageHeight_val<imageWidth_val){
 			zoom_val_pixel=Math.round((zoom_val_perc*imageWidth_val)/100)
 			tableImages_width=zoom_val_pixel
@@ -165,17 +168,24 @@ function setImageSize(refreshElement){
 	d = new Date();
 	$(".tableImages").each(function(){
 	   	var newSrc = "";
-	   	if ($(this).data("real_src").indexOf("&dim") != -1){
-	   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
-	   	}
-	   	else{
-			newSrc = $(this).data("real_src");   
-	   	}
-	   	$(this).attr("height",tableImages_height)
-	   	$(this).attr("width",tableImages_width)
-   	
-   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
-		$(this).data("real_src", realSrc);
+		if ($(this).attr("real_src") != undefined){
+		   	if ($(this).data("real_src").indexOf("&dim") != -1){
+		   		newSrc = $(this).data("real_src").substring(0,$(this).data("real_src").indexOf("&dim"));
+		   	}
+		   	else{
+				newSrc = $(this).data("real_src");   
+		   	}
+		   	$(this).attr("height",tableImages_height)
+		   	$(this).attr("width",tableImages_width)
+	   	
+	   		realSrc = newSrc.concat("&dim="+tableImages_width).concat("&"+d.getTime())
+			$(this).data("real_src", realSrc);
+			
+		}
+		else{
+			$(this).attr("height",tableImages_height)
+		   	$(this).attr("width",tableImages_width)
+		}
    })
    
    /* If images with new dimensions need to be generated in the server, waypoints jquery script manages it */

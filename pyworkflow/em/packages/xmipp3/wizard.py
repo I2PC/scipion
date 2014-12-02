@@ -178,21 +178,21 @@ class XmippBoxSizeWizard(Wizard):
 # NUMBER OF CLASSES
 #===============================================================================
 class XmippCL2DNumberOfClassesWizard(Wizard):
-    _targets = [(XmippProtCL2D, ['numberOfReferences'])]
+    _targets = [(XmippProtCL2D, ['numberOfClasses'])]
 
-    def _getNumberOfReferences(self, protocol):
+    def _getNumberOfClasses(self, protocol):
 
-        numberOfReferences = 64
+        numberOfClasses = 64
 
         if protocol.inputParticles.hasValue():
             from protocol_cl2d import IMAGES_PER_CLASS
-            numberOfReferences = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
+            numberOfClasses = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
 
-        return numberOfReferences
+        return numberOfClasses
 
 
     def show(self, form):
-        form.setVar('numberOfReferences', self._getNumberOfReferences(form.protocol))
+        form.setVar('numberOfClasses', self._getNumberOfClasses(form.protocol))
 
 #===============================================================================
 # MASKS 

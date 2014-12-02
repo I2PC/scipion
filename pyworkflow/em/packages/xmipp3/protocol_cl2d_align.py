@@ -137,7 +137,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
     
     def _methods(self):
         if self.useReferenceImage:
-            return ["We aligned all images with respect to the image "+self.referenceImage.get().getNameId()+" using CL2D [Sorzano2010a]"]
+            return ["We aligned all images with respect to the reference image using CL2D [Sorzano2010a]"]
         else:
             return ["We aligned all images with no reference using CL2D [Sorzano2010a]"]
         
