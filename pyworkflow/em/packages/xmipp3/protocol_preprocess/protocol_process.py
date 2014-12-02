@@ -94,7 +94,6 @@ class XmippProcessParticles(ProtProcessParticles):
 
         self._preprocessOutput(outputSet)
         
-        outputSet.copyInfo(inputSet)
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self._updateItem,
                             itemDataIterator=iterMdRows(self.outputMd))
