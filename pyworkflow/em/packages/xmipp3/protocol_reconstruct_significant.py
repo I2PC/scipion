@@ -187,23 +187,32 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         
     def _summary(self):
         summary = []
-#        if not hasattr(self, 'outputParticles'):
-#            summary.append("Output alignment not ready yet.")
-#        else:
-#            summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
-#            if self.useReferenceImage:
-#                summary.append("Aligned with reference image: %s" % self.referenceImage.get().getNameId())
-#            else:
-#                summary.append("Aligned with no reference image.")
+        summary.append("Input classes: %s" % self.inputClasses.get().getNameId())
+        if self.thereisRefVolume:
+            summary.append("Starting from: %s" % self.refVolume.get().getNameId())
+        else:
+            summary.append("Starting from: %d random volumes"%self.Nvolumes)
+        summary.append("Significance from %f to %f in %d iterations"%(self.alpha0*100,self.alphaF*100,self.iter))
+        if self.useImed:
+            summary.append("IMED used")
+        if self.strictDir:
+            summary.append("Strict directions")    
         return summary
     
     def _citations(self):
         return ['Sorzano2015']
     
     def _methods(self):
-        return []
-#        if self.useReferenceImage:
-#            return ["We aligned all images with respect to the image "+self.referenceImage.get().getNameId()+" using CL2D [Sorzano2010a]"]
-#        else:
-#            return ["We aligned all images with no reference using CL2D [Sorzano2010a]"]
-#        
+        retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
+           self.inputClasses.get().getNameId()
+        if self.thereisRefVolume:
+            retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
+        else:
+            retval+=" We started the iterations with %d random volumes."%self.Nvolumes
+        retval+=" %d iterations were run going from a starting significance of %f\% to a final one of %f\%."%\
+           (self.iter,self.alpha0*100,self.alphaF*100)
+        if self.useImed:
+            retval+=" IMED weighting was used."
+        if self.strictDir:
+            retval+=" The strict direction criterion was employed."    
+        return [retval]
