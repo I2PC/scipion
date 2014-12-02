@@ -35,9 +35,6 @@ from forms import DocumentForm
 from views_base import base_form
 from views_util import getResourceIcon, getResourceJs
 
-# def upload(request):
-#     return renderUpload(request, DocumentForm())
-        
 
 def upload(request, form=None):
     # Load documents for the list page

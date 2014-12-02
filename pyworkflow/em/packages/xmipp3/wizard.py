@@ -36,15 +36,14 @@ import xmipp
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
-from protocol_filter import XmippProtFilterParticles, XmippProtFilterVolumes
-from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
+from protocol_preprocess import (XmippProtFilterParticles, XmippProtFilterVolumes,
+                                 XmippProtMaskParticles, XmippProtMaskVolumes)
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
 
@@ -179,21 +178,21 @@ class XmippBoxSizeWizard(Wizard):
 # NUMBER OF CLASSES
 #===============================================================================
 class XmippCL2DNumberOfClassesWizard(Wizard):
-    _targets = [(XmippProtCL2D, ['numberOfReferences'])]
+    _targets = [(XmippProtCL2D, ['numberOfClasses'])]
 
-    def _getNumberOfReferences(self, protocol):
+    def _getNumberOfClasses(self, protocol):
 
-        numberOfReferences = 64
+        numberOfClasses = 64
 
         if protocol.inputParticles.hasValue():
             from protocol_cl2d import IMAGES_PER_CLASS
-            numberOfReferences = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
+            numberOfClasses = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
 
-        return numberOfReferences
+        return numberOfClasses
 
 
     def show(self, form):
-        form.setVar('numberOfReferences', self._getNumberOfReferences(form.protocol))
+        form.setVar('numberOfClasses', self._getNumberOfClasses(form.protocol))
 
 #===============================================================================
 # MASKS 

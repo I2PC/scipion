@@ -23,11 +23,10 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol for 3d classification with relion.
-"""
 
 import os
+
+from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D
 from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
@@ -68,8 +67,7 @@ class RelionImport():
         readSetOfParticles(self._starFile, partSet, 
                            preprocessImageRow=self._preprocessImageRow,
                            postprocessImageRow=self._postprocessImageRow,
-                           readAcquisition=False, is2D=self.is2D,
-                           isInverseTransform=True)
+                           readAcquisition=False, alignType=self.alignType)
         if self._micIdOrName:
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
         self.protocol._defineOutputs(outputParticles=partSet)
@@ -123,7 +121,10 @@ class RelionImport():
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
 
         # Check if the particles have 2d or 3d alignment
-        self.is2D = not row.containsLabel(xmipp.RLN_ORIENT_TILT)
+        if row.containsLabel(xmipp.RLN_ORIENT_TILT):
+            self.alignType = ALIGN_PROJ
+        else:
+            self.alignType = ALIGN_2D
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported

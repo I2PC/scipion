@@ -31,6 +31,8 @@ Object browser
 import sys
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.em.data import SetOfParticles
+from pyworkflow.mapper.sqlite import SqliteFlatDb
+from pyworkflow.em import *
 
 
 
@@ -42,11 +44,17 @@ USAGE = "usage: pw_sqlite_to_md.py pathToSqlite pathToMd"
 if __name__ == '__main__':
 
 
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 4:
         pathToSqlite = sys.argv[1]
-        pathToMd = sys.argv[2]
-        set = SetOfParticles(filename=pathToSqlite)
+        preffix = sys.argv[2]
+        pathToMd = sys.argv[3]
+
+        db = SqliteFlatDb(dbName=pathToSqlite, tablePrefix=preffix)
+        setClassName = db.getProperty('self') # get the set class name
+        setObj = emObjectsDict[setClassName](filename=pathToSqlite, prefix=preffix)
+        print setObj.getClass()
         writeSetOfParticles(set, pathToMd)
+
 
     else:
         print USAGE

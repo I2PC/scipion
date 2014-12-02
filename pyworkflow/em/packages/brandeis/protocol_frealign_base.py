@@ -1142,7 +1142,7 @@ eot
         
         # get alignment parameters for each particle
         from convert import geometryFromMatrix
-        shifts, angles = geometryFromMatrix(img.getAlignment().getMatrix())
+        shifts, angles = geometryFromMatrix(img.getTransform().getMatrix())
         #TODO: check if can use shiftZ
         shiftX, shiftY, _ = shifts * img.getSamplingRate()
         psi, theta, phi = angles

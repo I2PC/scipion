@@ -126,6 +126,7 @@ class EmanProtInitModel(ProtInitialVolume):
             volFn = self._getExtraPath('initial_models/model_00_%02d.hdf' % k)
             vol = Volume()
             vol.setFileName(volFn)
+            vol.setObjComment('eman initial model %02d' % k)
             volumes.append(vol)
 
         self._defineOutputs(outputVolumes=volumes)

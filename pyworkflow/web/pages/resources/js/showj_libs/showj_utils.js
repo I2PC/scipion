@@ -235,12 +235,14 @@ function updateMainContainerDim(colVal){
 
 function initializeZoomEvents(){
 	$('#id_zoom').click(function(){
+		console.log("click in zoom event")
 		/* updateImageDimByUrl(); */
 		setImageSize(false)
 	});
 	
 	$('#id_zoom').change(function(){
 		/* updateImageDimByUrl(); */
+		console.log("change in zoom event")
 		setImageSize(false)
 	});
 		

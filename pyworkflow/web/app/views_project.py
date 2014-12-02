@@ -277,9 +277,17 @@ def project_content(request):
                'selectedRuns': selectedRuns
                }
     
+    if mode == 'service':
+        context = service_context(context)
+    
     context = base_flex(request, context)
     
     return render_to_response('project_content/project_content.html', context)
+
+def service_context(context):
+    context.update({'1st': getResourceIcon('1st'),
+                    })
+    return context
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
@@ -359,19 +367,20 @@ def service_projects(request):
 
 def writeCustomMenu(customMenu):
     if not exists(customMenu):
-        f = open(customMenu, 'w')
+        f = open(customMenu, 'w+')
         f.write('''
-[PROTOCOLS]
-
-Initial_Volume = [
-    {"tag": "section", "text": "1. Upload and Import", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
-        {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
-    {"tag": "section", "text": "2. Create a 3D volume", "children": [
-        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
-        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
-    {"tag": "section", "text": "3. Download good volumes."}]
-''')
+            [PROTOCOLS]
+            
+            Initial_Volume = [
+                {"tag": "section", "text": "1. Upload and Import", "children": [
+                    {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
+                    {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
+                {"tag": "section", "text": "2. Create a 3D volume", "children": [
+                    {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
+                    {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+                {"tag": "section", "text": "3. Download good volumes."}]
+            ''')
+        f.close()
         
 def create_service_project(request):
     if request.is_ajax():

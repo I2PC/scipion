@@ -59,7 +59,7 @@
 		
 		$.ajax({
 			type : "GET",
-			url : "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
+			url : getSubDomainURL() + "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
 			dataType : "html",
 // 			async: false,
 			success : function(data) {
@@ -82,8 +82,8 @@
   			animate : true,
   			range: "min",
   			value: {{threshold}},
-  			min: -2,
-  			max: +2,
+  			min: {{minStats}},
+  			max: {{maxStats}},
   			step: 0.01,
   			slide : function(event, ui) {
   				$("#thresholdValue").val(ui.value);
@@ -110,6 +110,8 @@
 			<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
 		</div>
 		<div>
+			Min [{{minStats}}], Max [{{maxStats}}]
+			<br />
 			<span id="slider"></span>
 		</div>
 	</div>
@@ -132,5 +134,10 @@
 	  }
 </script>
 	
+{% endblock %}
+
+{% block bottom_menu %}
+	<!-- VOLUME MENU -->
+	{% include "showj/showj_bottom_vol_menu.html" %}
 {% endblock %}
 

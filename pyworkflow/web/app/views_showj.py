@@ -2,6 +2,7 @@
 # *
 # * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
 # *             Adrian Quintana (aquintana@cnb.csic.es)
+# *             
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -494,8 +495,8 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     threshold = calculateThreshold(param_stats)
     
     context = {"threshold":threshold,
-               'minStats':param_stats[2] if param_stats != None else 1,
-               'maxStats':param_stats[3] if param_stats != None else 1 }
+               'minStats':round(param_stats[2], 3) if param_stats != None else 1,
+               'maxStats':round(param_stats[3], 3) if param_stats != None else 1 }
     
     if inputParams[sj.MODE] == sj.MODE_VOL_ASTEX:
         context.update(create_context_astex(request, inputParams[sj.VOL_TYPE], volPath))
@@ -558,8 +559,8 @@ def create_context_chimera(volPath, threshold=None):
     
     chimeraHtml = chimera_headless(volPath, threshold)
     
-    context = {"chimeraHtml":chimeraHtml,
-               "volPath":volPath, 
+    context = {"chimeraHtml": chimeraHtml,
+               "volPath": volPath, 
                "threshold": threshold, 
                "jquery_ui_css": getResourceCss("jquery_ui"),
                "philogl": getResourceJs("philogl"),
@@ -591,6 +592,7 @@ def chimera_headless(volPath, threshold):
     # Build chimera command file
     cmdFile = htmlFile + '.cmd'
     outputCmdFile = open(cmdFile, 'w+')
+    
     outputCmdFile.write("""
     open %(volPath)s
     volume #0 level %(threshold)s
@@ -599,7 +601,7 @@ def chimera_headless(volPath, threshold):
     outputCmdFile.close()
     
     # Execute command file in chimera headless
-    cmdToExec = [os.environ.get('CHIMERA_HEADLESS'), cmdFile]
+    cmdToExec = [os.environ.get('CHIMERA_HEADLESS_HOME')+"/bin/chimera", cmdFile]
     import subprocess
     subprocess.call(cmdToExec, shell=False)
     

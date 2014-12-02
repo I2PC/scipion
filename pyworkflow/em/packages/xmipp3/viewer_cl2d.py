@@ -60,7 +60,7 @@ class XmippCL2DViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
-                      label="What to show", default=CLASS_CORES,
+                      label="What to show", default=CLASSES,
                       display=EnumParam.DISPLAY_LIST)
         form.addParam('doShowLastLevel', EnumParam, default=LEVEL_LAST, 
                       choices=LEVEL_CHOICES,
@@ -118,6 +118,8 @@ class XmippCL2DViewer(ProtocolViewer):
         errors = []
         #obj = getattr(self.protocol, "outputClasses" + fnSubset)
         levelFiles = self.protocol._getLevelMdFiles(fnSubset)
+
+        print "LEVEL FILES=%s" % levelFiles
         
         if levelFiles:
             levelFiles.sort()
@@ -144,6 +146,8 @@ class XmippCL2DViewer(ProtocolViewer):
                     
                     for block, fn in files:                        
                         views.append(self._viewClasses(block, fn))
+        else:
+            errors.append('Classes %s have not been produced.' % fnSubset.replace("_", " "))
         
         self.errorList(errors, views)
             

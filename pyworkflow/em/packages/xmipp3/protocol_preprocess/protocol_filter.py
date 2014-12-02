@@ -173,9 +173,7 @@ class XmippFilterHelper():
 
     @classmethod
     def getModesCondition(cls, filterMode, *filterModes):
-        command = ' or '.join('%s==%d' % (filterMode,fm) for fm in filterModes)
-        #print("command", command)
-        return command
+        return ' or '.join('%s==%d' % (filterMode,fm) for fm in filterModes)
     #        return ' or '.join(['%s==%d' % (fmKey,fmValue) for fmKey,fmValue in zip(filterMode,filterModes)])
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -247,15 +245,55 @@ class XmippFilterHelper():
         else:
             raise Exception("Unknown filter space: %d" % protocol.filterSpace.get())
 
-        protocol._insertFunctionStep("filterStep",
-                                 (protocol._args % {'inputFn': protocol.inputFn}) + args)
+        command = (protocol._args % {'inputFn': protocol.inputFn}) + args
+        protocol._insertFunctionStep("filterStep", command)
+
+    @classmethod
+    def _summary(cls, protocol):
+        summary = []
+        def add(x): summary.append('  ' + x)  # short notation
+        if protocol.filterSpace == FILTER_SPACE_FOURIER:
+            add('Space: *Fourier*')
+            if protocol.freqInAngstrom:
+                lowFreq = protocol.lowFreqA.get()
+                highFreq = protocol.highFreqA.get()
+            else:
+                lowFreq = protocol.lowFreqDig.get()
+                highFreq = protocol.highFreqDig.get()
+            mode = protocol.filterModeFourier.get()
+            if mode == cls.FM_LOW_PASS:
+                add('Mode: *Low-pass* ( freq > *%g* A )' % highFreq)
+            elif mode == cls.FM_HIGH_PASS:
+                add('Mode: *High-pass* ( freq < *%g* A )' % lowFreq)
+            elif mode == cls.FM_BAND_PASS:
+                add('Mode: *Band-pass* ( *%g* A < freq < *%g* A )' % (highFreq, lowFreq))
+            add('Frequency Decay: *%g* A' % protocol.freqDecay.get())
+        elif protocol.filterSpace == FILTER_SPACE_REAL:
+            add('Mode: *Median*')
+        elif protocol.filterSpace == FILTER_SPACE_WAVELET:
+            add('Space: *Wavelet*')
+            filterMode = protocol.filterModeWavelets.get()
+            if   filterMode == cls.FM_DAUB4:   add('Wavelet: *Daubechies 4*')
+            elif filterMode == cls.FM_DAUB12:  add('Wavelet: *Daubechies 12*')
+            elif filterMode == cls.FM_DAUB20:  add('Wavelet: *Daubechies 20*')
+
+            fm = protocol.waveletMode.get()
+            if   fm == cls.FM_REMOVE_SCALE:       add('Mode: *Remove scale*')
+            elif fm == cls.FM_SOFT_THRESHOLDING:  add('Mode: *Soft thresholding*')
+            elif fm == cls.FM_ADAPTIVE_SOFT:      add('Mode: *Adaptive soft*')
+            elif fm == cls.FM_CENTRAL:            add('Mode: *Central*')
+
+        return summary
+
+    @classmethod
+    def _methods(cls, protocol):
+        return ["We filtered the volume(s) using Xmipp [Sorzano2007a]."]
 
     def getInputSampling(self):
         """ Function to return the sampling rate of input objects.
         Should be implemented for filter volumes and particles.
         """
         pass
-
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
     """ Apply Fourier filters to a set of particles  """
@@ -311,6 +349,16 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
                 n /= 2
         return []
 
+    def _summary(self):
+        if not hasattr(self, "outputParticles"):
+            return ["Protocol has not finished yet."]
+
+        return (["Filtered %d particles using:" % self.outputParticles.getSize()] +
+                XmippFilterHelper._summary(self))
+
+    def _methods(self):
+        return XmippFilterHelper._methods(self)
+
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
     """ Apply Fourier filters to a set of volumes """
@@ -355,3 +403,17 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
                             ImageDim(*self.inputVolumes.get().getDim())]
                 n /= 2
         return []
+
+    def _summary(self):
+        if not hasattr(self, "outputVol"):
+            return ["Protocol has not finished yet."]
+
+        if hasattr(self.outputVol, "getSize"):
+            summary = ["Filtered %d volumes using:" % self.outputVol.getSize()]
+        else:
+            summary = ["Filtered one volume using:"]
+
+        return summary + XmippFilterHelper._summary(self)
+
+    def _methods(self):
+        return XmippFilterHelper._methods(self)

@@ -75,18 +75,18 @@ class XmippProtML2D(ProtClassify2D):
                        label="Input particles", important=True,
                        help='Select the input images from the project.')        
         group.addParam('doGenerateReferences', BooleanParam, default=True,
-                      label='Generate references?', 
-                      help='If you set to *No*, you should provide references images'
-                           'If *Yes*, the default generation is done by averaging'
-                           'subsets of the input images. (less bias introduced)')
-        group.addParam('numberOfReferences', IntParam, default=3, condition='doGenerateReferences',
-                      label='Number of references:',
-                      help='Number of references to be generated.')
+                      label='Generate classes?',
+                      help='If you set to *No*, you should provide class images.\n'
+                           'If *Yes*, the default generation is done by averaging\n'
+                           'subsets of the input images (less bias introduced).')
+        group.addParam('numberOfClasses', IntParam, default=3, condition='doGenerateReferences',
+                      label='Number of classes:',
+                      help='Number of classes to be generated.')
         group.addParam('inputReferences', PointerParam, allowsNull=True,
                        condition='not doGenerateReferences',
-                      label="Reference image(s)", 
+                      label="Class image(s)",
                       pointerClass='SetOfParticles',
-                      help='Image(s) that will serve as initial 2D references')
+                      help='Image(s) that will serve as initial 2D classes')
         
         form.addParam('doMlf', BooleanParam, default=False, important=True,
                       label='Use MLF2D instead of ML2D?')
@@ -94,14 +94,14 @@ class XmippProtML2D(ProtClassify2D):
         group = form.addGroup('ML-Fourier', condition='doMlf')
         group.addParam('doCorrectAmplitudes', BooleanParam, default=True,
                       label='Use CTF-amplitude correction?',
-                      help='If set to *Yes*, the input images file should contains'
+                      help='If set to *Yes*, the input images file should contains.\n'
                            'If set to *No*, provide the images pixel size in Angstrom.')
         group.addParam('areImagesPhaseFlipped', BooleanParam, default=True,
                       label='Are the images CTF phase flipped?',
                       help='You can run MLF with or without having phase flipped the images.')        
         group.addParam('highResLimit', IntParam, default=20,
                       label='High-resolution limit (Ang)',
-                      help='No frequencies higher than this limit will be taken into account.'
+                      help='No frequencies higher than this limit will be taken into account.\n'
                            'If zero is given, no limit is imposed.')
         
         form.addSection(label='Advanced')
@@ -152,11 +152,11 @@ class XmippProtML2D(ProtClassify2D):
         """ Mainly prepare the command line for call ml(f)2d program"""
         params = ' -i %s --oroot %s' % (self._getFileName('input_particles'), self._getOroot())
         if self.doGenerateReferences:
-            params += ' --nref %d' % self.numberOfReferences.get()
+            params += ' --nref %d' % self.numberOfClasses.get()
             self.inputReferences.set(None)
         else:
             params += ' --ref %s' % self._getFileName('input_references')
-            self.numberOfReferences.set(self.inputReferences.get().getSize())
+            self.numberOfClasses.set(self.inputReferences.get().getSize())
         
         if self.doMlf:
             if not self.doCorrectAmplitudes:
@@ -227,7 +227,7 @@ class XmippProtML2D(ProtClassify2D):
     def _summary(self):
         summary = []
         summary.append('Input Particles: *%d*' % self.inputParticles.get().getSize())
-        summary.append('Classified into *%d* classes' % self.numberOfReferences.get())
+        summary.append('Classified into *%d* classes' % self.numberOfClasses.get())
         
         if self.doMlf:
             summary.append('- Used a ML in _Fourier-space_')
@@ -242,7 +242,7 @@ class XmippProtML2D(ProtClassify2D):
     def _methods(self):
         methods = []
         methods.append('An input dataset of *%d* images was classified' % self.inputParticles.get().getSize())
-        methods.append('into *%d* 2D classes using Maximum Likelihood (ML) inside Xmipp.' % self.numberOfReferences.get())
+        methods.append('into *%d* 2D classes using Maximum Likelihood (ML) inside Xmipp.' % self.numberOfClasses.get())
         
         if self.doMlf:
             methods.append('ML was used in _Fourier-space_.')

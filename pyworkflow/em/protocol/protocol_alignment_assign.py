@@ -70,11 +70,11 @@ class ProtAlignmentAssign(ProtAlign2D):
             alignedParticle = inputAlignment[particle.getObjId()]
             if alignedParticle is not None:
                 newParticle = particle.clone()
-                alignment = alignedParticle.getAlignment()
+                alignment = alignedParticle.getTransform()
 #                 alignment._xmipp_shiftX.multiply(scale)
 #                 alignment._xmipp_shiftY.multiply(scale)
                 alignment.scale(scale)
-                newParticle.setAlignment(alignment)
+                newParticle.setTransform(alignment)
                 outputParticles.append(newParticle)
             ii = i+1
             if ii % block == 0:

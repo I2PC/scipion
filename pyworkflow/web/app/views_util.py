@@ -74,6 +74,10 @@ iconDict = {
             'file_sqlite':'file_sqlite.gif',
             'file_vol':'file_vol.gif',
             'file_stack':'file_stack.gif',
+            
+            #MyFirstMap
+            '1st': 'myfirstmap/1st.png',
+            
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -549,8 +553,8 @@ def readDimensions(request, path, typeOfColumn):
     return (300,300,1,1) 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
-    _newPath=path
-    _stats=None
+    _newPath = path
+    _stats = None
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
@@ -559,6 +563,9 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.read(str(imgFn), xmipp.HEADER)
     else:
         img.read(str(imgFn))
+    
+    if getStats:
+        _stats = img.computeStats()
         
     if convert:
         img.convert2DataType(dataType, xmipp.CW_ADJUST)
@@ -566,9 +573,6 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if reslice:
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
-    
-    if getStats:
-        _stats=img.computeStats()
     
     if convert or reslice:
         fileName, _ = os.path.splitext(path)

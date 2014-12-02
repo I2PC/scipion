@@ -36,6 +36,7 @@ class TestImportBase(BaseTest):
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dsEmx = DataSet.getDataSet('emx')
         cls.dsMda = DataSet.getDataSet('mda')
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         
     
 class TestImportParticles(TestImportBase):
@@ -50,7 +51,7 @@ class TestImportParticles(TestImportBase):
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'samplingRate': 2.1
-        }
+                }
 
 
         # Id's should be set increasing from 1 if ### is not in the 
@@ -74,7 +75,7 @@ class TestImportParticles(TestImportBase):
                 'voltage': 100,
                 'samplingRate': 2.46,
                 'magnification': 10000
-        }
+                }
         args['emxFile'] = self.dsEmx.getFile('particles/particles.emx')
         protEmxImport = self.newProtocol(ProtImportParticles, **args)
         protEmxImport.setObjLabel('from emx (particles)')
@@ -94,7 +95,7 @@ class TestImportParticles(TestImportBase):
                                  mdFile=self.dsXmipp.getFile('gold/xmipp_ml2d_images.xmd'),
                                  magnification=10000,
                                  samplingRate=1.
-        )
+                                 )
         prot1.setObjLabel('from xmipp (ml2d)')
         self.launchProtocol(prot1)
 
@@ -106,7 +107,7 @@ class TestImportParticles(TestImportBase):
                                  mdFile=self.dsXmipp.getFile('gold/images10.xmd'),
                                  magnification=10000,
                                  samplingRate=1.
-        )
+                                 )
         prot1.setObjLabel('from xmipp (with mic id)')
         self.launchProtocol(prot1)
 
@@ -114,10 +115,10 @@ class TestImportParticles(TestImportBase):
         """ Import an EMX file with Particles and defocus
         """
         prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from relion (auto-refine 3d)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                 starFile='/home/josem/work/data/franklab2014/relion_classify_run/classify_cip_ct36_it038_few_data.star',
+                                 starFile=self.dsRelion.getFile('import/case2/relion_it015_data.star'),
                                  magnification=10000,
-                                 samplingRate=1.
-        )
-        prot1.setObjLabel('from relion')
+                                 samplingRate=7.
+                                 )
         self.launchProtocol(prot1)

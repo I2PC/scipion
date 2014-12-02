@@ -424,6 +424,10 @@ class XmippProtRansac(ProtInitialVolume):
         self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
    
+    def _postprocessVolume(self, vol, row):
+        self._counter += 1
+        vol.setObjComment('ransac volume %02d' % self._counter)
+        
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         fn = self._getPath('proposedVolumes.xmd')
@@ -433,7 +437,13 @@ class XmippProtRansac(ProtInitialVolume):
         
         volumesSet = self._createSetOfVolumes()
         volumesSet.setSamplingRate(inputSet.getSamplingRate())
-        readSetOfVolumes(fn, volumesSet)
+        self._counter = 0
+        readSetOfVolumes(fn, volumesSet, postprocessImageRow=self._postprocessVolume)
+        
+        # Set a meanful comment
+#         for vol in volumesSet:
+#             vol.setObjComment('ransac volume %02d' % vol.getObjId())
+#             volumesSet.update(vol)
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(inputSet, volumesSet)

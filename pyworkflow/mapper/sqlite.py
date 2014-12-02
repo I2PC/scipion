@@ -854,26 +854,17 @@ class SqliteFlatDb(SqliteDb):
         return self._results(iterate)
 
     def aggregate(self, operations, operationLabel, groupByLabels=None):
-        print "aggregate3"
-
-        print "operations", operations
-        print "operationLabel", operationLabel
-        print "groupByLabels", groupByLabels
         #let us count for testing
         selectStr = 'SELECT '
         separator = ' '
         #This cannot be like the following line should be expresed in terms
         #of C1, C2 etc....
         for operation in operations:
-            print "operation", operation
-            print "operationLabel", operationLabel
-            print "hhhh", self._columnsMapping[operationLabel]
             selectStr += "%s %s(%s) AS %s"%(separator
                                             , operation
                                             , self._columnsMapping[operationLabel]
                                             , operation)
             separator = ', '
-        print "selectStr", selectStr
         if groupByLabels is not None:
             groupByStr = 'GROUP BY '
             separator = ' '
@@ -884,9 +875,7 @@ class SqliteFlatDb(SqliteDb):
                 separator = ', '
         else:
             groupByStr = ' '
-        print "groupByStr",groupByStr
         sqlCommand = selectStr +"\n" + self.FROM + "\n" + groupByStr
-        print "sqlCommand", sqlCommand
         self.executeCommand(sqlCommand)
         return self._results(iterate=False)
 

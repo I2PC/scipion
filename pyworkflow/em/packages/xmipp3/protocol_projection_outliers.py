@@ -31,6 +31,7 @@ from pyworkflow.object import Float
 from pyworkflow.protocol.constants import LEVEL_EXPERT
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
 from pyworkflow.utils.path import cleanPath
+from pyworkflow.em.constants import ALIGN_PROJ
 from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
@@ -202,4 +203,4 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
             particle = item.getRepresentative()
         else:
             particle = item
-        particle.setAlignment(rowToAlignment(row, is2D=False, inverseTransform=True))
+        particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))

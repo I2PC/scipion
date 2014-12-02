@@ -36,7 +36,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
     The alignment parameters will be converted to a Xmipp xmd file
     and used as direction projections to reconstruct.
     """
-    _label = 'reconstruct Fourier'
+    _label = 'reconstruct fourier'
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -99,7 +99,7 @@ class XmippProtReconstructFourier(ProtReconstruct3D):
         imgSet = self.inputParticles.get()
         #TODO: This only writes metadata what about binary file
         #it should
-        writeSetOfParticles(imgSet,particlesMd, is2D=False, isInverseTransform=True )
+        writeSetOfParticles(imgSet, particlesMd)
 
     def reconstructStep(self, params):
         """ Create the input file in STAR format as expected by Xmipp.
