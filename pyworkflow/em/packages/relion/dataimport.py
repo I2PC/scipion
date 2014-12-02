@@ -147,10 +147,18 @@ class RelionImport():
             raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
                                                                          self._starFile))
             
-        self._modelStarFile = self._starFile.replace('_data.star', '_model.star')
+        modelStarFile = self._starFile.replace('_data.star', '_model.star')
         
-        if not os.path.exists(self._modelStarFile):
-            raise Exception("Missing required model star file: %s" % self._modelStarFile)
+        if os.path.exists(modelStarFile):
+            self._modelStarFile = modelStarFile
+        else:
+            modelHalfStarFile = self._starFile.replace('_data.star', 'half1_model.star')
+            if os.path.exists(modelHalfStarFile):
+                self._modelStarFile = modelHalfStarFile
+            else:
+                raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile, 
+                                                                                              modelHalfStarFile))
+        
         modelRow = getMdFirstRow(self._modelStarFile)
         classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
         
