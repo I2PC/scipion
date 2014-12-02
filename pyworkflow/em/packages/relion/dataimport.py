@@ -28,6 +28,7 @@ import os
 
 from pyworkflow.object import Float
 from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D
+from pyworkflow.em.data import Micrograph
 from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
@@ -180,8 +181,8 @@ class RelionImport():
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
-        self._micIdOrName = False#(row.containsLabel(xmipp.MDL_MICROGRAPH_ID) or
-                                 #row.containsLabel(xmipp.MDL_MICROGRAPH))
+        self._micIdOrName = (row.containsLabel('rlnMicrographName') or
+                             row.containsLabel('rlnMicrographId'))
         #init dictionary. It will be used in the preprocessing
         self.micDict = {}
 
@@ -191,6 +192,32 @@ class RelionImport():
         if self._imgPath is not None:
             copyOrLinkFileName(imgRow, self._imgPath, self.protocol._getExtraPath())
         setupCTF(imgRow, self.protocol.samplingRate.get())
+
+        if self._micIdOrName:
+            micId = imgRow.getValue('rlnMicrographId', None)
+            micName = imgRow.getValue('rlnMicrographName', None)
+
+            # Check which is the key to identify micrographs (id or name)
+            if micId is not None:
+                micKey = micId
+            else:
+                micKey = micName
+
+            mic = self.micDict.get(micKey, None)
+
+            # First time I found this micrograph (either by id or name)
+            if mic is None:
+                mic = Micrograph()
+                mic.setObjId(micId)
+                if micName is None:
+                    micName = self.protocol._getExtraPath('fake_micrograph%6d' % micId)
+                mic.setFileName(micName)
+                self.micSet.append(mic)
+                # Update dict with new Micrograph
+                self.micDict[micKey] = mic
+
+            # Update the row to set a MDL_MICROGRAPH_ID
+            imgRow.setValue('rlnMicrographId', long(mic.getObjId()))
         
     def _postprocessImageRow(self, img, imgRow):
         if self.ignoreIds:
