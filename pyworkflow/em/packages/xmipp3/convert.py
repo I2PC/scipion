@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Xmipp specific files
@@ -300,7 +301,7 @@ def micrographToCTFParam(mic, ctfparam):
     md.write(ctfparam)
     
     return ctfparam
-    
+
     
 def imageToRow(img, imgRow, imgLabel, **kwargs):
     # Provide a hook to be used if something is needed to be 
@@ -337,6 +338,7 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if postprocessImageRow:
         postprocessImageRow(img, imgRow)
     
+from rpdb2 import start_embedded_debugger    
         
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     """ Create an Image from a row of a metadata. """
@@ -356,6 +358,9 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
         img.setClassId(imgRow.getValue(xmipp.MDL_REF))
     elif imgRow.containsLabel(xmipp.MDL_REF3D):
         img.setClassId(imgRow.getValue(xmipp.MDL_REF3D))
+    
+    print "imgRow: ", imgRow
+    #start_embedded_debugger('a')
     
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(imgRow))
@@ -1206,24 +1211,16 @@ def createClassesFromImages2(inputImages, inputMd, classesFn, ClassType,
         classFnTemplate: the template to get the classes averages filenames
         iter: the iteration number, just used in Class template
     """
-    # We asume here that the volumes (classes3d) are in the same folder than imgsFn
-    # rootDir here is defined to be used expanding locals()
-    if "@" in inputMd:
-        inputFn = inputMd.split('@')[1]
-        tmpDir = os.path.dirname(inputFn)
-    else:
-        tmpDir = os.path.dirname(inputMd)
-    rootDir = tmpDir
-    #md = xmipp.MetaData(inputMd)
+    mdIter = iterMdRows(inputMd)
     clsDict = {} # Dictionary to store the (classId, classSet) pairs
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
     hasCtf = inputImages.hasCTF()
     
-    for img in inputImages:
-        ref = img.getClassId()
+    for img, row in izip(inputImages, mdIter):
+        ref = row.getValue(xmipp.MDL_REF)
         if ref is None:
-            raise Exception('Particle classId is None!!!')
+            raise Exception('MDL_REF not found in metadata: %s' % inputMd)
         
         if not ref in clsDict: # Register a new class set if the ref was not found.
             classItem = clsSet.ITEM_TYPE(objId=ref)
@@ -1270,10 +1267,17 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
     """
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
+    if "@" in inputMd:
+        inputFn = inputMd.split('@')[1]
+        tmpDir = os.path.dirname(inputFn)
+    else:
+        tmpDir = os.path.dirname(inputMd)
+    
     def getClassFn(ref):
-        return classFnTemplate % locals()  
+        args = {'rootDir': tmpDir, 'iter': iter, 'ref': ref}
+        return classFnTemplate % args
     
     createClassesFromImages2(inputImages, inputMd, classesFn, ClassType, classLabel, 
-                             getClassFn=classFnTemplate, 
+                             getClassFn=getClassFn, 
                              preprocessImageRow=preprocessImageRow)
     
