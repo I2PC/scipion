@@ -175,11 +175,9 @@ public class GalleryData {
         try {
             selectedBlock = "";
             this.md = md;
-            setFileName(md.getFilename());
+            setFileName(md.getPath());
             zoom = parameters.zoom;
             resliceView = parameters.resliceView;
-            
-            readMdParameters();
             loadMd();
 
         } catch (Exception e) {
@@ -203,7 +201,8 @@ public class GalleryData {
         displaycis = new HashMap<String, ColumnInfo>();
         
         if(parameters.getBlock() == null)
-            parameters.setBlock(selectedBlock);
+            parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
+        
         if(parameters.getBlock().equals(selectedBlock))
         {
         
@@ -274,15 +273,11 @@ public class GalleryData {
 
     public void setFileName(String file) {
         filename = file;
-
         if (file != null) {
             if (Filename.hasPrefix(file)) {
                 if (Filename.isMetadata(file)) {
-                    selectedBlock = Filename.getPrefix(file); // FIXME:
-                    // validate
-                    // block exists
+                    selectedBlock = Filename.getPrefix(file); 
                     filename = Filename.getFilename(file);
-
                 }
             }
             if (Filename.exists(filename)) {
@@ -292,7 +287,7 @@ public class GalleryData {
                 }
             }
         }
-
+        System.out.println(selectedBlock);
     }
 
     public void setDisplayLabel(String key, boolean selected) {
