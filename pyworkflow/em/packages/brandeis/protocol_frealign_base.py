@@ -727,7 +727,7 @@ class ProtFrealignBase(EMProtocol):
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if not imgSet.hasAlignment3D() and self.useInitialAngles.get():
+        if not imgSet.hasAlignmentProj() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
     
