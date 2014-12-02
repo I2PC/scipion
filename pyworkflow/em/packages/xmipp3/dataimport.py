@@ -31,8 +31,7 @@ from pyworkflow.utils.path import findRootFrom, copyTree, createLink
 from pyworkflow.em.data import Micrograph
 from pyworkflow.em.packages.xmipp3.convert import (readSetOfMicrographs, readSetOfParticles,
                                                    xmippToLocation, locationToXmipp, 
-                                                   CTF_PSD_DICT,
-    createClassesFromImages)
+                                                   CTF_PSD_DICT, fillClasses)
 from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 
@@ -82,7 +81,9 @@ class XmippImport():
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
         self._imgDict = {} # store which images stack have been linked/copied and the new path
+
         self._findPathAndCtf(label=xmipp.MDL_IMAGE)
+        
         if self._micIdOrName:
             # If MDL_MICROGRAPH_ID or MDL_MICROGRAPH then
             # create a set to link from particles
@@ -105,12 +106,14 @@ class XmippImport():
         if self._micIdOrName:
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
             
-        # Also create classes if MDL_REF or MDL_REF3D was found
-        if self._classLabel is not None:
-            classesSqlite = self.protocol._getPath('particles.sqlite')
-            createClassesFromImages(partSet, inputMd, classesFn, ClassType, classLabel, classFnTemplate, iter, preprocessImageRow)
-            
         self.protocol._defineOutputs(outputParticles=partSet)
+        
+        # Also create classes if MDL_REF or MDL_REF3D was found
+        if self._classFunc is not None:
+            clsSet = self._classFunc(partSet)
+            fillClasses(clsSet)
+            self.protocol._defineOutputs(outputClasses=clsSet)
+            self.protocol._defineSourceRelation(partSet, clsSet)
         
     def _findPathAndCtf(self, label, warnings=True):
         """ Find the relative path from which the micrographs exists
@@ -139,14 +142,12 @@ class XmippImport():
             self._ctfPath = None # means no CTF info from micrographs metadata
             
         if row.containsLabel(xmipp.MDL_REF):
-            self._classLabel = xmipp.MDL_REF
-            self._classType = SetOfClasses2D
-        elif row._containsLabel(xmipp.MDL_REF3D):
-            self._classLabel = xmipp.MDL_REF3D
-            self._classType = SetOfClasses3D
+            self._classFunc = self.protocol._createSetOfClasses2D
+        elif row.containsLabel(xmipp.MDL_REF3D):
+            self._classFunc = self.protocol._createSetOfClasses3D
         else:
             self._classLabel = None
-            self._classType = None
+            self._classFunc = None
 
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
@@ -155,6 +156,8 @@ class XmippImport():
                              row.containsLabel(xmipp.MDL_MICROGRAPH))
         #init dictionary. It will be used in the preprocessing
         self.micDict = {}
+        
+        return row
     
     def validate(self, label):
         """ Try to find errors on import. """
