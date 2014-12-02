@@ -214,7 +214,7 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
             labels = 'id enabled _index _filename _xmipp_zScore _sampling '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _alignment._matrix'
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
@@ -307,7 +307,7 @@ class XmippViewer(Viewer):
                                                           'sortby': '_xmipp_maxCC des', RENDER:labelRender})
             else:
                 fn = obj.outputAverages.getFileName()
-                labels = 'id enabled _index _filename _xmipp_maxCC _alignment._matrix'
+                labels = 'id enabled _index _filename _xmipp_maxCC _transform._matrix'
                 labelRender = "_filename"
                 self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
@@ -324,7 +324,7 @@ class XmippViewer(Viewer):
                                                           'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender})
             else:
                 fn = obj.outputAverages.getFileName()
-                labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _alignment._matrix'
+                labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _transform._matrix'
                 labelRender = "_filename"
                 self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
