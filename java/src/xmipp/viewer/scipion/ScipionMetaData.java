@@ -844,12 +844,19 @@ public class ScipionMetaData extends MetaData {
     
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
+        String column = "_alignment";
+        String value = null;
         if(properties == null)
         {
-            if (parent == null) return false; else return parent.containsGeometryInfo();
+            if (parent == null) 
+                return false; 
+            else
+                for(EMObject emo: parent.emobjects)
+                    if(preffix.contains(emo.getId().toString()))
+                        value = (String)emo.getValue(column);
         }
-        
-        String value = properties.get("_alignment");
+        else
+            value = properties.get(column);
 
         if (value == null)
             return false;

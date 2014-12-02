@@ -1714,7 +1714,8 @@ public class GalleryData {
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
-
+        if(!renderImages)
+            return false;
         if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
                 return MetaData.isImage(ci.label) && ci.visible;
         
