@@ -285,7 +285,12 @@ def project_content(request):
     return render_to_response('project_content/project_content.html', context)
 
 def service_context(context):
-    context.update({'1st': getResourceIcon('1st'),
+    context.update({'importAverages': getResourceIcon('importAverages'),
+                    'useProtocols': getResourceIcon('useProtocols'),
+                    'protForm': getResourceIcon('protForm'),
+                    'summary': getResourceIcon('summary'),
+                    'showj': getResourceIcon('showj'),
+                    'download': getResourceIcon('download'),
                     })
     return context
 

@@ -76,7 +76,12 @@ iconDict = {
             'file_stack':'file_stack.gif',
             
             #MyFirstMap
-            '1st': 'myfirstmap/1st.png',
+            'importAverages': 'myfirstmap/importAverages.png',
+            'useProtocols': 'myfirstmap/useProtocols.png',
+            'protForm': 'myfirstmap/protForm.png',
+            'summary': 'myfirstmap/summary.png',
+            'showj': 'myfirstmap/showj.png',
+            'download': 'myfirstmap/download.png',
             
             }
 
