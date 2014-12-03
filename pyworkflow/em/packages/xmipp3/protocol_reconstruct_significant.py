@@ -75,16 +75,16 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       help='Keep all volumes and angular assignments along iterations')
 
         form.addSection(label='Criteria')
-        form.addParam('alpha0', FloatParam, default=0.1,
+        form.addParam('alpha0', FloatParam, default=80,
                       label='Starting significance',
-                      help='0.1 means 10% of significance. Use larger numbers to relax the starting significance and have a smoother '
+                      help='80 means 80% of significance. Use larger numbers to relax the starting significance and have a smoother '
                            'landscape of solutions')
         form.addParam('iter', IntParam, default=100,
                       label='Number of iterations',
                       help='Number of iterations to go from the initial significance to the final one')
-        form.addParam('alphaF', FloatParam, default=0.005,
+        form.addParam('alphaF', FloatParam, default=99.5,
                       label='Final significance',
-                      help='0.005 means 0.5% of significance. Use smaller numbers to be more strict and have a sharper reconstruction.'
+                      help='99.5 means 99.5% of significance. Use smaller numbers to be more strict and have a sharper reconstruction.'
                            'Be aware that if you are too strict, you may end with very few projections and the reconstruction becomes very'
                            'noisy.')
         form.addParam('useImed', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
@@ -120,8 +120,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                         'minTilt': self.minTilt.get(),
                         'maxTilt': self.maxTilt.get(),
                         'maximumShift': self.maximumShift.get(),
-                        'alpha0': self.alpha0.get(),
-                        'alphaF': self.alphaF.get(),
+                        'alpha0': 1-self.alpha0.get()/100.0,
+                        'alphaF': 1-self.alphaF.get()/100.0,
                         'iter': self.iter.get(),
                         'angDistance': self.angDistance.get()
                         }
@@ -191,8 +191,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.thereisRefVolume:
             summary.append("Starting from: %s" % self.refVolume.get().getNameId())
         else:
-            summary.append("Starting from: %d random volumes"%self.Nvolumes)
-        summary.append("Significance from %f to %f in %d iterations"%(self.alpha0*100,self.alphaF*100,self.iter))
+            summary.append("Starting from: %d random volumes"%self.Nvolumes.get())
+        summary.append("Significance from %f%% to %f%% in %d iterations"%(100-self.alpha0.get()*100,100-self.alphaF.get()*100,self.iter.get()))
         if self.useImed:
             summary.append("IMED used")
         if self.strictDir:
@@ -208,9 +208,9 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.thereisRefVolume:
             retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
         else:
-            retval+=" We started the iterations with %d random volumes."%self.Nvolumes
-        retval+=" %d iterations were run going from a starting significance of %f\% to a final one of %f\%."%\
-           (self.iter,self.alpha0*100,self.alphaF*100)
+            retval+=" We started the iterations with %d random volumes."%self.Nvolumes.get()
+        retval+=" %d iterations were run going from a starting significance of %f%% to a final one of %f%%."%\
+           (self.iter.get(),self.alpha0.get()*100,self.alphaF.get()*100)
         if self.useImed:
             retval+=" IMED weighting was used."
         if self.strictDir:
