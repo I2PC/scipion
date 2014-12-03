@@ -314,7 +314,7 @@ def protocol_info(request):
             input_obj = [{'name':name, 
                           'nameId': attr.getNameId(), 
                           'id': attr.getObjId(), 
-                          'info': str(attr)} 
+                          'info': str(attr.get()) if attr.isPointer() else str(attr)} 
                          for name, attr in protocol.iterInputAttributes()]
             
             output_obj = [{'name':name, 
