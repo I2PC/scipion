@@ -1040,6 +1040,7 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
+						updateTabs(id)
 					}
 				}
 			},
@@ -1069,14 +1070,11 @@ function checkStatusNode(id, status){
 		node.css("background-color", "#D2F5CB");
 	}
 	node.find("#nodeStatus").html(status);
-		
 }
 
 function checkStatusRow(id, status, time){
 	row = $("tr#"+ id);
-	
 	row.find(".status").html(status);
 	row.find(".time").html(time);
-		
 }	 
 

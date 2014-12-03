@@ -30,8 +30,8 @@ from pyworkflow.utils.path import moveFile
 from pyworkflow.em.protocol.protocol_particles import ProtProcessParticles
 from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam, IntParam, Positive
 
-from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 from pyworkflow.em.packages.relion.convert import writeSetOfParticles
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):

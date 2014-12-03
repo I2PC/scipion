@@ -296,7 +296,8 @@ class Image(EMObject):
     
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        if exists(self.getFileName().replace(':mrc', '')):
+        fn = self.getFileName()
+        if fn is not None and exists(fn.replace(':mrc', '')):
             x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
@@ -412,6 +413,7 @@ class Particle(Image):
         # object more indenpent for tracking coordinates
         self._coordinate = None
         self._micId = Integer()
+        self._classId = Integer()
         
     def hasCoordinate(self):
         return self._coordinate is not None
@@ -438,6 +440,15 @@ class Particle(Image):
         
     def hasMicId(self):
         return self.getMicId() is not None
+    
+    def getClassId(self):
+        return self._classId.get()
+    
+    def setClassId(self, classId):
+        self._classId.set(classId)
+        
+    def hasClassId(self):
+        return self._classId.hasValue()
 
 
 class Mask(Particle):

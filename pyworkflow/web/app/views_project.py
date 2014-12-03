@@ -277,9 +277,17 @@ def project_content(request):
                'selectedRuns': selectedRuns
                }
     
+    if mode == 'service':
+        context = service_context(context)
+    
     context = base_flex(request, context)
     
     return render_to_response('project_content/project_content.html', context)
+
+def service_context(context):
+    context.update({'1st': getResourceIcon('1st'),
+                    })
+    return context
 
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText

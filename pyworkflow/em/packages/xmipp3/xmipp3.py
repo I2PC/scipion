@@ -129,6 +129,9 @@ class XmippMdRow():
         return self.containsLabel(label)
     
     def containsLabel(self, label):
+        # Allow getValue using the label string
+        if isinstance(label, basestring):
+            label = xmipp.str2Label(label)
         return label in self._labelDict
     
     def removeLabel(self, label):
