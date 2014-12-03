@@ -72,8 +72,7 @@ public class GalleryData {
     protected String selectedBlock;
     // The following is only used in VolumeGallery mode
     protected String selectedVolFn = "";
-    protected String commonVolPrefix = "";
-    protected String[] volumes = null;
+    //protected String commonVolPrefix = "";
 
     protected List<ColumnInfo> labels = null;
     // First label that can be rendered
@@ -85,7 +84,7 @@ public class GalleryData {
     protected boolean showLabel = false;
     protected boolean renderImages;
     public final Params parameters;
-    protected int numberOfVols = 0;
+
 
     // flag to perform global normalization
     protected boolean normalize = false;
@@ -110,6 +109,7 @@ public class GalleryData {
     protected String[] displayLabels;
     protected String[] sortby;
     protected int selfrom = -1, selto = -1;
+    protected boolean isVolumeMd;
     
 
     public boolean hasRecalulateCTF() {
@@ -312,8 +312,6 @@ public class GalleryData {
         readMdParameters();
         ids = md.findObjects();
         loadLabels();
-        numberOfVols = 0;
-        volumes = null;
         if (!containsGeometryInfo()) {
             useGeo = false;
         }
@@ -343,7 +341,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.GALLERY_MD;
         }
-
+        isVolumeMd = false;
         if (hasRenderLabel()) {
             int renderLabel = ciFirstRender.label;
             ImageGeneric image = null;
@@ -383,18 +381,10 @@ public class GalleryData {
                     if (isGalleryMode()) {
                         mode = Mode.GALLERY_VOL;
                     }
-                    numberOfVols = md.size();
-                    volumes = new String[numberOfVols];
-
-                    for (int i = 0; i < numberOfVols; ++i) {
-                        volumes[i] = md.getValueString(
-                                ciFirstRender.label, ids[i]);
-                    }
-                    commonVolPrefix = XmippStringUtils
-                            .commonPathPrefix(volumes);
+                    isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectVolume(volumes[0]);
+                        selectVolume(getVolumeAt(0));
                     }
 
                 }
@@ -415,7 +405,8 @@ public class GalleryData {
                 sortMd(sortci.label, asc);
         }
     }// function loadMd
-
+    
+ 
     
 
     public ColumnInfo getColumnInfo(String labelName) {
@@ -645,9 +636,7 @@ public class GalleryData {
         return mdBlocks != null ? mdBlocks.length : 0;
     }
 
-    public int getNumberOfVols() {
-        return numberOfVols;
-    }
+   
 
     /**
      * Return the mode of the gallery
@@ -716,7 +705,7 @@ public class GalleryData {
             }
         } else if (isRotSpectraMd()) {
             mode = Mode.GALLERY_ROTSPECTRA;
-        } else if (numberOfVols > 0) {
+        } else if ( isVolumeMd) {
             mode = Mode.GALLERY_VOL;
         } else {
             mode = Mode.GALLERY_MD;
@@ -728,7 +717,7 @@ public class GalleryData {
      * following function only should be used in VolumeGallery mode
      */
     public String getVolumeAt(int index) {
-        return volumes[index];
+            return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
     public void selectVolume(String vol) {
@@ -1427,8 +1416,8 @@ public class GalleryData {
                 }
         }      
         selection[index] = isselected;
-        if (numberOfVols > 0)
-            selectedVolFn = isselected? volumes[index]: volumes[0];
+        if (isVolumeMd)
+            selectedVolFn = isselected? getVolumeAt(index): getVolumeAt(0);
             
     }
     public int size() {
@@ -1483,9 +1472,7 @@ public class GalleryData {
         return selectedBlock;
     }
 
-    public String getCommonVolPrefix() {
-        return commonVolPrefix;
-    }
+    
 
     public String getSelVolumeFile() {
         return selectedVolFn;
@@ -1889,5 +1876,7 @@ public class GalleryData {
            }
            return null;
        }
+       
+       
         
 }// class GalleryDaa

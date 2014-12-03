@@ -766,8 +766,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 	{
 
 		if (f == Format.Auto)
-			f = detectFormat(path);
-		if (f == Format.Unknown)
+			f = detectFormat(path, preffix, suffix);
+		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format. You may try specifying format or renaming files");
 
 		String result = "";
@@ -1258,7 +1258,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 			// more efficient way, now we are using this maxcount
 			// to limit the number of particles used in the update
 			int count = 0;
-			int maxcount = 100;
+			int maxcount = 50;
 			//FIXME: This is a tweak to avoid losing time with big particles
 			if (getSize() > 256)
 				maxcount = 10;

@@ -12,6 +12,7 @@ import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -56,9 +57,10 @@ public abstract class ParticlePicker {
     public static final int sizemax = 2000;
     protected String block;
 
-    private static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
+    protected static Color[] colors = new Color[]{Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW};
 
-    private static int nextcolor;
+    protected static int nextcolor;
+    public final HashMap<Format, String> emextensions;
 
     public static Color getNextColor() {
         Color next = colors[nextcolor];
@@ -93,6 +95,7 @@ public abstract class ParticlePicker {
 
     }
     
+    
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -125,6 +128,13 @@ public abstract class ParticlePicker {
         initFilters();
         loadEmptyMicrographs();
         loadConfig();
+        emextensions = new HashMap<Format, String>();
+        emextensions.put(Format.Xmipp, ".pos");
+        emextensions.put(Format.Xmipp24, ".pos");
+        emextensions.put(Format.Xmipp30, ".pos");
+        emextensions.put(Format.Xmipp301, ".pos");
+        emextensions.put(Format.Relion, ".star");
+        emextensions.put(Format.Eman, ".box");
     }
 
     public void loadConfig() {
@@ -211,9 +221,8 @@ public abstract class ParticlePicker {
     
     public Format detectFileFormat(String path) {
         if(!new File(path).exists())
-            return Format.Unknown;
-        
-        if (path.endsWith(".pos"))
+            return Format.None;
+        if (path.endsWith(emextensions.get(Format.Xmipp)))
         {
             if(MetaData.isPlainPos(path) ) 
                 return Format.Xmipp24;
@@ -222,20 +231,26 @@ public abstract class ParticlePicker {
             }
             return Format.Xmipp301;
         }
-        if (path.endsWith(".box")) {
+        else if (path.endsWith(emextensions.get(Format.Eman))) {
             return Format.Eman;
         }
+        else if (path.endsWith(emextensions.get(Format.Relion)))
+            return Format.Relion;
          
-        return Format.Unknown;
+        return Format.None;
     }
 
-    public Format detectFormat(String path) {
-        
-            File[] files = getCoordsFiles(path);
-            if(files.length == 0)
-                return Format.Unknown;
-            return detectFileFormat(files[0].getAbsolutePath());
-            
+    public Format detectFormat(String path, String preffix, String suffix) {
+        String file;
+        Format f;
+        for (Micrograph m : getMicrographs())
+        {
+            file = Filename.join(path, preffix + m.getName() + suffix);
+            f = detectFileFormat(file);
+            if(f != Format.None)
+                return f;
+        }
+        return Format.None;
     }
 
     public String getExportFile(String path) {
@@ -465,10 +480,13 @@ public abstract class ParticlePicker {
                 break;
             case Xmipp301:
                 fillParticlesMdFromXmipp301File(path, m, md);
-
                 break;
             case Eman:
                 fillParticlesMdFromEmanFile(path, m, md, scale);
+                break;
+             case Relion:
+                fillParticlesMdFromRelionFile(path, m, md);
+                
                 break;
             default:
                 md.clear();
@@ -505,8 +523,22 @@ public abstract class ParticlePicker {
                 
     }
 
-    
-
+    public void fillParticlesMdFromRelionFile(String file, Micrograph m, MetaData md) {
+         MetaData relionmd = new MetaData(file);
+         long[] ids = relionmd.findObjects();
+         int xcoor, ycoor;
+         long id;
+         for(int i = 0; i < ids.length; i++ )
+         {
+            xcoor = (int)relionmd.getValueDouble(MDLabel.RLN_IMAGE_COORD_X, ids[i]);
+            ycoor = (int)relionmd.getValueDouble(MDLabel.RLN_IMAGE_COORD_Y, ids[i]);
+            id = md.addObject();
+            md.setValueInt(MDLabel.MDL_XCOOR, xcoor, id);
+            md.setValueInt(MDLabel.MDL_YCOOR, ycoor, id);
+         }
+         relionmd.destroy();
+                
+    }
     
     public void fillParticlesMdFromEmanFile(String file, Micrograph m, MetaData md, float scale) {
         // inverty = true;

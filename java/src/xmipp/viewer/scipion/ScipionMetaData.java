@@ -65,14 +65,14 @@ public class ScipionMetaData extends MetaData {
         emobjects = new ArrayList<EMObject>();
         loadData();
         if (isClassificationMd()) {
-            String prefix;
+            String preffix;
             haschilds = true;
             List<String> childblocks = new ArrayList<String>();
             for (EMObject emo : emobjects) {
                 if((Integer)emo.getValue("_size") != 0)
                 {
-                    prefix = String.format("Class%03d_", emo.getId());
-                    emo.childmd = new ScipionMetaData(dbfile, prefix);
+                    preffix = String.format("Class%03d_", emo.getId());
+                    emo.childmd = new ScipionMetaData(dbfile, preffix);
                     emo.childmd.setParent(this);
                     childblocks.add(emo.childmd.getBlock());
                 }

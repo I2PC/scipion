@@ -255,7 +255,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
             try
             {
-                new GalleryJFrame(md, new Params());
+                Params p = new Params();
+                
+                new GalleryJFrame(md, p);
             }
             catch(Exception e)
             {
@@ -1144,6 +1146,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						{
 							data.loadMd();
 							reloadTableData();
+                                                        autoAdjustColumns(!data.isRotSpectraMode());
 						}
 						catch (Exception e)
 						{
@@ -1183,26 +1186,34 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public int getSize()
 			{
-				return data.getNumberOfVols();
+				return data.size();
 			}
 
 			@Override
 			public Object getElementAt(int index)
 			{
-				return removePrefix(data.getVolumeAt(index));
+                                String volume = data.getVolumeAt(index);
+				return getVolumeName(volume);
 			}
 
 			@Override
 			public void setSelectedItem(Object anItem)
 			{
-				data.selectVolume(data.getCommonVolPrefix() + (String) anItem);
+				data.selectVolume((String) anItem);
 				reloadTableData();
 			}
+                        
+                        public String getVolumeName(String volume)
+                        {
+                                if(!Filename.hasPrefix(volume))//is stack
+                                    volume = Filename.getBaseName(volume);
+				return volume;
+                        }
 
 			@Override
 			public Object getSelectedItem()
 			{
-				return removePrefix(data.getSelVolumeFile());
+				return getVolumeName(data.getSelVolumeFile());
 			}
 
 			@Override
@@ -1219,10 +1230,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			}
 
-			public String removePrefix(String value)
-			{
-				return value.replaceFirst(data.getCommonVolPrefix(), "");
-			}
+			
 		});
 		cbPanel.add(jcbVolumes);
 	}
@@ -1231,7 +1239,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
 
 		boolean showBlocks = data.getNumberOfBlocks() > 0;
-		boolean showVols = data.getNumberOfVols() > 1 && data.isVolumeMode();
+		boolean showVols = data.size() > 1 && data.isVolumeMode();
 		jcbBlocks.setVisible(showBlocks);
 		jcbVolumes.setVisible(showVols);
 		jlBlocks.setVisible(showBlocks);

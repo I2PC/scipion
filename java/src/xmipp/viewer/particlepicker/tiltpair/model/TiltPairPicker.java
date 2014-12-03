@@ -305,8 +305,8 @@ public class TiltPairPicker extends ParticlePicker
 	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 		if (f == Format.Auto)
-			f = detectFormat(path);
-		if (f == Format.Unknown)
+			f = detectFormat(path, preffix, suffix);
+		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format");
 
 		String uFn, tFn, file;
