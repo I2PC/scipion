@@ -104,6 +104,16 @@ class TestXmippBase(BaseTest):
         cls.launchProtocol(cls.ProtClassify)
         return cls.ProtClassify
 
+    @classmethod
+    def runCreateMask(cls, samplingRate, size):
+        cls.protMask = cls.newProtocol(XmippProtCreateMask2D,
+                                     samplingRate = samplingRate,
+                                     size= size,
+                                     geo=0, radius=-1 )
+        cls.protMask.setObjLabel('circular mask')
+        cls.launchProtocol(cls.protMask)
+        return cls.protMask
+
 
 class TestXmippCreateMask2D(TestXmippBase):
     @classmethod
@@ -578,6 +588,15 @@ class TestXmippRotSpectra(TestXmippBase):
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
+    def test_rotSpectraMask(self):
+        print "Run Rotational Spectra with Mask"
+        protMask = self.runCreateMask(3.5, 100)
+        xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, useMask=True, SomXdim=2, SomYdim=2)
+        xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
+        xmippProtRotSpectra.Mask.set(protMask.outputMask)
+        self.launchProtocol(xmippProtRotSpectra)
+        self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
+
 class TestXmippKerdensom(TestXmippBase):
     """This class check if the protocol to calculate the kerdensom from particles in Xmipp works properly."""
     @classmethod
@@ -594,6 +613,14 @@ class TestXmippKerdensom(TestXmippBase):
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
+    def test_kerdensomMask(self):
+        print "Run Kerdensom with a mask"
+        protMask = self.runCreateMask(3.5, 100)
+        xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
+        xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
+        xmippProtKerdensom.Mask.set(protMask.outputMask)
+        self.launchProtocol(xmippProtKerdensom)
+        self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
 class TestXmippProjectionOutliers(TestXmippBase):
     """This class check if the protocol projection outliers in Xmipp works properly."""

@@ -59,7 +59,7 @@
 		
 		$.ajax({
 			type : "GET",
-			url : "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
+			url : getSubDomainURL() + "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
 			dataType : "html",
 // 			async: false,
 			success : function(data) {
