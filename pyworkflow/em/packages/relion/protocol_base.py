@@ -27,10 +27,9 @@
 This module contains the protocol base class for Relion protocols
 """
 
-import os
 import re
 from glob import glob
-from os.path import join, exists
+from os.path import exists
 
 import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
@@ -42,8 +41,6 @@ from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
 from convert import (createClassesFromImages
-                   , addRelionLabels
-                   , restoreXmippLabels
                    , convertBinaryFiles)
 
 
@@ -90,6 +87,7 @@ class ProtRelionBase(EMProtocol):
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_scipion': self.extraIter + 'data_scipion.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
+                  'model': self.extraIter + 'model.star',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
@@ -442,10 +440,7 @@ class ProtRelionBase(EMProtocol):
         continueRun = self.continueRun.get()
         continueRun._initialize()
         
-        if self.continueIter.get() == 'last':
-            continueIter = continueRun._lastIter()
-        else:
-            continueIter = int(self.continueIter.get())
+        continueIter = self._getContinueIter()
         
         if self.IS_CLASSIFY:
             itersToRun = continueIter + self.numberOfIterations.get()
@@ -590,6 +585,11 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
+    def _methods(self):
+        """ Should be overriden in each protocol.
+        """
+        return []
+    
     #--------------------------- UTILS functions --------------------------------------------
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
@@ -654,7 +654,7 @@ class ProtRelionBase(EMProtocol):
         if not exists(data_angularDist):
             from convert import writeIterAngularDist
             data_star = self._getFileName('data', iter=it)
-            writeIterAngularDist(data_star, data_angularDist, 
+            writeIterAngularDist(self, data_star, data_angularDist, 
                                  self.numberOfClasses.get(), self.PREFIXES)
  
         return data_angularDist
@@ -663,4 +663,12 @@ class ProtRelionBase(EMProtocol):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
         from convert import splitInCTFGroups
         splitInCTFGroups(imgStar, self.numberOfGroups.get())
-
+    
+    def _getContinueIter(self):
+        continueRun = self.continueRun.get()
+        
+        if self.continueIter.get() == 'last':
+            continueIter = continueRun._lastIter()
+        else:
+            continueIter = int(self.continueIter.get())
+        return continueIter

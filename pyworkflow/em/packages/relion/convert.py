@@ -269,8 +269,8 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
                                       xmipp.MDL_ANGLE_ROT, xmipp.MDL_WEIGHT)
             mdDist.setValueCol(xmipp.MDL_ANGLE_PSI, 0.0)
             blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
-            print "Writing angular distribution to: ", blockName + data_angularDist
-            mdDist.write(blockName + data_angularDist, xmipp.MD_APPEND) 
+            print "Writing angular distribution to: ", blockName + outAngularDist
+            mdDist.write(blockName + outAngularDist, xmipp.MD_APPEND) 
             
     restoreXmippLabels()
     

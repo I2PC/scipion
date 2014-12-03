@@ -27,10 +27,11 @@
 This module contains the protocol for 3d classification with relion.
 """
 
+import xmipp
 from pyworkflow.em.protocol import ProtClassify3D
 from pyworkflow.em.data import Volume
-from protocol_base import *
 
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
@@ -118,12 +119,32 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        from pyworkflow.em.packages.xmipp3 import getMdFirstRow
+        summary = []
+        it = self._lastIter()
+        if it >= 1:
+            row = getMdFirstRow('model_general@' + self._getFileName('model', iter=it))
+            resol = row.getValue("rlnCurrentResolution")
+            summary.append("Current resolution: *%0.2f*" % resol)
+        
+        summary.append("Input Particles: *%d*\nClassified into *%d* 3D classes\n" % (self.inputParticles.get().getSize(),
+                                                                              self.numberOfClasses.get()))
+        
+        return summary
     
     def _summaryContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        summary = []
+        summary.append("Continue from iteration %01d" % self._getContinueIter())
+        return summary
+    
+    def _methods(self):
+        strline=''
+        if hasattr(self, 'outputClasses'):
+            strline += 'We classified %d particles into %d 3D classes using Relion Classify3d. '%\
+                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+        return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------
