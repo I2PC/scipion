@@ -678,8 +678,10 @@ class ProtFrealignBase(EMProtocol):
             self.runJob('', args % paramsRefine, cwd=iterDir)
         else:
             #ugly hack when for reconstruction only, just copy the input files
-            print "copying params files", param['inputParFn'], param['inputParFn'].replace("articles_iter_000","articles_iter_001")
-            copyFile(param['inputParFn'], param['inputParFn'].replace("articles_iter_000","articles_iter_001"))
+            inFile  = self._getExtraPath(param['inputParFn'])
+            outFile = self._getExtraPath(param['inputParFn'].replace("articles_iter_000","articles_iter_001"))
+            print "copying params files", inFile, outFile
+            copyFile(inFile, outFile)
     
     def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
