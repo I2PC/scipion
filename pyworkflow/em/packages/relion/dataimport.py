@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import os
+from os.path import exists
+from collections import OrderedDict
 
 from pyworkflow.object import Float
 from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D
@@ -127,7 +129,13 @@ class RelionImport():
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        try:
+            self._findImagesPath(label="rlnImageName", warnings=False)
+        except Exception, ex:
+            errors.append(str(ex))
+            
+        return errors
     
     def summaryParticles(self):
         """ Should be overriden in subclasses to 
@@ -149,11 +157,11 @@ class RelionImport():
             
         modelStarFile = self._starFile.replace('_data.star', '_model.star')
         
-        if os.path.exists(modelStarFile):
+        if exists(modelStarFile):
             self._modelStarFile = modelStarFile
         else:
             modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
-            if os.path.exists(modelHalfStarFile):
+            if exists(modelHalfStarFile):
                 self._modelStarFile = modelHalfStarFile
             else:
                 raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile, 
@@ -163,7 +171,7 @@ class RelionImport():
         classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
         
         self._optimiserFile = self._starFile.replace('_data.star', '_optimiser.star')
-        if not os.path.exists(self._optimiserFile):
+        if not exists(self._optimiserFile):
             raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
         optimiserRow = getMdFirstRow(self._optimiserFile)
         autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
@@ -193,6 +201,8 @@ class RelionImport():
                              row.containsLabel('rlnMicrographId'))
         #init dictionary. It will be used in the preprocessing
         self.micDict = {}
+        
+        return row, modelRow
 
 
     def _preprocessImageRow(self, img, imgRow):
@@ -230,4 +240,32 @@ class RelionImport():
     def _postprocessImageRow(self, img, imgRow):
         if self.ignoreIds:
             img.setObjId(None) # Force to generate a new id in Set
+            
+    def loadAcquisitionInfo(self):
+        """ Return a dictionary with acquisition values and 
+        the sampling rate information.
+        In the case of Xmipp, they are stored in files:
+        acquisition_info.xmd and microscope.xmd 
+        """
+        acquisitionDict = OrderedDict()
+        
+        try:
+            row, modelRow = self._findImagesPath(label=xmipp.RLN_IMAGE_NAME, warnings=False)
+            
+            if row.containsLabel('rlnVoltage'):
+                acquisitionDict['voltage'] = row.getValue('rlnVoltage')
+                
+            if row.containsLabel('rlnAmplitudeContrast'):
+                acquisitionDict['amplitudeContrast'] = row.getValue('rlnAmplitudeContrast')
+                
+            if row.containsLabel('rlnSphericalAberration'):
+                acquisitionDict['sphericalAberration'] = row.getValue('rlnSphericalAberration')           
+                
+            if modelRow.containsLabel('rlnPixelSize'):
+                acquisitionDict['samplingRate'] = modelRow.getValue('rlnPixelSize')
+            
+        except Exception, ex:
+            print "Error loading acquisition: ", str(ex)
+            
+        return acquisitionDict
             
