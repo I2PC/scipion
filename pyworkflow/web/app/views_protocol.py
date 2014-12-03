@@ -275,7 +275,10 @@ def setPointerValue(project, attr, htmlValue, paramName, pointer):
     """
     
     if len(htmlValue.strip()) > 0:
-        value, extended = htmlValue.split('::')
+        if '::' in htmlValue:
+            value, extended = htmlValue.split('::')
+        else:
+            value, extended = htmlValue, None
         obj = project.getObject(int(value))  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
