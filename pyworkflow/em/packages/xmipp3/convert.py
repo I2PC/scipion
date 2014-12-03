@@ -1240,7 +1240,7 @@ def createClassesFromImages2(inputImages, inputMd,
         # Set images attributes from the md row values
         #imgRow = rowFromMd(md, objId)
         #img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
-        
+        img.setTransform(rowToAlignment(row, alignType))
         classItem.append(img)
         
     for classItem in clsDict.values():

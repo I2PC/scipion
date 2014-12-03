@@ -64,7 +64,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        from convert import readSetOfClasses3D
+        from pyworkflow.em.packages.relion.convert import readSetOfClasses3D
         
         imgSet = self.inputParticles.get()
         

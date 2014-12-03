@@ -26,12 +26,11 @@
 """
 This module contains the protocol for 3d refinement with Relion.
 """
-
+import xmipp
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
 
-from protocol_base import *
-
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
