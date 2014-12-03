@@ -79,7 +79,7 @@ MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
 # MEDIA_URL = ABSOLUTE_URL+'/resources/'
-MEDIA_URL = '/resources/'
+MEDIA_URL = ABSOLUTE_URL+'/resources/'
 
 # Temporary folder where store the files after do a upload
 FILE_UPLOAD_TEMP_DIR = MEDIA_ROOT
