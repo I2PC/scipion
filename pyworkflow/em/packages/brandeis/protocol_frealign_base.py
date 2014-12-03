@@ -673,8 +673,13 @@ class ProtFrealignBase(EMProtocol):
         paramsRefine = dict(paramsDic.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % paramsRefine, cwd=iterDir)
+        if param['mode'] != 0:
+            # frealign program is already in the args script, that's why runJob('')
+            self.runJob('', args % paramsRefine, cwd=iterDir)
+        else:
+            #TODO: ROB I do not think this line copy all the needed files
+            print "copying params files"
+            copyFile(param['inputParFn'], param['outputParFn'])
     
     def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
@@ -931,7 +936,7 @@ class ProtFrealignBase(EMProtocol):
             if i < restBlock:
                 blockParticles[i] += 1
         return blockParticles
-        
+        particles_iter_001.par
     def _createIterWorkingDir(self, iterN):
         """create a new directory for the iterarion and change to this directory.
         """
@@ -1052,7 +1057,12 @@ eot
     
     def _mergeAllParFiles(self, iterN, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
-        
+
+        #TODO: ROB not sure the next check is really needed
+        #if we only want to reconstruct then use the initial par file
+        #instead of the output one since they are empty
+        if (self.mode.get()==0):
+            iterN=0;
         file2 = self._getFileName('output_par', iter=iterN)
         if numberOfBlocks != 1:
             f2 = open(file2, 'w+')
@@ -1060,6 +1070,8 @@ eot
                      "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
             for block in range(1, numberOfBlocks + 1):
                 file1 = self._getFileName('output_par_block', block=block, iter=iterN)
+                if not os.path.exists(file1):
+                     raise Exception ("Error: file %s does not exists" % file1)
                 f1 = open(file1)
                 
 #                 if block == 1:
