@@ -1062,16 +1062,14 @@ eot
     def _mergeAllParFiles(self, iterN, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
 
-        #TODO: ROB not sure the next check is really needed
         #if we only want to reconstruct then use the initial par file
         #instead of the output one since they are empty
         file2 = self._getFileName('output_par', iter=iterN)
         if (self.mode.get()==0):
-            inFile  = self._getFileName('output_par', iter=iterN)
-            outFile = self._getFileName('output_par_block', block=numberOfBlocks,
-                                        iter=iterN)
-            copyFile(inFile,outFile)
-
+            inFile   = self._getFileName('output_par_block', block=numberOfBlocks,
+                                        iter=0)
+            print inFile, file2
+            copyFile(inFile,file2)
         else:
             if numberOfBlocks != 1:
                 f2 = open(file2, 'w+')
