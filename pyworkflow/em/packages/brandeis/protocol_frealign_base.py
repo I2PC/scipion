@@ -1060,6 +1060,8 @@ eot
                      "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
             for block in range(1, numberOfBlocks + 1):
                 file1 = self._getFileName('output_par_block', block=block, iter=iterN)
+                if not os.path.exists(file1):
+                     raise Exception ("Error: file %s does not exists" % file1)
                 f1 = open(file1)
                 
 #                 if block == 1:
