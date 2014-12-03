@@ -104,13 +104,14 @@ function deleteProject(elm) {
 
 function serviceProjForm(){
 	var title = 'Confirm project creation'
-	var dialog = "<p>Your <strong>Project</strong> will be created.</p>" +
-		"<p>This process generates an unique <strong>identification code</strong><p>" +
-		"</p>that you have to save to access to the content in other moment.</p><br />" + 
-		"<p>If you agree, confirm to generate it.</p>"
-		
+	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
+        "This process generates a unique <strong>identification code</strong><br />" +
+        "that you will have to save to access the content in the future.</p>" +
+        "<p><br /></p>" +
+        "<p>If you agree, please confirm to generate it.</p>";
+
 	var funcName = 'createServProject';
-	
+
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
 }
 
@@ -123,12 +124,13 @@ function createServProject(elm) {
 		async: false,
 		success : function() {
 			var title = "ACCESS CODE"
-			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> generated is the next:</p>" +
-					"<br /><p><h2>"+ projName  +"</h2></p><br /><p>Please <strong>save this code securely</strong> " +
-							"to access to the project in the future.</p>";
-			var msg = msg +"<input type='hidden' class='content' value='"+ projName +"'/>";
+			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> is:</p>" +
+				"<br /><p><h2>" + projName + "</h2></p><br />" +
+                "<p>Please <strong>save this code securely</strong> " +
+				"to access the project in the future.</p>";
+			var msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
-				
+
 			accessPopup(title, msg, funcName, 'Go to the project', 'Exit');
 		}
 	});
@@ -136,11 +138,11 @@ function createServProject(elm) {
 
 function goToProjectForm() {
 	var title = 'Confirm access code'
-	var dialog = "<p>Give me the <strong>identification code</strong> " +
-			"to access to your <strong>Project</strong>.</p>" +
-			"<p>This code was given to you after the creation of your project.</p>" +
-			"<p>If It was forgotten, please contact with the <a style='color:firebrick;' href='#'>Scipion group</a>.</p><br />"
-	var msg = dialog +"<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
+	var dialog = "<p>Please write the <strong>identification code</strong> " +
+		"to access to your <strong>Project</strong>.</p>" +
+		"<p>This code was given to you after the creation of your project.</p>" +
+		"<p>If you forgot it, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p><br />";
+	var msg = dialog + "<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
 	var funcName = 'goToProject';
 	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
 }
@@ -151,22 +153,20 @@ function goToProject(elm) {
 	// remove the blank spaces
 	code = code.replace(/\s+/g, '');
 	
-	var URL = getSubDomainURL() + "/check_project_id/?code=" + code
+	var URL = getSubDomainURL() + "/check_project_id/?code=" + code;
 	$.ajax({
 		type : "GET",
 		url : URL,
 		success : function(result) {
-			if(result == 1){
-				var URL2 = getSubDomainURL() + "/project_content/?projectName="+code+"&mode=service"
+			if (result == 1) {
+				var URL2 = getSubDomainURL() + "/project_content/?projectName="+code+"&mode=service";
 				window.location.href = URL2;
 			} else {
-				var title = "Bad Access"
-				var msg = "<p>Wrong <strong>access code</strong> given!</p>"+
-					"<p>If It was forgotten, please contact with the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>"
-				errorPopup(title, msg)
+				var title = "Bad Access";
+				var msg = "<p>Wrong <strong>access code</strong>!</p>" +
+					"<p>If you forgot the code, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p>";
+				errorPopup(title, msg);
 			}
 		}
 	});
 }
-
-

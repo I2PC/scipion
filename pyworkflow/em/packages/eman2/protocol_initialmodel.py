@@ -114,6 +114,7 @@ class EmanProtInitModel(ProtInitialVolume):
         self.runJob(program, args, cwd=self._getExtraPath())        
                      
     def createOutputStep(self):
+        from glob import glob
         classes2DSet = self.inputSet.get()
         #volumes = EmanSetOfVolumes(self._getPath('scipion_volumes.json'))
         volumes = self._createSetOfVolumes()
@@ -122,8 +123,9 @@ class EmanProtInitModel(ProtInitialVolume):
         else:
             volumes.setSamplingRate(self.inputSet.get().getSamplingRate())
         
-        for k in range(1, self.numberOfModels.get() + 1):
-            volFn = self._getExtraPath('initial_models/model_00_%02d.hdf' % k)
+        outputVols = glob(self._getExtraPath('initial_models/model_??_??.hdf'))
+        for k in range(self.numberOfModels.get()):
+            volFn = outputVols[k]
             vol = Volume()
             vol.setFileName(volFn)
             vol.setObjComment('eman initial model %02d' % k)
