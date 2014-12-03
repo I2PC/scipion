@@ -677,9 +677,9 @@ class ProtFrealignBase(EMProtocol):
             # frealign program is already in the args script, that's why runJob('')
             self.runJob('', args % paramsRefine, cwd=iterDir)
         else:
-            #TODO: ROB I do not think this line copy all the needed files
-            print "copying params files", param['inputParFn'], param['outputParFn']
-            copyFile(param['inputParFn'], param['outputParFn'])
+            #ugly hack when for reconstruction only, just copy the input files
+            print "copying params files", param['inputParFn'], param['inputParFn'].replace("articles_iter_000","articles_iter_001")
+            copyFile(param['inputParFn'], param['inputParFn'].replace("articles_iter_000","articles_iter_001"))
     
     def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
