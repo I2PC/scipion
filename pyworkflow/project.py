@@ -396,6 +396,10 @@ class Project(object):
                 
     def getProtocol(self, protId):
         return self.mapper.selectById(protId)
+    
+    def getObject(self, objId):
+        """ Retrieve an object from the db given its id. """
+        return self.mapper.selectById(objId)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol

@@ -255,12 +255,14 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             sampling = _getSampling(self.outputParticles)
             size = _getSize(self.outputParticles)
             if self.doResize:
-                summary.append("The sampling rate of the output particles are: %0.3f" % sampling)
+                summary.append("Output particles have a different sampling "
+                               "rate: *%0.3f* A/px" % sampling)
             if self.doWindow.get():
                 if self.getEnumText('windowOperation') == "crop":
-                    summary.append("*Crop operation*: New size %s" % size)
+                    summary.append("The particles were cropped.")
                 else:
-                    summary.append("*Window operation*: New size %s" % size)
+                    summary.append("The particles were windowed.")
+                summary.append("New size: *%s* px" % size)
         return summary
     
     def _validate(self):

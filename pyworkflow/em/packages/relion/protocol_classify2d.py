@@ -30,7 +30,7 @@ This module contains the protocol base class for Relion protocols
 from pyworkflow.em.data import SetOfClasses2D
 from pyworkflow.em.protocol import ProtClassify2D
 
-from protocol_base import *
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
@@ -49,8 +49,6 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.outputClasses = 'classes.xmd'
-        self.outputVols = ''
         
 
     #--------------------------- INSERT steps functions --------------------------------------------  
@@ -61,7 +59,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
 
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self):
-        from convert import readSetOfClasses2D
+        from pyworkflow.em.packages.relion.convert import readSetOfClasses2D
         classesSqlite = self._getIterClasses(self._lastIter())
         imgSet = self.inputParticles.get()
         classes = self._createSetOfClasses2D(imgSet)
@@ -99,12 +97,24 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
+                                                                              self.numberOfClasses.get()))
+        return summary
     
     def _summaryContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
-
+        summary = []
+        summary.append("Continue from iteration %01d" % self._getContinueIter())
+        return summary
+    
+    def _methods(self):
+        strline=''
+        if hasattr(self, 'outputClasses'):
+            strline += 'We classified %d particles into %d classes using Relion Classify2d. '%\
+                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+        return [strline]
+    
     #--------------------------- UTILS functions --------------------------------------------

@@ -30,7 +30,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, PathParam,
 from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D
 
-from protocol_base import ProtRelionBase
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):

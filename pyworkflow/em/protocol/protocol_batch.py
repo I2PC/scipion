@@ -84,7 +84,8 @@ class ProtUserSubSet(BatchProtocol):
         outputClassName = self.outputClassName.get()
         
         if (outputClassName.startswith('SetOfAverages') or
-            outputClassName.startswith('SetOfVolumes')):
+            outputClassName.startswith('SetOfVolumes') or
+            outputClassName.startswith('SetOfParticles')):
             # We need to distinguish two cases:
             # a) when we want to create images by grouping class images
             # b) create a subset from a particular class images
@@ -92,11 +93,11 @@ class ProtUserSubSet(BatchProtocol):
             db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
             itemClassName = db.getSelfClassName()
             if itemClassName.startswith('Class'):
-                if outputClassName.endswith('Representatives'):
+                if outputClassName.startswith('SetOfParticles'):
+                    self._createImagesFromClasses(inputClasses)
+                else:
                     self._createRepresentativesFromClasses(inputClasses, 
                                                            outputClassName.split(',')[0])
-                else:
-                    self._createImagesFromClasses(inputClasses)
             else:
                 self._createSubSetFromImages(inputClasses.getImages())
         elif outputClassName.startswith('SetOfClasses'):

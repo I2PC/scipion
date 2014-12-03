@@ -25,12 +25,17 @@
 # **************************************************************************
 
 import os
+from os.path import exists
+from collections import OrderedDict
 
+from pyworkflow.object import Float
 from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D
+from pyworkflow.em.data import Micrograph
 from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
 import xmipp
+
 
 
 class RelionImport():
@@ -72,29 +77,65 @@ class RelionImport():
             self.protocol._defineOutputs(outputMicrographs=self.micSet)
         self.protocol._defineOutputs(outputParticles=partSet)
         
-    def _createClasses(self, dataFile, partSet):     
-        self.info('Creating the set of classes...')
-        from convert import readSetOfClasses3D, createClassesFromImages
-        # Create the set of classes 2D or 3D  
-        classesSqlite = self._getTmpPath('classes.sqlite')
-        relDataFile = os.path.relpath(dataFile)
-        classTemplate = relDataFile.replace('_data.star', '_class%(ref)03d.mrc:mrc')
-        self.info('  Using classes template: %s' % classTemplate)
-        createClassesFromImages(partSet, dataFile, classesSqlite, 
-                                self.OUTPUT_TYPE, self.CLASS_LABEL, classTemplate, 
-                                0, preprocessImageRow=self._preprocessImageRow)      
-        # FIXME: Check whether create classes 2D or 3D
-        classes = self._createSetOfClasses3D(partSet)
-        readSetOfClasses3D(classes, classesSqlite)
+        if self._classesFunc is not None:
+            self._createClasses(partSet)
         
-        return classes
+    
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        if  classId in self._classesDict:
+            index, fn, row = self._classesDict[classId]
+            if fn.endswith('.mrc'):
+                fn += ':mrc' # Specify that are volumes to read them properly in xmipp
+            item.getRepresentative().setLocation(index, fn)
+            item._rlnclassDistribution = Float(row.getValue('rlnClassDistribution'))
+            item._rlnAccuracyRotations = Float(row.getValue('rlnAccuracyRotations'))
+            item._rlnAccuracyTranslations = Float(row.getValue('rlnAccuracyTranslations'))
+    
+    def _createClasses(self, partSet):    
+        from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
+        from pyworkflow.em.packages.xmipp3.convert import fillClasses
+        self._classesDict = {} # store classes info, indexed by class id
+        pathDict = {}
+         
+        self.protocol.info('Loading classes info from: %s' % self._modelStarFile)
+        modelMd = xmipp.MetaData('model_classes@' + self._modelStarFile)
+        for classNumber, objId in enumerate(modelMd):
+            row = XmippMdRow()
+            row.readFromMd(modelMd, objId)
+            index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
+            
+            if fn in pathDict:
+                newFn = pathDict.get(fn)
+            else:
+                clsPath = findRootFrom(self._modelStarFile, fn)
+                if clsPath is None:
+                    newFn = fn
+                else:
+                    newFn = self.protocol._getExtraPath(os.path.basename(fn))
+                    self.copyOrLink(os.path.join(clsPath, fn), newFn)
+                pathDict[fn] = newFn
+            
+            self._classesDict[classNumber+1] = (index, newFn, row)
+
+        clsSet = self._classesFunc(partSet)
+        fillClasses(clsSet, updateClassCallback=self._updateClass)
+        
+        self.protocol._defineOutputs(outputClasses=clsSet)
+        self.protocol._defineSourceRelation(partSet, clsSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def validateParticles(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        try:
+            self._findImagesPath(label="rlnImageName", warnings=False)
+        except Exception, ex:
+            errors.append(str(ex))
+            
+        return errors
     
     def summaryParticles(self):
         """ Should be overriden in subclasses to 
@@ -113,6 +154,28 @@ class RelionImport():
         if not row.containsLabel(label):
             raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
                                                                          self._starFile))
+            
+        modelStarFile = self._starFile.replace('_data.star', '_model.star')
+        
+        if exists(modelStarFile):
+            self._modelStarFile = modelStarFile
+        else:
+            modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
+            if exists(modelHalfStarFile):
+                self._modelStarFile = modelHalfStarFile
+            else:
+                raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile, 
+                                                                                              modelHalfStarFile))
+        
+        modelRow = getMdFirstRow(self._modelStarFile)
+        classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
+        
+        self._optimiserFile = self._starFile.replace('_data.star', '_optimiser.star')
+        if not exists(self._optimiserFile):
+            raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
+        optimiserRow = getMdFirstRow(self._optimiserFile)
+        autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
+        
 
         index, fn = relionToLocation(row.getValue(label))
         self._imgPath = findRootFrom(self._starFile, fn)
@@ -120,19 +183,26 @@ class RelionImport():
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
 
-        # Check if the particles have 2d or 3d alignment
-        if row.containsLabel(xmipp.RLN_ORIENT_TILT):
-            self.alignType = ALIGN_PROJ
+        self.alignType = ALIGN_PROJ
+        
+        if not autoRefine:
+            if classDimensionality == 3:
+                self._classesFunc = self.protocol._createSetOfClasses3D
+            else:
+                self._classesFunc = self.protocol._createSetOfClasses2D
+                self.alignType = ALIGN_2D
         else:
-            self.alignType = ALIGN_2D
-
+            self._classesFunc = None
+            
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
-        self._micIdOrName = False#(row.containsLabel(xmipp.MDL_MICROGRAPH_ID) or
-                                 #row.containsLabel(xmipp.MDL_MICROGRAPH))
+        self._micIdOrName = (row.containsLabel('rlnMicrographName') or
+                             row.containsLabel('rlnMicrographId'))
         #init dictionary. It will be used in the preprocessing
         self.micDict = {}
+        
+        return row, modelRow
 
 
     def _preprocessImageRow(self, img, imgRow):
@@ -140,7 +210,62 @@ class RelionImport():
         if self._imgPath is not None:
             copyOrLinkFileName(imgRow, self._imgPath, self.protocol._getExtraPath())
         setupCTF(imgRow, self.protocol.samplingRate.get())
+
+        if self._micIdOrName:
+            micId = imgRow.getValue('rlnMicrographId', None)
+            micName = imgRow.getValue('rlnMicrographName', None)
+
+            # Check which is the key to identify micrographs (id or name)
+            if micId is not None:
+                micKey = micId
+            else:
+                micKey = micName
+
+            mic = self.micDict.get(micKey, None)
+
+            # First time I found this micrograph (either by id or name)
+            if mic is None:
+                mic = Micrograph()
+                mic.setObjId(micId)
+                if micName is None:
+                    micName = self.protocol._getExtraPath('fake_micrograph%6d' % micId)
+                mic.setFileName(micName)
+                self.micSet.append(mic)
+                # Update dict with new Micrograph
+                self.micDict[micKey] = mic
+
+            # Update the row to set a MDL_MICROGRAPH_ID
+            imgRow.setValue('rlnMicrographId', long(mic.getObjId()))
         
     def _postprocessImageRow(self, img, imgRow):
         if self.ignoreIds:
             img.setObjId(None) # Force to generate a new id in Set
+            
+    def loadAcquisitionInfo(self):
+        """ Return a dictionary with acquisition values and 
+        the sampling rate information.
+        In the case of Xmipp, they are stored in files:
+        acquisition_info.xmd and microscope.xmd 
+        """
+        acquisitionDict = OrderedDict()
+        
+        try:
+            row, modelRow = self._findImagesPath(label=xmipp.RLN_IMAGE_NAME, warnings=False)
+            
+            if row.containsLabel('rlnVoltage'):
+                acquisitionDict['voltage'] = row.getValue('rlnVoltage')
+                
+            if row.containsLabel('rlnAmplitudeContrast'):
+                acquisitionDict['amplitudeContrast'] = row.getValue('rlnAmplitudeContrast')
+                
+            if row.containsLabel('rlnSphericalAberration'):
+                acquisitionDict['sphericalAberration'] = row.getValue('rlnSphericalAberration')           
+                
+            if modelRow.containsLabel('rlnPixelSize'):
+                acquisitionDict['samplingRate'] = modelRow.getValue('rlnPixelSize')
+            
+        except Exception, ex:
+            print "Error loading acquisition: ", str(ex)
+            
+        return acquisitionDict
+            

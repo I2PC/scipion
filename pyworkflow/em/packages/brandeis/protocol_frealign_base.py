@@ -673,8 +673,17 @@ class ProtFrealignBase(EMProtocol):
         paramsRefine = dict(paramsDic.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        # frealign program is already in the args script, that's why runJob('')
-        self.runJob('', args % paramsRefine, cwd=iterDir)
+        if self.mode.get() != 0:
+            # frealign program is already in the args script, that's why runJob('')
+            self.runJob('', args % paramsRefine, cwd=iterDir)
+        else:
+            pass
+            ##ugly hack when for reconstruction only, just copy the input files
+            #inFile  = self._getFileName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
+            #outFile = self._getFileName('output_par_block', block=block, iter=iterN)
+            #print "I am in dir: ", os.getcwd()
+            #print "copying params files", inFile, outFile
+            #copyFile(inFile, outFile)
     
     def reconstructVolumeStep(self, iterN, paramsDic):
         """Reconstruct a volume from a SetOfParticles with its current parameters refined
@@ -727,7 +736,7 @@ class ProtFrealignBase(EMProtocol):
         halfX = partSizeX % 2
         if halfX != 0:
             errors.append('Particle dimensions must be even!!!')
-        if not imgSet.hasAlignment3D() and self.useInitialAngles.get():
+        if not imgSet.hasAlignmentProj() and self.useInitialAngles.get():
             errors.append("Particles has not initial angles !!!")
         return errors
     
@@ -931,7 +940,7 @@ class ProtFrealignBase(EMProtocol):
             if i < restBlock:
                 blockParticles[i] += 1
         return blockParticles
-        
+        particles_iter_001.par
     def _createIterWorkingDir(self, iterN):
         """create a new directory for the iterarion and change to this directory.
         """
@@ -1052,28 +1061,37 @@ eot
     
     def _mergeAllParFiles(self, iterN, numberOfBlocks):
         """ This method merge all parameters files that has been created in a refineIterStep """
-        
+
+        #if we only want to reconstruct then use the initial par file
+        #instead of the output one since they are empty
         file2 = self._getFileName('output_par', iter=iterN)
-        if numberOfBlocks != 1:
-            f2 = open(file2, 'w+')
-            f2.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
-                     "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
-            for block in range(1, numberOfBlocks + 1):
-                file1 = self._getFileName('output_par_block', block=block, iter=iterN)
-                f1 = open(file1)
-                
-#                 if block == 1:
-#                     lines = f1.readlines()
-#                     f2.writelines(lines[:-2])
-#                 else:
-                for l in f1:
-                    if not l.startswith('C'):
-                        f2.write(l)
-                f1.close()
-            f2.close()
+        if (self.mode.get()==0):
+            inFile = self._getFileName('input_par_block', block= numberOfBlocks, iter=1, prevIter=0)
+            print inFile, file2
+            copyFile(inFile,file2)
         else:
-            file1 = self._getFileName('output_par_block', block=1, iter=iterN)
-            copyFile(file1, file2)
+            if numberOfBlocks != 1:
+                f2 = open(file2, 'w+')
+                f2.write("C           PSI   THETA     PHI       SHX       SHY     MAG  FILM      DF1"
+                         "      DF2  ANGAST     OCC     -LogP      SIGMA   SCORE  CHANGE\n")
+                for block in range(1, numberOfBlocks + 1):
+                    file1 = self._getFileName('output_par_block', block=block, iter=iterN)
+                    if not os.path.exists(file1):
+                         raise Exception ("Error: file %s does not exists" % file1)
+                    f1 = open(file1)
+
+    #                 if block == 1:
+    #                     lines = f1.readlines()
+    #                     f2.writelines(lines[:-2])
+    #                 else:
+                    for l in f1:
+                        if not l.startswith('C'):
+                            f2.write(l)
+                    f1.close()
+                f2.close()
+            else:
+                file1 = self._getFileName('output_par_block', block=1, iter=iterN)
+                copyFile(file1, file2)
     
     def _splitParFile(self, iterN, numberOfBlocks):
         """ This method split the parameter files that has been previosuly merged """
