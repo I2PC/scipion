@@ -1061,7 +1061,7 @@ eot
         #TODO: ROB not sure the next check is really needed
         #if we only want to reconstruct then use the initial par file
         #instead of the output one since they are empty
-        if (self.mode.get()==0):
+        if (self.mode.get()==0 and iterN == 1):
             iterN=0;
         file2 = self._getFileName('output_par', iter=iterN)
         if numberOfBlocks != 1:
