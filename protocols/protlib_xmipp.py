@@ -176,24 +176,26 @@ def getXmippLabels():
     f = open(labelHeader)
     labels = []
     comments = {}
+    labelsPrefixes = ['MDL_', 'RLN_', 'BSOFT_']
     
     for line in f:
         line = line.strip()
-        if line.startswith('MDL_') and '///<' in line:
-            parts = line.split('///<')
-            mdl = parts[0].strip()[:-1] # remove last comma
-            comm = parts[1].strip()
-            comments[mdl] = comm
-        if line.startswith('MDL::addLabel(MDL_'):
-            l = line.find('(')
-            r = line.find(')')
-            parts = line[l + 1:r].split(',')
-            label = {}
-            label['name'] = parts[2].replace('"', '').strip()
-            label['type'] = parts[1].strip()
-            label['enum'] = parts[0].strip()
-            label['comment'] = comments.get(label['enum'], "")
-            labels.append(label)
+        for prefix in labelsPrefixes:
+            if line.startswith(prefix) and '///<' in line:
+                parts = line.split('///<')
+                mdl = parts[0].strip()[:-1] # remove last comma
+                comm = parts[1].strip()
+                comments[mdl] = comm
+            if line.startswith('MDL::addLabel(' + prefix):
+                l = line.find('(')
+                r = line.find(')')
+                parts = line[l + 1:r].split(',')
+                label = {}
+                label['name'] = parts[2].replace('"', '').strip()
+                label['type'] = parts[1].strip()
+                label['enum'] = parts[0].strip()
+                label['comment'] = comments.get(label['enum'], "")
+                labels.append(label)
     return labels
 
 def getXmippLabelsName():

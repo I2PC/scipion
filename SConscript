@@ -183,7 +183,7 @@ PluginLibs = {}
 PluginResources = {}
 javaEnumDict = {'ImageWriteMode': [join('libraries','data','xmipp_image_base.h'), 'WRITE_'],
             'CastWriteMode': [join('libraries','data','xmipp_image_base.h'), 'CW_'],
-            'MDLabel': [join('libraries','data','metadata_label.h'), 'MDL_'],
+            'MDLabel': [join('libraries','data','metadata_label.h'), ['MDL_', 'RLN_', 'BSOFT']],
             'XmippError': [join('libraries','data','xmipp_error.h'), 'ERR_']}
 
 copyJar = None
@@ -883,26 +883,33 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
     f = open(header_file)
     fOut = open(java_file, 'w+')
     counter = 0;
-    last_label_pattern = pattern + "LAST_LABEL"
+    if isinstance(pattern, basestring):
+        patternList = [pattern]
+    elif isinstance(pattern, list):
+        patternList = pattern
+    else:
+        raise Exception("Invalid input pattern type: %s" % type(pattern))
+    last_label_pattern = patternList[0] + "LAST_LABEL"
     fOut.write("package xmipp.jni; \n")
     fOut.write("public class " + class_name + " {\n")
 
     for line in f:
         l = line.strip();
-        if l.startswith(pattern):
-            if '///' in l:
-                l, comment = l.split('///')
-            else:
-                comment = ''
-            if l.startswith(last_label_pattern):
-                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
-            if (l.find("=") == -1):
-                l = l.replace(",", " = %d;" % counter)
-                counter = counter + 1;
-            else:
-                l = l.replace(",", ";")
-
-            fOut.write("   public static final int %s ///%s\n" % (l, comment))
+        for p in patternList:
+            if l.startswith(p):
+                if '///' in l:
+                    l, comment = l.split('///')
+                else:
+                    comment = ''
+                if l.startswith(last_label_pattern):
+                    l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
+                if (l.find("=") == -1):
+                    l = l.replace(",", " = %d;" % counter)
+                    counter = counter + 1;
+                else:
+                    l = l.replace(",", ";")
+    
+                fOut.write("   public static final int %s ///%s\n" % (l, comment))
     fOut.write("}\n")
     fOut.close()
     f.close()
