@@ -69,7 +69,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         imgSet = self.inputParticles.get()
         
         # create a SetOfClasses3D and define its relations
-        classesSqlite = self._getIterClasses(self._lastIter())
+        classesSqlite = self._getIterClasses(self._lastIter(), clean=True)
         classes = self._createSetOfClasses3D(imgSet)
         readSetOfClasses3D(classes, classesSqlite)
         

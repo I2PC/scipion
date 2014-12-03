@@ -75,8 +75,6 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.outputClasses = 'classes_ref3D.xmd'
-        self.outputVols = 'volumes.xmd'
         self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
@@ -620,13 +618,16 @@ class ProtRelionBase(EMProtocol):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
     
-    def _getIterClasses(self, it):
+    def _getIterClasses(self, it, clean=False):
         """ Return the .star file with the classes for this iteration.
         If the file doesn't exists, it will be created. 
         """
         data_star = self._getFileName('data', iter=it)
         data_classes = self._getFileName('classes_scipion', iter=it)
         
+        if clean:
+            cleanPath(data_classes)
+            
         if not exists(data_classes):
             createClassesFromImages(self._getInputParticles(), data_star, data_classes, 
                                     self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)

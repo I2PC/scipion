@@ -1,16 +1,15 @@
 
-
-
 import sys
 import os
 import time
+from traceback import format_exception
 import unittest
 from os.path import join, relpath
 from itertools import izip
 
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
-from pyworkflow.utils.utils import getColorStr, envVarOn
+from pyworkflow.utils.utils import envVarOn, redStr, greenStr
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
@@ -194,7 +193,7 @@ class GTestResult(unittest.TestResult):
         sys.stderr.write("\n%s run %d tests (%0.3f secs)\n" %
                          (greenStr("[==========]"), self.numberTests, secs))
         if self.testFailed:
-            print >> sys.stderr, failStr("[  FAILED  ]") + " %d tests" % self.testFailed
+            print >> sys.stderr, redStr("[  FAILED  ]") + " %d tests" % self.testFailed
         print >> sys.stdout, greenStr("[  PASSED  ]") + " %d tests" % (self.numberTests - self.testFailed)
         #self.xml.write('</testsuite>\n')
         #self.xml.close()
@@ -221,7 +220,9 @@ class GTestResult(unittest.TestResult):
         sys.stderr.write("%s %s (%0.3f secs)\n" % (greenStr('[ RUN   OK ]'), self.getTestName(test), secs))
     
     def reportError(self, test, err):
-        sys.stderr.write("%s %s\n" % (failStr('[   FAILED ]'), self.getTestName(test)))
+        sys.stderr.write("%s %s\n" % (redStr('[   FAILED ]'),
+                                      self.getTestName(test)))
+        sys.stderr.write("\n%s" % redStr("".join(format_exception(*err))))
         self.testFailed += 1
                 
     def addError(self, test, err):
@@ -229,11 +230,3 @@ class GTestResult(unittest.TestResult):
         
     def addFailure(self, test, err):
         self.reportError(test, err)
-        
-
-def greenStr(msg):
-    return getColorStr(msg, 'green')
-
-
-def failStr(msg):
-    return getColorStr(msg, 'red')

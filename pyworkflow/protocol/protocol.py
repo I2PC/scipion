@@ -422,6 +422,8 @@ class Protocol(Step):
         which are pointers and have no condition.
         """
         for key, attr in self.getAttributes():
+            if not isinstance(attr, Object):
+                raise Exception('Attribute %s have been overwritten to type %s ' % (key, type(attr)))
             if isinstance(attr, PointerList) and attr.hasValue():
                 for item in attr:
                     yield key, item

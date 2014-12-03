@@ -12,7 +12,8 @@ import argparse
 import unittest
 
 import pyworkflow as pw
-from pyworkflow.tests import failStr, GTestResult
+from pyworkflow.utils.utils import redStr
+from pyworkflow.tests import GTestResult
 
 
 PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
@@ -100,7 +101,7 @@ def printTests(tests, mode='modules'):
 
         # If there is a failure loading the test, show it
         if moduleName.startswith('unittest.loader.ModuleImportFailure'):
-            print failStr(moduleName), "  test:", t.id()
+            print redStr(moduleName), "  test:", t.id()
             continue
 
         if moduleName != lastModule:

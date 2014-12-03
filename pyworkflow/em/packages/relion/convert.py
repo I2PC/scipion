@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import ALIGN_2D, ALIGN_PROJ
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Relion specific files
@@ -203,8 +204,9 @@ def writeSetOfParticles(imgSet, starFile,
     restoreXmippLabels()
 
 
-def createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
+def createClassesFromImages(inputImages, inputStar, 
+                            classesFn, ClassType, classLabel, classFnTemplate, 
+                            iter, preprocessImageRow=None):
     """ From an intermediate dataXXX.star file produced by relion, create
     the set of classes in which those images are classified.
     Params:
@@ -220,8 +222,16 @@ def createClassesFromImages(inputImages, inputStar, classesFn, ClassType,
     addRelionLabels(replace=True, extended=True)
     # We asume here that the volumes (classes3d) are in the same folder than imgsFn
     # rootDir here is defined to be used expanding locals()
-    xmipp3.createClassesFromImages(inputImages, inputStar, classesFn, ClassType, 
-                                   classLabel, classFnTemplate, iter, preprocessImageRow)
+    if ClassType == SetOfClasses2D:
+        alignType = ALIGN_2D
+    elif ClassType == SetOfClasses3D:
+        alignType = ALIGN_PROJ
+    else:
+        raise Exception('Invalid ClassType %s' % ClassType)
+    
+    xmipp3.createClassesFromImages(inputImages, inputStar, 
+                                   classesFn, ClassType, classLabel, classFnTemplate, 
+                                   alignType, iter, preprocessImageRow)
     restoreXmippLabels()    
     
 #def createClassesFromImages(inputImages, inputStar, classesFn, ):

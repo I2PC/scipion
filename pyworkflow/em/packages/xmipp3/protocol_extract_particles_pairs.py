@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 """
 
 
-from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles, REJECT_NONE, REJECT_MAXZSCORE, REJECT_PERCENTAGE
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
 from pyworkflow.em import CoordinatesTiltPair, PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
 from pyworkflow.protocol.params import Positive
@@ -76,25 +76,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       label='Particle box size', validators=[Positive],
                       help='In pixels. The box size is the size of the boxed particles, ' 
                       'actual particles may be smaller than this.')
-        
-        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
-                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO,
-                      label='Automatic particle rejection',
-                      help='How to automatically reject particles. It can be none (no rejection),'
-                      ' maxZscore (reject a particle if its Zscore is larger than this value), '
-                      'Percentage (reject a given percentage in each one of the screening criteria).', 
-                      expertLevel=LEVEL_ADVANCED)
-        
-        form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
-                      condition='rejectionMethod==%d' % REJECT_MAXZSCORE,
-                      label='Maximum Zscore',
-                      help='Maximum Zscore above which particles are rejected.')
-        
-        form.addParam('percentage', IntParam, default=5, expertLevel=LEVEL_ADVANCED, 
-                      condition='rejectionMethod==%d' % REJECT_PERCENTAGE,
-                      label='Percentage (%)',
-                      help='Percentage of particles to reject')
-        
+
         form.addSection(label='Preprocess')
         form.addParam('doRemoveDust', BooleanParam, default=True, important=True,
                       label='Dust removal (Recommended)', 
@@ -337,25 +319,6 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             summary.append("Particles extracted: %d" % (self.outputParticlesTiltPair.getTilted().getSize()))
             
         return summary
-    
-    def _methods(self):
-        methodsMsgs = []
-        if self.methodsInfo.hasValue():
-            methodsMsgs.append(self.methodsInfo.get())
-            
-        methodsMsgs.append("with box size %d, " % self.boxSize.get())
-        
-        methodsMsgs.append("%s automatic rejection method, " % (self.getEnumText('rejectionMethod')))    
-        
-        if self.doInvert.get():
-            methodsMsgs.append("invert contrast performed, ")
-        if self.doNormalize.get():
-            methodsMsgs.append("normalization %s with background radius %s, " % (self.getEnumText('normType'), self.backRadius.get()))
-            
-        if self.doRemoveDust.get():
-            methodsMsgs.append("and dust removal with dust threshold: %s" % (self.thresholdDust.get()))            
-
-        return methodsMsgs
 
     def getCoords(self):
         if self.inputCoordinatesTiltedPairs.hasValue():
@@ -363,4 +326,13 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         else:
             return None
 
+    def getOutput(self):
+        if self.outputParticlesTiltPair.hasValue():
+            return self.outputParticlesTiltPair.getUntilted()
+        else:
+            return None
+
+    def _storeMethodsInfo(self, fnImages):
+        """ Store some information when the protocol finishes. """
+        self.methodsInfo.set("")
     
