@@ -678,9 +678,9 @@ class ProtFrealignBase(EMProtocol):
             self.runJob('', args % paramsRefine, cwd=iterDir)
         else:
             #ugly hack when for reconstruction only, just copy the input files
-            outFile = self._getFileName('output_par', iter=1)
-            inFile  = outFile.replace("articles_iter_001","articles_iter_000")
-            print "Iii am in dir: ", os.getcwd()
+            inFile  = self._getFileName('input_par_block', block= block, iter=iterN, prevIter=prevIter)
+            outFile = self._getFileName('output_par_block', block=block, iter=iterN)
+            print "I am in dir: ", os.getcwd()
             print "copying params files", inFile, outFile
             copyFile(inFile, outFile)
     
