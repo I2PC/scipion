@@ -1066,8 +1066,7 @@ eot
         #instead of the output one since they are empty
         file2 = self._getFileName('output_par', iter=iterN)
         if (self.mode.get()==0):
-            inFile   = self._getFileName('output_par_block', block=numberOfBlocks,
-                                        iter=0)
+            inFile = self._getFileName('input_par_block', block= numberOfBlocks, iter=1, prevIter=0)
             print inFile, file2
             copyFile(inFile,file2)
         else:
