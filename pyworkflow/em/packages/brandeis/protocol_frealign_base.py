@@ -673,12 +673,12 @@ class ProtFrealignBase(EMProtocol):
         paramsRefine = dict(paramsDic.items() + paramDic.items() + param.items())
         args = self._prepareCommand()
         
-        if param['mode'] != 0:
+        if self.mode.get() != 0:
             # frealign program is already in the args script, that's why runJob('')
             self.runJob('', args % paramsRefine, cwd=iterDir)
         else:
             #TODO: ROB I do not think this line copy all the needed files
-            print "copying params files"
+            print "copying params files", param['inputParFn'], param['outputParFn']
             copyFile(param['inputParFn'], param['outputParFn'])
     
     def reconstructVolumeStep(self, iterN, paramsDic):
