@@ -361,7 +361,7 @@ Examples:
         
     def _createVolumesMd(self):
         """ Write a metadata with all volumes selected for visualization. """
-        import xmipp
+#         import xmipp
         prefixes = self._getPrefixes()
         
         mdPath = self.protocol._getExtraPath('relion_viewer_volumes.xmd')
@@ -477,6 +477,7 @@ Examples:
         
     
     def _createAngDist2D(self, it):
+        addRelionLabels(replace=True)
         # Common variables to use
         prefixes = self._getPrefixes()
         nrefs = len(self._refsList)
@@ -488,10 +489,11 @@ Examples:
         for ref3d in self._refsList:
             for prefix in prefixes:
                 md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
-                plot_title = '%sclass %d' % (prefix, ref3d)
+                plot_title = '%s class %d' % (prefix, ref3d)
                 xplotter.plotMdAngularDistribution(plot_title, md)
         
         return xplotter
+                
                 
 #===============================================================================
 # plotSSNR              

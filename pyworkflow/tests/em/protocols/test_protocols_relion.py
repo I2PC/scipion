@@ -120,6 +120,34 @@ class TestRelionClassify3D(TestRelionBase):
                              "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
 
 
+# class TestRelionRefine(TestRelionBase):
+#     @classmethod
+#     def setUpClass(cls):
+#         setupTestProject(cls)
+#         TestRelionBase.setData('mda')
+#         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+# #         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
+#         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
+#      
+#     def testProtRelionRefine(self):
+#         relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
+#         relionNormalize.inputParticles.set(self.protImport.outputParticles)
+#         relionNormalize.doNormalize.set(True)
+#         self.launchProtocol(relionNormalize)
+#  
+#         print "Run ProtRelionRefine"
+#         relion3DClass = self.newProtocol(ProtRelionRefine3D, 
+#                                          doCTF=False, runMode=1,
+#                                          extraParams='--low_resol_join_halves 40 --memory_per_thread 1',
+#                                          numberOfMpi=3, numberOfThreads=2)
+#         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
+#         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
+#         self.launchProtocol(relion3DClass)
+#          
+#         self.assertIsNotNone(getattr(relion3DClass, 'outputClasses', None), 
+#                              "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
+
+
 class TestRelionImport(BaseTest):
     
     @classmethod
