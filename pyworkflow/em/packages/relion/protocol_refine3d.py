@@ -56,8 +56,6 @@ leads to objective and high-quality results.
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.outputClasses = 'classes.xmd'
-        self.outputVols = ''
         self.numberOfClasses.set(1) # For refinement we only need just one "class"
     
     #--------------------------- INSERT steps functions --------------------------------------------  

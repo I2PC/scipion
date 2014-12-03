@@ -1194,8 +1194,9 @@ def fillClasses(clsSet, updateClassCallback=None):
     
     
 #FIXME: USE THIS FUNCTION AS THE WAY TO CREATE CLASSES, REMOVE THE NEXT ONE
-def createClassesFromImages2(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, getClassFn=None, preprocessImageRow=None):
+def createClassesFromImages2(inputImages, inputMd, 
+                             classesFn, ClassType, classLabel, 
+                             alignType, getClassFn=None, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1231,6 +1232,7 @@ def createClassesFromImages2(inputImages, inputMd, classesFn, ClassType,
             
             clsDict[ref] = classItem
             classItem.copyInfo(inputImages)
+            classItem.setAlignment(alignType)
             classItem.setAcquisition(inputImages.getAcquisition())
             clsSet.append(classItem)
         else:
@@ -1248,8 +1250,9 @@ def createClassesFromImages2(inputImages, inputMd, classesFn, ClassType,
     return clsSet
     
 #FIXME: remove this function and use previous one
-def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
+def createClassesFromImages(inputImages, inputMd, 
+                            classesFn, ClassType, classLabel, classFnTemplate, 
+                            alignType, iter, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1273,7 +1276,8 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         args = {'rootDir': tmpDir, 'iter': iter, 'ref': ref}
         return classFnTemplate % args
     
-    createClassesFromImages2(inputImages, inputMd, classesFn, ClassType, classLabel, 
-                             getClassFn=getClassFn, 
+    createClassesFromImages2(inputImages, inputMd, 
+                             classesFn, ClassType, classLabel, 
+                             alignType, getClassFn=getClassFn, 
                              preprocessImageRow=preprocessImageRow)
     

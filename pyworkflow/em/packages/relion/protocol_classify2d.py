@@ -49,8 +49,6 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.outputClasses = 'classes.xmd'
-        self.outputVols = ''
         
 
     #--------------------------- INSERT steps functions --------------------------------------------  

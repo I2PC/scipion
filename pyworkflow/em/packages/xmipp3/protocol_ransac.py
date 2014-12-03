@@ -414,7 +414,7 @@ class XmippProtRansac(ProtInitialVolume):
 
 
     def projectInitialVolume(self):
-        self.volFn = createXmippInputVolumes(self, self.initialVolume.get())
+        self.volFn = createXmippInputVolumes(self, self.initialVolume.get()) # This function is deprecated
         
         fnOutputInitVolume=self._getTmpPath("initialVolume.vol")
         self.runJob('xmipp_image_convert',"-i %s -o %s"%(removeExt(self.volFn),fnOutputInitVolume))

@@ -78,8 +78,6 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.outputClasses = 'classes_ref3D.xmd'
-        self.outputVols = 'volumes.xmd'
         self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
