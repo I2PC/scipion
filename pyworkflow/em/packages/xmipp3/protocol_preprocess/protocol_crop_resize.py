@@ -163,10 +163,9 @@ class XmippResizeHelper():
             else:
                 args = protocol._args + " --dim %(size)d"
         elif protocol.resizeOption == cls.RESIZE_FACTOR:
-            factor = protocol.resizeFactor.get()                                               
+            factor = protocol.resizeFactor.get()
             newSamplingRate = samplingRate / factor
             args = protocol._args + " --factor %(factor)f"
-        
         elif protocol.resizeOption == cls.RESIZE_PYRAMID:
             level = protocol.resizeLevel.get()
             factor = 2**level
