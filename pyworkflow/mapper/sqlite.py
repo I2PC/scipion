@@ -661,7 +661,6 @@ class SqliteFlatMapper(Mapper):
         """
         return [self.selectById(rowId['id']) for rowId in objIds]
     
-
     def hasProperty(self, key):
         return self.db.hasProperty(key)
         

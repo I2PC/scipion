@@ -45,13 +45,14 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_EMX    = 1
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_RELION = 3
+    IMPORT_FROM_SCIPION = 4
 
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return ['emx', 'xmipp3', 'relion']
+        return ['emx', 'xmipp3', 'relion', 'scipion']
     
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3 and relion formats. """
@@ -83,6 +84,11 @@ class ProtImportParticles(ProtImportImages):
                            "different metadatas and id's are not  \n"
                            "longer unique.")
         
+        form.addParam('sqliteFile', FileParam,
+              condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+              label='Particles sqlite file',
+              help="Select the particles sqlite file.\n")
+        
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRate', FloatParam,
@@ -113,6 +119,10 @@ class ProtImportParticles(ProtImportImages):
             from pyworkflow.em.packages.relion.dataimport import RelionImport
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
+        elif self.importFrom == self.IMPORT_FROM_SCIPION:
+            from dataimport import ScipionImport
+            self.importFilePath = self.sqliteFile.get('').strip()
+            return ScipionImport(self, self.importFilePath)        
         else:
             self.importFilePath = ''
             return None 

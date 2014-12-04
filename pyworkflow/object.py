@@ -1015,6 +1015,18 @@ class Set(OrderedObject):
         return all(x.getObjId() == y.getObjId() and
                    x.equalAttributes(y, ignore=ignore, verbose=verbose)
                    for x, y in izip(self, other))
+        
+    def hasProperty(self, key):
+        return self._mapper.hasProperty(key)
+        
+    def getProperty(self, key, defaultValue=None):
+        return self._mapper.getProperty(key, defaultValue)
+    
+    def loadProperty(self, propertyName, defaultValue=None):
+        """ Get the value of a property and
+        set its value as an object attribute.
+        """
+        self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
 
 
 def ObjectWrap(value):

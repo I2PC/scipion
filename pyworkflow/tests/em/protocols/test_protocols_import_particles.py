@@ -38,6 +38,14 @@ class TestImportBase(BaseTest):
         cls.dsMda = DataSet.getDataSet('mda')
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         
+    @classmethod
+    def checkOutput(cls, prot, outputName, condition):
+        """ Check that an ouput was generated and
+        the condition is valid. 
+        """
+        output = getattr(prot, outputName)
+        eval(condition)
+        
     
 class TestImportParticles(TestImportBase):
 
@@ -122,7 +130,7 @@ class TestImportParticles(TestImportBase):
                                  samplingRate=7.08
                                  )
         self.launchProtocol(prot1)
- 
+        
     def test_fromRelionClassify2D(self):
         """ Import an EMX file with Particles and defocus
         """
@@ -146,3 +154,22 @@ class TestImportParticles(TestImportBase):
                                  samplingRate=7.08
                                  )
         self.launchProtocol(prot1)         
+        
+    def test_fromScipionReconstruct(self):
+        """ Import the particles with 3D projection directions for reconstruct
+        a volume. Actually this test use a similar .sqlite file than
+        the output of
+        test_fromRelionRefine3D
+        """
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from scipion (to-reconstruct)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=self.dsRelion.getFile('import/case2/particles.sqlite'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)
+        
+        o = prot1.outputParticles
+        self.assertTrue(o.hasAlignmentProj())
+        self.assertTrue(o.hasCTF())
