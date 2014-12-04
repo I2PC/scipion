@@ -10,26 +10,91 @@
 	function launchHelp(){
 		$("#dialog").dialog({resizable: false,
 							 position:['right','50%'],
+							 height: '400',
+							 width: '500'
 							 });
 	}
 </script>
 
-<div id="dialog" title="Let's start!">
-  <p>
-  	<strong>Step 1:</strong> 
-  	Upload your Averages clicking in the box named: "Import Averages"
-  	<br />
-  	<img src="{{1st}}"/>
-  </p> 
-  <br />
-  <p>
-  	<strong>Step 2:</strong> 
-  	Select a protocol, "Ransac" or "Eman Initial Volume" to use your averages. 
-  	The parameters can be customized to adjust the results. Press "Execute"!
-  </p>
-  <br />
-  <p>
-  	<strong>Step 3:</strong> 
-  	You can visualize your results in the bottom of the page, even to be downloaded!
-  </p> 
+<div id="dialog" title="Let's start!" style="font-size:0.9em;">
+  <div id="contentDialog">
+	  <div id="step1">
+		  <p>
+		  	<strong>Step 1:</strong> 
+		  	Upload your files to the web service using this button and following the instructions.
+		  </p> 
+		  <br />
+		  <p style="text-align:center;">
+		  	<a href='javascript:popup("/upload/")' class="headerLink">
+				<input type="button" class='btn buttonRed' value="Upload Files"/>
+			</a>
+		  </p> 
+	  </div>
+	  
+	  <br />
+	  
+	  <div id="step2">
+		  <p>
+		  	<strong>Step 2:</strong> 
+	  		Import your Averages by clicking in the graph at left on the box "Import Averages" and selecting the uploaded files.
+		  </p> 
+		  <br />
+		  <p style="text-align:center;">
+		  	<img src="{{importAverages}}"/>
+		  </p> 
+	  </div>
+	  
+	  <br />
+	  
+	    <div id="step3">
+		  <p>
+		  	<strong>Step 3:</strong> 
+		  	Select a protocol, "Ransac" or "Eman Initial Volume", to use with your averages.
+	  	  </p> 
+	  	  <br />
+		  <p style="text-align:center;">
+		  	<img src="{{useProtocols}}"/>
+		  </p> 
+		  <br />
+		  <p>
+		  	The parameters can be customized to get the best results. If you need more options, just change the "Expert Level" to show the advanced options.
+	  	  </p> 
+	  	  <br />
+	  	  <p style="text-align:center;">
+		  	<img src="{{protForm}}"/>
+		  </p> 
+		  <br />
+		  <p>
+		  	Finally press "Execute"!
+	  	  </p> 
+	  </div>
+	  
+	  <br />
+	  
+	  <div id="step4">
+		  <p>
+		  	<strong>Step 4:</strong> 
+	  		When the protocol is finished you can see a summary about the protocol at the bottom.
+	  	  </p> 
+	  	  <br />
+		  <p style="text-align:center;">
+		  	<img src="{{summary}}"/>
+		  </p> 
+		  <br />
+		  <p>
+	  		There you can visualize the objects by clicking over the names.
+	  	  </p> 
+	  	  <br />
+	  	  <p style="text-align:center;">
+		  	<img src="{{showj}}"/>
+		  </p> 
+		  <br />
+	  </div>
+	  	  <div id="step5">
+			  <p>
+			  	<strong>Step 5:</strong> 
+		  		You can download your results using the button <img src="{{download}}" style="height:1.5em;width:auto;"/> at the bottom of the page after mark or select an execution.
+		  	  </p> 
+	     </div>
+	</div>
 </div>

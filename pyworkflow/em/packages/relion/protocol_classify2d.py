@@ -59,7 +59,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
 
     #--------------------------- STEPS functions --------------------------------------------       
     def createOutputStep(self):
-        from convert import readSetOfClasses2D
+        from pyworkflow.em.packages.relion.convert import readSetOfClasses2D
         classesSqlite = self._getIterClasses(self._lastIter())
         imgSet = self.inputParticles.get()
         classes = self._createSetOfClasses2D(imgSet)

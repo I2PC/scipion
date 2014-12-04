@@ -264,7 +264,14 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
                     summary.append("The particles were windowed.")
                 summary.append("New size: *%s* px" % size)
         return summary
-    
+
+    def _methods(self):
+        # TODO: this is just a placeholder. Fill it properly dude.
+        methods = ["We took %d particles and " % len(self.inputParticles.get())]
+        if self.doResize:
+            methods += ["resized them to %d px" % self.outputParticles.getDim()[0]]
+        return methods
+
     def _validate(self):
         return XmippResizeHelper._validate(self)
     

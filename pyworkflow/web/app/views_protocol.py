@@ -37,7 +37,7 @@ def getPointerHtml(protVar):
         #if protVar.get() is None:
         #    raise Exception("protVar.hasValue...and .get() is None")
         #TODO: CHECK THIS LATER to display better when _extended attribute
-        return protVar.getObjValue().getNameId(), protVar.getObjValue().getObjId()
+        return protVar.getObjValue().getNameId(), '%s::%s' % (protVar.getObjValue().getObjId(), protVar._extended.get())
     return '',''
 
         
@@ -268,19 +268,28 @@ def updateProtocolParams(request, protocol, project):
     protocol.setObjLabel(request.POST.get('runName'))
     protocol.setObjComment(request.POST.get('comment'))
 
-def getPointerValue(project, attr, value, paramName):
-    if len(value.strip()) > 0:
-      
-        obj = project.getProtocol(value)  # Get the object from its id
+
+def setPointerValue(project, attr, htmlValue, paramName, pointer):
+    """ Get the html stored value of the pointer in the form of  objId:extended
+    and set the attributes of poiter
+    """
+    
+    if len(htmlValue.strip()) > 0:
+        if '::' in htmlValue:
+            value, extended = htmlValue.split('::')
+        else:
+            value, extended = htmlValue, None
+        obj = project.getObject(int(value))  # Get the object from its id
         id1 = attr.getObjId()
         id2 = obj.getObjId()
         
         if id1 == id2 :
             raise Exception("Param: %s is autoreferencing with id: %d" % (paramName, value))
+        pointer.set(obj)
+        pointer._extended.set(extended)
     else:
-        obj = None
-        
-    return obj
+        pointer.set(None)
+ 
  
 def updateParam(request, project, protocol, paramName):
     from pyworkflow.em import Pointer, PointerList
@@ -298,17 +307,17 @@ def updateParam(request, project, protocol, paramName):
     if isinstance(attr, PointerList):
         attr.clear()
         valueList = request.POST.getlist(paramName)
-        for v in valueList:
-            attr.append(Pointer(value=getPointerValue(project, attr, v, paramName)))
-        value = None
-            
+        for htmlValue in valueList:
+            p = Pointer()
+            setPointerValue(project, attr, htmlValue, paramName, p)
+            attr.append(p)
     else:
-        value = request.POST.get(paramName)
+        htmlValue = request.POST.get(paramName)
         if isinstance(attr, Pointer):
-            value = getPointerValue(project, attr, value, paramName)
+            setPointerValue(project, attr, htmlValue, paramName, attr)
+        else: 
+            attr.set(htmlValue) # set the value for normal attribues
             
-#    print "setting attr %s with value:" % paramName, value 
-    attr.set(value)
         
 def save_protocol(request):
     project, protocol = loadProtocolProject(request)

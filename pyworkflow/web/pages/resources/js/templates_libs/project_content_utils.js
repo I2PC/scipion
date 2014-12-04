@@ -1040,7 +1040,7 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
-						updateTabs(id)
+//						updateTabs(id)
 					}
 				}
 			},

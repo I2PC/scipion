@@ -285,7 +285,12 @@ def project_content(request):
     return render_to_response('project_content/project_content.html', context)
 
 def service_context(context):
-    context.update({'1st': getResourceIcon('1st'),
+    context.update({'importAverages': getResourceIcon('importAverages'),
+                    'useProtocols': getResourceIcon('useProtocols'),
+                    'protForm': getResourceIcon('protForm'),
+                    'summary': getResourceIcon('summary'),
+                    'showj': getResourceIcon('showj'),
+                    'download': getResourceIcon('download'),
                     })
     return context
 
@@ -309,7 +314,7 @@ def protocol_info(request):
             input_obj = [{'name':name, 
                           'nameId': attr.getNameId(), 
                           'id': attr.getObjId(), 
-                          'info': str(attr)} 
+                          'info': str(attr.get()) if attr.isPointer() else str(attr)} 
                          for name, attr in protocol.iterInputAttributes()]
             
             output_obj = [{'name':name, 
@@ -367,18 +372,19 @@ def service_projects(request):
 
 def writeCustomMenu(customMenu):
     if not exists(customMenu):
-        f = open(customMenu, 'w+')
+        f = open(customMenu, 'w')
         f.write('''
-            [PROTOCOLS]
-            
-            Initial_Volume = [
-                {"tag": "section", "text": "1. Upload and Import", "children": [
-                    {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
-                    {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
-                {"tag": "section", "text": "2. Create a 3D volume", "children": [
-                    {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
-                    {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
-                {"tag": "section", "text": "3. Download good volumes."}]
+[PROTOCOLS]
+
+Initial_Volume = [
+    {"tag": "section", "text": "1. Upload and Import", "children": [
+        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
+        {"tag": "protocol", "value": "ProtImportAverages",     "text": "Import averages", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "2. Create a 3D volume", "children": [
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+    {"tag": "section", "text": "3. Download good volumes."}]
+                
             ''')
         f.close()
         
