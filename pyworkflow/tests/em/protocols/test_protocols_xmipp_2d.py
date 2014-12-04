@@ -388,7 +388,7 @@ class TestXmippPreprocessParticles(TestXmippBase):
 
 
 class TestXmippCropResizeParticles(TestXmippBase):
-    """This class check if the protocol to crop/resize particles in Xmipp works properly."""
+    """Check protocol crop/resize particles from Xmipp."""
     @classmethod
     def setUpClass(cls):
         print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
@@ -403,9 +403,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
         prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
         prot.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(prot)
-        self.assertTrue(hasattr(prot, "outputParticles") and
-                        prot.outputParticles is not None,
-                        "There was a problem with resize/crop the particles")
+        self.assertTrue(
+            hasattr(prot, "outputParticles") and prot.outputParticles is not None,
+            "There was a problem applying resize/crop to the particles")
         self.assertAlmostEqual(prot.outputParticles.getAcquisition().getVoltage(),
                                self.acquisition.getVoltage())
         return prot.outputParticles  # for more tests
