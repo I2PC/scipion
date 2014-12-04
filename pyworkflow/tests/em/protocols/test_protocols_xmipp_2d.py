@@ -391,6 +391,7 @@ class TestXmippCropResizeParticles(TestXmippBase):
     """This class check if the protocol to crop/resize particles in Xmipp works properly."""
     @classmethod
     def setUpClass(cls):
+        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
@@ -401,27 +402,29 @@ class TestXmippCropResizeParticles(TestXmippBase):
         self.assertAlmostEqual(acquisition.getVoltage(), self.acquisition.getVoltage())
     
     def test_cropResizePart(self):
-        print "Run crop/resize particles"
+        print "\n", greenStr(" Crop/Resize Particles ".center(75, '-'))
         oldSize = 500.
         newSize = 128
         protCropResize = self.newProtocol(XmippProtCropResizeParticles, 
-                                         doResize=True, resizeOption=1, resizeDim=newSize, 
-                                         doWindow=True, windowOperation=0)
-        input = self.protImport.outputParticles
-        protCropResize.inputParticles.set(input)
+                                          doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS, resizeDim=newSize,
+                                          doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
+        inP = self.protImport.outputParticles
+        protCropResize.inputParticles.set(inP)
         self.launchProtocol(protCropResize)
-        
-        output = protCropResize.outputParticles
-        self.assertIsNotNone(output, "There was a problem with resize/crop the particles")
-        self.validateAcquisition(output)
-        self.assertEquals(newSize, output.getDimensions()[0])#, "Output particles dimension should be equal to %d" % newSize)
-        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*(oldSize/newSize))
+        self.assertTrue(hasattr(protCropResize, "outputParticles") and
+                        protCropResize.outputParticles is not None,
+                        "There was a problem with resize/crop the particles")
+        outP = protCropResize.outputParticles
+        self.validateAcquisition(outP)
+        self.assertEqual(newSize, outP.getDimensions()[0],
+                         "Output particles dimension should be equal to %d" % newSize)
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * (oldSize / newSize))
     
     def test_cropResizePart2(self):
         print "Run crop/resize particles v2"
         protCropResize = self.newProtocol(XmippProtCropResizeParticles,  
-                                         doResize=True, resizeOption=2, resizeLevel=0.5, 
-                                         doWindow=True, windowOperation=1, windowSize=500)
+                                         doResize=True, resizeOption=xrh.RESIZE_FACTOR, resizeLevel=0.5,
+                                         doWindow=True, windowOperation=xrh.WINDOW_OP_WINDOW, windowSize=500)
         input = self.protImport.outputParticles
         protCropResize.inputParticles.set(input)
         self.launchProtocol(protCropResize)

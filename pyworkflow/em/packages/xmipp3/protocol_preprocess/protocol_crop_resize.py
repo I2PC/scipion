@@ -42,6 +42,9 @@ class XmippResizeHelper():
     RESIZE_FACTOR = 2
     RESIZE_PYRAMID = 3
 
+    WINDOW_OP_CROP = 0
+    WINDOW_OP_WINDOW = 1
+
     #--------------------------- DEFINE param functions --------------------------------------------
     @classmethod
     def _defineProcessParams(cls, protocol, form):
@@ -86,20 +89,20 @@ class XmippResizeHelper():
         form.addParam('windowOperation', EnumParam,
                       choices=['crop', 'window'],
                       condition='doWindow',
-                      default=1,
+                      default=cls.WINDOW_OP_WINDOW,
                       label="Window operation", display=EnumParam.DISPLAY_COMBO,
                       help='Select how to change the size of the particles.\n'
                       '_cls.RESIZE_: provide the new size (in pixels) for your particles.\n'
                       '_crop_: choose how many pixels to crop from each border.\n')
         form.addParam('cropSize', IntParam, default=0,
-                      condition='doWindow and windowOperation == 0',
+                      condition='doWindow and windowOperation == %d' % cls.WINDOW_OP_CROP,
                       label='Crop size (px)',
                       help='Amount of pixels cropped from each border.\n'
                            'e.g: if you set 10 pixels, the dimensions of the\n'
                            'object (SetOfParticles, Volume or SetOfVolumes) will be\n'
                            'reduced in 20 pixels (2 borders * 10 pixels)')
         form.addParam('windowSize', IntParam, default=0,
-                      condition='doWindow and windowOperation == 1',
+                      condition='doWindow and windowOperation == %d' % cls.WINDOW_OP_WINDOW,
                       label='Window size (px)',
                       help='Size in pixels of the output object. It will be '
                            'expanded or cutted in all directions such that the '
@@ -266,11 +269,19 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
-        # TODO: this is just a placeholder. Fill it properly dude.
-        methods = ["We took %d particles and " % len(self.inputParticles.get())]
+        methods = ["We took %d particles" % len(self.inputParticles.get())]
+        if self.doWindow.get():
+            if self.getEnumText('windowOperation') == "crop":
+                methods += ["cropped them"]
+            else:
+                methods += ["windowed them"]
         if self.doResize:
-            methods += ["resized them to %d px" % self.outputParticles.getDim()[0]]
-        return methods
+            methods += ["resized them to %d px%s" %
+                        (self.outputParticles.getDim()[0],
+                         " in Fourier space" if self.doFourier else "")]
+        if not self.doResize and not self.doWindow.get():
+            methods += ["did nothing to them"]
+        return ["%s and %s." % (", ".join(methods[:-1]), methods[-1])]
 
     def _validate(self):
         return XmippResizeHelper._validate(self)

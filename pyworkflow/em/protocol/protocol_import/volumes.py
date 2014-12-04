@@ -78,16 +78,17 @@ class ProtImportVolumes(ProtImportImages):
         for fileName, fileId in self.iterFiles():
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
-            _, _, _, n = imgh.getDimensions(dst)
-            if n > 1:
+            x, y, z, n = imgh.getDimensions(dst)
+            
+            if (n == x and n == y and z == 1) or n == 1:
+                vol.setObjId(fileId)
+                vol.setLocation(dst)
+                volSet.append(vol)
+            else:
                 for index in range(1, n+1):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
                     volSet.append(vol)
-            else:
-                vol.setObjId(fileId)
-                vol.setLocation(dst)
-                volSet.append(vol)
         
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)

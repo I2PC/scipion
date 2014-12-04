@@ -422,23 +422,6 @@ class TestXmippProtHelicalParameters(TestXmippBase):
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
 
 
-class TestXmippSimAnnealing(TestXmippBase):
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
-
-    def test_simAnnealing(self):
-        print "Run Simulating annealing"
-        protSimAnneal = self.newProtocol(XmippProtInitVolSimAnneal,
-                                         symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
-        protSimAnneal.inputClasses.set(self.Class2D.outputClasses)
-        self.launchProtocol(protSimAnneal)
-        self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
-
-
 class TestXmippRansacMda(TestXmippBase):
     @classmethod
     def setUpClass(cls):
