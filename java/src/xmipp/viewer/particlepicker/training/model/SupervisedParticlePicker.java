@@ -1272,31 +1272,31 @@ public class SupervisedParticlePicker extends ParticlePicker
                             int templateindex = 0;
                             for (SupervisedPickerMicrograph m : getMicrographs())
                             {
-                                    if (count >= maxcount)
-                                            break;
                                     particles = m.getManualParticles();
                                     for (int i = 0; i < particles.size(); i++)
                                     {
                                             if(isCancelled())
                                                 return null;
-                                            particle = particles.get(i);
-                                            if(resize)
-                                                particle.resetImage();
-                                            igp = particle.getImageGeneric();
-                                            System.out.printf("%s templates %s particle %s\n", count, templates.getXDim(), igp.getXDim());
-                                            if (templateindex < getTemplatesNumber())
+                                            if(count < maxcount)
                                             {
-                                                    matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-                                                    templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-                                                    templateindex ++;
+                                                particle = particles.get(i);
+                                                if(resize)
+                                                    particle.resetImage();
+                                                igp = particle.getImageGeneric();
+                                                if (templateindex < getTemplatesNumber())
+                                                {
+                                                        matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                                        templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                                        templateindex ++;
+                                                }
+                                                else
+                                                {
+                                                        align = templates.alignImage(igp);
+                                                        particle.setLastalign(align);
+                                                        templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+                                                }
+                                                count++;
                                             }
-                                            else
-                                            {
-                                                    align = templates.alignImage(igp);
-                                                    particle.setLastalign(align);
-                                                    templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-                                            }
-                                            count++;
 
                                     }
                             }

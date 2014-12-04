@@ -50,7 +50,7 @@ public class ParticlesDialog extends Dialog
 	{
 
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
-		side = frame.getSide(frame.getParticlePicker().getSize());
+		side = frame.getSide();
 
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
@@ -97,6 +97,7 @@ public class ParticlesDialog extends Dialog
 					break;
 				p = particles.get(index);
 				c = p.getParticleCanvas(frame);
+                                
 				particlespn.add(c, XmippWindowUtil.getConstraints(constraints, j, i, 1));
 			}
                 // particlespn.revalidate();

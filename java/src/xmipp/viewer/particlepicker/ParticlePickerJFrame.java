@@ -520,7 +520,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().display();
 	}
 
-	public int getSide(int size)
+	public int getSide()
 	{
 		return 100;
 	}

@@ -26,7 +26,7 @@ public class TiltPairParticlesDialog extends ParticlesDialog
 	{
 		
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
-		side = frame.getSide(frame.getParticlePicker().getSize());
+		side = frame.getSide();
 
 		if (side == 0)
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg("side"));
