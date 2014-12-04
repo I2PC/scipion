@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 """
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
 """
@@ -169,5 +170,20 @@ class ProtImportAverages(ProtImportParticles):
     """Protocol to import a set of averages to the project"""
     _label = 'import averages'
     _outputClassName = 'SetOfAverages'    
-    
 
+    def _getImportChoices(self):
+        """ Return a list of possible choices
+        from which the import can be done.
+        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        """
+        return []
+            
+    def _defineAcquisitionParams(self, form):
+        form.addParam('samplingRate', FloatParam, default=1.,
+                   label=Message.LABEL_SAMP_RATE)
+        group = ProtImportImages._defineAcquisitionParams(self, form)
+        group.expertLevel.set(LEVEL_ADVANCED)
+        
+        # Change some params properties
+        patternParam = form.getParam('filesPattern')
+        patternParam.condition.set('0')
