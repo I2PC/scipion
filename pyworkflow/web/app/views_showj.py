@@ -508,7 +508,7 @@ def create_context_volume(request, inputParams, volPath, param_stats):
         volPath = inputParams['volOld']
         volPath = request.session['projectPath'] + "/" + volPath
            
-        context.update(create_context_chimera(volPath))
+        context.update(create_context_chimera(volPath, threshold))
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
         context.update(create_context_jsmol(request, volPath))
@@ -556,6 +556,8 @@ def create_context_chimera(volPath, threshold=None):
     # Control the threshold value
     if threshold == None:
         threshold = 0.1
+    else:
+        threshold = round(threshold, 3)
     
     chimeraHtml = chimera_headless(volPath, threshold)
     
