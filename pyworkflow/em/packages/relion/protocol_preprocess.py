@@ -149,11 +149,13 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
             params += ' --window %d' % self.windowSize.get()
 
         self.runJob(self._getProgram('relion_preprocess'), params, cwd=self._getPath())
-                             
+        
         outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
+        partFn = self._getPath('particles.mrcs')
+        if outputMrcs != partFn:
         # Override the initial converted mrcs particles stack
         # It also make easy to use the same .star file as output
-        moveFile(outputMrcs, self._getPath('particles.mrcs'))
+            moveFile(outputMrcs, partFn)
     
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
