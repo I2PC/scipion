@@ -263,7 +263,7 @@ env.AddPackage('pytom',
                default=False)
 
 env.AddPackage('relion',
-               tar='relion-1.2.tgz',
+               tar='relion-1.3.tgz',
                extraActions=[
                    ('lib', 'ln -fs lib64 lib'),
                    ('relion_build.log', './INSTALL.sh -j %s'
