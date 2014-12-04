@@ -621,7 +621,8 @@ def chimera_headless(volPath, threshold):
     return chimeraHtml
     
 def calculateThreshold(params):
-    threshold = (params[2] + params[3])/2 if params != None else 1
+    threshold = params[1] * 2.5
+#     threshold = (params[2] + params[3])/2 if params != None else 1
     
     return threshold
 
