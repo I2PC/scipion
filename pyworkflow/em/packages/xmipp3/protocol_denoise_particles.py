@@ -33,27 +33,27 @@ from pyworkflow.protocol.params import (EnumParam, IntParam, Positive, Range,
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.utils.path import copyFile, replaceBaseExt
 
-from convert import writeSetOfParticles, readSetOfParticles
+from convert import writeSetOfParticles, readSetOfParticles, writeSetOfClasses2D
 
 
 
         
         
 class XmippProtDenoiseParticles(ProtProcessParticles):
-    """ Remove particles noise using different Xmipp programs """
+    """ Remove particles noise by filtering them. This filtering process is based on a projection over a basis created from some averages (extracted from classes). This filtering is not intended for processing particles. The huge filtering they will be passed through is known to remove part of the signal 
+    with the noise. However this is a good method for clearly see which particle are we going to process before it's done. """
     _label = 'denoise particles'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         # First we customize the inputParticles param to fit our needs in this protocol
-        form.getParam('inputParticles').pointerCondition = 'hasAlignment'
-        form.getParam('inputParticles').help = String('Points to your input images. It is'' important that the images have alignment information with '
-                                                                    ' important that the images have alignment information with '
-                                                                    'respect to the chosen set of classes. This is the standard situation '
-                                                                    'after CL2D or ML2D.')
-        form.addParam('inputClasses', PointerParam, label='Input classes', important=True,
+        form.getParam('inputParticles').pointerCondition = String('hasAlignment')
+        form.getParam('inputParticles').help = String('Input images you want to filter. It is important that the images have alignment information with '
+                                                      'respect to the chosen set of classes. This is the standard situation '
+                                                      'after CL2D or ML2D.')
+        form.addParam('inputClasses', PointerParam, label='Input Classes', important=True,
                       pointerClass='SetOfClasses', 
-                      help='Select the input classes for the basis construction.')
+                      help='Select the input classes for the basis construction against images will be projected to.')
         
         form.addSection(label='Basis construction')
         form.addParam('maxClasses', IntParam, default=128,
@@ -86,17 +86,25 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
 
     #--------------------------- STEPS functions --------------------------------------------
     def denoiseImages(self, inputId, inputClassesId):
+        # We start preparing writing those elements we're using as input to keep them untouched
         imagesMd = self._getPath('images.xmd')
         writeSetOfParticles(self.inputParticles.get(), imagesMd)
-        args = '-i Particles@%s --oroot %s --eigenvectors %d --maxImages %d' % (imagesMd)
+        classesMd = self._getPath('classes.xmd')
+        writeSetOfClasses2D(self.inputClasses.get(), classesMd)
 
+        fnRoot = self._getExtraPath('pca')
+        fnRootDenoised = self._getExtraPath('imagesDenoised')
+
+        args = '-i Particles@%s --oroot %s --eigenvectors %d --maxImages %d' % (imagesMd, fnRoot, self.maxPCABases.get(), self.maxClasses.get())
         self.runJob("xmipp_image_rotational_pca", args)
-        
-        args="-i %s -o %s.stk --save_metadata_stack %s.xmd --basis %s.stk %d"
-        
+
+        N=min(self.maxPCABases.get(), self.PCABases2Project.get())
+        args='-i %s -o %s.stk --save_metadata_stack %s.xmd --basis %s.stk %d'\
+             % (imagesMd, fnRootDenoised, fnRootDenoised, fnRoot, N)
+
         self.runJob("xmipp_transform_filter", args)
 
-        self.outputMd = String(imagesMd)
+        self.outputMd = String('%s.stk' % fnRootDenoised)
 
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
@@ -112,7 +120,10 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            summary.append("Fill in with summary information")
+            summary.append('PCA basis created by using %d classes' % len(self.inputClasses.get()))
+            summary.append('Max. number of classes defined for PCA basis creation: %d' % self.maxClasses.get())
+            summary.append('Max. number of PCA bases defined for PCA basis creation: %d' % self.maxPCABases.get())
+            summary.append('PCA basis on which to project for denoising: %d' % self.PCABases2Project.get())
         return summary
     
     def _validate(self):
