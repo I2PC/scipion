@@ -198,7 +198,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		if (num <= 0)
 			throw new IllegalArgumentException(
 					XmippMessage.getIllegalValueMsgWithInfo("Templates Number", Integer.valueOf(num), "Must have at least one template"));
-		updateTemplatesStack(num);
+		updateTemplatesStack(num, false);
                 saveConfig();
 	}
 
@@ -233,7 +233,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		for (SupervisedPickerMicrograph m : micrographs)
 		{
 			for (ManualParticle p : m.getManualParticles())
-				p.resetImagePlus();
+				p.resetImage();
 
 		}
 	}
@@ -242,6 +242,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	public synchronized void updateTemplates(ImageGeneric templates, int templateindex)
 	{
+                
 		try
 		{
 			this.templates = templates;
@@ -647,7 +648,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		}
 
 		saveAllData();
-		updateTemplatesStack(getTemplatesNumber());
+		updateTemplatesStack(false);
                 
 	}
 
@@ -1214,17 +1215,17 @@ public class SupervisedParticlePicker extends ParticlePicker
     }
     
      
-    public void updateTemplatesStack()
+    public void updateTemplatesStack(boolean resize)
     {
-        updateTemplatesStack(getTemplatesNumber());
+        updateTemplatesStack(getTemplatesNumber(), resize);
     }
      
-    public void updateTemplatesStack(int num)
+    public void updateTemplatesStack(int num, boolean resize)
     {
         if(mode != Mode.Manual)
             return;
         initTemplates(num);//to avoid any error with templates while updating
-        new UpdateTemplatesTask().execute();
+        new UpdateTemplatesTask(resize).execute();
     }
     
     public void setTemplatesDialog(TemplatesJDialog d)
@@ -1234,72 +1235,77 @@ public class SupervisedParticlePicker extends ParticlePicker
     
     public class UpdateTemplatesTask extends SwingWorker<String, Object>
     {
+            private final boolean resize;
+            public UpdateTemplatesTask(boolean resize)
+            {
+                this.resize = resize;
+            }
+            
             @Override
             protected String doInBackground() throws Exception
             {
-                    try
-                    {
-                        if(uttask != null)
-                            uttask.cancel(true);
-                        uttask = this;
                         try
-		{
-			
-			ImageGeneric templates = new ImageGeneric(ImageGeneric.Float);
-			templates.resize(getSize(), getSize(), 1, getTemplatesNumber());
-			
-			ImageGeneric igp;
-			List<ManualParticle> particles;
-			
-			ManualParticle particle;
-			double[] align;
+                        {
+                            if(uttask != null)
+                                uttask.cancel(true);
+                            uttask = this;
 
-			//FIXME: the template update needs to be done in a 
-			// more efficient way, now we are using this maxcount
-			// to limit the number of particles used in the update
-			int count = 0;
-			int maxcount = 50;
-			//FIXME: This is a tweak to avoid losing time with big particles
-			if (getSize() > 256)
-				maxcount = 10;
-                        float[] matrix;
-                        int templateindex = 0;
-			for (SupervisedPickerMicrograph m : getMicrographs())
-			{
-				if (count >= maxcount)
-					break;
-				particles = m.getManualParticles();
-				
-				for (int i = 0; i < particles.size(); i++)
-				{
-					particle = particles.get(i);
-					igp = particle.getImageGeneric();
-					if (templateindex < getTemplatesNumber())
-                                        {
-                                                matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
-                                                templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
-                                                templateindex ++;
-                                        }
-					else
-					{
-						align = templates.alignImage(igp);
-						particle.setLastalign(align);
-                                                templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
-					}
-					count++;
 
-				}
-			}
-			
-			updateTemplates(templates, templateindex);
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e.getMessage());
-		}
+                            ImageGeneric templates = new ImageGeneric(ImageGeneric.Float);
+                            templates.resize(getSize(), getSize(), 1, getTemplatesNumber());
+
+                            ImageGeneric igp;
+                            List<ManualParticle> particles;
+
+                            ManualParticle particle;
+                            double[] align;
+
+                            //FIXME: the template update needs to be done in a 
+                            // more efficient way, now we are using this maxcount
+                            // to limit the number of particles used in the update
+                            int count = 0;
+                            int maxcount = 50;
+                            //FIXME: This is a tweak to avoid losing time with big particles
+                            if (getSize() > 256)
+                                    maxcount = 10;
+                            float[] matrix;
+                            int templateindex = 0;
+                            for (SupervisedPickerMicrograph m : getMicrographs())
+                            {
+                                    if (count >= maxcount)
+                                            break;
+                                    particles = m.getManualParticles();
+                                    for (int i = 0; i < particles.size(); i++)
+                                    {
+                                            if(isCancelled())
+                                                return null;
+                                            particle = particles.get(i);
+                                            if(resize)
+                                                particle.resetImage();
+                                            igp = particle.getImageGeneric();
+                                            System.out.printf("%s templates %s particle %s\n", count, templates.getXDim(), igp.getXDim());
+                                            if (templateindex < getTemplatesNumber())
+                                            {
+                                                    matrix = igp.getArrayFloat(ImageGeneric.FIRST_IMAGE, ImageGeneric.FIRST_SLICE);
+                                                    templates.setArrayFloat(matrix, ImageGeneric.FIRST_IMAGE + templateindex, ImageGeneric.FIRST_SLICE);
+                                                    templateindex ++;
+                                            }
+                                            else
+                                            {
+                                                    align = templates.alignImage(igp);
+                                                    particle.setLastalign(align);
+                                                    templates.applyAlignment(igp, particle.getTemplateIndex(), particle.getTemplateRotation(), particle.getTemplateTilt(), particle.getTemplatePsi());
+                                            }
+                                            count++;
+
+                                    }
+                            }
+
+                            updateTemplates(templates, templateindex);
                     }
                     catch (Exception e)
                     {
+                            e.printStackTrace();
                             throw new IllegalArgumentException(e);
                     }
                     return "";

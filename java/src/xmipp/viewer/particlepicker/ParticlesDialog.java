@@ -92,6 +92,7 @@ public class ParticlesDialog extends Dialog
 		for (int i = 0; i < rows; i++)
 			for (int j = 0; j < columns; j++, index++)
 			{
+                                
 				if (index == particles.size())
 					break;
 				p = particles.get(index);

@@ -168,9 +168,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     public void updateSize(int size) {
         try {
-            ppicker.resetParticleImages();
+            
             super.updateSize(size);
-            ppicker.updateTemplatesStack();
+            ppicker.updateTemplatesStack(true);
             
 
         } catch (Exception e) {
@@ -185,11 +185,12 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
             result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
+            boolean resize = ((int)sizetf.getValue()) != ppicker.getSize();
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
-            ppicker.updateTemplatesStack();
+            ppicker.updateTemplatesStack(resize);
             
 
         } else // only can choose file if TrainingPickerJFrame instance
@@ -714,7 +715,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         ppicker.resetMicrograph(getMicrograph());
         canvas.refreshActive(null);
         updateMicrographsModel();
-        ppicker.updateTemplatesStack();
+        ppicker.updateTemplatesStack(false);
         
         if (ppicker.getMode() == Mode.Supervised) {
             ppicker.autopick(this, getMicrograph());

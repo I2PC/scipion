@@ -234,7 +234,7 @@ public class ImageGeneric {
     		int select_slice, long select_image) throws Exception;
     
 
-    public native double[] alignImage(ImageGeneric img) throws Exception;
+    public synchronized native double[] alignImage(ImageGeneric img) throws Exception;
     
     public synchronized native void getRadialAvg(ImageGeneric radialimg) throws Exception;
     
