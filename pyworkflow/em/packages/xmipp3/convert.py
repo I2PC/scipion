@@ -1237,9 +1237,7 @@ def createClassesFromImages2(inputImages, inputMd,
             clsSet.append(classItem)
         else:
             classItem = clsDict[ref] # Try to get the class set given its ref number
-        # Set images attributes from the md row values
-        #imgRow = rowFromMd(md, objId)
-        #img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
+        
         img.setTransform(rowToAlignment(row, alignType))
         classItem.append(img)
         

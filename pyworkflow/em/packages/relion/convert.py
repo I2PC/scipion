@@ -414,3 +414,13 @@ def convertBinaryFiles(imgSet, outputDir):
             filesMapping[f] = newFile
 
     return filesMapping
+
+
+def createItemMatrix(self, item, row, align):
+    from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+    
+    item.setTransform(rowToAlignment(row, alignType=align))
+
+def iterRows(md):
+    from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+    return iterMdRows(md)

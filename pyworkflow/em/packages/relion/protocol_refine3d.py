@@ -86,10 +86,24 @@ leads to objective and high-quality results.
         
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
+        from pyworkflow.em.packages.relion.convert import iterRows
+        
         imgSet = self.inputParticles.get()
+        
         vol = Volume()
         vol.setFileName(self._getExtraPath('relion_class001.mrc'))
         vol.setSamplingRate(imgSet.getSamplingRate())
+        
+        outImgSet = self._createSetOfParticles()
+        outImgsFn = self._getFileName('data', iter=self._lastIter())
+        
+        outImgSet.copyInfo(imgSet)
+        outImgSet.copyItems(imgSet,
+                            updateItemCallback=self._createItemMatrix,
+                            itemDataIterator=iterRows(outImgsFn))
+        
+        self._defineOutputs(outputParticles=outImgSet)
+        self._defineTransformRelation(imgSet, outImgSet)
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(imgSet, vol)
     
@@ -141,3 +155,9 @@ leads to objective and high-quality results.
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _createItemMatrix(self, item, row):
+        from pyworkflow.em.packages.relion.convert import createItemMatrix
+        from pyworkflow.em import ALIGN_PROJ
+        
+        createItemMatrix(item, row, align=ALIGN_PROJ)
+        
