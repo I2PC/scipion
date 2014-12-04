@@ -11,8 +11,6 @@
 		<tr {% if paramGroup.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramGroupName}}" name="{{paramGroupName}}" data-type="{{paramGroup.getClassName}}" data-cond="{{paramGroup.condition.get}}" data-params="{{paramGroup.htmlCondParams}}" 
 		data-depen="{{paramGroup.htmlDepend}}" value="{{paramGroup.htmlValue}}" data-enum="{{paramGroup.display}}" data-expert="{{paramGroup.expertLevel.get}}">
 			
-			
-			
 			<td id="inputName" 
 				{% if paramGroup.isImportant.get %} 
 					class="recommended" 
