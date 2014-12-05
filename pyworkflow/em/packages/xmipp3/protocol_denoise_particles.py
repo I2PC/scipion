@@ -128,7 +128,7 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
         pass
         
     def _citations(self):
-        return ['zhao2013']
+        return ['zhao2013', 'ponce2011']
     
     def _methods(self):
         methods = []
