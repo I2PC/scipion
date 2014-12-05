@@ -38,13 +38,15 @@ class TestImportBase(BaseTest):
         cls.dsMda = DataSet.getDataSet('mda')
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         
-    @classmethod
-    def checkOutput(cls, prot, outputName, condition):
+    def checkOutput(self, prot, outputName, conditions):
         """ Check that an ouput was generated and
         the condition is valid. 
         """
-        output = getattr(prot, outputName)
-        eval(condition)
+        o = getattr(prot, outputName, None)
+        locals()[outputName] = o 
+        self.assertIsNotNone(o, "Output: %s is None" % outputName)
+        for cond in conditions:
+            self.assertTrue(eval(cond), 'Condition failed: ' + cond)
         
     
 class TestImportParticles(TestImportBase):
@@ -170,6 +172,6 @@ class TestImportParticles(TestImportBase):
                                  )
         self.launchProtocol(prot1)
         
-        o = prot1.outputParticles
-        self.assertTrue(o.hasAlignmentProj())
-        self.assertTrue(o.hasCTF())
+        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasCTF()', 
+                                                    'outputParticles.hasAlignmentProj()'])
+
