@@ -365,14 +365,36 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             sampling = _getSampling(self.outputVol)
             size = _getSize(self.outputVol)
             if self.doResize:
-                summary.append("The sampling rate of the output voume(s) are: %0.3f" % sampling)
+                summary.append("Output volume(s) have a different sampling "
+                               "rate: *%0.3f* A/px" % sampling)
             if self.doWindow.get():
                 if self.getEnumText('windowOperation') == "crop":
-                    summary.append("*Crop operation*: New size %d" % size)
+                    summary.append("The volume(s) were cropped.")
                 else:
-                    summary.append("*Window operation*: New size %d" % size)
+                    summary.append("The volume(s) were windowed.")
+                summary.append("New size: *%s* px" % size)
         return summary
-    
+
+    def _methods(self):
+        if self._isSingleInput():
+            methods = ["We took one volume"]
+            pronoun = "it"
+        else:
+            methods = ["We took %d volumes" % self.inputVolumes.get().getSize()]
+            pronoun = "them"
+        if self.doWindow.get():
+            if self.getEnumText('windowOperation') == "crop":
+                methods += ["cropped %s" % pronoun]
+            else:
+                methods += ["windowed %s" % pronoun]
+        if self.doResize:
+            methods += ["resized %s to %d px%s" %
+                        (pronoun, self.outputVol.getDim()[0],
+                         " in Fourier space" if self.doFourier else "")]
+        if not self.doResize and not self.doWindow.get():
+            methods += ["did nothing to %s" % pronoun]
+        return ["%s and %s." % (", ".join(methods[:-1]), methods[-1])]
+
     def _validate(self):
         return XmippResizeHelper._validate(self)
     
