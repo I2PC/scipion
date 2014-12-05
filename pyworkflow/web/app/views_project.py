@@ -399,6 +399,11 @@ def create_service_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
+        
+        # Filename to use as test data 
+        fnTestData = request.GET.get('testData')
+        print "filename to use as test data: ", fnTestData
+        
         customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
         writeCustomMenu(customMenu)
         #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
