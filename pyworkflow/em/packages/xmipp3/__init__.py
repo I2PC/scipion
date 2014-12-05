@@ -86,7 +86,6 @@ from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
-from protocol_simulated_annealing import XmippProtInitVolSimAnneal
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_denoise_particles import XmippProtDenoiseParticles
 

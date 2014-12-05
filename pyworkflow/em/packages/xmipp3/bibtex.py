@@ -408,6 +408,20 @@ eprint = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.full.pdf+h
 journal = {Bioinformatics} 
 }
 
+@article{zhao2013,
+author = {Zhao, Zhizhen and Singer, Amit},
+title = {Fourier-Bessel rotational invariant eigenimages},
+volume = {30},
+number = {5},
+pages = {871--877},
+year = {2013},
+doi = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886/pdf/nihms484949.pdf},
+abstract = {},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886},
+eprint = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886/pdf/nihms484949.pdf},
+journal = {Journal of the Optical Society of America. A, Optics, image science, and vision}
+}
+
 @article{Vargas2014a,
 title = "A general validation approach for cryoEM ",
 journal = "Nature Methods",
@@ -437,6 +451,8 @@ url = "",
 author = "Marabini et al.",
 keywords = "Contrast transfer function"
 }
+
+
 
 """
 
