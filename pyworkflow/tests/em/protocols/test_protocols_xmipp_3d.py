@@ -396,6 +396,22 @@ class TestXmippCropResizeVolumes(TestXmippBase):
         self.assertTrue(outV.equalAttributes(
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
+    def testFactorAndCrop(self):
+        inV = self.protImport2.outputVolume  # short notation
+        outV = self.launchSingle(doResize=True,
+                                 resizeOption=xrh.RESIZE_FACTOR,
+                                 resizeFactor=0.5,
+                                 doWindow=True,
+                                 windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(inV.getDim()[0] * 0.5, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(), inV.getSamplingRate() * 2)
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    # TODO: are a few more tests, like the ones in
+    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
+
     # Tests with multiple volumes as input.
     def launchSet(self, **kwargs):
         "Launch XmippProtCropResizeVolumes and return output volumes."
@@ -425,6 +441,8 @@ class TestXmippCropResizeVolumes(TestXmippBase):
         self.assertTrue(outV.equalItemAttributes(
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
+    # TODO: are a few more tests, like the ones in
+    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
 
 class TestXmippCLTomo(TestXmippBase):
     @classmethod
