@@ -33,7 +33,8 @@ from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
+from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
+                                           XmippResizeHelper as xrh)
 
 
 class TestXmippBase(BaseTest):
@@ -285,8 +286,8 @@ class TestXmippFilterVolumes(TestXmippBase):
         prot = XmippProtFilterVolumes(**kwargs)
         prot.inputVolumes.set(self.protImport2.outputVolume)
         self.proj.launchProtocol(prot, wait=True)
-        self.assertIsNotNone(prot.outputVol,
-                             "There was a problem with filter volume")
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with filter single volume")
         self.assertTrue(prot.outputVol.equalAttributes(
             self.protImport2.outputVolume, ignore=['_index', '_filename'],
             verbose=True))
@@ -312,8 +313,8 @@ class TestXmippFilterVolumes(TestXmippBase):
         vIn = self.protImport1.outputVolumes  # short notation
         prot.inputVolumes.set(vIn)
         self.proj.launchProtocol(prot, wait=True)
-        self.assertIsNotNone(prot.outputVol,
-                             "There was a problem with filter volume")
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with filter multiple volumes")
         self.assertTrue(prot.outputVol.equalAttributes(
             self.protImport1.outputVolumes, ignore=['_mapperPath'],
             verbose=True))
@@ -363,25 +364,66 @@ class TestXmippMaskVolumes(TestXmippBase):
 class TestXmippCropResizeVolumes(TestXmippBase):
     @classmethod
     def setUpClass(cls):
+        print "\n", greenStr(" Crop/Resize Volumes Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
-    def testCropResizeVolumes(self):
-        print "Run Resize-Crop single volume"
-        protCropResizeVolume = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
-                                                    windowOperation=1, windowSize=256)
-        protCropResizeVolume.inputVolumes.set(self.protImport2.outputVolume)
-        self.proj.launchProtocol(protCropResizeVolume, wait=True)
-        self.assertIsNotNone(protCropResizeVolume.outputVol, "There was a problem with applying resize and crop to a volume")
+    # Tests with single volume as input.
+    def launchSingle(self, **kwargs):
+        "Launch XmippProtCropResizeVolumes and return output volume."
+        print magentaStr("\n==> Crop/Resize single volume input params: %s" % kwargs)
+        prot = XmippProtCropResizeVolumes(**kwargs)
+        prot.inputVolumes.set(self.protImport2.outputVolume)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with applying resize/crop to a volume")
+        return prot.outputVol
 
-        print "Run Resize-Crop SetOfVolumes"
-        protCropResizeVolumes = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
-                                                    windowOperation=1, windowSize=256)
-        protCropResizeVolumes.inputVolumes.set(self.protImport1.outputVolumes)
-        self.proj.launchProtocol(protCropResizeVolumes, wait=True)
-        self.assertIsNotNone(protCropResizeVolumes.outputVol, "There was a problem with applying resize and crop to SetOfVolumes")
+    def testSingleResizeDimensions(self):
+        inV = self.protImport2.outputVolume  # short notation
+        newSize = 128
+        outV = self.launchSingle(doResize=True,
+                                 resizeOption=xrh.RESIZE_DIMENSIONS,
+                                 resizeDim=newSize, doWindow=True,
+                                 windowOperation=xrh.WINDOW_OP_WINDOW,
+                                 windowSize=newSize*2)
+
+        self.assertEqual(newSize * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(),
+                               inV.getSamplingRate() * (inV.getDim()[0] / float(newSize)))
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    # Tests with multiple volumes as input.
+    def launchSet(self, **kwargs):
+        "Launch XmippProtCropResizeVolumes and return output volumes."
+        print magentaStr("\n==> Crop/Resize single set of volumes input params: %s" % kwargs)
+        prot = XmippProtCropResizeVolumes(**kwargs)
+        prot.inputVolumes.set(self.protImport1.outputVolumes)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with applying resize/crop to a set of volumes")
+        return prot.outputVol
+
+    def testSetResizeDimensions(self):
+        inV = self.protImport1.outputVolumes  # short notation
+        newSize = 128
+        outV = self.launchSet(doResize=True,
+                              resizeOption=xrh.RESIZE_DIMENSIONS,
+                              resizeDim=newSize, doWindow=True,
+                              windowOperation=xrh.WINDOW_OP_WINDOW,
+                              windowSize=newSize*2)
+
+        self.assertEqual(newSize * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(),
+                               inV.getSamplingRate() * (inV.getDim()[0] / float(newSize)))
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # Compare the individual volumes too.
+        self.assertTrue(outV.equalItemAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
 
 class TestXmippCLTomo(TestXmippBase):
