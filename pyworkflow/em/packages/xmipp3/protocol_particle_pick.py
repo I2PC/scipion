@@ -118,11 +118,9 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMics, coordSet)
         
-
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
         return ['Abrishami2013']
-
 
     #--------------------------- UTILS functions --------------------------------------------
     def __str__(self):
@@ -134,9 +132,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
         return msg
-    
-
-
     
     def _summary(self):
         if self.getOutputsSize() > 0:
@@ -150,16 +145,14 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         else:
             return [self.getMethods(None)]
 
-
-
-    
     def getInputMicrographs(self):
         return self.inputMicrographs.get()
     
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
-
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
+        msg = ''
+        
         if existsConfig:
             md = xmipp.MetaData('properties@' + configfile)
             configobj = md.firstObject()
@@ -174,7 +167,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         return msg
 
     def getSummary(self):
-
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
