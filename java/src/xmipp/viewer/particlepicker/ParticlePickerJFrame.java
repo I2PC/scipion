@@ -787,6 +787,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				int size = ((Number) sizetf.getValue()).intValue();
 				if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
 				{
+                                        
 					int prevsize = getParticlePicker().getSize();
 					sizetf.setText(Integer.toString(prevsize));
 					return;
@@ -803,9 +804,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (sizesl.getValueIsAdjusting()) 
 					return;
-				if (sizesl.getValue() == getParticlePicker().getSize())// event
-																					// from
-																					// sizetf
+				if (sizesl.getValue() == getParticlePicker().getSize())
 					return;
 
 				int size = sizesl.getValue();

@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -378,14 +379,23 @@ public class TiltPairPicker extends ParticlePicker
 	@Override
 	public boolean isValidSize(JFrame parent, int size)
 	{
+                boolean valid = true;
 		UntiltedMicrograph um = getMicrograph();
 		for (UntiltedParticle p : um.getParticles())
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
+                        {
+				valid = false;
+                                break;
+                        }
 		for (TiltedParticle p : um.getTiltedMicrograph().getParticles())
 			if (!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
+                        {
+				valid = false;
+                                break;
+                        }
+                if (!valid) 
+                    XmippDialog.showInfo(parent, String.format("Particles out of bounds, %s not allowed.", size));
+		return valid;
 	}
 
     @Override

@@ -11,8 +11,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.XmippMessage;
+import xmipp.utils.XmippWindowUtil;
 
 public class ParticlesDialog extends Dialog
 {
@@ -46,7 +46,7 @@ public class ParticlesDialog extends Dialog
 
 	}
 
-	public void loadParticles(boolean changesize)
+	public void loadParticles(boolean resize)
 	{
 
 		List<? extends PickerParticle> particles = frame.getAvailableParticles();
@@ -65,7 +65,7 @@ public class ParticlesDialog extends Dialog
 			return;
 		}
 
-		if (changesize) // first time or keep size
+		if (resize) // first time or keep size
 		{
 			columns = Math.min(200, particles.size() * side) / side;
 			rows = (int) Math.ceil(particles.size() / (float) columns);
@@ -140,5 +140,7 @@ public class ParticlesDialog extends Dialog
 		dispose();
 
 	}
+        
+        
 
 }
