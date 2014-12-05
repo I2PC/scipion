@@ -16,11 +16,9 @@
 
 /*----------   Statistics --------------------------------------- */
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo, MDLabel image_label)
+void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
 {
-    _min = MAXDOUBLE;
-    _max = -MAXDOUBLE;
+
     bool first = true;
     int n = 0;
     //Remove disabled images if present
@@ -30,7 +28,6 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     Image<double> image, tmpImg;
-    double min=0, max=0, avg, stddev;
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
@@ -39,20 +36,13 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
             image.read(fnImg);
-        image().computeStats(avg, stddev, min, max);
-        if (min < _min)
-            _min = min;
-        if (max > _max)
-            _max = max;
         if (first)
         {
             _ave = image;
             first = false;
         }
         else
-        {
             _ave() += image();
-        }
         n++;
     }
 
@@ -223,9 +213,8 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     MetaData &MD2 = vMD.at(1);
 
     Image<double> I1, I2, Id;
-    double dummy;
-    getStatistics(MD1,I1,Id,dummy,dummy,true, image_label);
-    getStatistics(MD2,I2,Id,dummy,dummy,true, image_label);
+    getStatistics(MD1,I1,Id,true, image_label);
+    getStatistics(MD2,I2,Id,true, image_label);
     I1().setXmippOrigin();
     I2().setXmippOrigin();
 
