@@ -39,7 +39,6 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
-from convert import addRelionLabels, addRelionLabelsToEnviron, restoreXmippLabels
 import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
@@ -76,7 +75,6 @@ class RelionViewer(ProtocolViewer):
         self.__defineParams(self._form)
         self._createVarsFromDefinition()
         self._env = os.environ.copy()
-        addRelionLabelsToEnviron(self._env)
 #        self._load()
         
     def _defineParams(self, form):
@@ -594,7 +592,6 @@ class PostprocessViewer(ProtocolViewer):
         self.__defineParams(self._form)
         self._createVarsFromDefinition()
         self._env = os.environ.copy()
-        addRelionLabelsToEnviron(self._env)
 #        self._load()
         
     def _defineParams(self, form):
