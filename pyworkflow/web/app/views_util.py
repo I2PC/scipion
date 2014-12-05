@@ -350,6 +350,8 @@ def get_file(request):
     path = request.GET.get("path")
     filename = request.GET.get("filename", path)
     
+    print "path: ",path
+    print "filename: ",filename
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)
