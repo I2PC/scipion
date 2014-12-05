@@ -1213,6 +1213,7 @@ def createClassesFromImages2(inputImages, inputMd,
     clsSet = ClassType(filename=classesFn)
     clsSet.setImages(inputImages)
     hasCtf = inputImages.hasCTF()
+    sampling = inputImages.getSamplingRate()
     
     for img, row in izip(inputImages, mdIter):
         ref = row.getValue(xmipp.MDL_REF)
@@ -1228,6 +1229,7 @@ def createClassesFromImages2(inputImages, inputMd,
             refLocation = xmippToLocation(refFn)
             rep = clsSet.REP_TYPE()
             rep.setLocation(refLocation)
+            rep.setSamplingRate(sampling)
             classItem.setRepresentative(rep)
             
             clsDict[ref] = classItem
