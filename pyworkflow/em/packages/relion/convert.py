@@ -535,18 +535,18 @@ def readSetOfParticles(filename, partSet, **kwargs):
     # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
         imgMd.removeDisabled()
-
+    
     # If the type of alignment is not sent throught the kwargs
-    # try to deduced from the metadata labels
-    if 'alignType' not in kwargs:
-        imgRow = rowFromMd(imgMd, imgMd.firstObject())
-        if _containsAny(imgRow, ALIGNMENT_DICT):
-            if imgRow.getValue(xmipp.RLN_ORIENT_TILT) != 0:
-                kwargs['alignType'] = ALIGN_PROJ
-            else:
-                kwargs['alignType'] = ALIGN_2D
-        else:
-            kwargs['alignType'] = ALIGN_NONE
+#     # try to deduced from the metadata labels
+#     if 'alignType' not in kwargs:
+#         imgRow = rowFromMd(imgMd, imgMd.firstObject())
+#         if _containsAny(imgRow, ALIGNMENT_DICT):
+#             if imgRow.getValue(xmipp.RLN_ORIENT_TILT) != 0:
+#                 kwargs['alignType'] = ALIGN_PROJ
+#             else:
+#                 kwargs['alignType'] = ALIGN_2D
+#         else:
+#             kwargs['alignType'] = ALIGN_NONE
     
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
@@ -555,8 +555,8 @@ def readSetOfParticles(filename, partSet, **kwargs):
         
     partSet.setHasCTF(img.hasCTF())
     partSet.setAlignment(kwargs['alignType'])
-
-
+    
+##### DE AQUI EN ADELANTE HAY QUE PASAR DESDE XMIPP.
 
 def writeSetOfParticles(imgSet, starFile,
                         outputDir,
@@ -568,7 +568,6 @@ def writeSetOfParticles(imgSet, starFile,
         filesMapping: this dict will help when there is need to replace images names
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
-    addRelionLabels(replace=True)
     filesMapping = convertBinaryFiles(imgSet, outputDir)
     pa = ParticleAdaptor(imgSet, filesMapping, originalSet,
                          preprocessImageRow=kwargs.get('preprocessImageRow', None),
@@ -577,7 +576,6 @@ def writeSetOfParticles(imgSet, starFile,
     kwargs['preprocessImageRow'] = pa.preprocessImageRow
     kwargs['postprocessImageRow'] = pa.postprocessImageRow
     xmipp3.writeSetOfParticles(imgSet, starFile, **kwargs)
-    restoreXmippLabels()
 
 
 def createClassesFromImages(inputImages, inputStar,
