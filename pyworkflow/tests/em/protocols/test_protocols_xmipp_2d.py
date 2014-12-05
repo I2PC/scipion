@@ -388,55 +388,83 @@ class TestXmippPreprocessParticles(TestXmippBase):
 
 
 class TestXmippCropResizeParticles(TestXmippBase):
-    """This class check if the protocol to crop/resize particles in Xmipp works properly."""
+    """Check protocol crop/resize particles from Xmipp."""
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
         cls.acquisition = cls.protImport.outputParticles.getAcquisition()
-        
-    def validateAcquisition(self, particles):
-        acquisition = particles.getAcquisition()
-        self.assertAlmostEqual(acquisition.getVoltage(), self.acquisition.getVoltage())
-    
-    def test_cropResizePart(self):
-        print "\n", greenStr(" Crop/Resize Particles ".center(75, '-'))
-        oldSize = 500.
+
+    def launch(self, **kwargs):
+        "Launch XmippProtCropResizeParticles and return output particles."
+        print magentaStr("\n==> Crop/Resize input params: %s" % kwargs)
+        prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
+        prot.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(prot)
+        self.assertTrue(
+            hasattr(prot, "outputParticles") and prot.outputParticles is not None,
+            "There was a problem applying resize/crop to the particles")
+        self.assertAlmostEqual(prot.outputParticles.getAcquisition().getVoltage(),
+                               self.acquisition.getVoltage())
+        return prot.outputParticles  # for more tests
+
+    def test_newSizeAndCrop(self):
+        inP = self.protImport.outputParticles  # short notation
         newSize = 128
-        protCropResize = self.newProtocol(XmippProtCropResizeParticles, 
-                                          doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS, resizeDim=newSize,
-                                          doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
-        inP = self.protImport.outputParticles
-        protCropResize.inputParticles.set(inP)
-        self.launchProtocol(protCropResize)
-        self.assertTrue(hasattr(protCropResize, "outputParticles") and
-                        protCropResize.outputParticles is not None,
-                        "There was a problem with resize/crop the particles")
-        outP = protCropResize.outputParticles
-        self.validateAcquisition(outP)
-        self.assertEqual(newSize, outP.getDimensions()[0],
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS,
+                           resizeDim=newSize,
+                           doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(newSize, outP.getDim()[0],
                          "Output particles dimension should be equal to %d" % newSize)
-        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * (oldSize / newSize))
-    
-    def test_cropResizePart2(self):
-        print "Run crop/resize particles v2"
-        protCropResize = self.newProtocol(XmippProtCropResizeParticles,  
-                                         doResize=True, resizeOption=xrh.RESIZE_FACTOR, resizeLevel=0.5,
-                                         doWindow=True, windowOperation=xrh.WINDOW_OP_WINDOW, windowSize=500)
-        input = self.protImport.outputParticles
-        protCropResize.inputParticles.set(input)
-        self.launchProtocol(protCropResize)
-        output = protCropResize.outputParticles
-        
-        self.assertIsNotNone(output, "There was a problem with resize/crop v2 the particles")
-        self.validateAcquisition(output)
-        # Since the images where downsampled twice (factor 0.5)
-        # the sampling rate should be the double
-        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*2)
-        # Since we have done windowing operation, the dimensions should be the same
-        self.assertEquals(input.getDim(), output.getDim())
+        self.assertAlmostEqual(outP.getSamplingRate(),
+                               inP.getSamplingRate() * (inP.getDim()[0] / float(newSize)))
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
+
+    def test_factorAndWindow(self):
+        inP = self.protImport.outputParticles  # short notation
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_FACTOR,
+                           resizeFactor=0.5,
+                           doWindow=True, windowOperation=xrh.WINDOW_OP_WINDOW,
+                           windowSize=500)
+
+        # Since the images were downsampled by a factor 0.5, the new
+        # pixel size (painfully called "sampling rate") should be 2x.
+        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 2)
+        # After the window operation, the dimensions should be the same.
+        self.assertEquals(inP.getDim(), outP.getDim())
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
+
+    def test_pyramid(self):
+        inP = self.protImport.outputParticles  # short notation
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_PYRAMID, resizeLevel=1)
+
+        # Since the images were expanded by 2**resizeLevel (=2) the new
+        # pixel size (painfully called "sampling rate") should be 0.5x.
+        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
+        # We did no window operation, so the dimensions will have doubled.
+        self.assertAlmostEquals(outP.getDim()[0], inP.getDim()[0] * 2)
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
 
 
 class TestXmippFilterParticles(TestXmippBase):
