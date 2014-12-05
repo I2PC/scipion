@@ -76,8 +76,6 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
     #--------------------------- INSERT steps functions --------------------------------------------            
     def _insertAllSteps(self):
         """ Insert every step of the protocol"""
-        # Create extra dir if needed
-        
         
         # Convert input images if necessary
         self._insertFunctionStep('denoiseImages', self.inputParticles.getObjId(), self.inputClasses.getObjId()) 
@@ -130,10 +128,15 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
         pass
         
     def _citations(self):
-        return []
+        return ['zhao2013']
     
     def _methods(self):
         methods = []
-        methods.append('Fill in with methods information.')
+        if not hasattr(self, 'outputParticles'):
+            methods.append("Output particles not ready yet.")
+        else:
+            methods.append('An input dataset of %d particles was filtered creating a PCA basis (%d components) with '
+                           'xmipp_image_rotational_pca and projecting the dataset into that base with xmipp_transform_filter.'\
+                           % (len(self.inputParticles.get()), len(self.inputClasses.get())))
         return methods
     

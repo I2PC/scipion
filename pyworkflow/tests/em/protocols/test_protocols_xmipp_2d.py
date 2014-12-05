@@ -438,9 +438,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
         # Since the images were downsampled by a factor 0.5, the new
         # pixel size (painfully called "sampling rate") should be 2x.
-        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 2)
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 2)
         # After the window operation, the dimensions should be the same.
-        self.assertEquals(inP.getDim(), outP.getDim())
+        self.assertEqual(inP.getDim(), outP.getDim())
 
         # All other attributes remain the same. For the set:
         self.assertTrue(outP.equalAttributes(
@@ -455,9 +455,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
         # Since the images were expanded by 2**resizeLevel (=2) the new
         # pixel size (painfully called "sampling rate") should be 0.5x.
-        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
         # We did no window operation, so the dimensions will have doubled.
-        self.assertAlmostEquals(outP.getDim()[0], inP.getDim()[0] * 2)
+        self.assertAlmostEqual(outP.getDim()[0], inP.getDim()[0] * 2)
 
         # All other attributes remain the same. For the set:
         self.assertTrue(outP.equalAttributes(
