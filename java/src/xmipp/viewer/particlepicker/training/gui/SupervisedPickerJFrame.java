@@ -774,7 +774,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if(index < 0 || index == ppicker.getMicrographs().size())
         {
             canvas.repaint();
-            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Particles might be too close or too few.");
+            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Particles might be too few.");
             rectmic.resetParticlesRectangle();
             canvas.repaint();
             return false;

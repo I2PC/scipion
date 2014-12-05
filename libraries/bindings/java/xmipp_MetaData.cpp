@@ -808,8 +808,7 @@ JNIEXPORT void JNICALL Java_xmipp_jni_MetaData_getStatsImages
         std->setDatatype(DT_Double);
         Image<double> * imgAvg = (Image<double>*)avg->image;
         Image<double> * imgStd = (Image<double>*)std->image;
-        double dum;
-        getStatistics(*md, *imgAvg, *imgStd, dum, dum, applyGeo, (MDLabel)label);
+        getStatistics(*md, *imgAvg, *imgStd, applyGeo, (MDLabel)label);
     }
     XMIPP_JAVA_CATCH;
 }
