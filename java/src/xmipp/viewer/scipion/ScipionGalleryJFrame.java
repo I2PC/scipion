@@ -50,6 +50,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private ScipionMessageDialog dlg;
     private String tmpdir;
     private JButton createvolbt;
+    private String setType;
     
    
 
@@ -76,6 +77,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     {
         try {
             self = ((ScipionGalleryData)data).getSelf();
+            setType = ((ScipionMetaData)data.getMd()).getSetType();
             type = ((ScipionGalleryData)data).getScipionType() + "s";
             python = parameters.python;
             scripts = parameters.scripts;
@@ -210,7 +212,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         boolean register = confirmCreate("Are you sure you want to register volume in scipion?");
         if(register)
         {
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), data.getSelVolId().toString() + ",Volume"};
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , setType, dlg.getFieldValue(runNameKey), data.getSelVolId().toString() + ",Volume"};
             createSubset(command, "Creating set ...");
         }
     }
@@ -240,8 +242,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         int size = ((ScipionGalleryData)data).getEnabledCount();
                        
         if (confirmCreate("Classes", size)) {
-            String output = ((ScipionGalleryData)data).getSelf().equals("Class2D")? "SetOfClasses2D":"SetOfClasses3D";
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", setType , dlg.getFieldValue(runNameKey), other};
 
             createSubset(command, "Creating set ...");
 

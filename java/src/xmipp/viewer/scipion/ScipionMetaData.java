@@ -1182,6 +1182,8 @@ public class ScipionMetaData extends MetaData {
 
     }
     
-    
+    public String getSetType() {
+        return properties.get("self");
+    }
    
 }

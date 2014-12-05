@@ -185,7 +185,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
             result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
-            boolean resize = ((int)sizetf.getValue()) != ppicker.getSize();
+            boolean resize = ((Integer)sizetf.getValue()).intValue() != ppicker.getSize();
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);
