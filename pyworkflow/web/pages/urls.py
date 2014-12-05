@@ -113,5 +113,5 @@ urlpatterns = patterns('',
 
 )
 
-handler404 = "app.views_util.error"
-handler500 = "app.views_util.error"
+# handler404 = "app.views_util.error"
+# handler500 = "app.views_util.error"
