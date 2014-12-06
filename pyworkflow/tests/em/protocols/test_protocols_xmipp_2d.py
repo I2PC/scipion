@@ -96,6 +96,16 @@ class TestXmippBase(BaseTest):
         return cls.CL2DAlign
     
     @classmethod
+    def runCL2D(cls, particles, classes):
+        cls.CL2D = cls.newProtocol(XmippProtCL2D,
+                                   numberOfClasses=4, randomInitialization=False,
+                                   numberOfIterations=4, numberOfMpi=2)
+        cls.CL2D.inputParticles.set(particles)
+        cls.CL2D.initialClasses.set(classes)
+        cls.launchProtocol(cls.CL2D)
+        return cls.CL2D
+    
+    @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D, 
                                            numberOfClasses=4, maxIters=3, doMlf=False,
@@ -296,9 +306,6 @@ class TestXmippScreenParticles(TestXmippBase):
     """This class check if the protocol to classify particles by their similarity to discard outliers work properly"""
     @classmethod
     def setUpClass(cls):
-        #setupTestProject(cls)
-        #TestXmippBase.setData('mda')
-        #cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
@@ -438,9 +445,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
         # Since the images were downsampled by a factor 0.5, the new
         # pixel size (painfully called "sampling rate") should be 2x.
-        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 2)
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 2)
         # After the window operation, the dimensions should be the same.
-        self.assertEquals(inP.getDim(), outP.getDim())
+        self.assertEqual(inP.getDim(), outP.getDim())
 
         # All other attributes remain the same. For the set:
         self.assertTrue(outP.equalAttributes(
@@ -455,9 +462,9 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
         # Since the images were expanded by 2**resizeLevel (=2) the new
         # pixel size (painfully called "sampling rate") should be 0.5x.
-        self.assertAlmostEquals(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
         # We did no window operation, so the dimensions will have doubled.
-        self.assertAlmostEquals(outP.getDim()[0], inP.getDim()[0] * 2)
+        self.assertAlmostEqual(outP.getDim()[0], inP.getDim()[0] * 2)
 
         # All other attributes remain the same. For the set:
         self.assertTrue(outP.equalAttributes(
@@ -603,6 +610,28 @@ class TestXmippProtCL2DAlign(TestXmippBase):
         self.assertTrue(CL2DAlignRef.outputParticles.hasAlignment2D(), "Output particles do not have alignment 2D")
 
 
+class TestXmippDenoiseParticles(TestXmippBase):
+    """This class checks if the protocol Denoise Particles works properly"""
+    @classmethod
+    def setUpClass(cls):
+        # For denoise particles we need to import particles, and classes, and 
+        # particles must be aligned with classes. As this is the usual 
+        # situation after a CL2D, we just run this protocol
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesDir + '/img00007[1-4].spi', 3.5)
+        cls.protCL2DInitialCore = cls.runCL2D(cls.protImport.outputParticles, cls.protImportAvgs.outputAverages)
+    
+    def test_denoiseparticles(self):
+        # We check that protocol generates output
+        protDenoise = self.newProtocol(XmippProtDenoiseParticles)
+        protDenoise.inputParticles.set(self.protImport.outputParticles)
+        protDenoise.inputClasses.set(self.protCL2DInitialCore.outputClasses)
+        self.launchProtocol(protDenoise)
+        self.assertIsNotNone(protDenoise.outputParticles, "There was a problem generating output particles")
+
+
 class TestXmippRotSpectra(TestXmippBase):
     """This class check if the protocol to calculate the rotational spectra from particles in Xmipp works properly."""
     @classmethod
@@ -610,7 +639,7 @@ class TestXmippRotSpectra(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+        
          
     def test_rotSpectra(self):
         print "Run Rotational Spectra"

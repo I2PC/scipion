@@ -102,13 +102,23 @@ function deleteProject(elm) {
  * SERVICE PROJECT
  */ 
 
-function serviceProjForm(){
+function serviceProjForm(data){
 	var title = 'Confirm project creation'
 	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
         "This process generates a unique <strong>identification code</strong><br />" +
         "that you will have to save to access the content in the future.</p>" +
-        "<p><br /></p>" +
-        "<p>If you agree, please confirm to generate it.</p>";
+        "<p><br /></p>";
+	
+	if (data){
+		dialog += "<p>Choose a <strong>test data</strong> to use into the project:</p>";
+		dialog += '<div id="testData">';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="level_classes.stk" checked>level_classes.stk<br>';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="level_classes2.stk">level_classes2.stk<br>';
+		dialog += "</div>";
+		dialog += "<br />";
+	}
+        
+    dialog += "<p>If you agree, please confirm to generate it.</p>";
 
 	var funcName = 'createServProject';
 
@@ -117,7 +127,13 @@ function serviceProjForm(){
 
 function createServProject(elm) {
 	projName = randomString(32, '#aA')
+	var selected = $("#testData input[type='radio']:checked").val();
+
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
+	if(selected != undefined){
+		URL += "&testData="+selected;
+	}
+	
 	$.ajax({
 		type : "GET",
 		url : URL,
