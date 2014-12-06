@@ -558,6 +558,15 @@ class Integer(Scalar):
     def increment(self):
         """ Add 1 to the current value. """
         self._objValue += 1
+        
+    def __float__(self):
+        return float(self.get())
+    
+    def __int__(self):
+        return self.get()
+    
+    def __long__(self):
+        return long(self.get())
     
         
 class String(Scalar):
@@ -599,6 +608,9 @@ class Float(Scalar):
             return True
         
         return False
+    
+    def __float__(self):
+        return self.get()
         
         
 class Boolean(Scalar):
