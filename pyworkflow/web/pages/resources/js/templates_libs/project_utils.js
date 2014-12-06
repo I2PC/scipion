@@ -112,8 +112,9 @@ function serviceProjForm(data){
 	if (data){
 		dialog += "<p>Choose a <strong>test data</strong> to use into the project:</p>";
 		dialog += '<div id="testData">';
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="level_classes.stk" checked>level_classes.stk<br>';
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="level_classes2.stk">level_classes2.stk<br>';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="hemoglobin">       &nbsp; Worm hemoglobin (phantom)<br>';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>    &nbsp; Groel data<br>';
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked> &nbsp; Ribosome<br>';
 		dialog += "</div>";
 		dialog += "<br />";
 	}
