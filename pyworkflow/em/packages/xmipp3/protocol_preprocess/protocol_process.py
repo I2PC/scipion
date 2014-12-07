@@ -84,7 +84,11 @@ class XmippProcessParticles(ProtProcessParticles):
         # info and apply the operation on the binary data only.
         # then the new location (index, filename) is the most
         # common property to update in the single items.
-        writeSetOfParticles(self.inputParticles.get(), self.inputFn, 
+        if isinstance(self.inputVolumes2.get(), Volume):
+            print ("WRITE  A SINGLE VOLUME1")
+            pass
+        else:
+            writeSetOfParticles(self.inputParticles.get(), self.inputFn,
                             alignType=ALIGN_NONE)
         
     def createOutputStep(self):
@@ -148,7 +152,6 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
             
     def createOutputStep(self):
         volInput = self.inputVolumes.get()
-        
         if self._isSingleInput():
             vol = Volume()
             vol.copyInfo(volInput)
