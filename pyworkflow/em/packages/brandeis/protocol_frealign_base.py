@@ -1162,14 +1162,16 @@ eot
         from convert import geometryFromMatrix
         shifts, angles = geometryFromMatrix(img.getTransform().getMatrix())
         #TODO: check if can use shiftZ
-        shiftX, shiftY, _ = shifts * img.getSamplingRate()
-        psi, theta, phi = angles
-#        shiftX = float(str(align._xmipp_shiftX)) * img.getSamplingRate()
-#        shiftY = float(str(align._xmipp_shiftY)) * img.getSamplingRate()
-#        psi   = float(str(align._xmipp_anglePsi))
-#        theta = float(str(align._xmipp_angleTilt))
-#        phi   = float(str(align._xmipp_angleRot))
-                    
+        shiftXP, shiftYP, _ = shifts * img.getSamplingRate()
+        psiP, thetaP, phiP = angles
+
+        #TODO review FLIP. I think we got it wrong
+        psi   = phiP
+        theta = thetaP
+        phi   = psiP
+        shiftX = -shiftXP
+        shiftY = -shiftYP
+
         # get ctfModel for each particle
         ctfModel = img.getCTF()
         defU     = ctfModel.getDefocusU()
