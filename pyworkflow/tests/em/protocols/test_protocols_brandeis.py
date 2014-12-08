@@ -28,6 +28,7 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.brandeis import *
+from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes
 
 
 class TestBrandeisBase(BaseTest):
@@ -56,20 +57,37 @@ class TestBrandeisBase(BaseTest):
         return cls.protImport
 
     @classmethod
-    def runImportVolumes(cls, pattern, samplingRate):
+    def runImportVolumes(cls, pattern, samplingRate,
+                         importFrom = ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         filesPath=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate
+                                        )
+                                         #not yet implemented
+                                         #importFrom=importFrom
+                                         #)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False,
+                           importFrom = ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
+        if importFrom == ProtImportParticles.IMPORT_FROM_SCIPION:
+            objLabel = 'from scipion (particles)'
+        elif importFrom == ProtImportParticles.IMPORT_FROM_FILES:
+            objLabel = 'from file (particles)'
+
+
         cls.protImport = cls.newProtocol(ProtImportParticles,
+                                         objLabel=objLabel,
                                          filesPath=pattern,
+                                         sqliteFile=pattern,
                                          samplingRate=samplingRate,
-                                         checkStack=checkStack)
+                                         checkStack=checkStack,
+                                         importFrom=importFrom)
+
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -88,16 +106,18 @@ class TestBrandeisBase(BaseTest):
                                        magnification=56000)
 
     @classmethod
-    def runImportParticleBPV(cls, pattern):
+    def runImportParticleGrigorieff(cls, pattern):
         """ Run an Import micrograph protocol. """
         return cls.runImportParticles(pattern,
-                                      samplingRate=1.237,
-                                      checkStack=True)
+                                      samplingRate=4.,
+                                      checkStack=True,
+                            importFrom=ProtImportParticles.IMPORT_FROM_SCIPION)
     @classmethod
-    def runImportVolumesBPV(cls, pattern):
+    def runImportVolumesGrigorieff(cls, pattern):
         """ Run an Import micrograph protocol. """
         return cls.runImportVolumes(pattern,
-                                    samplingRate=1.237)
+                                    samplingRate=4.,
+                                    importFrom=ProtImportParticles.IMPORT_FROM_FILES)
 
 
 class TestBrandeisCtffind(TestBrandeisBase):
@@ -121,18 +141,31 @@ class TestBrandeisFrealign(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
+        dataProject='grigorieff'
+        dataset = DataSet.getDataSet(dataProject)
         TestBrandeisBase.setData()
-        particlesPattern   = cls.dataset.getFile('particles/BPV_####_ptcls_64.spi')
-        cls.protImportPart = cls.runImportParticleBPV(particlesPattern)
-        cls.protImportVol  = cls.runImportVolumesBPV(cls.volFn)
+        particlesPattern   = dataset.getFile('particles.sqlite')
+        volFn              = dataset.getFile('ref_volume.vol')
+        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
+        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
 
     def testFrealign(self):
         frealign = self.newProtocol(ProtFrealign,
+                                    inputParticles = self.protImportPart.outputParticles,
+                                    input3DReference = self.protImportVol.outputVolume,
                                     useInitialAngles=True,
                                     mode=MOD_RECONSTRUCTION,
-                                    innerRadius=0,
-                                    outerRadius=32.,
-                                    symmetry='i1'
+                                    innerRadius=0.,
+                                    outerRadius=241.,
+                                    symmetry='C1',
+                                    numberOfThreads=4,
+                                    numberOfIterations=1,
+                                    doWienerFilter=False,
+                                    resolution=2.,
+                                    highResolRefine=2.,
+                                    resolClass=2.,
+                                    writeMatchProjections=False,
+                                    score=0,
                                     )
         frealign.inputParticles.set(self.protImportPart.outputParticles)
         frealign.input3DReference.set(self.protImportVol.outputVolume)
