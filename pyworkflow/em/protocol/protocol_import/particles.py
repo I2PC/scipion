@@ -55,7 +55,7 @@ class ProtImportParticles(ProtImportImages):
         return ['emx', 'xmipp3', 'relion', 'scipion']
     
     def _defineImportParams(self, form):
-        """ Import files from: emx, xmipp3 and relion formats. """
+        """ Import files from: emx, xmipp3, relion, scipion  formats. """
         form.addParam('emxFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
