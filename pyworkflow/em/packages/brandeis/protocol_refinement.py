@@ -75,8 +75,6 @@ reconstructions.
 
         #convert to scipion
 
-        print "SAVE ALIGNMENT INFORMATION"
-
     #--------------------------- INFO functions ----------------------------------------------------
     def _citations(self):
         return ['Lyumkis2013', 'Sindelar2012', 'Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998']
