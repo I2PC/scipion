@@ -193,4 +193,8 @@ DataSet(name='movies',  folder='movies',
                'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
                 })             
                
-               
+DataSet(name='grigorieff',  folder='grigorieff',
+        files={'particles_rot_shift':'particles.sqlite',
+               'ref_volume':'ref_volume.vol',
+                })
+
