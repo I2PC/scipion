@@ -170,6 +170,7 @@ class TestBrandeisFrealign(TestBrandeisBase):
         frealign.inputParticles.set(self.protImportPart.outputParticles)
         frealign.input3DReference.set(self.protImportVol.outputVolume)
         self.launchProtocol(frealign)
+        print "Assert is missing: testFrealign"
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
