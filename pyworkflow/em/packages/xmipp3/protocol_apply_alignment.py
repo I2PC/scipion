@@ -27,9 +27,11 @@
 This sub-package contains wrapper around align2d Xmipp program
 """
 
-from pyworkflow.em import *  
-from convert import (readSetOfParticles, locationToXmipp, 
+from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+from convert import (readSetOfParticles, xmippToLocation,
                      writeSetOfParticles)
+import xmipp
 
        
         
@@ -72,7 +74,20 @@ class XmippProtApplyAlignment(ProtAlign2D):
         args = '-i %(inputFn)s -o %(outputStk)s --apply_transform ' % locals()
         self.runJob('xmipp_transform_geometry', args)
         
-        return [outputStk]  
+        return [outputStk]
+
+    def _updateItem(self, item, row):
+        """ Implement this function to do some
+        update actions over each single item
+        that will be stored in the output Set.
+        """
+        # By default update the item location (index, filename) with the new binary data location
+        newFn = row.getValue(xmipp.MDL_IMAGE)
+        newLoc = xmippToLocation(newFn)
+        item.setLocation(newLoc)
+        # Also remove alignment info
+        item.setTransform(None)
+
             
     def createOutputStep(self):
         particles = self.inputParticles.get()
@@ -80,9 +95,14 @@ class XmippProtApplyAlignment(ProtAlign2D):
         # Generate the SetOfAlignmet
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
-        
-        readSetOfParticles(self._getPath('aligned_particles.xmd'), alignedSet)
-        
+
+        inputMd = self._getPath('aligned_particles.xmd')
+        alignedSet.copyItems(particles,
+                            updateItemCallback=self._updateItem,
+                            itemDataIterator=iterMdRows(inputMd))
+        # Remove alignment 2D
+        alignedSet.setAlignment(ALIGN_NONE)
+
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)
                 

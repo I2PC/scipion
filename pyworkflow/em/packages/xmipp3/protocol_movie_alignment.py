@@ -239,10 +239,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             if self.doGPU:
                 command += ' --gpu %d' % gpuId
             self.runJob(program, command, cwd=movieFolder)
+            moveFile(join(movieFolder, metadataName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
-        moveFile(join(movieFolder, metadataName), self._getExtraPath())
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())

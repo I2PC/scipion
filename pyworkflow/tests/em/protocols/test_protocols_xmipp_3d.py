@@ -33,7 +33,8 @@ from pyworkflow.utils import redStr, greenStr, magentaStr
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
+from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
+                                           XmippResizeHelper as xrh)
 
 
 class TestXmippBase(BaseTest):
@@ -272,58 +273,68 @@ class TestXmippResolution3D(TestXmippBase):
 class TestXmippFilterVolumes(TestXmippBase):
     @classmethod
     def setUpClass(cls):
-        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        print "\n", greenStr(" Filter Volumes Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
-    def testFilterVolumeSingle(self):
-        print "\n", greenStr(" Filter singe volume ".center(75, '-'))
+    # Tests with single volume as input.
+    def launchAndTestSingle(self, **kwargs):
+        "Launch XmippProtFilterVolumes on single volume and check results."
+        print magentaStr("\n==> Filter singe volume input params: %s" % kwargs)
+        prot = XmippProtFilterVolumes(**kwargs)
+        prot.inputVolumes.set(self.protImport2.outputVolume)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with filter single volume")
+        self.assertTrue(prot.outputVol.equalAttributes(
+            self.protImport2.outputVolume, ignore=['_index', '_filename'],
+            verbose=True))
 
-        def test(**kwargs):
-            "Launch XmippProtFilterVolumes on single volume and check results."
-            print magentaStr("\n==> Input params: %s" % kwargs)
-            prot = XmippProtFilterVolumes(**kwargs)
-            prot.inputVolumes.set(self.protImport2.outputVolume)
-            self.proj.launchProtocol(prot, wait=True)
-            self.assertIsNotNone(prot.outputVol,
-                                 "There was a problem with filter volume")
-            self.assertTrue(prot.outputVol.equalAttributes(
-                self.protImport2.outputVolume, ignore=['_index', '_filename'],
-                verbose=True))
+    def testSingleFourier(self):
+        self.launchAndTestSingle(filterSpace=FILTER_SPACE_FOURIER,
+                                 lowFreq=0.1, highFreq=0.25)
 
-        # Check a few different cases.
-        test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
-        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
-        test(filterSpace=FILTER_SPACE_WAVELET,
-             filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
+    def testSingleMedian(self):
+        self.launchAndTestSingle(filterSpace=FILTER_SPACE_REAL,
+                                 filterModeReal=xfh.FM_MEDIAN)
 
-    def testFilterSetOfVolumes(self):
-        print "\n", greenStr(" Filter set of volumes ".center(75, '-'))
+    def testSingleWavelets(self):
+        self.launchAndTestSingle(filterSpace=FILTER_SPACE_WAVELET,
+                                 filterModeWavelets=xfh.FM_DAUB12,
+                                 waveletMode=xfh.FM_REMOVE_SCALE)
 
-        def test(**kwargs):
-            "Launch XmippProtFilterVolumes on set of volumes and check results."
-            print magentaStr("\n==> Input params: %s" % kwargs)
-            prot = XmippProtFilterVolumes(**kwargs)
-            vIn = self.protImport1.outputVolumes  # short notation
-            prot.inputVolumes.set(vIn)
-            self.proj.launchProtocol(prot, wait=True)
-            self.assertIsNotNone(prot.outputVol,
-                                 "There was a problem with filter volume")
-            self.assertTrue(prot.outputVol.equalAttributes(
-                self.protImport1.outputVolumes, ignore=['_mapperPath'],
-                verbose=True))
-            # Compare the individual volumes too.
-            self.assertTrue(prot.outputVol.equalItemAttributes(
-                self.protImport1.outputVolumes, ignore=['_index', '_filename'],
-                verbose=True))
+    # Tests with multiple volumes as input.
+    def launchAndTestSet(self, **kwargs):
+        "Launch XmippProtFilterVolumes on set of volumes and check results."
+        print magentaStr("\n==> Filter multiple volumes input params: %s" % kwargs)
+        prot = XmippProtFilterVolumes(**kwargs)
+        vIn = self.protImport1.outputVolumes  # short notation
+        prot.inputVolumes.set(vIn)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with filter multiple volumes")
+        self.assertTrue(prot.outputVol.equalAttributes(
+            self.protImport1.outputVolumes, ignore=['_mapperPath'],
+            verbose=True))
+        # Compare the individual volumes too.
+        self.assertTrue(prot.outputVol.equalItemAttributes(
+            self.protImport1.outputVolumes, ignore=['_index', '_filename'],
+            verbose=True))
 
-        # Check a few different cases.
-        test(filterSpace=FILTER_SPACE_FOURIER, lowFreq=0.1, highFreq=0.25)
-        test(filterSpace=FILTER_SPACE_REAL, filterModeReal=xfh.FM_MEDIAN)
-        test(filterSpace=FILTER_SPACE_WAVELET,
-             filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
+    def testSetFourier(self):
+        self.launchAndTestSet(filterSpace=FILTER_SPACE_FOURIER,
+                              lowFreq=0.1, highFreq=0.25)
+
+    def testSetMedian(self):
+        self.launchAndTestSet(filterSpace=FILTER_SPACE_REAL,
+                              filterModeReal=xfh.FM_MEDIAN)
+
+    def testSetWavelets(self):
+        self.launchAndTestSet(filterSpace=FILTER_SPACE_WAVELET,
+                              filterModeWavelets=xfh.FM_DAUB12,
+                              waveletMode=xfh.FM_REMOVE_SCALE)
 
 
 class TestXmippMaskVolumes(TestXmippBase):
@@ -353,26 +364,85 @@ class TestXmippMaskVolumes(TestXmippBase):
 class TestXmippCropResizeVolumes(TestXmippBase):
     @classmethod
     def setUpClass(cls):
+        print "\n", greenStr(" Crop/Resize Volumes Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport1 = cls.runImportVolumes(cls.volumes, 9.896)
         cls.protImport2 = cls.runImportVolumes(cls.vol1, 9.896)
 
-    def testCropResizeVolumes(self):
-        print "Run Resize-Crop single volume"
-        protCropResizeVolume = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
-                                                    windowOperation=1, windowSize=256)
-        protCropResizeVolume.inputVolumes.set(self.protImport2.outputVolume)
-        self.proj.launchProtocol(protCropResizeVolume, wait=True)
-        self.assertIsNotNone(protCropResizeVolume.outputVol, "There was a problem with applying resize and crop to a volume")
+    # Tests with single volume as input.
+    def launchSingle(self, **kwargs):
+        "Launch XmippProtCropResizeVolumes and return output volume."
+        print magentaStr("\n==> Crop/Resize single volume input params: %s" % kwargs)
+        prot = XmippProtCropResizeVolumes(**kwargs)
+        prot.inputVolumes.set(self.protImport2.outputVolume)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with applying resize/crop to a volume")
+        return prot.outputVol
 
-        print "Run Resize-Crop SetOfVolumes"
-        protCropResizeVolumes = XmippProtCropResizeVolumes(doResize=True, resizeOption=1, resizeDim=128, doWindow=True,
-                                                    windowOperation=1, windowSize=256)
-        protCropResizeVolumes.inputVolumes.set(self.protImport1.outputVolumes)
-        self.proj.launchProtocol(protCropResizeVolumes, wait=True)
-        self.assertIsNotNone(protCropResizeVolumes.outputVol, "There was a problem with applying resize and crop to SetOfVolumes")
+    def testSingleResizeDimensions(self):
+        inV = self.protImport2.outputVolume  # short notation
+        newSize = 128
+        outV = self.launchSingle(doResize=True,
+                                 resizeOption=xrh.RESIZE_DIMENSIONS,
+                                 resizeDim=newSize, doWindow=True,
+                                 windowOperation=xrh.WINDOW_OP_WINDOW,
+                                 windowSize=newSize*2)
 
+        self.assertEqual(newSize * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(),
+                               inV.getSamplingRate() * (inV.getDim()[0] / float(newSize)))
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    def testFactorAndCrop(self):
+        inV = self.protImport2.outputVolume  # short notation
+        outV = self.launchSingle(doResize=True,
+                                 resizeOption=xrh.RESIZE_FACTOR,
+                                 resizeFactor=0.5,
+                                 doWindow=True,
+                                 windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(inV.getDim()[0] * 0.5, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(), inV.getSamplingRate() * 2)
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    # TODO: are a few more tests, like the ones in
+    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
+
+    # Tests with multiple volumes as input.
+    def launchSet(self, **kwargs):
+        "Launch XmippProtCropResizeVolumes and return output volumes."
+        print magentaStr("\n==> Crop/Resize single set of volumes input params: %s" % kwargs)
+        prot = XmippProtCropResizeVolumes(**kwargs)
+        prot.inputVolumes.set(self.protImport1.outputVolumes)
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem with applying resize/crop to a set of volumes")
+        return prot.outputVol
+
+    def testSetResizeDimensions(self):
+        inV = self.protImport1.outputVolumes  # short notation
+        newSize = 128
+        outV = self.launchSet(doResize=True,
+                              resizeOption=xrh.RESIZE_DIMENSIONS,
+                              resizeDim=newSize, doWindow=True,
+                              windowOperation=xrh.WINDOW_OP_WINDOW,
+                              windowSize=newSize*2)
+
+        self.assertEqual(newSize * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(),
+                               inV.getSamplingRate() * (inV.getDim()[0] / float(newSize)))
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # Compare the individual volumes too.
+        self.assertTrue(outV.equalItemAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    # TODO: are a few more tests, like the ones in
+    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
 
 class TestXmippCLTomo(TestXmippBase):
     @classmethod
@@ -420,23 +490,6 @@ class TestXmippProtHelicalParameters(TestXmippBase):
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
-
-
-class TestXmippSimAnnealing(TestXmippBase):
-    @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData('mda')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.Class2D = cls.runClassify(cls.protImport.outputParticles)
-
-    def test_simAnnealing(self):
-        print "Run Simulating annealing"
-        protSimAnneal = self.newProtocol(XmippProtInitVolSimAnneal,
-                                         symmetryGroup='d6', numberOfSimAnnealRef=2, percentRejection=0)
-        protSimAnneal.inputClasses.set(self.Class2D.outputClasses)
-        self.launchProtocol(protSimAnneal)
-        self.assertIsNotNone(protSimAnneal.outputVolumes, "There was a problem with simulating annealing protocol")
 
 
 class TestXmippRansacMda(TestXmippBase):

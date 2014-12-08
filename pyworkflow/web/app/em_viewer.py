@@ -36,7 +36,7 @@ def launch_viewer(request):
     
     projectName = request.session['projectName']
     project = loadProject(projectName)
-    objId = request.GET.get('objectId', None)
+    objId = request.GET.get('objectId', None).split("::")[0]
     obj = project.getProtocol(int(objId))
     
     if obj.isPointer():

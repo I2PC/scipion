@@ -96,6 +96,16 @@ class TestXmippBase(BaseTest):
         return cls.CL2DAlign
     
     @classmethod
+    def runCL2D(cls, particles, classes):
+        cls.CL2D = cls.newProtocol(XmippProtCL2D,
+                                   numberOfClasses=4, randomInitialization=False,
+                                   numberOfIterations=4, numberOfMpi=2)
+        cls.CL2D.inputParticles.set(particles)
+        cls.CL2D.initialClasses.set(classes)
+        cls.launchProtocol(cls.CL2D)
+        return cls.CL2D
+    
+    @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D, 
                                            numberOfClasses=4, maxIters=3, doMlf=False,
@@ -296,9 +306,6 @@ class TestXmippScreenParticles(TestXmippBase):
     """This class check if the protocol to classify particles by their similarity to discard outliers work properly"""
     @classmethod
     def setUpClass(cls):
-        #setupTestProject(cls)
-        #TestXmippBase.setData('mda')
-        #cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
@@ -388,52 +395,83 @@ class TestXmippPreprocessParticles(TestXmippBase):
 
 
 class TestXmippCropResizeParticles(TestXmippBase):
-    """This class check if the protocol to crop/resize particles in Xmipp works properly."""
+    """Check protocol crop/resize particles from Xmipp."""
     @classmethod
     def setUpClass(cls):
+        print "\n", greenStr(" Crop/Resize Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True)
         cls.acquisition = cls.protImport.outputParticles.getAcquisition()
-        
-    def validateAcquisition(self, particles):
-        acquisition = particles.getAcquisition()
-        self.assertAlmostEqual(acquisition.getVoltage(), self.acquisition.getVoltage())
-    
-    def test_cropResizePart(self):
-        print "Run crop/resize particles"
-        oldSize = 500.
+
+    def launch(self, **kwargs):
+        "Launch XmippProtCropResizeParticles and return output particles."
+        print magentaStr("\n==> Crop/Resize input params: %s" % kwargs)
+        prot = self.newProtocol(XmippProtCropResizeParticles, **kwargs)
+        prot.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(prot)
+        self.assertTrue(
+            hasattr(prot, "outputParticles") and prot.outputParticles is not None,
+            "There was a problem applying resize/crop to the particles")
+        self.assertAlmostEqual(prot.outputParticles.getAcquisition().getVoltage(),
+                               self.acquisition.getVoltage())
+        return prot.outputParticles  # for more tests
+
+    def test_newSizeAndCrop(self):
+        inP = self.protImport.outputParticles  # short notation
         newSize = 128
-        protCropResize = self.newProtocol(XmippProtCropResizeParticles, 
-                                         doResize=True, resizeOption=1, resizeDim=newSize, 
-                                         doWindow=True, windowOperation=0)
-        input = self.protImport.outputParticles
-        protCropResize.inputParticles.set(input)
-        self.launchProtocol(protCropResize)
-        
-        output = protCropResize.outputParticles
-        self.assertIsNotNone(output, "There was a problem with resize/crop the particles")
-        self.validateAcquisition(output)
-        self.assertEquals(newSize, output.getDimensions()[0])#, "Output particles dimension should be equal to %d" % newSize)
-        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*(oldSize/newSize))
-    
-    def test_cropResizePart2(self):
-        print "Run crop/resize particles v2"
-        protCropResize = self.newProtocol(XmippProtCropResizeParticles,  
-                                         doResize=True, resizeOption=2, resizeLevel=0.5, 
-                                         doWindow=True, windowOperation=1, windowSize=500)
-        input = self.protImport.outputParticles
-        protCropResize.inputParticles.set(input)
-        self.launchProtocol(protCropResize)
-        output = protCropResize.outputParticles
-        
-        self.assertIsNotNone(output, "There was a problem with resize/crop v2 the particles")
-        self.validateAcquisition(output)
-        # Since the images where downsampled twice (factor 0.5)
-        # the sampling rate should be the double
-        self.assertAlmostEquals(output.getSamplingRate(), input.getSamplingRate()*2)
-        # Since we have done windowing operation, the dimensions should be the same
-        self.assertEquals(input.getDim(), output.getDim())
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_DIMENSIONS,
+                           resizeDim=newSize,
+                           doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(newSize, outP.getDim()[0],
+                         "Output particles dimension should be equal to %d" % newSize)
+        self.assertAlmostEqual(outP.getSamplingRate(),
+                               inP.getSamplingRate() * (inP.getDim()[0] / float(newSize)))
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
+
+    def test_factorAndWindow(self):
+        inP = self.protImport.outputParticles  # short notation
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_FACTOR,
+                           resizeFactor=0.5,
+                           doWindow=True, windowOperation=xrh.WINDOW_OP_WINDOW,
+                           windowSize=500)
+
+        # Since the images were downsampled by a factor 0.5, the new
+        # pixel size (painfully called "sampling rate") should be 2x.
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 2)
+        # After the window operation, the dimensions should be the same.
+        self.assertEqual(inP.getDim(), outP.getDim())
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
+
+    def test_pyramid(self):
+        inP = self.protImport.outputParticles  # short notation
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_PYRAMID, resizeLevel=1)
+
+        # Since the images were expanded by 2**resizeLevel (=2) the new
+        # pixel size (painfully called "sampling rate") should be 0.5x.
+        self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 0.5)
+        # We did no window operation, so the dimensions will have doubled.
+        self.assertAlmostEqual(outP.getDim()[0], inP.getDim()[0] * 2)
+
+        # All other attributes remain the same. For the set:
+        self.assertTrue(outP.equalAttributes(
+            inP, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # And for its individual particles too:
+        self.assertTrue(outP.equalItemAttributes(
+            inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
 
 
 class TestXmippFilterParticles(TestXmippBase):
@@ -572,6 +610,28 @@ class TestXmippProtCL2DAlign(TestXmippBase):
         self.assertTrue(CL2DAlignRef.outputParticles.hasAlignment2D(), "Output particles do not have alignment 2D")
 
 
+class TestXmippDenoiseParticles(TestXmippBase):
+    """This class checks if the protocol Denoise Particles works properly"""
+    @classmethod
+    def setUpClass(cls):
+        # For denoise particles we need to import particles, and classes, and 
+        # particles must be aligned with classes. As this is the usual 
+        # situation after a CL2D, we just run this protocol
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportAvgs = cls.runImportAverages(cls.particlesDir + '/img00007[1-4].spi', 3.5)
+        cls.protCL2DInitialCore = cls.runCL2D(cls.protImport.outputParticles, cls.protImportAvgs.outputAverages)
+    
+    def test_denoiseparticles(self):
+        # We check that protocol generates output
+        protDenoise = self.newProtocol(XmippProtDenoiseParticles)
+        protDenoise.inputParticles.set(self.protImport.outputParticles)
+        protDenoise.inputClasses.set(self.protCL2DInitialCore.outputClasses)
+        self.launchProtocol(protDenoise)
+        self.assertIsNotNone(protDenoise.outputParticles, "There was a problem generating output particles")
+
+
 class TestXmippRotSpectra(TestXmippBase):
     """This class check if the protocol to calculate the rotational spectra from particles in Xmipp works properly."""
     @classmethod
@@ -579,7 +639,7 @@ class TestXmippRotSpectra(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+        
          
     def test_rotSpectra(self):
         print "Run Rotational Spectra"

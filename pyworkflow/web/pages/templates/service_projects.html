@@ -66,13 +66,14 @@ div#box {
 }
 
 div#minibox {
-	width: 10em;
-	height: 5em; 
+/* 	width: 10em; */
+/* 	height: 5em;  */
+	width:90%;
 	padding: 1em; 
 	background-color: white;
 	border: 1px solid black;
 	border-radius: 5px;
-	font-size: 0.7em;
+/* 	font-size: 0.7em; */
 	display: inline-table;
 	margin: 1em ;
 }
@@ -95,9 +96,25 @@ h1, h2, h3 {
 
 img.ico{
     background-color:white;
-    padding:0.5em;
-    border-radius:50%;
+/*     padding:0.5em; */
+/*     border-radius:50%; */
 }
+
+#steps{
+/* 	float:left; */
+ 	width:72%; 
+	text-align:left;
+}
+
+#buttons{
+	float:right;
+	width:auto;
+}
+
+.btn{
+	width:10em;
+	}
+
 </style>
 
 <!-- JS -->
@@ -130,58 +147,95 @@ img.ico{
 		<div id="box">
 			<h1>Create your initial volume </h1>
             <br /> 
-			<h3>This webpage will allow you to create an initial 3D map
+			<h3 style="text-align:justify;">This webpage will allow you to create an initial 3D map
 			from your average images.
 			Several methods of different packages are available (Xmipp3, Eman2, ...).
 			At the end, you compare the output volumes and download the desired ones.  
-			
 			<br /><br />
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-folder-open.png"/><br />
-		    	1. Create a new project (or go to a previous one)
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-upload.png"/><br /><br />
-		    	2. Upload binary image stack file.
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-sign-in.png"/><br /><br />
-		    	3. Import averages into the Project.</div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
-		    	4. Run different initial volumes methods.
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-download.png"/><br /><br />
-		    	5. Compare and download the results.
-		    </div>
-             
-			<br />
+			It is recommended  
+			<a href="#" style="color:firebrick;">
+				to check and read the tutorial
+			</a>before to use this tool.
 			</h3>
-            
-			<br /> 
-			<!-- CREATE NEW PROJECT --> 
-			<a href="javascript:serviceProjForm();">
-				<button class="btn buttonRed" type="button">Create new
-					project</button>
-			</a>
-			<!-- GO TO YOUR PROJECT -->
-			<a href="javascript:goToProjectForm();">
-				<button class="btn buttonGrey" type="button">Go to your
-					project</button>
-			</a>
-			<!-- EXAMPLE PROJECT -->
-			<a href="javascript:goWithSubDomainURL('/project_content/?projectName=exampleProject&mode=service');"
-				class="projName">
-				<button class="btn buttonGrey" type="button">Example
-					Project</button>
-			</a>
+			
+			
+		    <div id="minibox">
+		    	<div style="text-align:left;float:left; width:72%;">
+			    	<h2>
+			    		<strong>
+			    			<img class="ico" src="/resources/favicon.png" style="width:auto;height:17px;"/>
+				    		First Step: Your project
+			    		</strong>
+		    		</h2>
+		    		<h3>
+			    		Create a new project (or go to a previous one)
+			    	</h3>
+		    	</div>
+			    <div id="buttons">
+					<!-- CREATE NEW PROJECT --> 
+					<a href="javascript:serviceProjForm(0);">
+						<button class="btn buttonRed" type="button">Create
+							project</button>
+					</a>
+					<br /><br />
+					<!-- GO TO YOUR PROJECT -->
+					<a href="javascript:goToProjectForm();">
+						<button class="btn buttonGrey" type="button">Go to 
+							project</button>
+					</a>
+				</div>
+		    </div>
+		    
+		    <div id="minibox">
+		    	<div style="text-align:left;float:left; width:72%;">
+			    	<h2>
+			    		<strong>
+					    	<img class="ico" src="/resources/fa-folder-open.png"/>
+				    		Second Step: Using data
+			    		</strong>
+		    		</h2>
+		    		<h3>
+				    	Upload binary image stack file and import this averages into the Project.
+		    		</h3>
+		    	</div>
+		    	<div id="buttons">
+			    	<!-- TEST DATA -->
+					<a href="javascript:serviceProjForm(1);">
+						<button class="btn buttonRed" type="button">
+							Test data
+						</button>
+					</a>
+				</div>
+		    </div>
+		    
+		    <div id="minibox">
+		    	<div style="text-align:left;float:left; width:72%;">
+			    	<h2>
+			    		<strong>
+			    			<img class="ico" src="/resources/fa-cog.png"/>
+				    		Final Step: Running
+			    		</strong>
+		    		</h2>
+			    	<h3>
+			    		Run different initial volumes methods. After you can compare and download the results.
+			    	</h3>
+		    	</div>
+		    	<div id="buttons">
+					<!-- EXAMPLE PROJECT -->
+					<a href="javascript:goWithSubDomainURL('/project_content/?projectName=exampleProject&mode=service');"
+						class="projName">
+						<button class="btn buttonGrey" type="button">Example
+							Project</button>
+					</a>
+				</div>
+		    </div>
+		
 		</div>
 		<div style="text-align:center; font-size: 0.8em;">
-			<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/"> ©
-				2014 · Scipion is licenced under the Creative Commons
-				Attribution-NonCommercial-NoDerivs <img
-				src="https://i.creativecommons.org/l/by-nc-nd/3.0/80x15.png" />
+			<a href="http://www.gnu.org/copyleft/gpl.html"> ©
+				2014 · Scipion is licenced under the GNU General Public License
+				&nbsp;&nbsp;
+				<img src="http://www.gnu.org/graphics/gplv3-127x51.png" style="height:1.5em;width:auto;"/>
 			</a>
 		</div>
 	</div>

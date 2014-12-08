@@ -101,11 +101,11 @@ class XmippProtImageOperate():
                            label='Input Volumes (2nd)',
                            help = 'It can be a metadata, a stack of volumes',
                            pointerClass='Volume, SetOfVolumes')
-        form.addParam('inputValue', IntParam, important=True,
+        form.addParam('inputValue', FloatParam, important=True,
                        condition='isValue', label='Input value ',
                        help = 'For the operations which support values')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+
     def _insertProcessStep(self):
 
         inputFn = self.inputFn
@@ -116,15 +116,20 @@ class XmippProtImageOperate():
                 inputFn2 = self._getTmpPath('input_particles2.xmd')
                 writeSetOfParticles(self.inputParticles2.get(), inputFn2)
             else:
-                print "We are in saving list of volumes"
                 inputFn2 = self._getTmpPath('input_volumes2.xmd')
-                writeSetOfVolumes(self.inputVolumes2.get(), inputFn2)
+                #if we do not create this case them getAlignment must be defined
+                if isinstance(self.inputVolumes2.get(), Volume):
+                    inputFn2 = self.inputVolumes2.get().getFileName()
+                else:#set of volumes
+                    #TODO ROB: how to deal with binary conversions?
+                    writeSetOfVolumes(self.inputVolumes2.get(), inputFn2)
             args = (self._args + operationStr + ' ' + inputFn2) % locals()
         else:
             val = self.inputValue.get()
             args = (self._args + operationStr) % locals()
-            args += ' %d' % val
+            args += ' %f' % val
         self._insertFunctionStep("operationStep", args)
+        #--------------------------- INSERT steps functions --------------------------------------------
 
 
 class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles, XmippProtImageOperate):
@@ -143,6 +148,7 @@ class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def operationStep(self, args):
+        print "operationStep"
         args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
         self.runJob("xmipp_image_operate", args)
     #--------------------------- INFO functions --------------------------------------------
@@ -150,7 +156,10 @@ class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles
         errors = []
         operation = self.operation.get()
         N1 = self.inputParticles.get().getSize()
-        N2 = self.inputParticles2.get().getSize()
+        if self.isValue.get == False:
+            N2 = self.inputParticles2.get().getSize()
+        else:
+            N2=1
         checkDimension = False
         if operation == OP_COLUMN or operation == OP_SLICE or operation == OP_ROW:
             if not self.isValue.get():
@@ -176,7 +185,9 @@ class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles
         return errors
 
 
-class XmippProtImageOperateVolumes(ProtOperateVolumes, XmippProcessVolumes, XmippProtImageOperate):
+class XmippProtImageOperateVolumes(ProtOperateVolumes,
+                                   XmippProcessVolumes,
+                                   XmippProtImageOperate):
     """ Apply an operation to two sets of volumes """
     _label = 'calculator'
     _isParticle = False
@@ -219,8 +230,16 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes, XmippProcessVolumes, Xmip
             if not self.isValue.get():
                 checkDimension = True
         if checkDimension:
-            x1, y1, z1 = self.inputVolumes.get().getDimensions()
-            x2, y2, z2 = self.inputVolumes.get().getDimensions()
+            #TODO ROB: this should be getDimensions even dor single objects
+            #Do the same with 2D?
+            # but I cannot make it work
+            if isinstance(self.inputVolumes2.get(), Volume)\
+               or isinstance(self.inputVolumes2.get(), Particle):
+                x1, y1, z1 = self.inputVolumes.get().getDim()
+                x2, y2, z2 = self.inputVolumes2.get().getDim()
+            else:
+                x1, y1, z1 = self.inputVolumes.get().getDimensions()
+                x2, y2, z2 = self.inputVolumes2.get().getDimensions()
             if x1 != x2 or y1 != y2 or z1 != z2:
                 errors.append("Volume sizes in the two operands are not the same")
             #if N2 > 1:

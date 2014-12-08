@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
 
 
@@ -210,8 +210,13 @@ class ProtUserSubSet(BatchProtocol):
         inputObj = self.inputObject.get()
 
         if self.volId.get():
-            volSet = SetOfVolumes(filename=self._dbName)
-            vol = volSet[self.volId.get()]
+
+            if isinstance(setObj, SetOfVolumes):
+                volSet = SetOfVolumes(filename=self._dbName)
+                vol = volSet[self.volId.get()]
+            else:
+                classSet = SetOfClasses3D(filename=self._dbName)
+                vol = classSet[self.volId.get()].getRepresentative()
             self._defineOutputs(outputVolume=vol)
             self._defineSourceRelation(inputObj, vol)
 

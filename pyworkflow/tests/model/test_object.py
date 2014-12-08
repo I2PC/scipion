@@ -172,6 +172,18 @@ class TestObject(BaseTest):
         operationLabel  = '_defocusMin' #argument of aggregation function
         groupByLabels   = ['_defocusMin'] # absolute minimum
         print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
+    
+    def test_formatString(self):
+        """ Test that Scalar objects behave well
+        when using string formating such as: %f or %d
+        """
+        i = Integer(10)
+        f = Float(3.345)
+        
+        s1 = "i = %d, f = %0.3f" % (i, f)
+        
+        self.assertEqual(s1, "i = 10, f = 3.345")
+
 
 class TestUtils(BaseTest):
     

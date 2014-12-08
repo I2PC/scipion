@@ -24,16 +24,18 @@
 # *
 # **************************************************************************
 
-from os.path import exists
+from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
 from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
 from views_tree import loadProtTree
 
 from pyworkflow.manager import Manager
+from pyworkflow.utils.path import copyFile
 
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
+from pyworkflow.tests.tests import DataSet
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -399,6 +401,10 @@ def create_service_project(request):
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
+        
+        # Filename to use as test data 
+        testDataKey = request.GET.get('testData')
+        
         customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
         writeCustomMenu(customMenu)
         #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
@@ -408,7 +414,26 @@ def create_service_project(request):
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
                                          objLabel='import averages')
-        project.saveProtocol(protImport)
+        
+        # If using test data execute the import averages run
+        # options are set in 'project_utils.js'
+        dsMDA = DataSet.getDataSet('mda')
+        testDataDict = {'hemoglobin': dsMDA.getFile('particles/images.stk'),
+                        'groel': '',
+                        'ribosome': ''}
+        
+        if testDataKey in testDataDict:
+            fn = testDataDict.get(testDataKey)
+            newFn = join(project.uploadPath, basename(fn))
+            copyFile(fn, newFn)
+            
+            protImport.filesPath.set(newFn)
+            protImport.samplingRate.set(1.)
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            project.saveProtocol(protImport)
+            
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)

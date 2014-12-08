@@ -293,7 +293,14 @@ class Image(EMObject):
     
     def getDataType(self):
         pass
-    
+
+    def getDimensions(self):
+        """getDimensions is redundant here but not in setOfVolumes
+         create it makes easier to crete protocols for both images
+         and sets of images
+        """
+        self.getDim()
+
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         fn = self.getFileName()

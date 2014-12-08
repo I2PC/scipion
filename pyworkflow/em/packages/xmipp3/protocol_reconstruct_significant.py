@@ -23,6 +23,8 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
+from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 """
 This sub-package contains wrapper around reconstruct_significant Xmipp program
 """
@@ -39,7 +41,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
-                      pointerClass='SetOfClasses2D, SetOfAverages', pointerCondition='hasRepresentatives',
+                      pointerClass='SetOfClasses2D, SetOfAverages',
                       help='Select the input classes2D from the project.\n'
                            'It should be a SetOfClasses2D class with class representative')
         form.addParam('symmetryGroup', TextParam, default='c1',
@@ -130,7 +132,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                '--alphaF %(alphaF)f --angDistance %(angDistance)f'% self._params
         
         if self.thereisRefVolume:
-            args += " --initvolumes " + self.refVolume.get()
+            args += " --initvolumes " + self._getExtraPath('input_volumes.xmd')
         else:
             args += " --numberOfVolumes %d"%self.Nvolumes.get()
         if self.useImed:
@@ -143,7 +145,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             args += " --keepIntermediateVolumes"
         self._insertRunJobStep("xmipp_reconstruct_significant", args)
 
-        # self._insertFunctionStep('createOutputStep')        
+        self._insertFunctionStep('createOutputStep')        
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self, classesFn):
@@ -153,23 +155,58 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             writeSetOfClasses2D(inputClasses, classesFn, writeParticles=False)
         else:
             writeSetOfParticles(inputClasses, classesFn)
+            
+        if self.thereisRefVolume:
+            inputVolume= self.refVolume.get()
+            fnVolumes = self._getExtraPath('input_volumes.xmd')
+            if isinstance(inputVolume, SetOfVolumes):
+                writeSetOfVolumes(inputVolume, fnVolumes)
+            else:
+                row = XmippMdRow()
+                volumeToRow(inputVolume, row, alignType = ALIGN_NONE)
+                md = xmipp.MetaData()
+                row.writeToMd(md, md.addObject())
+                md.write(fnVolumes)
+
+    def getLastIteration(self,Nvolumes):
+        lastIter=-1
+        for n in range(self.iter.get()+1):
+            NvolumesIter=len(glob(self._getExtraPath('volume_iter%03d_*.vol'%n)))
+            if NvolumesIter==0:
+                continue
+            elif NvolumesIter==Nvolumes:
+                lastIter=n
+            else:
+                break
+        return lastIter
 
     def createOutputStep(self):
-        particles = self.inputParticles.get()
-        # Define the output average
-        avgFile = self._getExtraPath('level_00', 'class_classes.stk')
-        avg = Particle()
-        avg.setLocation(1, avgFile)
-        avg.copyInfo(particles)
-        self._defineOutputs(outputAverage=avg)
-        self._defineSourceRelation(particles, avg)
-            
-        # Generate the Set of Particles with alignment
-        alignedSet = self._createSetOfParticles()
-        alignedSet.copyInfo(particles)
-        readSetOfParticles(self.imgsFn, alignedSet)
-        self._defineOutputs(outputParticles=alignedSet)
-        self._defineSourceRelation(particles, alignedSet)
+        if self.thereisRefVolume:
+            inputVolume= self.refVolume.get()
+            if isinstance(inputVolume, SetOfVolumes):
+                Nvolumes=inputVolume.getSize()
+            else:
+                Nvolumes=1
+        else:
+            Nvolumes=self.Nvolumes.get()
+
+        lastIter=self.getLastIteration(Nvolumes)
+        if Nvolumes==1:
+            vol = Volume()
+            vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
+            vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
+        else:
+            vol = self._createSetOfVolumes()
+            vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
+            fnVolumes=glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
+            fnVolumes.sort()
+            for fnVolume in fnVolumes:
+                aux=Volume()
+                aux.setLocation(fnVolume)
+                vol.append(aux)
+
+        self._defineOutputs(outputVol=vol)
+        self._defineSourceRelation(vol, self.inputClasses)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -177,8 +214,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if self.thereisRefVolume:
             if self.refVolume.hasValue():
                 refVolume = self.refVolume.get()
-                [x1,y1,z1]=refVolume.getDim()
-                [x2,y2]=self.inputClasses.get().getDim()
+                x1, y1, _ = refVolume.getDim()
+                x2, y2, _ = self.inputClasses.get().getDimensions()
                 if x1!=x2 or y1!=y2:
                     errors.append('The input images and the reference volume have different sizes') 
             else:
@@ -192,7 +229,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             summary.append("Starting from: %s" % self.refVolume.get().getNameId())
         else:
             summary.append("Starting from: %d random volumes"%self.Nvolumes.get())
-        summary.append("Significance from %f%% to %f%% in %d iterations"%(100-self.alpha0.get()*100,100-self.alphaF.get()*100,self.iter.get()))
+        summary.append("Significance from %f%% to %f%% in %d iterations"%(self.alpha0.get(),self.alphaF.get(),self.iter.get()))
         if self.useImed:
             summary.append("IMED used")
         if self.strictDir:
@@ -210,7 +247,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         else:
             retval+=" We started the iterations with %d random volumes."%self.Nvolumes.get()
         retval+=" %d iterations were run going from a starting significance of %f%% to a final one of %f%%."%\
-           (self.iter.get(),self.alpha0.get()*100,self.alphaF.get()*100)
+           (self.iter.get(),self.alpha0.get(),self.alphaF.get())
         if self.useImed:
             retval+=" IMED weighting was used."
         if self.strictDir:
