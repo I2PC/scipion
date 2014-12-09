@@ -8,9 +8,7 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
@@ -48,7 +46,6 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 	public void paint(Graphics g)
 	{
-		
 		Rectangle source = new Rectangle(particle.getX0(size), particle.getY0(size), size, size);
 		setSourceRect(source);
 		super.paint(g);

@@ -124,6 +124,7 @@ public class JMetaDataIO {
                         out.write(String.format(vformat, f.getCommand().replace(' ', '_')));
                         options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
                         out.write(String.format(vformat, options));
+                        out.newLine();
                         
                     }
                     out.close();

@@ -13,6 +13,7 @@ import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippDialog;
@@ -43,16 +44,17 @@ public class TemplatesJDialog extends JDialog
 			int size = frame.getParticlePicker().getSize();
 			templatespn.removeAll();
 
-			templatespn.setPreferredSize(new Dimension((int) (size * templates.getNDim()  + 20), size + 5));
+			templatespn.setPreferredSize(new Dimension((int) (size * templates.getNDim()  + 50), size + 5));
 
 			if(frame.getParticlePicker().hasManualParticles())
 			{
 				ImagePlus template;
 
-				for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i++)
+				for (int i = 0; i < frame.getParticlePicker().getTemplatesNumber(); i ++)
 				{
 					template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
-					templatespn.add(new JLabel(new ImageIcon(template.getImage(), "")));
+					templatespn.add(new JLabel(new ImageIcon(template.getImage()), SwingConstants.CENTER));
+                                        
 
 				}
 			}
