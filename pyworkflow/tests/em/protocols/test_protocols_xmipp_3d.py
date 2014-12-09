@@ -396,7 +396,7 @@ class TestXmippCropResizeVolumes(TestXmippBase):
         self.assertTrue(outV.equalAttributes(
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
-    def testFactorAndCrop(self):
+    def testSingleFactorAndCrop(self):
         inV = self.protImport2.outputVolume  # short notation
         outV = self.launchSingle(doResize=True,
                                  resizeOption=xrh.RESIZE_FACTOR,
@@ -409,8 +409,17 @@ class TestXmippCropResizeVolumes(TestXmippBase):
         self.assertTrue(outV.equalAttributes(
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
-    # TODO: are a few more tests, like the ones in
-    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
+    def testSinglePyramid(self):
+        inV = self.protImport2.outputVolume  # short notation
+        outV = self.launchSingle(doResize=True, resizeOption=xrh.RESIZE_PYRAMID,
+                                 resizeLevel=1)
+
+        # Since the images were expanded by 2**resizeLevel (=2) the new
+        # pixel size (painfully called "sampling rate") should be 0.5x.
+        self.assertEqual(inV.getDim()[0] * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(), inV.getSamplingRate() * 0.5)
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
     # Tests with multiple volumes as input.
     def launchSet(self, **kwargs):
@@ -441,8 +450,37 @@ class TestXmippCropResizeVolumes(TestXmippBase):
         self.assertTrue(outV.equalItemAttributes(
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
-    # TODO: are a few more tests, like the ones in
-    # pyworkflow/tests/em/protocols/test_protocols_xmipp_2d.py:TestXmippCropResizeParticles
+    def testSetFactorAndCrop(self):
+        inV = self.protImport1.outputVolumes  # short notation
+        outV = self.launchSet(doResize=True,
+                              resizeOption=xrh.RESIZE_FACTOR,
+                              resizeFactor=0.5,
+                              doWindow=True,
+                              windowOperation=xrh.WINDOW_OP_CROP)
+
+        self.assertEqual(inV.getDim()[0] * 0.5, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(), inV.getSamplingRate() * 2)
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # Compare the individual volumes too.
+        self.assertTrue(outV.equalItemAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
+    def testSetPyramid(self):
+        inV = self.protImport1.outputVolumes  # short notation
+        outV = self.launchSet(doResize=True, resizeOption=xrh.RESIZE_PYRAMID,
+                              resizeLevel=1)
+
+        # Since the images were expanded by 2**resizeLevel (=2) the new
+        # pixel size (painfully called "sampling rate") should be 0.5x.
+        self.assertEqual(inV.getDim()[0] * 2, outV.getDim()[0])
+        self.assertAlmostEqual(outV.getSamplingRate(), inV.getSamplingRate() * 0.5)
+        self.assertTrue(outV.equalAttributes(
+            inV, ignore=['_mapperPath', '_samplingRate', '_firstDim'], verbose=True))
+        # Compare the individual volumes too.
+        self.assertTrue(outV.equalItemAttributes(
+            inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
+
 
 class TestXmippCLTomo(TestXmippBase):
     @classmethod

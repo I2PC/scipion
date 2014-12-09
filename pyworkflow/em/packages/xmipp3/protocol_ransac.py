@@ -59,9 +59,10 @@ class XmippProtRansac(ProtInitialVolume):
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')  
         form.addParam('symmetryGroup', StringParam, default="c1",
-                      label='Symmetry group', 
-                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
-                        'If no symmetry is present, give c1')
+                      label='Symmetry group',  
+                      help="See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
+                           "for a description of the symmetry groups format."
+                           "If no symmetry is present, give c1")
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Angular sampling rate',
                       help='In degrees.'
