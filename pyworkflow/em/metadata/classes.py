@@ -1,0 +1,124 @@
+# **************************************************************************
+# *
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *
+# **************************************************************************
+"""
+Add functions related to metadata
+"""
+
+import sys
+from collections import OrderedDict
+
+from pyworkflow.object import ObjectWrap
+from xmipp import MetaData, label2Str, str2Label
+
+
+
+class Row():
+    """ Support Xmipp class to store label and value pairs 
+    corresponding to a Metadata row. 
+    """
+    def __init__(self):
+        self._labelDict = OrderedDict() # Dictionary containing labels and values
+        self._objId = None # Set this id when reading from a metadata
+        
+    def getObjId(self):
+        return self._objId
+    
+    def hasLabel(self, label):
+        return self.containsLabel(label)
+    
+    def containsLabel(self, label):
+        # Allow getValue using the label string
+        if isinstance(label, basestring):
+            label = str2Label(label)
+        return label in self._labelDict
+    
+    def removeLabel(self, label):
+        if self.hasLabel(label):
+            del self._labelDict[label]
+    
+    def setValue(self, label, value):
+        """args: this list should contains tuples with 
+        MetaData Label and the desired value"""
+        # Allow setValue using the label string
+        if isinstance(label, basestring):
+            label = str2Label(label)
+        self._labelDict[label] = value
+            
+    def getValue(self, label, default=None):
+        """ Return the value of the row for a given label. """
+        # Allow getValue using the label string
+        if isinstance(label, basestring):
+            label = str2Label(label)
+        return self._labelDict.get(label, default)
+    
+    def getValueAsObject(self, label, default=None):
+        """ Same as getValue, but making an Object wrapping. """
+        return ObjectWrap(self.getValue(label, default))
+    
+    def readFromMd(self, md, objId):
+        """ Get all row values from a given id of a metadata. """
+        self._labelDict.clear()
+        self._objId = objId
+        
+        for label in md.getActiveLabels():
+            self._labelDict[label] = md.getValue(label, objId)
+            
+    def writeToMd(self, md, objId):
+        """ Set back row values to a metadata row. """
+        for label, value in self._labelDict.iteritems():
+            # TODO: Check how to handle correctly unicode type
+            # in Xmipp and Scipion
+            if type(value) is unicode:
+                value = str(value)
+            try:
+                md.setValue(label, value, objId)
+            except Exception, ex:
+                print >> sys.stderr, "XmippMdRow.writeToMd: Error writting value to metadata."
+                print >> sys.stderr, "                     label: %s, value: %s, type(value): %s" % (label2Str(label), value, type(value))
+                raise ex
+            
+    def readFromFile(self, fn):
+        md = MetaData(fn)
+        self.readFromMd(md, md.firstObject())
+        
+    def copyFromRow(self, other):
+        for label, value in other._labelDict.iteritems():
+            self.setValue(label, value)
+            
+    def __str__(self):
+        s = '{'
+        for k, v in self._labelDict.iteritems():
+            s += '  %s = %s\n' % (label2Str(k), v)
+        return s + '}'
+    
+    def __iter__(self):
+        return self._labelDict.iteritems()
+            
+    def printDict(self):
+        """ Fancy printing of the row, mainly for debugging. """
+        print str(self)
+        
+        

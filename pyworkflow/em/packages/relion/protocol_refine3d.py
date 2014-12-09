@@ -26,7 +26,7 @@
 """
 This module contains the protocol for 3d refinement with Relion.
 """
-import xmipp
+import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
 
@@ -42,8 +42,9 @@ leads to objective and high-quality results.
     """    
     _label = '3D refine'
     IS_CLASSIFY = False
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS]
+    #FIXME: USE REAL RELION LABELS
+    CHANGE_LABELS = [md.MDL_AVG_CHANGES_ORIENTATIONS, 
+                     md.MDL_AVG_CHANGES_OFFSETS]
     PREFIXES = ['half1_', 'half2_']
     
     def __init__(self, **args):        
@@ -137,11 +138,10 @@ leads to objective and high-quality results.
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        from pyworkflow.em.packages.xmipp3 import getMdFirstRow
         summary = []
         it = self._lastIter()
         if it >= 1:
-            row = getMdFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
+            row = md.getFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
             resol = row.getValue("rlnCurrentResolution")
             summary.append("Current resolution: *%0.2f*" % resol)
         return summary

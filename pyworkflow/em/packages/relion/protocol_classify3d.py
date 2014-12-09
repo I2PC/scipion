@@ -27,7 +27,7 @@
 This module contains the protocol for 3d classification with relion.
 """
 
-import xmipp
+import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtClassify3D
 from pyworkflow.em.data import Volume
 
@@ -43,8 +43,9 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     leads to objective and high-quality results.
     """
     _label = '3D classify'
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS]
+    #FIXME: use real relion labels
+    CHANGE_LABELS = [md.MDL_AVG_CHANGES_ORIENTATIONS, 
+                     md.MDL_AVG_CHANGES_OFFSETS]
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
@@ -119,11 +120,10 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        from pyworkflow.em.packages.xmipp3 import getMdFirstRow
         summary = []
         it = self._lastIter()
         if it >= 1:
-            row = getMdFirstRow('model_general@' + self._getFileName('model', iter=it))
+            row = md.getFirstRow('model_general@' + self._getFileName('model', iter=it))
             resol = row.getValue("rlnCurrentResolution")
             summary.append("Current resolution: *%0.2f*" % resol)
         

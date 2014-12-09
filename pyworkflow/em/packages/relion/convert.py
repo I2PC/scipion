@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import ALIGN_NONE, ALIGN_2D, ALIGN_PROJ
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Relion specific files
@@ -32,22 +31,20 @@ This module contains converter functions that will serve to:
 """
 
 import os
-from os.path import join
+from os.path import join, basename
 import numpy
 from collections import OrderedDict
 
+from pyworkflow.object import ObjectWrap
 from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
-                                   findRootFrom)
-from pyworkflow.em import ImageHandler, ObjectWrap, NO_INDEX, String
-from pyworkflow.em.data import (Particle, SetOfClasses2D, SetOfClasses3D,
-                                SetOfParticles, CTFModel, Transform,
-                                Acquisition, Coordinate)
+                                   findRootFrom, replaceBaseExt)
+import pyworkflow.em as em
 from pyworkflow.em.packages.xmipp3 import XmippMdRow, getLabelPythonType
-from pyworkflow.em.relion.constants import *
+from pyworkflow.em.packages.relion.constants import *
 # Since Relion share several conventions with Xmipp, we will reuse 
 # the xmipp3 tools implemented for Scipion here
-import xmipp
+import pyworkflow.em.metadata as md
 
 
 # This dictionary will be used to map
@@ -87,7 +84,7 @@ CTF_EXTRA_LABELS = [
 IMAGE_EXTRA_LABELS = [
     xmipp.RLN_SELECT_PARTICLES_ZSCORE,
     xmipp.RLN_PARTICLE_ID,
-    xmipp.RLN_FRAME_ID,
+    xmipp.RLN_IMAGE_FRAME_NR,
     ]
  
 # ANGLES_DICT = OrderedDict([
@@ -122,7 +119,7 @@ def locationToRelion(index, filename):
     to a string with @ as expected in Relion.
     """
     #TODO: Maybe we need to add more logic dependent of the format
-    if index != NO_INDEX:
+    if index != em.NO_INDEX:
         return "%06d@%s" % (index, filename)
     
     return filename
@@ -134,77 +131,77 @@ def relionToLocation(filename):
     if '@' in filename:
         return xmipp.FileName(filename).decompose()
     else:
-        return NO_INDEX, str(filename)
+        return em.NO_INDEX, str(filename)
 
 
-class ParticleAdaptor():
-    """ Class used to convert a set of particles for Relion.
-    It will write an stack in Spider format and also
-    modify the output star file to point to the new stack.
-    """
-    def __init__(self, imgSet, filesMapping={}, originalSet=None,
-                 preprocessImageRow=None,
-                 postprocessImageRow=None):
-        self._rowCount = 1
-        self._ih = ImageHandler()
-        self._imgSet = imgSet
-        self._filesMapping = filesMapping
-        self._originalSet = originalSet
-        self._preprocessImageRow = preprocessImageRow
-        self._postprocessImageRow = postprocessImageRow
-        
-    def preprocessImageRow(self, img, imgRow):
-        """ If binary images where converted or just 
-        created links, replace the orignal names.
-        """
-        # preprocessImageRow is a way relion protocol have to
-        # do some preprocessing on image object or row 
-        # before the normal setup
-        if self._preprocessImageRow:
-            self._preprocessImageRow(img, imgRow)
-            
-        # Re-write the row with the new location
-        if self._filesMapping:
-            # If the filesMapping is not empty
-            # we assume that the stack files have been converted
-            # to be properly read by relion and also that
-            # each particle preserve its index and only change the filename
-            newFile = self._filesMapping[img.getFileName()]
-            newLoc = (img.getIndex(), newFile)
-            img.setLocation(newLoc)
-
-    def postprocessImageRow(self, img, imgRow):
-        """ If binary images where converted or just 
-        created links, replace the orignal names.
-        """            
-        if img.hasMicId():
-            imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
-            imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
-            
-        if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
-            # Write stuff for particle polishing
-            movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
-            movieName = 'fake_micrograph_%06d_movie.mrcs' % movieId 
-            frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
-            micName = '%06d@%s' % (frameId, movieName)
-            particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
-            particle = self._originalSet[particleId]
-            if particle is None:
-                particleName = 'None'
-                raise Exception("Particle with id %d not found!!!" % particleId)
-            else:
-                particleName = locationToRelion(*particle.getLocation())
-                
-            imgRow.setValue('rlnMicrographName', micName)
-            imgRow.setValue('rlnParticleName', particleName)
-            
-        for label, _ in imgRow:
-            if not label in XMIPP_RELION_LABELS:
-                imgRow.removeLabel(label)
-        self._rowCount += 1
-        
-        if self._postprocessImageRow:
-            self._postprocessImageRow(img, imgRow)
+# class ParticleAdaptor():
+#     """ Class used to convert a set of particles for Relion.
+#     It will write an stack in Spider format and also
+#     modify the output star file to point to the new stack.
+#     """
+#     def __init__(self, imgSet, filesMapping={}, originalSet=None,
+#                  preprocessImageRow=None,
+#                  postprocessImageRow=None):
+#         self._rowCount = 1
+#         self._ih = ImageHandler()
+#         self._imgSet = imgSet
+#         self._filesMapping = filesMapping
+#         self._originalSet = originalSet
+#         self._preprocessImageRow = preprocessImageRow
+#         self._postprocessImageRow = postprocessImageRow
+#         
+#     def preprocessImageRow(self, img, imgRow):
+#         """ If binary images where converted or just 
+#         created links, replace the orignal names.
+#         """
+#         # preprocessImageRow is a way relion protocol have to
+#         # do some preprocessing on image object or row 
+#         # before the normal setup
+#         if self._preprocessImageRow:
+#             self._preprocessImageRow(img, imgRow)
+#             
+#         # Re-write the row with the new location
+#         if self._filesMapping:
+#             # If the filesMapping is not empty
+#             # we assume that the stack files have been converted
+#             # to be properly read by relion and also that
+#             # each particle preserve its index and only change the filename
+#             newFile = self._filesMapping[img.getFileName()]
+#             newLoc = (img.getIndex(), newFile)
+#             img.setLocation(newLoc)
+# 
+#     def postprocessImageRow(self, img, imgRow):
+#         """ If binary images where converted or just 
+#         created links, replace the orignal names.
+#         """            
+#         if img.hasMicId():
+#             imgRow.setValue('rlnMicrographName', 'fake_micrograph_%06d.mrc' % img.getMicId())
+#             imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(img.getMicId()))
+#             
+#         if imgRow.hasLabel(xmipp.MDL_PARTICLE_ID):
+#             # Write stuff for particle polishing
+#             movieId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID)
+#             movieName = 'fake_micrograph_%06d_movie.mrcs' % movieId 
+#             frameId = imgRow.getValue(xmipp.MDL_FRAME_ID) + 1
+#             micName = '%06d@%s' % (frameId, movieName)
+#             particleId = imgRow.getValue(xmipp.MDL_PARTICLE_ID)
+#             particle = self._originalSet[particleId]
+#             if particle is None:
+#                 particleName = 'None'
+#                 raise Exception("Particle with id %d not found!!!" % particleId)
+#             else:
+#                 particleName = locationToRelion(*particle.getLocation())
+#                 
+#             imgRow.setValue('rlnMicrographName', micName)
+#             imgRow.setValue('rlnParticleName', particleName)
+#             
+#         for label, _ in imgRow:
+#             if not label in XMIPP_RELION_LABELS:
+#                 imgRow.removeLabel(label)
+#         self._rowCount += 1
+#         
+#         if self._postprocessImageRow:
+#             self._postprocessImageRow(img, imgRow)
 
 
 def objectToRow(obj, row, attrDict, extraLabels={}):
@@ -231,7 +228,7 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
     attrLabels = attrDict.values()
     
     for label in extraLabels:
-        attrName = '_rln_%s' % xmipp.label2Str(label)
+        attrName = '_' + xmipp.label2Str(label)
         if label not in attrLabels and hasattr(obj, attrName):
             value = obj.getAttributeValue(attrName) 
             row.setValue(label, value)
@@ -245,7 +242,7 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
         attrDict: dictionary with the map between obj attributes(keys) and 
             row MDLabels in Xmipp (values).
         extraLabels: a list with extra labels that could be included
-            as _xmipp_labelName
+            as properties with the label name such as: _rlnSomeThing
     """
     obj.setEnabled(row.getValue(xmipp.RLN_IMAGE_ENABLED, 1) > 0)
     
@@ -261,7 +258,7 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
     for label in extraLabels:
         if label not in attrLabels and row.hasLabel(label):
             labelStr = xmipp.label2Str(label)
-            setattr(obj, '_xmipp_%s' % labelStr, row.getValueAsObject(label))
+            setattr(obj, '_' % labelStr, row.getValueAsObject(label))
     
     
 def rowFromMd(md, objId):
@@ -313,9 +310,9 @@ def acquisitionToRow(acquisition, ctfRow):
 
 
 def rowToAcquisition(acquisitionRow):
-    """ Create an acquisition from a row of a metadata. """
+    """ Create an acquisition from a row of a meta """
     if _containsAll(acquisitionRow, ACQUISITION_DICT):
-        acquisition = Acquisition()
+        acquisition = em.Acquisition()
         rowToObject(acquisitionRow, acquisition, ACQUISITION_DICT) 
     else:                
         acquisition = None
@@ -334,9 +331,9 @@ def setPsdFiles(ctfModel, ctfRow):
 
 
 def rowToCtfModel(ctfRow):
-    """ Create a CTFModel from a row of a metadata. """
+    """ Create a CTFModel from a row of a meta """
     if _containsAll(ctfRow, CTF_DICT):
-        ctfModel = CTFModel()
+        ctfModel = em.CTFModel()
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)
@@ -385,11 +382,11 @@ def rowToAlignment(alignmentRow, alignType):
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
     """
-    is2D = alignType == ALIGN_2D
-    inverseTransform = alignType == ALIGN_PROJ
+    is2D = alignType == em.ALIGN_2D
+    inverseTransform = alignType == em.ALIGN_PROJ
     
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
-        alignment = Transform()
+        alignment = em.Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
         angles[2] = alignmentRow.getValue(xmipp.RLN_ORIENT_PSI, 0.)
@@ -402,13 +399,6 @@ def rowToAlignment(alignmentRow, alignType):
 
         M = matrixFromGeometry(shifts, angles, inverseTransform)
         alignment.setMatrix(M)
-        
-        #FIXME: now are also storing the alignment parameters since
-        # the conversions to the Transform matrix have not been extensively tested.
-        # After this, we should only keep the matrix 
-        #for paramName, label in ALIGNMENT_DICT.iteritems():
-        #    if alignmentRow.hasLabel(label):
-        #        setattr(alignment, paramName, alignmentRow.getValueAsObject(label))    
     else:
         alignment = None
     
@@ -422,8 +412,8 @@ def alignmentToRow(alignment, alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
-    is2D = alignType == ALIGN_2D
-    inverseTransform = alignType == ALIGN_PROJ
+    is2D = alignType == em.ALIGN_2D
+    inverseTransform = alignType == em.ALIGN_PROJ
     
     shifts, angles = geometryFromMatrix(alignment.getMatrix(), inverseTransform)
 
@@ -445,18 +435,19 @@ def coordinateToRow(coord, coordRow, copyId=True):
     if copyId:
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT)
+    #FIXME: THE FOLLOWING IS NOT CLEAN
     if coord.getMicId():
         coordRow.setValue(xmipp.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
 
 
 def rowToCoordinate(coordRow):
-    """ Create a Coordinate from a row of a metadata. """
+    """ Create a Coordinate from a row of a meta """
     # Check that all required labels are present in the row
     if _containsAll(coordRow, COOR_DICT):
-        coord = Coordinate()
+        coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT)
             
-        # Setup the micId if is integer value
+        #FIXME: THE FOLLOWING IS NOT CLEAN
         try:
             coord.setMicId(int(coordRow.getValue(xmipp.RLN_MICROGRAPH_NAME)))
         except Exception:
@@ -468,8 +459,8 @@ def rowToCoordinate(coordRow):
 
 
 def rowToParticle(partRow, **kwargs):
-    """ Create a Particle from a row of a metadata. """
-    img = Particle()
+    """ Create a Particle from a row of a meta """
+    img = em.Particle()
     
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -481,10 +472,8 @@ def rowToParticle(partRow, **kwargs):
     index, filename = relionToLocation(partRow.getValue(xmipp.RLN_IMAGE_NAME))
     img.setLocation(index, filename)
     
-#     if partRow.containsLabel(xmipp.MDL_REF):
-#         img.setClassId(partRow.getValue(xmipp.MDL_REF))
-#     elif partRow.containsLabel(xmipp.MDL_REF3D):
-#         img.setClassId(partRow.getValue(xmipp.MDL_REF3D))
+    if partRow.containsLabel(xmipp.MDL_RLN_CLASS_NUMBER):
+        img.setClassId(partRow.getValue(xmipp.MDL_RLN_CLASS_NUMBER))
     
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(partRow))
@@ -493,7 +482,7 @@ def rowToParticle(partRow, **kwargs):
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
-    if alignType != ALIGN_NONE:
+    if alignType != em.ALIGN_NONE:
         img.setTransform(rowToAlignment(partRow, alignType))
         
     if kwargs.get('readAcquisition', True):
@@ -524,8 +513,19 @@ def rowToParticle(partRow, **kwargs):
     return img
 
 
+def particleToRow(part, partRow, **kwargs):
+    """ Set labels values from Particle to md row. """
+    imageToRow(part, partRow, xmipp.MDL_IMAGE, **kwargs)
+    coord = part.getCoordinate()
+    if coord is not None:
+        coordinateToRow(coord, partRow, copyId=False)
+    if part.hasMicId():
+        partRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(part.getMicId()))
+        partRow.setValue(xmipp.MDL_MICROGRAPH, str(part.getMicId()))
+
+
 def readSetOfParticles(filename, partSet, **kwargs):
-    """read from Relion image metadata.
+    """read from Relion image meta
         filename: The metadata filename where the image are.
         imgSet: the SetOfParticles that will be populated.
         rowToParticle: this function will be used to convert the row to Object
@@ -535,18 +535,6 @@ def readSetOfParticles(filename, partSet, **kwargs):
     # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
         imgMd.removeDisabled()
-    
-    # If the type of alignment is not sent throught the kwargs
-#     # try to deduced from the metadata labels
-#     if 'alignType' not in kwargs:
-#         imgRow = rowFromMd(imgMd, imgMd.firstObject())
-#         if _containsAny(imgRow, ALIGNMENT_DICT):
-#             if imgRow.getValue(xmipp.RLN_ORIENT_TILT) != 0:
-#                 kwargs['alignType'] = ALIGN_PROJ
-#             else:
-#                 kwargs['alignType'] = ALIGN_2D
-#         else:
-#             kwargs['alignType'] = ALIGN_NONE
     
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
@@ -558,13 +546,15 @@ def readSetOfParticles(filename, partSet, **kwargs):
     
 ##### DE AQUI EN ADELANTE HAY QUE PASAR DESDE XMIPP.
 
+
+
 def writeSetOfParticles(imgSet, starFile,
                         outputDir,
                         originalSet=None, **kwargs):
-    """ This function will write a SetOfImages as Relion metadata.
+    """ This function will write a SetOfImages as Relion meta
     Params:
         imgSet: the SetOfImages instance.
-        starFile: the filename where to write the metadata.
+        starFile: the filename where to write the meta
         filesMapping: this dict will help when there is need to replace images names
     """
     import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -576,6 +566,48 @@ def writeSetOfParticles(imgSet, starFile,
     kwargs['preprocessImageRow'] = pa.preprocessImageRow
     kwargs['postprocessImageRow'] = pa.postprocessImageRow
     xmipp3.writeSetOfParticles(imgSet, starFile, **kwargs)
+    
+
+
+def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
+    """ This function will fill Xmipp metadata from a SetOfMicrographs
+    Params:
+        imgSet: the set of images to be converted to metadata
+        md: metadata to be filled
+        rowFunc: this function can be used to setup the row before 
+            adding to meta
+    """
+    
+    if 'alignType' not in kwargs:
+        kwargs['alignType'] = imgSet.getAlignment()
+        
+    for img in imgSet:
+        objId = md.addObject()
+        imgRow = XmippMdRow()
+        imgToFunc(img, imgRow, **kwargs)
+        imgRow.writeToMd(md, objId)
+
+
+def setOfParticlesToMd(imgSet, md, **kwargs):
+    setOfImagesToMd(imgSet, md, particleToRow, **kwargs)
+
+def writeSetOfParticles(imgSet, filename, blockName='Particles', **kwargs):
+    writeSetOfImages(imgSet, filename, particleToRow, blockName, **kwargs)
+  
+def writeSetOfParticles(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
+    """ This function will write a SetOfImages as a Xmipp meta
+    Params:
+        imgSet: the set of images to be written (particles, micrographs or volumes)
+        filename: the filename where to write the meta
+        rowFunc: this function can be used to setup the row before 
+            adding to meta
+    """
+    md = xmipp.MetaData()
+        
+    setOfImagesToMd(imgSet, md, particleToRow, **kwargs)
+    md.write('%s@%s' % (blockName, filename))
+        
+        
 
 
 def createClassesFromImages(inputImages, inputStar,
@@ -612,12 +644,12 @@ def createClassesFromImages(inputImages, inputStar,
     
 
 def readSetOfClasses2D(classes2DSet, filename, **args):
-    clsSet = SetOfClasses2D(filename=filename)
+    clsSet = em.SetOfClasses2D(filename=filename)
     classes2DSet.appendFromClasses(clsSet)
 
 
 def readSetOfClasses3D(classes3DSet, filename, **args):
-    clsSet = SetOfClasses3D(filename=filename)
+    clsSet = em.SetOfClasses3D(filename=filename)
     classes3DSet.appendFromClasses(clsSet)
     
 
@@ -629,7 +661,7 @@ def writeSqliteIterData(imgStar, imgSqlite):
     """
     addRelionLabels(replace=True, extended=True)
     cleanPath(imgSqlite)
-    imgSet = SetOfParticles(filename=imgSqlite)
+    imgSet = em.SetOfParticles(filename=imgSqlite)
     readSetOfParticles(imgStar, imgSet)
     imgSet.write()
     restoreXmippLabels()
@@ -696,22 +728,6 @@ def splitInCTFGroups(imgStar, groups):
     restoreXmippLabels()
     
         
-def getMdFirstRow(starfile):
-    addRelionLabels(replace=True, extended=True)
-    from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
-    row = getMdFirstRow(starfile)
-    restoreXmippLabels()
-    return row
-
-
-def findImagesPath(starFile):
-    """ Find the path of the images relative to some star file. """
-    row = getMdFirstRow(starFile)
-    _, imgFile = relionToLocation(row.getValue(xmipp.MDL_IMAGE))
-    
-    return findRootFrom(starFile, imgFile)
-    
-
 def prependToFileName(imgRow, prefixPath):
     """ Prepend some root name to imageRow filename. """
     index, imgPath = relionToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
@@ -768,26 +784,40 @@ def convertBinaryFiles(imgSet, outputDir):
         A dictionary with old-file as key and new-file as value
         If empty, not conversion was done.
     """
-    filesMapping = {}
+    filesDict = {}
+    ih = em.ImageHandler()
     # This approach can be extended when
     # converting from a binary file format that
     # is not read from Relion
+    def linkMrcsToMrc(fn):
+        """ Just create a link named .mrcs to Relion understand 
+        that it is a binary stack file and not a volume.
+        """
+        newFn = join(outputDir, basename(fn) + 's')
+        createLink(fn, newFn)
+        return newFn
+        
+    def convertStack(fn):
+        """ Convert from a format that is not read by Relion
+        to an spider stack.
+        """
+        newFn = join(outputDir, replaceBaseExt(fn, 'stk'))
+        ih.convertStack(fn, newFn)
+        return newFn
+        
     ext = imgSet.getFirstItem().getFileName()
     if ext.endswith('.mrc'):
-        uniqueFiles = list(imgSet.getFiles())
-        for f in uniqueFiles:
-            newFile = os.path.join(outputDir, os.path.basename(f) + 's')
-            createLink(f, newFile)
-            filesMapping[f] = newFile
-    elif ext.endswith('.hdf'):  # assume eman
-        uniqueFiles = list(imgSet.getFiles())
-        from pyworkflow.em.convert import convertStack
-        for f in uniqueFiles:
-            newFile = os.path.join(outputDir, os.path.basename(f.rsplit(".", 1)[ 0 ]) + '.spi')
-            convertStack(f, newFile)
-            filesMapping[f] = newFile
+        mapFunc = linkMrcsToMrc
+    elif ext.endswith('.hdf'): # assume eman .hdf format
+        mapFunc = convertStack
+    else:
+        mapFunc = None
+        
+    if mapFunc is not None:
+        for fn in imgSet.getFiles():
+            filesDict[fn] = mapFunc(fn) # convert and map new filename
 
-    return filesMapping
+    return filesDict
 
 
 def createItemMatrix(self, item, row, align):
