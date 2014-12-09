@@ -84,6 +84,7 @@ class XmippProcessParticles(ProtProcessParticles):
         # info and apply the operation on the binary data only.
         # then the new location (index, filename) is the most
         # common property to update in the single items.
+        #print "convertInputStep: self.inputVolumes2.get"
         if isinstance(self.inputVolumes2.get(), Volume):
             print ("WRITE  A SINGLE VOLUME1")
             pass
