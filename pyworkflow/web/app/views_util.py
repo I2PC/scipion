@@ -33,7 +33,7 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.core.servers.basehttp import FileWrapper
 
-from pyworkflow.em import emProtocolsDict
+import pyworkflow.em as em
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
@@ -188,7 +188,7 @@ def loadProtocolProject(request, requestType='POST'):
         # Remove this and create loadProtocol method in project class
         protocol.setProject(project) 
     else:
-        protocolClass = emProtocolsDict.get(protClass, None)
+        protocolClass = em.getProtocols().get(protClass, None)
         protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
