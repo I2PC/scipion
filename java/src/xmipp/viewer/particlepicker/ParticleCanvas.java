@@ -113,7 +113,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 				}
 				canvas.repaint();
 				frame.updateMicrographsModel();
-				frame.loadParticles();
+				frame.loadParticles(false);
 			}
 			else
 			{

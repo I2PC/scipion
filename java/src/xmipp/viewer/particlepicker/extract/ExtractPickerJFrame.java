@@ -291,7 +291,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	public void updateMicrographsModel(boolean all)
 	{
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 
 		if (all)
 			micrographsmd.fireTableRowsUpdated(0, micrographsmd.getRowCount() - 1);

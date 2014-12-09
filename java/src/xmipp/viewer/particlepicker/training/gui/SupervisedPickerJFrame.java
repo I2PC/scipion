@@ -251,7 +251,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     public void updateMicrographsModel(boolean all) {
 
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
         int index = ppicker.getMicrographIndex();
@@ -574,7 +574,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         updateMicrographsModel();
         canvas.repaint();
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
     }
@@ -683,7 +683,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         pack();
 
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
     }

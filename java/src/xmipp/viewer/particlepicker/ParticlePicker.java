@@ -41,7 +41,7 @@ public abstract class ParticlePicker {
     protected Mode mode;
     protected List<IJCommand> filters;
     protected String selfile;
-    protected String command;
+    
     protected String configfile;
     public String python, script, protid, projectid;//scipion params
     protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
@@ -125,7 +125,7 @@ public abstract class ParticlePicker {
         this.mode = mode;
         this.configfile = getOutputPath("config.xmd");
 
-        initFilters();
+        filters = new ArrayList<IJCommand>();
         loadEmptyMicrographs();
         loadConfig();
         emextensions = new HashMap<Format, String>();
@@ -168,8 +168,10 @@ public abstract class ParticlePicker {
                 md = new MetaData("filters@" + file);
                 long[] ids = md.findObjects();
                 for (long id : ids) {
-                    command = md.getValueString(MDLabel.MDL_MACRO_CMD, id).replace('_', ' ');
-                    options = md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id).replace('_', ' ');
+                    command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
+                    System.out.println(command);
+                    options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
+                    System.out.println(options);
                     if (options.equals("NULL")) {
                         options = "";
                     }
@@ -193,13 +195,13 @@ public abstract class ParticlePicker {
             saveConfig(md, id);
             md.write("properties@" + file);
             md.destroy();
-            String options;
+            String cmd, options;
             md = new MetaData();
-
             for (IJCommand f : filters) {
                 id = md.addObject();
-                md.setValueString(MDLabel.MDL_MACRO_CMD, f.getCommand().replace(' ', '_'), id);
-                options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
+                cmd = f.getMdCommand();
+                md.setValueString(MDLabel.MDL_MACRO_CMD, cmd, id);
+                options = f.getMdOptions();
                 md.setValueString(MDLabel.MDL_MACRO_CMD_ARGS, options, id);
             }
             md.writeBlock("filters@" + file);
@@ -278,41 +280,7 @@ public abstract class ParticlePicker {
 
     public abstract void loadEmptyMicrographs();
 
-    private void initFilters() {
 
-        filters = new ArrayList<IJCommand>();
-
-        Recorder.record = true;
-
-        // detecting if a command is thrown by ImageJ
-        Executer.addCommandListener(new CommandListener() {
-            public String commandExecuting(String command) {
-
-                
-                ParticlePicker.this.command = command;
-                return command;
-
-            }
-        });
-        ImagePlus.addImageListener(new ImageListener() {
-
-            @Override
-            public void imageUpdated(ImagePlus arg0) {
-                updateFilters();
-            }
-
-            @Override
-            public void imageOpened(ImagePlus arg0) {
-
-            }
-
-            @Override
-            public void imageClosed(ImagePlus arg0) {
-                // TODO Auto-generated method stub
-
-            }
-        });
-    }
 
     protected boolean isRegisteredFilter(String command2) {
         for (IJCommand f : filters) {
@@ -323,7 +291,7 @@ public abstract class ParticlePicker {
         return false;
     }
 
-    private void updateFilters() {
+    public void updateFilters(String command) {
         if (command != null) {
             String options = "";
             if (Recorder.getCommandOptions() != null) {
@@ -341,8 +309,6 @@ public abstract class ParticlePicker {
             }
 
             saveConfig();
-            command = null;
-
         }
     }
 

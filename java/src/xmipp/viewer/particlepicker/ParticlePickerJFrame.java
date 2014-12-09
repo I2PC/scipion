@@ -1,8 +1,13 @@
 package xmipp.viewer.particlepicker;
 
+import ij.CommandListener;
+import ij.Executer;
 import ij.IJ;
 import static ij.IJ.URL;
+import ij.ImageListener;
+import ij.ImagePlus;
 import ij.WindowManager;
+import ij.plugin.frame.Recorder;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -94,7 +99,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected String activefilter;
 	protected JSlider sizesl;
 	protected JPanel sizepn;
-
 	private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
 	protected JMenuItem importmi;
@@ -104,23 +108,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JButton resetbt;
 	protected JTable micrographstb;
 	protected ImportParticlesJDialog importpjd = null;
-
 	protected JMenuItem exitmi;
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
-
 	private JToggleButton eraserbt;
-
 	private JMenuItem keyassistmi;
-
 	protected JMenu helpmn;
-
 	protected JButton savebt;
-
 	protected JButton saveandexitbt;
-
 	protected JToolBar tb;
         protected ResourceBundle bundle;
+        protected String command;
         
         
 
@@ -392,7 +390,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				loadParticles();
+				loadParticles(false);
 			}
 		});
 
@@ -423,11 +421,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 			}
 		});
-
+                
 		addFilterMenuItem(ParticlePicker.xmippsmoothfilter, true, picker);
 		addFilterMenuItem("Bandpass Filter...", true, picker);
 
-		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic diffusion...", false, picker);
+		JCheckBoxMenuItem admi = addFilterMenuItem("Anisotropic Diffusion...", false, picker);
 		admi.addActionListener(new ActionListener()
 		{
 
@@ -445,7 +443,50 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem("Gaussian Blur...", true, picker);
 		addFilterMenuItem("Brightness/Contrast...", true, picker);
 		addFilterMenuItem("Invert LUT", true, picker);
+                addFilterAppliedListener();
 	}
+        
+        private void addFilterAppliedListener() {
+
+                
+
+                Recorder.record = true;
+
+                // detecting if a command is thrown by ImageJ
+                Executer.addCommandListener(new CommandListener() {
+                    public String commandExecuting(String command) {
+
+
+                        ParticlePickerJFrame.this.command = command;
+                        return command;
+
+                    }
+                });
+                ImagePlus.addImageListener(new ImageListener() {
+
+                    @Override
+                    public void imageUpdated(ImagePlus arg0) {
+                        if(command != null)
+                        {
+                            getParticlePicker().updateFilters(command);
+                            if(particlesdialog != null)
+                                loadParticles(true);
+                            command = null;
+                        }
+                    }
+
+                    @Override
+                    public void imageOpened(ImagePlus arg0) {
+
+                    }
+
+                    @Override
+                    public void imageClosed(ImagePlus arg0) {
+                        // TODO Auto-generated method stub
+
+                    }
+                });
+        }
 
 	protected abstract void openHelpURl();
 
@@ -494,12 +535,16 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 				{
 					for (int i = 0; i < WindowManager.getImageCount(); i++)
 						IJ.run(WindowManager.getImage(i), activefilter, "");
+                                       
 				}
 			else
 			{
 				// filter removed
 				getParticlePicker().removeFilter(activefilter);
 				reloadImage();
+                                if(particlesdialog != null)
+                                    loadParticles(true);    
+                                
 			}
 
 			getParticlePicker().saveConfig();
@@ -518,6 +563,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().getMicrograph().releaseImage();
 		getCanvas().updateMicrograph();
 		getCanvas().display();
+                
 	}
 
 	public int getSide()
@@ -529,10 +575,13 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	public abstract ParticlesDialog initParticlesJDialog();
 
-	public void loadParticles()
+	public void loadParticles(boolean reset)
 	{
 		try
 		{
+                        if(reset)
+                            for (PickerParticle p : getAvailableParticles())
+                                p.resetParticleCanvas();
 			if (particlesdialog == null)
 				particlesdialog = initParticlesJDialog();
 			else
@@ -834,13 +883,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getParticlePicker().setSize(size);
                 updateMicrographsModel();
-		if (particlesdialog != null)
-		{
-			for (PickerParticle p : getAvailableParticles())
-				p.resetParticleCanvas();
-			loadParticles();
-		}
-		
+                loadParticles(true);
 		getParticlePicker().saveConfig();
 	}
 

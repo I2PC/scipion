@@ -116,14 +116,15 @@ public class JMetaDataIO {
                     out.write(String.format(vformat, picker.getManualParticlesNumber()));
                     out.write(String.format(vformat, picker.getAutomaticParticlesNumber()));
                     out.newLine();
+                    String optionsFormat = "%80s";
                     out.write("data_filters\nloop_\n");
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MACRO_CMD)));
                     out.write(String.format(cformat, MetaData.getLabelName(MDLabel.MDL_MACRO_CMD_ARGS)));
                     String options;
                     for (IJCommand f : picker.getFilters()) {
-                        out.write(String.format(vformat, f.getCommand().replace(' ', '_')));
-                        options = (f.getOptions() == null || f.getOptions().equals("")) ? "NULL" : f.getOptions().replace(' ', '_');
-                        out.write(String.format(vformat, options));
+                        out.write(String.format(vformat, f.getMdCommand()));
+                        options = f.getMdOptions();
+                        out.write(String.format(optionsFormat, options));
                         out.newLine();
                         
                     }
