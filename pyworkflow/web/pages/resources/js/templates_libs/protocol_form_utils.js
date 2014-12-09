@@ -245,7 +245,7 @@ function evalElements() {
 		var debug_param = "PARAM:"+param;
 		var debug_value = "VALUE:"+value;
 		var debug_type = "TYPE:"+type;
-		console.log(debug_param + "," +debug_value + "," +debug_type);
+//		console.log(debug_param + "," +debug_value + "," +debug_type);
 		
 		// Depending of the parameter is processed
 		
@@ -317,8 +317,8 @@ function setParamValue(paramId, value) {
 	var newLevel = $("select[name=expertLevel]").val();
 	
 	// DEBUG
-	console.log("PARAM TO EVALUATE: " + paramId)
-	console.log("WITH LEVEL: " + newLevel)
+//	console.log("PARAM TO EVALUATE: " + paramId)
+//	console.log("WITH LEVEL: " + newLevel)
 	
 	// Evaluate the dependencies for the new expert level and the row affected
 	evalDependencies(row, newLevel);
@@ -338,14 +338,14 @@ function setParamValue(paramId, value) {
 }
 
 function evalExpertLevel(expLevel, newLevel, row){
-	console.log('Evaluate the expert level')
+//	console.log('Evaluate the expert level')
 	var expLevel = row.attr('data-expert');
 
 	if (expLevel > newLevel) {
-		console.log("hide")
+//		console.log("hide")
 		row.hide();
 	} else {
-		console.log("show")
+//		console.log("show")
 		row.show();			
 	}
 }
@@ -372,7 +372,7 @@ function evalDependencies(row, newLevel) {
 	// Get dependencies for the parameter
 	var dependencies = row.attr('data-depen');
 	
-	console.log("Dependencies:", dependencies)
+//	console.log("Dependencies:", dependencies)
 
 	if (dependencies != undefined && dependencies.length > 0) {
 		
@@ -470,6 +470,10 @@ function normalizeConditions(cond){
 	return cond;
 }
 
+
+
+
+
 function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
 	 * Browse object in the database.
@@ -502,7 +506,6 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 				+ "&direction=" + res[3]
 				                      
     		break;
-		
     }
 	
 //	console.log("URL:", url_param)
