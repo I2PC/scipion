@@ -28,7 +28,6 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
-from pyworkflow.em.packages.xmipp3 import XmippProtPreprocessParticles
 
 
 # Some utility functions to import micrographs that are used
@@ -55,7 +54,7 @@ class TestRelionBase(BaseTest):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
-        protPreproc = cls.newProtocol(XmippProtPreprocessParticles,
+        protPreproc = cls.newProtocol(ProtRelionPreprocessParticles,
                                       doNormalize=True)
         protPreproc.inputParticles.set(particles)
         cls.launchProtocol(protPreproc)
