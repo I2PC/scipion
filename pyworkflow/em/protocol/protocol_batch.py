@@ -166,7 +166,10 @@ class ProtUserSubSet(BatchProtocol):
         
         output = createFunc()
         output.copyInfo(inputImages)
-        output.setAlignment(inputClasses[1].getAlignment())
+        for sampleClass in inputClasses:
+            alignment = sampleClass.getAlignment()
+            break
+        output.setAlignment(alignment)
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
