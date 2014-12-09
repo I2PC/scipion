@@ -256,7 +256,9 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             size = _getSize(self.outputParticles)
             if self.doResize:
                 summary.append("Output particles have a different sampling "
-                               "rate: *%0.3f* A/px" % sampling)
+                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                summary.append("Resizing method: *%s*" %
+                               self.getEnumText('resizeOption'))
             if self.doWindow.get():
                 if self.getEnumText('windowOperation') == "crop":
                     summary.append("The particles were cropped.")
@@ -273,8 +275,9 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             else:
                 methods += ["windowed them"]
         if self.doResize:
-            methods += ["resized them to %d px%s" %
+            methods += ['resized them to %d px using the "%s" method%s' %
                         (self.outputParticles.getDim()[0],
+                         self.getEnumText('resizeOption'),
                          " in Fourier space" if self.doFourier else "")]
         if not self.doResize and not self.doWindow.get():
             methods += ["did nothing to them"]
@@ -366,7 +369,9 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             size = _getSize(self.outputVol)
             if self.doResize:
                 summary.append("Output volume(s) have a different sampling "
-                               "rate: *%0.3f* A/px" % sampling)
+                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                summary.append("Resizing method: *%s*" %
+                               self.getEnumText('resizeOption'))
             if self.doWindow.get():
                 if self.getEnumText('windowOperation') == "crop":
                     summary.append("The volume(s) were cropped.")
@@ -388,11 +393,13 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             else:
                 methods += ["windowed %s" % pronoun]
         if self.doResize:
-            methods += ["resized %s to %d px%s" %
+            methods += ['resized %s to %d px using the "%s" method%s' %
                         (pronoun, self.outputVol.getDim()[0],
+                         self.getEnumText('resizeOption'),
                          " in Fourier space" if self.doFourier else "")]
         if not self.doResize and not self.doWindow.get():
             methods += ["did nothing to %s" % pronoun]
+            # TODO: does this case even work in the protocol?
         return ["%s and %s." % (", ".join(methods[:-1]), methods[-1])]
 
     def _validate(self):

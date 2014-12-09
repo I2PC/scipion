@@ -659,7 +659,7 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate, scannedPixelSize and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
+        self.copyAttributes(other, '_samplingRate', '_scannedPixelSize', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):

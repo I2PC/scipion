@@ -110,9 +110,19 @@ class XmippProtApplyAlignment(ProtAlign2D):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if not self.inputParticles.get().hasAlignment2D():
+            errors.append("Input particles should have alignment 2D.")
         return errors
         
     def _summary(self):
         summary = []
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Applied alignment to %s particles." % self.inputParticles.get().getSize())
         return summary
+
+    def _methods(self):
+        return ["We applied alignment to %s particles." % self.inputParticles.get().getSize()]
+
     
