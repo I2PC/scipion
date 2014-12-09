@@ -63,10 +63,16 @@
 // 					value: false
 // 				});
 			});
+			
+			// To fill the list of files tab
+			$(document).ready(function() {
+				doInitFunction();
+			});
 		</script>
 		
 	</head>
 	<body>
+	{% if mode != "service" %}
 		<div>
 			<img src='{{logo_scipion_small}}' style="margin:5px;width:auto;height:2.5em;float:left;"/>
 			<h3 id="protName" style="">
@@ -83,58 +89,17 @@
 					<a href="#tabs-2">List Files</a>
 				</li>
 			</ul>
+	{% endif %}
 			
 		<!-- FILE UPLOAD> -->
 			 <div id="tabs-1">
-	 			<div class="box">
-					<form id="uploadForm" action="{{abs_url}}/doUpload/" method="post" enctype="multipart/form-data">
-					{% csrf_token %}
-						<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
-						<p>
-							<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
-							<strong>{{relative_path}}</strong>
-						</p>
-						<table class="section">
-							<tr>
-								<td id="inputName" class="normal">
-									<strong>{{form.docfile.label_tag}}</strong>
-								</td>
-								<td colspan="3">
-									<p>{{form.non_field_errors}}</p>
-									<p>{{form.docfile.help_text}}</p>
-									<p>
-										{{form.docfile.errors}}
-										{{form.docfile}}
-									</p>
-								</td>
-								<td class="ico">
-									<a class="fa fa-question-circle" href="javascript:infoPopup('Documentation','{{msg.TEXT_HELP}}');"></a>
-								</td>
-							</tr>
-						</table>
-						<div style="float:right;">
-							<a href="javascript:launchUpload();" class="btn buttonGrey">
-								<i class="fa fa-cogs"></i>
-								Upload
-							</a>
-						</div>
-					</form>
-				</div>
+	 			{% include "upload/do_file_upload.html" %}
 			</div>
 			
+	{% if mode != "service" %}
 		<!-- LIST FILES -->
 			<div id="tabs-2">
-	 			<div class="box">
-	 				<p>
-						<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
-						<strong>{{relative_path}}</strong>
-					</p>	
-					<table class="section">
-						<tr id="listFiles">
-							<!-- List of uploaded documents -->
-						</tr>
-					</table>
-				</div>
+	 			{% include "upload/list_files_upload.html" %}
 			</div>
 		</div>
 		<br />
@@ -144,5 +109,6 @@
 		<div class="boxBottom">
 			<a href="javascript:window.close()" class="btn buttonGrey"><i class="fa fa-times"></i>{{msg.LABEL_BUTTON_CLOSE}}</a>
 		</div>
+	{% endif %}
 	</body>
 </html>

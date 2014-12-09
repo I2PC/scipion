@@ -33,26 +33,55 @@
  /** METHODS ******************************************************************/
 
 // To fill the list of files tab
-$(document).ready(function() {
+function doInitFunction(){
 	var project_folder = $("#project_folder").val()
 	updateListFiles(project_folder)
 	var URL = getSubDomainURL() + '/doUpload/'
 	$("#uploadForm").submit(function(e) {
 		$.ajax({
 			url: URL,
-	        type: 'POST',
-	        data: new FormData( this ),
-	        processData: false,
-	        contentType: false,
-	        async: false
+			type: 'POST',
+			data: new FormData( this ),
+			processData: false,
+			contentType: false,
+			async: false
 		});
 		e.preventDefault();
 		infoPopup('Success', "The file was uploaded successfuly",0);
 //		$("#progressbar").hide()
 		updateListFiles(project_folder)
 	});
-});
- 
+}
+
+function browseUpload(paramName){
+	url_param = "/upload/?mode=service"
+	var URL = getSubDomainURL() + url_param
+	
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType : "html",
+		async: false,
+		success : function(html) {
+			new Messi(html, {
+				title : 'Select file',
+				modal : true,
+				buttons : [ {
+					id : 0,
+					label : 'Upload',
+					val : 'Y',
+					btnClass : 'fa-cogs',
+					btnFunc : 'launchSubmitUploadService',
+				}, {
+					id : 1,
+					label : 'Cancel',
+					val : 'C',
+					btnClass : 'fa-ban'
+				} ]
+			});
+		}
+	});
+}
  
 function launchUpload(){
 	var msg = "</td><td class='content' value='"
@@ -64,6 +93,13 @@ function launchUpload(){
 function launchSubmitUpload(){
 //	$("#progressbar").show()
 	$('#uploadForm').submit();
+}
+
+function launchSubmitUploadService(){
+	var file = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	launchSubmitUpload();
+	file = $("#project_folder").val()+ "/Uploads/" + file
+	$("input.upload").val(file)
 }
 
 function updateListFiles(project_folder){

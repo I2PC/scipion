@@ -101,6 +101,8 @@
 										<option value="{{htmlIdValue}}">{{htmlValue}}</option>
 									{% endfor %}
 									</select>
+								{% elif param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
+									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" class="upload" readonly>
 								{% else %}			
 									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
 								{% endif %}	
@@ -108,8 +110,16 @@
 							</td>
 <!-- PATH PARAM -->
 						{% if param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
-							{% include "form/file_browse.html" %}
-						
+<!-- 							{% include "form/file_browse.html" %} -->
+							
+							<script src="{{upload_utils}} "type="text/javascript"></script>
+							
+							<td class="ico">
+								<a href="javascript:browseUpload('{{paramName}}');">
+									<i class="fa fa-search" style="font-size:1.1em;"></i>
+								</a> 
+							</td>
+							
 <!-- POINTER PARAM -->	
 						{% elif param.getClassName == "PointerParam" %}
 							<td class="ico">
