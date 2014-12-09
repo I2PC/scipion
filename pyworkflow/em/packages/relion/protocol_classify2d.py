@@ -67,14 +67,12 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         imgSet = self.inputParticles.get()
         
         data = md.MetaData(self._getFileName('data', iter=self._lastIter()))
-        
+        outImgSet.copyInfo(imgSet)
         outImgSet.copyItems(imgSet,
                     updateItemCallback=self.updatePartProperties,
                     itemDataIterator=md.iterRows(data))
         
-        
         self._classesDict = {} # store classes info, indexed by class id
-        pathDict = {}
          
         modelMd = md.MetaData('model_classes@' + self._getFileName('model', iter=self._lastIter()))
         for classNumber, objId in enumerate(modelMd):
@@ -82,8 +80,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
             row.readFromMd(modelMd, objId)
             index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
             
-            newFn = pathDict.get(fn)
-            self._classesDict[classNumber+1] = (index, newFn, row)
+            self._classesDict[classNumber+1] = (index, fn, row)
         
         clsSet = self._createSetOfClasses2D(outImgSet)
         fillClasses(clsSet, updateClassCallback=self._updateClass)
