@@ -169,9 +169,7 @@ public abstract class ParticlePicker {
                 long[] ids = md.findObjects();
                 for (long id : ids) {
                     command = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD, id));
-                    System.out.println(command);
                     options = IJCommand.getString(md.getValueString(MDLabel.MDL_MACRO_CMD_ARGS, id));
-                    System.out.println(options);
                     if (options.equals("NULL")) {
                         options = "";
                     }
