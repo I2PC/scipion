@@ -443,7 +443,7 @@ class TestXmippCropResizeParticles(TestXmippBase):
                            doWindow=True, windowOperation=xrh.WINDOW_OP_WINDOW,
                            windowSize=500)
 
-        # Since the images were downsampled by a factor 0.5, the new
+        # Since the images were resized by a factor 0.5 (downsampled), the new
         # pixel size (painfully called "sampling rate") should be 2x.
         self.assertAlmostEqual(outP.getSamplingRate(), inP.getSamplingRate() * 2)
         # After the window operation, the dimensions should be the same.
@@ -458,7 +458,8 @@ class TestXmippCropResizeParticles(TestXmippBase):
 
     def test_pyramid(self):
         inP = self.protImport.outputParticles  # short notation
-        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_PYRAMID, resizeLevel=1)
+        outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_PYRAMID,
+                           resizeLevel=1)
 
         # Since the images were expanded by 2**resizeLevel (=2) the new
         # pixel size (painfully called "sampling rate") should be 0.5x.
