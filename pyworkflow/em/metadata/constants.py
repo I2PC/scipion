@@ -865,3 +865,10 @@ BSOFT_SYMMETRY_CELL_SETTING = xmipp.BSOFT_SYMMETRY_CELL_SETTING
 BSOFT_SYMMETRY_EQUIV_ID = xmipp.BSOFT_SYMMETRY_EQUIV_ID
 BSOFT_SYMMETRY_EQUIV_POS_AS_XYZ = xmipp.BSOFT_SYMMETRY_EQUIV_POS_AS_XYZ
 
+LABEL_TYPES = { 
+               LABEL_SIZET: long,
+               LABEL_DOUBLE: float,
+               LABEL_INT: int,
+               LABEL_BOOL: bool              
+               }
+
