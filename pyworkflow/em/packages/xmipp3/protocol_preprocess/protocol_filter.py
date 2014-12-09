@@ -119,12 +119,12 @@ class XmippFilterHelper():
 
         form.addParam('freqInAngstrom', BooleanParam, default=True,
                       condition='filterSpace == %d' % FILTER_SPACE_FOURIER,
-                      label='Provide frequencies in Angstroms?',
-                      help='If *Yes*, the frequency values for the filter\n'
+                      label='Provide resolution in Angstroms?',
+                      help='If *Yes*, the resolution values for the filter\n'
                            'should be provided in Angstroms. If *No*, the\n'
-                           'values should be in digital frequencies (between 0 and 0.5).')
-        # Frequencies in Angstroms
-        line = form.addLine('Frequency (A)',
+                           'values should be in normalized frequencies (between 0 and 0.5).')
+        # Resolution in Angstroms (inverse of frequencies)
+        line = form.addLine('Resolution (A)',
                             condition=fourierCondition + ' and freqInAngstrom',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
@@ -136,8 +136,8 @@ class XmippFilterHelper():
                                                        cls.FM_BAND_PASS, cls.FM_LOW_PASS),
                       label='Highest')
 
-        # Digital frequencies
-        line = form.addLine('Frequency (dig)',
+        # Normalized frequencies
+        line = form.addLine('Frequency (normalized)',
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqDig', DigFreqParam, default=0.02,
@@ -254,20 +254,23 @@ class XmippFilterHelper():
         def add(x): summary.append('  ' + x)  # short notation
         if protocol.filterSpace == FILTER_SPACE_FOURIER:
             add('Space: *Fourier*')
-            if protocol.freqInAngstrom:
-                lowFreq = protocol.lowFreqA.get()
-                highFreq = protocol.highFreqA.get()
-            else:
-                lowFreq = protocol.lowFreqDig.get()
-                highFreq = protocol.highFreqDig.get()
+            inA = protocol.freqInAngstrom  # short notation
+            lowA, highA = protocol.lowFreqA.get(), protocol.highFreqA.get()
+            lowN, highN = protocol.lowFreqDig.get(), protocol.highFreqDig.get()
             mode = protocol.filterModeFourier.get()
             if mode == cls.FM_LOW_PASS:
-                add('Mode: *Low-pass* ( freq > *%g* A )' % highFreq)
+                add('Mode: *Low-pass* ( %s )' %
+                    ('resolution > *%g* A' % highA) if inA else
+                    ('normalized frequency < *%g*' % highN))
             elif mode == cls.FM_HIGH_PASS:
-                add('Mode: *High-pass* ( freq < *%g* A )' % lowFreq)
+                add('Mode: *High-pass* ( %s )' %
+                    ('resolution < *%g* A' % lowA) if inA else
+                    ('normalized frequency > *%g*' % lowN))
             elif mode == cls.FM_BAND_PASS:
-                add('Mode: *Band-pass* ( *%g* A < freq < *%g* A )' % (highFreq, lowFreq))
-            add('Frequency Decay: *%g* A' % protocol.freqDecay.get())
+                add('Mode: *Band-pass* ( %s )' %
+                    ('*%g* A < resolution < *%g* A' % (highA, lowA) if inA else
+                    ('*%g* < normalized frequency < *%g*' % (lowN, highN))))
+            add('Normalized Frequency Decay: *%g*' % protocol.freqDecay.get())
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             add('Mode: *Median*')
         elif protocol.filterSpace == FILTER_SPACE_WAVELET:
