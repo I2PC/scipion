@@ -40,8 +40,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import (createClassesFromImages
-                   , convertBinaryFiles)
+from convert import convertBinaryFiles, fillClasses
 
 
 class ProtRelionBase(EMProtocol):
@@ -627,10 +626,9 @@ class ProtRelionBase(EMProtocol):
         
         if clean:
             cleanPath(data_classes)
-            
+        
         if not exists(data_classes):
-            createClassesFromImages(self._getInputParticles(), data_star, data_classes, 
-                                    self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
+            fillClasses(data_classes, updateClassCallback=None)
         return data_classes
     
     def _getIterData(self, it):

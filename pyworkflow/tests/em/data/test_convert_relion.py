@@ -4,12 +4,13 @@ Created on 5th Feb, 2014
 @author: Roberto Marabini
          J.M. de la Rosa Trevin
 '''
-
+from pyworkflow.object import Float
 from pyworkflow.tests import BaseTest, setupTestOutput, DataSet
 from pyworkflow.em.data import SetOfParticles, CTFModel, Acquisition, Coordinate, Particle
 
+import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.relion.convert import convertBinaryFiles
-
+import pyworkflow.em.packages.relion as relion
 
 
 class TestConversions(BaseTest):
@@ -55,21 +56,19 @@ class TestConversions(BaseTest):
         print ">>> Writing to file: %s" % fnStar
         relion.writeSetOfParticles(imgSet, fnStar, fnStk)
         
-        relion.addRelionLabels()
-        md = xmipp.MetaData(fnStar)
-        self.assertTrue(md.containsLabel(xmipp.MDL_XCOOR))
-        self.assertTrue(md.containsLabel(xmipp.MDL_YCOOR))
-        self.assertFalse(md.containsLabel(xmipp.MDL_ZSCORE))
+        mdAll = md.MetaData(fnStar)
+        self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_X))
+        self.assertTrue(mdAll.containsLabel(md.RLN_IMAGE_COORD_Y))
+        self.assertFalse(mdAll.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE))
         
     def test_particlesFromStar(self):
         """ Read a set of particles from an .star file.  """
         fnStar = self.getFile('relion_it020_data')
         
-        relion.addRelionLabels()
         print ">>> Reading star file: ", fnStar
-        md = xmipp.MetaData(fnStar)
-        print "labels: ", [xmipp.label2Str(l) for l in md.getActiveLabels()]
-        print "size: ", md.size()
+        mdAll = md.MetaData(fnStar)
+        print "labels: ", [md.label2Str(l) for l in mdAll.getActiveLabels()]
+        print "size: ", mdAll.size()
         
         
     def test_particlesToStar(self):
@@ -81,7 +80,7 @@ class TestConversions(BaseTest):
             if i > 10: 
                 break
         partSet.printAll()
-        #print md
+        #print mdAll
         
 
 class TestConvertBinaryFiles(BaseTest):

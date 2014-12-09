@@ -37,8 +37,7 @@ def label2Python(label):
     """ Return the Python type (int, float, bool) for a given 
     metadata label (LABEL_INT, LABEL_DOUBLE..etc)
     """
-    labelType = labelType(label)
-    return LABEL_TYPES.get(labelType, str)
+    return LABEL_TYPES.get(labelType(label), str)
 
 
 def getFirstRow(filename):

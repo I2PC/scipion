@@ -143,9 +143,9 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
             as _xmipp_labelName
     """
     if obj.isEnabled():
-        enabled = 1
+        enabled = True
     else:
-        enabled = -1
+        enabled = False
     row.setValue(md.RLN_IMAGE_ENABLED, enabled)
     
     for attr, label in attrDict.iteritems():
@@ -308,7 +308,7 @@ def rowToAlignment(alignmentRow, alignType):
     is2D = alignType == em.ALIGN_2D
     inverseTransform = alignType == em.ALIGN_PROJ
     
-    if alignmentRow.containsAny(alignmentRow, ALIGNMENT_DICT):
+    if alignmentRow.containsAny(ALIGNMENT_DICT):
         alignment = em.Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
@@ -396,13 +396,13 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
 
 def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
-    imageToRow(part, partRow, md.MDL_IMAGE, **kwargs)
+    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
     coord = part.getCoordinate()
     if coord is not None:
         coordinateToRow(coord, partRow, copyId=False)
     if part.hasMicId():
-        partRow.setValue(md.MDL_MICROGRAPH_ID, long(part.getMicId()))
-        partRow.setValue(md.MDL_MICROGRAPH, str(part.getMicId()))
+        partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
+        partRow.setValue(md.RLN_MICROGRAPH_NAME, str(part.getMicId()))
         
 
 def rowToParticle(partRow, **kwargs):
@@ -480,8 +480,8 @@ def readSetOfParticles(filename, partSet, **kwargs):
     partSet.setAlignment(kwargs['alignType'])
     
 
-def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
-    """ This function will fill Xmipp metadata from a SetOfMicrographs
+def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
+    """ This function will fill Relion metadata from a SetOfMicrographs
     Params:
         imgSet: the set of images to be converted to metadata
         md: metadata to be filled
@@ -493,10 +493,10 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
         kwargs['alignType'] = imgSet.getAlignment()
         
     for img in imgSet:
-        objId = md.addObject()
+        objId = imgMd.addObject()
         imgRow = md.Row()
         imgToFunc(img, imgRow, **kwargs)
-        imgRow.writeToMd(md, objId)
+        imgRow.writeToMd(imgMd, objId)
 
 
 def setOfParticlesToMd(imgSet, md, **kwargs):
@@ -517,51 +517,48 @@ def writeSetOfParticles(imgSet, starFile,
     setOfParticlesToMd(imgSet, partMd, **kwargs)
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
-    
 
 
 #----------- REVIEWED UNTIL HERE----------------------
-
-
-def createClassesFromImages(inputImages, inputStar,
-                            classesFn, ClassType, classLabel, classFnTemplate,
-                            iter, preprocessImageRow=None):
-    """ From an intermediate dataXXX.star file produced by relion, create
-    the set of classes in which those images are classified.
-    Params:
-        inputImages: the SetOfImages that were initially classified by relion. 
-        inputStar: the filename with relion star format.
-        classesFn: filename where to write the classes.
-        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
-        classLabel: label that is the class reference.
-        classFnTemplate: the template to get the classes averages filenames
-        iter: the iteration number, just used in Class template
+def fillClasses(clsSet, updateClassCallback=None):
+    """ Give an empty SetOfClasses (either 2D or 3D).
+    Iterate over the input images and append to the corresponding class.
+    It is important that each image has the classId properly set.
     """
-    import pyworkflow.em.packages.xmipp3 as xmipp3
-    # We asume here that the volumes (classes3d) are in the same folder than imgsFn
-    # rootDir here is defined to be used expanding locals()
-    if ClassType == em.SetOfClasses2D:
-        alignType = em.ALIGN_2D
-    elif ClassType == em.SetOfClasses3D:
-        alignType = em.ALIGN_PROJ
-    else:
-        raise Exception('Invalid ClassType %s' % ClassType)
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    inputImages = clsSet.getImages()
     
-    xmipp3.createClassesFromImages(inputImages, inputStar,
-                                   classesFn, ClassType, classLabel, classFnTemplate,
-                                   alignType, iter, preprocessImageRow)
-    
-# def createClassesFromImages(inputImages, inputStar, classesFn, ):
-    
+    for img in inputImages:
+        ref = img.getClassId()
+        if ref is None:
+            raise Exception('Particle classId is None!!!')
+        
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            classItem = clsSet.ITEM_TYPE(objId=ref)
+            rep = clsSet.REP_TYPE()
+            classItem.setRepresentative(rep)            
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputImages)
+            classItem.setAcquisition(inputImages.getAcquisition())
+            if updateClassCallback is not None:
+                updateClassCallback(classItem)
+            clsSet.append(classItem)
+        else:
+            classItem = clsDict[ref] # Try to get the class set given its ref number
+        classItem.append(img)
+        
+    for classItem in clsDict.values():
+        clsSet.update(classItem)
 
-def readSetOfClasses2D(classes2DSet, filename, **args):
-    clsSet = em.SetOfClasses2D(filename=filename)
-    classes2DSet.appendFromClasses(clsSet)
 
-
-def readSetOfClasses3D(classes3DSet, filename, **args):
-    clsSet = em.SetOfClasses3D(filename=filename)
-    classes3DSet.appendFromClasses(clsSet)
+# def readSetOfClasses2D(classes2DSet, filename, **args):
+#     clsSet = em.SetOfClasses2D(filename=filename)
+#     classes2DSet.appendFromClasses(clsSet)
+# 
+# 
+# def readSetOfClasses3D(classes3DSet, filename, **args):
+#     clsSet = em.SetOfClasses3D(filename=filename)
+#     classes3DSet.appendFromClasses(clsSet)
     
 
 def writeSqliteIterData(imgStar, imgSqlite):
@@ -633,21 +630,21 @@ def splitInCTFGroups(imgStar, groups):
         
 def prependToFileName(imgRow, prefixPath):
     """ Prepend some root name to imageRow filename. """
-    index, imgPath = relionToLocation(imgRow.getValue(md.MDL_IMAGE))
+    index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
     newLoc = locationToRelion(index, os.path.join(prefixPath, imgPath))
-    imgRow.setValue(md.MDL_IMAGE, newLoc)
+    imgRow.setValue(md.RLN_IMAGE_NAME, newLoc)
 
 
 def relativeFromFileName(imgRow, prefixPath):
     """ Remove some prefix from filename in row. """
-    index, imgPath = relionToLocation(imgRow.getValue(md.MDL_IMAGE))
+    index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
     imgPath = os.path.relpath(imgPath, prefixPath)
     newLoc = locationToRelion(index, imgPath)
-    imgRow.setValue(md.MDL_IMAGE, newLoc)
+    imgRow.setValue(md.RLN_IMAGE_NAME, newLoc)
     
     
 def copyOrLinkFileName(imgRow, prefixDir, outputDir, copyFiles=False):
-    index, imgPath = relionToLocation(imgRow.getValue(md.MDL_IMAGE))
+    index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
     baseName = os.path.basename(imgPath)
     newName = os.path.join(outputDir, baseName)
     if not os.path.exists(newName):
@@ -656,7 +653,7 @@ def copyOrLinkFileName(imgRow, prefixDir, outputDir, copyFiles=False):
         else:
             createLink(os.path.join(prefixDir, imgPath), newName)
             
-    imgRow.setValue(md.MDL_IMAGE, locationToRelion(index, newName))
+    imgRow.setValue(md.RLN_IMAGE_NAME, locationToRelion(index, newName))
     
 
 def setupCTF(imgRow, sampling):

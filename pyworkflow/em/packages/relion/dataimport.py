@@ -35,7 +35,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
-import xmipp
+# import xmipp
 
 
 
@@ -94,7 +94,7 @@ class RelionImport():
             item._rlnAccuracyTranslations = Float(row.getValue('rlnAccuracyTranslations'))
     
     def _createClasses(self, partSet):    
-        from pyworkflow.em.packages.xmipp3.convert import fillClasses
+        from pyworkflow.em.packages.relion.convert import fillClasses
         self._classesDict = {} # store classes info, indexed by class id
         pathDict = {}
          
