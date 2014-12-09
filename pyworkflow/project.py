@@ -109,6 +109,7 @@ class Project(object):
         """ Create a new SqliteMapper object and pass as classes dict
         all globas and update with data and protocols from em.
         """
+        #TODO: REMOVE THE USE OF globals() here
         classesDict = dict(globals())
         classesDict.update(em.getProtocols())
         classesDict.update(em.getObjects())
