@@ -89,7 +89,12 @@ class TestRelionClassify2D(TestRelionBase):
         self.launchProtocol(prot2D)        
         
         self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
-                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage()) 
+                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage())
+        self.assertAlmostEquals(self.protNormalize.outputParticles.getSamplingRate(), 
+                                prot2D.outputClasses.getImages().getSamplingRate(),
+                                "There was a problem with the sampling rate of the particles")
+        self.assertEqual(prot2D.outputClasses.getImages().getAlignment(), "2D",
+                         "The particles hasn't alignment2D")
 
 
 class TestRelionClassify3D(TestRelionBase):
