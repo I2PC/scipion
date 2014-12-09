@@ -29,6 +29,16 @@ This module contains utils functions to operate over xmipp metadata files.
 """
 
 from classes import MetaData, Row
+from constants import LABEL_TYPES
+from functions import labelType
+
+
+def label2Python(label):
+    """ Return the Python type (int, float, bool) for a given 
+    metadata label (LABEL_INT, LABEL_DOUBLE..etc)
+    """
+    labelType = labelType(label)
+    return LABEL_TYPES.get(labelType, str)
 
 
 def getFirstRow(filename):
