@@ -1183,6 +1183,8 @@ public class ScipionMetaData extends MetaData {
     }
     
     public String getSetType() {
+        if(properties == null)
+            return "SetOfParticles";//child md from classes set
         return properties.get("self");
     }
    
