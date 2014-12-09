@@ -632,6 +632,24 @@ class TestXmippDenoiseParticles(TestXmippBase):
         self.launchProtocol(protDenoise)
         self.assertIsNotNone(protDenoise.outputParticles, "There was a problem generating output particles")
 
+class TestXmippApplyAlignment(TestXmippBase):
+    """This class checks if the protocol Apply Alignment works properly"""
+    @classmethod
+    def setUpClass(cls):
+        # For apply alignment we need to import particles that have alignment 2D information
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+
+    def test_apply_alignment(self):
+        protApply = self.newProtocol(XmippProtApplyAlignment)
+        protApply.inputParticles.set(self.align2D.outputParticles)
+        self.launchProtocol(protApply)
+        # We check that protocol generates output
+        self.assertIsNotNone(protApply.outputParticles, "There was a problem generating output particles")
+        # Check that output particles do not have alignment information
+        self.assertFalse(protApply.outputParticles.hasAlignment(), "Output particles should not have alignment information")
 
 class TestXmippRotSpectra(TestXmippBase):
     """This class check if the protocol to calculate the rotational spectra from particles in Xmipp works properly."""
@@ -640,7 +658,7 @@ class TestXmippRotSpectra(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        
+        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
          
     def test_rotSpectra(self):
         print "Run Rotational Spectra"
