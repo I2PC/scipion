@@ -30,6 +30,7 @@ In this module are protocol base classes related to EM Micrographs
 
 import os
 from os.path import join, basename, exists, dirname, relpath
+from itertools import izip
 
 from pyworkflow.object import String
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, LEVEL_EXPERT
@@ -295,10 +296,12 @@ class ProtRecalculateCTF(ProtMicrographs):
         # README: We suppose this is reading the ctf selection (with enabled/disabled)
         # to only consider the enabled ones in the final SetOfCTF
         #self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
-        #modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = SetOfCTF(filename=self.sqliteFile.get())
         
-        for ctfModel in self.inputCtf.get():
-            if ctfModel.isEnabled():
+        #TODO: maybe we can remove the need of the extra text file
+        # with the recalculate parameters
+        for ctfModel, ctfModel2 in izip(self.inputCtf.get(), modifiedSet):
+            if ctfModel2.isEnabled():
                 mic = ctfModel.getMicrograph()
                 for line in self.values:
                     objId = self._getObjId(line)                    
@@ -308,6 +311,7 @@ class ProtRecalculateCTF(ProtMicrographs):
                         # we dont want to copy the id here since it is already correct
                         ctfModel.copy(self._createNewCtfModel(mic), copyId=False)                        
                         break
+                ctfModel.setEnabled(True)
                 ctfSet.append(ctfModel)
                 # save the values of defocus for each micrograph in a list
                 defocusList.append(ctfModel.getDefocusU())
