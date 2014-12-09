@@ -258,8 +258,8 @@ class FilterObject():
 def browse_protocol_class(request):
     if request.is_ajax():
         protClassName = request.GET.get('protClassName')
-        from pyworkflow.em import findSubClasses, emProtocolsDict
-        objs = findSubClasses(emProtocolsDict, protClassName).keys()
+        from pyworkflow.em import findSubClasses, getProtocols
+        objs = findSubClasses(getProtocols(), protClassName).keys()
         
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')

@@ -1348,7 +1348,8 @@ def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
 def getProtocolFromDb(dbPath, protId):
     import pyworkflow.em as em
     import pyworkflow.config as config
-    classDict = dict(em.__dict__)
+    classDict = dict(em.getProtocols())
+    classDict.update(em.getObjects())
     classDict.update(config.__dict__)
     from pyworkflow.mapper import SqliteMapper
     mapper = SqliteMapper(dbPath, classDict)
