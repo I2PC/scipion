@@ -116,9 +116,28 @@ class Row():
     
     def __iter__(self):
         return self._labelDict.iteritems()
+        
+    def containsAll(self, labels):
+        """ Check if all labels are present in the row.
+        Params:
+            row: the Row object.
+            labels: either a dict or list object containing the labels
+                (in the case of dicts, label are the dict.values())
+        """
+        values = labels.values() if isinstance(labels, dict) else labels
+        return all(self.containsLabel(l) for l in values)
+    
+    def containsAny(self, labels):
+        """ Check if at least one of labels is present in the row.
+        Params:
+            row: the Row object.
+            labels: either a dict or list object containing the labels
+                (in the case of dicts, label are the dict.values())
+        """
+        values = labels.values() if isinstance(labels, dict) else labels
+        return any(self.containsLabel(l) for l in values)
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
         print str(self)
-        
         
