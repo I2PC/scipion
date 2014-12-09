@@ -68,6 +68,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         
         data = md.MetaData(self._getFileName('data', iter=self._lastIter()))
         outImgSet.copyInfo(imgSet)
+        outImgSet.setAlignment2D()
         outImgSet.copyItems(imgSet,
                     updateItemCallback=self.updatePartProperties,
                     itemDataIterator=md.iterRows(data))
