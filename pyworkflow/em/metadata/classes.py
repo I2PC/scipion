@@ -31,7 +31,7 @@ import sys
 from collections import OrderedDict
 
 from pyworkflow.object import ObjectWrap
-from xmipp import MetaData, label2Str, str2Label
+from xmipp import MetaData, label2Str, str2Label, MD_APPEND
 
 
 
@@ -151,3 +151,35 @@ class Row():
         """ Fancy printing of the row, mainly for debugging. """
         print str(self)
         
+        
+class RowMetaData():
+    """ This class is a wrapper for MetaData in row mode.
+    Where only one object is used.
+    """
+    def __init__(self, filename=None):
+        self._md = MetaData()
+        self._md.setColumnFormat(False)
+        self._id = self._md.addObject()
+        
+        if filename:
+            self.read(filename)
+        
+    def setValue(self, label, value):
+        self._md.setValue(label, value, self._id)
+        
+    def getValue(self, label):
+        return self._md.getValue(label, self._id)
+        
+    def write(self, filename, mode=MD_APPEND):
+        self._md.write(filename, mode)
+        
+    def read(self, filename):
+        self._md.read(filename)
+        self._md.setColumnFormat(False)
+        self._id = self._md.firstObject()
+        
+    def containsLabel(self, label):
+        return self._md.containsLabel(label)
+     
+    def __str__(self):
+        return str(self._md)
