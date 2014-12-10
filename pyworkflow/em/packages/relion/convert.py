@@ -519,48 +519,6 @@ def writeSetOfParticles(imgSet, starFile,
     partMd.write('%s@%s' % (blockName, starFile))
 
 
-#----------- REVIEWED UNTIL HERE----------------------
-def fillClasses(clsSet, updateClassCallback=None):
-    """ Give an empty SetOfClasses (either 2D or 3D).
-    Iterate over the input images and append to the corresponding class.
-    It is important that each image has the classId properly set.
-    """
-    clsDict = {} # Dictionary to store the (classId, classSet) pairs
-    inputImages = clsSet.getImages()
-    
-    for img in inputImages:
-        ref = img.getClassId()
-        if ref is None:
-            raise Exception('Particle classId is None!!!')
-        
-        if not ref in clsDict: # Register a new class set if the ref was not found.
-            classItem = clsSet.ITEM_TYPE(objId=ref)
-            rep = clsSet.REP_TYPE()
-            classItem.setRepresentative(rep)            
-            clsDict[ref] = classItem
-            classItem.copyInfo(inputImages)
-            classItem.setAcquisition(inputImages.getAcquisition())
-            if updateClassCallback is not None:
-                updateClassCallback(classItem)
-            clsSet.append(classItem)
-        else:
-            classItem = clsDict[ref] # Try to get the class set given its ref number
-        classItem.append(img)
-        
-    for classItem in clsDict.values():
-        clsSet.update(classItem)
-
-
-# def readSetOfClasses2D(classes2DSet, filename, **args):
-#     clsSet = em.SetOfClasses2D(filename=filename)
-#     classes2DSet.appendFromClasses(clsSet)
-# 
-# 
-# def readSetOfClasses3D(classes3DSet, filename, **args):
-#     clsSet = em.SetOfClasses3D(filename=filename)
-#     classes3DSet.appendFromClasses(clsSet)
-    
-
 def writeSqliteIterData(imgStar, imgSqlite):
     """ Given a Relion images star file (from some iteration)
     create the corresponding SetOfParticles (sqlite file)
@@ -571,6 +529,10 @@ def writeSqliteIterData(imgStar, imgSqlite):
     imgSet = em.SetOfParticles(filename=imgSqlite)
     readSetOfParticles(imgStar, imgSet)
     imgSet.write()
+    
+    
+def writeSqliteIterClasses(imgStar):
+    pass
     
     
 def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, prefixes):

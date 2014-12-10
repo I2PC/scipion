@@ -32,7 +32,7 @@ from pyworkflow.em.data import SetOfClasses2D
 from pyworkflow.em.protocol import ProtClassify2D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from pyworkflow.em.packages.relion.convert import fillClasses, rowToAlignment, relionToLocation
+from pyworkflow.em.packages.relion.convert import rowToAlignment, relionToLocation
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
@@ -60,36 +60,36 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
 
     #--------------------------- STEPS functions --------------------------------------------       
-    def createOutputStep(self):
-        from pyworkflow.utils.path import findRootFrom
-        
-        outImgSet = self._createSetOfParticles()
-        imgSet = self.inputParticles.get()
-        
-        data = md.MetaData(self._getFileName('data', iter=self._lastIter()))
-        outImgSet.copyInfo(imgSet)
-        outImgSet.setAlignment2D()
-        outImgSet.copyItems(imgSet,
-                    updateItemCallback=self.updatePartProperties,
-                    itemDataIterator=md.iterRows(data))
-        
-        self._classesDict = {} # store classes info, indexed by class id
+    def _loadClassesInfo(self, iteration):
+        """ Read some information about the produced Relion 2D classes
+        from the *model.star file.
+        """
+        self._classesInfo = {} # store classes info, indexed by class id
          
-        modelMd = md.MetaData('model_classes@' + self._getFileName('model', iter=self._lastIter()))
-        for classNumber, objId in enumerate(modelMd):
-            row = md.Row()
-            row.readFromMd(modelMd, objId)
+        modelStar = md.MetaData('model_classes@' + self._getFileName('model', iter=iteration))
+        
+        for classNumber, row in enumerate(md.iterRows(modelStar)):
             index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
-            
-            self._classesDict[classNumber+1] = (index, fn, row)
+            # Store info indexed by id, we need to store the row.clone() since
+            # the same reference is used for iteration            
+            self._classesInfo[classNumber+1] = (index, fn, row.clone())
+    
+    def _fillClassesFromIter(self, clsSet, iteration):
+        """ Create the SetOfClasses2D from a given iteration. """
+        self._loadClassesInfo(iteration)
+        dataStar = self._getFileName('data', iter=self._lastIter())
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                             updateClassCallback=self._updateClass,
+                             itemDataIterator=md.iterRows(dataStar))
         
-        clsSet = self._createSetOfClasses2D(outImgSet)
-        fillClasses(clsSet, updateClassCallback=self._updateClass)
+    def createOutputStep(self):
+        partSet = self.inputParticles.get()       
         
-        self._defineOutputs(outputParticles=outImgSet)
-        self._defineTransformRelation(imgSet, outImgSet)
-        self._defineOutputs(outputClasses=clsSet)
-        self._defineSourceRelation(imgSet, clsSet)
+        classes2D = self._createSetOfClasses2D(partSet)
+        self._fillClassesFromIter(classes2D, self._lastIter())
+        
+        self._defineOutputs(outputClasses=classes2D)
+        self._defineSourceRelation(partSet, classes2D)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
@@ -142,8 +142,9 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------
-    def updatePartProperties(self, item, row):
-        
+    def _updateParticle(self, item, row):
+        #print "_updateParticle"
+        #row.printDict()
         item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
         item.setTransform(rowToAlignment(row, em.ALIGN_2D))
         
@@ -153,8 +154,9 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         
     def _updateClass(self, item):
         classId = item.getObjId()
-        if  classId in self._classesDict:
-            index, fn, row = self._classesDict[classId]
+        if  classId in self._classesInfo:
+            index, fn, row = self._classesInfo[classId]
+            item.setAlignment2D()
             item.getRepresentative().setLocation(index, fn)
             item._rlnclassDistribution = em.Float(row.getValue('rlnClassDistribution'))
             item._rlnAccuracyRotations = em.Float(row.getValue('rlnAccuracyRotations'))
