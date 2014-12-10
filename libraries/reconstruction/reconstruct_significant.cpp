@@ -446,23 +446,23 @@ void ProgReconstructSignificant::run()
 				mdAux.clear();
 				mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
 
-				String fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+				String fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 				if (mdAux.size()>0)
 					mdAux.write(fnAngles);
 				else
 				{
-					std::cout << formatString("%s/angles_iter%02d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
+					std::cout << formatString("%s/angles_iter%03d_%02d.xmd is empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
 					emptyVolumes=true;
 				}
 
 				MetaData &mdPM=mdReconstructionProjectionMatching[nVolume];
 				if (mdPM.size()>0)
 				{
-					String fnImages=formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnImages=formatString("%s/images_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					mdPM.write(fnImages);
 
 					// Remove from mdPM those images that do not participate in angles
-					String fnAux=formatString("%s/aux_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnAux=formatString("%s/aux_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					// Take only the image name from angles.xmd
 					String cmd=(String)"xmipp_metadata_utilities -i "+fnAngles+" --operate keep_column image -o "+fnAux;
 					if (system(cmd.c_str())!=0)
@@ -472,32 +472,32 @@ void ProgReconstructSignificant::run()
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					// Intersect with images.xmd
-					String fnImagesSignificant=formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+					String fnImagesSignificant=formatString("%s/images_significant_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 					cmd=(String)"xmipp_metadata_utilities -i "+fnImages+" --set intersection "+fnAux+" image image -o "+fnImagesSignificant;
 					if (system(cmd.c_str())!=0)
 						REPORT_ERROR(ERR_MD,(String)"Cannot execute "+cmd);
 					deleteFile(fnAux);
 				}
 				else
-					std::cout << formatString("%s/images_iter%02d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
-				deleteFile(formatString("%s/gallery_iter%02d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
-				deleteFile(formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,nVolume));
-				deleteFile(formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,nVolume));
+					std::cout << formatString("%s/images_iter%03d_%02d.xmd empty. Not written.",fnDir.c_str(),iter,nVolume) << std::endl;
+				deleteFile(formatString("%s/gallery_iter%03d_%02d_sampling.xmd",fnDir.c_str(),iter,nVolume));
+				deleteFile(formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,nVolume));
+				deleteFile(formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,nVolume));
 				if (iter>=1 && !keepIntermediateVolumes)
 				{
-					deleteFile(formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter-1,nVolume));
-					deleteFile(formatString("%s/images_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
-					deleteFile(formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
-					deleteFile(formatString("%s/images_significant_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
+					deleteFile(formatString("%s/images_significant_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,nVolume));
 				}
 			}
 
 			if (verbose>=2)
 			{
 				save()=cc;
-				save.write(formatString("%s/cc_iter%02d.vol",fnDir.c_str(),iter));
+				save.write(formatString("%s/cc_iter%03d.vol",fnDir.c_str(),iter));
 				save()=weight;
-				save.write(formatString("%s/weight_iter%02d.vol",fnDir.c_str(),iter));
+				save.write(formatString("%s/weight_iter%03d.vol",fnDir.c_str(),iter));
 			}
     	}
     	synchronize();
@@ -522,12 +522,12 @@ void ProgReconstructSignificant::reconstructCurrent()
 		if ((nVolume+1)%Nprocessors!=rank)
 			continue;
 
-		FileName fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter,nVolume);
+		FileName fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 		if (!fnAngles.exists())
 			continue;
 		MD.read(fnAngles);
 		std::cout << "Volume " << nVolume << ": number of images=" << MD.size() << std::endl;
-		FileName fnVolume=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter,nVolume);
+		FileName fnVolume=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter,nVolume);
 		String args=formatString("-i %s -o %s --sym %s --weight -v 0",fnAngles.c_str(),fnVolume.c_str(),fnSym.c_str());
 		String cmd=(String)"xmipp_reconstruct_fourier "+args;
 		if (system(cmd.c_str())==-1)
@@ -557,10 +557,10 @@ void ProgReconstructSignificant::generateProjections()
 	{
 		if ((n+1)%Nprocessors!=rank)
 			continue;
-		fnVol=formatString("%s/volume_iter%02d_%02d.vol",fnDir.c_str(),iter-1,n);
-		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
-		fnAngles=formatString("%s/angles_iter%02d_%02d.xmd",fnDir.c_str(),iter-1,n);
-		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
+		fnVol=formatString("%s/volume_iter%03d_%02d.vol",fnDir.c_str(),iter-1,n);
+		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
+		fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter-1,n);
+		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
 		String args=formatString("-i %s -o %s --sampling_rate %f --sym %s --compute_neighbors --angular_distance -1 --experimental_images %s --min_tilt_angle %f --max_tilt_angle %f -v 0",
 				fnVol.c_str(),fnGallery.c_str(),angularSampling,fnSym.c_str(),fnAngles.c_str(),tilt0,tiltF);
 
@@ -576,8 +576,8 @@ void ProgReconstructSignificant::generateProjections()
 	for (int n=0; n<Nvol; n++)
 	{
 		mdGallery.push_back(galleryNames);
-		fnGalleryMetaData=formatString("%s/gallery_iter%02d_%02d.doc",fnDir.c_str(),iter,n);
-		fnGallery=formatString("%s/gallery_iter%02d_%02d.stk",fnDir.c_str(),iter,n);
+		fnGalleryMetaData=formatString("%s/gallery_iter%03d_%02d.doc",fnDir.c_str(),iter,n);
+		fnGallery=formatString("%s/gallery_iter%03d_%02d.stk",fnDir.c_str(),iter,n);
 		MetaData mdAux(fnGalleryMetaData);
 		galleryNames.clear();
 		FOR_ALL_OBJECTS_IN_METADATA(mdAux)
@@ -673,10 +673,10 @@ void ProgReconstructSignificant::produceSideinfo()
 		{
 			mdInit.getValue(MDL_IMAGE,fnVol,__iter.objId);
 			V.read(fnVol);
-			fnVol=formatString("%s/volume_iter00_%02d.vol",fnDir.c_str(),idx);
+			fnVol=formatString("%s/volume_iter000_%02d.vol",fnDir.c_str(),idx);
 			V.write(fnVol);
 			mdInit.setValue(MDL_IMAGE,fnVol,__iter.objId);
-			fnAngles=formatString("%s/angles_iter00_%02d.xmd",fnDir.c_str(),idx);
+			fnAngles=formatString("%s/angles_iter000_%02d.xmd",fnDir.c_str(),idx);
 			mdIn.write(fnAngles);
 		}
 		gallery.push_back(galleryDummy);
