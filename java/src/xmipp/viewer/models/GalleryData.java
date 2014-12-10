@@ -146,6 +146,10 @@ public class GalleryData {
         return tmpfile;
     }
 
+    public void selectVolumeAt(int selectedIndex) {
+        selectedVolFn = getVolumeAt(selectedIndex);
+    }
+
       
 
     public enum Mode {
@@ -384,7 +388,7 @@ public class GalleryData {
                     isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectVolume(getVolumeAt(0));
+                        selectedVolFn = getVolumeAt(0);
                     }
 
                 }
@@ -720,9 +724,7 @@ public class GalleryData {
             return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    public void selectVolume(String vol) {
-        selectedVolFn = vol; // FIXME: Check it is valid
-    }
+    
 
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
