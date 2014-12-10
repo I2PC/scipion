@@ -65,21 +65,8 @@ class RelionViewer(ProtocolViewer):
     
     _label = 'viewer relion'
     
-    # The following "tricks" with changing _defineParams
-    # is to postpone the definition of parameters after
-    # the protocol is set, to allow a more dynamic definition
-    # if this use become common, we need to move it to base class.
-    def setProtocol(self, protocol):
-        ProtocolViewer.setProtocol(self, protocol)
-        self.__defineParams(self._form)
-        self._createVarsFromDefinition()
-        self._env = os.environ.copy()
-#        self._load()
-        
     def _defineParams(self, form):
-        self._form = form
-        
-    def __defineParams(self, form):
+        self._env = os.environ.copy()
         form.addSection(label='Visualization')
         form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
                       display=EnumParam.DISPLAY_LIST,
@@ -109,10 +96,6 @@ Examples:
             group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
                            label='Particles angular assignment')
         
-#         form.addParam('showLL', BooleanParam, label="Show maximum model probability?", default=False, 
-#                       help='Max likelihood per image may be used to delete images with smaller value.'
-#                            'The higher, the better. Consider remove particles with low values.')
-         
         if self.protocol.IS_3D:
             group = form.addGroup('3D')
             
