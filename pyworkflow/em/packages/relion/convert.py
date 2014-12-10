@@ -186,7 +186,7 @@ def rowToObject(row, obj, attrDict, extraLabels={}):
     for label in extraLabels:
         if label not in attrLabels and row.hasLabel(label):
             labelStr = md.label2Str(label)
-            setattr(obj, '_' % labelStr, row.getValueAsObject(label))
+            setattr(obj, '_' + labelStr, row.getValueAsObject(label))
     
 
 def setObjId(obj, mdRow, label=md.RLN_IMAGE_ID):
@@ -204,7 +204,7 @@ def acquisitionToRow(acquisition, ctfRow):
 
 def rowToAcquisition(acquisitionRow):
     """ Create an acquisition from a row of a meta """
-    if acquisitionRow.containsAll(acquisitionRow, ACQUISITION_DICT):
+    if acquisitionRow.containsAll(ACQUISITION_DICT):
         acquisition = em.Acquisition()
         rowToObject(acquisitionRow, acquisition, ACQUISITION_DICT) 
     else:                
@@ -230,7 +230,7 @@ def ctfModelToRow(ctfModel, ctfRow):
 
 def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a meta """
-    if ctfRow.containsAll(ctfRow, CTF_DICT):
+    if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
         ctfModel.standardize()
@@ -341,7 +341,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
 def rowToCoordinate(coordRow):
     """ Create a Coordinate from a row of a meta """
     # Check that all required labels are present in the row
-    if coordRow.containsAll(coordRow, COOR_DICT):
+    if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT)
             

@@ -94,7 +94,6 @@ class RelionImport():
             item._rlnAccuracyTranslations = Float(row.getValue('rlnAccuracyTranslations'))
     
     def _createClasses(self, partSet):    
-        from pyworkflow.em.packages.relion.convert import fillClasses
         self._classesDict = {} # store classes info, indexed by class id
         pathDict = {}
          
@@ -119,7 +118,7 @@ class RelionImport():
             self._classesDict[classNumber+1] = (index, newFn, row)
 
         clsSet = self._classesFunc(partSet)
-        fillClasses(clsSet, updateClassCallback=self._updateClass)
+        clsSet.classifyItems(updateClassCallback=self._updateClass)
         
         self.protocol._defineOutputs(outputClasses=clsSet)
         self.protocol._defineSourceRelation(partSet, clsSet)
