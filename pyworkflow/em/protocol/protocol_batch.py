@@ -109,7 +109,7 @@ class ProtUserSubSet(BatchProtocol):
         """ Create a subset of Micrographs analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
-        SetOfImages.copyInfo(outputMics, setOfMics)
+        outputMics.copyInfo(setOfMics)
         
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
         
