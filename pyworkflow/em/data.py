@@ -1254,6 +1254,52 @@ class SetOfClasses(EMSet):
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
                 
+    def classifyItems(self, 
+                      updateItemCallback=None,
+                      updateClassCallback=None,
+                      itemDataIterator=None,
+                      classifyDisabled=False):
+        """ Classify items from the self.getImages() and add the needed classes.
+        This function iterates over each item in the images and call
+        the updateItemCallback to register the information coming from
+        the iterator in itemDataIterator. The callback function should
+        set the classId of the image that will be used to classify it.
+        It is also possible to pass a callback to update the class properties.
+        """
+        clsDict = {} # Dictionary to store the (classId, classSet) pairs
+        inputSet = self.getImages()
+        
+        for item in inputSet:
+            # copy items if enabled or copyDisabled=True
+            if classifyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                ref = newItem.getClassId()
+                if ref is None:
+                    raise Exception('Particle classId is None!!!')                    
+                
+                if not ref in clsDict: # Register a new class set if the ref was not found.
+                    classItem = self.ITEM_TYPE(objId=ref)
+                    rep = self.REP_TYPE()
+                    classItem.setRepresentative(rep)            
+                    clsDict[ref] = classItem
+                    classItem.copyInfo(inputSet)
+                    classItem.setAcquisition(inputSet.getAcquisition())
+                    if updateClassCallback is not None:
+                        updateClassCallback(classItem)
+                    self.append(classItem)
+                else:
+                    classItem = clsDict[ref]
+                classItem.append(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row                    
+                    
+        for classItem in clsDict.values():
+            self.update(classItem)                    
+                
 
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """
