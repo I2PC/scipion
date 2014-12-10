@@ -283,12 +283,17 @@ class Object(object):
         self.X.set(other.X.get())
         """
         for name in attrNames:
-            if isinstance(getattr(other, name), PointerList):
-                for pointer in getattr(other, name):
-                    getattr(self, name).append(pointer)
+            #TODO: I simply do not think we should reinforce each attribute
+            #check alternatives with JM, ROB
+            if hasattr(self, name):
+                if isinstance(getattr(other, name), PointerList):
+                    for pointer in getattr(other, name):
+                        getattr(self, name).append(pointer)
+                else:
+                    getattr(self, name).set(getattr(other, name).get())
             else:
-                getattr(self, name).set(getattr(other, name).get())
-            
+                setattr(self, name, None)
+
     def __getObjDict(self, prefix, objDict, includeClass):
         if prefix:
             prefix += '.'
