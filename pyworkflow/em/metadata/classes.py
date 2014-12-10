@@ -108,6 +108,16 @@ class Row():
         for label, value in other._labelDict.iteritems():
             self.setValue(label, value)
             
+    def clone(self):
+        """ Return another Row that have exactly the same
+        values as self.
+        """
+        row = Row()
+        row.copyFromRow(self)
+        row._objId = self._objId
+    
+        return row
+        
     def __str__(self):
         s = '{'
         for k, v in self._labelDict.iteritems():
