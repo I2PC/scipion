@@ -50,6 +50,7 @@ from viewer_resolution3d import XmippResolution3DViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
+from viewer_reconstruct_significant import XmippReconstructSignificantViewer
 
 from plotter import XmippPlotter
 
