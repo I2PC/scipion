@@ -35,32 +35,32 @@ from forms import DocumentForm
 from views_base import base_form
 from views_util import getResourceIcon, getResourceJs
 
-
 def upload(request, form=None):
     # Load documents for the list page
     
+    mode = request.GET.get('mode', None)
     path = os.path.join(request.session['projectPath'],'Uploads')
     split_path = path.split("/ScipionUserData/")
     relative_path = "ScipionUserData/" + split_path[1]
 
-
     context = {'relative_path': relative_path,
                'form': DocumentForm(),
                'logo_scipion_small': getResourceIcon('logo_scipion_small'),
-               "upload_utils": getResourceJs('upload_utils')
+               "upload_utils": getResourceJs('upload_utils'),
+               "mode": mode,
                }
 
     context = base_form(request, context)
     
     # Render list page with the documents and the form
-    return render_to_response('upload.html', context, 
+    return render_to_response('upload/upload.html', context, 
                               context_instance=RequestContext(request))
 
-def doUpload(request):
+def executeUpload(request):
     # Save the files
     form = DocumentForm(request.POST, request.FILES)
     
-    file_new = request.FILES['docfile'] 
+    file_new = request.FILES['docfile']
     
     if form.is_valid():
         #Save temporary file
@@ -72,6 +72,7 @@ def doUpload(request):
     
         #Move the file to the new folder
         src = os.path.join(django_settings.FILE_UPLOAD_TEMP_DIR, 'uploads', fn)
+        file_upload = src
         path = os.path.join(request.session['projectPath'],'Uploads')
         target = os.path.join(path, fn)
         if os.path.exists(target):
@@ -80,12 +81,18 @@ def doUpload(request):
         
         #Delete the temporary file
         newdoc.delete()
-            
+        
+
+def doUploadService(request):
+    form = DocumentForm(request.POST, request.FILES)
+    file = executeUpload(request)
+
+def doUpload(request):
+    form = DocumentForm(request.POST, request.FILES)
+    executeUpload(request)
     return upload(request, form)
 
-
 # """ File Browser Utils """
-
 def getPath(request):
     # action = request.GET.get('action')
     # time = request.GET.get('time')

@@ -302,20 +302,32 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
 #===============================================================================
 #  FILTERS
 #===============================================================================
-        
+
 class XmippFilterParticlesWizard(FilterParticlesWizard):   
-    _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _targets = [(XmippProtFilterParticles, ['lowFreqA','lowFreqDig',
+                                            'highFreqA','highFreqDig',
+                                            'freqDecayA','freqDecayDig'])]
     
     def _getParameters(self, protocol):
-        
-        label, value = self._getInputProtocol(self._targets, protocol)
-        
+
         protParams = {}
-        protParams['input']= protocol.inputParticles
-        protParams['label']= label
-        protParams['value']= value
-        protParams['mode'] = protocol.fourierMode.get()
-        return protParams  
+
+        if protocol.freqInAngstrom:
+            labels = ['lowFreqA', 'highFreqA', 'freqDecayA']
+            protParams['unit'] = UNIT_ANGSTROM
+        else:
+            labels = ['lowFreqDig', 'highFreqDig', 'freqDecayDig']
+            protParams['unit'] = UNIT_PIXEL
+
+        values = [protocol.getAttributeValue(l) for l in labels]
+
+        protParams['input'] = protocol.inputParticles
+        protParams['label'] = labels
+        protParams['value'] = values
+        protParams['mode'] = protocol.filterModeFourier.get()
+        #protParams['space'] = protocol.filterSpace.get()
+        #protParams['freqInAngstrom'] = protocol.freqInAngstrom.get()
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
@@ -326,7 +338,8 @@ class XmippFilterParticlesWizard(FilterParticlesWizard):
         _value = params['value']
         _label = params['label']
         _mode = params['mode']
-        FilterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+        _unit = params['unit']
+        FilterParticlesWizard.show(self, form, _value, _label, _mode, _unit)
     
 
     
@@ -336,13 +349,14 @@ class XmippFilterVolumesWizard(FilterVolumesWizard):
     def _getParameters(self, protocol):
         
         label, value = self._getInputProtocol(self._targets, protocol)
-        
+        value = [protocol.getLowFreq(), protocol.getHighFreq(), protocol.freqDecay.get()]
+
         protParams = {}
         protParams['input']= protocol.inputVolumes
         protParams['label']= label
+        protParams['mode'] = protocol.filterSpace.get()
         protParams['value']= value
-        protParams['mode'] = protocol.fourierMode.get()
-        return protParams  
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']

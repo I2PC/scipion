@@ -570,14 +570,11 @@ class EMSet(Set, EMObject):
 class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
-
     
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
-        #self._hasAlignment = Boolean(args.get('alignmet', False))
-        #self._hasProjection = Boolean(False)
         self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
@@ -657,7 +654,7 @@ class SetOfImages(EMSet):
         EMSet.append(self, image)
     
     def copyInfo(self, other):
-        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
+        """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
         self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)

@@ -119,12 +119,12 @@ class XmippFilterHelper():
 
         form.addParam('freqInAngstrom', BooleanParam, default=True,
                       condition='filterSpace == %d' % FILTER_SPACE_FOURIER,
-                      label='Provide frequencies in Angstroms?',
-                      help='If *Yes*, the frequency values for the filter\n'
+                      label='Provide resolution in Angstroms?',
+                      help='If *Yes*, the resolution values for the filter\n'
                            'should be provided in Angstroms. If *No*, the\n'
-                           'values should be in digital frequencies (between 0 and 0.5).')
-        # Frequencies in Angstroms
-        line = form.addLine('Frequency (A)',
+                           'values should be in normalized frequencies (between 0 and 0.5).')
+        # Resolution in Angstroms (inverse of frequencies)
+        line = form.addLine('Resolution (A)',
                             condition=fourierCondition + ' and freqInAngstrom',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
@@ -136,8 +136,13 @@ class XmippFilterHelper():
                                                        cls.FM_BAND_PASS, cls.FM_LOW_PASS),
                       label='Highest')
 
+        form.addParam('freqDecayA', FloatParam, default=2,
+                      condition=fourierCondition + ' and freqInAngstrom',
+                      label='Frequency decay',
+                      help='Length of the amplitude decay in a raised cosine')
+
         # Digital frequencies
-        line = form.addLine('Frequency (dig)',
+        line = form.addLine('Frequency (normalized)',
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
         line.addParam('lowFreqDig', DigFreqParam, default=0.02,
@@ -149,8 +154,8 @@ class XmippFilterHelper():
                                                        cls.FM_BAND_PASS, cls.FM_LOW_PASS),
                       label='Highest')
 
-        form.addParam('freqDecay', FloatParam, default=0.02,
-                      condition=fourierCondition,
+        form.addParam('freqDecayDig', FloatParam, default=0.02,
+                      condition=fourierCondition + ' and (not freqInAngstrom)',
                       label='Frequency decay',
                       help='Length of the amplitude decay in a raised cosine')
 
@@ -172,6 +177,27 @@ class XmippFilterHelper():
                       help='filter mode to be applied in wavelet space')
 
     @classmethod
+    def getLowFreq(cls, protocol):
+        if protocol.freqInAngstrom.get():
+            return protocol.lowFreqA.get()/(2.*protocol.getInputSampling())
+        else:
+            return protocol.lowFreqDig.get()
+
+    @classmethod
+    def getHighFreq(cls,protocol):
+        if protocol.freqInAngstrom.get():
+            return protocol.highFreqA.get()/(2.*protocol.getInputSampling())
+        else:
+            return protocol.highFreqDig.get()
+
+    @classmethod
+    def getFreqDecay(cls,protocol):
+        if protocol.freqInAngstrom.get():
+            return protocol.freqDecayA.get()/(2.*protocol.getInputSampling())
+        else:
+            return protocol.freqDecayDig.get()
+
+    @classmethod
     def getModesCondition(cls, filterMode, *filterModes):
         return ' or '.join('%s==%d' % (filterMode,fm) for fm in filterModes)
     #        return ' or '.join(['%s==%d' % (fmKey,fmValue) for fmKey,fmValue in zip(filterMode,filterModes)])
@@ -189,7 +215,6 @@ class XmippFilterHelper():
                 lowFreq = protocol.lowFreqDig.get()
                 highFreq = protocol.highFreqDig.get()
                 samplingStr = ''
-
             mode = protocol.filterModeFourier.get()
 
             freqDecay = protocol.freqDecay.get()
@@ -254,20 +279,23 @@ class XmippFilterHelper():
         def add(x): summary.append('  ' + x)  # short notation
         if protocol.filterSpace == FILTER_SPACE_FOURIER:
             add('Space: *Fourier*')
-            if protocol.freqInAngstrom:
-                lowFreq = protocol.lowFreqA.get()
-                highFreq = protocol.highFreqA.get()
-            else:
-                lowFreq = protocol.lowFreqDig.get()
-                highFreq = protocol.highFreqDig.get()
+            inA = protocol.freqInAngstrom  # short notation
+            lowA, highA = protocol.lowFreqA.get(), protocol.highFreqA.get()
+            lowN, highN = protocol.lowFreqDig.get(), protocol.highFreqDig.get()
             mode = protocol.filterModeFourier.get()
             if mode == cls.FM_LOW_PASS:
-                add('Mode: *Low-pass* ( freq > *%g* A )' % highFreq)
+                add('Mode: *Low-pass* ( %s )' %
+                    ('resolution > *%g* A' % highA) if inA else
+                    ('normalized frequency < *%g*' % highN))
             elif mode == cls.FM_HIGH_PASS:
-                add('Mode: *High-pass* ( freq < *%g* A )' % lowFreq)
+                add('Mode: *High-pass* ( %s )' %
+                    ('resolution < *%g* A' % lowA) if inA else
+                    ('normalized frequency > *%g*' % lowN))
             elif mode == cls.FM_BAND_PASS:
-                add('Mode: *Band-pass* ( *%g* A < freq < *%g* A )' % (highFreq, lowFreq))
-            add('Frequency Decay: *%g* A' % protocol.freqDecay.get())
+                add('Mode: *Band-pass* ( %s )' %
+                    ('*%g* A < resolution < *%g* A' % (highA, lowA) if inA else
+                    ('*%g* < normalized frequency < *%g*' % (lowN, highN))))
+            add('Normalized Frequency Decay: *%g*' % protocol.freqDecay.get())
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             add('Mode: *Median*')
         elif protocol.filterSpace == FILTER_SPACE_WAVELET:
@@ -310,6 +338,16 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
         
     def _insertProcessStep(self):
         XmippFilterHelper._insertProcessStep(self)
+
+    #--------------------------- RETURN digital or analog freq
+    def getLowFreq(self):
+        return XmippFilterHelper.getLowFreq(self)
+
+    def getHighFreq(self):
+        return XmippFilterHelper.getHighFreq(self)
+
+    def getFreqDecay(self):
+        return XmippFilterHelper.getFreqDecay(self)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertCTFXmippStep(self, ctfModel):
@@ -358,6 +396,7 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
 
     def _methods(self):
         return XmippFilterHelper._methods(self)
+
 
 
 class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
@@ -417,3 +456,13 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
 
     def _methods(self):
         return XmippFilterHelper._methods(self)
+
+    #--------------------------- RETURN digital or analog freq
+    def getLowFreq(self):
+        return XmippFilterHelper.getLowFreq(self)
+
+    def getHighFreq(self):
+        return XmippFilterHelper.getHighFreq(self)
+
+    def getFreqDecay(self):
+        return XmippFilterHelper.getFreqDecay(self)
