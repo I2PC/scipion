@@ -52,8 +52,6 @@ public class TemplatesJDialog extends JDialog
 				{
 					template = XmippImageConverter.convertToImagePlus(templates, ImageGeneric.FIRST_IMAGE + i);
 					templatespn.add(new JLabel(new ImageIcon(template.getImage()), SwingConstants.CENTER));
-                                        
-
 				}
 			}
 		}

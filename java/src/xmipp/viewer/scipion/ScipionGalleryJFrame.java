@@ -120,13 +120,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             return;
             
         if (type != null) {
-            cmdbutton = getScipionButton("Create " + type, new ActionListener() {
+            if(!data.isCTFMd())
+            {
+                cmdbutton = getScipionButton("Create " + type, new ActionListener() {
 
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    createSimpleSubset();
-                }
-            });
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        createSimpleSubset();
+                    }
+                });
+                buttonspn.add(cmdbutton);
+            }
             if(data.hasClasses())
             {
                 classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
@@ -152,7 +156,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(classcmdbutton);
             }
             
-            buttonspn.add(cmdbutton);
+            
             if(data.isCTFMd())
             {
                 icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-cogs.png")));

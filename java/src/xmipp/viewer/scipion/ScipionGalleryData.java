@@ -9,7 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +21,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -263,6 +261,14 @@ public class ScipionGalleryData extends GalleryData {
     public String getPreffix() {
         return ((ScipionMetaData) md).getPreffix();
     }
+    
+    public String getCTFParams(long id)
+    {
+            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f";
+            EllipseCTF ctf = ctfs.get(id);
+            String line = String.format(Locale.ENGLISH, format, id, ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq());
+            return line;
+    }
 
     public void exportCTFRecalculate(String path) {
 
@@ -276,8 +282,10 @@ public class ScipionGalleryData extends GalleryData {
             {
                 
                 ctf = entry.getValue();
-                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq());
+                line = getCTFParams(entry.getKey());
                 out.write(line);
+                out.newLine();
+                
             }
 
             out.close();
@@ -315,8 +323,9 @@ public class ScipionGalleryData extends GalleryData {
                 if(selection[i] && isEnabled(i))
                 {
                     emo = ((ScipionMetaData) md).getEMObjects().get(i);
-                    emo.setComment("(recalculate ctf)");
                     ctfs.put(ids[i], ellipseCTF);
+                    emo.setLabel("(recalculate ctf)");
+                    emo.setComment(getCTFParams(emo.getId()));
                 }
             window.fireTableRowsUpdated(selfrom, selto);
         }
@@ -396,6 +405,7 @@ public class ScipionGalleryData extends GalleryData {
 
     public void loadSelection(String selectedPath) {
         ((ScipionMetaData)md).loadSelection(selectedPath);
+            
     }
     
      /**

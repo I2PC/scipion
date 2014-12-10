@@ -743,12 +743,14 @@ public class ScipionMetaData extends MetaData {
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:" + path);
             c.setAutoCommit(false);
-            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=? WHERE id=?;", preffix, enabledci.labelName));
+            stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=?, %s=?, %s=? WHERE id=?;", preffix, enabledci.labelName, labelci.labelName, commentci.labelName));
 
             for (EMObject emo : emobjects) {
                 if (emo.changed) {
                     stmt.setInt(1, emo.isEnabled() ? 1 : 0);
-                    stmt.setInt(2, emo.getId().intValue());
+                    stmt.setString(2, emo.getLabel());
+                    stmt.setString(3, emo.getComment());
+                    stmt.setInt(4, emo.getId().intValue());
                     stmt.executeUpdate();
                     
                 }
@@ -1084,6 +1086,10 @@ public class ScipionMetaData extends MetaData {
         void setIndex(int index) {
             this.index = index;
         }
+
+        void setLabel(String label) {
+            setValue(labelci, label);
+        }
         
         
         
@@ -1124,19 +1130,27 @@ public class ScipionMetaData extends MetaData {
             EMObject emo;
             String alias;
 
-            String query = String.format("SELECT id, enabled FROM %sObjects;", preffix);
+            String query = String.format("SELECT id, enabled, label, comment FROM %sObjects;", preffix);
             rs = stmt.executeQuery(query);
-            Object value;
+            Object enabled, label, comment;
             long id;
             enableds = 0;
+            
             while (rs.next()) {
                 id = rs.getInt("id");
                 emo = getEMObject(id);
                 alias = enabledci.comment;
-                value = rs.getInt(alias);
-                emo.setValue(enabledci, value);
+                enabled = rs.getInt(alias);
+                emo.setValue(enabledci, enabled);
+                alias = labelci.comment;
+                label = rs.getString(alias);
+                emo.setValue(labelci, label);
+                alias = commentci.comment;
+                comment = rs.getString(alias);
+                emo.setValue(commentci, comment);
                 if(emo.isEnabled())
                     enableds ++;
+                
             }
             
             rs.close();
