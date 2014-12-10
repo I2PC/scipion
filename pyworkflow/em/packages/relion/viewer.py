@@ -27,12 +27,11 @@
 import os
 
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
-    MessageView
+from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
-from pyworkflow.em.viewer import DataView, ObjectView, ClassesView, Classes3DView
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 
-from pyworkflow.em.data import Volume, SetOfVolumes
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
@@ -190,11 +189,11 @@ Examples:
             return ['There are not iterations completed.'] 
     
     def createDataView(self, filename, viewParams={}):
-        return DataView(filename, env=self._env, viewParams=viewParams)
+        return em.DataView(filename, env=self._env, viewParams=viewParams)
         
     def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-        ViewClass = ClassesView if self.protocol.IS_2D else Classes3DView
+        ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         return ViewClass(self._project.getName(), 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
@@ -260,13 +259,11 @@ Examples:
         a 'classes' block and a 'class00000?_images' block per class.
         If the new metadata was already written, it is just shown.
         """
-        #output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
         views = []
         
         for it in self._iterations:
             fn = self.protocol._getIterClasses(it)
-            #should provide sqlite instead of metadata
-            v = self.createScipionView(fn)#, output)
+            v = self.createScipionView(fn)
             views.append(v)
         
         return views
@@ -276,16 +273,10 @@ Examples:
 #=====================================================================
           
     def _showLL(self, paramName=None):
-        addRelionLabels()
         views = []
         for it in self._iterations:
             fn = self.protocol._getIterData(it)
-            #md = xmipp.MetaData(fn)
-            #xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-            #xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-            #xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
-            #views.append(xplotter)
-            views.append(self.createScipionView(fn))#, viewParams={'sortby': ''}))
+            views.append(self.createScipionView(fn))
             
         return views
 
@@ -294,33 +285,29 @@ Examples:
 #===============================================================================
         
     def _showPMax(self, paramName=None):
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
-        addRelionLabels(extended=True)  
+        labels = [md.RLN_MLMODEL_AVE_PMAX, md.RLN_PARTICLE_PMAX]
         
-        mdIters = xmipp.MetaData()
+        mdIters = md.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
         
         for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
             objId = mdIters.addObject()
-            mdIters.setValue(xmipp.MDL_ITER, it, objId)
+            mdIters.setValue(md.MDL_ITER, it, objId)
             for i, prefix in enumerate(self.protocol.PREFIXES):
                 fn = 'model_general@'+ self.protocol._getFileName(prefix + 'model', iter=it)
-                md = xmipp.MetaData(fn)
-                pmax = md.getValue(xmipp.MDL_AVGPMAX, md.firstObject())
+                mdModel = md.RowMetaData(fn)
+                pmax = mdModel.getValue(md.RLN_MLMODEL_AVE_PMAX)
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
             
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         colors = ['g', 'b']
 
-        md = xmipp.MetaData(fn)
-        
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
         
         for label, color in zip(labels, colors):
-            xplotter.plotMd(md, xmipp.MDL_ITER, label, color)
+            xplotter.plotMd(mdIters, md.MDL_ITER, label, color)
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
@@ -332,22 +319,20 @@ Examples:
 #===============================================================================    
 
     def _showChanges(self, paramName=None):
-        addRelionLabels(extended=True)  
         
-        mdIters = xmipp.MetaData()
+        mdIters = md.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
         
         print " Computing average changes in offset, angles, and class membership"
         for it in iterations:
             print "Computing data for iteration; %03d" % it
             objId = mdIters.addObject()
-            mdIters.setValue(xmipp.MDL_ITER, it, objId)
+            mdIters.setValue(md.MDL_ITER, it, objId)
             #agregar por ref3D
             fn = self.protocol._getFileName('optimiser', iter=it )
-            md = xmipp.MetaData(fn)
-            firstId = md.firstObject()
+            mdOptimiser = md.RowMetaData(fn)
             for label in self.protocol.CHANGE_LABELS:
-                mdIters.setValue(label, md.getValue(label, firstId), objId)
+                mdIters.setValue(label, mdOptimiser.getValue(label), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
         

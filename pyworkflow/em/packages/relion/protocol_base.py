@@ -31,11 +31,12 @@ import re
 from glob import glob
 from os.path import exists
 
-import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
 from pyworkflow.utils.path import cleanPath
+
+import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
@@ -57,10 +58,10 @@ class ProtRelionBase(EMProtocol):
     IS_2D = False
     OUTPUT_TYPE = SetOfClasses3D
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
-    CLASS_LABEL = xmipp.MDL_REF
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                 xmipp.MDL_AVG_CHANGES_OFFSETS, 
-                 xmipp.MDL_AVG_CHANGES_CLASSES]
+    CLASS_LABEL = md.RLN_PARTICLE_CLASS
+    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
     PREFIXES = ['']
     
     def __init__(self, **args):        
@@ -621,7 +622,6 @@ class ProtRelionBase(EMProtocol):
         """ Return the .star file with the classes for this iteration.
         If the file doesn't exists, it will be created. 
         """
-        data_star = self._getFileName('data', iter=it)
         data_classes = self._getFileName('classes_scipion', iter=it)
         
         if clean:
