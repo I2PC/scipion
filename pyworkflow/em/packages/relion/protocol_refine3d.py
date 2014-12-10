@@ -42,9 +42,9 @@ leads to objective and high-quality results.
     """    
     _label = '3D refine'
     IS_CLASSIFY = False
-    #FIXME: USE REAL RELION LABELS
-    CHANGE_LABELS = [md.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     md.MDL_AVG_CHANGES_OFFSETS]
+    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
+
     PREFIXES = ['half1_', 'half2_']
     
     def __init__(self, **args):        
@@ -79,15 +79,8 @@ leads to objective and high-quality results.
             else:
                 args['--sigma_ang'] = self.movieStdRot.get()
         
-        #TODO: check why only for C*???
-        # I have added by default for refine3d 
-        # as extra parameters
-        #if args['--sym'].startswith('C'):
-        #    args['--low_resol_join_halves'] = "40";
-        
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
-        from pyworkflow.em.packages.relion.convert import iterRows
         
         imgSet = self.inputParticles.get()
         
@@ -101,7 +94,7 @@ leads to objective and high-quality results.
         outImgSet.copyInfo(imgSet)
         outImgSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
-                            itemDataIterator=iterRows(outImgsFn))
+                            itemDataIterator=md.iterRows(outImgsFn))
         
         self._defineOutputs(outputParticles=outImgSet)
         self._defineTransformRelation(imgSet, outImgSet)
