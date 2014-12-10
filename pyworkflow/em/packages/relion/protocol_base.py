@@ -40,7 +40,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryFiles, fillClasses
+from convert import convertBinaryFiles, writeSqliteIterData
 
 
 class ProtRelionBase(EMProtocol):
@@ -628,7 +628,12 @@ class ProtRelionBase(EMProtocol):
             cleanPath(data_classes)
         
         if not exists(data_classes):
-            fillClasses(data_classes, updateClassCallback=None)
+            clsSet = self.OUTPUT_TYPE(filename=data_classes)
+            clsSet.setImages(self.inputParticles.get())
+            self._fillClassesFromIter(clsSet, it)
+            clsSet.write()
+            clsSet.close()
+
         return data_classes
     
     def _getIterData(self, it):
@@ -637,9 +642,6 @@ class ProtRelionBase(EMProtocol):
         
         if not exists(data_sqlite):
             data = self._getFileName('data', iter=it)
-            # TODO: convert the sorted data directly to sqlite
-            # and just displayed sorted by LL
-            from convert import writeSqliteIterData
             writeSqliteIterData(data, data_sqlite)
         
         return data_sqlite
