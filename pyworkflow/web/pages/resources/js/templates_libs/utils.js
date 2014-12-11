@@ -386,6 +386,38 @@ function accessPopup(title, msgText, funcName, btnYes, btnNo){
 	});
 }
 
+function accessPopupOpt(title, msgText, 
+						 btn1, ico1, funcName1, 
+						 btn2, ico2, funcName2, 
+						 btnNo){
+
+	msg = "<table><tr><td>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
+
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : btn1,
+			val : 'Y',
+			btnClass : ico1,
+			btnFunc : funcName1
+		},{
+			id : 1,
+			label : btn2,
+			val : 'Y',
+			btnClass : ico2,
+			btnFunc : funcName2
+		}, {
+			id : 2,
+			label : btnNo,
+			val : 'C',
+			btnClass : 'fa-ban'
+		} ]
+	});
+}
+
 
 function listToString(list){
 	var res = "";

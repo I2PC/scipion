@@ -464,6 +464,14 @@ def create_service_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
+def download_testdata(request):
+    from views_util import get_file
+    # Filename to use as test data 
+    testDataKey = request.GET.get('testData')
+    dsMDA = DataSet.getDataSet('initial_volume')
+    fn = dsMDA.getFile(testDataKey)
+    return HttpResponse(fn, mimetype='application/javascript')
+
 def check_project_id(request):
     result = 0
     projectName = request.GET.get('code', None)
