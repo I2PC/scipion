@@ -81,17 +81,15 @@ def executeUpload(request):
         #Delete the temporary file
         newdoc.delete()
         
-
-def upload_service(request):
-    print "llegamos ", request
-    executeUpload(request)
-    context = {"ok":"ok"}
-    return HttpResponse(context, mimetype='application/javascript')
-
-
 def doUpload(request):
     form = DocumentForm(request.POST, request.FILES)
-    executeUpload(request)
+    
+    try:
+        executeUpload(request)
+    except Exception, ex:
+        print "Error: %s" % ex
+        return HttpResponse("error", mimetype='application/javascript')
+
     return upload(request, form)
 
 # """ File Browser Utils """

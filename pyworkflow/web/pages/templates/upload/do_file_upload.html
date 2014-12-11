@@ -1,9 +1,5 @@
 <div class="box">
-  	{% if mode != "service" %}
 	<form id="uploadForm" action="{{abs_url}}/doUpload/" method="post" enctype="multipart/form-data">
-	{% else %}
-	<form id="uploadForm" action="{{abs_url}}/upload_service/" method="post" enctype="multipart/form-data">
-	{% endif %}
 	{% csrf_token %}
 		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 		<p>

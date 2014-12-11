@@ -41,13 +41,21 @@ function doInitFunction(){
 		$.ajax({
 			url: URL,
 			type: 'POST',
-			data: new FormData( this ),
+			data: new FormData(this),
 			processData: false,
 			contentType: false,
-			async: false
+			dataType: "text",
+			async: false,
+			success: function(data){
+				if(data == "error"){
+					errorPopup('Error', "Problem found with the file selected", 0);
+				}
+				else{
+					infoPopup('Success', "The file was uploaded successfuly", 0);
+				}
+			}
 		});
 		e.preventDefault();
-		infoPopup('Success', "The file was uploaded successfuly",0);
 //		$("#progressbar").hide()
 		updateListFiles(project_folder)
 	});
