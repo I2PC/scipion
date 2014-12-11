@@ -60,4 +60,6 @@ MDValueGE = xmipp.MDValueGE
 
 MDValueRange = xmipp.MDValueRange 
 
-addLabelAlias = xmipp.addLabelAlias 
+addLabelAlias = xmipp.addLabelAlias
+
+activateMathExtensions = xmipp.activateMathExtensions

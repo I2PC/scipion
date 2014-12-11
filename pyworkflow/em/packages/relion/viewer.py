@@ -38,7 +38,6 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
-import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
 ITER_LAST = 0
@@ -341,25 +340,6 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
-        
-    def _createVolumesMd(self):
-        """ Write a metadata with all volumes selected for visualization. """
-#         import xmipp
-        prefixes = self._getPrefixes()
-        
-        mdPath = self.protocol._getExtraPath('relion_viewer_volumes.xmd')
-        cleanPath(mdPath)
-        md = xmipp.MetaData()
-        
-        for it in self._iterations:
-            md.clear()
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
-            md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
-        return [self.createDataView(mdPath)]
-
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
@@ -367,19 +347,18 @@ Examples:
 
         path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
         cleanPath(path)
-        volSet = SetOfVolumes(filename=path)
+        volSet = em.SetOfVolumes(filename=path)
         volSet.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
 
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vol = Volume()
+                    vol = em.Volume()
                     vol.setFileName(volFn)
                     volSet.append(vol)
         volSet.write()
-        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
-
+        return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
@@ -460,7 +439,6 @@ Examples:
         
     
     def _createAngDist2D(self, it):
-        addRelionLabels(replace=True)
         # Common variables to use
         prefixes = self._getPrefixes()
         nrefs = len(self._refsList)
@@ -471,25 +449,24 @@ Examples:
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
-                md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
                 plot_title = '%s class %d' % (prefix, ref3d)
-                xplotter.plotMdAngularDistribution(plot_title, md)
+                xplotter.plotMdAngularDistribution(plot_title, mdAng)
         
         return xplotter
-                
                 
 #===============================================================================
 # plotSSNR              
 #===============================================================================
                
     def _plotSSNR(self, a, fn):
-        mdOut = xmipp.MetaData(fn)
-        md = xmipp.MetaData()
+        mdOut = md.MetaData(fn)
+        mdSSNR = md.MetaData()
         # only cross by 1 is important
-        md.importObjects(mdOut, xmipp.MDValueGT(xmipp.MDL_RESOLUTION_SSNR, 0.9))
-        md.operate("resolutionSSNR=log(resolutionSSNR)")
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_SSNR, id) for id in md]
+        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
+        mdSSNR.operate("resolutionSSNR=log(resolutionSSNR)")
+        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
+        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
         a.plot(resolution_inv, frc)
         a.xaxis.set_major_formatter(self._plotFormatter)               
  
@@ -498,8 +475,7 @@ Examples:
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
-        addRelionLabels()
-        xmipp.activateMathExtensions()
+        md.activateMathExtensions()
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1])
         
         for prefix in prefixes:
@@ -523,9 +499,9 @@ Examples:
 #===============================================================================
 
     def _plotFSC(self, a, model_star):
-        md = xmipp.MetaData(model_star)
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
         self.maxFrc = max(frc)
         self.minInv = min(resolution_inv)
         self.maxInv = max(resolution_inv)
@@ -540,8 +516,7 @@ Examples:
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         
-        xmipp.activateMathExtensions()
-        addRelionLabels(replace=True, extended=True)
+        md.activateMathExtensions()
         
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
 
@@ -561,7 +536,6 @@ Examples:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
                 a.grid(True)
         
-        restoreXmippLabels()
         return [xplotter]
         
 
@@ -596,24 +570,26 @@ class PostprocessViewer(ProtocolViewer):
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
-                      label='Display SSNR plots?',
-                      help='Display signal to noise ratio plots (SSNR) ')
+        group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+                      label='Display resolution plots (FSC) ?',
+                      help='')
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
     
     def _getVisualizeDict(self):
 #         self._load()
         return {'displayVol': self._showVolume,
                 'displayMaskedVol': self._showMaskedVolume,
-#                 'displayAngDist': self._showAngularDistribution,
-#                 'resolutionPlotsSSNR': self._showSSNR,
-#                 'resolutionPlotsFSC': self._showFSC
+                'resolutionPlotsFSC': self._showFSC
                 }
 #===============================================================================
 # ShowVolumes
 #===============================================================================
         
     def _showVolumeShowj(self, volPath):        
-        return [DataView(volPath)]
+        return [em.DataView(volPath)]
     
     def _showVolumesChimera(self, volPath):
         """ Create a chimera script to visualize selected volumes. """
@@ -639,3 +615,38 @@ class PostprocessViewer(ProtocolViewer):
         
         elif self.displayVol == VOLUME_SLICES:
             return self._showVolumeShowj(volPath)
+    
+#===============================================================================
+# plotFSC            
+#===============================================================================
+    def _plotFSC(self, a, model_star):
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
+        self.maxfsc = max(fsc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, fsc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+    def _showFSC(self, paramName=None):
+        threshold = self.resolutionThresholdFSC.get()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        md.activateMathExtensions()
+        
+        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        a = xplotter.createSubPlot("GoldStandard FSC", 'Armstrongs^-1', 'FSC', yformat=False)
+        
+        model_star = self.protocol._getExtraPath('postprocess.star')
+        if os.path.exists(model_star):
+            self._plotFSC(a, 'fsc@' + model_star)
+        if threshold < self.maxfsc:
+            a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+        a.grid(True)
+        
+        return [xplotter]
