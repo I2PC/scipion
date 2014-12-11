@@ -181,21 +181,21 @@ class XmippFilterHelper():
     @classmethod
     def getLowFreq(cls, protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.lowFreqA.get()/(2.*protocol.getInputSampling())
+            return protocol.lowFreqA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.lowFreqDig.get()
 
     @classmethod
     def getHighFreq(cls,protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.highFreqA.get()/(2.*protocol.getInputSampling())
+            return protocol.highFreqA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.highFreqDig.get()
 
     @classmethod
     def getFreqDecay(cls,protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.freqDecayA.get()/(2.*protocol.getInputSampling())
+            return protocol.freqDecayA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.freqDecayDig.get()
 
