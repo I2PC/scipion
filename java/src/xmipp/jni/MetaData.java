@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,6 +92,8 @@ public class MetaData {
 
 	// keep labels for avoid read all the time
 	int[] activeLabels;
+        
+        protected HashMap<Long, EllipseCTF> ctfs = new HashMap<Long, EllipseCTF>();
         
 
 	static {
@@ -616,10 +619,22 @@ public class MetaData {
         return true;
     }
 
-    public boolean isCellEditable(int label) {
-        return true;
+   
+    public boolean hasRecalulateCTF() {
+        return !ctfs.isEmpty();
     }
 
+    public void removeCTF(long id) {
+        ctfs.remove(id);
+    }
+
+    public boolean containsCTF(long id) {
+        return ctfs.containsKey(id);
+    }
+
+    public void putCTF(long id, EllipseCTF ellipseCTF) {
+        ctfs.put(id, ellipseCTF);
+    }
     
 
     

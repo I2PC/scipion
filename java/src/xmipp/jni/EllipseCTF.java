@@ -7,6 +7,7 @@ package xmipp.jni;
 import ij.process.EllipseFitter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -28,8 +29,8 @@ public class EllipseCTF {
         defocusAngle = ellipseFitter.angle;
     }
 
-    public EllipseFitter getEllipseFitter() {
-        return ellipseFitter;
+    public double getDefocusAngle() {
+        return defocusAngle;
     }
     
     public EllipseCTF(long id, double Q0, double Cs, double downsampleFactor, double Ts, double kV, double mddefU, double mddefV, double defocusAngle, int D)
@@ -114,8 +115,8 @@ public class EllipseCTF {
         return Cs;
     }
     
-    @Override
-    public String toString() {
+    
+    public String toString2() {
     return "---------------------------------------------------\n"
     + "Q0: " + Q0 + "\n"
     + "Cs: " + Cs + "\n"
@@ -127,6 +128,13 @@ public class EllipseCTF {
     + "defocusU: " + defocusU + " > (file: " + mddefU + ")\n"
     + "defocusV: " + defocusV + " > (file: " + mddefV + ")\n"
     + "---------------------------------------------------\n";
+    }
+    
+    @Override
+    public String toString()
+    {
+        String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f";
+        return String.format(Locale.ENGLISH, format, id, getDefocusU(), getDefocusV(), getDefocusAngle(), getLowFreq(), getHighFreq());
     }
     
     public int getD()
@@ -155,6 +163,13 @@ public class EllipseCTF {
         return downsampleFactor;
     }
 
+    public void setDefocus(double defU, double defV, double angle) {
+        this.defocusU = defU;
+        this.defocusV = defV;
+        this.defocusAngle = angle;
+    }
+    
+   
     
     
 }

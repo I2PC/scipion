@@ -6,14 +6,18 @@
 package xmipp.viewer.scipion;
 
 import ij.IJ;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +26,7 @@ import xmipp.jni.CTFDescription;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.MetaData;
 import xmipp.utils.StopWatch;
-import xmipp.utils.XmippStringUtils;
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.models.ColumnInfo;
 
 /**
@@ -43,21 +47,11 @@ public class ScipionMetaData extends MetaData {
     private int enableds;
     Boolean checkTmp;
     HashMap<String, String> properties;
+    HashMap <Long, EMObject> idsmap;
     
     
 
-    public ScipionMetaData(String prefix, String self, String selfalias, List<ColumnInfo> columns) {
-        this(prefix, self, selfalias, columns, new ArrayList<EMObject>());
-    }
-
-    public ScipionMetaData(String preffix, String self, String selfalias, List<ColumnInfo> columns, List<EMObject> emobjects) {
-        this.preffix = preffix;
-        this.self = self;
-        this.selfalias = selfalias;
-        this.columns = columns;
-        this.emobjects = emobjects;
-        blocks = new String[]{getBlock()};
-    }
+   
 
     public ScipionMetaData(String dbfile) {
         this.filename = dbfile;
@@ -185,6 +179,7 @@ public class ScipionMetaData extends MetaData {
     protected void loadValues(Connection c)
     {
         try {
+            idsmap = new HashMap<Long, EMObject>();
             Statement stmt = c.createStatement();
             ResultSet rs;
             EMObject emo;
@@ -212,6 +207,7 @@ public class ScipionMetaData extends MetaData {
                     emo.values.put(column, value);
                 }
                 emobjects.add(emo);
+                idsmap.put(emo.getId(), emo);
                 if(emo.isEnabled())
                     enableds ++;
                 else
@@ -246,12 +242,7 @@ public class ScipionMetaData extends MetaData {
     }
 
     public EMObject getEMObject(long id) {
-        for (EMObject emo : emobjects) {
-            if (emo.getId() == id) {
-                return emo;
-            }
-        }
-        return null;
+        return idsmap.get(id);
     }
 
     public synchronized String getValueFromLabel(int index, int label) {
@@ -285,17 +276,7 @@ public class ScipionMetaData extends MetaData {
         return null;
     }
 
-    public ScipionMetaData getMd(List<EMObject> emos) {
-        ScipionMetaData selmd;
-        //either selection of classes or particles main selection will be saved on Classes and Objects table
-        selmd = new ScipionMetaData("", self, selfalias, columns);
-        for (EMObject emo : emos) {
-            selmd.add(emo);
-        }
-
-        return selmd;
-    }
-
+   
     public void add(EMObject emo) {
         emobjects.add(emo);
         if (emo.childmd != null) {
@@ -303,10 +284,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public ScipionMetaData getStructure(String prefix) {
-        return new ScipionMetaData(prefix, self, selfalias, columns);
-    }
-
+   
     
 
     public long[] findObjects() {
@@ -464,17 +442,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
 
-    public List<EMObject> getChilds(long[] ids) {
-        ArrayList<EMObject> childs = new ArrayList<EMObject>();
-        EMObject emo;
-        for (int i = 0; i < ids.length; i++) {
-            emo = getEMObject(ids[i]);
-            if (emo.childmd != null) {
-                childs.addAll(emo.childmd.getEMObjects());
-            }
-        }
-        return childs;
-    }
+   
 
     public void unionAll(MetaData md) {
 
@@ -1091,8 +1059,23 @@ public class ScipionMetaData extends MetaData {
             setValue(labelci, label);
         }
         
-        
-        
+        public EllipseCTF getEllipseCTF()
+        {
+            String comment = getComment();
+            if(comment == null || comment.isEmpty())
+                return null;
+            String[] params = comment.trim().split("\\s+");
+            System.out.println(Arrays.toString(params));
+            double defU = Double.parseDouble(params[1]);
+            double defV = Double.parseDouble(params[2]);
+            double angle = Double.parseDouble(params[3]);
+            double lowFreq = Double.parseDouble(params[4]);
+            double highFreq = Double.parseDouble(params[5]);
+            EllipseCTF ctf = md.getEllipseCTF(getId());
+            ctf.setDefocus(defU, defV, angle);
+            ctf.setFreqRange(lowFreq, highFreq);
+            return ctf;
+        }
     }
     
     
@@ -1135,7 +1118,7 @@ public class ScipionMetaData extends MetaData {
             Object enabled, label, comment;
             long id;
             enableds = 0;
-            
+            boolean isctfmd = isCTFMd();
             while (rs.next()) {
                 id = rs.getInt("id");
                 emo = getEMObject(id);
@@ -1150,6 +1133,8 @@ public class ScipionMetaData extends MetaData {
                 emo.setValue(commentci, comment);
                 if(emo.isEnabled())
                     enableds ++;
+                if(isctfmd)
+                    ctfs.put(id, emo.getEllipseCTF());
                 
             }
             
@@ -1167,17 +1152,7 @@ public class ScipionMetaData extends MetaData {
         }
     }
     
-    @Override
-    public boolean isCellEditable(int label) {
-        
-        
-        ColumnInfo ci = getColumnInfo(label);
-        if(ci == null)
-            return false;
-        if(ci.equals(enabledci))
-           return true;
-        return false;
-    }
+   
     
     class EMObjectComparator implements Comparator<EMObject> {
         private final ColumnInfo ci;
@@ -1200,6 +1175,33 @@ public class ScipionMetaData extends MetaData {
         if(properties == null)
             return "SetOfParticles";//child md from classes set
         return properties.get("self");
+    }
+    
+   
+    
+    
+    public void exportCTFRecalculate(String path) {
+
+        try {
+            FileWriter fstream = new FileWriter(path);
+            BufferedWriter out = new BufferedWriter(fstream);
+            String line;
+            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f";
+            EllipseCTF ctf;
+            for (Map.Entry<Long,EllipseCTF> entry : ctfs.entrySet()) 
+            {
+                ctf = entry.getValue();
+                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle(), ctf.getLowFreq(), ctf.getHighFreq());
+                out.write(line);
+                out.newLine();
+            }
+
+            out.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            XmippDialog.showError(null, ex.getMessage());
+        }
     }
    
 }
