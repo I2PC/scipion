@@ -36,7 +36,8 @@ import ttk
 
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
-from pyworkflow.em import emProtocolsDict, findViewers, DESKTOP_TKINTER, EMObject
+from pyworkflow.viewer import DESKTOP_TKINTER
+import pyworkflow.em as em
 from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -106,6 +107,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             
         if obj.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part
+            emProtocolsDict = em.getProtocols()
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
@@ -285,7 +287,7 @@ class SearchProtocolWindow(gui.Window):
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
         keyword = self._searchVar.get()
-
+        emProtocolsDict = em.getProtocols()
         for key, prot in emProtocolsDict.iteritems():
             label = prot.getClassLabel()
             if keyword in label:
@@ -307,7 +309,7 @@ class RunIOTreeProvider(TreeProvider):
         objs = []
         if self.protocol:
             inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
-            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
+            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(em.EMObject)]
             self.inputStr = String(Message.LABEL_INPUT)
             self.outputStr = String(Message.LABEL_OUTPUT)
             objs = [self.inputStr, self.outputStr] + inputs + outputs                
@@ -333,7 +335,7 @@ class RunIOTreeProvider(TreeProvider):
             obj = obj.get()
         actions = []    
         
-        viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
         def yatevalejosemi(v):
             return lambda: self._visualizeObject(v, obj)
         for v in viewers:
@@ -693,6 +695,7 @@ class ProtocolsView(tk.Frame):
         self.protTree.unbind('<<TreeviewClose>>')
         self.protTreeItems = {}
         subclassedDict = {} # Check which classes serve as base to not show them
+        emProtocolsDict = em.getProtocols()
         for k1, v1 in emProtocolsDict.iteritems():
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
@@ -787,7 +790,7 @@ class ProtocolsView(tk.Frame):
         # the search protocol dialog tree
         tree = e.widget
         protClassName = tree.getFirst().split('.')[-1]
-        protClass = emProtocolsDict.get(protClassName)
+        protClass = em.getProtocols().get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
@@ -989,7 +992,7 @@ class ProtocolsView(tk.Frame):
 
     def _analyzeResults(self, prot):        
 
-        viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
+        viewers = em.findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
             firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
@@ -999,8 +1002,8 @@ class ProtocolsView(tk.Frame):
             else:
                 firstViewer.visualize(prot)
         else:
-            for _, output in prot.iterOutputAttributes(EMObject):
-                viewers = findViewers(output.getClassName(), DESKTOP_TKINTER)
+            for _, output in prot.iterOutputAttributes(em.EMObject):
+                viewers = em.findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]

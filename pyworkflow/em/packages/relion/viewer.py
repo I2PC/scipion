@@ -27,20 +27,17 @@
 import os
 
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
-    MessageView
+from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
-from pyworkflow.em.viewer import DataView, ObjectView, ClassesView, Classes3DView
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 
-from pyworkflow.em.data import Volume, SetOfVolumes
 from pyworkflow.viewer import CommandView
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
-from convert import addRelionLabels, addRelionLabelsToEnviron, restoreXmippLabels
-import xmipp
 from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
 
 ITER_LAST = 0
@@ -67,22 +64,8 @@ class RelionViewer(ProtocolViewer):
     
     _label = 'viewer relion'
     
-    # The following "tricks" with changing _defineParams
-    # is to postpone the definition of parameters after
-    # the protocol is set, to allow a more dynamic definition
-    # if this use become common, we need to move it to base class.
-    def setProtocol(self, protocol):
-        ProtocolViewer.setProtocol(self, protocol)
-        self.__defineParams(self._form)
-        self._createVarsFromDefinition()
-        self._env = os.environ.copy()
-        addRelionLabelsToEnviron(self._env)
-#        self._load()
-        
     def _defineParams(self, form):
-        self._form = form
-        
-    def __defineParams(self, form):
+        self._env = os.environ.copy()
         form.addSection(label='Visualization')
         form.addParam('viewIter', EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
                       display=EnumParam.DISPLAY_LIST,
@@ -112,10 +95,6 @@ Examples:
             group.addParam('showImagesAngularAssignment', BooleanParam, default=True,
                            label='Particles angular assignment')
         
-#         form.addParam('showLL', BooleanParam, label="Show maximum model probability?", default=False, 
-#                       help='Max likelihood per image may be used to delete images with smaller value.'
-#                            'The higher, the better. Consider remove particles with low values.')
-         
         if self.protocol.IS_3D:
             group = form.addGroup('3D')
             
@@ -192,11 +171,11 @@ Examples:
             return ['There are not iterations completed.'] 
     
     def createDataView(self, filename, viewParams={}):
-        return DataView(filename, env=self._env, viewParams=viewParams)
+        return em.DataView(filename, env=self._env, viewParams=viewParams)
         
     def createScipionView(self, filename, viewParams={}):
         inputParticlesId = self.protocol.inputParticles.get().strId()
-        ViewClass = ClassesView if self.protocol.IS_2D else Classes3DView
+        ViewClass = em.ClassesView if self.protocol.IS_2D else em.Classes3DView
         return ViewClass(self._project.getName(), 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
@@ -262,13 +241,11 @@ Examples:
         a 'classes' block and a 'class00000?_images' block per class.
         If the new metadata was already written, it is just shown.
         """
-        #output = "Classes2D" if self.protocol.IS_2D else "Classes3D"
         views = []
         
         for it in self._iterations:
             fn = self.protocol._getIterClasses(it)
-            #should provide sqlite instead of metadata
-            v = self.createScipionView(fn)#, output)
+            v = self.createScipionView(fn)
             views.append(v)
         
         return views
@@ -278,16 +255,10 @@ Examples:
 #=====================================================================
           
     def _showLL(self, paramName=None):
-        addRelionLabels()
         views = []
         for it in self._iterations:
             fn = self.protocol._getIterData(it)
-            #md = xmipp.MetaData(fn)
-            #xplotter = XmippPlotter(windowTitle="max Likelihood particles sorting Iter_%d" % it)
-            #xplotter.createSubPlot("Particle sorting: Iter_%d" % it, "Particle number", "maxLL")
-            #xplotter.plotMd(md, False, mdLabelY=xmipp.MDL_LL)
-            #views.append(xplotter)
-            views.append(self.createScipionView(fn))#, viewParams={'sortby': ''}))
+            views.append(self.createScipionView(fn))
             
         return views
 
@@ -296,33 +267,29 @@ Examples:
 #===============================================================================
         
     def _showPMax(self, paramName=None):
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
-        addRelionLabels(extended=True)  
+        labels = [md.RLN_MLMODEL_AVE_PMAX, md.RLN_PARTICLE_PMAX]
         
-        mdIters = xmipp.MetaData()
+        mdIters = md.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
         
         for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
             objId = mdIters.addObject()
-            mdIters.setValue(xmipp.MDL_ITER, it, objId)
+            mdIters.setValue(md.MDL_ITER, it, objId)
             for i, prefix in enumerate(self.protocol.PREFIXES):
                 fn = 'model_general@'+ self.protocol._getFileName(prefix + 'model', iter=it)
-                md = xmipp.MetaData(fn)
-                pmax = md.getValue(xmipp.MDL_AVGPMAX, md.firstObject())
+                mdModel = md.RowMetaData(fn)
+                pmax = mdModel.getValue(md.RLN_MLMODEL_AVE_PMAX)
                 mdIters.setValue(labels[i], pmax, objId)
         fn = self.protocol._getFileName('all_avgPmax_xmipp')
         mdIters.write(fn)
             
-        labels = [xmipp.MDL_AVGPMAX, xmipp.MDL_PMAX]
         colors = ['g', 'b']
 
-        md = xmipp.MetaData(fn)
-        
         xplotter = XmippPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
         
         for label, color in zip(labels, colors):
-            xplotter.plotMd(md, xmipp.MDL_ITER, label, color)
+            xplotter.plotMd(mdIters, md.MDL_ITER, label, color)
         
         if len(self.protocol.PREFIXES) > 1:
             xplotter.showLegend(self.protocol.PREFIXES)
@@ -334,22 +301,20 @@ Examples:
 #===============================================================================    
 
     def _showChanges(self, paramName=None):
-        addRelionLabels(extended=True)  
         
-        mdIters = xmipp.MetaData()
+        mdIters = md.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
         
         print " Computing average changes in offset, angles, and class membership"
         for it in iterations:
             print "Computing data for iteration; %03d" % it
             objId = mdIters.addObject()
-            mdIters.setValue(xmipp.MDL_ITER, it, objId)
+            mdIters.setValue(md.MDL_ITER, it, objId)
             #agregar por ref3D
             fn = self.protocol._getFileName('optimiser', iter=it )
-            md = xmipp.MetaData(fn)
-            firstId = md.firstObject()
+            mdOptimiser = md.RowMetaData(fn)
             for label in self.protocol.CHANGE_LABELS:
-                mdIters.setValue(label, md.getValue(label, firstId), objId)
+                mdIters.setValue(label, mdOptimiser.getValue(label), objId)
         fn = self.protocol._getFileName('all_changes_xmipp')
         mdIters.write(fn)
         
@@ -358,25 +323,6 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
-        
-    def _createVolumesMd(self):
-        """ Write a metadata with all volumes selected for visualization. """
-#         import xmipp
-        prefixes = self._getPrefixes()
-        
-        mdPath = self.protocol._getExtraPath('relion_viewer_volumes.xmd')
-        cleanPath(mdPath)
-        md = xmipp.MetaData()
-        
-        for it in self._iterations:
-            md.clear()
-            for ref3d in self._refsList:
-                for prefix in prefixes:
-                    volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    md.setValue(xmipp.MDL_IMAGE, volFn, md.addObject())
-            md.write('iter%03d@%s' % (it, mdPath), xmipp.MD_APPEND)
-        return [self.createDataView(mdPath)]
-
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
@@ -384,19 +330,18 @@ Examples:
 
         path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
         cleanPath(path)
-        volSet = SetOfVolumes(filename=path)
+        volSet = em.SetOfVolumes(filename=path)
         volSet.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
 
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vol = Volume()
+                    vol = em.Volume()
                     vol.setFileName(volFn)
                     volSet.append(vol)
         volSet.write()
-        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
-
+        return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
@@ -477,7 +422,6 @@ Examples:
         
     
     def _createAngDist2D(self, it):
-        addRelionLabels(replace=True)
         # Common variables to use
         prefixes = self._getPrefixes()
         nrefs = len(self._refsList)
@@ -488,25 +432,24 @@ Examples:
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
-                md = xmipp.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
+                mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
                 plot_title = '%s class %d' % (prefix, ref3d)
-                xplotter.plotMdAngularDistribution(plot_title, md)
+                xplotter.plotMdAngularDistribution(plot_title, mdAng)
         
         return xplotter
-                
                 
 #===============================================================================
 # plotSSNR              
 #===============================================================================
                
     def _plotSSNR(self, a, fn):
-        mdOut = xmipp.MetaData(fn)
-        md = xmipp.MetaData()
+        mdOut = md.MetaData(fn)
+        mdSSNR = md.MetaData()
         # only cross by 1 is important
-        md.importObjects(mdOut, xmipp.MDValueGT(xmipp.MDL_RESOLUTION_SSNR, 0.9))
-        md.operate("resolutionSSNR=log(resolutionSSNR)")
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_SSNR, id) for id in md]
+        mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
+        mdSSNR.operate("resolutionSSNR=log(resolutionSSNR)")
+        resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
+        frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
         a.plot(resolution_inv, frc)
         a.xaxis.set_major_formatter(self._plotFormatter)               
  
@@ -515,8 +458,7 @@ Examples:
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
-        addRelionLabels()
-        xmipp.activateMathExtensions()
+        md.activateMathExtensions()
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1])
         
         for prefix in prefixes:
@@ -540,9 +482,9 @@ Examples:
 #===============================================================================
 
     def _plotFSC(self, a, model_star):
-        md = xmipp.MetaData(model_star)
-        resolution_inv = [md.getValue(xmipp.MDL_RESOLUTION_FREQ, id) for id in md]
-        frc = [md.getValue(xmipp.MDL_RESOLUTION_FRC, id) for id in md]
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
         self.maxFrc = max(frc)
         self.minInv = min(resolution_inv)
         self.maxInv = max(resolution_inv)
@@ -557,8 +499,7 @@ Examples:
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         
-        xmipp.activateMathExtensions()
-        addRelionLabels(replace=True, extended=True)
+        md.activateMathExtensions()
         
         xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
 
@@ -578,7 +519,6 @@ Examples:
                     a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
                 a.grid(True)
         
-        restoreXmippLabels()
         return [xplotter]
         
 
@@ -594,7 +534,6 @@ class PostprocessViewer(ProtocolViewer):
         self.__defineParams(self._form)
         self._createVarsFromDefinition()
         self._env = os.environ.copy()
-        addRelionLabelsToEnviron(self._env)
 #        self._load()
         
     def _defineParams(self, form):
@@ -614,24 +553,26 @@ class PostprocessViewer(ProtocolViewer):
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
-        group.addParam('resolutionPlotsSSNR', BooleanParam, default=True,
-                      label='Display SSNR plots?',
-                      help='Display signal to noise ratio plots (SSNR) ')
+        group.addParam('resolutionPlotsFSC', BooleanParam, default=True,
+                      label='Display resolution plots (FSC) ?',
+                      help='')
+        group.addParam('resolutionThresholdFSC', FloatParam, default=0.5, 
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Threshold in resolution plots',
+                      help='')
     
     def _getVisualizeDict(self):
 #         self._load()
         return {'displayVol': self._showVolume,
                 'displayMaskedVol': self._showMaskedVolume,
-#                 'displayAngDist': self._showAngularDistribution,
-#                 'resolutionPlotsSSNR': self._showSSNR,
-#                 'resolutionPlotsFSC': self._showFSC
+                'resolutionPlotsFSC': self._showFSC
                 }
 #===============================================================================
 # ShowVolumes
 #===============================================================================
         
     def _showVolumeShowj(self, volPath):        
-        return [DataView(volPath)]
+        return [em.DataView(volPath)]
     
     def _showVolumesChimera(self, volPath):
         """ Create a chimera script to visualize selected volumes. """
@@ -657,3 +598,38 @@ class PostprocessViewer(ProtocolViewer):
         
         elif self.displayVol == VOLUME_SLICES:
             return self._showVolumeShowj(volPath)
+    
+#===============================================================================
+# plotFSC            
+#===============================================================================
+    def _plotFSC(self, a, model_star):
+        mdStar = md.MetaData(model_star)
+        resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
+        fsc = [mdStar.getValue(md.RLN_POSTPROCESS_FSC_TRUE, id) for id in mdStar]
+        self.maxfsc = max(fsc)
+        self.minInv = min(resolution_inv)
+        self.maxInv = max(resolution_inv)
+        a.plot(resolution_inv, fsc)
+        a.xaxis.set_major_formatter(self._plotFormatter)
+        a.set_ylim([-0.1, 1.1])
+            
+    def _showFSC(self, paramName=None):
+        threshold = self.resolutionThresholdFSC.get()
+        prefixes = self._getPrefixes()        
+        nrefs = len(self._refsList)
+        n = nrefs * len(prefixes)
+        gridsize = self._getGridSize(n)
+        
+        md.activateMathExtensions()
+        
+        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        a = xplotter.createSubPlot("GoldStandard FSC", 'Armstrongs^-1', 'FSC', yformat=False)
+        
+        model_star = self.protocol._getExtraPath('postprocess.star')
+        if os.path.exists(model_star):
+            self._plotFSC(a, 'fsc@' + model_star)
+        if threshold < self.maxfsc:
+            a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+        a.grid(True)
+        
+        return [xplotter]

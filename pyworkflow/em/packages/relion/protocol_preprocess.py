@@ -153,8 +153,8 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
         outputMrcs = glob(self._getPath('particles*.mrcs'))[0] # In Relion 1.3 it is produces particles.mrcs.mrcs
         partFn = self._getPath('particles.mrcs')
         if outputMrcs != partFn:
-        # Override the initial converted mrcs particles stack
-        # It also make easy to use the same .star file as output
+            # Override the initial converted mrcs particles stack
+            # It also make easy to use the same .star file as output
             moveFile(outputMrcs, partFn)
     
     def createOutputStep(self):

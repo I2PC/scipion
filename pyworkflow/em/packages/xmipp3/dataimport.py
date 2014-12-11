@@ -29,13 +29,11 @@ from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom, copyTree, createLink
 from pyworkflow.em.data import Micrograph
+import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.xmipp3.convert import (readSetOfMicrographs, readSetOfParticles,
                                                    xmippToLocation, locationToXmipp, 
                                                    CTF_PSD_DICT, fillClasses)
-from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
-from pyworkflow.em.packages.xmipp3 import XmippMdRow
 
-import xmipp
 
 
 class XmippImport():
@@ -52,7 +50,7 @@ class XmippImport():
         (usually the result "micrographs.xmd" from Xmipp protocols)
         If the CTF is found, a SetOfCTF will be also created.
         """
-        self._findPathAndCtf(label=xmipp.MDL_MICROGRAPH)
+        self._findPathAndCtf(label=md.MDL_MICROGRAPH)
         micSet = self.protocol._createSetOfMicrographs()
         micSet.setObjComment('Micrographs imported from Xmipp metadata:\n%s' % self._mdFile)
         
@@ -82,7 +80,7 @@ class XmippImport():
         """ Import particles from a metadata 'images.xmd' """
         self._imgDict = {} # store which images stack have been linked/copied and the new path
 
-        self._findPathAndCtf(label=xmipp.MDL_IMAGE)
+        self._findPathAndCtf(label=md.MDL_IMAGE)
         
         if self._micIdOrName:
             # If MDL_MICROGRAPH_ID or MDL_MICROGRAPH then
@@ -120,13 +118,13 @@ class XmippImport():
         repect to the metadata location. Also check if it contains
         CTF information and their relative root.
         """
-        row = getMdFirstRow(self._mdFile)
+        row = md.getFirstRow(self._mdFile)
         
         if row is None:
             raise Exception("Can not import from an empty metadata: %s" % self._mdFile)
         
         if not row.containsLabel(label):
-            raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
+            raise Exception("Label *%s* is missing in metadata: %s" % (md.label2Str(label), 
                                                                          self._mdFile))
 
         # take only the filename part after the @
@@ -136,14 +134,14 @@ class XmippImport():
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._mdFile)
         
-        if row.containsLabel(xmipp.MDL_CTF_MODEL):
-            self._ctfPath = findRootFrom(self._mdFile, row.getValue(xmipp.MDL_CTF_MODEL))
+        if row.containsLabel(md.MDL_CTF_MODEL):
+            self._ctfPath = findRootFrom(self._mdFile, row.getValue(md.MDL_CTF_MODEL))
         else:
             self._ctfPath = None # means no CTF info from micrographs metadata
             
-        if row.containsLabel(xmipp.MDL_REF):
+        if row.containsLabel(md.MDL_REF):
             self._classFunc = self.protocol._createSetOfClasses2D
-        elif row.containsLabel(xmipp.MDL_REF3D):
+        elif row.containsLabel(md.MDL_REF3D):
             self._classFunc = self.protocol._createSetOfClasses3D
         else:
             self._classLabel = None
@@ -152,8 +150,8 @@ class XmippImport():
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
-        self._micIdOrName = (row.containsLabel(xmipp.MDL_MICROGRAPH_ID) or
-                             row.containsLabel(xmipp.MDL_MICROGRAPH))
+        self._micIdOrName = (row.containsLabel(md.MDL_MICROGRAPH_ID) or
+                             row.containsLabel(md.MDL_MICROGRAPH))
         #init dictionary. It will be used in the preprocessing
         self.micDict = {}
         
@@ -170,27 +168,27 @@ class XmippImport():
         return errors
         
     def validateMicrographs(self):
-        return self.validate(xmipp.MDL_MICROGRAPH)
+        return self.validate(md.MDL_MICROGRAPH)
     
     def validateParticles(self):
-        return self.validate(xmipp.MDL_IMAGE)
+        return self.validate(md.MDL_IMAGE)
         
     def _preprocessMicrographRow(self, img, imgRow):
         if self._imgPath:
             # Create a link or copy files to extraPath
             # and update the Row properly
-            micFile = imgRow.getValue(xmipp.MDL_MICROGRAPH)
+            micFile = imgRow.getValue(md.MDL_MICROGRAPH)
             micBase = basename(micFile)
             micDst = self.protocol._getExtraPath(micBase)
             self.copyOrLink(join(self._imgPath, micFile), micDst)
-            imgRow.setValue(xmipp.MDL_MICROGRAPH, micDst)
+            imgRow.setValue(md.MDL_MICROGRAPH, micDst)
             
         if self._ctfPath:
             # Read Xmipp ctfModel parameters and add
             # to the original micrograph row
-            ctfFile = imgRow.getValue(xmipp.MDL_CTF_MODEL) 
+            ctfFile = imgRow.getValue(md.MDL_CTF_MODEL) 
             ctfPath = join(self._imgPath, ctfFile)
-            ctfRow = XmippMdRow()
+            ctfRow = md.Row()
             ctfRow.readFromFile(ctfPath)
             imgRow.copyFromRow(ctfRow)
             # Also copy or link to the result micrograph 
@@ -216,16 +214,16 @@ class XmippImport():
         if self._imgPath:
             # Create a link or copy files to extraPath
             # and update the Row properly
-            index, fn = xmippToLocation(imgRow.getValue(xmipp.MDL_IMAGE))
+            index, fn = xmippToLocation(imgRow.getValue(md.MDL_IMAGE))
             imgBase = basename(fn)
             imgDst = self.protocol._getExtraPath(imgBase)
             if not exists(imgDst):
                 self.copyOrLink(join(self._imgPath, fn), imgDst)
-            imgRow.setValue(xmipp.MDL_IMAGE, locationToXmipp(index, imgDst))
+            imgRow.setValue(md.MDL_IMAGE, locationToXmipp(index, imgDst))
 
         if self._micIdOrName:
-            micId = imgRow.getValue(xmipp.MDL_MICROGRAPH_ID, None)
-            micName = imgRow.getValue(xmipp.MDL_MICROGRAPH, None)
+            micId = imgRow.getValue(md.MDL_MICROGRAPH_ID, None)
+            micName = imgRow.getValue(md.MDL_MICROGRAPH, None)
 
             # Check which is the key to identify micrographs (id or name)
             if micId is not None:
@@ -247,7 +245,7 @@ class XmippImport():
                 self.micDict[micKey] = mic
 
             # Update the row to set a MDL_MICROGRAPH_ID
-            imgRow.setValue(xmipp.MDL_MICROGRAPH_ID, long(mic.getObjId()))
+            imgRow.setValue(md.MDL_MICROGRAPH_ID, long(mic.getObjId()))
 
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 
@@ -263,13 +261,13 @@ class XmippImport():
             microscopeFile = join(dirName, 'microscope.xmd')
                 
             if exists(microscopeFile):
-                row = getMdFirstRow(microscopeFile)
-                acquisitionDict['voltage'] = row.getValue(xmipp.MDL_CTF_VOLTAGE)
-                acquisitionDict['sphericalAberration'] = row.getValue(xmipp.MDL_CTF_CS)
+                row = md.getFirstRow(microscopeFile)
+                acquisitionDict['voltage'] = row.getValue(md.MDL_CTF_VOLTAGE)
+                acquisitionDict['sphericalAberration'] = row.getValue(md.MDL_CTF_CS)
             
             if exists(acquisitionFile):
-                row = getMdFirstRow(acquisitionFile)
-                acquisitionDict['samplingRate'] = row.getValue(xmipp.MDL_SAMPLINGRATE)
+                row = md.getFirstRow(acquisitionFile)
+                acquisitionDict['samplingRate'] = row.getValue(md.MDL_SAMPLINGRATE)
             
         return acquisitionDict
           

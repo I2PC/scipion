@@ -31,7 +31,7 @@ import os
 import re
 from os.path import abspath
 
-from pyworkflow.em import *
+import pyworkflow.em as em
 from pyworkflow.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
@@ -105,6 +105,16 @@ class Project(object):
         if not isReadOnly():
             self.settings.write()
             
+    def createMapper(self, sqliteFn):
+        """ Create a new SqliteMapper object and pass as classes dict
+        all globas and update with data and protocols from em.
+        """
+        #TODO: REMOVE THE USE OF globals() here
+        classesDict = dict(globals())
+        classesDict.update(em.getProtocols())
+        classesDict.update(em.getObjects())
+        return SqliteMapper(sqliteFn, classesDict)
+    
     def load(self):
         """Load project data and settings
         from the project dir.
@@ -114,7 +124,7 @@ class Project(object):
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
             raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
-        self.mapper = SqliteMapper(self.dbPath, globals())
+        self.mapper = self.createMapper(self.dbPath)
         self.settings = loadSettings(self.settingsPath)
         
     def create(self, confs={}, graphView=False):
@@ -130,7 +140,7 @@ class Project(object):
         self._cleanData()
         print abspath(self.dbPath)
         # Create db throught the mapper
-        self.mapper = SqliteMapper(self.dbPath, globals())
+        self.mapper = self.createMapper(self.dbPath)
         self.mapper.commit()
         # Load settings from .conf files and write .sqlite
         self.settings = ProjectSettings(confs)
@@ -331,7 +341,7 @@ class Project(object):
         Used from self.copyProtocol
         """
         matches = []
-        for oKey, oAttr in node.run.iterOutputAttributes(EMObject):
+        for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
             for iKey, iAttr in childNode.run.iterInputAttributes():
                 if oAttr is iAttr.get():
                     matches.append((oKey, iKey))
@@ -477,7 +487,7 @@ class Project(object):
                 n.run = r
                 n.label = r.getRunName()
                 outputDict[r.getObjId()] = n
-                for _, attr in r.iterOutputAttributes(EMObject):
+                for _, attr in r.iterOutputAttributes(em.EMObject):
                     outputDict[attr.getObjId()] = n # mark this output as produced by r
                 
             def _checkInputAttr(node, pointed):
@@ -522,7 +532,7 @@ class Project(object):
         runs = self.getRuns(refresh=refresh)
         
         for r in runs:
-            for _, attr in r.iterOutputAttributes(EMObject):
+            for _, attr in r.iterOutputAttributes(em.EMObject):
                 node = g.createNode(attr.strId(), attr.getNameId())
                 node.object = attr                
         

@@ -26,11 +26,13 @@
 """
 This module contains the protocol base class for Relion protocols
 """
-
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses2D
 from pyworkflow.em.protocol import ProtClassify2D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
+from pyworkflow.em.packages.relion.convert import rowToAlignment, relionToLocation
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
@@ -58,14 +60,36 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         args['--psi_step'] = self.inplaneAngularSamplingDeg.get() * 2
 
     #--------------------------- STEPS functions --------------------------------------------       
+    def _loadClassesInfo(self, iteration):
+        """ Read some information about the produced Relion 2D classes
+        from the *model.star file.
+        """
+        self._classesInfo = {} # store classes info, indexed by class id
+         
+        modelStar = md.MetaData('model_classes@' + self._getFileName('model', iter=iteration))
+        
+        for classNumber, row in enumerate(md.iterRows(modelStar)):
+            index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
+            # Store info indexed by id, we need to store the row.clone() since
+            # the same reference is used for iteration            
+            self._classesInfo[classNumber+1] = (index, fn, row.clone())
+    
+    def _fillClassesFromIter(self, clsSet, iteration):
+        """ Create the SetOfClasses2D from a given iteration. """
+        self._loadClassesInfo(iteration)
+        dataStar = self._getFileName('data', iter=self._lastIter())
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                             updateClassCallback=self._updateClass,
+                             itemDataIterator=md.iterRows(dataStar))
+        
     def createOutputStep(self):
-        from pyworkflow.em.packages.relion.convert import readSetOfClasses2D
-        classesSqlite = self._getIterClasses(self._lastIter())
-        imgSet = self.inputParticles.get()
-        classes = self._createSetOfClasses2D(imgSet)
-        readSetOfClasses2D(classes, classesSqlite)
-        self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(imgSet, classes)
+        partSet = self.inputParticles.get()       
+        
+        classes2D = self._createSetOfClasses2D(partSet)
+        self._fillClassesFromIter(classes2D, self._lastIter())
+        
+        self._defineOutputs(outputClasses=classes2D)
+        self._defineSourceRelation(partSet, classes2D)
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
@@ -118,3 +142,23 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _updateParticle(self, item, row):
+        #print "_updateParticle"
+        #row.printDict()
+        item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
+        item.setTransform(rowToAlignment(row, em.ALIGN_2D))
+        
+        item._rlnNormCorrection = em.Float(row.getValue('rlnNormCorrection'))
+        item._rlnLogLikeliContribution = em.Float(row.getValue('rlnLogLikeliContribution'))
+        item._rlnMaxValueProbDistribution = em.Float(row.getValue('rlnMaxValueProbDistribution'))
+        
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        if  classId in self._classesInfo:
+            index, fn, row = self._classesInfo[classId]
+            item.setAlignment2D()
+            item.getRepresentative().setLocation(index, fn)
+            item._rlnclassDistribution = em.Float(row.getValue('rlnClassDistribution'))
+            item._rlnAccuracyRotations = em.Float(row.getValue('rlnAccuracyRotations'))
+            item._rlnAccuracyTranslations = em.Float(row.getValue('rlnAccuracyTranslations'))
+
