@@ -197,4 +197,10 @@ DataSet(name='grigorieff',  folder='grigorieff',
         files={'particles_rot_shift':'particles.sqlite',
                'ref_volume':'ref_volume.vol',
                 })
+               
+DataSet(name='initial_volume',  folder='initial_volume',
+        files={'groel': 'groel_64.stk',
+               'ribosome': 'ribosomeFrank_64_preprocessed.stk',
+               'bpv': 'bpv_100.stk'
+                })
 
