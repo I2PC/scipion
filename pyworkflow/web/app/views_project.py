@@ -374,7 +374,7 @@ def service_projects(request):
 
 def writeCustomMenu(customMenu):
     if not exists(customMenu):
-        f = open(customMenu, 'w')
+        f = open(customMenu, 'w+')
         f.write('''
 [PROTOCOLS]
 
@@ -405,9 +405,9 @@ def create_service_project(request):
         # Filename to use as test data 
         testDataKey = request.GET.get('testData')
         
-        customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
-        #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
         
