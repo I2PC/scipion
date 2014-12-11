@@ -126,7 +126,7 @@ class XmippFilterHelper():
         # Resolution in Angstroms (inverse of frequencies)
         line = form.addLine('Resolution (A)',
                             condition=fourierCondition + ' and freqInAngstrom',
-                            help='Range of frequencies to use in the filter')
+                            help='Range of resolutions to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
                       condition=cls.getModesCondition('filterModeFourier',
                                                        cls.FM_BAND_PASS, cls.FM_HIGH_PASS),
@@ -138,10 +138,11 @@ class XmippFilterHelper():
 
         form.addParam('freqDecayA', FloatParam, default=2,
                       condition=fourierCondition + ' and freqInAngstrom',
-                      label='Frequency decay',
-                      help='Length of the amplitude decay in a raised cosine')
+                      label='Decay length',
+                      help=('Amplitude decay in a [[https://en.wikipedia.org/'
+                            'wiki/Raised-cosine_filter][raised cosine]]'))
 
-        # Digital frequencies
+        # Normalized frequencies ("digital frequencies")
         line = form.addLine('Frequency (normalized)',
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
@@ -157,7 +158,8 @@ class XmippFilterHelper():
         form.addParam('freqDecayDig', FloatParam, default=0.02,
                       condition=fourierCondition + ' and (not freqInAngstrom)',
                       label='Frequency decay',
-                      help='Length of the amplitude decay in a raised cosine')
+                      help=('Amplitude decay in a [[https://en.wikipedia.org/'
+                            'wiki/Raised-cosine_filter][raised cosine]]'))
 
         form.addParam('inputCTF', PointerParam,
                       condition='filterModeFourier == %d' % cls.FM_CTF,
