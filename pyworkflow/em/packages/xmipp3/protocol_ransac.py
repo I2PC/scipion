@@ -60,9 +60,9 @@ class XmippProtRansac(ProtInitialVolume):
                            'It should be a SetOfClasses2D class')  
         form.addParam('symmetryGroup', StringParam, default="c1",
                       label='Symmetry group',  
-                      help="See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
-                           "for a description of the symmetry groups format."
-                           "If no symmetry is present, give c1")
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
+                           "for a description of the symmetry groups format in Xmipp.\n"
+                           "If no symmetry is present, use _c1_.")
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Angular sampling rate',
                       help='In degrees.'
