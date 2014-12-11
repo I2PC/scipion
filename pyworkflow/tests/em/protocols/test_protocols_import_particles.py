@@ -26,7 +26,6 @@ from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportParticles
-from pyworkflow.em.data import SetOfParticles
 
 
 class TestImportBase(BaseTest):
@@ -38,7 +37,7 @@ class TestImportBase(BaseTest):
         cls.dsMda = DataSet.getDataSet('mda')
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         
-    def checkOutput(self, prot, outputName, conditions):
+    def checkOutput(self, prot, outputName, conditions=[]):
         """ Check that an ouput was generated and
         the condition is valid. 
         """
@@ -127,11 +126,12 @@ class TestImportParticles(TestImportBase):
         prot1 = self.newProtocol(ProtImportParticles,
                                  objLabel='from relion (auto-refine 3d)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                 starFile=self.dsRelion.getFile('import/case2/relion_it015_data.star'),
+                                 starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
                                  magnification=10000,
                                  samplingRate=7.08
                                  )
         self.launchProtocol(prot1)
+        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignmentProj()'])
         
     def test_fromRelionClassify2D(self):
         """ Import an EMX file with Particles and defocus
@@ -143,7 +143,9 @@ class TestImportParticles(TestImportBase):
                                  magnification=10000,
                                  samplingRate=7.08
                                  )
-        self.launchProtocol(prot1)       
+        self.launchProtocol(prot1)
+        self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignment2D()'])
+        self.checkOutput(prot1, 'outputClasses')    
  
     def test_fromRelionClassify3D(self):
         """ Import an EMX file with Particles and defocus

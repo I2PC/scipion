@@ -126,7 +126,7 @@ class XmippFilterHelper():
         # Resolution in Angstroms (inverse of frequencies)
         line = form.addLine('Resolution (A)',
                             condition=fourierCondition + ' and freqInAngstrom',
-                            help='Range of frequencies to use in the filter')
+                            help='Range of resolutions to use in the filter')
         line.addParam('lowFreqA', FloatParam, default=60,
                       condition=cls.getModesCondition('filterModeFourier',
                                                        cls.FM_BAND_PASS, cls.FM_HIGH_PASS),
@@ -138,10 +138,11 @@ class XmippFilterHelper():
 
         form.addParam('freqDecayA', FloatParam, default=2,
                       condition=fourierCondition + ' and freqInAngstrom',
-                      label='Frequency decay',
-                      help='Length of the amplitude decay in a raised cosine')
+                      label='Decay length',
+                      help=('Amplitude decay in a [[https://en.wikipedia.org/'
+                            'wiki/Raised-cosine_filter][raised cosine]]'))
 
-        # Digital frequencies
+        # Normalized frequencies ("digital frequencies")
         line = form.addLine('Frequency (normalized)',
                             condition=fourierCondition + ' and (not freqInAngstrom)',
                             help='Range of frequencies to use in the filter')
@@ -157,7 +158,8 @@ class XmippFilterHelper():
         form.addParam('freqDecayDig', FloatParam, default=0.02,
                       condition=fourierCondition + ' and (not freqInAngstrom)',
                       label='Frequency decay',
-                      help='Length of the amplitude decay in a raised cosine')
+                      help=('Amplitude decay in a [[https://en.wikipedia.org/'
+                            'wiki/Raised-cosine_filter][raised cosine]]'))
 
         form.addParam('inputCTF', PointerParam,
                       condition='filterModeFourier == %d' % cls.FM_CTF,
@@ -179,21 +181,21 @@ class XmippFilterHelper():
     @classmethod
     def getLowFreq(cls, protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.lowFreqA.get()/(2.*protocol.getInputSampling())
+            return protocol.lowFreqA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.lowFreqDig.get()
 
     @classmethod
     def getHighFreq(cls,protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.highFreqA.get()/(2.*protocol.getInputSampling())
+            return protocol.highFreqA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.highFreqDig.get()
 
     @classmethod
     def getFreqDecay(cls,protocol):
         if protocol.freqInAngstrom.get():
-            return protocol.freqDecayA.get()/(2.*protocol.getInputSampling())
+            return protocol.freqDecayA.get() / (2. * protocol.getInputSampling())
         else:
             return protocol.freqDecayDig.get()
 
@@ -210,14 +212,14 @@ class XmippFilterHelper():
             if protocol.freqInAngstrom:
                 lowFreq = protocol.lowFreqA.get()
                 highFreq = protocol.highFreqA.get()
+                freqDecay = protocol.freqDecayA.get()
                 samplingStr = ' --sampling %f ' % protocol.getInputSampling()
             else:
                 lowFreq = protocol.lowFreqDig.get()
                 highFreq = protocol.highFreqDig.get()
+                freqDecay = protocol.freqDecayDig.get()
                 samplingStr = ''
             mode = protocol.filterModeFourier.get()
-
-            freqDecay = protocol.freqDecay.get()
 
             if mode == cls.FM_LOW_PASS:
                 filterStr = " low_pass %f %f " % (highFreq, freqDecay)
@@ -283,19 +285,21 @@ class XmippFilterHelper():
             lowA, highA = protocol.lowFreqA.get(), protocol.highFreqA.get()
             lowN, highN = protocol.lowFreqDig.get(), protocol.highFreqDig.get()
             mode = protocol.filterModeFourier.get()
+            decayStr = ('*%g* A' % protocol.freqDecayA.get() if inA else
+                        '*%g*' % protocol.freqDecayDig.get())
             if mode == cls.FM_LOW_PASS:
-                add('Mode: *Low-pass* ( %s )' %
-                    ('resolution > *%g* A' % highA) if inA else
-                    ('normalized frequency < *%g*' % highN))
+                add('Mode: *Low-pass* ( %s, decay at %s )' %
+                    ('resolution > *%g* A' % highA if inA else
+                     'normalized frequency < *%g*' % highN, decayStr))
             elif mode == cls.FM_HIGH_PASS:
-                add('Mode: *High-pass* ( %s )' %
-                    ('resolution < *%g* A' % lowA) if inA else
-                    ('normalized frequency > *%g*' % lowN))
+                add('Mode: *High-pass* ( %s, decay at %s )' %
+                    ('resolution < *%g* A' % lowA if inA else
+                     'normalized frequency > *%g*' % lowN, decayStr))
             elif mode == cls.FM_BAND_PASS:
-                add('Mode: *Band-pass* ( %s )' %
+                add('Mode: *Band-pass* ( %s, decay at %s )' %
                     ('*%g* A < resolution < *%g* A' % (highA, lowA) if inA else
-                    ('*%g* < normalized frequency < *%g*' % (lowN, highN))))
-            add('Normalized Frequency Decay: *%g*' % protocol.freqDecay.get())
+                     '*%g* < normalized frequency < *%g*' % (lowN, highN),
+                     decayStr))
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             add('Mode: *Median*')
         elif protocol.filterSpace == FILTER_SPACE_WAVELET:

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,23 +24,42 @@
 # *
 # **************************************************************************
 """
-List all existing protocols within Scipion
+Add functions related to metadata
 """
+import xmipp
 
-import sys
-from pyworkflow.em import getProtocols
+getBlocksInMetaDataFile = xmipp.getBlocksInMetaDataFile
 
+label2Str = xmipp.label2Str 
 
-if __name__ == '__main__':
-    count = 0
-    withDoc = '--with-doc' in sys.argv
-    emProtocolsDict = getProtocols()
-    for k, v in emProtocolsDict.iteritems():
-        packageName = v.getClassPackageName()
-        if packageName == 'xmipp3':
-            print "%s: %s -> %s" % (packageName, k, v.__name__)
-            if withDoc:
-                print "   doc: ", v.__doc__
-            count += 1
-            
-    print "total: ", count
+colorStr = xmipp.colorStr 
+
+labelType = xmipp.labelType 
+
+labelHasTag = xmipp.labelHasTag 
+
+labelIsImage = xmipp.labelIsImage 
+
+str2Label = xmipp.str2Label 
+
+isValidLabel = xmipp.isValidLabel
+
+MDValueRelational = xmipp.MDValueRelational
+
+MDValueEQ = xmipp.MDValueEQ 
+
+MDValueNE = xmipp.MDValueNE 
+
+MDValueLT = xmipp.MDValueLT 
+
+MDValueLE = xmipp.MDValueLE 
+
+MDValueGT = xmipp.MDValueGT 
+
+MDValueGE = xmipp.MDValueGE 
+
+MDValueRange = xmipp.MDValueRange 
+
+addLabelAlias = xmipp.addLabelAlias
+
+activateMathExtensions = xmipp.activateMathExtensions

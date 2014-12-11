@@ -49,9 +49,6 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
-        if self._path.endswith('.star'):
-            from pyworkflow.em.packages.relion import addRelionLabelsToEnviron
-            addRelionLabelsToEnviron(self._env)
             
     def _loadPath(self, path):
         # Check if there is a table name with @ in path

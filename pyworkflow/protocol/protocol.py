@@ -1346,9 +1346,15 @@ def runProtocolMainMPI(projectPath, dbPath, protId, mpiComm):
     
      
 def getProtocolFromDb(dbPath, protId):
+    """ Retrieve the Protocol object from a given .sqlite file
+    and the protocol id.
+    """
     import pyworkflow.em as em
     import pyworkflow.config as config
-    classDict = dict(em.__dict__)
+    classDict = dict(em.getProtocols())
+    classDict.update(em.getObjects())
+    #TODO: remove the use of config.__dict__ and maybe 
+    # review if it is the same classesDict needed in project.py
     classDict.update(config.__dict__)
     from pyworkflow.mapper import SqliteMapper
     mapper = SqliteMapper(dbPath, classDict)
