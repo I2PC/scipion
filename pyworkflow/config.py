@@ -87,6 +87,7 @@ class ProjectSettings(OrderedObject):
         self.protMenuList = SettingList() # Store different protocol configurations
         self.mapper = None # This should be set when load, or write
         self.graphView = Boolean(False)
+        self.readOnly = Boolean(False)
         self.runSelection = CsvList(int) # Store selected runs
         
     def loadConfig(self, confs={}):
@@ -122,6 +123,12 @@ class ProjectSettings(OrderedObject):
     
     def setGraphView(self, value):
         self.graphView.set(value)
+        
+    def getReadOnly(self):
+        return self.readOnly.get()
+    
+    def setReadOnly(self, value):
+        self.readOnly.set(value)
 
     def saveHost(self, host, commit=False):
         """ Save a host for project settings.

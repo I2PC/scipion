@@ -102,7 +102,7 @@ class Project(object):
     
     def saveSettings(self):
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
             self.settings.write()
             
     def createMapper(self, sqliteFn):
@@ -127,7 +127,7 @@ class Project(object):
         self.mapper = self.createMapper(self.dbPath)
         self.settings = loadSettings(self.settingsPath)
         
-    def create(self, confs={}, graphView=False):
+    def create(self, confs={}, graphView=False, readOnly=False):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
@@ -146,6 +146,7 @@ class Project(object):
         self.settings = ProjectSettings(confs)
         self.settings.loadConfig(confs)
         self.settings.setGraphView(graphView)
+        self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
         # Create other paths inside project
         for p in self.pathList:
@@ -196,7 +197,7 @@ class Project(object):
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
             try:
                 # FIXME: this will not work for a real remote host
                 jobId = protocol.getJobId() # Preserve the jobId before copy
@@ -279,7 +280,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if isReadOnly():
+        if self.isReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
         
         self._checkProtocolsDependencies(protocols, msg)        
@@ -425,7 +426,7 @@ class Project(object):
     
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
     
@@ -433,7 +434,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
         
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
         
             self._storeProtocol(protocol) # Store first to get a proper id
             # Set important properties of the protocol
@@ -609,6 +610,12 @@ class Project(object):
             connection[node.object.strId()] = node.object
         
         return connection
+    
+    def isReadOnly(self):
+        return self.settings.getReadOnly()
+    
+    def setReadOnly(self, value):
+        self.settings.setReadOnly(value)
             
 
 def isReadOnly():
