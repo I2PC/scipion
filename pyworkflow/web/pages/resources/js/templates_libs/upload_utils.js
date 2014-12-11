@@ -41,13 +41,21 @@ function doInitFunction(){
 		$.ajax({
 			url: URL,
 			type: 'POST',
-			data: new FormData( this ),
+			data: new FormData(this),
 			processData: false,
 			contentType: false,
-			async: false
+			dataType: "text",
+			async: false,
+			success: function(data){
+				if(data == "error"){
+					errorPopup('Error', "Problem found with the file selected", 0);
+				}
+				else{
+					infoPopup('Success', "The file was uploaded successfuly", 0);
+				}
+			}
 		});
 		e.preventDefault();
-		infoPopup('Success', "The file was uploaded successfuly",0);
 //		$("#progressbar").hide()
 		updateListFiles(project_folder)
 	});
@@ -71,13 +79,13 @@ function browseUpload(paramName){
 					label : 'Upload',
 					val : 'Y',
 					btnClass : 'fa-cogs',
-					btnFunc : 'launchSubmitUploadService',
+					btnFunc : 'uploadService',
 				}, {
 					id : 1,
 					label : 'Cancel',
 					val : 'C',
 					btnClass : 'fa-ban'
-				} ]
+				}]
 			});
 		}
 	});
@@ -87,17 +95,16 @@ function launchUpload(){
 	var msg = "</td><td class='content' value='"
 		msg += "'>The file will be <strong>UPLOADED</strong> into the path <strong>PROJECT FOLDER</strong>. "
 		msg += "Do you really want to continue?</td></tr></table>";
-	warningPopup('Confirm UPLOAD',msg, 'launchSubmitUpload')
+	warningPopup('Confirm UPLOAD', msg, 'launchSubmitUpload')
 }
 
 function launchSubmitUpload(){
-//	$("#progressbar").show()
 	$('#uploadForm').submit();
 }
 
-function launchSubmitUploadService(){
+function uploadService(){
+	launchSubmitUpload()
 	var file = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
-	launchSubmitUpload();
 	file = $("#project_folder").val()+ "/Uploads/" + file
 	$("input.upload").val(file)
 }

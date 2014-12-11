@@ -131,12 +131,14 @@ $(document).ready(function() {
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
 
+// ---------- MODE EXECUTE PROTOCOL  -----------------------------------------------
 		if (mode == 'execute') {
 			/* Execute the protocol */
 			// console.log($("#protocolForm").serialize())
 			var action = $("#protocolForm").attr("action");
 			var URL = getSubDomainURL() + action
 			var serialize_form = fixInput($("#protocolForm").serialize());
+			
 			$.post(URL, serialize_form, function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
@@ -146,6 +148,7 @@ $(document).ready(function() {
 				}
 			}, "json");
 
+// ---------- MODE SAVE PROTOCOL ------------------------------------------------
 		} else if (mode == 'save') {
 			/* Save the protocol */
 			var serialize_form = fixInput($("#protocolForm").serialize());
@@ -160,6 +163,8 @@ $(document).ready(function() {
 					infoPopup('Success', "The protocol was saved successfuly", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
 				}
 			},"json");
+
+// ---------- MODE WIZARD -----------------------------------------------------
 		} else if (mode == 'wiz') {
 			
 			new Messi("<i class='fa fa-magic'/>  Loading Wizard...",{
@@ -184,6 +189,8 @@ $(document).ready(function() {
 					customPopupHTML(html,790,480);
 				}
 			});
+
+// ---------- MODE VIEWER -----------------------------------------------------
 		} else if (mode == 'viewerElement') {
 			
 			new Messi("<i class='fa fa-eye'/> Loading Viewer...",{

@@ -195,7 +195,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
             summary.append("Particles picked: %d"%manualParticlesSize)
             summary.append("Last micrograph: " + activemic)
-        return "\n".join(summary)
+        return ["\n".join(summary)]
        
     
 

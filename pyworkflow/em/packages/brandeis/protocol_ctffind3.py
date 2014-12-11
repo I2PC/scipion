@@ -93,10 +93,12 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor))
+            
+            self._params['samplingRate'] = self._params['samplingRate'] * downFactor
+            self._params['scannedPixelSize'] = self._params['scannedPixelSize'] * downFactor
         else:
             micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
             ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
-        
         
         # Update _params dictionary
         self._params['micFn'] = micFnMrc

@@ -179,8 +179,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             else:
                 break
         return lastIter
-
-    def createOutputStep(self):
+    
+    def getNumberOfVolumes(self):
         if self.thereisRefVolume:
             inputVolume= self.refVolume.get()
             if isinstance(inputVolume, SetOfVolumes):
@@ -189,7 +189,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 Nvolumes=1
         else:
             Nvolumes=self.Nvolumes.get()
-
+        return Nvolumes
+        
+    def createOutputStep(self):
+        Nvolumes=self.getNumberOfVolumes()
         lastIter=self.getLastIteration(Nvolumes)
         if Nvolumes==1:
             vol = Volume()

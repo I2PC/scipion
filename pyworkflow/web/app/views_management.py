@@ -37,7 +37,6 @@ from views_util import getResourceIcon, getResourceJs
 
 def upload(request, form=None):
     # Load documents for the list page
-    
     mode = request.GET.get('mode', None)
     path = os.path.join(request.session['projectPath'],'Uploads')
     split_path = path.split("/ScipionUserData/")
@@ -82,14 +81,15 @@ def executeUpload(request):
         #Delete the temporary file
         newdoc.delete()
         
-
-def doUploadService(request):
-    form = DocumentForm(request.POST, request.FILES)
-    file = executeUpload(request)
-
 def doUpload(request):
     form = DocumentForm(request.POST, request.FILES)
-    executeUpload(request)
+    
+    try:
+        executeUpload(request)
+    except Exception, ex:
+        print "Error: %s" % ex
+        return HttpResponse("error", mimetype='application/javascript')
+
     return upload(request, form)
 
 # """ File Browser Utils """

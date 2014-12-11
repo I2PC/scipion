@@ -92,8 +92,8 @@ urlpatterns = patterns('',
     
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
-    url(r'^upload_lite/', 'app.views_management.upload_lite', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
+    url(r'^upload_service/', 'app.views_management.upload_service'),
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
