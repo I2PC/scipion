@@ -1351,11 +1351,13 @@ def getProtocolFromDb(dbPath, protId):
     """
     import pyworkflow.em as em
     import pyworkflow.config as config
+    import pyworkflow.object as obj
     classDict = dict(em.getProtocols())
     classDict.update(em.getObjects())
     #TODO: remove the use of config.__dict__ and maybe 
     # review if it is the same classesDict needed in project.py
     classDict.update(config.__dict__)
+    classDict.update(obj.__dict__)
     from pyworkflow.mapper import SqliteMapper
     mapper = SqliteMapper(dbPath, classDict)
     protocol = mapper.selectById(protId)
