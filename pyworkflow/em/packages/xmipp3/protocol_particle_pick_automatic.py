@@ -139,14 +139,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             self.runJob("xmipp_micrograph_automatic_picking", args)
         
                   
-    # def createOutputStep(self):
-    #     posDir = self._getExtraPath()
-    #     inputMicrographs = self.getInputMicrographs()
-    #     coordSet = self._createSetOfCoordinates(inputMicrographs)
-    #     readSetOfCoordinates(posDir, inputMicrographs, coordSet)
-    #     coordSet.setObjComment("\n".join(self.getSummary(coordSet)))
-    #     self._defineOutputs(outputCoordinates=coordSet)
-    #     self._defineSourceRelation(inputMicrographs, coordSet)
+
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
@@ -176,7 +169,7 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         summary.append("Particles picked: %d" % coordSet.getSize())
         summary.append("Particle size:%d" % coordSet.getBoxSize())
             
-        return ["\n".join(summary)]
+        return "\n".join(summary)
     
     def getMethods(self, output):
         msg = 'Program picked %d particles of size %d using training from %s. For more detail see [Abrishami2013]' % (output.getSize(), output.getBoxSize(), self.xmippParticlePicking.get().getNameId())

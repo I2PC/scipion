@@ -381,9 +381,9 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         self._insertFunctionStep('createOutputStep', prerequisites=[stepId])
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, line):
+    def _estimateCTF(self, ctfModel):
         """ Run the estimate CTF program """
-        self._prepareCommand(line)
+        self._prepareCommand(ctfModel)
         # CTF estimation with Xmipp                
         self.runJob(self._program, self._args % self._params)    
     
@@ -405,15 +405,15 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         return [methodStr]
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self, line):
-        self._defineValues(line)
+    def _prepareCommand(self, ctfModel):
+        self._defineValues(ctfModel)
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_psd'       
         self._args = "--psd %(psdFn)s "
-        
+
+        line = ctfModel.getObjComment().split()
         # get the size and the image of psd
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         imgPsd = ctfModel.getPsdFile()
         psdFile = basename(imgPsd)
         imgh = ImageHandler()

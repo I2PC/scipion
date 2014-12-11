@@ -159,10 +159,9 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         ProtRecalculateCTF.__init__(self, **args)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, line):
+    def _estimateCTF(self, ctfModel):
         """ Run ctffind3 with required parameters """
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
@@ -201,12 +200,11 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         return ctfModel2
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self, line):
-        
-        self._defineValues(line)
+    def _prepareCommand(self, ctfModel):
+        line = ctfModel.getObjComment().split()
+        self._defineValues(ctfModel)
         # get the size and the image of psd
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         imgPsd = ctfModel.getPsdFile()
         imgh = ImageHandler()
         size, _, _, _ = imgh.getDimensions(imgPsd)
