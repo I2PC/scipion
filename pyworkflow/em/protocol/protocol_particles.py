@@ -97,7 +97,7 @@ class ProtParticlePicking(ProtParticles):
         summary = []
         summary.append("Number of particles picked: %d" % coordSet.getSize())
         summary.append("Particle size: %d" % coordSet.getBoxSize())
-        return "\n".join(summary)
+        return ["\n".join(summary)]
 
     def getMethods(self, output):
         msg = 'User picked %d particles with a particle size of %d.' % (output.getSize(), output.getBoxSize())

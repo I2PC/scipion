@@ -187,4 +187,4 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             if isAutopick:
                 summary.append("Automatic particles picked: %d"%autoParticlesSize)
             summary.append("Last micrograph: " + activeMic)
-        return "\n".join(summary)
+        return ["\n".join(summary)]
