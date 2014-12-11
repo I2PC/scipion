@@ -113,15 +113,15 @@ function serviceProjForm(data){
 		dialog += "<p>Choose a <strong>test data</strong> to use into the project:</p>";
 		dialog += '<div id="testData">';
 		
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="hemoglobin">       &nbsp; Worm hemoglobin (phantom)';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-			
 		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>    &nbsp; Groel data';
 		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
 		dialog += '<br />';
-		
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome" checked> &nbsp; Ribosome';
+
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">       &nbsp; BPV';
+		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
+		dialog += '<br />';
+			
+		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome"> &nbsp; Ribosome';
 		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
 		dialog += '<br />';
 		
