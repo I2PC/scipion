@@ -219,7 +219,6 @@ class ProtRecalculateCTF(ProtMicrographs):
         
         form.addParam('inputCtf', PointerParam, important=True,
               label="input the SetOfCTF to recalculate", pointerClass='SetOfCTF')
-        form.addParam('inputValues', TextParam)
         form.addHidden('sqliteFile', FileParam)
         
         form.addParallelSection(threads=1, mpi=1)
@@ -229,15 +228,16 @@ class ProtRecalculateCTF(ProtMicrographs):
         """ Insert the steps to perform ctf re-estimation on a set of CTFs.
         """
         #self._insertFunctionStep('createSubsetOfCTF')
-        inputValsId = self._insertFunctionStep('copyInputValues')
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each psd insert the steps to process it
-        self.values = self._splitFile(self.inputValues.get())
-        for line in self.values:
-            # CTF Re-estimation with Xmipp
-            copyId = self._insertFunctionStep('copyMicDirectory', line, prerequisites=[inputValsId])
-            stepId = self._insertFunctionStep('_estimateCTF',line, prerequisites=[copyId]) # Make estimation steps independent between them
-            deps.append(stepId)
+        modifiedSet = SetOfCTF(filename=self.sqliteFile.get())
+        for ctf in modifiedSet:
+            line = ctf.getObjComment()
+            if ctf.isEnabled and line:
+                # CTF Re-estimation with Xmipp
+                copyId = self._insertFunctionStep('copyMicDirectory', ctf)
+                stepId = self._insertFunctionStep('_estimateCTF', ctf, prerequisites=[copyId]) # Make estimation steps independent between them
+                deps.append(stepId)
         # Insert step to create output objects
         self._insertFinalSteps(deps)
     
@@ -247,18 +247,10 @@ class ProtRecalculateCTF(ProtMicrographs):
 
     #--------------------------- STEPS functions ---------------------------------------------------
            
-    def copyInputValues(self):
-        """ Copy a parameter file that contain the info of the
-        micrographs to recalculate its CTF to a current directory"""
-        srcFile = self.inputValues.get()
-        baseFn = basename(srcFile)
-        dstFile = self._getTmpPath(baseFn)
-        copyFile(srcFile, dstFile)
+
     
-    def copyMicDirectory(self, line):
+    def copyMicDirectory(self, ctfModel):
         """ Copy micrograph's directory tree for recalculation"""
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
         mic = ctfModel.getMicrograph()
         
         prevDir = self._getPrevMicDir(ctfModel)
@@ -301,16 +293,12 @@ class ProtRecalculateCTF(ProtMicrographs):
         #TODO: maybe we can remove the need of the extra text file
         # with the recalculate parameters
         for ctfModel, ctfModel2 in izip(self.inputCtf.get(), modifiedSet):
-            if ctfModel2.isEnabled():
+            if ctfModel2.isEnabled() and ctfModel2.getObjComment:
                 mic = ctfModel.getMicrograph()
-                for line in self.values:
-                    objId = self._getObjId(line)                    
-                    if objId == ctfModel.getObjId():
-                        # Update the CTF models that where recalculated
-                        # and append later to the set
-                        # we dont want to copy the id here since it is already correct
-                        ctfModel.copy(self._createNewCtfModel(mic), copyId=False)                        
-                        break
+                # Update the CTF models that where recalculated
+                # and append later to the set
+                # we dont want to copy the id here since it is already correct
+                ctfModel.copy(self._createNewCtfModel(mic), copyId=False)
                 ctfModel.setEnabled(True)
                 ctfSet.append(ctfModel)
                 # save the values of defocus for each micrograph in a list
@@ -343,11 +331,10 @@ class ProtRecalculateCTF(ProtMicrographs):
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _defineValues(self, line):
+    def _defineValues(self, ctfModel):
         """ This function get the acquisition info of the micrographs"""
         
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         mic = ctfModel.getMicrograph()
         
         acquisition = mic.getAcquisition()

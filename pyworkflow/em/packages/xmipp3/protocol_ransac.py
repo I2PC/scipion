@@ -97,7 +97,7 @@ class XmippProtRansac(ProtInitialVolume):
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
                 
-        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('maxFreq', IntParam, default=20, expertLevel=LEVEL_EXPERT,
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         

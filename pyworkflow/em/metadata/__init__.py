@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -25,23 +24,14 @@
 # *
 # **************************************************************************
 """
-List all existing protocols within Scipion
+This module is a Wrapper to the underlying xmipp module
+to the functions related to metadata.
 """
 
-import sys
-from pyworkflow.em import getProtocols
+from constants import *
+from functions import *
+from classes import MetaData, Row, RowMetaData
+from utils import *
 
 
-if __name__ == '__main__':
-    count = 0
-    withDoc = '--with-doc' in sys.argv
-    emProtocolsDict = getProtocols()
-    for k, v in emProtocolsDict.iteritems():
-        packageName = v.getClassPackageName()
-        if packageName == 'xmipp3':
-            print "%s: %s -> %s" % (packageName, k, v.__name__)
-            if withDoc:
-                print "   doc: ", v.__doc__
-            count += 1
-            
-    print "total: ", count
+

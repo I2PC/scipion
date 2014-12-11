@@ -46,6 +46,9 @@ class TestXmippBase(BaseTest):
         cls.particlesFn = cls.dataset.getFile('particles')
         cls.particlesDir = cls.dataset.getFile('particlesDir')
         cls.volumesFn = cls.dataset.getFile('volumes')
+        cls.volumesDir = cls.dataset.getFile('volumesDir')
+        cls.averagesFn = cls.dataset.getFile('averages')
+        cls.averagesDir = cls.dataset.getFile('averagesDir')
     
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
@@ -94,16 +97,6 @@ class TestXmippBase(BaseTest):
         cls.CL2DAlign.inputParticles.set(particles)
         cls.launchProtocol(cls.CL2DAlign)
         return cls.CL2DAlign
-    
-    @classmethod
-    def runCL2D(cls, particles, classes):
-        cls.CL2D = cls.newProtocol(XmippProtCL2D,
-                                   numberOfClasses=4, randomInitialization=False,
-                                   numberOfIterations=4, numberOfMpi=2)
-        cls.CL2D.inputParticles.set(particles)
-        cls.CL2D.initialClasses.set(classes)
-        cls.launchProtocol(cls.CL2D)
-        return cls.CL2D
     
     @classmethod
     def runClassify(cls, particles):
@@ -615,21 +608,33 @@ class TestXmippDenoiseParticles(TestXmippBase):
     """This class checks if the protocol Denoise Particles works properly"""
     @classmethod
     def setUpClass(cls):
+        from pyworkflow.em.packages.relion import ProtRelionClassify2D
         # For denoise particles we need to import particles, and classes, and 
         # particles must be aligned with classes. As this is the usual 
         # situation after a CL2D, we just run this protocol
+        # Set project and data
         setupTestProject(cls)
-        TestXmippBase.setData('mda')
+        cls.setData('mda')
+        # Import particles
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-        cls.protImportAvgs = cls.runImportAverages(cls.particlesDir + '/img00007[1-4].spi', 3.5)
-        cls.protCL2DInitialCore = cls.runCL2D(cls.protImport.outputParticles, cls.protImportAvgs.outputAverages)
+        # Normalize them
+        cls.protNormalize = cls.newProtocol(XmippProtPreprocessParticles, doNormalize=True)
+        cls.protNormalize.inputParticles.set(cls.protImport.outputParticles)
+        cls.launchProtocol(cls.protNormalize)
+        cls.protCL2D = cls.newProtocol(ProtRelionClassify2D,
+                                  doCTF=False, maskRadiusA=170,
+                                  numberOfMpi=4, numberOfThreads=1)
+        cls.protCL2D.numberOfClasses.set(4)
+        cls.protCL2D.numberOfIterations.set(3)
+        cls.protCL2D.inputParticles.set(cls.protNormalize.outputParticles)
+        cls.launchProtocol(cls.protCL2D)
     
     def test_denoiseparticles(self):
-        # We check that protocol generates output
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
-        protDenoise.inputClasses.set(self.protCL2DInitialCore.outputClasses)
+        protDenoise.inputClasses.set(self.protCL2D.outputClasses)
         self.launchProtocol(protDenoise)
+        # We check that protocol generates output
         self.assertIsNotNone(protDenoise.outputParticles, "There was a problem generating output particles")
 
 class TestXmippApplyAlignment(TestXmippBase):

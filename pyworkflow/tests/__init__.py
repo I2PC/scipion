@@ -73,7 +73,9 @@ DataSet(name='mda', folder='hemoglobin_mda',
                'particles': 'particles/*.spi',
                'particlesDir': 'particles',
                'volumes': 'volumes/*.spi',
-               'averages':'averages/averages.stk'})
+               'volumesDir': 'volumes',
+               'averages':'averages/averages.stk',
+               'averagesDir': 'averages'})
 
 
 DataSet(name='nma', folder='nma', 
