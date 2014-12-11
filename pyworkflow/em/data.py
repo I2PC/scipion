@@ -681,7 +681,7 @@ class SetOfImages(EMSet):
         return self._samplingRate.get()
     
     def writeStack(self, fnStack):
-        # TODO creaty empty file to improve efficiency
+        # TODO create empty file to improve efficiency
         ih = ImageHandler()
         for i, img in enumerate(self):
             ih.convert(img, (i+1, fnStack))
@@ -1257,7 +1257,14 @@ class SetOfClasses2D(SetOfClasses):
     ITEM_TYPE = Class2D
     REP_TYPE = Particle
 
-    pass
+    def writeStack(self, fnStack):
+        """ Write an stack with the classes averages. """
+        if not self.hasRepresentatives():
+            raise Exception('Could not write Averages stack if not hasRepresentatives!!!')
+        ih = ImageHandler()
+        for i, class2D in enumerate(self):
+            img = class2D.getRepresentative()
+            ih.convert(img, (i+1, fnStack))
 
 
 class SetOfClasses3D(SetOfClasses):
