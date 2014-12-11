@@ -77,7 +77,14 @@
 //   		console.log("threshold: {{threshold}}")
 //   		console.log("MIN: {{minStats}}")
 //   		console.log("MAX: {{maxStats}}")
-  		
+		
+		document.getElementById('thresholdValue').addEventListener('keypress', function(event) {
+	        if (event.keyCode == 13) {
+	        	updateThreshold();
+	        	
+	        }
+    	});
+		
   		$("span#slider").slider({
   			animate : true,
   			range: "min",
@@ -109,6 +116,7 @@
 			<input id="thresholdValue" type="text" value="{{threshold}}" style="width:11.2em;text-align:center;"/>
 			<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
 		</div>
+		
 		<div>
 			Min [{{minStats}}], Max [{{maxStats}}]
 			<br />
