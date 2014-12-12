@@ -1180,8 +1180,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jlVolumes = new JLabel(XmippLabel.LABEL_VOLUME);
 		cbPanel.add(jlVolumes);
 		jcbVolumes = new JComboBox();
-		jcbVolumes.setModel(new ComboBoxModel()
-		{
+		jcbVolumes.setModel(new VolumesComboBoxModel());
+		cbPanel.add(jcbVolumes);
+	}
+        
+        public class VolumesComboBoxModel implements ComboBoxModel
+        {
+                       
 
 			@Override
 			public int getSize()
@@ -1199,7 +1204,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			@Override
 			public void setSelectedItem(Object anItem)
 			{
-				data.selectVolume((String) anItem);
+                                for(int i = 0; i < getSize(); i ++)
+                                    if(getElementAt(i).equals(anItem))
+                                        data.selectVolumeAt(i);
 				reloadTableData();
 			}
                         
@@ -1222,18 +1229,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				// TODO Auto-generated method stub
 
 			}
-
-			@Override
+                        
+                        @Override
 			public void removeListDataListener(ListDataListener arg0)
 			{
 				// TODO Auto-generated method stub
 
 			}
-
-			
-		});
-		cbPanel.add(jcbVolumes);
-	}
+        }
 
 	protected void updateVisibleCombos()
 	{

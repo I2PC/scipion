@@ -9,7 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,7 +21,6 @@ import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -225,22 +223,6 @@ public class ScipionGalleryData extends GalleryData {
         return ci.allowRender;
     }
 
-    public MetaData getMd(List<Long> ids) {
-        MetaData selmd = null;
-        try {
-            long[] ids2 = new long[ids.size()];
-            for (int i = 0; i < ids.size(); i++) {
-                ids2[i] = ids.get(i);
-            }
-            selmd = ((ScipionMetaData) md).getStructure("");
-            selmd.importObjects(md, ids2);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return selmd;
-    }
-
-    
 
     public void overwrite(String path) throws SQLException {
         ((ScipionMetaData) md).overwrite(filename, path);
@@ -263,34 +245,12 @@ public class ScipionGalleryData extends GalleryData {
     public String getPreffix() {
         return ((ScipionMetaData) md).getPreffix();
     }
-
-    public void exportCTFRecalculate(String path) {
-
-        try {
-            FileWriter fstream = new FileWriter(path);
-            BufferedWriter out = new BufferedWriter(fstream);
-
-            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n", line;
-            EllipseCTF ctf;
-            for (Map.Entry<Long,EllipseCTF> entry : ctfs.entrySet()) 
-            {
-                
-                ctf = entry.getValue();
-                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq());
-                out.write(line);
-            }
-
-            out.close();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            XmippDialog.showError(window, ex.getMessage());
-        }
-    }
     
+        
     @Override
     public void removeCTF(int row) {
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(row);
+        emo.setLabel("");
         emo.setComment("");
         super.removeCTF(row);
         window.fireTableRowsUpdated(row, row);
@@ -306,17 +266,15 @@ public class ScipionGalleryData extends GalleryData {
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) {
         if(isEnabled(row))
         {
-            if (ctfs == null) {
-                ctfs = new HashMap<Long, EllipseCTF>();
-            }
-
+            
             ScipionMetaData.EMObject emo;
             for(int i = selfrom; i <= selto; i ++)
                 if(selection[i] && isEnabled(i))
                 {
                     emo = ((ScipionMetaData) md).getEMObjects().get(i);
-                    emo.setComment("(recalculate ctf)");
-                    ctfs.put(ids[i], ellipseCTF);
+                    md.putCTF(ids[i], ellipseCTF);
+                    emo.setLabel("(recalculate ctf)");
+                    emo.setComment(ellipseCTF.toString());
                 }
             window.fireTableRowsUpdated(selfrom, selto);
         }
@@ -396,6 +354,7 @@ public class ScipionGalleryData extends GalleryData {
 
     public void loadSelection(String selectedPath) {
         ((ScipionMetaData)md).loadSelection(selectedPath);
+            
     }
     
      /**

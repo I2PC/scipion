@@ -670,13 +670,19 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         current.releaseImage();
         ppicker.setMicrograph(next);
         ppicker.saveConfig();
-        initializeCanvas();
+        
         if (ppicker.getMode() == Mode.Supervised) {
             resetbt.setEnabled(next.getState() != MicrographState.Manual);
-            thresholdsl.setValue((int) (next.getThreshold() * 100));
-            thresholdtf.setValue(next.getThreshold());
+            double threshold = next.getThreshold();
+            if(threshold == 0)
+            {
+                threshold = current.getThreshold();
+                next.setThreshold(threshold);
+            }
+            thresholdsl.setValue((int) (threshold * 100));
+            thresholdtf.setValue(threshold);
         }
-
+        initializeCanvas();
         if(ppicker.containsPSD())
             iconbt.setIcon(next.getCTFIcon());
 

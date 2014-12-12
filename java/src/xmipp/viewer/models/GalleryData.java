@@ -105,16 +105,14 @@ public class GalleryData {
     // Flags to check if md or classes has changed
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
-    protected HashMap<Long, EllipseCTF> ctfs;
+    
     protected String[] displayLabels;
     protected String[] sortby;
     protected int selfrom = -1, selto = -1;
     protected boolean isVolumeMd;
     
 
-    public boolean hasRecalulateCTF() {
-        return ctfs != null && !ctfs.isEmpty();
-    }
+    
     
     protected String[] renderLabels;
     protected String renderLabel = "first";
@@ -145,6 +143,12 @@ public class GalleryData {
             tmpfile = filename.replace(ext, ext2);
         return tmpfile;
     }
+
+    public void selectVolumeAt(int selectedIndex) {
+        selectedVolFn = getVolumeAt(selectedIndex);
+    }
+
+   
 
       
 
@@ -384,7 +388,7 @@ public class GalleryData {
                     isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectVolume(getVolumeAt(0));
+                        selectedVolFn = getVolumeAt(0);
                     }
 
                 }
@@ -720,9 +724,7 @@ public class GalleryData {
             return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    public void selectVolume(String vol) {
-        selectedVolFn = vol; // FIXME: Check it is valid
-    }
+    
 
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
@@ -1743,31 +1745,30 @@ public class GalleryData {
     }
 
     public void removeCTF(int row) {
-        if(ctfs == null)
-            return;
-        ctfs.remove(ids[row]);
+        md.removeCTF(ids[row]);
         
         
     }
 
     public boolean isRecalculateCTF(int row) {
-        if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
+        
         long id = ids[row];
-        if(ctfs.containsKey(id))
+        if(md.containsCTF(id))
             return true;
         return false;
     }
     
+    public boolean hasRecalculateCTF()
+    {
+        return md.hasRecalculateCTF();
+    }
+    
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
     {
-         if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
-        ctfs.put(ids[row], ellipseCTF);
+        
+        md.putCTF(ids[row], ellipseCTF);
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseCTF.getEllipseFitter().angle, 
+                ellipseCTF, 90 - ellipseCTF.getDefocusAngle(), 
                 md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
         window.getTasksEngine().add(estimateFromCTFTask);
     }
