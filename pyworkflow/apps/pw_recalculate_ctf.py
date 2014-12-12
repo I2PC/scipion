@@ -59,9 +59,9 @@ def runRecalcCftProtocol(projectId, inputObjId, sqliteFile):
     Mpi = parentProt.numberOfMpi.get()
     Threads = parentProt.numberOfThreads.get()
     # Define the input params of the new protocol
-    prot._useQUeue = useQueue
-    prot.numberOfMpi.set(Mpi)
-    prot.numberOfThreads.set(Threads)
+    #prot._useQUeue = useQueue
+    #prot.numberOfMpi.set(Mpi)
+    #prot.numberOfThreads.set(Threads)
     prot.sqliteFile.set(sqliteFile)
     prot.inputCtf.set(inputObj)
 
