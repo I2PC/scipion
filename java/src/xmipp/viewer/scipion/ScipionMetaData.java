@@ -1065,12 +1065,11 @@ public class ScipionMetaData extends MetaData {
             if(comment == null || comment.isEmpty())
                 return null;
             String[] params = comment.trim().split("\\s+");
-            System.out.println(Arrays.toString(params));
-            double defU = Double.parseDouble(params[1]);
-            double defV = Double.parseDouble(params[2]);
-            double angle = Double.parseDouble(params[3]);
-            double lowFreq = Double.parseDouble(params[4]);
-            double highFreq = Double.parseDouble(params[5]);
+            double defU = Double.parseDouble(params[0]);
+            double defV = Double.parseDouble(params[1]);
+            double angle = Double.parseDouble(params[2]);
+            double lowFreq = Double.parseDouble(params[3]);
+            double highFreq = Double.parseDouble(params[4]);
             EllipseCTF ctf = md.getEllipseCTF(getId());
             ctf.setDefocus(defU, defV, angle);
             ctf.setFreqRange(lowFreq, highFreq);
@@ -1119,6 +1118,7 @@ public class ScipionMetaData extends MetaData {
             long id;
             enableds = 0;
             boolean isctfmd = isCTFMd();
+            EllipseCTF ctf;
             while (rs.next()) {
                 id = rs.getInt("id");
                 emo = getEMObject(id);
@@ -1134,7 +1134,11 @@ public class ScipionMetaData extends MetaData {
                 if(emo.isEnabled())
                     enableds ++;
                 if(isctfmd)
-                    ctfs.put(id, emo.getEllipseCTF());
+                {
+                    ctf = emo.getEllipseCTF();
+                    if(ctf != null)
+                        ctfs.put(id, ctf);
+                }
                 
             }
             
@@ -1178,30 +1182,5 @@ public class ScipionMetaData extends MetaData {
     }
     
    
-    
-    
-    public void exportCTFRecalculate(String path) {
-
-        try {
-            FileWriter fstream = new FileWriter(path);
-            BufferedWriter out = new BufferedWriter(fstream);
-            String line;
-            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f";
-            EllipseCTF ctf;
-            for (Map.Entry<Long,EllipseCTF> entry : ctfs.entrySet()) 
-            {
-                ctf = entry.getValue();
-                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle(), ctf.getLowFreq(), ctf.getHighFreq());
-                out.write(line);
-                out.newLine();
-            }
-
-            out.close();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            XmippDialog.showError(null, ex.getMessage());
-        }
-    }
    
 }

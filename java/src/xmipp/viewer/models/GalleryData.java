@@ -148,9 +148,7 @@ public class GalleryData {
         selectedVolFn = getVolumeAt(selectedIndex);
     }
 
-    public boolean hasRecalulateCTF() {
-        return md.hasRecalulateCTF();
-    }
+   
 
       
 
@@ -1762,7 +1760,7 @@ public class GalleryData {
     
     public boolean hasRecalculateCTF()
     {
-        return md.hasRecalulateCTF();
+        return md.hasRecalculateCTF();
     }
     
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 

@@ -133,8 +133,8 @@ public class EllipseCTF {
     @Override
     public String toString()
     {
-        String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f";
-        return String.format(Locale.ENGLISH, format, id, getDefocusU(), getDefocusV(), getDefocusAngle(), getLowFreq(), getHighFreq());
+        String format = "%10.2f%10.2f%10.2f%10.2f%10.2f";
+        return String.format(Locale.ENGLISH, format, getDefocusU(), getDefocusV(), getDefocusAngle(), getLowFreq(), getHighFreq());
     }
     
     public int getD()

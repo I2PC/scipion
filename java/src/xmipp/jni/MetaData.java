@@ -620,7 +620,7 @@ public class MetaData {
     }
 
    
-    public boolean hasRecalulateCTF() {
+    public boolean hasRecalculateCTF() {
         return !ctfs.isEmpty();
     }
 

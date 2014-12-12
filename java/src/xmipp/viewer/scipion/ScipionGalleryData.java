@@ -246,14 +246,7 @@ public class ScipionGalleryData extends GalleryData {
         return ((ScipionMetaData) md).getPreffix();
     }
     
-    
-    
-
-    public void exportCTFRecalculate(String path) {
-
-        ((ScipionMetaData)md).exportCTFRecalculate(path);
-    }
-    
+        
     @Override
     public void removeCTF(int row) {
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(row);

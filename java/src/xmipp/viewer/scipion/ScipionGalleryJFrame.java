@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -268,17 +269,15 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     protected void createCTFsSubset()
     {
         try {
-            if(!data.hasRecalulateCTF())
+            
+            if(!data.hasRecalculateCTF())
             {
                 XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
                 return;
-
             }
 
-            String recalculatefile = tmpdir + File.separator + "ctfrecalculate.txt";
-            ((ScipionGalleryData)data).exportCTFRecalculate(recalculatefile);
             ((ScipionGalleryData)data).overwrite(sqlitefile);
-            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile, recalculatefile};
+            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile};
             new Thread(new Runnable() {
 
                 @Override
@@ -287,6 +286,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     try {
 
                         String output = XmippWindowUtil.executeCommand(command, false);
+                        
                     } catch (Exception ex) {
                         throw new IllegalArgumentException(ex.getMessage());
                     }
