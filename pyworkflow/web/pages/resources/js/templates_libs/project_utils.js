@@ -126,11 +126,14 @@ function serviceTestDataForm(){
 	dialog += "<br />";
 	dialog += '<div id="testData">';
 	dialog += "<p>Select the <strong>test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>Groel data';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">BPV';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">Ribosome';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -157,11 +160,14 @@ function goExampleForm(){
 
 	dialog += '<div id="exProjects">';
 	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data</a>';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data project</a>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV</a>';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV project</a>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome</a>';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome project</a>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
 	dialog += '<br />';
 	dialog += "</div>";
 	
@@ -270,4 +276,20 @@ function goToProject(elm) {
 			}
 		}
 	});
+}
+
+function getRefTestData(id){
+	var ref = ""
+	switch(id){
+		case "bpv":
+			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://10.1073/pnas.0914604107' style='color:firebrick;'>from Wolf,M. et al. (2010)</a>)"
+			break;
+		case "groel":
+			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;'>from Ludtke, S.J. et al. (2004)</a>)"
+			break;
+		case "ribosome":
+			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;'>from J.Frank</a>)"
+			break;
+	}
+	return ref;
 }
