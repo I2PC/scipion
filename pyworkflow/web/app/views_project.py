@@ -464,8 +464,7 @@ def create_service_project(request):
         
     return HttpResponse(mimetype='application/javascript')
 
-def download_testdata(request):
-    from views_util import get_file
+def get_testdata(request):
     # Filename to use as test data 
     testDataKey = request.GET.get('testData')
     dsMDA = DataSet.getDataSet('initial_volume')

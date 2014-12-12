@@ -153,7 +153,7 @@ function serviceTestDataForm(){
 
 function downloadTestdata(elm){
 	var selected = $("#testData input[type='radio']:checked").val();
-	var URL = getSubDomainURL() + "/download_testdata/?testData="+ selected;
+	var URL = getSubDomainURL() + "/get_testdata/?testData="+ selected;
 	
 	$.ajax({
 		type : "GET",
@@ -161,7 +161,9 @@ function downloadTestdata(elm){
 		dataType: "text",
 		async: false,
 		success : function(text) {
-			var URL = getSubDomainURL() + '/get_file/?path='+ text+'&filename='+selected+'.stk'
+			var str = text.split("/")
+			var fn = str[str.length]
+			var URL = getSubDomainURL() + '/get_file/?path='+ text+'&filename='+fn
 			window.location.href = URL;
 		}
 	});
