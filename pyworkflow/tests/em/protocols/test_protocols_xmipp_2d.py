@@ -630,6 +630,11 @@ class TestXmippDenoiseParticles(TestXmippBase):
         cls.launchProtocol(cls.protCL2D)
     
     def test_denoiseparticles(self):
+        print ''
+        print '*****************************'
+        print '| ATTENTION: This part of the test may last for several minutes, building PCA basis for denoising is time expensive.'
+        print '*****************************'
+        print ''
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
         protDenoise.inputClasses.set(self.protCL2D.outputClasses)
