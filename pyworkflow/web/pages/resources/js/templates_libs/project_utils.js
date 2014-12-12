@@ -162,8 +162,8 @@ function downloadTestdata(elm){
 		async: false,
 		success : function(text) {
 			var str = text.split("/")
-			var fn = str[str.length]
-			var URL = getSubDomainURL() + '/get_file/?path='+ text+'&filename='+fn
+			var fn = str[str.length-1]
+			var URL = getSubDomainURL() + '/get_file/?path='+text+'&filename='+fn
 			window.location.href = URL;
 		}
 	});
