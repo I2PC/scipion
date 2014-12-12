@@ -1387,6 +1387,8 @@ public class GalleryData {
     }
 
     public boolean isSelected(int index) {
+        if(!isColumnFormat())
+            return true;
         return selection[index];
     }
 
@@ -1751,7 +1753,8 @@ public class GalleryData {
     }
 
     public boolean isRecalculateCTF(int row) {
-        
+        if(!isCTFMd())
+            return false;
         long id = ids[row];
         if(md.containsCTF(id))
             return true;
