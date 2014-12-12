@@ -159,39 +159,56 @@ function goExampleForm(){
 	var dialog = ""
 
 	dialog += '<div id="exProjects">';
-	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data project</a>';
+	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV project</a>';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome project</a>';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
 	dialog += '<br />';
 	dialog += "</div>";
+	dialog += "<br />";
 	
-	new Messi(dialog, {
-		title : title,
-		modal : true,
-		buttons : [ {
-			id : 0,
-			label : 'Close',
-			val : 'X',
-			btnClass : 'fa-times'
-		} ]
-	});
+	accessPopup(title, dialog, 'getProjExample', 'Go to project', 'Cancel');
+		
+//	dialog += '<div id="exProjects">';
+//	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+//	dialog += '<br />';
+//	dialog += "</div>";
+	
+//	new Messi(dialog, {
+//		title : title,
+//		modal : true,
+//		buttons : [ {
+//			id : 0,
+//			label : 'Close',
+//			val : 'X',
+//			btnClass : 'fa-times'
+//		} ]
+//	});
 }
 
-function getProjExample(x){
+function getProjExample(elm){
+	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
-		case 1:
+		case "groel":
 			var url = "/project_content/?projectName=GroelTestData&mode=service";
 			break;
-		case 2:
+		case "bpv":
 			var url ="/project_content/?projectName=BpvTestData&mode=service";
 			break;
-		case 3:
+		case "ribosome":
 			var url ="/project_content/?projectName=RiboTestData&mode=service";
 			break;
 	}
