@@ -282,7 +282,7 @@ function getRefTestData(id){
 	var ref = ""
 	switch(id){
 		case "bpv":
-			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. (2010)</a>)"
+			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. (2010)</a>)"
 			break;
 		case "groel":
 			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. (2004)</a>)"
