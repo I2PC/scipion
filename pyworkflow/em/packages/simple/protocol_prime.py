@@ -25,6 +25,7 @@
 # **************************************************************************
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
+from protlib_filesystem import deleteFile
 """
 This sub-package contains wrapper around reconstruct_significant Xmipp program
 """
@@ -47,7 +48,7 @@ class ProtPrime(ProtInitialVolume):
                            'It should be a SetOfClasses2D class with class representative')
         form.addParam('symmetryGroup', TextParam, default='c1',
                       label="Symmetry group",
-                      help='cn or dn. For icosahedral viruses, use d5. If no symmetry is present, give c1.')  
+                      help='cn or dn. For icosahedral viruses, use c5. If no symmetry is present, give c1.')  
         form.addParam('Nvolumes', IntParam, label='Number of volumes', help="Number of volumes to reconstruct",
                       default=1)
         form.addParam('maximumShift', IntParam, default=0, expertLevel=LEVEL_ADVANCED,
@@ -68,7 +69,7 @@ class ProtPrime(ProtInitialVolume):
                       label='Keep intermediate volumes',
                       help='Keep all volumes along iterations')
 
-        form.addParallelSection(threads=4, mpi=1)
+        form.addParallelSection(threads=4, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     
@@ -77,25 +78,15 @@ class ProtPrime(ProtInitialVolume):
         
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runPrime')
-        return
+        self._insertFunctionStep('getLastIteration')
+        if not self.keepIntermediate:
+            self._insertFunctionStep('cleanPrime')
         self._insertFunctionStep('createOutputStep')        
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
         self.inputClasses.get().writeStack(self._getExtraPath("classes.spi:stk"))
             
-    def getLastIteration(self,Nvolumes):
-        lastIter=-1
-        for n in range(self.iter.get()+1):
-            NvolumesIter=len(glob(self._getExtraPath('volume_iter%03d_*.vol'%n)))
-            if NvolumesIter==0:
-                continue
-            elif NvolumesIter==Nvolumes:
-                lastIter=n
-            else:
-                break
-        return lastIter
-
     def runPrime(self):
         # simple_prime stk=stack.spi [vol1=invol.spi] [vol2=<refvol_2.spi> etc.] box=<image size(in pixels)> 
         #              smpd=<sampling distance(in A)> [ring2=<outer mask radius(in pixels){box/2}>] 
@@ -112,27 +103,57 @@ class ProtPrime(ProtInitialVolume):
             args+=" lp=%f"%self.maxResolution.get()
         args+=" trs=%d trsstep=%d"%(self.maximumShift.get(),self.shiftStep.get())
         args+=" nstates=%d"%self.Nvolumes.get()
+        args+=" nthr=%d"%self.numberOfThreads.get()
         if self.outerMask>0:
             args+=" ring2=%f"%self.outerMask.get()
         args+=" frac=%f"%self.fractionParticles.get()
         if self.molecularWeight>0:
             args+=" mw=%f"%self.molecularWeight.get()
         
+        
         self._enterDir(self._getExtraPath(''))
         self.runJob("simple_prime", args)
         self._leaveDir()
+
+    def getLastIteration(self):
+        self._enterDir(self._getExtraPath(''))
+        self.lastIter=1
+        while True:
+            if os.path.exists("recvol_state1_iter%d.spi"%self.lastIter):
+                self.lastIter+=1
+            else:
+                self.lastIter-=1
+                break
+        self._leaveDir()
+
+    def cleanPrime(self):
+        self._enterDir(self._getExtraPath(''))
+        cleanPath("cmdline.txt")
+        for fn in glob("*.txt"):
+            cleanPath(fn)
+        for fn in glob("startvol_state*.spi"):
+            cleanPath(fn)
+
+        # Get last iteration
+        for i in range(1,self.lastIter):
+            for fn in glob("recvol_state*_iter%d.spi"%i):
+                cleanPath(fn)
+        self._leaveDir()
     
     def createOutputStep(self):
-        Nvolumes=self.getNumberOfVolumes()
-        lastIter=self.getLastIteration(Nvolumes)
-        if Nvolumes==1:
+        if self.lastIter<=1:
+            return
+        
+        if self.Nvolumes==1:
             vol = Volume()
-            vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
+            print "Adding ",self._getExtraPath('recvol_state1_iter%d.spi'%self.lastIter)
+            vol.setLocation(self._getExtraPath('recvol_state1_iter%d.spi'%self.lastIter))
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
         else:
             vol = self._createSetOfVolumes()
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
-            fnVolumes=glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
+            fnVolumes=glob(self._getExtraPath('recvol_state*_iter%d.spi')%self.lastIter)
+            print "Adding ",self._getExtraPath('recvol_state*_iter%d.spi'%self.lastIter)
             fnVolumes.sort()
             for fnVolume in fnVolumes:
                 aux=Volume()
@@ -145,12 +166,14 @@ class ProtPrime(ProtInitialVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
+        summary.append("Input classes: %s" % self.inputClasses.get().getNameId())
+        summary.append("Starting from: %d random volumes"%self.Nvolumes.get())
         return summary
     
     def _citations(self):
         return ['Elmlund2013']
     
     def _methods(self):
-        retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
+        retval="We used prime [Elmlund2013] to produce an initial volume from the set of classes %s."%\
            self.inputClasses.get().getNameId()
         return [retval]
