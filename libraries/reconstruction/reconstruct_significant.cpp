@@ -438,8 +438,8 @@ void ProgReconstructSignificant::run()
 					mdReconstruction.getValue(MDL_REF,nDir,__iter.objId);
 					mdReconstruction.getValue(MDL_REF3D,nVol,__iter.objId);
 					mdReconstruction.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
-					if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
-						std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
+					//if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
+					//	std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
 				}
 
 				// Remove zero-weight images
