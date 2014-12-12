@@ -417,13 +417,10 @@ def create_service_project(request):
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
-        dsMDA = DataSet.getDataSet('mda')
-        testDataDict = {'hemoglobin': dsMDA.getFile('particles/images.stk'),
-                        'groel': '',
-                        'ribosome': ''}
+        dsMDA = DataSet.getDataSet('initial_volume')
         
-        if testDataKey in testDataDict:
-            fn = testDataDict.get(testDataKey)
+        if testDataKey :
+            fn = dsMDA.getFile(testDataKey)
             newFn = join(project.uploadPath, basename(fn))
             copyFile(fn, newFn)
             

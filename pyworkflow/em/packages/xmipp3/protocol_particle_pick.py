@@ -137,7 +137,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return self.getSummary()
+            return [self.getSummary()]
 
     def _methods(self):
         if self.getOutputsSize() > 0:

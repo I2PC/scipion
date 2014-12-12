@@ -29,12 +29,13 @@ from os.path import exists
 from collections import OrderedDict
 
 from pyworkflow.object import Float
-from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D
+from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D, ALIGN_NONE
 from pyworkflow.em.data import Micrograph
+import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.relion.convert import relionToLocation
 from pyworkflow.utils.path import findRootFrom
 
-import xmipp
+# import xmipp
 
 
 
@@ -51,7 +52,7 @@ class RelionImport():
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
         self._imgDict = {} # store which images stack have been linked/copied and the new path
-        self._findImagesPath(label=xmipp.RLN_IMAGE_NAME)
+        self._findImagesPath(label=md.RLN_IMAGE_NAME)
         if self._micIdOrName:
             # If MDL_MICROGRAPH_ID or MDL_MICROGRAPH then
             # create a set to link from particles
@@ -93,15 +94,13 @@ class RelionImport():
             item._rlnAccuracyTranslations = Float(row.getValue('rlnAccuracyTranslations'))
     
     def _createClasses(self, partSet):    
-        from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
-        from pyworkflow.em.packages.xmipp3.convert import fillClasses
         self._classesDict = {} # store classes info, indexed by class id
         pathDict = {}
          
         self.protocol.info('Loading classes info from: %s' % self._modelStarFile)
-        modelMd = xmipp.MetaData('model_classes@' + self._modelStarFile)
+        modelMd = md.MetaData('model_classes@' + self._modelStarFile)
         for classNumber, objId in enumerate(modelMd):
-            row = XmippMdRow()
+            row = md.Row()
             row.readFromMd(modelMd, objId)
             index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
             
@@ -119,7 +118,7 @@ class RelionImport():
             self._classesDict[classNumber+1] = (index, newFn, row)
 
         clsSet = self._classesFunc(partSet)
-        fillClasses(clsSet, updateClassCallback=self._updateClass)
+        clsSet.classifyItems(updateClassCallback=self._updateClass)
         
         self.protocol._defineOutputs(outputClasses=clsSet)
         self.protocol._defineSourceRelation(partSet, clsSet)
@@ -144,56 +143,61 @@ class RelionImport():
         return []
         
     def _findImagesPath(self, label, warnings=True):
-        from pyworkflow.em.packages.xmipp3.utils import getMdFirstRow
 
-        row = getMdFirstRow(self._starFile)
+        row = md.getFirstRow(self._starFile)
         
         if row is None:
             raise Exception("Can not import from an empty metadata: %s" % self._starFile)
         
         if not row.containsLabel(label):
-            raise Exception("Label *%s* is missing in metadata: %s" % (xmipp.label2Str(label), 
-                                                                         self._starFile))
-            
-        modelStarFile = self._starFile.replace('_data.star', '_model.star')
-        
-        if exists(modelStarFile):
-            self._modelStarFile = modelStarFile
-        else:
-            modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
-            if exists(modelHalfStarFile):
-                self._modelStarFile = modelHalfStarFile
-            else:
-                raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile, 
-                                                                                              modelHalfStarFile))
-        
-        modelRow = getMdFirstRow(self._modelStarFile)
-        classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
-        
-        self._optimiserFile = self._starFile.replace('_data.star', '_optimiser.star')
-        if not exists(self._optimiserFile):
-            raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
-        optimiserRow = getMdFirstRow(self._optimiserFile)
-        autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
-        
+            raise Exception("Label *%s* is missing in metadata: %s" % (md.label2Str(label), 
+                                                                       self._starFile))
 
         index, fn = relionToLocation(row.getValue(label))
         self._imgPath = findRootFrom(self._starFile, fn)
         
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
-
-        self.alignType = ALIGN_PROJ
-        
-        if not autoRefine:
-            if classDimensionality == 3:
-                self._classesFunc = self.protocol._createSetOfClasses3D
-            else:
-                self._classesFunc = self.protocol._createSetOfClasses2D
-                self.alignType = ALIGN_2D
-        else:
-            self._classesFunc = None
             
+            
+        if self._starFile.endswith('_data.star'):            
+            
+            modelStarFile = self._starFile.replace('_data.star', '_model.star')
+            
+            if exists(modelStarFile):
+                self._modelStarFile = modelStarFile
+            else:
+                modelHalfStarFile = self._starFile.replace('_data.star', '_half1_model.star')
+                if exists(modelHalfStarFile):
+                    self._modelStarFile = modelHalfStarFile
+                else:
+                    raise Exception("Missing required model star file, search for\n%s\nor\n%s" % (modelStarFile, 
+                                                                                                  modelHalfStarFile))
+            
+            modelRow = md.getFirstRow(self._modelStarFile)
+            classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
+            
+            self._optimiserFile = self._starFile.replace('_data.star', '_optimiser.star')
+            if not exists(self._optimiserFile):
+                raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
+            optimiserRow = md.getFirstRow(self._optimiserFile)
+            autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
+            
+    
+            self.alignType = ALIGN_PROJ
+            
+            if not autoRefine:
+                if classDimensionality == 3:
+                    self._classesFunc = self.protocol._createSetOfClasses3D
+                else:
+                    self._classesFunc = self.protocol._createSetOfClasses2D
+                    self.alignType = ALIGN_2D
+            else:
+                self._classesFunc = None
+        else:
+            self.alignType = ALIGN_NONE
+            self._classesFunc = None
+            self._modelStarFile = None
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
@@ -250,10 +254,10 @@ class RelionImport():
         acquisitionDict = OrderedDict()
         
         try:
-            row, modelRow = self._findImagesPath(label=xmipp.RLN_IMAGE_NAME, warnings=False)
+            row, modelRow = self._findImagesPath(label=md.RLN_IMAGE_NAME, warnings=False)
             
-            if row.containsLabel('rlnVoltage'):
-                acquisitionDict['voltage'] = row.getValue('rlnVoltage')
+            if row.containsLabel(md.RLN_CTF_VOLTAGE):
+                acquisitionDict['voltage'] = row.getValue(md.RLN_CTF_VOLTAGE)
                 
             if row.containsLabel('rlnAmplitudeContrast'):
                 acquisitionDict['amplitudeContrast'] = row.getValue('rlnAmplitudeContrast')

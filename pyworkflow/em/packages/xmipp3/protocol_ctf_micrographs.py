@@ -381,19 +381,14 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         self._insertFunctionStep('createOutputStep', prerequisites=[stepId])
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, line):
+    def _estimateCTF(self, id):
+        ctfModel = self.recalculateSet[id]
         """ Run the estimate CTF program """
-        self._prepareCommand(line)
+        self._prepareCommand(ctfModel)
         # CTF estimation with Xmipp                
-        self.runJob(self._program, self._args % self._params)    
+        self.runJob(self._program, self._args % self._params)
     
-    def _createNewCtfModel(self, mic):
-        micDir = self._getMicrographDir(mic)
-        ctfparam = self._getFileName('ctfparam', micDir=micDir)
-        ctfModel2 = readCTFModel(ctfparam, mic)
-        self._setPsdFiles(ctfModel2, micDir)
-        return ctfModel2
-        
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         return ProtRecalculateCTF._summary(self)+XmippCTFBase._summary(self)
@@ -405,15 +400,15 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         return [methodStr]
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self, line):
-        self._defineValues(line)
+    def _prepareCommand(self, ctfModel):
+        self._defineValues(ctfModel)
         self._createFilenameTemplates()
         self._program = 'xmipp_ctf_estimate_from_psd'       
         self._args = "--psd %(psdFn)s "
-        
+        line = ctfModel.getObjComment().split()
+
         # get the size and the image of psd
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         imgPsd = ctfModel.getPsdFile()
         psdFile = basename(imgPsd)
         imgh = ImageHandler()
@@ -424,9 +419,9 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         cleanPath(self._getFileName('ctfparam', micDir=micDir))
         
         params2 = {'psdFn': join(micDir, psdFile),
-                   'defocusU': float(line[1]),
-                   'defocusV': float(line[2]),
-                   'angle': line[3],
+                   'defocusU': float(line[0]),
+                   'defocusV': float(line[1]),
+                   'angle': line[2],
                   }
         self._params = dict(self._params.items() + params2.items())
         
@@ -434,8 +429,8 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         self.__params = {'sampling_rate': self._params['samplingRate'],
                          'kV': self._params['voltage'],
                          'Cs': self._params['sphericalAberration'],
-                         'min_freq': line[4],
-                         'max_freq': line[5],
+                         'min_freq': line[3],
+                         'max_freq': line[4],
                          'defocusU': self._params['defocusU'],
                          'defocusV': self._params['defocusV'],
                          'azimuthal_angle': self._params['angle'],
@@ -452,20 +447,24 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
         #self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
         #modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
         
-        for ctfModel in self.inputCtf.get():
-            if ctfModel.isEnabled():
+        for ctfModel in self.recalculateSet:
+            if ctfModel.isEnabled() and ctfModel.getObjComment():
                 mic = ctfModel.getMicrograph()
-                # Loop over the recalculated CTFs
-                for line in self.values:
-                    objId = self._getObjId(line)                    
-                    if objId == ctfModel.getObjId():
-                        # Update the CTF models that where recalculated
-                        # and append later to the set
-                        # we dont want to copy the id here since it is already correct
-                        micDir = self._getMicrographDir(mic)
-                        micFn = mic.getFileName()
-                        ctfparam = self._getFileName('ctfparam', micDir=micDir)
-                        mdCTF = xmipp.MetaData(ctfparam)
-                        ctfDownFactor = mdCTF.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTF.firstObject())
-                        self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor)
-        
+
+
+                # Update the CTF models that where recalculated
+                # and append later to the set
+                # we dont want to copy the id here since it is already correct
+                micDir = self._getMicrographDir(mic)
+                micFn = mic.getFileName()
+                ctfparam = self._getFileName('ctfparam', micDir=micDir)
+                mdCTF = xmipp.MetaData(ctfparam)
+                ctfDownFactor = mdCTF.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED,mdCTF.firstObject())
+                self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor)
+
+    def _createNewCtfModel(self, mic):
+        micDir = self._getMicrographDir(mic)
+        ctfparam = self._getFileName('ctfparam', micDir=micDir)
+        ctfModel2 = readCTFModel(ctfparam, mic)
+        self._setPsdFiles(ctfModel2, micDir)
+        return ctfModel2
