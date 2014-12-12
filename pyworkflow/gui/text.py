@@ -43,7 +43,7 @@ from pyworkflow.utils.properties import Message, Color, Icon
 
 # Define a function to open files cleanly in a system-dependent way
 if sys.platform.startswith('darwin'):  # macs use the "open" command
-    _open_cmd = lambda path: subprocess.call(['open', path])
+    _open_cmd = lambda path: subprocess.Popen(['open', path])
 elif os.name == 'nt':  # there is a function os.startfile for windows
     _open_cmd = lambda path: os.startfile(path)
 elif os.name == 'posix':  # linux systems and so on
@@ -59,7 +59,7 @@ elif os.name == 'posix':  # linux systems and so on
 
     def _open_cmd(path):
         if x_open:
-            if subprocess.call([x_open, path]) == 0:
+            if subprocess.Popen([x_open, path]) == 0:
                 return  # yay! that's the way to do it!
         # If we couldn't open it in a standard way, try web and editors
         if path.startswith('http://') or path.startswith('https://'):
@@ -70,7 +70,7 @@ elif os.name == 'posix':  # linux systems and so on
                 pass
         else:
             if editor:
-                if subprocess.call([editor, path]) == 0:
+                if subprocess.Popen([editor, path]) == 0:
                     return  # hope we found your fav editor :)
         print 'WARNING: Cannot open %s' % path  # nothing worked! :(
 else:
