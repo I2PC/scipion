@@ -26,11 +26,11 @@
 
 
 import pyworkflow.protocol.params as params
-import pyworkflow.em as em
+from pyworkflow.em.protocol import ProtCTFMicrographs	
 from pyworkflow.utils.path import removeBaseExt
 
 
-class ProtCTFAssign(em.ProtCTFMicrographs):
+class ProtCTFAssign(ProtCTFMicrographs):
     """ This protocol assign a CTF estimation to a particular
     set of particles producing a new set. """
     _label = 'ctf assign'
@@ -45,6 +45,7 @@ class ProtCTFAssign(em.ProtCTFMicrographs):
                       label="Input CTF",
                       help='Select the CTF that will be used to update particles.')  
         form.addParam('useMicName', params.BooleanParam, default=False,
+	              label="Use name?",
                       help='Instead of using micId, use the particle stack name\n'
                            'as the link to the correct micrograph. This option\n'
                            'can be useful if the id\'s have been lost due to union.')      
@@ -80,9 +81,9 @@ class ProtCTFAssign(em.ProtCTFMicrographs):
         
         for particle in inputParticles:
             if self.useMicName:
-                micKey = particle.getMicId()
-            else:
                 micKey = removeBaseExt(particle.getFileName())
+            else:
+	        micKey = particle.getMicId()
                 
             if micKey not in missingSet:                
                 ctf = ctfDict.get(micKey, None)
