@@ -47,6 +47,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
     
     def __init__(self, **args):
         em.ProtAlignVolume.__init__(self, **args)
+        self.stepsExecutionMode = em.STEPS_PARALLEL
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
