@@ -25,11 +25,12 @@
 # **************************************************************************
 
 
-from pyworkflow.protocol.params import PointerParam
-from pyworkflow.em.protocol import ProtCTFMicrographs
+import pyworkflow.protocol.params as params
+import pyworkflow.em as em
+from pyworkflow.utils.path import removeBaseExt
 
 
-class ProtCTFAssign(ProtCTFMicrographs):
+class ProtCTFAssign(em.ProtCTFMicrographs):
     """ This protocol assign a CTF estimation to a particular
     set of particles producing a new set. """
     _label = 'ctf assign'
@@ -37,12 +38,16 @@ class ProtCTFAssign(ProtCTFMicrographs):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputParticles', params.PointerParam, pointerClass='SetOfParticles',
                       label='Input particles',
                       help='Select the particles that you want to update the CTF parameters.')        
-        form.addParam('inputCTF', PointerParam, pointerClass='SetOfCTF',
+        form.addParam('inputCTF', params.PointerParam, pointerClass='SetOfCTF',
                       label="Input CTF",
-                      help='Select the CTF that will be used to update particles.')        
+                      help='Select the CTF that will be used to update particles.')  
+        form.addParam('useMicName', params.BooleanParam, default=False,
+                      help='Instead of using micId, use the particle stack name\n'
+                           'as the link to the correct micrograph. This option\n'
+                           'can be useful if the id\'s have been lost due to union.')      
 
         form.addParallelSection(threads=0, mpi=0) 
               
@@ -64,19 +69,31 @@ class ProtCTFAssign(ProtCTFMicrographs):
         defaultCTF.setDefocusU(-9999.)
         defaultCTF.setDefocusV(-9999.)
         
+        ctfDict = {}
+        for ctf in inputCTF:
+            ctfId = ctf.getObjId()
+            ctfName = removeBaseExt(ctf.getMicrograph().getFileName())
+            ctfDict[ctfId] = ctf
+            ctfDict[ctfName] = ctf
+            
+        missingSet = set() # Report missing micrographs only once
+        
         for particle in inputParticles:
-            micId = particle.getMicId()
-            ctf = inputCTF[micId]
-            if ctf is None:
-#                 ctf = defaultCTF.clone()
-#                 if particle.hasCTF():
-#                     ctf.copy(particle.getCTF())
-                    self.warning("Discarding particle with id=%d and location %s, CTF not found "
-                              % (particle.getObjId(), particle.getLocation()))
+            if self.useMicName:
+                micKey = particle.getMicId()
             else:
-                newParticle = particle.clone()
-                newParticle.setCTF(ctf)
-                outputParticles.append(newParticle)
+                micKey = removeBaseExt(particle.getFileName())
+                
+            if micKey not in missingSet:                
+                ctf = ctfDict.get(micKey, None)
+                
+                if ctf is None:
+                    self.warning("Discarding particles from micrograph: %s, CTF not found. " % micKey)
+                    missingSet.add(micKey)
+                else:
+                    newParticle = particle.clone()
+                    newParticle.setCTF(ctf)
+                    outputParticles.append(newParticle)
         
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
