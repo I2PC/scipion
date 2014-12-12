@@ -126,11 +126,11 @@ function serviceTestDataForm(){
 	dialog += "<br />";
 	dialog += '<div id="testData">';
 	dialog += "<p>Select the <strong>test data</strong>:</p>";
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>    &nbsp; Groel data';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>Groel data';
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">       &nbsp; BPV';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">BPV';
 	dialog += '<br />';
-	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome"> &nbsp; Ribosome';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">Ribosome';
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
@@ -149,6 +149,47 @@ function serviceTestDataForm(){
 					 btn1, ico1, funcName1, 
 					 btn2, ico2, funcName2, 
 					 "Cancel")
+}
+
+function goExampleForm(){
+	var title = 'Example projects'
+	var dialog = ""
+
+	dialog += '<div id="exProjects">';
+	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data</a>';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV</a>';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome</a>';
+	dialog += '<br />';
+	dialog += "</div>";
+	
+	new Messi(dialog, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Close',
+			val : 'X',
+			btnClass : 'fa-times'
+		} ]
+	});
+}
+
+function getProjExample(x){
+	switch(x){
+		case 1:
+			var url = "/project_content/?projectName=GroelTestData&mode=service";
+			break;
+		case 2:
+			var url ="/project_content/?projectName=BpvTestData&mode=service";
+			break;
+		case 3:
+			var url ="/project_content/?projectName=RiboTestData&mode=service";
+			break;
+	}
+	goWithSubDomainURL(url);
 }
 
 function downloadTestdata(elm){
