@@ -523,7 +523,11 @@ def get_slice(request):
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
+        print "CURRENT DIR: ", os.getcwd()
+        print "Exist path? ", os.path.exists(imagePath)
+        
         imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
+        
         
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
