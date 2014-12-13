@@ -45,5 +45,3 @@ def getEnviron():
                     }, 
                    position=Environ.BEGIN)
     return environ
-
-_environ = getEnviron()
