@@ -183,7 +183,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
       
     def createOutputStep(self):
         volSet = self._createSetOfVolumes()
-        volSet.setSampling(self.inputReference.get().getSamplingRate())
+        volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
         
         for vol in self._iterInputVolumes():
             vol.setLocation(vol.outputName)
