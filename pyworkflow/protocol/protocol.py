@@ -848,10 +848,12 @@ class Protocol(Step):
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
         if 'env' not in kwargs:
-            # self._log.info("calling self._getEnviron...")
+            #self._log.info("calling self._getEnviron...")
             kwargs['env'] = self._getEnviron()
                        
-        # self._log.info("Using environ for runJob: ", str(kwargs['env']))
+        #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
+        #self._log.info("runJob: env = %s " % str(kwargs['env']))
+        
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):
@@ -1024,6 +1026,8 @@ class Protocol(Step):
     def getClassPackage(cls):
         """ Return the package module to which this protocol belongs
         """
+        import pyworkflow.em as em
+        em.getProtocols() # make sure the _package is set for each Protocol class
         return getattr(cls, '_package', scipion)
         
     @classmethod 
