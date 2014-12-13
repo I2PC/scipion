@@ -72,6 +72,7 @@ class TestGroel(tests.BaseTest):
                                       symmetryGroup=sym,
                                       nRansac=200,
                                       maxFreq=20,
+                                      numberOfMpi=1,
                                       numberOfThreads=cpus
                                       )
         protRansac.inputSet.set(protImport.outputAverages)
