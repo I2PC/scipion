@@ -60,7 +60,9 @@ class EmanProtInitModel(ProtInitialVolume):
                            'You can select SetOfAverages or SetOfClasses2D as input.')
         form.addParam('symmetry', TextParam, default='c1',
                       label='Symmetry group',
-                      help='Specify the symmetry.\nChoices are: c(n), d(n), h(n), tet, oct, icos')        
+                      help='Specify the symmetry.\nChoices are: c(n), d(n), h(n), tet, oct, icos.\n'
+                           'See http://blake.bcm.edu/emanwiki/EMAN2/Symmetry\n'
+                           'for a detailed descript of symmetry in Eman.')        
         form.addParam('numberOfIterations', IntParam, default=8, expertLevel=LEVEL_ADVANCED,
                       label='Number of iterations to perform',
                       help='The total number of refinement to perform.')

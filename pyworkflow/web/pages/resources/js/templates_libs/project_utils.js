@@ -102,38 +102,112 @@ function deleteProject(elm) {
  * SERVICE PROJECT
  */ 
 
-function serviceProjForm(data){
-	var title = 'Confirm project creation'
+function serviceProjForm(){
+	var title = 'Project creation'
 	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
         "This process generates a unique <strong>identification code</strong><br />" +
         "that you will have to save to access the content in the future.</p>" +
         "<p><br /></p>";
 	
-	if (data){
-		dialog += "<p>Choose a <strong>test data</strong> to use into the project:</p>";
-		dialog += '<div id="testData">';
-		
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>    &nbsp; Groel data';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">       &nbsp; BPV';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-			
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome"> &nbsp; Ribosome';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-		
-		dialog += "</div>";
-		dialog += "<br />";
-	}
-        
-    dialog += "<p>If you agree, please confirm to generate it.</p>";
+    dialog += "<p>Confirm to generate it.</p>";
 
 	var funcName = 'createServProject';
 
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
+}
+
+function serviceTestDataForm(){
+	var title = 'Test data'
+	var dialog = ""
+		
+	dialog += "<p>You have two options to use the <strong>Test data</strong> :<br />" +
+        "1.- <strong>Create a project</strong> with the <strong>Test data</strong> already imported inside.<br />" +	
+		"2.- <strong>Download</strong> the files chosen to be imported manually by the user into a project created.</p>";
+	dialog += "<br />";
+	dialog += '<div id="testData">';
+	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>Groel data';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">BPV';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">Ribosome';
+	dialog += '<br />';
+	dialog += "</div>";
+	dialog += "<br />";
+    dialog += "<p>After select, choose your option.</p>";
+
+    
+    var btn1 = 'Create project'
+	var ico1 = 'fa-check'
+	var funcName1 = 'createServProject';
+		
+	var btn2 = 'Download'
+	var ico2 = 'fa-download';
+	var funcName2 = 'downloadTestdata';
+	
+	accessPopupOpt(title, dialog, 
+					 btn1, ico1, funcName1, 
+					 btn2, ico2, funcName2, 
+					 "Cancel")
+}
+
+function goExampleForm(){
+	var title = 'Example projects'
+	var dialog = ""
+
+	dialog += '<div id="exProjects">';
+	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data</a>';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV</a>';
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome</a>';
+	dialog += '<br />';
+	dialog += "</div>";
+	
+	new Messi(dialog, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : 'Close',
+			val : 'X',
+			btnClass : 'fa-times'
+		} ]
+	});
+}
+
+function getProjExample(x){
+	switch(x){
+		case 1:
+			var url = "/project_content/?projectName=GroelTestData&mode=service";
+			break;
+		case 2:
+			var url ="/project_content/?projectName=BpvTestData&mode=service";
+			break;
+		case 3:
+			var url ="/project_content/?projectName=RiboTestData&mode=service";
+			break;
+	}
+	goWithSubDomainURL(url);
+}
+
+function downloadTestdata(elm){
+	var selected = $("#testData input[type='radio']:checked").val();
+	var URL = getSubDomainURL() + "/get_testdata/?testData="+ selected;
+	
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType: "text",
+		async: false,
+		success : function(text) {
+			var str = text.split("/")
+			var fn = str[str.length-1]
+			var URL = getSubDomainURL() + '/get_file/?path='+text+'&filename='+fn
+			window.location.href = URL;
+		}
+	});
 }
 
 function createServProject(elm) {

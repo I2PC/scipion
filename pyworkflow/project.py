@@ -619,6 +619,6 @@ class Project(object):
             
 
 def isReadOnly():
-    """ Auxiliar method to keep a read-only mode for the environment. """
-    return 'SCIPION_READONLY' in os.environ
+     """ Auxiliar method to keep a read-only mode for the environment. """
+     return 'SCIPION_READONLY' in os.environ
         
