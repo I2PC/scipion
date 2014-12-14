@@ -25,6 +25,7 @@
 # **************************************************************************
 
 
+from pyworkflow.em import ALIGN_2D
 from pyworkflow.protocol.params import PointerParam
 from protocol_2d import ProtAlign2D
 
@@ -56,47 +57,65 @@ class ProtAlignmentAssign(ProtAlign2D):
         """
         self._insertFunctionStep('createOutputStep')
 
+    def _updateItem(self, item, row):
+        """ Implement this function to do some
+        update actions over each single item
+        that will be stored in the output Set.
+        """
+        # Add alignment info from corresponding item on inputAlignment
+        inputAlignment = self.inputAlignment.get()
+        scale = inputAlignment.getSamplingRate()/self.inputParticles.get().getSamplingRate()
+
+        alignedParticle = inputAlignment[item.getObjId()]
+        # If alignment is found for this particle set the alignment info on the output particle, if not do not write that item
+        if alignedParticle is not None:
+            alignment = alignedParticle.getTransform()
+            alignment.scale(scale)
+            item.setTransform(alignment)
+        else:
+            item.setEnabled(False)
+
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()
         inputAlignment = self.inputAlignment.get() 
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
-        
-        scale = inputAlignment.getSamplingRate()/inputParticles.getSamplingRate()
-        n = inputParticles.getSize()
-        block = min(n/10, 1000)       
-        
-        for i, particle in enumerate(inputParticles):
-            alignedParticle = inputAlignment[particle.getObjId()]
-            if alignedParticle is not None:
-                newParticle = particle.clone()
-                alignment = alignedParticle.getTransform()
-#                 alignment._xmipp_shiftX.multiply(scale)
-#                 alignment._xmipp_shiftY.multiply(scale)
-                alignment.scale(scale)
-                newParticle.setTransform(alignment)
-                outputParticles.append(newParticle)
-            ii = i+1
-            if ii % block == 0:
-                self.info('Done %d out of %d' % (i+1, n))
-        
+
+        outputParticles.copyItems(inputParticles,
+                            updateItemCallback=self._updateItem)
+        outputParticles.setAlignment(ALIGN_2D)
+
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
         self._defineSourceRelation(inputAlignment, outputParticles)
         
     def _summary(self):
         summary = []
-        return summary    
-    
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output particles not ready yet.")
+        else:
+            scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
+            summary.append("Assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
+            if scale != 1:
+                summary.append("Applied scale of %s." % scale)
+        return summary
+
     def _methods(self):
-        return []
+        scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
+        methods = []
+        methods.append("We assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
+        if scale != 1:
+            methods.append("Applied scale factor of %s." % scale)
+        return methods
     
     def _validate(self):
         """ The function of this hook is to add some validation before the protocol
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        #same micrographs in both CTF??
-        errors = [ ] 
+        #check that input set of aligned particles do have 2D alignment
+        errors = [ ]
+        if not self.inputAlignment.get().hasAlignment2D():
+            errors.append("Input aligned particles should have alignment 2D.")
         # Add some errors if input is not valid
         return errors

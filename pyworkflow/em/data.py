@@ -561,7 +561,9 @@ class EMSet(Set, EMObject):
                 if updateItemCallback:
                     row = None if itemDataIterator is None else next(itemDataIterator)
                     updateItemCallback(newItem, row)
-                self.append(newItem)
+                #TODO: Ask JM if I can use isEnabled to avoid appending the item. If not maybe setObjId to None?
+                if newItem.isEnabled():
+                    self.append(newItem)
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
