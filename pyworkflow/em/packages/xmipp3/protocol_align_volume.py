@@ -75,12 +75,14 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
                       help='Select the volume mask object')
         
         form.addSection(label='Search strategy')
-        form.addParam('alignmentAlgorithm', params.EnumParam, choices=['exhaustive','local', 'exhaustive + local', 'fast fourier'], default=ALIGN_ALGORITHM_EXHAUSTIVE, 
+        form.addParam('alignmentAlgorithm', params.EnumParam, default=ALIGN_ALGORITHM_EXHAUSTIVE, 
+                      choices=['exhaustive','local', 'exhaustive + local', 'fast fourier'], 
                       label='Alignment algorithm', display=params.EnumParam.DISPLAY_COMBO,
                       help='Exhaustive searches all possible combinations within a search space.'
                             'Local searches around a given position.'
                             'Be aware that the Fast Fourier algorithm requires a special compilation'
-                            'of Xmipp (DO_FRM=True in install.sh). It performs the same job as the exhaustive method but much faster.')
+                            'of Xmipp (DO_FRM=True in install.sh). It performs the same job as the  '
+                            'exhaustive method but much faster.')
         
         anglesCond = 'alignmentAlgorithm!=%d' % ALIGN_ALGORITHM_LOCAL
         
@@ -195,14 +197,17 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volumes not ready yet.")
+        nVols = 0
+        for _ in self._iterInputVolumes():
+            nVols += 1
+            
+        if nVols > 0:
+            summary.append("Volumes to align: *%d* " % nVols)
         else:
-            summary.append("Reference volume: [%s] " % self.inputReferenceVolume.get().getFirstItem().getNameId())
-            summary.append("Input volume: [%s] " % self.inputVolumes.get().getNameId())
-            summary.append("Alignment method: %s" % self.alignmentAlgorithm.get())
+            summary.append("No volumes selected.")
+        summary.append("Alignment method: %s" % self.getEnumText('alignmentAlgorithm'))
                 
-            return summary
+        return summary
         
     def _citations(self):
         if self.alignmentAlgorithm == ALIGN_ALGORITHM_FAST_FOURIER:
