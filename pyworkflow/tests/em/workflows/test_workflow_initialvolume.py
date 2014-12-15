@@ -95,28 +95,51 @@ class TestSignificant(tests.BaseTest):
         tests.setupTestProject(cls)
         cls.ds = tests.DataSet.getDataSet('initial_volume')
     
+    def _runSignificant(self, inputSet, args):
+        myargs = dict(args)
+        nVols = myargs['Nvolumes']
+        
+        prot1 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
+            objLabel='significant i1 vol=%d' % nVols, 
+            **myargs
+            )
+        #prot1.inputClasses.set(inputSet)
+        self.launchProtocol(prot1)
+        
+        output = prot1.outputVol if nVols == 1 else prot1.outputVolumes
+        
+        myargs['thereisRefVolume'] = True
+         
+        prot2 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
+            objLabel='significant i1 vol=%d (with ref)' % nVols, 
+            **myargs
+            )
+        #prot2.inputClasses.set(inputSet)
+        prot2.refVolume.set(output)
+        self.launchProtocol(prot2)
+        
+        
     def test_significant(self):
         """ Run an Import particles protocol. """
         cpus = os.environ.get('SCIPION_TEST_CPU', 4)
         # 1. Run import of averages
         avg = self.ds.getFile('bpv')
-        sym = 'i3'
         
         protImport = self.newProtocol(em.ProtImportAverages, 
                                       filesPath=avg, 
                                       samplingRate=1)
         self.launchProtocol(protImport)
         
-        args = {'symmetryGroup': 'i3',
+        args = {'symmetryGroup': 'i1',
                 'iter': 3,
                 'numberOfMpi': cpus,
-                'inputClasses': protImport.outputAverages
+                'inputClasses': protImport.outputAverages,
+                'Nvolumes': 1
                 }
-        # 2. Run initial models
-        # 2a. Ransac 
-        protSignificant = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
-            objLabel='significant i1 vol=1', **args
-            )
-        #protSignificant.inputClasses.set(protImport.outputAverages)
-        self.launchProtocol(protSignificant)
+        # Run significant with one volume
+        self._runSignificant(protImport.outputAverages, args)
+        
+        # Run same as before but with 2 volumes
+        args['Nvolumes'] = 2
+        self._runSignificant(protImport.outputAverages, args)
         
