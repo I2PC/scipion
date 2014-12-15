@@ -37,21 +37,21 @@ class ProtAlignmentAssign(ProtAlign2D):
     The particles with the alignment can also be a subset of the other images
     """
     _label = 'alignment assign'
-    
+
     def _defineParams(self, form):
         form.addSection(label='Input')
 
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
                       label='Input particles',
-                      help='Select the particles that you want to update the new alignment.')        
+                      help='Select the particles that you want to update the new alignment.')
         form.addParam('inputAlignment', PointerParam, pointerClass='SetOfParticles',
                       label="Input alignments",
-                      help='Select the particles with alignment to be apply to the other particles.')        
+                      help='Select the particles with alignment to be apply to the other particles.')
 
-        form.addParallelSection(threads=0, mpi=0) 
-              
-#--------------------------- INSERT steps functions --------------------------------------------  
-                                
+        form.addParallelSection(threads=0, mpi=0)
+
+#--------------------------- INSERT steps functions --------------------------------------------
+
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
@@ -70,14 +70,14 @@ class ProtAlignmentAssign(ProtAlign2D):
         # If alignment is found for this particle set the alignment info on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scale(scale)
+            alignment.scaleShifts2D(scale)
             item.setTransform(alignment)
         else:
-            item.setEnabled(False)
+            item._appendItem = False
 
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()
-        inputAlignment = self.inputAlignment.get() 
+        inputAlignment = self.inputAlignment.get()
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
 
@@ -88,7 +88,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
         self._defineSourceRelation(inputAlignment, outputParticles)
-        
+
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputParticles'):
@@ -101,13 +101,16 @@ class ProtAlignmentAssign(ProtAlign2D):
         return summary
 
     def _methods(self):
-        scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
         methods = []
-        methods.append("We assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
-        if scale != 1:
-            methods.append("Applied scale factor of %s." % scale)
+        if not hasattr(self, 'outputParticles'):
+            methods.append("Output particles not ready yet.")
+        else:
+            scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
+            methods.append("We assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
+            if scale != 1:
+                methods.append("Applied scale factor of %s." % scale)
         return methods
-    
+
     def _validate(self):
         """ The function of this hook is to add some validation before the protocol
         is launched to be executed. It should return a list of errors. If the list is
