@@ -561,7 +561,9 @@ class EMSet(Set, EMObject):
                 if updateItemCallback:
                     row = None if itemDataIterator is None else next(itemDataIterator)
                     updateItemCallback(newItem, row)
-                self.append(newItem)
+                # If updateCallBack function returns attribute _appendItem to False do not append the item
+                if getattr(newItem, "_appendItem", True):
+                    self.append(newItem)
             else:
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
@@ -1100,7 +1102,6 @@ class Transform(EMObject):
         
     def scaleShifts2D(self, factor):
         m = self.getMatrix()
-        m *= factor
         m[0, 3] *= factor
         m[1, 3] *= factor
 

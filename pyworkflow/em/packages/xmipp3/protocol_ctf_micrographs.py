@@ -109,11 +109,14 @@ estimate CTF on a set of micrographs using Xmipp 3.1 """
         fnRejected = self._getTmpPath(basename(micFn +"_rejected.xmd"))
         self.runJob("xmipp_metadata_utilities",'-i %s --query select "%s" -o %s' % (fnEval, self._criterion, fnRejected))
         
+        retval=True
         if not isMdEmpty(fnRejected):
             mdCTF = md.MetaData(fnEval)
             mdCTF.setValue(md.MDL_ENABLED, -1, mdCTF.firstObject())
             mdCTF.write(fnEval)
+            retval=False
         cleanPath(fnRejected)
+        return retval
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
@@ -182,7 +185,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
                 break
             
             # Check the quality of the estimation and reject it necessary
-            self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor)
+            if self.evaluateSingleMicrograph(micFn,micDir,ctfDownFactor):
+                break
             
         if deleteTmp != "":
             cleanPath(deleteTmp)
