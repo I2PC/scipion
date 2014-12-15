@@ -93,9 +93,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor))
-            
-            self._params['samplingRate'] = self._params['samplingRate'] * downFactor
-            self._params['scannedPixelSize'] = self._params['scannedPixelSize'] * downFactor
+            self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
         else:
             micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
             ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
@@ -117,8 +115,8 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         defocusList = []
         
         for fn, micDir, mic in self._iterMicrographs():
-            
-            mic.setSamplingRate(self._params['samplingRate'])
+            samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
+            mic.setSamplingRate(samplingRate)
             
             out = self._getCtfOutPath(micDir)
             psdFile = self._getPsdPath(micDir)
@@ -141,7 +139,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0
         # Convert digital frequencies to spatial frequencies
-        sampling = self.inputMics.getSamplingRate()
+        sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
         self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
