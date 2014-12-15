@@ -46,7 +46,7 @@ from protocol_import import ProtImport
 
 
 class ProtImportMicrographsTiltPairs(ProtImport):
-    """Protocol to import a pair of tilted micrographs in the project"""
+    """Protocol to import untilted-tilted pairs of micrographs in the project"""
     
     _className = 'Micrograph'
     _label = 'import tilted micrographs'
