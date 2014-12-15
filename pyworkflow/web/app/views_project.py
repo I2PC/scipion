@@ -383,13 +383,11 @@ Initial_Volume = [
         {"tag": "protocol", "value": "ProtImportAverages",     "text": "Import averages", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
         {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - ransac"},
-        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
         {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"},
         {"tag": "protocol", "value": "ProtPrime", "text": "simple - prime"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
-        {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]
-    }]
-                
+        {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]}]
             ''')
         f.close()
         
