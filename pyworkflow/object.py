@@ -287,7 +287,7 @@ class Object(object):
                 for pointer in getattr(other, name):
                     getattr(self, name).append(pointer)
             else:
-                getattr(self, name).set(getattr(other, name).get())
+                getattr(self, name).copy(getattr(other, name))
             
     def __getObjDict(self, prefix, objDict, includeClass):
         if prefix:
@@ -532,7 +532,7 @@ class Scalar(Object):
             return self._objValue
         return default
     
-    def _copy(self, other, *args):
+    def _copy(self, other, *args, **kwargs):
         self.set(other.get())
         
     def swap(self, other):

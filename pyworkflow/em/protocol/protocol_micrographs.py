@@ -230,27 +230,27 @@ class ProtRecalculateCTF(ProtMicrographs):
         #self._insertFunctionStep('createSubsetOfCTF')
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each psd insert the steps to process it
-        modifiedSet = SetOfCTF(filename=self.sqliteFile.get())
-        for ctf in modifiedSet:
+        self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(), objDoStore=False)
+        for ctf in self.recalculateSet:
             line = ctf.getObjComment()
-            if ctf.isEnabled and line:
-                # CTF Re-estimation with Xmipp
-                copyId = self._insertFunctionStep('copyMicDirectory', ctf)
-                stepId = self._insertFunctionStep('_estimateCTF', ctf, prerequisites=[copyId]) # Make estimation steps independent between them
+            if ctf.isEnabled() and line:
+                # CTF Re-estimation
+                copyId = self._insertFunctionStep('copyMicDirectory', ctf.getObjId())
+                stepId = self._insertFunctionStep('_estimateCTF', ctf.getObjId(), prerequisites=[copyId]) # Make estimation steps independent between them
                 deps.append(stepId)
         # Insert step to create output objects
         self._insertFinalSteps(deps)
-    
+
+
     def _insertFinalSteps(self, deps):
         # Insert step to create output objects       
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
     #--------------------------- STEPS functions ---------------------------------------------------
-           
 
-    
-    def copyMicDirectory(self, ctfModel):
+    def copyMicDirectory(self, id):
         """ Copy micrograph's directory tree for recalculation"""
+        ctfModel = self.recalculateSet[id]
         mic = ctfModel.getMicrograph()
         
         prevDir = self._getPrevMicDir(ctfModel)
@@ -261,7 +261,7 @@ class ProtRecalculateCTF(ProtMicrographs):
             raise Exception("No created dir: %s " % micDir)
         copyTree(prevDir, micDir)
     
-    def _estimateCTF(self, line):
+    def _estimateCTF(self, id):
         """ Do the CTF estimation with the specific program
         and the parameters required.
         Params:
@@ -287,34 +287,33 @@ class ProtRecalculateCTF(ProtMicrographs):
         defocusList = []
         # README: We suppose this is reading the ctf selection (with enabled/disabled)
         # to only consider the enabled ones in the final SetOfCTF
-        #self._loadDbNamePrefix() # load self._dbName and self._dbPrefix
-        modifiedSet = SetOfCTF(filename=self.sqliteFile.get())
+
         
         #TODO: maybe we can remove the need of the extra text file
         # with the recalculate parameters
-        for ctfModel, ctfModel2 in izip(self.inputCtf.get(), modifiedSet):
-            if ctfModel2.isEnabled() and ctfModel2.getObjComment:
+        for ctfModel, ctfModel2 in izip(self.inputCtf.get(), self.recalculateSet):
+            if ctfModel2.isEnabled() and ctfModel2.getObjComment():
                 mic = ctfModel.getMicrograph()
                 # Update the CTF models that where recalculated
                 # and append later to the set
                 # we dont want to copy the id here since it is already correct
                 ctfModel.copy(self._createNewCtfModel(mic), copyId=False)
                 ctfModel.setEnabled(True)
-                ctfSet.append(ctfModel)
-                # save the values of defocus for each micrograph in a list
-                defocusList.append(ctfModel.getDefocusU())
-                defocusList.append(ctfModel.getDefocusV())
+            ctfSet.append(ctfModel)
+            # save the values of defocus for each micrograph in a list
+            defocusList.append(ctfModel.getDefocusU())
+            defocusList.append(ctfModel.getDefocusV())
             
         self._defineOutputs(outputCTF=ctfSet)
-        
         self._defineSourceRelation(self.inputCtf.get(), ctfSet)
+
         self._defocusMaxMin(defocusList)
         self._ctfCounter(defocusList)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):
         summary = []
-        if not (hasattr(self, 'outputCTF') and hasattr(self, 'outputMicrographs')):
+        if not (hasattr(self, 'outputCTF') ):
             summary.append(Message.TEXT_NO_CTF_READY)
         else:
             summary.append(self.summaryInfo.get())
@@ -323,7 +322,7 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _methods(self):
         methods = []
         
-        if not (hasattr(self, 'outputCTF') and hasattr(self, 'outputMicrographs')):
+        if not (hasattr(self, 'outputCTF') ):
             methods.append(Message.TEXT_NO_CTF_READY)
         else:
             methods.append(self.methodsInfo.get())
@@ -361,19 +360,8 @@ class ProtRecalculateCTF(ProtMicrographs):
     def _getPrevMicDir(self, ctfModel):
         return dirname(ctfModel.getPsdFile())
     
-    def _getObjId(self, values):
-        return int(values[0])
-    
-    def _splitFile(self, filename):
-        """ This method split the parameter filename into lines"""
-        values = []
-        f1 = open(filename)
-        for l in f1:
-            split = l.split()
-            values.append(split)
-        f1.close()
-        return values
-    
+
+
     def _defocusMaxMin(self, values):
         """ This function return the minimum and maximum of the defocus
         of a SetOfMicrographs.
@@ -389,15 +377,7 @@ class ProtRecalculateCTF(ProtMicrographs):
         numberOfCTF = len(values)/2
         msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
         self.summaryInfo.set(msg)
-    
-    def _loadDbNamePrefix(self):
-        """ Setup filename and prefix for db connection. """
-        _dbName = self.sqliteFile.get()
-        self._dbName = self._getPath('subset.sqlite')
-        os.rename(_dbName, self._dbName)
-        self._dbPrefix = ""
-        if self._dbPrefix.endswith('_'):
-            self._dbPrefix = self._dbPrefix[:-1] 
+
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass

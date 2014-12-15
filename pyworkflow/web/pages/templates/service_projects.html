@@ -149,7 +149,7 @@ img.ico{
             <br /> 
 			<h3 style="text-align:justify;">This webpage will allow you to create an initial 3D map
 			from your average images.
-			Several methods of different packages are available (Xmipp3, Eman2, ...).
+			Several methods from different packages are available (Xmipp3, Eman2, ...).
 			At the end, you compare the output volumes and download the desired ones.  
 			<br /><br />
 			It is recommended  
@@ -173,7 +173,7 @@ img.ico{
 		    	</div>
 			    <div id="buttons">
 					<!-- CREATE NEW PROJECT --> 
-					<a href="javascript:serviceProjForm(0);">
+					<a href="javascript:serviceProjForm();">
 						<button class="btn buttonRed" type="button">Create
 							project</button>
 					</a>
@@ -200,7 +200,7 @@ img.ico{
 		    	</div>
 		    	<div id="buttons">
 			    	<!-- TEST DATA -->
-					<a href="javascript:serviceProjForm(1);">
+					<a href="javascript:serviceTestDataForm();">
 						<button class="btn buttonRed" type="button">
 							Test data
 						</button>
@@ -222,10 +222,10 @@ img.ico{
 		    	</div>
 		    	<div id="buttons">
 					<!-- EXAMPLE PROJECT -->
-					<a href="javascript:goWithSubDomainURL('/project_content/?projectName=exampleProject&mode=service');"
-						class="projName">
-						<button class="btn buttonGrey" type="button">Example
-							Project</button>
+					<a href="javascript:goExampleForm();">
+						<button class="btn buttonRed" type="button">
+							Test projects
+						</button>
 					</a>
 				</div>
 		    </div>

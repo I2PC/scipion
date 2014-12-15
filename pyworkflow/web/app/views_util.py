@@ -523,7 +523,11 @@ def get_slice(request):
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
+        print "CURRENT DIR: ", os.getcwd()
+        print "Exist path? ", os.path.exists(imagePath)
+        
         imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
+        
         
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
@@ -608,9 +612,9 @@ def replacePattern(m, mode):
     elif mode == HYPER_ITALIC:
         text = " <i>%s</i> " % g1
     elif mode == HYPER_LINK1:
-        text = " <a href='%s' target='_blank'>%s</a> " % (g1, g1)
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, g1)
     elif mode == HYPER_LINK2:
-        text = " <a href='%s' target='_blank'>%s</a> " % (g1, m.group('link2_label'))
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, m.group('link2_label'))
     else:
         raise Exception("Unrecognized pattern mode: " + mode)
     

@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.web.pages import settings as django_settings
+import pyworkflow.em as em
 
 #===============================================================================
 # PROTOCOL TREE
@@ -54,7 +55,7 @@ class TreeItem():
         
         
 def populateProtTree(tree, obj):    
-    from pyworkflow.em import emProtocolsDict
+    emProtocolsDict = em.getProtocols()
     
     for sub in obj:
         text = sub.text.get()

@@ -512,12 +512,14 @@ class Environ(dict):
                 BEGIN or END will preserve the current value
                 and add (at begin or end) the new value.
         """
-        if position == self.REPLACE:
+        if varName in self and position != self.REPLACE:
+            if position == self.BEGIN:
+                self[varName] = varValue + os.pathsep + self[varName]
+            elif position == self.END:
+                self[varName] = self[varName] + os.pathsep + varValue
+        else:
             self[varName] = varValue
-        elif position == self.BEGIN:
-            self[varName] = varValue + os.pathsep + self[varName]
-        elif position == self.END:
-            self[varName] = self[varName] + os.pathsep + varValue
+                
             
     def update(self, valuesDict, position=REPLACE):
         """ Use set for each key, value pair in valuesDict. """
