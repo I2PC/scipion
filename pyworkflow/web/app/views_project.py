@@ -487,10 +487,10 @@ def create_service_project(request):
         
         protJoin = project.newProtocol(XmippProtAlignVolume)
         protJoin.setObjLabel('merge all volumes')
-        protJoin.inputSets.append(p1)
-        protJoin.inputSets.append(p2)
-        protJoin.inputSets.append(p3)
-        protJoin.inputSets.append(p4)
+        protJoin.inputVolumes.append(p1)
+        protJoin.inputVolumes.append(p2)
+        protJoin.inputVolumes.append(p3)
+        protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
         
