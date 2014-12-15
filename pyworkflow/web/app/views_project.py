@@ -396,8 +396,9 @@ def create_service_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant
         from pyworkflow.em.packages.eman2 import EmanProtInitModel
+        from pyworkflow.em.packages.simple import ProtPrime
         
         # Create a new project
         manager = Manager()
