@@ -331,3 +331,5 @@ class XmippProtRCT(ProtInitialVolume):
                 methods.append('For each initial volume were used respectively %s particles' % particlesArrayString)
         return methods
             
+    def _citations(self):
+        return ['Radermacher1987', 'Sorzano2010a']
