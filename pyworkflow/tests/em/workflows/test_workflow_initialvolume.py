@@ -70,7 +70,6 @@ class TestGroel(tests.BaseTest):
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
-                                      nRansac=200,
                                       maxFreq=20,
                                       numberOfMpi=1,
                                       numberOfThreads=cpus
@@ -85,7 +84,49 @@ class TestGroel(tests.BaseTest):
         protEmanInitVol.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protEmanInitVol)
       
+      
+class TestBPV(tests.BaseTest):
+    """ Check the images are converted properly to spider format. """
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        tests.setupTestProject(cls)
+        cls.ds = tests.DataSet.getDataSet('initial_volume')
+    
+    def test_bpv(self):
+        """ Run an Import particles protocol. """
+        cpus = os.environ.get('SCIPION_TEST_CPU', 4)
+        # 1. Run import of averages
+        groelAvg = self.ds.getFile('bpv')
+        sym = 'i1'
+        protImport = self.newProtocol(em.ProtImportAverages, 
+                                      filesPath=groelAvg, 
+                                      samplingRate=1)
+        self.launchProtocol(protImport)
         
+        # 2. Run initial models
+        # 2a. Ransac 
+        protRansac = self.newProtocol(xmipp3.XmippProtRansac,
+                                      objLabel='xmipp - ransac',
+                                      symmetryGroup=sym,
+                                      maxFreq=20,
+                                      dimRed=False,
+                                      numSamples=6, # less than 8 classes provided
+                                      numberOfMpi=1,
+                                      numberOfThreads=cpus
+                                      )
+        protRansac.inputSet.set(protImport.outputAverages)
+        self.launchProtocol(protRansac)
+        
+        # 2b. Eman 
+        protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
+                                           objLabel='eman - initial vol',
+                                           numberOfThreads=cpus)
+        protEmanInitVol.inputSet.set(protImport.outputAverages)
+        self.launchProtocol(protEmanInitVol)  
+        
+             
 class TestSignificant(tests.BaseTest):
     """ Test only significant execution with BPV virus. """
     
