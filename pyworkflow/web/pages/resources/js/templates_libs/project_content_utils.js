@@ -1040,7 +1040,13 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
-//						updateTabs(id)
+						
+						console.log(status)
+						
+						if (status == "finished"){
+							console.log("protocol finished!")
+	//						updateTabs(id)
+						}
 					}
 				}
 			},

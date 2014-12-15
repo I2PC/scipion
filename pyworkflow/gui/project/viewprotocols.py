@@ -984,6 +984,7 @@ class ProtocolsView(tk.Frame):
             self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
+            self.refreshRuns()
             
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):

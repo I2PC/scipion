@@ -130,12 +130,14 @@ class TestBrandeisCtffind(TestBrandeisBase):
     def testCtffind(self):
         protCTF = ProtCTFFind()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
         ctfModel = protCTF.outputCTF.getFirstItem()
-        self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusV(),23640.28, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, places=2)
+        self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, delta=100)
+        self.assertAlmostEquals(ctfModel.getDefocusV(),23499.73, delta=100)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, delta=1)
+        self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
 
 class TestBrandeisFrealign(TestBrandeisBase):
     @classmethod

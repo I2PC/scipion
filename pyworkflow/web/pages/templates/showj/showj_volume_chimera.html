@@ -31,10 +31,6 @@
 	<link rel="stylesheet" href="{{jquery_ui_css}}">
 	<link rel="stylesheet" href="{{messi_css}}">
   	<script type="text/javascript">
-  	function webGL(){
-	  	<!-- Init webgl -->
-  		webGLStart();
-  	}
   	
   	function putWait(){
 		new Messi("<i class='fa fa-picture-o'/>  Loading Volume...",{
@@ -65,25 +61,29 @@
 			success : function(data) {
 				$("div#chimeraContent").empty();
 				$("div#chimeraContent").html(data);
-				webGL();
+				webGLStart();
 				removeWait();
 			}
 		});	
 	}
 
   	$(document).ready(function(){
-  		webGL();
+  		// Loading WebGL
+  		webGLStart();
   		
-//   		console.log("threshold: {{threshold}}")
-//   		console.log("MIN: {{minStats}}")
-//   		console.log("MAX: {{maxStats}}")
-		
+  		// Event changing the volume
+  		$("select#id_volumesToRenderComboBox").change(function(){
+  			putWait();
+  		})
+
+  		// Press Ctrl event when change threshold
 		document.getElementById('thresholdValue').addEventListener('keypress', function(event) {
 	        if (event.keyCode == 13) {
 	        	updateThreshold();
 	        }
     	});
 		
+		// Slider invoke and events
   		$("span#slider").slider({
   			animate : true,
   			range: "min",
@@ -98,11 +98,6 @@
   				updateThreshold();
   			}
   		});
-  		
-  		$("select#id_volumesToRenderComboBox").change(function(){
-  			putWait();
-  		})
-  		
   	});
 	</script>
 {% endblock %}
@@ -118,7 +113,7 @@
 		<div id="thresholdParams">
 			Threshold
 			<input id="thresholdValue" type="text" value="{{threshold}}" style="width:11.2em;text-align:center;"/>
-			<input id="thresholdButton" class="btn buttonRed" type="button" value="Load" onclick="updateThreshold();"/>
+			<input id="thresholdButton" class="btn buttonRed" type="button" value="Refresh" onclick="updateThreshold();"/>
 		</div>
 		
 		<div>

@@ -33,6 +33,9 @@ _logo = "simple_logo.png"
 
 from simple import *
 
+
+_environ = getEnviron()
+
 # from viewer import *
 from protocol_prime import ProtPrime
 

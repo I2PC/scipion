@@ -186,20 +186,22 @@ class TestXmippCTFEstimation(TestXmippBase):
         setupTestProject(cls)
         TestXmippBase.setData()
         cls.protImport = cls.runImportMicrographBPV(cls.micFn)
-        cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 3)
+#         cls.protDown = cls.runDownsamplingMicrographs(cls.protImport.outputMicrographs, 3)
     
     def testCTF(self):
         # Estimate CTF on the downsampled micrographs
         print "Performing CTF..."
-        protCTF = XmippProtCTFMicrographs()         
-        protCTF.inputMicrographs.set(self.protDown.outputMicrographs)        
+        protCTF = XmippProtCTFMicrographs()
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
         self.proj.launchProtocol(protCTF, wait=True)
         print protCTF.outputCTF.printAll()
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.") 
         ctfModel = protCTF.outputCTF.getFirstItem()
         self.assertAlmostEquals(ctfModel.getDefocusU(),23825.9, delta=50)
         self.assertAlmostEquals(ctfModel.getDefocusV(),23520.3, delta=50)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(),55.256, delta=1)
+        self.assertAlmostEquals(ctfModel.getDefocusAngle(), 47.489, delta=1)
+        self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
 
 
 class TestXmippCTFRestimation(TestXmippBase):

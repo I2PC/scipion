@@ -102,38 +102,135 @@ function deleteProject(elm) {
  * SERVICE PROJECT
  */ 
 
-function serviceProjForm(data){
-	var title = 'Confirm project creation'
+function serviceProjForm(){
+	var title = 'Project creation'
 	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
         "This process generates a unique <strong>identification code</strong><br />" +
         "that you will have to save to access the content in the future.</p>" +
         "<p><br /></p>";
 	
-	if (data){
-		dialog += "<p>Choose a <strong>test data</strong> to use into the project:</p>";
-		dialog += '<div id="testData">';
-		
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>    &nbsp; Groel data';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">       &nbsp; BPV';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-			
-		dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome"> &nbsp; Ribosome';
-		dialog += '&nbsp;&nbsp;<a href="#"><i class="fa fa-save"></i></a>';
-		dialog += '<br />';
-		
-		dialog += "</div>";
-		dialog += "<br />";
-	}
-        
-    dialog += "<p>If you agree, please confirm to generate it.</p>";
+    dialog += "<p>Confirm to generate it.</p>";
 
 	var funcName = 'createServProject';
 
 	accessPopup(title, dialog, funcName, 'Confirm', 'Cancel');
+}
+
+function serviceTestDataForm(){
+	var title = 'Test data'
+	var dialog = ""
+		
+	dialog += "<p>You have two options to use the <strong>Test data</strong> :<br />" +
+        "1.- <strong>Create a project</strong> with the <strong>Test data</strong> already imported inside.<br />" +	
+		"2.- <strong>Download</strong> the files chosen to be imported manually by the user into a project created.</p>";
+	dialog += "<br />";
+	dialog += '<div id="testData">';
+	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+	dialog += '<br />';
+	dialog += "</div>";
+	dialog += "<br />";
+    dialog += "<p>After select, choose your option.</p>";
+
+    
+    var btn1 = 'Create project'
+	var ico1 = 'fa-check'
+	var funcName1 = 'createServProject';
+		
+	var btn2 = 'Download'
+	var ico2 = 'fa-download';
+	var funcName2 = 'downloadTestdata';
+	
+	accessPopupOpt(title, dialog, 
+					 btn1, ico1, funcName1, 
+					 btn2, ico2, funcName2, 
+					 "Cancel")
+}
+
+function goExampleForm(){
+	var title = 'Example projects'
+	var dialog = ""
+
+	dialog += '<div id="exProjects">';
+	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="bpv">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+	dialog += '<br />';
+	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="ribosome">';
+	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+	dialog += '<br />';
+	dialog += "</div>";
+	dialog += "<br />";
+	
+	accessPopup(title, dialog, 'getProjExample', 'Go to project', 'Cancel');
+		
+//	dialog += '<div id="exProjects">';
+//	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
+//	dialog += '<br />';
+//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome project</a>';
+//	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
+//	dialog += '<br />';
+//	dialog += "</div>";
+	
+//	new Messi(dialog, {
+//		title : title,
+//		modal : true,
+//		buttons : [ {
+//			id : 0,
+//			label : 'Close',
+//			val : 'X',
+//			btnClass : 'fa-times'
+//		} ]
+//	});
+}
+
+function getProjExample(elm){
+	var x = $("div#exProjects input[type='radio']:checked").val();
+	switch(x){
+		case "groel":
+			var url = "/project_content/?projectName=GroelTestData&mode=service";
+			break;
+		case "bpv":
+			var url ="/project_content/?projectName=BpvTestData&mode=service";
+			break;
+		case "ribosome":
+			var url ="/project_content/?projectName=RiboTestData&mode=service";
+			break;
+	}
+	goWithSubDomainURL(url);
+}
+
+function downloadTestdata(elm){
+	var selected = $("#testData input[type='radio']:checked").val();
+	var URL = getSubDomainURL() + "/get_testdata/?testData="+ selected;
+	
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType: "text",
+		async: false,
+		success : function(text) {
+			var str = text.split("/")
+			var fn = str[str.length-1]
+			var URL = getSubDomainURL() + '/get_file/?path='+text+'&filename='+fn
+			window.location.href = URL;
+		}
+	});
 }
 
 function createServProject(elm) {
@@ -196,4 +293,20 @@ function goToProject(elm) {
 			}
 		}
 	});
+}
+
+function getRefTestData(id){
+	var ref = ""
+	switch(id){
+		case "bpv":
+			ref = "<strong>Bovine Papillomavirus</strong> (8 averages, 100x100 pixels, <a href='http://dx.doi.org/10.1073/pnas.0914604107' style='color:firebrick;' target='_blank'>from Wolf,M. et al. (2010)</a>)"
+			break;
+		case "groel":
+			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. (2004)</a>)"
+			break;
+		case "ribosome":
+			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank</a>)"
+			break;
+	}
+	return ref;
 }
