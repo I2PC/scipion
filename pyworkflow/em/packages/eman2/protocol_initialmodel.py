@@ -130,7 +130,7 @@ class EmanProtInitModel(ProtInitialVolume):
         for k, volFn in enumerate(outputVols):
             vol = Volume()
             vol.setFileName(volFn)
-            vol.setObjComment('eman initial model %02d' % k)
+            vol.setObjComment('eman initial model %02d' % (k+1))
             volumes.append(vol)
 
         self._defineOutputs(outputVolumes=volumes)
