@@ -44,7 +44,7 @@ from xmipp3 import XmippMdRow
 
 
 class XmippProtRCT(ProtInitialVolume):
-    """ Computes from a set of projections/classes using RCT algorithm """
+    """Creates initial volumes by using a set of projections/classes from a tilted-pair picking process and using RCT algorithm"""
     _label = 'random conical tilt'
     
     def __init__(self, **args):
@@ -59,11 +59,11 @@ class XmippProtRCT(ProtInitialVolume):
         #TODO: Input can be either a SetOfParticles or a SetOfClasses2D
         form.addParam('inputParticlesTiltPair', PointerParam, label="Input particles tilt pair", important=True, 
                       pointerClass='ParticlesTiltPair',
-                      help='Select the input particles tilt pair from the project.')   
+                      help='Select the input particles tilt pair file that will be used.  file. This file is used to associate each micrograph with its tilted equivalent.')
         
         form.addParam('inputParticles', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfParticles,SetOfClasses',
-                      help='Select the input images or classes from the project.')    
+                      help='Select the input images or classes from the project.')
         
         form.addSection(label='Alignment parameters')
 
@@ -92,8 +92,8 @@ class XmippProtRCT(ProtInitialVolume):
                       'contribute to the reconstruction.')
         
         form.addParam('resoLowPassFilter', FloatParam, default=0.2,
-                      label='Resolution of the low-pass fitler (dig.freq)',
-                      help='Resolution of the low-pass fitler (dig.freq)')        
+                      label='Resolution of the low-pass filter (dig.freq)',
+                      help='Resolution of the low-pass filter (dig.freq)')        
 
         form.addParallelSection(mpi=2)
             
