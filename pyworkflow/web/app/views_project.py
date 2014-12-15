@@ -447,6 +447,20 @@ def create_service_project(request):
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protEmanInitVol)
         
+        # 2c. Significant 
+        protSignificant = project.newProtocol(XmippProtReconstructSignificant)
+        protSignificant.setObjLabel('xmipp - significant')
+        protSignificant.inputSet.set(protImport)
+        protSignificant.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protSignificant)
+        
+        # 2d. Prime 
+        protPrime = project.newProtocol(ProtPrime)
+        protPrime.setObjLabel('simple - prime')
+        protPrime.inputSet.set(protImport)
+        protPrime.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protPrime)
+        
         # 3. Join result volumes
         p1 = Pointer()
         p1.set(protRansac)
