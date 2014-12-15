@@ -185,7 +185,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         """
         for mic in self.inputMics:
             micFn = mic.getFileName()
-            micDir = self._getMicrographDir(mic) 
+            micDir = self._getMicrographDir(mic)
             yield (micFn, micDir, mic)  
     
     def _prepareCommand(self):
