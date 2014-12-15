@@ -39,7 +39,6 @@ import glob
 CLASSES = 0
 CLASS_CORES = 1
 CLASS_STABLE_CORES = 2   
-CLASS_CHOICES = ['Classes', 'Class Cores', 'Class Stable Cores']
 
 LEVEL_LAST = 0
 LEVEL_SEL = 1
@@ -59,6 +58,11 @@ class XmippCL2DViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
+        CLASS_CHOICES = ['Classes']
+        if self.protocol.doCore:
+            CLASS_CHOICES.append('Class Cores')
+            if self.protocol.doStableCore:
+                CLASS_CHOICES.append('Class Stable Cores')
         form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
                       label="What to show", default=CLASSES,
                       display=EnumParam.DISPLAY_LIST)

@@ -630,6 +630,11 @@ class TestXmippDenoiseParticles(TestXmippBase):
         cls.launchProtocol(cls.protCL2D)
     
     def test_denoiseparticles(self):
+        print ''
+        print '*****************************'
+        print '| ATTENTION: This part of the test may last for several minutes, building PCA basis for denoising is time expensive.'
+        print '*****************************'
+        print ''
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
         protDenoise.inputClasses.set(self.protCL2D.outputClasses)
@@ -655,6 +660,44 @@ class TestXmippApplyAlignment(TestXmippBase):
         self.assertIsNotNone(protApply.outputParticles, "There was a problem generating output particles")
         # Check that output particles do not have alignment information
         self.assertFalse(protApply.outputParticles.hasAlignment(), "Output particles should not have alignment information")
+
+#TODO: Check with JM if this test should go in here since it is not a Xmipp protocol.
+class TestAlignmentAssign(TestXmippBase):
+    """This class checks if the protocol Alignment Assign works properly"""
+    @classmethod
+    def setUpClass(cls):
+        # For alignment assign we need a set of particles without alignment 2D information and other set who has alignment information
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.align2D = cls.runCL2DAlign(cls.protImport.outputParticles)
+
+    def test_alignment_assign_samesize(self):
+        protAssign = self.newProtocol(ProtAlignmentAssign)
+        protAssign.setObjLabel("Assign alignment of same size")
+        protAssign.inputParticles.set(self.protImport.outputParticles)
+        protAssign.inputAlignment.set(self.align2D.outputParticles)
+        self.launchProtocol(protAssign)
+        # We check that protocol generates output
+        self.assertIsNotNone(protAssign.outputParticles, "There was a problem generating output particles")
+        # Check that output particles do not have alignment information
+        self.assertTrue(protAssign.outputParticles.hasAlignment(), "Output particles should have alignment information")
+
+    def test_alignment_assign_othersize(self):
+        protResize = self.newProtocol(XmippProtCropResizeParticles,
+                                      doResize=True,
+                                      resizeOption=xrh.RESIZE_DIMENSIONS,
+                                      resizeDim=50)
+        protResize.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(protResize)
+        protAssign = self.newProtocol(ProtAlignmentAssign)
+        protAssign.setObjLabel("Assign alignment of different size")
+        protAssign.inputParticles.set(protResize.outputParticles)
+        protAssign.inputAlignment.set(self.align2D.outputParticles)
+        self.launchProtocol(protAssign)
+        # We check that protocol generates output
+        self.assertIsNotNone(protAssign.outputParticles, "There was a problem generating output particles")
+        #TODO: Add an assert to check that sampling rate and alignment matrix is ok
 
 class TestXmippRotSpectra(TestXmippBase):
     """This class check if the protocol to calculate the rotational spectra from particles in Xmipp works properly."""

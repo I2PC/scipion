@@ -111,7 +111,11 @@ boost_headers_only = env.ManualInstall(
          'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
     default=False)
 
-
+swig = env.AddLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    flags=['--without-pcre'],
+    default=False)
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -259,7 +263,7 @@ env.AddPackage('pytom',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
                               % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
-               deps=[boost_headers_only],
+               deps=[boost_headers_only, fftw, swig],
                default=False)
 
 env.AddPackage('relion',
