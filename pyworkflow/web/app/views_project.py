@@ -486,7 +486,7 @@ def create_service_project(request):
 #         project.saveProtocol(protJoin)
         
         protJoin = project.newProtocol(XmippProtAlignVolume)
-        protJoin.setObjLabel('merge all volumes')
+        protJoin.setObjLabel('align volumes')
         protJoin.inputVolumes.append(p1)
         protJoin.inputVolumes.append(p2)
         protJoin.inputVolumes.append(p3)
