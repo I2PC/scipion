@@ -164,7 +164,6 @@ class ProtPrime(em.ProtInitialVolume):
         
         if self.Nvolumes == 1:
             vol = em.Volume()
-            print "Adding ",self._getExtraPath('recvol_state1_iter%d.spi' % lastIter)
             vol.setLocation(self._getExtraPath('recvol_state1_iter%d.spi' % lastIter))
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
             self._defineOutputs(outputVol=vol)
@@ -172,7 +171,6 @@ class ProtPrime(em.ProtInitialVolume):
             vol = self._createSetOfVolumes()
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
             fnVolumes=glob(self._getExtraPath('recvol_state*_iter%d.spi') % lastIter)
-            print "Adding ",self._getExtraPath('recvol_state*_iter%d.spi' % lastIter)
             fnVolumes.sort()
             for fnVolume in fnVolumes:
                 aux=em.Volume()
