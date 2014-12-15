@@ -86,5 +86,37 @@ class TestGroel(tests.BaseTest):
         self.launchProtocol(protEmanInitVol)
       
         
+class TestSignificant(tests.BaseTest):
+    """ Test only significant execution with BPV virus. """
+    
+    @classmethod
+    def setUpClass(cls):    
+        # Create a new project
+        tests.setupTestProject(cls)
+        cls.ds = tests.DataSet.getDataSet('initial_volume')
+    
+    def test_significant(self):
+        """ Run an Import particles protocol. """
+        cpus = os.environ.get('SCIPION_TEST_CPU', 4)
+        # 1. Run import of averages
+        avg = self.ds.getFile('bpv')
+        sym = 'i3'
         
+        protImport = self.newProtocol(em.ProtImportAverages, 
+                                      filesPath=avg, 
+                                      samplingRate=1)
+        self.launchProtocol(protImport)
+        
+        args = {'symmetryGroup': 'i3',
+                'iter': 3,
+                'numberOfMpi': cpus,
+                'inputClasses': protImport.outputAverages
+                }
+        # 2. Run initial models
+        # 2a. Ransac 
+        protSignificant = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
+            objLabel='significant i1 vol=1', **args
+            )
+        #protSignificant.inputClasses.set(protImport.outputAverages)
+        self.launchProtocol(protSignificant)
         
