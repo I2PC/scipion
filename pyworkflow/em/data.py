@@ -1102,7 +1102,6 @@ class Transform(EMObject):
         
     def scaleShifts2D(self, factor):
         m = self.getMatrix()
-        m *= factor
         m[0, 3] *= factor
         m[1, 3] *= factor
 
