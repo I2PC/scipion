@@ -126,8 +126,8 @@ class EmanProtInitModel(ProtInitialVolume):
             volumes.setSamplingRate(self.inputSet.get().getSamplingRate())
         
         outputVols = glob(self._getExtraPath('initial_models/model_??_??.hdf'))
-        for k in range(self.numberOfModels.get()):
-            volFn = outputVols[k]
+        outputVols.sort()
+        for k, volFn in enumerate(outputVols):
             vol = Volume()
             vol.setFileName(volFn)
             vol.setObjComment('eman initial model %02d' % k)
