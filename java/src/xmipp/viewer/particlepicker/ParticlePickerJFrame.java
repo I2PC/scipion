@@ -883,7 +883,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		getCanvas().repaint();
 		getParticlePicker().setSize(size);
                 updateMicrographsModel();
-                loadParticles(true);
+                if(particlesdialog != null)
+                    loadParticles(true);
 		getParticlePicker().saveConfig();
 	}
 
