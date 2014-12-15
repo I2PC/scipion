@@ -281,6 +281,12 @@ env.AddPackage('spider',
 env.AddPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
+
+
+env.AddPackage('simple',
+               tar='simple2.tgz',
+               default=False)
+
 # This last one already contains the binary.
 
 
