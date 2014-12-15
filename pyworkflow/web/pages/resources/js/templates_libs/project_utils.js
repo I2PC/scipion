@@ -68,7 +68,6 @@ function createProject(elm) {
 		success : function() {
 			var URL2 = getSubDomainURL() + "/project_content/?projectName="+projName
 			window.location.href = URL2;
-//			window.location.href = "/projects/";
 		}
 	});
 }
@@ -76,7 +75,6 @@ function createProject(elm) {
 function deleteProjectForm(projName, title, dialog) {
 	var title = 'Confirm DELETE project ' + projName 
 	var msg = "<td class='content' value='"	+ projName +"'>"
-//			+ "Project <strong>" + projName + "</strong>"
 			+ dialog 
 			+ "</td>";
 			
@@ -148,7 +146,7 @@ function serviceTestDataForm(){
 	var ico2 = 'fa-download';
 	var funcName2 = 'downloadTestdata';
 	
-	accessPopupOpt(title, dialog, 
+	accessPopup2opt(title, dialog, 
 					 btn1, ico1, funcName1, 
 					 btn2, ico2, funcName2, 
 					 "Cancel")
@@ -174,29 +172,6 @@ function goExampleForm(){
 	
 	accessPopup(title, dialog, 'getProjExample', 'Go to project', 'Cancel');
 		
-//	dialog += '<div id="exProjects">';
-//	dialog += "<p>Click over the <strong>example project</strong> to visit it:</p><br />";
-//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(1);" style="color:firebrick;">·&nbsp;Groel data project</a>';
-//	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
-//	dialog += '<br />';
-//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(2);" style="color:firebrick;">·&nbsp;BPV project</a>';
-//	dialog += '&nbsp;&nbsp;' + getRefTestData("bpv");
-//	dialog += '<br />';
-//	dialog += '&nbsp;&nbsp;&nbsp;<a href="javascript:getProjExample(3);" style="color:firebrick;">·&nbsp;Ribosome project</a>';
-//	dialog += '&nbsp;&nbsp;' + getRefTestData("ribosome");
-//	dialog += '<br />';
-//	dialog += "</div>";
-	
-//	new Messi(dialog, {
-//		title : title,
-//		modal : true,
-//		buttons : [ {
-//			id : 0,
-//			label : 'Close',
-//			val : 'X',
-//			btnClass : 'fa-times'
-//		} ]
-//	});
 }
 
 function getProjExample(elm){

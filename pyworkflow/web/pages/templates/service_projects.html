@@ -66,23 +66,15 @@ div#box {
 }
 
 div#minibox {
-/* 	width: 10em; */
-/* 	height: 5em;  */
 	width:90%;
 	padding: 1em; 
 	background-color: white;
 	border: 1px solid black;
 	border-radius: 5px;
-/* 	font-size: 0.7em; */
 	display: inline-table;
 	margin: 1em ;
 }
 
-/* div#minibox:hover{ */
-/*     background-color:firebrick; */
-/*     color: white; */
-/*     border: 1px solid white; */
-/* } */
 
 h1 {
 	font-size: 57px;
@@ -96,24 +88,33 @@ h1, h2, h3 {
 
 img.ico{
     background-color:white;
-/*     padding:0.5em; */
-/*     border-radius:50%; */
 }
 
-#steps{
-/* 	float:left; */
- 	width:72%; 
+div#steps{
 	text-align:left;
+/* 	float:left;  */
+	width:100%;
 }
 
 #buttons{
-	float:right;
-	width:auto;
+ 	float:right;
+/* 	width:auto; */
+}
+
+#textbtn{
+/* 	float:left; */
+	width:60%;
+}
+
+#lineOpt{
+	width:100%; 
+	display: flex;
+/* 	text-align: left; */
 }
 
 .btn{
 	width:10em;
-	}
+}
 
 </style>
 
@@ -158,77 +159,82 @@ img.ico{
 			</a>before to use this tool.
 			</h3>
 			
-			
 		    <div id="minibox">
-		    	<div style="text-align:left;float:left; width:72%;">
+		    	<div id="steps">
 			    	<h2>
 			    		<strong>
-			    			<img class="ico" src="/resources/favicon.png" style="width:auto;height:17px;"/>
-				    		First Step: Your project
+				    		Choose your project
 			    		</strong>
 		    		</h2>
-		    		<h3>
-			    		Create a new project (or go to a previous one)
-			    	</h3>
 		    	</div>
-			    <div id="buttons">
-					<!-- CREATE NEW PROJECT --> 
-					<a href="javascript:serviceProjForm();">
-						<button class="btn buttonRed" type="button">Create
-							project</button>
-					</a>
-					<br /><br />
-					<!-- GO TO YOUR PROJECT -->
-					<a href="javascript:goToProjectForm();">
-						<button class="btn buttonGrey" type="button">Go to 
-							project</button>
-					</a>
+		    	<br />
+		    	<div id="lineOpt">
+				    <h3 id="textbtn">
+			    		Create an empty project
+				    </h3>
+				    <span id="buttons">	
+						<!-- CREATE NEW PROJECT --> 
+						<a href="javascript:serviceProjForm();">
+							<button class="btn buttonRed" type="button">
+								Create
+							</button>
+						</a>
+					</span>
+				</div>
+				<br />
+				<div id="lineOpt">
+				    <h3 id="textbtn">
+				    		Resume existing project
+			    	</h3>
+					<span id="buttons">
+						<!-- GO TO YOUR PROJECT -->
+						<a href="javascript:goToProjectForm();">
+							<button class="btn buttonRed" type="button">
+								Resume
+							</button>
+						</a>
+					</span>
 				</div>
 		    </div>
 		    
 		    <div id="minibox">
-		    	<div style="text-align:left;float:left; width:72%;">
+		    	<div id="steps">
 			    	<h2>
 			    		<strong>
-					    	<img class="ico" src="/resources/fa-folder-open.png"/>
-				    		Second Step: Using data
+				    		Example project
 			    		</strong>
 		    		</h2>
-		    		<h3>
-				    	Upload binary image stack file and import this averages into the Project.
+		    	</div>
+		    	<br />
+		    	<div id="lineOpt">
+			    	<h3 id="textbtn">
+					    	Create a project with test data 
 		    		</h3>
-		    	</div>
-		    	<div id="buttons">
-			    	<!-- TEST DATA -->
-					<a href="javascript:serviceTestDataForm();">
-						<button class="btn buttonRed" type="button">
-							Test data
-						</button>
-					</a>
+			    	<span id="buttons">
+				    	<!-- TEST DATA -->
+						<a href="javascript:serviceTestDataForm();">
+							<button class="btn buttonRed" type="button">
+								Test data
+							</button>
+						</a>
+					</span>
+				</div>
+				<br />
+				<div id="lineOpt">	
+			    	<h3 id="textbtn">	
+				    	Explore project with test data (read-only)
+			    	</h3>
+			    	<span id="buttons">	
+						<!-- EXAMPLE PROJECT -->
+						<a href="javascript:goExampleForm();">
+							<button class="btn buttonRed" type="button">
+								Explore
+							</button>
+						</a>
+					</span>
 				</div>
 		    </div>
 		    
-		    <div id="minibox">
-		    	<div style="text-align:left;float:left; width:72%;">
-			    	<h2>
-			    		<strong>
-			    			<img class="ico" src="/resources/fa-cog.png"/>
-				    		Final Step: Running
-			    		</strong>
-		    		</h2>
-			    	<h3>
-			    		Run different initial volumes methods. After you can compare and download the results.
-			    	</h3>
-		    	</div>
-		    	<div id="buttons">
-					<!-- EXAMPLE PROJECT -->
-					<a href="javascript:goExampleForm();">
-						<button class="btn buttonRed" type="button">
-							Test projects
-						</button>
-					</a>
-				</div>
-		    </div>
 		
 		</div>
 		<div style="text-align:center; font-size: 0.8em;">
