@@ -451,15 +451,15 @@ def create_service_project(request):
         # 2c. Significant 
         protSignificant = project.newProtocol(XmippProtReconstructSignificant)
         protSignificant.setObjLabel('xmipp - significant')
-        protSignificant.inputSet.set(protImport)
-        protSignificant.inputSet.setExtendedAttribute('outputAverages')
+        protSignificant.inputClasses.set(protImport)
+        protSignificant.inputClasses.setExtendedAttribute('outputAverages')
         project.saveProtocol(protSignificant)
         
         # 2d. Prime 
         protPrime = project.newProtocol(ProtPrime)
         protPrime.setObjLabel('simple - prime')
-        protPrime.inputSet.set(protImport)
-        protPrime.inputSet.setExtendedAttribute('outputAverages')
+        protPrime.inputClasses.set(protImport)
+        protPrime.inputClasses.setExtendedAttribute('outputAverages')
         project.saveProtocol(protPrime)
         
         # 3. Join result volumes
