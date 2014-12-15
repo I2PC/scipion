@@ -39,6 +39,9 @@ public class ImageGeneric {
     public final static int X_POS = 5;  // Align X axis to Z axis, rotating 90 degrees around Y axis");
 
     public final static int VIEWS[] = {Z_NEG, Y_NEG, X_NEG, Y_POS, X_POS };
+
+    
+    
     // Associated filename.
     private String filename;
     private boolean useLogarithm = true;   // To convert PSD images.
@@ -317,6 +320,8 @@ public class ImageGeneric {
          */
         public native void applyGeoMatrix(String matrixString, boolean wrap);
         
-        
+        public static native void getStatsOnImages(MDRow[] imagesmd, ImageGeneric imgAvg, ImageGeneric imgStd, boolean useGeo, int renderLabel) ;
+
+        public static native void getPCABasis(MDRow[] imagesmd, ImageGeneric result, int renderLabel);
     
 }

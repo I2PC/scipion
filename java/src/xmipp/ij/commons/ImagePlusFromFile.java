@@ -34,8 +34,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
             this(fileName);
             this.imp = imp;
             this.ig = ig;
-            
-            
         }
         
        

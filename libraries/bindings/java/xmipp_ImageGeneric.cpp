@@ -1121,15 +1121,29 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getStatsOnImages
 		{
 			 row = *GET_INTERNAL_MDROW(env->GetObjectArrayElement(jimages, i));
 			 images.push_back(row);
+
 		}
         ImageGeneric *avg = GET_INTERNAL_IMAGE_GENERIC(jimageAvg);
         ImageGeneric *std = GET_INTERNAL_IMAGE_GENERIC(jimageStd);
+        avg->setDatatype(DT_Double);
+        std->setDatatype(DT_Double);
 
         Image<double> * imgAvg = (Image<double>*)avg->image;
         Image<double> * imgStd = (Image<double>*)std->image;
-        double dum;
 
-        getStatistics(images, *imgAvg, *imgStd, dum, dum, applyGeo, (MDLabel)label);
+        getStatistics(images, *imgAvg, *imgStd, applyGeo, (MDLabel)label);
+    }
+    XMIPP_JAVA_CATCH;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPCABasis
+(JNIEnv *env, jclass jigclass, jobjectArray jimages,
+ jobject jimage, jint label)
+{
+    XMIPP_JAVA_TRY
+    {
+
+
     }
     XMIPP_JAVA_CATCH;
 }

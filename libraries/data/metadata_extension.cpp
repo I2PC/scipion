@@ -69,11 +69,9 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
 
 /*----------   Statistics --------------------------------------- */
 
-void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo, MDLabel image_label)
+void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
 {
-    _min = MAXDOUBLE;
-    _max = -MAXDOUBLE;
+
     bool first = true;
     int n = 0;
 
@@ -82,7 +80,7 @@ void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<dou
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images.");
 
     Image<double> image, tmpImg;
-    double min=0, max=0, avg, stddev;
+
     FileName fnImg;
     for (size_t i=0;i<MD.size();i++)
     {
@@ -91,11 +89,7 @@ void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<dou
             image.readApplyGeo(fnImg, MD[i]);
         else
             image.read(fnImg);
-        image().computeStats(avg, stddev, min, max);
-        if (min < _min)
-            _min = min;
-        if (max > _max)
-            _max = max;
+
         if (first)
         {
             _ave = image;
@@ -115,7 +109,7 @@ void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<dou
     // Calculate SD
     for (size_t i=0;i<MD.size();i++)
     {
-    	MD[i].getValue(image_label,fnImg);
+    	MD[i].getValue(image_label, fnImg);
         if (apply_geo)
             image.readApplyGeo(fnImg, MD[i]);
         else

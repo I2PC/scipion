@@ -348,6 +348,10 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getStatsOnImages
 (JNIEnv *env, jclass, jobjectArray,
  jobject , jobject , jboolean , jint);
 
+JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPCABasis
+(JNIEnv *env, jclass, jobjectArray,
+ jobject , jint);
+
 #ifdef __cplusplus
 }
 #endif

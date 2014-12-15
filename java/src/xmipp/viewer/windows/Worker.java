@@ -7,6 +7,7 @@
 package xmipp.viewer.windows;
 
 import ij.ImagePlus;
+import java.util.ArrayList;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippImageWindow;
@@ -15,10 +16,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.scipion.ScipionGalleryData;
-import xmipp.viewer.scipion.ScipionGalleryJFrame;
 
 /**
  *
@@ -32,22 +30,17 @@ public class Worker implements Runnable
 		public String message;
 		/** Constructor selecting operation */
 		private int op; // store operation
-		private MetaData imagesmd;
+		private MDRow[] imagesmd;
                 private GalleryJFrame frame = null;
-                private int renderLabel;
 
 		public Worker(int operation, MetaData md, GalleryJFrame frame)
 		{
                         this.frame = frame;
                         
 			op = operation;
-                        renderLabel = frame.data.getRenderLabel();
-                        if(frame.data instanceof ScipionGalleryData)
-                            renderLabel = getFirstXmippRenderLabel(md);
+                        imagesmd = frame.data.getImagesMd(md);
                         
-
-                        imagesmd = getImagesMd(md, renderLabel);
-			if (imagesmd.findObjects().length == 0)
+			if (imagesmd.length == 0)
 				throw new IllegalArgumentException("No images available");
                         
 		}
@@ -68,7 +61,6 @@ public class Worker implements Runnable
 					fsc();
 					break;
 				}
-				imagesmd.destroy();
 			}
 			catch (Exception e)
 			{
@@ -99,7 +91,7 @@ public class Worker implements Runnable
                         ImageGeneric imgAvg = new ImageGeneric();
                         ImageGeneric imgStd = new ImageGeneric();
 
-                        imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), renderLabel);
+                        ImageGeneric.getStatsOnImages(imagesmd, imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
                         ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
                         ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
                         imgAvg.destroy();
@@ -112,65 +104,49 @@ public class Worker implements Runnable
 
                         XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, frame);
                         winStd.setVisible(true);
-                        imagesmd.destroy();
                 }
 
                 public void pca() throws Exception
                 {
                         ImageGeneric image = new ImageGeneric();
-                        imagesmd.getPCAbasis(image, renderLabel);
+                        ImageGeneric.getPCABasis(imagesmd, image, MDLabel.MDL_IMAGE);
                         ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
                         imp.setTitle("PCA: " + frame.data.getFileName());
                         ImagesWindowFactory.openXmippImageWindow(frame, imp, false);
-                        imagesmd.destroy();
 
                 }
 
                 public void fsc() throws Exception
                 {
-                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
-                        XmippWindowUtil.centerWindows(fscframe, frame);
-                        fscframe.setVisible(true);
+//                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
+//                        XmippWindowUtil.centerWindows(fscframe, frame);
+//                        fscframe.setVisible(true);
                 }
                 
-                public int getFirstXmippRenderLabel(MetaData xmippmd) {
-                    
-                    int[] labels = xmippmd.getActiveLabels();
-                    for(int i = 0; i < labels.length; i ++)
-                        if(MetaData.isImage(labels[i]))
-                        {
-                            return labels[i];
-                        }
-                    throw new IllegalArgumentException(XmippMessage.getEmptyFieldMsg("Xmipp render label"));
-                }
+               
                 
                 
-                public MetaData getImagesMd(MetaData md, int idlabel) {
+                public MDRow[] getImagesMd(MetaData md, int idlabel) {
                     
-                    MDRow mdRow = new MDRow();
-                    MetaData imagesmd = new MetaData();
+                    MDRow mdRow;
+                    ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
                     int index = 0;
                     String imagepath;
-                    long id2;
                     for (long id : md.findObjects()) {
                         if (frame.data.isEnabled(index)) {
                             imagepath = md.getValueString(idlabel, id, true);
                             System.out.println(imagepath);
                             if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                                id2 = imagesmd.addObject();
-                                if (frame.data.useGeo()) {
-                                    md.getRow(mdRow, id);
-                                    mdRow.setValueString(idlabel, imagepath);
-                                    imagesmd.setRow(mdRow, id2);
-                                } else {
-                                    imagesmd.setValueString(idlabel, imagepath, id2);
-                                }
+                                mdRow = new MDRow();
+                                if (frame.data.useGeo()) 
+                                    md.getRow(mdRow, id);//copy geo info in mdRow
+                                mdRow.setValueString(idlabel, imagepath);
+                                imagesmd.add(mdRow);
                             }
                         }
                         index++;
                     }
-                    mdRow.destroy();
-                    return imagesmd;
+                    return imagesmd.toArray(new MDRow[]{});
                 }
 
 	}

@@ -29,8 +29,7 @@
  * Note that the mean and stddev are images, not values.*/
 void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label=MDL_IMAGE);
 
-void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo, MDLabel image_label);
+void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label);
 
 /** Get the average of a Metadata applying the header.
  * The MD is not cleaned from disabled images (this option makes the call faster).

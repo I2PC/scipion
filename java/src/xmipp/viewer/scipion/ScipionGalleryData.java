@@ -9,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -18,6 +19,9 @@ import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
+import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
@@ -25,6 +29,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.scipion.ScipionMetaData.EMObject;
 
 /**
  *
@@ -280,17 +285,23 @@ public class ScipionGalleryData extends GalleryData {
         }
     }
     
+    public ColumnInfo getGeoMatrixColumn()
+    {
+        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
+        return getColumnInfo(column);
+    }
+    
     
     public Geometry getGeometry(long id)
-        {
-            if (!containsGeometryInfo()) 
-                return null;
-            ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-
-            String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
-            String matrix = (String)emo.getValue(column);
-            return new Geometry(matrix);
-        }
+    {
+        if (!containsGeometryInfo()) 
+            return null;
+        ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
+        ColumnInfo column = getGeoMatrixColumn();
+        
+        String matrix = (String)emo.getValue(column);
+        return new Geometry(matrix);
+    }
 
     public int getEnabledCount() {
         return ((ScipionMetaData)md).getEnabledCount();
@@ -415,7 +426,32 @@ public class ScipionGalleryData extends GalleryData {
     
     
     
-    
+    public MDRow[] getImagesMd(MetaData md) {
+                    
+            MDRow mdRow;
+            ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
+            int index = 0;
+            String imagepath;
+            EMObject emo;
+            for (long id : md.findObjects()) {
+                if (isEnabled(index)) {
+                    imagepath = md.getValueString(getRenderLabel(), id, true);
+                    if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                        mdRow = new MDRow();
+                        if (useGeo()) 
+                        {
+                            emo = ((ScipionMetaData)md).getEMObject(id);
+                            mdRow.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, emo.getValueString(getGeoMatrixColumn()));//copy geo info in mdRow
+                        }
+                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
+                        imagesmd.add(mdRow);
+                    }
+                }
+                index++;
+            }
+            return imagesmd.toArray(new MDRow[]{});
+        
+    }
     
 
     
