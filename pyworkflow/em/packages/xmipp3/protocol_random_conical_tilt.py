@@ -317,5 +317,17 @@ class XmippProtRCT(ProtInitialVolume):
         return summary
         
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        methods = []
+        if not hasattr(self, 'outputVolumes'):
+            summary.append("Output volumes not ready yet.")
+        else:
+            inputIsString = ''
+            if isinstance(self.inputParticles.get(), SetOfParticles):
+                methods.append('A set of %d particles was employed to create an initial volume using RCT method.' % len(self.inputParticles.get()))
+            else:
+                particlesArray = [len(s) for s in self.inputParticles.get()]
+                particlesArrayString = String(particlesArray)
+                methods.append('A set of %d classes was employed to create %d initial volumes using RCT method. ' % (len(self.inputParticles.get()), len(self.inputParticles.get())))
+                methods.append('For each initial volume were used respectively %s particles' % particlesArrayString)
+        return methods
             
