@@ -396,7 +396,7 @@ def create_service_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolume
         from pyworkflow.em.packages.eman2 import EmanProtInitModel
         from pyworkflow.em.packages.simple import ProtPrime
         
@@ -471,10 +471,26 @@ def create_service_project(request):
         p2.set(protEmanInitVol)
         p2.setExtendedAttribute('outputVolumes')
         
-        protJoin = project.newProtocol(ProtUnionSet)
+        p3 = Pointer()
+        p3.set(protSignificant)
+        p3.setExtendedAttribute('outputVolumes')
+        
+        p4 = Pointer()
+        p4.set(ProtPrime)
+        p4.setExtendedAttribute('outputVolumes')
+        
+#         protJoin = project.newProtocol(ProtUnionSet)
+#         protJoin.setObjLabel('merge all volumes')
+#         protJoin.inputSets.append(p1)
+#         protJoin.inputSets.append(p2)
+#         project.saveProtocol(protJoin)
+        
+        protJoin = project.newProtocol(XmippProtAlignVolume)
         protJoin.setObjLabel('merge all volumes')
         protJoin.inputSets.append(p1)
         protJoin.inputSets.append(p2)
+        protJoin.inputSets.append(p3)
+        protJoin.inputSets.append(p4)
         project.saveProtocol(protJoin)
         
         
