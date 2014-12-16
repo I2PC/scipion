@@ -1263,10 +1263,12 @@ class FormWindow(Window):
                 if not onlySave:
                     self.close()
         except Exception, ex:
+            import traceback
+            traceStr = traceback.format_exc()
             action = "EXECUTE"
             if onlySave:
                 action = "SAVE"
-            self.showError("Error during %s: %s" % (action, ex))
+            self.showError("Error during %s: %s\n\nTraceback:\n%s" % (action, ex, traceStr))
     
     
     def getWidgetValue(self, protVar, param):
