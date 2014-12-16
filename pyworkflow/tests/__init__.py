@@ -63,7 +63,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'rctMicsU': 'rct/micrographs/*U.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
-               'vol3': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_2_iter_002.mrc',
                'volumes': 'volumes/*.mrc',
                })
 
