@@ -243,8 +243,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         return ['Sorzano2015']
     
     def _methods(self):
-        retval=[]
-        if self.inputClasses.hasValue():
+        retval = ""
+        if self.inputClasses.get() is not None:
             retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
                self.inputClasses.get().getNameId()
             if self.thereisRefVolume:

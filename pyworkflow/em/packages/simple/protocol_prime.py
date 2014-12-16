@@ -191,7 +191,7 @@ class ProtPrime(em.ProtInitialVolume):
         return ['Elmlund2013']
     
     def _methods(self):
-        if self.inputClasses.hasValue():
+        if self.inputClasses.get() is not None:
             retval="We used *simple_prime* program [Elmlund2013] to produce an initial volume from the set of classes %s."
             return [retval % self.inputClasses.get().getNameId()]
         else:
