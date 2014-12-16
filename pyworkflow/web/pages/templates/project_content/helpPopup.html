@@ -1,85 +1,100 @@
 <script type="text/javascript">
 	jQuery(function($) {
 		launchHelp();
-		var html = '<span id="helpTool">' +
-		'<a href="javascript:launchHelp();"><i class="fa fa-question-circle" style="margin-right:5px"></i>Help</a>' +
-		'</span>'
+		var html = '<span id="helpTool">'
+				+ '<a href="javascript:launchHelp();"><i class="fa fa-question-circle" style="margin-right:5px"></i>Help</a>'
+				+ '</span>'
 		$("span#toolbar").append(html)
 	});
 
-	function launchHelp(){
-		$("#dialog").dialog({resizable: false,
-							 position:['right','50%'],
-							 height: '400',
-							 width: '500'
-							 });
+	function launchHelp() {
+		$("#dialog").dialog({
+			resizable : false,
+			position : [ 'right', '50%' ],
+			height : '400',
+			width : '500'
+		});
 	}
 </script>
 
-<div id="dialog" title="Let's start!" style="font-size:0.9em;">
-  <div id="contentDialog">
-	  <div id="step1">
-		  <p>
-		  	<strong>Step 1:</strong> 
-		  	Upload and import your files to the web service clicking in the graph at left on the box "Import Averages".
-		  </p> 
-		  <br />
-		  <p style="text-align:center;">
-		  	<img src="{{importAverages}}"/>
-		  </p> 
-	  </div>
-	  
-	  <br />
-	  
-	    <div id="step2">
-		  <p>
-		  	<strong>Step 2:</strong> 
-		  	Select a protocol, "Ransac" or "Eman Initial Volume", to use with your averages.
-	  	  </p> 
-	  	  <br />
-		  <p style="text-align:center;">
-		  	<img src="{{useProtocols}}"/>
-		  </p> 
-		  <br />
-		  <p>
-		  	The parameters can be customized to get the best results. If you need more options, just change the "Expert Level" to show the advanced options.
-	  	  </p> 
-	  	  <br />
-	  	  <p style="text-align:center;">
-		  	<img src="{{protForm}}"/>
-		  </p> 
-		  <br />
-		  <p>
-		  	Finally press "Execute"!
-	  	  </p> 
-	  </div>
-	  
-	  <br />
-	  
-	  <div id="step3">
-		  <p>
-		  	<strong>Step 3:</strong> 
-	  		When the protocol is finished you can see a summary about the protocol at the bottom.
-	  	  </p> 
-	  	  <br />
-		  <p style="text-align:center;">
-		  	<img src="{{summary}}"/>
-		  </p> 
-		  <br />
-		  <p>
-	  		There you can visualize the objects by clicking over the names.
-	  	  </p> 
-	  	  <br />
-	  	  <p style="text-align:center;">
-		  	<img src="{{showj}}"/>
-		  </p> 
-		  <br />
-	  </div>
-	  	  <div id="step4">
-			  <p>
-			  	<strong>Step 4:</strong> 
-		  		You can download your results using the button <img src="{{download}}" style="height:1.5em;width:auto;"/> at the bottom of the page after mark or select an execution.
-		  	  </p> 
-	     </div>
+<div id="dialog" title="Let's start!" style="font-size: 0.9em;">
+	<div id="contentDialog">
+
+		<div id="step1">
+			<p>
+				<strong>Step 1:</strong> Upload and import your files to the web
+				service clicking in the graph at left on the box <strong>Import Averages</strong>.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{importAverages}}" />
+			</p>
+		</div>
+
+		<br />
+
+		<div id="step2">
+			<p>
+				<strong>Step 2:</strong> Select a protocol to use with your
+				averages. You can choose between <strong>RANSAC</strong>, <strong>EMAN
+					initial volume</strong>, <strong>Significant</strong> and <strong>Prime</strong>.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{useProtocols}}" />
+			</p>
+			<br />
+			<p>The parameters can be customized to get the best results. If
+				you need more options, just change the <strong>Expert Level</strong> to show the
+				advanced options.</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{protForm}}" />
+			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
+		</div>
+
+		<br />
+
+		<div id="step3">
+			<p>
+				<strong>Step 3:</strong> When the protocol is finished you can see a
+				<strong>summary</strong> about the protocol at the bottom.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{summary}}" />
+			</p>
+			<br />
+			<p>There you can visualize the objects by clicking over the
+				names.</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{showj}}" />
+			</p>
+			<br />
+		</div>
+
+		<br />
+
+		<div id="step4">
+			<p>
+				<strong>Step 4:</strong> After execute more runs you can join and align 
+				the volumes generated to visualize all the set using the <strong>align volumes</strong> box.
+			</p>
+			<br />
+			<p style="text-align: center;">
+				<img src="{{alignVol}}" />
+			</p>
+		</div>
+		<br />
+		<div id="step5">
+			<p>
+				<strong>Step 5:</strong> You can download your results using the
+				button <img src="{{download}}" style="height: 1.5em; width: auto;" />
+				at the bottom of the page after mark or select an execution.
+			</p>
+		</div>
 	</div>
 </div>

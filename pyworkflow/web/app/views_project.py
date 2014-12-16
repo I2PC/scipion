@@ -227,6 +227,7 @@ def service_content(request):
                     'protForm': getResourceIcon('protForm'),
                     'summary': getResourceIcon('summary'),
                     'showj': getResourceIcon('showj'),
+                    'alignVol': getResourceIcon('alignVol'),
                     'download': getResourceIcon('download'),
                     'mode':'service',
                     })
