@@ -28,7 +28,7 @@
 This sub-package contains protocols for creating masks.
 """
 
-from pyworkflow.protocol.params import IntParam, EnumParam, FloatParam
+from pyworkflow.protocol.params import IntParam, EnumParam, FloatParam, BooleanParam
 from ..constants import *
 
 
@@ -180,7 +180,10 @@ class XmippGeometricalMask2D:
         form.addParam('sigma', FloatParam, default=-1, condition='geo==%d and %s' % (MASK2D_GAUSSIAN,isGeometry),
                       label="Sigma (px)", help="Gaussian sigma in pixels. If -1, sigma will be MaskSize/6")                
         form.addParam('borderDecay', IntParam, default=0, condition='geo==%d and %s' % (MASK2D_RAISED_CROWN,isGeometry),
-                      label="Border decay (px)", help="This is the fall-off of the two borders of the crown")        
+                      label="Border decay (px)", help="This is the fall-off of the two borders of the crown")
+        form.addParam('shiftCenter', BooleanParam, default=False, label='Shift Center', help='Shift Mask Center to a new origin.')
+        form.addParam('centerX', IntParam, default=0, label='X center offset', condition='shiftCenter', help='New x center coordinate')
+        form.addParam('centerY', IntParam, default=0, label='Y center offset', condition='shiftCenter', help='New y center coordinate')
 
     def argsForTransformMask(self,size):
         # Create empty volume file with desired dimensions
@@ -218,6 +221,8 @@ class XmippGeometricalMask2D:
             args += 'raised_crown %d %d %d' % (iR, oR, self.borderDecay.get())               
         else:
             raise Exception("No valid mask type value %d" % geo)
+        if self.shiftCenter.get():
+            args += ' --center %d %d' % (self.centerX.get(), self.centerY.get()) 
         return args
     
     def summary(self):

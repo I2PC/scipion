@@ -67,6 +67,8 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
 
+overwriteConfs = False  # regenerate config files?
+
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
@@ -75,6 +77,8 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
     elif arg == '--menu':
         SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
+    elif arg == '--overwrite':
+        overwriteConfs = True
     else:
         sys.exit('Unknown argument: %s' % arg)
 
@@ -96,11 +100,11 @@ def createConf(fpath, ftemplate):
 #
 
 try:
-    if not exists(SCIPION_CONFIG):
+    if not exists(SCIPION_CONFIG) or overwriteConfs:
         sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_CONFIG)
         createConf(SCIPION_CONFIG, '%s/settings/scipion.conf' % SCIPION_HOME)
 
-    if not exists(SCIPION_MENU):
+    if not exists(SCIPION_MENU) or overwriteConfs:
         sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_MENU)
         createConf(SCIPION_MENU, '%s/settings/menu.conf' % SCIPION_HOME)
 
