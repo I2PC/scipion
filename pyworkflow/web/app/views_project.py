@@ -215,11 +215,27 @@ def formatProvider(provider, mode):
         
     return objs
 
-def project_content(request):        
+def project_content(request):
+    context = contentContext(request)
+    context.update({'mode': None})
+    return render_to_response('project_content/project_content.html', context)
+
+def service_content(request):
+    context = contentContext(request)
+    context.update({'importAverages': getResourceIcon('importAverages'),
+                    'useProtocols': getResourceIcon('useProtocols'),
+                    'protForm': getResourceIcon('protForm'),
+                    'summary': getResourceIcon('summary'),
+                    'showj': getResourceIcon('showj'),
+                    'download': getResourceIcon('download'),
+                    'mode':'service',
+                    })
+    return render_to_response('project_content/project_content.html', context)
+
+def contentContext(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
     
     projectName = request.GET.get('projectName', None)
-    mode = request.GET.get('mode', None)
     
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -254,7 +270,6 @@ def project_content(request):
     projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
-               'mode': mode,
                'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
@@ -278,24 +293,11 @@ def project_content(request):
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
-    
-    if mode == 'service':
-        context = service_context(context)
-    
+
     context = base_flex(request, context)
     
-    return render_to_response('project_content/project_content.html', context)
-
-def service_context(context):
-    context.update({'importAverages': getResourceIcon('importAverages'),
-                    'useProtocols': getResourceIcon('useProtocols'),
-                    'protForm': getResourceIcon('protForm'),
-                    'summary': getResourceIcon('summary'),
-                    'showj': getResourceIcon('showj'),
-                    'download': getResourceIcon('download'),
-                    })
     return context
-
+    
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
@@ -475,22 +477,16 @@ def create_service_project(request):
         p3.set(protSignificant)
         p3.setExtendedAttribute('outputVolumes')
         
-        p4 = Pointer()
-        p4.set(ProtPrime)
-        p4.setExtendedAttribute('outputVolumes')
-        
-#         protJoin = project.newProtocol(ProtUnionSet)
-#         protJoin.setObjLabel('merge all volumes')
-#         protJoin.inputSets.append(p1)
-#         protJoin.inputSets.append(p2)
-#         project.saveProtocol(protJoin)
+#         p4 = Pointer()
+#         p4.set(ProtPrime)
+#         p4.setExtendedAttribute('outputVolumes')
         
         protJoin = project.newProtocol(XmippProtAlignVolume)
         protJoin.setObjLabel('align volumes')
         protJoin.inputVolumes.append(p1)
         protJoin.inputVolumes.append(p2)
         protJoin.inputVolumes.append(p3)
-        protJoin.inputVolumes.append(p4)
+#         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
         

@@ -26,6 +26,7 @@ urlpatterns = patterns('',
     url(r'^check_project_id/$', 'app.views_project.check_project_id'),
     url(r'^create_service_project/$', 'app.views_project.create_service_project'),
     url(r'^get_testdata/$', 'app.views_project.get_testdata'),
+    url(r'^service_content/$', 'app.views_project.service_content'),
 
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),

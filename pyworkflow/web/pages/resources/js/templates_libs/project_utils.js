@@ -178,13 +178,13 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "groel":
-			var url = "/project_content/?projectName=GroelTestData&mode=service";
+			var url = "/service_content/?projectName=GroelTestData";
 			break;
 		case "bpv":
-			var url ="/project_content/?projectName=BpvTestData&mode=service";
+			var url ="/service_content/?projectName=BpvTestData";
 			break;
 		case "ribosome":
-			var url ="/project_content/?projectName=RiboTestData&mode=service";
+			var url ="/service_content/?projectName=RiboTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -258,7 +258,7 @@ function goToProject(elm) {
 		url : URL,
 		success : function(result) {
 			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/project_content/?projectName="+code+"&mode=service";
+				var URL2 = getSubDomainURL() + "/service_content/?projectName="+code;
 				window.location.href = URL2;
 			} else {
 				var title = "Bad Access";
