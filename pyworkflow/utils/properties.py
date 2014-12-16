@@ -183,7 +183,7 @@ Define the number of processors to be used in the execution.
     TEXT_SPH_ABERRATION = "Optical effect due to the increased refraction of light rays when they strike lens near its edge, in comparison with those that strike nearer the centre."
     LABEL_AMPLITUDE = 'Amplitude Contrast'
     TEXT_AMPLITUDE = 'Is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
-    'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined.'\
+    'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined. '\
                      'It should be a positive number, typically between 0.05 and 0.3.'
     LABEL_PATTERNU = 'Pattern untilted'
     LABEL_PATTERNT = 'Pattern tilted'

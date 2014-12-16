@@ -453,9 +453,20 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        if isinstance(self.inputSet.get(), SetOfClasses2D):
+        inputSet = self.inputSet.get()
+        if isinstance(inputSet, SetOfClasses2D):
             if not self.inputSet.get().hasRepresentatives():
                 errors.append("The input classes should have representatives.")
+                
+                
+        if self.dimRed:
+            nGrids = self.numGrids.get()
+            if (nGrids * nGrids) > inputSet.getSize():
+                errors.append('Dimensionaly reduction could not be applied')
+                errors.append('if the number of classes is less than the number')
+                errors.append('of grids squared. \n')
+                errors.append('Consider either provide more classes or')
+                errors.append('disable dimensionality reduction')
         return errors
     
     def _summary(self):
