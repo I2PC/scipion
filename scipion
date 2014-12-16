@@ -331,6 +331,7 @@ def main():
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
+        assert n == 2, "config takes no arguments (got %s)" % sys.argv[2:]
         runApp('pw_config.py')
 
     elif mode == MODE_STATS:
