@@ -121,7 +121,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Use all images to refine', 
                       help=' When refining a RANSAC volume, use all images to refine it instead of only inliers')
         
-        form.addParallelSection(mpi=2)
+        form.addParallelSection(threads=8, mpi=1)
             
          
     #--------------------------- INSERT steps functions --------------------------------------------    

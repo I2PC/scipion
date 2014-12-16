@@ -75,7 +75,7 @@ class EmanProtInitModel(ProtInitialVolume):
                            'Suggest using this option to shrink the input particles by an '
                            'integer amount prior to recontruction.' 
                            'Default = 1, no shrinking')
-        form.addParallelSection(threads=3, mpi=0)
+        form.addParallelSection(threads=8, mpi=0)
  
     #--------------------------- INSERT steps functions --------------------------------------------  
 
