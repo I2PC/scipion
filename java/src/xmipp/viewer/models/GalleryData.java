@@ -291,7 +291,6 @@ public class GalleryData {
                 }
             }
         }
-        System.out.println(selectedBlock);
     }
 
     public void setDisplayLabel(String key, boolean selected) {

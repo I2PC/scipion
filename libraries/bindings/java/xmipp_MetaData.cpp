@@ -280,7 +280,9 @@ JNIEXPORT jint JNICALL Java_xmipp_jni_MetaData_getLabelType(JNIEnv *env,
 {
     XMIPP_JAVA_TRY
     {
-        return (MDL::labelType((MDLabel) label));
+    	MDLabel clabel = (MDLabel) label;
+    	int type = MDL::labelType(clabel);
+        return type;
     }
     XMIPP_JAVA_CATCH;
 
