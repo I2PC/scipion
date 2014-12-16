@@ -313,7 +313,7 @@ class MdFileHandler(ImageFileHandler):
         filename = objFile.getPath()
         ext = getExt(filename)
         
-        if ext == '.xmd' or ext == '.ctfparam':
+        if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos':
             import xmipp
             msg = "*Metadata File* "
             blocks = xmipp.getBlocksInMetaDataFile(filename)

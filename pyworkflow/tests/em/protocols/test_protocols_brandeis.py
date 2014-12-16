@@ -35,8 +35,8 @@ class TestBrandeisBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.micFn = cls.dataset.getFile('micrographs/BPV_1386.mrc')
-        cls.volFn = cls.dataset.getFile('volumes/volume_1_iter_002.mrc')
+        cls.micFn = cls.dataset.getFile('allMics')
+        cls.volFn = cls.dataset.getFile('vol2')
         #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
@@ -131,13 +131,31 @@ class TestBrandeisCtffind(TestBrandeisBase):
         protCTF = ProtCTFFind()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
+        protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-        ctfModel = protCTF.outputCTF.getFirstItem()
-        self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, delta=100)
-        self.assertAlmostEquals(ctfModel.getDefocusV(),23499.73, delta=100)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, delta=1)
-        self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+        
+        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+
+    def testCtffind2(self):
+        protCTF = ProtCTFFind()
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.numberOfThreads.set(4)
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        
+        valuesList = [[23863, 23640, 64], [22159, 21983, 50.6], [22394, 22269, 45]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
+
 
 class TestBrandeisFrealign(TestBrandeisBase):
     @classmethod
