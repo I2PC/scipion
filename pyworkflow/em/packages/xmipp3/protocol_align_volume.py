@@ -124,9 +124,10 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         line.addParam('maximumScale', params.FloatParam, default=1, label='Max')
         line.addParam('stepScale', params.FloatParam, default=0.005, label='Step')          
                         
-        group = form.addGroup('Initial values', condition='alignmentAlgorithm==%d' % ALIGN_ALGORITHM_LOCAL)
-        line = group.addLine('Initial angles', expertLevel=params.LEVEL_ADVANCED,
-                            )        
+        group = form.addGroup('Initial values', 
+                              condition='alignmentAlgorithm==%d' % ALIGN_ALGORITHM_LOCAL, 
+                              expertLevel=params.LEVEL_ADVANCED)
+        line = group.addLine('Initial angles')        
         line.addParam('initialRotAngle', params.FloatParam, default=0, label='Rot')        
         line.addParam('initialTiltAngle', params.FloatParam, default=0, label='Tilt')
         line.addParam('initialInplaneAngle', params.FloatParam, default=0, label='Psi') 
