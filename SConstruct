@@ -27,7 +27,7 @@
 # *
 # **************************************************************************
 
-# Builders and pseudobuilders used be SConscript to install things.
+# Builders and pseudobuilders used by SConscript to install things.
 
 
 import os
@@ -61,7 +61,7 @@ env = Environment(ENV=os.environ,
 
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
-env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
+env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES"
 
 
 def progInPath(env, prog):
