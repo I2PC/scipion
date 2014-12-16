@@ -19,6 +19,7 @@ class TestMixedBPV(TestWorkflow):
         cls.vol1 = cls.dataset.getFile('vol1')
         
     def test_workflow(self):
+        from itertools import izip
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, 
                                       samplingRate=1.237, voltage=300)
@@ -47,8 +48,15 @@ class TestMixedBPV(TestWorkflow):
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
-#         self.validateFiles('protCTF', protCTF)
         
+        valuesList = [[24029, 23940, 54.8], [22424, 22356, 66.6], [22858, 22781, 64]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 6.185, delta=0.001)
+
+#         self.validateFiles('protCTF', protCTF)
         print "Running Eman fake particle picking..."
         protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir, runMode=1) 
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
