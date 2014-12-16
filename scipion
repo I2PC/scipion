@@ -436,4 +436,8 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        # This way of catching exceptions works with Python 2 & 3
+        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
