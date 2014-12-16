@@ -1481,7 +1481,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		{
                         boolean isscipion = (data instanceof ScipionGalleryData);
 			boolean galMode = data.isGalleryMode();
-			boolean volMode = data.isVolumeMode();
+			boolean volMode = !data.getSelVolumeFile().isEmpty();
 			setItemEnabled(FILE_OPENWITH_CHIMERA, volMode);
 			setItemEnabled(FILE_OPENMICROGRAPHS, data.hasMicrographParticles());
                         setItemEnabled(FILE_EXPORTIMAGES, data.hasRenderLabel() && !volMode && !(data instanceof ScipionGalleryData));
