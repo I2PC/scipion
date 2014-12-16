@@ -331,6 +331,7 @@ def main():
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
+        assert n == 2, "config takes no arguments (got %s)" % sys.argv[2:]
         runApp('pw_config.py')
 
     elif mode == MODE_STATS:
@@ -344,7 +345,7 @@ def main():
         sys.exit(0)
 
     elif mode == MODE_RUNPROTOCOL:
-        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
+        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % (n - 1)
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
         # This should be (projectPath, protocolDb and protocolId)
@@ -435,4 +436,8 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        # This way of catching exceptions works with Python 2 & 3
+        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])

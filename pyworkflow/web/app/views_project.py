@@ -215,11 +215,27 @@ def formatProvider(provider, mode):
         
     return objs
 
-def project_content(request):        
+def project_content(request):
+    context = contentContext(request)
+    context.update({'mode': None})
+    return render_to_response('project_content/project_content.html', context)
+
+def service_content(request):
+    context = contentContext(request)
+    context.update({'importAverages': getResourceIcon('importAverages'),
+                    'useProtocols': getResourceIcon('useProtocols'),
+                    'protForm': getResourceIcon('protForm'),
+                    'summary': getResourceIcon('summary'),
+                    'showj': getResourceIcon('showj'),
+                    'download': getResourceIcon('download'),
+                    'mode':'service',
+                    })
+    return render_to_response('project_content/project_content.html', context)
+
+def contentContext(request):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider
     
     projectName = request.GET.get('projectName', None)
-    mode = request.GET.get('mode', None)
     
     if projectName is None:
         projectName = request.POST.get('projectName', None)
@@ -254,7 +270,6 @@ def project_content(request):
     projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
-               'mode': mode,
                'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
@@ -278,30 +293,15 @@ def project_content(request):
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
-    
-    if mode == 'service':
-        context = service_context(context)
-    
+
     context = base_flex(request, context)
     
-    return render_to_response('project_content/project_content.html', context)
-
-def service_context(context):
-    context.update({'importAverages': getResourceIcon('importAverages'),
-                    'useProtocols': getResourceIcon('useProtocols'),
-                    'protForm': getResourceIcon('protForm'),
-                    'summary': getResourceIcon('summary'),
-                    'showj': getResourceIcon('showj'),
-                    'download': getResourceIcon('download'),
-                    })
     return context
-
+    
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
     
-#    print "ENTER IN PROTOCOL INFO METHOD"
-
     if request.is_ajax():
         jsonStr = ''
         projectName = request.session['projectName']
@@ -379,14 +379,15 @@ def writeCustomMenu(customMenu):
 [PROTOCOLS]
 
 Initial_Volume = [
-    {"tag": "section", "text": "1. Upload and Import", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
+    {"tag": "section", "text": "1. Upload data", "children": [
         {"tag": "protocol", "value": "ProtImportAverages",     "text": "Import averages", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
-        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
-        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
-    {"tag": "section", "text": "3. Download good volumes."}]
-                
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - ransac"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
+        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"},
+        {"tag": "protocol", "value": "ProtPrime", "text": "simple - prime"}]},
+    {"tag": "section", "text": "3. Align volumes.", "children": [
+        {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]}]
             ''')
         f.close()
         
@@ -395,8 +396,9 @@ def create_service_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolume
         from pyworkflow.em.packages.eman2 import EmanProtInitModel
+        from pyworkflow.em.packages.simple import ProtPrime
         
         # Create a new project
         manager = Manager()
@@ -446,6 +448,20 @@ def create_service_project(request):
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protEmanInitVol)
         
+        # 2c. Significant 
+        protSignificant = project.newProtocol(XmippProtReconstructSignificant)
+        protSignificant.setObjLabel('xmipp - significant')
+        protSignificant.inputClasses.set(protImport)
+        protSignificant.inputClasses.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protSignificant)
+        
+        # 2d. Prime 
+        protPrime = project.newProtocol(ProtPrime)
+        protPrime.setObjLabel('simple - prime')
+        protPrime.inputClasses.set(protImport)
+        protPrime.inputClasses.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protPrime)
+        
         # 3. Join result volumes
         p1 = Pointer()
         p1.set(protRansac)
@@ -455,10 +471,20 @@ def create_service_project(request):
         p2.set(protEmanInitVol)
         p2.setExtendedAttribute('outputVolumes')
         
-        protJoin = project.newProtocol(ProtUnionSet)
-        protJoin.setObjLabel('merge all volumes')
-        protJoin.inputSets.append(p1)
-        protJoin.inputSets.append(p2)
+        p3 = Pointer()
+        p3.set(protSignificant)
+        p3.setExtendedAttribute('outputVolume')
+        
+        p4 = Pointer()
+        p4.set(protPrime)
+        p4.setExtendedAttribute('outputVolume')
+        
+        protJoin = project.newProtocol(XmippProtAlignVolume)
+        protJoin.setObjLabel('align volumes')
+        protJoin.inputVolumes.append(p1)
+        protJoin.inputVolumes.append(p2)
+        protJoin.inputVolumes.append(p3)
+        protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
         

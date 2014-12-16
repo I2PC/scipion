@@ -243,16 +243,18 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         return ['Sorzano2015']
     
     def _methods(self):
-        retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
-           self.inputClasses.get().getNameId()
-        if self.thereisRefVolume:
-            retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
-        else:
-            retval+=" We started the iterations with %d random volumes."%self.Nvolumes.get()
-        retval+=" %d iterations were run going from a starting significance of %f%% to a final one of %f%%."%\
-           (self.iter.get(),self.alpha0.get(),self.alphaF.get())
-        if self.useImed:
-            retval+=" IMED weighting was used."
-        if self.strictDir:
-            retval+=" The strict direction criterion was employed."    
+        retval = ""
+        if self.inputClasses.get() is not None:
+            retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
+               self.inputClasses.get().getNameId()
+            if self.thereisRefVolume:
+                retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
+            else:
+                retval+=" We started the iterations with %d random volumes."%self.Nvolumes.get()
+            retval+=" %d iterations were run going from a starting significance of %f%% to a final one of %f%%."%\
+               (self.iter.get(),self.alpha0.get(),self.alphaF.get())
+            if self.useImed:
+                retval+=" IMED weighting was used."
+            if self.strictDir:
+                retval+=" The strict direction criterion was employed."    
         return [retval]

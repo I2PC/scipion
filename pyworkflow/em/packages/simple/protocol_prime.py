@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package contains wrapper around reconstruct_significant Xmipp program
+This sub-package contains wrapper around Prime algorithm in Simple
 """
 
 import os
@@ -191,6 +191,8 @@ class ProtPrime(em.ProtInitialVolume):
         return ['Elmlund2013']
     
     def _methods(self):
-        retval="We used *simple_prime* program [Elmlund2013] to produce an initial volume from the set of classes %s."
-           
-        return [retval % self.inputClasses.get().getNameId()]
+        if self.inputClasses.get() is not None:
+            retval="We used *simple_prime* program [Elmlund2013] to produce an initial volume from the set of classes %s."
+            return [retval % self.inputClasses.get().getNameId()]
+        else:
+            return []

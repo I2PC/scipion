@@ -70,21 +70,21 @@
 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
 				</td>
 <!-- HOST -->
-				<td>
-					{{msg.LABEL_HOST}}
-				</td>
-				<td>
-					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange="">
-					{% for h in hosts %}
-						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option>
-					{% endfor %}
-					</select>
-				</td>
-				<td>
-					<!-- .ico -->
-				</td>
-			</tr>
-			<tr>
+<!-- 				<td> -->
+<!-- 					{{msg.LABEL_HOST}} -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					<select name="{{msg.VAR_EXEC_HOST}}" size=1 onChange=""> -->
+<!-- 					{% for h in hosts %} -->
+<!-- 						<option value="{{h}}" {% if h == hostName %} selected="selected" {% endif %}>{{h}}</option> -->
+<!-- 					{% endfor %} -->
+<!-- 					</select> -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					.ico -->
+<!-- 				</td> -->
+<!-- 			</tr> -->
+<!-- 			<tr> -->
 				{% if protocol.allowThreads or protocol.allowMpi %}
 <!-- PARALLEL (THREAD & MPI) -->
 				<td>
@@ -94,13 +94,17 @@
 					{% if protocol.allowThreads %}
 						{{msg.LABEL_THREADS}}
 						&nbsp;		
-						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;">
+<!-- 						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;"> -->
+<!-- 						SERVICE MODE -->
+						<input type="text" id="{{msg.VAR_THREADS}}_input" name="{{msg.VAR_THREADS}}" value="{{numberOfThreads}}" style="width:2em;" readonly>
 					{% endif %}
 						&nbsp;
 					{% if protocol.allowMpi %}
 						{{msg.LABEL_MPI}}
 						&nbsp;		
-						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;">
+<!-- 						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;"> -->
+<!-- 						SERVICE MODE -->
+						<input type="text" id="{{msg.VAR_MPI}}_input" name="{{msg.VAR_MPI}}" value="{{numberOfMpi}}" style="width:2em;" readonly>
 					{% endif %}
 				</td>
 				<td>
@@ -112,16 +116,16 @@
 				<td></td>
 				{% endif %}
 <!-- QUEUE -->
-				<td>
-					{{msg.LABEL_QUEUE}}
-				</td>
-				<td>
-					<input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value=True {% if protocol.useQueue == True %} checked {% endif %} />{{msg.LABEL_QUEUE_YES}}
-					<input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value=False {% if protocol.useQueue == False %} checked {% endif %} />{{msg.LABEL_QUEUE_NO}}
-				</td>
-				<td>
-					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a>
-				</td>
+<!-- 				<td> -->
+<!-- 					{{msg.LABEL_QUEUE}} -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					<input type="radio" id="queue_yes" name="{{msg.VAR_QUEUE}}" value=True {% if protocol.useQueue == True %} checked {% endif %} />{{msg.LABEL_QUEUE_YES}} -->
+<!-- 					<input type="radio" id="queue_no" name="{{msg.VAR_QUEUE}}" value=False {% if protocol.useQueue == False %} checked {% endif %} />{{msg.LABEL_QUEUE_NO}} -->
+<!-- 				</td> -->
+<!-- 				<td> -->
+<!-- 					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{msg.LABEL_RUNMODE}}','{{msg.HELP_RUNMODE|escapejs}}');"></a> -->
+<!-- 				</td> -->
 			</tr>
 		</table>
 	</div>

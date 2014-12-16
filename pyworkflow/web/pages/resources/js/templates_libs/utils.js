@@ -386,7 +386,7 @@ function accessPopup(title, msgText, funcName, btnYes, btnNo){
 	});
 }
 
-function accessPopupOpt(title, msgText, 
+function accessPopup2opt(title, msgText, 
 						 btn1, ico1, funcName1, 
 						 btn2, ico2, funcName2, 
 						 btnNo){
@@ -418,6 +418,16 @@ function accessPopupOpt(title, msgText,
 	});
 }
 
+function putWaitPopup(msg, ico){
+	new Messi("<i class='"+ ico +"'/>  " + msg + "...",{
+		modal : true
+	});
+}
+
+function removeWaitPopup(){
+	$('.messi').remove();
+	$('.messi-modal').remove();
+}
 
 function listToString(list){
 	var res = "";

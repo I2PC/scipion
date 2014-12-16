@@ -319,7 +319,7 @@ class XmippProtRCT(ProtInitialVolume):
     def _methods(self):
         methods = []
         if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volumes not ready yet.")
+            methods.append("Output volumes not ready yet.")
         else:
             inputIsString = ''
             if isinstance(self.inputParticles.get(), SetOfParticles):
@@ -332,4 +332,4 @@ class XmippProtRCT(ProtInitialVolume):
         return methods
             
     def _citations(self):
-        return ['Radermacher1987', 'Sorzano2010a']
+        return ['Radermacher1987']
