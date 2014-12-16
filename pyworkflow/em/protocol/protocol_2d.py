@@ -69,7 +69,7 @@ class ProtAnalysis2D(Prot2D):
 
 #------------ Some testing protocols ------------------
 
-class ProtEvenClassify2D(ProtClassify2D):
+class ProtEvenClassify2D():#ProtClassify2D):
     """ This is a simple classification protocol for testing purposes.
     It will iterate over the images and assign each one to a different
     class. 
