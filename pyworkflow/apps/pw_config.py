@@ -24,50 +24,39 @@
 # *
 # **************************************************************************
 """
-This modules serve to define some Configuration classes
-mainly for project GUI
+Update project settings using the current settings from
+ProjectSettings().loadConfig().
 """
 
-from pyworkflow.utils.path import cleanPath
-from pyworkflow.config import *
+import sys
+from os.path import join
 
-
-def writeDefaults():
-    settings = ProjectSettings()
-    settings.loadConfig()
-
-    #writeConfig(config, 'configuration.xml')
-    dbPath = pw.SETTINGS
-    print "Writing default settings to: ", dbPath
-    if exists(dbPath):
-        dbPathBackup = '%s.%d' % (dbPath, int(time.time()))
-        print "File %s exists, moving to %s ..." % (dbPath, dbPathBackup)
-        os.rename(dbPath, dbPathBackup)
-    settings.write(dbPath)
+from pyworkflow.utils.path import copyFile, cleanPath
+from pyworkflow.config import ProjectSettings, pw
+from pyworkflow.manager import Manager
 
 
 def updateSettings():
-    """ Write the settings.sqlite default configuration
-    and also update each project settings.
+    """ Write the settings.sqlite configuration file for all projects.
     """
-    writeDefaults()
-    # Update the settings to all existing projects
-    from pyworkflow.manager import Manager
-    from pyworkflow.utils.path import copyFile
+    # Load the default settings and write them in pw.SETTINGS (a sqlite file).
+    settings = ProjectSettings()
+    settings.loadConfig()
+    settings.write(pw.SETTINGS)
 
+    # Update the settings in all existing projects, by copying the sqlite file.
     manager = Manager()
-    projects = manager.listProjects()
+    for p in manager.listProjects():
+        fpath = join(manager.getProjectPath(p.getName()), 'settings.sqlite')
+        print "Copying settings to:", fpath
+        copyFile(pw.SETTINGS, fpath)
 
-    for p in projects:
-        projPath = manager.getProjectPath(p.getName())
-        projSettings = join(projPath, 'settings.sqlite')
-        print "Copying settings to: ", projSettings
-        copyFile(pw.SETTINGS, projSettings)
-        
-    cleanPath(pw.SETTINGS) # we dont need to store the settings.sqlite 
+    cleanPath(pw.SETTINGS) # we dont need to store the settings.sqlite file
 
 
 
 if __name__ == '__main__':
-    #Write default configurations
+    if len(sys.argv) > 1:
+        sys.exit("Error: %s does not take any argument (got: %s)." %
+                 sys.argv[0], " ".join(sys.argv[1:]))
     updateSettings()
