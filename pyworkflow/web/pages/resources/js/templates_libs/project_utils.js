@@ -102,9 +102,9 @@ function deleteProject(elm) {
 
 function serviceProjForm(){
 	var title = 'Project creation'
-	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
-        "This process generates a unique <strong>url access</strong><br />" +
-        "where you going to have accessing to the content in the future.</p>" +
+	var dialog = "<p>Your <strong>Project</strong> will be created.<br /><br />" +
+        "This process generates a unique <strong>url access</strong>.<br /><br />" +
+        "This url access should be used to have access to your data in future sessions.</p>" +
         "<p><br /></p>";
 	
     dialog += "<p>Confirm to generate it.</p>";
@@ -118,12 +118,12 @@ function serviceTestDataForm(){
 	var title = 'Test data'
 	var dialog = ""
 		
-	dialog += "<p>You have two options to use the <strong>Test data</strong> :<br />" +
-        "1.- <strong>Create a project</strong> with the <strong>Test data</strong> already imported inside.<br />" +	
-		"2.- <strong>Download</strong> the files chosen to be imported manually by the user into a project created.</p>";
+	dialog += "<p>You have two options to use <strong>Test data</strong> :<br />" +
+        "1.- <strong>Create a project</strong> with <strong>Test data</strong> already imported inside.<br />" +	
+		"2.- <strong>Download</strong> test files to your computer, to be manually imported into an already created project.</p>";
 	dialog += "<br />";
 	dialog += '<div id="testData">';
-	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += "<p>Select <strong>Test data</strong>:</p>";
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
 	dialog += '<br />';
@@ -135,7 +135,7 @@ function serviceTestDataForm(){
 	dialog += '<br />';
 	dialog += "</div>";
 	dialog += "<br />";
-    dialog += "<p>After select, choose your option.</p>";
+    dialog += "<p>After selection, choose your option.</p>";
 
     
     var btn1 = 'Create project'
@@ -229,13 +229,13 @@ function createServProject(elm) {
 //                "<p>Please <strong>save this code securely</strong> " +
 //				"to access the project in the future.</p><br />";
 			
-			var msg = "<p>Your <strong>url to access </strong> to your <strong>Project</strong> is:</p>" +
+			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
             "<p>Please <strong>save this url securely</strong> " +
-			"to access to the project in the future.</p><br />";
+			"in order to access to this project in future sessions.</p><br />";
 			
 			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
@@ -290,7 +290,7 @@ function getRefTestData(id){
 			ref = "<strong>GroEL</strong> (44 averages, 64x64 pixels, <a href='http://dx.doi.org/10.1016/j.str.2004.05.006' style='color:firebrick;' target='_blank'>from Ludtke, S.J. et al. (2004)</a>)"
 			break;
 		case "ribosome":
-			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank</a>)"
+			ref = "<strong>Eukaryotic Ribosome</strong> (32 averages, 64x64 pixels, <a href='ftp://ftp.ebi.ac.uk/pub/databases/emtest/SPIDER_FRANK_data/' style='color:firebrick;' target='_blank'>from J.Frank lab</a>)"
 			break;
 	}
 	return ref;

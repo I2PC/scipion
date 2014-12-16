@@ -23,30 +23,32 @@
 		<div id="step1">
 			<p>
 				<strong>Step 1:</strong> Upload and import your files to the web
-				service clicking in the graph at left on the box <strong>Import Averages</strong>.
+				portal clicking on the graph on the left hand side of this panel, on the <strong>Import Averages</strong> box.
 			</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{importAverages}}" />
 			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
 		</div>
 
 		<br />
 
 		<div id="step2">
 			<p>
-				<strong>Step 2:</strong> Select a protocol to use with your
-				averages. You can choose between <strong>RANSAC</strong>, <strong>EMAN
-					initial volume</strong>, <strong>Significant</strong> and <strong>Prime</strong>.
+				<strong>Step 2:</strong> Select a method to obtain your initial map
+				. You can choose among <strong>Xmipp - RANSAC</strong>, <strong>EMAN
+					initial volume</strong>, <strong>Xmipp - Significant</strong> and <strong>Simple - Prime</strong>.
 			</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{useProtocols}}" />
 			</p>
 			<br />
-			<p>The parameters can be customized to get the best results. If
-				you need more options, just change the <strong>Expert Level</strong> to show the
-				advanced options.</p>
+			<p>Parameters can be easily user customized. Three level of usages are supported (Normal, Advance and Expert), which 
+			 should be chosen according to your experience with each of the methods
+				</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{protForm}}" />
@@ -59,16 +61,15 @@
 
 		<div id="step3">
 			<p>
-				<strong>Step 3:</strong> When the protocol is finished you can see a
-				<strong>summary</strong> about the protocol at the bottom.
+				<strong>Step 3:</strong> Once a method has finished processing, clicking on its box shows at the bottom a <strong>summary</strong> of Inputs and Outputs.
 			</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{summary}}" />
 			</p>
 			<br />
-			<p>Then you can visualize the objects by clicking over the
-				names or using the <strong>Analyze Results</strong> button.</p>
+			<p>Further analyze of the results of each method can be achieved by first clicking on its corresponding box and then clicking on the <strong>Analyze Results</strong> button.
+			</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{showj}}" />
@@ -80,20 +81,21 @@
 
 		<div id="step4">
 			<p>
-				<strong>Step 4:</strong> After execute more runs you can join and align 
-				the volumes generated to visualize all the set using the <strong>align volumes</strong> box.
-			</p>
+				<strong>Step 4:</strong> The outputs of several methods can be mutually aligned in 3D and presented to the user for further selection using the <strong>align volume</strong> box.
+				Note that you should select one of the output 3D volumes to be used as 3D reference.			</p>
 			<br />
 			<p style="text-align: center;">
 				<img src="{{alignVol}}" />
 			</p>
+			<br />
+			<p>Finally press "Execute"!</p>
 		</div>
 		<br />
 		<div id="step5">
 			<p>
-				<strong>Step 5:</strong> You can download your results using the
+				<strong>Step 5:</strong> Selected volumes can be downloaded using the corresponding
 				button <img src="{{download}}" style="height: 1.5em; width: auto;" />
-				at the bottom of the page after mark or select an execution.
+				.
 			</p>
 		</div>
 	</div>
