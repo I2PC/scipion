@@ -26,8 +26,10 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippMenuBar;
@@ -45,7 +47,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	private static final long serialVersionUID = 1L;
 	// Label to be rendered
 	protected ColumnInfo renderLabel;
-	protected ImageGeneric image;
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
@@ -151,8 +152,8 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                         if(imageFn != null)
                             try
                             {
-                                    image = new ImageGeneric(imageFn);
-                                    dim = new ImageDimension(image);
+                                    ImagePlus image = new ImagePlusFromFile(imageFn).getImagePlus();
+                                    dim = new ImageDimension(image.getWidth(), image.getHeight());
                             }
                             catch (Exception e)
                             {
