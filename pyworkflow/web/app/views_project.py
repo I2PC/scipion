@@ -302,8 +302,6 @@ def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
     
-#    print "ENTER IN PROTOCOL INFO METHOD"
-
     if request.is_ajax():
         jsonStr = ''
         projectName = request.session['projectName']
@@ -475,18 +473,18 @@ def create_service_project(request):
         
         p3 = Pointer()
         p3.set(protSignificant)
-        p3.setExtendedAttribute('outputVolumes')
+        p3.setExtendedAttribute('outputVolume')
         
-#         p4 = Pointer()
-#         p4.set(ProtPrime)
-#         p4.setExtendedAttribute('outputVolumes')
+        p4 = Pointer()
+        p4.set(protPrime)
+        p4.setExtendedAttribute('outputVolume')
         
         protJoin = project.newProtocol(XmippProtAlignVolume)
         protJoin.setObjLabel('align volumes')
         protJoin.inputVolumes.append(p1)
         protJoin.inputVolumes.append(p2)
         protJoin.inputVolumes.append(p3)
-#         protJoin.inputVolumes.append(p4)
+        protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
         
