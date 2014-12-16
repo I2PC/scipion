@@ -178,13 +178,13 @@ function getProjExample(elm){
 	var x = $("div#exProjects input[type='radio']:checked").val();
 	switch(x){
 		case "groel":
-			var url = "/service_content/?projectName=GroelTestData";
+			var url = "/service_content/?p=GroelTestData";
 			break;
 		case "bpv":
-			var url ="/service_content/?projectName=BpvTestData";
+			var url ="/service_content/?p=BpvTestData";
 			break;
 		case "ribosome":
-			var url ="/service_content/?projectName=RiboTestData";
+			var url ="/service_content/?p=RiboTestData";
 			break;
 	}
 	goWithSubDomainURL(url);
@@ -223,11 +223,21 @@ function createServProject(elm) {
 		async: false,
 		success : function() {
 			var title = "ACCESS CODE"
-			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> is:</p>" +
-				"<br /><p><h2>" + projName + "</h2></p><br />" +
-                "<p>Please <strong>save this code securely</strong> " +
-				"to access the project in the future.</p>";
-			var msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
+			
+//			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> is:</p>" +
+//				"<br /><p><h2>" + projName + "</h2></p><br />" +
+//                "<p>Please <strong>save this code securely</strong> " +
+//				"to access the project in the future.</p><br />";
+			
+			var msg = "<p>Your <strong>url to access </strong> to your <strong>Project</strong> is:</p>" +
+			"<br /><p><h2>" + 
+			"<a href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
+			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
+			"</h2></p><br />" +
+            "<p>Please <strong>save this url securely</strong> " +
+			"to access to the project in the future.</p><br />";
+			
+			msg = msg + "<input type='hidden' class='content' value='" + projName + "' />";
 			var funcName = "goToProject"
 
 			accessPopup(title, msg, funcName, 'Go to the project', 'Exit');
@@ -240,7 +250,7 @@ function goToProjectForm() {
 	var dialog = "<p>Please write the <strong>identification code</strong> " +
 		"to access to your <strong>Project</strong>.</p>" +
 		"<p>This code was given to you after the creation of your project.</p>" +
-		"<p>If you forgot it, please contact the <a style='color:firebrick;' href='#'>Scipion group</a>.</p><br />";
+		"<p>If you forgot it, please contact us using this mail: <span style='color:firebrick;'>myfirstmap@cnb.csic.es</span></p><br />";
 	var msg = dialog + "<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
 	var funcName = 'goToProject';
 	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
@@ -258,7 +268,7 @@ function goToProject(elm) {
 		url : URL,
 		success : function(result) {
 			if (result == 1) {
-				var URL2 = getSubDomainURL() + "/service_content/?projectName="+code;
+				var URL2 = getSubDomainURL() + "/service_content/?p="+code;
 				window.location.href = URL2;
 			} else {
 				var title = "Bad Access";
