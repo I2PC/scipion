@@ -103,8 +103,8 @@ function deleteProject(elm) {
 function serviceProjForm(){
 	var title = 'Project creation'
 	var dialog = "<p>Your <strong>Project</strong> will be created.<br />" +
-        "This process generates a unique <strong>identification code</strong><br />" +
-        "that you will have to save to access the content in the future.</p>" +
+        "This process generates a unique <strong>url access</strong><br />" +
+        "where you going to have accessing to the content in the future.</p>" +
         "<p><br /></p>";
 	
     dialog += "<p>Confirm to generate it.</p>";
@@ -230,10 +230,10 @@ function createServProject(elm) {
 //				"to access the project in the future.</p><br />";
 			
 			var msg = "<p>Your <strong>url to access </strong> to your <strong>Project</strong> is:</p>" +
-			"<br /><p><h2>" + 
+			"<br /><p><h3>" + 
 			"<a href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
-			"</h2></p><br />" +
+			"</h3></p><br />" +
             "<p>Please <strong>save this url securely</strong> " +
 			"to access to the project in the future.</p><br />";
 			
@@ -245,16 +245,16 @@ function createServProject(elm) {
 	});
 }
 
-function goToProjectForm() {
-	var title = 'Confirm access code'
-	var dialog = "<p>Please write the <strong>identification code</strong> " +
-		"to access to your <strong>Project</strong>.</p>" +
-		"<p>This code was given to you after the creation of your project.</p>" +
-		"<p>If you forgot it, please contact us using this mail: <span style='color:firebrick;'>myfirstmap@cnb.csic.es</span></p><br />";
-	var msg = dialog + "<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
-	var funcName = 'goToProject';
-	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
-}
+//function goToProjectForm() {
+//	var title = 'Confirm access code'
+//	var dialog = "<p>Please write the <strong>identification code</strong> " +
+//		"to access to your <strong>Project</strong>.</p>" +
+//		"<p>This code was given to you after the creation of your project.</p>" +
+//		"<p>If you forgot it, please contact us using this mail: <span style='color:firebrick;'>myfirstmap@cnb.csic.es</span></p><br />";
+//	var msg = dialog + "<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
+//	var funcName = 'goToProject';
+//	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
+//}
 
 function goToProject(elm) {
 	var code = elm.val();
