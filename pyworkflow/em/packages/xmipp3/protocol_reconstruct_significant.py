@@ -103,7 +103,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                       label='Do not apply Fisher', help="Images are preselected using Fisher's confidence interval on the correlation "
                       "coefficient. Check this box if you do not want to make this preselection.")
 
-        form.addParallelSection(threads=1, mpi=4)
+        form.addParallelSection(threads=1, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     

@@ -35,7 +35,10 @@ from protocol_ca_pca import SpiderProtCAPCA
 from protocol_classify_diday import SpiderProtClassifyDiday
 from protocol_classify_ward import SpiderProtClassifyWard
 from protocol_classify_kmeans import SpiderProtClassifyKmeans
-from protocol_mda import SpiderWfMDA
 from protocol_align_pairwise import SpiderProtAlignPairwise
+
+# Spider workflow is not working yet
+# (well, any workflow now)
+#from protocol_mda import SpiderWfMDA
 
 

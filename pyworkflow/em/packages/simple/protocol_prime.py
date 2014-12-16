@@ -93,7 +93,7 @@ class ProtPrime(em.ProtInitialVolume):
                       label='Keep intermediate volumes',
                       help='Keep all volumes along iterations')
 
-        form.addParallelSection(threads=4, mpi=0)
+        form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     
