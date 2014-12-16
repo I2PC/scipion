@@ -281,13 +281,20 @@ class Object(object):
         """ Copy attributes in attrNames from other to self. 
         If the name X is in attrNames, it would be equivalent to:
         self.X.set(other.X.get())
+        This method is more useful for Scalar attributes.
+        There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            if isinstance(getattr(other, name), PointerList):
-                for pointer in getattr(other, name):
-                    getattr(self, name).append(pointer)
+            attr = getattr(other, name)
+            otherAttr = getattr(other, name)
+            
+            if isinstance(attr, Pointer):
+                attr.copy(otherAttr)
+            elif isinstance(attr, PointerList):
+                for pointer in otherAttr:
+                    attr.append(pointer)
             else:
-                getattr(self, name).copy(getattr(other, name))
+                attr.set(otherAttr.get())
             
     def __getObjDict(self, prefix, objDict, includeClass):
         if prefix:
