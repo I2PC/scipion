@@ -3,12 +3,12 @@
 	{% csrf_token %}
 		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 		<p>
-			<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
-			<strong>{{relative_path}}</strong>
+<!-- 			<strong>{{relative_path}}</strong> -->
 		</p>
 		<table class="section">
 			<tr>
 				<td id="inputName" class="normal">
+					<img src="/resources/{{icon.ACTION_BROWSE}}">&nbsp;
 					<strong>{{form.docfile.label_tag}}</strong>
 				</td>
 				<td colspan="3">

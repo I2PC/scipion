@@ -231,7 +231,7 @@ function createServProject(elm) {
 			
 			var msg = "<p>Your <strong>url to access </strong> to your <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
-			"<a href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +
             "<p>Please <strong>save this url securely</strong> " +
