@@ -3,7 +3,6 @@ package xmipp.viewer.particlepicker;
 import ij.CommandListener;
 import ij.Executer;
 import ij.IJ;
-import static ij.IJ.URL;
 import ij.ImageListener;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -16,6 +15,8 @@ import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -25,10 +26,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +43,6 @@ import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
@@ -159,8 +159,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     public void actionPerformed(ActionEvent e)
                     {
                         String resetmsg = getResetMsg();
-                        XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, resetmsg,
-                                false);
+                        XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, resetmsg, false);
                         if (qd.showDialog())
                             resetMicrograph();
                     }
@@ -823,26 +822,38 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizetf.setColumns(3);
 		sizetf.setValue(size);
 		sizepn.add(sizetf);
-		sizetf.addActionListener(new ActionListener()
+		sizetf.addFocusListener(new FocusListener()
 		{
 
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-                            // event from sizesl
-				if (((Number)sizetf.getValue()).intValue() == getParticlePicker().getSize())
-					return;
+                    @Override
+                    public void focusGained(FocusEvent fe) {
+                    }
 
-				int size = ((Number) sizetf.getValue()).intValue();
-				if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
-				{
-                                        
-					int prevsize = getParticlePicker().getSize();
-					sizetf.setText(Integer.toString(prevsize));
-					return;
-				}
-				updateSize(size);
-			}
+                    @Override
+                    public void focusLost(FocusEvent fe) {
+                        // event from sizes
+                        if(!fe.isTemporary())
+                        {
+                            try {
+                                sizetf.commitEdit();
+                                int size = ((Number) sizetf.getValue()).intValue();
+                                if (size == getParticlePicker().getSize())
+                                    return;
+                                
+                                if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
+                                {
+                                    
+                                    int prevsize = getParticlePicker().getSize();
+                                    sizetf.setText(Integer.toString(prevsize));
+                                    return;
+                                }
+                                updateSize(size);
+                            } catch (ParseException ex) {
+                                XmippDialog.showError(ParticlePickerJFrame.this, XmippMessage.getIllegalValueMsg("size", sizetf.getText()));
+                                Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
 		});
 
 		sizesl.addChangeListener(new ChangeListener()
@@ -853,27 +864,25 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			{
 				if (sizesl.getValueIsAdjusting()) 
 					return;
-				if (sizesl.getValue() == getParticlePicker().getSize())
+                                int size = sizesl.getValue();
+				if (size == getParticlePicker().getSize())
 					return;
-
-				int size = sizesl.getValue();
+				
 				if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
 				{
 					sizesl.dispatchEvent(//trick to repaint slider after changing value
-                            new MouseEvent(sizesl, 
-                            MouseEvent.MOUSE_RELEASED,
-                            0,0,0,0,1,false));
+                                            new MouseEvent(sizesl, MouseEvent.MOUSE_RELEASED,0,0,0,0,1,false));
 					int prevsize = getParticlePicker().getSize();
 					sizesl.setValue(prevsize);
-					
 					return;
-					
 				}
 				updateSize(size);
 			}
 		});
 
 	}
+        
+        
 
 	public void updateSize(int size)
 	{

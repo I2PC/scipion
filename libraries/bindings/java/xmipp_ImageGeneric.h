@@ -352,6 +352,8 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPCABasis
 (JNIEnv *env, jclass, jobjectArray,
  jobject , jint);
 
+
+
 #ifdef __cplusplus
 }
 #endif

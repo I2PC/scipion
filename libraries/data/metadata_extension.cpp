@@ -69,6 +69,32 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool 
 
 /*----------   Statistics --------------------------------------- */
 
+Matrix2D<double> getMatrix(char* matrix)
+{
+		 // Parse the string values as floats
+		 std::stringstream ss(matrix);
+		 double values[16];
+		 for (int i = 0; i < 16; i++)
+		   ss >> values[i];
+
+		 //build the matrix from the parsed values
+
+
+		 Matrix2D<double> transformM(3, 3);
+		 dMij(transformM, 0, 2) = 0;
+		 dMij(transformM, 1, 2) = 0;
+		 dMij(transformM, 2, 0) = 0;
+		 dMij(transformM, 2, 1) = 0;
+		 dMij(transformM, 2, 2) = 1;
+		 dMij(transformM, 0, 0) = values[0]; // cosine
+		 dMij(transformM, 0, 1) = values[1]; // sine
+		 dMij(transformM, 1, 0) = values[4]; // -sine
+		 dMij(transformM, 1, 1) = values[5]; // cosine
+		 dMij(transformM, 0, 2) = values[3]; // shiftx;
+		 dMij(transformM, 1, 2) = values[7]; // shifty;
+		 return transformM;
+}
+
 void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
 {
 

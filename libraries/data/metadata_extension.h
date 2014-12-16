@@ -96,6 +96,8 @@ void bsoftRemoveLoopBlock(const FileName &_inFile, const FileName &block);
  */
 void bsoftRestoreLoopBlock(const FileName &_inFile, const FileName &block);
 
+Matrix2D<double> getMatrix(char* matrix);
+
 //@}
 
 #endif /* METADATA_EXTENSION_H_ */
