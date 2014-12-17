@@ -117,7 +117,7 @@ public class Worker implements Runnable
 
                 public void fsc() throws Exception
                 {
-                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
+                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd, MDLabel.MDL_IMAGE);
                         XmippWindowUtil.centerWindows(fscframe, frame);
                         fscframe.setVisible(true);
                 }
