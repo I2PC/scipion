@@ -320,8 +320,6 @@ public class ImageGeneric {
          */
         public native void applyGeoMatrix(String matrixString, boolean wrap);
         
-        public static native void getStatsOnImages(MDRow[] imagesmd, ImageGeneric imgAvg, ImageGeneric imgStd, boolean useGeo, int renderLabel) ;
 
-        public static native void getPCABasis(MDRow[] imagesmd, ImageGeneric result, int renderLabel);
     
 }

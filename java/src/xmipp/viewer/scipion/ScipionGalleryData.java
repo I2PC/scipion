@@ -426,31 +426,32 @@ public class ScipionGalleryData extends GalleryData {
     
     
     
-    public MDRow[] getImagesMd(boolean selected) {
+    public MetaData getImagesMd(boolean selected) {
                     
-            MDRow mdRow;
-            ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
+            MetaData imagesmd = new MetaData();
             int index = 0;
             String imagepath;
             EMObject emo;
+            long imageid;
+            String matrix;
             for (long id : md.findObjects()) {
                 if (isEnabled(index) && (!selected ||isSelected(index))) {
                         
                     imagepath = md.getValueString(getRenderLabel(), id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                        mdRow = new MDRow();
+                        imageid = imagesmd.addObject();
                         if (useGeo()) 
                         {
                             emo = ((ScipionMetaData)md).getEMObject(id);
-                            mdRow.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, emo.getValueString(getGeoMatrixColumn()));//copy geo info in mdRow
+                            matrix = emo.getValueString(getGeoMatrixColumn());
+                            imagesmd.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, matrix, imageid);//copy geo info in mdRow
                         }
-                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
-                        imagesmd.add(mdRow);
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
                     }
                 }
                 index++;
             }
-            return imagesmd.toArray(new MDRow[]{});
+            return imagesmd;
         
     }
     

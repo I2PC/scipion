@@ -95,58 +95,7 @@ Matrix2D<double> getMatrix(char* matrix)
 		 return transformM;
 }
 
-void getStatistics(const std::vector<MDRow> &MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
-{
 
-    bool first = true;
-    int n = 0;
-
-    // Calculate Mean
-    if (MD.size() == 0)
-        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images.");
-
-    Image<double> image, tmpImg;
-
-    FileName fnImg;
-    for (size_t i=0;i<MD.size();i++)
-    {
-        MD[i].getValue(image_label,fnImg);
-        if (apply_geo)
-            image.readApplyGeo(fnImg, MD[i]);
-        else
-            image.read(fnImg);
-
-        if (first)
-        {
-            _ave = image;
-            first = false;
-        }
-        else
-        {
-            _ave() += image();
-        }
-        n++;
-    }
-
-    if (n > 0)
-        _ave() /= n;
-    _sd = _ave;
-    _sd().initZeros();
-    // Calculate SD
-    for (size_t i=0;i<MD.size();i++)
-    {
-    	MD[i].getValue(image_label, fnImg);
-        if (apply_geo)
-            image.readApplyGeo(fnImg, MD[i]);
-        else
-            image.read(fnImg);
-        tmpImg() = ((image() - _ave()));
-        tmpImg() *= tmpImg();
-        _sd() += tmpImg();
-    }
-    _sd() /= (n - 1);
-    _sd().selfSQRT();
-}
 
 //Copy of the Metadata is required to remove disabled objects before computing stats
 void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label)

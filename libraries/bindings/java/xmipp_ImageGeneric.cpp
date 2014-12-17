@@ -1109,43 +1109,4 @@ JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_applyGeoMatrix
      XMIPP_JAVA_CATCH;
 }
 
-JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getStatsOnImages
-(JNIEnv *env, jclass jigclass, jobjectArray jimages,
- jobject jimageAvg, jobject jimageStd, jboolean applyGeo, jint label)
-{
-    XMIPP_JAVA_TRY
-    {
 
-    	int size = env->GetArrayLength(jimages);
-    	std::vector<MDRow> images;
-    	MDRow row;
-		for(int i = 0; i < size; i++)
-		{
-			 row = *GET_INTERNAL_MDROW(env->GetObjectArrayElement(jimages, i));
-			 images.push_back(row);
-
-		}
-        ImageGeneric *avg = GET_INTERNAL_IMAGE_GENERIC(jimageAvg);
-        ImageGeneric *std = GET_INTERNAL_IMAGE_GENERIC(jimageStd);
-        avg->setDatatype(DT_Double);
-        std->setDatatype(DT_Double);
-
-        Image<double> * imgAvg = (Image<double>*)avg->image;
-        Image<double> * imgStd = (Image<double>*)std->image;
-
-        getStatistics(images, *imgAvg, *imgStd, applyGeo, (MDLabel)label);
-    }
-    XMIPP_JAVA_CATCH;
-}
-
-JNIEXPORT void JNICALL Java_xmipp_jni_ImageGeneric_getPCABasis
-(JNIEnv *env, jclass jigclass, jobjectArray jimages,
- jobject jimage, jint label)
-{
-    XMIPP_JAVA_TRY
-    {
-
-
-    }
-    XMIPP_JAVA_CATCH;
-}

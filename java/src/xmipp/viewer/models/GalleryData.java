@@ -1888,26 +1888,30 @@ public class GalleryData {
            return null;
        }
        
-       public MDRow[] getImagesMd(boolean selected) {
+       public MetaData getImagesMd(boolean selected) {
             int idlabel = getRenderLabel();
             MDRow mdRow;
-            ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
+            MetaData imagesmd = new MetaData();
             int index = 0;
             String imagepath;
+            long imageid;
             for (long id : md.findObjects()) {
                 if (isEnabled(index) && (!selected ||isSelected(index))) {
                     imagepath = md.getValueString(idlabel, id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
-                        mdRow = new MDRow();
+                        imageid = imagesmd.addObject();
                         if (useGeo()) 
+                        {
+                            mdRow = new MDRow();
                             md.getRow(mdRow, id);//copy geo info in mdRow
-                        mdRow.setValueString(MDLabel.MDL_IMAGE, imagepath);
-                        imagesmd.add(mdRow);
+                            imagesmd.setRow(mdRow, imageid);
+                        }
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
                     }
                 }
                 index++;
             }
-            return imagesmd.toArray(new MDRow[]{});
+            return imagesmd;
        }
        
         

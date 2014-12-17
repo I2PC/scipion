@@ -30,7 +30,7 @@ public class Worker implements Runnable
 		public String message;
 		/** Constructor selecting operation */
 		private int op; // store operation
-		private MDRow[] imagesmd;
+		private MetaData imagesmd;
                 private GalleryJFrame frame = null;
 
 		public Worker(int operation, boolean selected, GalleryJFrame frame)
@@ -39,8 +39,7 @@ public class Worker implements Runnable
                         
 			op = operation;
                         imagesmd = frame.data.getImagesMd(selected);
-                        
-			if (imagesmd.length == 0)
+			if (imagesmd.size() == 0)
 				throw new IllegalArgumentException("No images available");
                         
 		}
@@ -91,7 +90,7 @@ public class Worker implements Runnable
                         ImageGeneric imgAvg = new ImageGeneric();
                         ImageGeneric imgStd = new ImageGeneric();
 
-                        ImageGeneric.getStatsOnImages(imagesmd, imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
+                        imagesmd.getStatsImages(imgAvg, imgStd, frame.data.useGeo(), MDLabel.MDL_IMAGE);
                         ImagePlus impAvg = XmippImageConverter.convertToImagePlus(imgAvg);
                         ImagePlus impStd = XmippImageConverter.convertToImagePlus(imgStd);
                         imgAvg.destroy();
@@ -109,7 +108,7 @@ public class Worker implements Runnable
                 public void pca() throws Exception
                 {
                         ImageGeneric image = new ImageGeneric();
-                        ImageGeneric.getPCABasis(imagesmd, image, MDLabel.MDL_IMAGE);
+                        imagesmd.getPCAbasis(image, MDLabel.MDL_IMAGE);
                         ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
                         imp.setTitle("PCA: " + frame.data.getFileName());
                         ImagesWindowFactory.openXmippImageWindow(frame, imp, false);
@@ -118,9 +117,9 @@ public class Worker implements Runnable
 
                 public void fsc() throws Exception
                 {
-//                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
-//                        XmippWindowUtil.centerWindows(fscframe, frame);
-//                        fscframe.setVisible(true);
+                        FSCJFrame fscframe = new FSCJFrame(frame.data, imagesmd);
+                        XmippWindowUtil.centerWindows(fscframe, frame);
+                        fscframe.setVisible(true);
                 }
                 
                
