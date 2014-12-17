@@ -285,7 +285,7 @@ class Object(object):
         There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            attr = getattr(other, name)
+            attr = getattr(self, name)
             otherAttr = getattr(other, name)
             
             if isinstance(attr, Pointer):
