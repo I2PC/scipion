@@ -130,7 +130,14 @@ class TestObject(BaseTest):
         # since it is only an "alias" to an existing pointed value
         self.assertNotIn('refC', attrNames)
         
+        self.assertFalse(o.pointer.hasExtended(), 
+                         'o.pointer should not have extended at this point')
+        
         o.pointer.setExtendedItemId(7)
+        
+        self.assertTrue(o.pointer.hasExtended())
+        self.assertTrue(o.pointer.hasExtendedItemId())
+        self.assertEqual(o.pointer.getExtendedValue(), "7")
         # Check that the Item 7 of the set is properly
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
