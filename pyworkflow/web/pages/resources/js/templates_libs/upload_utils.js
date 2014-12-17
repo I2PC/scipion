@@ -104,9 +104,12 @@ function launchSubmitUpload(){
 
 function uploadService(){
 	launchSubmitUpload()
-	var file = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
-	file = $("#project_folder").val()+ "/Uploads/" + file
-	$("input.upload").val(file)
+	
+	var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	$("input.upload2").val(fn)
+
+	file = $("#project_folder").val()+ "/Uploads/" + fn
+	$("input.upload1").val(file)
 }
 
 function updateListFiles(project_folder){

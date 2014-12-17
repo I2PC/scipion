@@ -81,6 +81,7 @@ iconDict = {
             'protForm': 'myfirstmap/protForm.png',
             'summary': 'myfirstmap/summary.png',
             'showj': 'myfirstmap/showj.png',
+            'alignVol': 'myfirstmap/alignVol.png',
             'download': 'myfirstmap/download.png',
             
             }
