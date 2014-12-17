@@ -1485,7 +1485,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
 			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
 			addSeparator(METADATA);
-			addItem(MD_FIND_REPLACE, "Find & Replace", "search.gif", "control released F");
+			addItem(MD_FIND_REPLACE, "Find & Replace", "binocular.png", "control released F");
 			// Help
 			addItem(HELP, "Help");
 			addItem(HELP_ONLINE, "Online help", "online_help.gif");
