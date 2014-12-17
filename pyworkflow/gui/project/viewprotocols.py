@@ -308,11 +308,35 @@ class RunIOTreeProvider(TreeProvider):
     def getObjects(self):
         objs = []
         if self.protocol:
-            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
+            # Store a dict with input parents (input, PointerList)
+            self.inputParentDict = OrderedDict()
+            inputs = []
+            
+            inputObj = String(Message.LABEL_INPUT)
+            inputObj._icon = Icon.ACTION_IN
+            self.inputParentDict['_input'] = inputObj
+            inputParents = [inputObj]
+            
+            for key, attr in self.protocol.iterInputAttributes():
+                attr._parentKey = key
+                # Repeated keys means there are inside a pointerList
+                # since the same key is yielded for all items inside
+                # so update the parent dict with a new object
+                if key in self.inputParentDict:
+                    if self.inputParentDict[key] == inputObj:
+                        parentObj = String(key)
+                        parentObj._icon = Icon.ACTION_IN
+                        parentObj._parentKey = '_input'
+                        inputParents.append(parentObj)
+                        self.inputParentDict[key] = parentObj
+                else:
+                    self.inputParentDict[key] = inputObj
+                inputs.append(attr) 
+                    
+            
             outputs = [attr for n, attr in self.protocol.iterOutputAttributes(em.EMObject)]
-            self.inputStr = String(Message.LABEL_INPUT)
             self.outputStr = String(Message.LABEL_OUTPUT)
-            objs = [self.inputStr, self.outputStr] + inputs + outputs                
+            objs = inputParents + inputs + [self.outputStr] + outputs                
         return objs
     
     def _visualizeObject(self, ViewerClass, obj):
@@ -371,32 +395,45 @@ class RunIOTreeProvider(TreeProvider):
         if isinstance(obj, String):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
+            if hasattr(obj, '_parentKey'):
+                info['parent'] = self.inputParentDict[obj._parentKey]
         else:
+            # All attributes are considered output, unless they are pointers
             image = Icon.ACTION_OUT
             parent = self.outputStr
             
             if isinstance(obj, Pointer):
-                ptr = obj
                 name = obj.getLastName()
-                obj = obj.get()
-                if obj is None:
-                    return None
-                image = Icon.ACTION_IN
-                parent = self.inputStr
-                if ptr._extended:
-                    labelObj = ptr.getObjValue()
-                    suffix = '[Item %d]' % obj.getObjId() 
+                # Remove ugly item notations inside lists
+                name = name.replace('__item__000', '')
+                # Consider Pointer as inputs
+                image = getattr(obj, '_icon', '')
+                parent = self.inputParentDict[obj._parentKey]
+                
+                if obj.hasExtended():
+                    extendedValue = obj.getExtendedValue()
+                    if obj.hasExtendedAttribute():
+                        suffix = '[%s]' % extendedValue
+                    elif obj.hasExtendedItemId():
+                        suffix = '[Item %s]' % extendedValue
+                    if obj.get() is None:
+                        labelObj = obj.getObjValue()
+                    else:
+                        labelObj = obj.get()
                 else:
-                    labelObj = obj
+                    labelObj = obj.get()
                     suffix = ''
                     
+                objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
                 name += '   (from %s %s)' % (label, suffix)
             else:
                 name = self.getObjectLabel(obj, self.protocol)
+                objKey = str(obj.getObjId())
+                labelObj = obj
                 
-            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
-                    'text': name, 'values': (str(obj),)}
+            info = {'key': objKey, 'parent': parent, 'image': image,
+                    'text': name, 'values': (str(labelObj),)}
         return info     
 
 
