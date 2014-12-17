@@ -594,13 +594,35 @@ function getTableFormatted(node, json, id, previsualize) {
 	$.each(json, function(key, value) {
 		// key is the param ObjId for the object
 		// value is the name of the object
-		if(previsualize){
-			var func = first + 'launchViewer("'+ key +'")' + second;
-		}
+		if (value["type"] == "obj"){
+			if(previsualize)
+				var func = first + 'launchViewer("'+ key +'")' + second;
+			res += "<tr id='"+ x + "' class='" + key + "' value='"
+			+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
+			+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
+			
+		} else if (value["type"] == "set"){
+			if(previsualize)
+				var func = first + 'launchViewer("'+ key +'")' + second;
+			
+			res += "<tr style='background-color:lightblue;' class='" + key + "' value='" + value["nameId"] +"'>"
+			res += "<td>"+ "" +"</td><td>"+ value["info"]+"</td>";
+			res += "<td>"+ func +"</td>"
+			res += "</tr>"
+			
+			for(i=0; i<value['objects'].length; i++){
+				var nameIdObjFull = value["nameId"] + value['objects'][i]["nameId"]
+				var nameIdObj = value['objects'][i]["nameId"]
+				var infoObj = value['objects'][i]["info"]
+				var objId = value['objects'][i]["objId"]
 				
-		res += "<tr id='"+ x + "' class='" + key + "' value='"
-				+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
-				+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
+				res += "<tr id='"+ x + "' class='" + key + "' value='"
+				+ nameIdObjFull  + "' onclick=javascript:selTableMessi($(this));><td>" 
+				+ nameIdObjFull + "</td><td>"+ infoObj +"</td></tr>";
+				
+				x++;
+			}
+		}
 		x++;
 	});
 	
