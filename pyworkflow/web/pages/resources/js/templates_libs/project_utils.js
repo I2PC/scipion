@@ -140,7 +140,7 @@ function serviceTestDataForm(){
     
     var btn1 = 'Create project'
 	var ico1 = 'fa-check'
-	var funcName1 = 'createServProject';
+	var funcName1 = 'createServProject';	
 		
 	var btn2 = 'Download'
 	var ico2 = 'fa-download';
@@ -157,7 +157,7 @@ function goExampleForm(){
 	var dialog = ""
 
 	dialog += '<div id="exProjects">';
-	dialog += "<p>Select the <strong>test data</strong>:</p>";
+	dialog += "<p>Select the <strong>Test data</strong>:</p>";
 	dialog += '&nbsp;&nbsp;&nbsp;<input type="radio" name="data" value="groel" checked>';
 	dialog += '&nbsp;&nbsp;' + getRefTestData("groel");
 	dialog += '<br />';
