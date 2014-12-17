@@ -104,7 +104,35 @@ def form(request):
                     for paramGroupName, paramGroup in param.iterParams():
                         protVar = getattr(protocol, paramGroupName, None)
                         
-                        if protVar is None:
+                        # LINE PARAM
+                        if isinstance(paramGroup, Line):
+                            for paramLineName, paramLine in paramGroup.iterParams():
+                                protVar = getattr(protocol, paramLineName, None)
+                                
+                                if protVar is None:
+                                    pass
+                                else:
+                                    paramLine = PreprocessParamForm(request, paramLine, paramLineName, wizards, viewerDict, visualize, protVar)                  
+                                
+                            # PATCH: This is applied to all the params in the line, maybe just need for the first one.
+                            for name, _ in paramGroup.iterParams():
+                                wizParamName = name
+                                if wizParamName in wizards:
+                                    paramGroup.hasWizard = True
+                                    paramGroup.wizardClassName = wizards[wizParamName].__name__
+                                
+                            if visualize == 1:
+                                if paramGroupName in viewerDict:
+                                    paramGroup.hasViewer = True
+                            
+                            if not paramGroup.help.empty():
+                                paramGroup.htmlHelp = parseText(paramGroup.help.get())
+                                
+                            paramGroup.htmlCond = paramGroup.condition.get()
+                            paramGroup.htmlDepend = ','.join(paramGroup._dependants)
+                            paramGroup.htmlCondParams = ','.join(paramGroup._conditionParams)   
+                            
+                        elif protVar is None:
                             pass
                         else:
                             paramGroup = PreprocessParamForm(request, paramGroup, paramGroupName, wizards, viewerDict, visualize, protVar)
@@ -174,9 +202,10 @@ def form(request):
 
 def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualize, protVar):
     from pyworkflow.em import Boolean, PointerParam
-    from pyworkflow.protocol.params import MultiPointerParam, RelationParam
-    
+    from pyworkflow.protocol.params import MultiPointerParam, RelationParam, Line
+
     try:
+        # MULTI POINTER
         if isinstance(param, MultiPointerParam):
             htmlValueList = []
             htmlIdValueList = []
@@ -187,10 +216,12 @@ def PreprocessParamForm(request, param, paramName, wizards, viewerDict, visualiz
                 htmlIdValueList.append(htmlIdValue)
                 
             param.htmlValueIdZip = zip(htmlValueList,htmlIdValueList)
-            
+        
+        # POINTER
         elif isinstance(param, PointerParam):
             param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
-            
+        
+        # RELATION PARAM
         elif isinstance(param, RelationParam):
             param.htmlValue, param.htmlIdValue = getPointerHtml(protVar)
             param.relationName = param.getName()
