@@ -35,11 +35,14 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -242,9 +245,14 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
+                        
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-                                openXmippImageWindow(index, ci.label);
+                                String file = getImageFilename(index, renderLabel.label);
+                                if(Filename.isVolume(file))
+                                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                                else
+                                    openXmippImageWindow(index, ci.label);
 				return true;
 			}
 		} catch (Exception e) {
