@@ -30,7 +30,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -42,13 +42,12 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
-
 import xmipp.viewer.models.MetadataTableModel;
 
 
@@ -63,8 +62,8 @@ public class MDSearchJDialog extends XmippDialog {
 	protected JTable table;
 	protected long[] ids;
 	protected int selected_index = -1;
-	protected int label;
-	protected int[] labels;
+	protected ColumnInfo label;
+	protected List<ColumnInfo> labels;
 
 	protected GridBagConstraints gbc = new GridBagConstraints();
 	protected JPanel mainPanel;
@@ -90,8 +89,8 @@ public class MDSearchJDialog extends XmippDialog {
 		this.data = data;
 		this.table = table;
 		this.ids = data.getIds();
-		this.labels = data.getLabels();
-		this.label = labels[0];
+		this.labels = data.getColumns();
+		this.label = labels.get(0);
 		btnOkText = "Close";
 		btnCancelDisplay = false;
 		initComponents();
@@ -135,8 +134,8 @@ public class MDSearchJDialog extends XmippDialog {
 
 		// Create labels combo
 		jcbLabel = new JComboBox();
-		for (int l : labels) {
-			jcbLabel.addItem(MetaData.getLabelName(l));
+		for (ColumnInfo l : labels) {
+			jcbLabel.addItem(l.labelName);
 		}
 		jcbLabel.addActionListener(this);
 		addPair(optPanel, "Label", jcbLabel, 0, 0);
@@ -178,7 +177,7 @@ public class MDSearchJDialog extends XmippDialog {
 		if (o == jtFind || o == btnFind)
 			find();
 		else if (o == jcbLabel)
-			label = labels[jcbLabel.getSelectedIndex()];
+			label = labels.get(jcbLabel.getSelectedIndex());
 		else if (o == btnReplace)
 			replace(selected_index);
 		else if (o == btnReplaceFind) {
@@ -226,7 +225,7 @@ public class MDSearchJDialog extends XmippDialog {
 
 	private boolean match(String findStr, int index) {
 		boolean caseSensitive = jchCase.isSelected();
-		String value = data.getValueString(label, ids[index]).trim();
+		String value = data.getValueString(label.label, ids[index]).trim();
 		String str = findStr.trim();
 		if (!caseSensitive) {
 			value = value.toLowerCase();
@@ -238,10 +237,10 @@ public class MDSearchJDialog extends XmippDialog {
 	private void replace(int index) {
 		String replaceStr = jtReplace.getText().trim();
 		if (index > -1 && replaceStr.length() > 0) {
-			String value = data.getValueString(label, ids[index]);
+			String value = data.getValueString(label.label, ids[index]);
 			String newValue = value.replace(jtFind.getText().trim(), replaceStr);
 			// table.setValueAt(newValue, index, jcbLabel.getSelectedIndex());
-			data.setValueString(label, newValue, ids[index]);
+			data.setValueString(label.label, newValue, ids[index]);
 			((MetadataTableModel) table.getModel()).fireTableRowsUpdated(index,
 					index);
 		}

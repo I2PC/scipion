@@ -51,6 +51,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
@@ -201,6 +203,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
+        private JButton searchbt;
 
 
 	/** Initialization function after GalleryData structure is created */
@@ -952,7 +955,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	
 
 	/** Find and replace in metadata */
-	public void findReplace() throws Exception
+	public void findReplace() 
 	{
 		MDSearchJDialog dlg = new MDSearchJDialog(this, table, data);
 		dlg.setVisible(true);
@@ -1102,6 +1105,19 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		
 		initResliceButtonMenu();
 		toolBar.add(reslicebt);
+                searchbt = new JButton(XmippResource.getIcon("binocular.png"));
+                searchbt.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        try {
+                            findReplace();
+                        } catch (Exception ex) {
+                            Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                toolBar.add(searchbt);
 
 	}// function createToolbar
 
