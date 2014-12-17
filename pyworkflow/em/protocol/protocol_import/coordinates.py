@@ -32,11 +32,11 @@ from pyworkflow.protocol.params import PathParam, IntParam, PointerParam
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 
-from base import ProtImport
+from base import ProtImportFiles
 
 
 
-class ProtImportCoordinates(ProtImport, ProtParticlePicking):
+class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     """ Protocol to import a set of coordinates """
     _label = 'import coordinates'
     

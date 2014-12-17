@@ -29,10 +29,10 @@
 from pyworkflow.protocol.params import PathParam, PointerParam
 from pyworkflow.em.data import CTFModel
 
-from pyworkflow.em.protocol import ProtImport, ProtCTFMicrographs
+from pyworkflow.em.protocol import ProtImportFiles, ProtCTFMicrographs
 
 
-class ProtImportCTF(ProtImport, ProtCTFMicrographs):
+class ProtImportCTF(ProtImportFiles, ProtCTFMicrographs):
     """Protocol to import a set of movies (from direct detector cameras) to the project"""
     _label = 'import ctf'
     
