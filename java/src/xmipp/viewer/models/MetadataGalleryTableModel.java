@@ -143,9 +143,10 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
-
-		if (data.hasRenderLabel())
+                int width = 30, height = 30;
+		if (data.hasRenderLabel()) 
 		{
+                        
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
@@ -153,7 +154,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                             try
                             {
                                     ImagePlus image = new ImagePlusFromFile(imageFn).getImagePlus();
-                                    dim = new ImageDimension(image.getWidth(), image.getHeight());
+                                    width = image.getWidth(); 
+                                    height = image.getHeight();
+                                    dim = new ImageDimension(width, height);
                             }
                             catch (Exception e)
                             {
@@ -163,8 +166,9 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 
 		if (dim == null)
-			dim = new ImageDimension(30);
+			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
+                data.zoom = GalleryData.getDefaultZoom(width);
 		return dim;
 	}
 

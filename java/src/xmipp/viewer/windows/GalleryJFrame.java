@@ -1793,6 +1793,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				JRadioButtonMenuItem mi = (JRadioButtonMenuItem)e.getSource();
 				String key = mi.getText();
 				data.setRenderColumn(key);
+                                
 				reloadTableData();
 			}
 

@@ -236,6 +236,7 @@ public class GalleryData {
             for(ColumnInfo ci: labels)
                 if(ci.labelName.equals(key))
                     ciFirstRender = ci;
+            renderLabel = ciFirstRender.labelName;
 	}
 
     public ColumnInfo getRenderColumn() {
@@ -373,10 +374,8 @@ public class GalleryData {
                     if (md.containsMicrographsInfo()) {
                         MAX_SIZE /= 2;
                     }
-                    int xdim = image.getXDim();
-                    int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
-                    float scale = (float) x / xdim;
-                    zoom = (int) Math.ceil(scale * 100);
+                    zoom = getDefaultZoom(image.getXDim());
+                    
                 }
 
                 if (image.isVolume()) { // We are assuming all are volumes
@@ -410,7 +409,13 @@ public class GalleryData {
     }// function loadMd
     
  
-    
+    public static int getDefaultZoom(int xdim)
+    {
+        int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
+        float scale = (float) x / xdim;
+        int zoom = (int) Math.ceil(scale * 100);
+        return zoom;
+    }
 
     public ColumnInfo getColumnInfo(String labelName) {
         for (ColumnInfo ci : labels) {
