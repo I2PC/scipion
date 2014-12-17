@@ -605,18 +605,19 @@ function getTableFormatted(node, json, id, previsualize) {
 			if(previsualize)
 				var func = first + 'launchViewer("'+ key +'")' + second;
 			
-			res += "<tr style='background-color:lightblue;' class='" + key + "' value='" + value["nameId"] +"'>"
-			res += "<td>"+ "" +"</td><td>"+ value["info"]+"</td>";
+			res += "<tr onclick='showHideChildsRow("+ key +")' class='" + key + "' value='" + value["nameId"] +"'>"
+			res += "<td><i id='folderIco-"+ key +"' class='fa fa-folder'></i></td><td>"+ value["info"]+"</td>";
 			res += "<td>"+ func +"</td>"
 			res += "</tr>"
-			
+
 			for(i=0; i<value['objects'].length; i++){
+				
 				var nameIdObjFull = value["nameId"] + value['objects'][i]["nameId"]
 				var nameIdObj = value['objects'][i]["nameId"]
 				var infoObj = value['objects'][i]["info"]
 				var objId = value['objects'][i]["objId"]
 				
-				res += "<tr id='"+ x + "' class='" + key + "' value='"
+				res += "<tr style='display:none;' data-row='"+ key +"' id='"+ x + "' class='" + key + "' value='"
 				+ nameIdObjFull  + "' onclick=javascript:selTableMessi($(this));><td>" 
 				+ nameIdObjFull + "</td><td>"+ infoObj +"</td></tr>";
 				
@@ -629,6 +630,18 @@ function getTableFormatted(node, json, id, previsualize) {
 	res = res + "</table>";
 	return res;
 }
+
+function showHideChildsRow(key){
+	if($("i#folderIco-"+key).attr("class")== "fa fa-folder"){
+		$("tr[data-row="+ key +"]").show();
+		$("i#folderIco-"+key).attr("class", "fa fa-folder-open")
+	}
+	else {
+		$("tr[data-row="+ key +"]").hide();
+		$("i#folderIco-"+key).attr("class", "fa fa-folder")
+	}
+}
+
 
 function selectDialog(objClass, msg, funcName) {
 	/*
