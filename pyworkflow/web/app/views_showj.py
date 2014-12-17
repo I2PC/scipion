@@ -203,6 +203,11 @@ def setRenderingOptions(request, dataset, table, inputParams):
                         
                         _imageVolName = table.getValueFromIndex(index, label)
                         inputParams[sj.VOL_SELECTED] = _imageVolName
+        
+        if _imageVolName is None:
+            # Patch to visualize individual volume
+            pathAux = inputParams[sj.PATH].split("/Runs/")[1]
+            _imageVolName = "Runs/"+pathAux
             
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)

@@ -228,23 +228,41 @@ def browse_objects(request):
     if request.is_ajax():
         objClassList = request.GET.get('objClass')
         projectName = request.session['projectName']
-        
-        objFilterParam = request.GET.get('objFilter', None)
-        filterObject = FilterObject(objFilterParam)
-        
-        project = loadProject(projectName)
 
+        objFilterParam = request.GET.get('objFilter', None)
+        filterObject = FilterObject(objFilterParam, objClassList)
+            
+        project = loadProject(projectName)
         objs = {}
-        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
-                objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)} 
         
+        # Object Filter
+        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+            objs[obj.getObjId()] = {"type":"obj", 
+                                    "nameId":obj.getNameId(), 
+                                    "info": str(obj)
+                                    } 
+        # Class Filter
+        for obj in project.iterSubclasses("Set", filterObject.classFilter):
+            context = {"type":"set", 
+                       "nameId":obj.getNameId(), 
+                       "info": str(obj),
+                       "objects": []}
+            
+            for child in obj._iterItems():
+                obj_context = {"nameId":child.getNameId(), 
+                               "objId":child.getObjId(), 
+                               "info": str(child)} 
+                context["objects"].append(obj_context)    
+            objs[obj.getObjId()] = context
+            
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
-   
+
 
 class FilterObject():
-    def __init__(self, condition):
+    def __init__(self, condition, className):
         self.condition = None if condition == 'None' else condition
+        self.className = className
         
     def objFilter(self, obj):
         result = True
@@ -252,6 +270,11 @@ class FilterObject():
             result = obj.evalCondition(self.condition)
         return result
     
+    def classFilter(self, obj):
+        """ Filter Set with the specified class name. """
+        itemType = getattr(obj, 'ITEM_TYPE', None) 
+        return itemType.__name__ == self.className  
+        
 #===============================================================================
 # Browse protocols like objects
 #===============================================================================
