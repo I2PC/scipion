@@ -102,7 +102,6 @@ class ProtPrime(em.ProtInitialVolume):
         
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runPrime')
-        self._insertFunctionStep('getLastIteration')
         if not self.keepIntermediate:
             self._insertFunctionStep('cleanPrime')
         self._insertFunctionStep('createOutputStep')        
