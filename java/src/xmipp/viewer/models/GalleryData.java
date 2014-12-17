@@ -1401,29 +1401,32 @@ public class GalleryData {
             selfrom = index;
         if(isselected && selto < index)
             selto = index;
-        
-        if(!isselected && selfrom == index && selto != selfrom)
+        boolean hasSelection = (isselected || selto != selfrom || selfrom != index);
+        selection[index] = isselected;
+        if(!isselected && selfrom == index)
         {
             selfrom = -1;
-            for(int i = index; i <= selto; i ++)
-                if(selection[i])
-                {
-                    selfrom = i;
-                    break;
-                }
+            if(hasSelection)
+                for(int i = index; i <= selto; i ++)
+                    if(selection[i])
+                    {
+                        selfrom = i;
+                        break;
+                    }
         }       
         
-        if(!isselected && selto == index && selfrom != selto)
+        if(!isselected && selto == index)
         {
             selto = -1;
-            for(int i = index; i >= selfrom; i --)
-                if(selection[i])
-                {
-                    selto = i;
-                    break;
-                }
+            if(hasSelection)
+                for(int i = index; i >= selfrom; i --)
+                    if(selection[i])
+                    {
+                        selto = i;
+                        break;
+                    }
         }      
-        selection[index] = isselected;
+        
         if (isVolumeMd)
             selectedVolFn = isselected? getVolumeAt(index): getVolumeAt(0);
             
@@ -1885,14 +1888,14 @@ public class GalleryData {
            return null;
        }
        
-       public MDRow[] getImagesMd(MetaData md) {
+       public MDRow[] getImagesMd(boolean selected) {
             int idlabel = getRenderLabel();
             MDRow mdRow;
             ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
             int index = 0;
             String imagepath;
             for (long id : md.findObjects()) {
-                if (isEnabled(index)) {
+                if (isEnabled(index) && (!selected ||isSelected(index))) {
                     imagepath = md.getValueString(idlabel, id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
                         mdRow = new MDRow();

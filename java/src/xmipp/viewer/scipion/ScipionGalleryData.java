@@ -426,7 +426,7 @@ public class ScipionGalleryData extends GalleryData {
     
     
     
-    public MDRow[] getImagesMd(MetaData md) {
+    public MDRow[] getImagesMd(boolean selected) {
                     
             MDRow mdRow;
             ArrayList<MDRow> imagesmd = new ArrayList<MDRow>();
@@ -434,7 +434,8 @@ public class ScipionGalleryData extends GalleryData {
             String imagepath;
             EMObject emo;
             for (long id : md.findObjects()) {
-                if (isEnabled(index)) {
+                if (isEnabled(index) && (!selected ||isSelected(index))) {
+                        
                     imagepath = md.getValueString(getRenderLabel(), id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
                         mdRow = new MDRow();

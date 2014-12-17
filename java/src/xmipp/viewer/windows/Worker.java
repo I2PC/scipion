@@ -33,12 +33,12 @@ public class Worker implements Runnable
 		private MDRow[] imagesmd;
                 private GalleryJFrame frame = null;
 
-		public Worker(int operation, MetaData md, GalleryJFrame frame)
+		public Worker(int operation, boolean selected, GalleryJFrame frame)
 		{
                         this.frame = frame;
                         
 			op = operation;
-                        imagesmd = frame.data.getImagesMd(md);
+                        imagesmd = frame.data.getImagesMd(selected);
                         
 			if (imagesmd.length == 0)
 				throw new IllegalArgumentException("No images available");
