@@ -135,6 +135,21 @@ class TestObject(BaseTest):
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
     
+    
+    def test_copyAttributes(self):
+        """ Check that after copyAttributes, the values
+        were properly copied.
+        """
+        c1 = Complex(imag=10., real=11.)
+        c2 = Complex(imag=0., real=1.0001)
+        
+        # Float values are different, should not be equal
+        self.assertFalse(c1.equalAttributes(c2))
+        c2.copyAttributes(c1, 'imag', 'real')
+        
+        self.assertTrue(c1.equalAttributes(c2), 
+                        'Complex c1 and c2 have not equal attributes\nc1: %s\nc2: %s\n' % (c1, c2))
+        
     def test_equalAttributes(self):
         """ Check that equal attributes function behaves well
         to compare floats with a given precision.
