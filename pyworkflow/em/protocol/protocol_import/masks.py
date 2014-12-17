@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Laura del Caño (ldelcano@cnb.csic.es)
+# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
 # *              Ignacio Foche (ifoche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -28,16 +28,19 @@
 In this module are protocol related to EM imports of Masks...
 """
 
-from os.path import join
+from os.path import exists, basename
 
-from pyworkflow.protocol.params import (PathParam, BooleanParam, 
+from pyworkflow.utils.properties import Message
+
+from pyworkflow.protocol.params import (PathParam, FloatParam,
                                         EnumParam, StringParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import expandPattern, createLink, copyFile
-from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.utils.path import copyFile
+from pyworkflow.em.protocol.protocol_import.base import ProtImport
+from pyworkflow.em.data import Mask, VolumeMask
+from pyworkflow.em.convert import ImageHandler
 
 
-
-class ProtImportMask(EMProtocol):
+class ProtImportMask(ProtImport):
     """ Class for import masks from existing files. """
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -49,7 +52,36 @@ class ProtImportMask(EMProtocol):
                       help="Select the file path of the mask\n")
         form.addParam('samplingRate', FloatParam, default=1.,
                    label=Message.LABEL_SAMP_RATE)
-        
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep('importMaskStep', self.maskPath.get(), self.samplingRate.get())
+
+    #--------------------------- STEPS functions ---------------------------------------------------
+
+    def importMaskStep(self, path, samplingRate):
+        """ Copy mask from maskPath.
+        """
+        self.info("Using mask path: '%s'" % path)
+
+        # Copy the image file into the project
+        dst = self._getExtraPath(basename(path))
+        copyFile(path, dst)
+
+        # Retrive image dimensions
+        imgh = ImageHandler()
+        x, y, z, n = imgh.getDimensions(dst)
+
+        # Create a 2D or 3D Mask
+        if z == 1:
+            mask = Mask()
+        else:
+            mask = VolumeMask()
+
+        mask.setFileName(dst)
+        mask.setSamplingRate(samplingRate)
+
+        self._defineOutputs(outputVolume=mask)
+
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         return []

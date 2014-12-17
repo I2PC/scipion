@@ -31,13 +31,13 @@ from glob import glob
 
 from pyworkflow.utils import expandPattern
 from pyworkflow.protocol.params import PointerParam, PathParam
-from pyworkflow.em.protocol import ProtProcessMovies, ProtImport
+from pyworkflow.em.protocol import ProtProcessMovies, ProtImportFiles
 
 from convert import parseMovieAlignment
 
 
 
-class ProtDosefGpuImport(ProtImport, ProtProcessMovies):
+class ProtDosefGpuImport(ProtImportFiles, ProtProcessMovies):
     """
     Import alignment from 
     
