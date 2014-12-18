@@ -105,7 +105,24 @@ function launchSubmitUpload(){
 function uploadService(){
 	launchSubmitUpload()
 	
-	var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	var browser = detectWebBrowser()
+	
+	if(browser=="chrome" || browser=="ie"){
+		var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	}else if("firefox"){
+		var fn = $("input#id_docfile").val()
+	}else{
+		var fn = $("input#id_docfile").val()
+		console.log("1:"+fn)
+		fn = fn.split("fakepath")[1]
+		console.log("2:"+fn)
+		fn = fn.slice(1)
+		console.log("3:"+fn)
+		fn = fn.replace(" ", "_")
+		console.log("4:"+fn)
+//		var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	}
+	
 	$("input.upload2").val(fn)
 
 	file = $("#project_folder").val()+ "/Uploads/" + fn
