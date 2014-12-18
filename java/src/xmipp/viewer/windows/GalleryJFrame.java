@@ -866,6 +866,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			menu.update();
 			updateVisibleCombos();
+                        searchbt.setEnabled(data.isTableMode());
 			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
 
@@ -1106,6 +1107,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		initResliceButtonMenu();
 		toolBar.add(reslicebt);
                 searchbt = new JButton(XmippResource.getIcon("binocular.png"));
+                searchbt.setEnabled(data.isTableMode());
                 searchbt.addActionListener(new ActionListener() {
 
                     @Override
