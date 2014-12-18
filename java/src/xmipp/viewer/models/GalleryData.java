@@ -1427,7 +1427,7 @@ public class GalleryData {
                     }
         }      
         
-        if (isVolumeMd)
+        if (isVolumeMd && isTableMode())
             selectedVolFn = isselected? getVolumeAt(index): getVolumeAt(0);
             
     }
