@@ -198,6 +198,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             vol = Volume()
             vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
+            self._defineOutputs(outputVolume=vol)
         else:
             vol = self._createSetOfVolumes()
             vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
@@ -207,8 +208,8 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 aux=Volume()
                 aux.setLocation(fnVolume)
                 vol.append(aux)
+            self._defineOutputs(outputVolumes=vol)
 
-        self._defineOutputs(outputVol=vol)
         self._defineSourceRelation(vol, self.inputClasses)
 
     #--------------------------- INFO functions --------------------------------------------
