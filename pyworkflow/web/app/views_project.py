@@ -414,7 +414,7 @@ def create_service_project(request):
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel = objLabelImport)
+                                         objLabel='import averages')
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
