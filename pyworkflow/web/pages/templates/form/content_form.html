@@ -70,7 +70,7 @@
 <!-- BOOLEAN PARAM -->
 							{% if param.getClassName == "BooleanParam" %}
 							  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true"
-							  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}
+							  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}min-width: 230px;
 							  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"
 							  {% if param.htmlValue == 'false' %} checked {% endif %} />{{msg.LABEL_PARAM_NO}}
 							{% elif param.getClassName == "EnumParam" %}
@@ -103,9 +103,9 @@
 									</select>
 								{% elif param.getClassName == "PathParam" or param.getClassName == "FileParam" or param.getClassName == "FolderParam" %}
 									<input type="hidden" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" class="upload1">
-									<input type="text" id="inputPath" class="upload2" readonly>
+									<input type="text" id="inputPath" class="upload2" style="min-width: 230px;" readonly>
 								{% else %}			
-									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" >	
+									<input type="text" id="{{paramName}}_input" data-objId="{{param.htmlIdValue}}" name="{{paramName}}" value="{{param.htmlValue}}" style="min-width: 230px;">	
 								{% endif %}	
 							{% endif %}
 							</td>
