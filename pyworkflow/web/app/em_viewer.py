@@ -42,40 +42,52 @@ def launch_viewer(request):
         idParts = objectId.split("::")
         if idParts[1] != 'None':
             setObj = project.getObject(int(idParts[0]))
-            obj = setObj[int(idParts[1])]
+            if idParts[1].startswith('__attribute__'):
+                attrName = idParts[1].replace('__attribute__', '')
+                if setObj.hasAttribute(attrName):
+                    obj = getattr(setObj, attrName)
+                else:
+                    obj = None
+                    print "OBJ IS NONE!!"
+            else:
+                obj = setObj[int(idParts[1])]
         else:
             obj = project.getObject(int(idParts[0]))
     else:
         obj = project.getObject(int(objectId))
     
-    if obj.isPointer():
-        obj = obj.get()
+    if obj != None:
+        if obj.isPointer():
+            obj = obj.get()
         
-    viewers = findViewers(obj.getClassName(), WEB_DJANGO)
+        viewers = findViewers(obj.getClassName(), WEB_DJANGO)
     
-    if len(viewers) == 0:
-        views = []
-        
-        if isinstance(obj, EMProtocol):
-            for _, output in obj.iterOutputAttributes(EMObject):
-                objViewers = findViewers(output.getClassName(), WEB_DJANGO)
-                if objViewers:
-                    views += objViewers[0](project=project)._visualize(output) or []
-
-        if not views:
-            views = [MessageView("No viewers found for object type: %s" % obj.getClassName())]                    
-        
-        urls = [viewToUrl(request, view) for view in views]
-    else:
-        viewer = viewers[0](project=project)
-        # Lets assume if there is a viewer for the protocol
-        # it will be a ProtocolViewer with a Form
-        if isinstance(viewer, ProtocolViewer):
-            urls = [viewerForm(project, obj, viewer)]
-        else:
-            views = viewer._visualize(obj)
-            urls = [viewToUrl(request, v) for v in views]
+        if len(viewers) == 0:
+            views = []
             
+            if isinstance(obj, EMProtocol):
+                for _, output in obj.iterOutputAttributes(EMObject):
+                    objViewers = findViewers(output.getClassName(), WEB_DJANGO)
+                    if objViewers:
+                        views += objViewers[0](project=project)._visualize(output) or []
+    
+            if not views:
+                views = [MessageView("No viewers found for object type: %s" % obj.getClassName())]                    
+            
+            urls = [viewToUrl(request, view) for view in views]
+        else:
+            viewer = viewers[0](project=project)
+            # Lets assume if there is a viewer for the protocol
+            # it will be a ProtocolViewer with a Form
+            if isinstance(viewer, ProtocolViewer):
+                urls = [viewerForm(project, obj, viewer)]
+            else:
+                views = viewer._visualize(obj)
+                urls = [viewToUrl(request, v) for v in views]
+    else:
+        views = [MessageView("Object not found to visualize")]
+        urls = [viewToUrl(request, view) for view in views]
+        
     jsonStr = json.dumps(urls, ensure_ascii=False)
         
     return HttpResponse(jsonStr, mimetype='application/javascript')
