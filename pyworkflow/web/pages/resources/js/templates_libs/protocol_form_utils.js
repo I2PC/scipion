@@ -616,8 +616,8 @@ function getTableFormatted(node, json, id, previsualize) {
 				var infoObj = value['objects'][i]["info"]
 				var objId = value['objects'][i]["objId"]
 				
-				if(previsualize)
-					var func = first + 'launchViewer("'+ idElm +'")' + second;
+//				if(previsualize)
+//					var func = first + 'launchViewer("'+ idElm +'")' + second;
 				
 				res += "<tr style='display:none;' data-row='"+ key +"' id='"+ x + "' class='" + idElm + "' value='"
 				+ idText  + "' onclick=javascript:selTableMessi($(this));><td> item " 
