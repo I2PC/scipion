@@ -386,7 +386,7 @@ Initial_Volume = [
         {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
         {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
-        {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]}]
+        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"}]}]
         ''')
         f.close()
         
@@ -395,7 +395,7 @@ def create_service_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolume
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
         from pyworkflow.em.packages.eman2 import EmanProtInitModel
         from pyworkflow.em.packages.simple import ProtPrime
         
@@ -479,7 +479,7 @@ def create_service_project(request):
 #         p4.set(protPrime)
 #         p4.setExtendedAttribute('outputVolume')
         
-        protJoin = project.newProtocol(XmippProtAlignVolume)
+        protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
         protJoin.setObjLabel('align volumes')
         protJoin.inputVolumes.append(p1)
         protJoin.inputVolumes.append(p2)
