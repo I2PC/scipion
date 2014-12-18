@@ -40,8 +40,11 @@ def launch_viewer(request):
     objectId = request.GET.get('objectId')
     if '::' in objectId:
         idParts = objectId.split("::")
-        setObj = project.getObject(int(idParts[0]))
-        obj = setObj[int(idParts[1])]
+        if idParts[1] != 'None':
+            setObj = project.getObject(int(idParts[0]))
+            obj = setObj[int(idParts[1])]
+        else:
+            obj = project.getObject(int(idParts[0]))
     else:
         obj = project.getObject(int(objectId))
     
