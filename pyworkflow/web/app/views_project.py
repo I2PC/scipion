@@ -427,7 +427,7 @@ def create_service_project(request):
             
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
-            protImport.setObjectLabel('import averages (%s)' % testDataKey)
+#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
             
             project.launchProtocol(protImport, wait=True)
         else:
