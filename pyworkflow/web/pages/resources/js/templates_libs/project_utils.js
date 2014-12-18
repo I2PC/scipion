@@ -224,11 +224,6 @@ function createServProject(elm) {
 		success : function() {
 			var title = "ACCESS CODE"
 			
-//			var msg = "<p>Your <strong>access code</strong> to the <strong>Project</strong> is:</p>" +
-//				"<br /><p><h2>" + projName + "</h2></p><br />" +
-//                "<p>Please <strong>save this code securely</strong> " +
-//				"to access the project in the future.</p><br />";
-			
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
 			"<br /><p><h3>" + 
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
