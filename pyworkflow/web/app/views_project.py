@@ -412,9 +412,12 @@ def create_service_project(request):
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
         
+        if testDataKey :
+            objLabelImport = 'import averages (%s)' % testDataKey
+        
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
-                                         objLabel='import averages')
+                                         objLabel = objLabelImport)
         
         # If using test data execute the import averages run
         # options are set in 'project_utils.js'
