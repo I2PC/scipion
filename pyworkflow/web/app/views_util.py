@@ -250,7 +250,8 @@ def browse_objects(request):
             
             for child in obj._iterItems():
                 obj_context = {"nameId":child.getNameId(), 
-                               "objId":child.getObjId(), 
+                               "setId": obj.getObjId(),
+                               "objId": child.getObjId(),
                                "info": str(child)} 
                 context["objects"].append(obj_context)    
             objs[obj.getObjId()] = context
