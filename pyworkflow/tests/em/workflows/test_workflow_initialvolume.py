@@ -69,7 +69,6 @@ class TestGroel(tests.BaseTest):
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
-                                      maxFreq=20,
                                       numberOfMpi=1,
                                       numberOfThreads=cpus
                                       )
@@ -79,9 +78,34 @@ class TestGroel(tests.BaseTest):
         # 2b. Eman 
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
+                                           symmetry=sym,
                                            numberOfThreads=cpus)
         protEmanInitVol.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protEmanInitVol)
+        
+        # 3. Significant
+        protSignificant = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
+                                      objLabel='xmipp - significant',
+                                      symmetryGroup=sym,
+                                      numberOfMpi=cpus,
+                                      numberOfThreads=1,
+                                      iter=15
+                                      )
+        protSignificant.inputSet.set(protImport.outputAverages)
+        self.launchProtocol(protSignificant)
+        
+        # 4. Align all volumes
+        protAlign = self.newProtocol(xmipp3.XmippProtAlignVolumeForWeb,
+                                      objLabel='xmipp - align volumes',
+                                      numberOfMpi=1,
+                                      numberOfThreads=cpus
+                                      )
+        protAlign.inputReference.set(protSignificant.outputVolume)
+        protAlign.inputVolumes.append(protRansac.outputVolumes)
+        protAlign.inputVolumes.append(protEmanInitVol.outputVolumes)
+        protAlign.inputVolumes.append(protSignificant.outputVolume)
+        self.launchProtocol(protAlign)        
+                
       
       
 class TestBPV(tests.BaseTest):
