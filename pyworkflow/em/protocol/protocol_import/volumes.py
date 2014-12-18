@@ -35,7 +35,7 @@ from pyworkflow.utils.path import copyFile
 from pyworkflow.em.data import Volume, PdbFile
 from pyworkflow.em.convert import ImageHandler
 
-from base import ProtImport
+from base import ProtImportFiles
 from images import ProtImportImages
 
 
@@ -116,12 +116,12 @@ class ProtImportVolumes(ProtImportImages):
     
     
         
-class ProtImportPdb(ProtImport):
+class ProtImportPdb(ProtImportFiles):
     """ Protocol to import a set of pdb volumes to the project"""
     _label = 'import pdb volumes'
     
     def __init__(self, **args):
-        ProtImport.__init__(self, **args)         
+        ProtImportFiles.__init__(self, **args)
        
     def _defineParams(self, form):
         form.addSection(label='Input')

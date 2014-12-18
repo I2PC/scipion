@@ -643,6 +643,9 @@ class Boolean(Scalar):
     
 class Pointer(Object):
     """Reference object to other one"""
+    EXTENDED_ATTR = '__attribute__'
+    EXTENDED_ITEMID = '__itemid__'
+    
     def __init__(self, value=None, **kwargs):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
         # The _extended attribute will be used to point to attributes of a pointed object
@@ -667,10 +670,10 @@ class Pointer(Object):
         """
         extended = self._extended.get()
         if extended:
-            if extended.startswith('__attribute__'):
+            if extended.startswith(self.EXTENDED_ATTR):
                 attribute = extended.split('__')[-1]
                 value = getattr(self._objValue, attribute, default)
-            elif extended.startswith('__itemid__'):
+            elif extended.startswith(self.EXTENDED_ITEMID):
                 itemId = int(extended.split('__')[-1])
                 value = self._objValue[itemId]
                 value._parentObject = self._objValue
@@ -700,14 +703,35 @@ class Pointer(Object):
         
     def setExtendedAttribute(self, attributeName):
         """ Point to an attribute of the pointed object. """
-        self._extended.set('__attribute__' + attributeName)
+        self._extended.set(self.EXTENDED_ATTR + attributeName)
+        
+    def hasExtendedAttribute(self):
+        return (self._extended.hasValue() and
+                self._extended.get().startswith(self.EXTENDED_ATTR))
         
     def setExtendedItemId(self, itemId):
         """ Point to an specific item of a pointed Set. """
-        self._extended.set('__itemid__%d' % itemId)
+        self._extended.set(self.EXTENDED_ITEMID + str(itemId))
+         
+    def hasExtendedItemId(self):
+        return (self._extended.hasValue() and
+                self._extended.get().startswith(self.EXTENDED_ITEMID))       
+        
+        
+    def hasExtended(self):
+        return self._extended.hasValue()
+    
+    def getExtendedValue(self):
+        if self.hasExtended():
+            return self._extended.get().split('__')[-1]
+        else:
+            return None
         
     def getAttributes(self):
         yield ('_extended', getattr(self, '_extended'))
+        
+    def pointsNone(self):
+        return self.get() is None
     
 
 class List(Object, list):

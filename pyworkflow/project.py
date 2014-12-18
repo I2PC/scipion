@@ -204,7 +204,6 @@ class Project(object):
                 dbPath = self.getPath(protocol.getDbPath())
                 if not exists(dbPath):
                     return
-                print protocol.getStatus()
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
                 prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
                 # Copy is only working for db restored objects

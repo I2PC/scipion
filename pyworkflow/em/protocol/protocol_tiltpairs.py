@@ -41,11 +41,11 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import SetOfMicrographs
 from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
 
-from protocol_import import ProtImport
+from protocol_import import ProtImportFiles
 
 
 
-class ProtImportMicrographsTiltPairs(ProtImport):
+class ProtImportMicrographsTiltPairs(ProtImportFiles):
     """Protocol to import untilted-tilted pairs of micrographs in the project"""
     
     _className = 'Micrograph'

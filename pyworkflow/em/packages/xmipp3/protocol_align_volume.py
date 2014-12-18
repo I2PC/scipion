@@ -189,13 +189,25 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
         
         for vol in self._iterInputVolumes():
-            vol.setLocation(vol.outputName)
-            volSet.append(vol) 
+            outVol = em.Volume()
+            outVol.setLocation(vol.getLocation())
+            outVol.setObjLabel(vol.getObjLabel())
+            outVol.setObjComment(vol.getObjComment())
+            volSet.append(outVol) 
         
         self._defineOutputs(outputVolumes=volSet)
         #TODO: define the source relation from each input
     
     #--------------------------- INFO functions --------------------------------------------
+    
+    def _validate(self):
+        errors = []
+        for pointer in self.inputVolumes:
+            if pointer.pointsNone():
+                errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
+                errors.append('              extended: %s' % pointer.getExtendedValue())
+        return errors    
+    
     def _summary(self):
         summary = []
         nVols = 0

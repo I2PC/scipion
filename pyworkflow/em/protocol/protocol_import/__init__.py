@@ -29,10 +29,10 @@ Sub-packages containing different sub-modules to import different type
 of objects.
 """
 
-from base import ProtImport
+from base import ProtImportFiles
 from images import ProtImportImages
 from micrographs import ProtImportMicrographs, ProtImportMovies
 from particles import ProtImportParticles, ProtImportAverages
 from coordinates import ProtImportCoordinates
 from volumes import ProtImportVolumes, ProtImportPdb
-
+from masks import ProtImportMask

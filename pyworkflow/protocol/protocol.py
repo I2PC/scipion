@@ -426,7 +426,10 @@ class Protocol(Step):
                 raise Exception('Attribute %s have been overwritten to type %s ' % (key, type(attr)))
             if isinstance(attr, PointerList) and attr.hasValue():
                 for item in attr:
-                    yield key, item
+                    # the same key is returned for all items inside the
+                    # PointerList, this is used in viewprotocols.py
+                    # to group them inside the same tree element
+                    yield key, item 
             elif attr.isPointer() and attr.hasValue():
                 yield key, attr
                 
