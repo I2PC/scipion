@@ -478,9 +478,6 @@ function normalizeConditions(cond){
 }
 
 
-
-
-
 function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
 	 * Browse object in the database.
@@ -626,7 +623,7 @@ function getTableFormatted(node, json, id, previsualize) {
 				+ idText  + "' onclick=javascript:selTableMessi($(this));><td> item " 
 				+ objId + "</td><td>"+ infoObj +"</td>";
 				
-				res += "<td>"+ func +"</td>"
+//				res += "<td>"+ func +"</td>"
 				res += "</tr>"
 					
 				x++;
@@ -753,10 +750,16 @@ function selTableMessi(elm) {
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', '');
+//		rowOld.attr('style', '');
+		// Fixed
+		rowOld.css('background-color', '');
+		rowOld.css('font-weight', '');
 	}
 	row.attr('value', id);
 	elm.attr("selected","selected")
-	elm.attr('style', 'background-color: #F3CBCB;font-weight: bold;');
+//	elm.attr('style', 'background-color: #F3CBCB;font-weight: bold;');
+	// Fixed
+	elm.css('background-color', '#F3CBCB')
+	elm.css('font-weight', 'bold')
 }
 
