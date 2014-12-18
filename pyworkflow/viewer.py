@@ -30,6 +30,8 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 
 from os.path import join
 from protocol import Protocol
+from em import SetOfVolumes, Volume
+from pyworkflow.utils.path import cleanPath
 
 DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
@@ -299,3 +301,16 @@ class ProtocolViewer(Protocol, Viewer):
                 # If values are separated by comma also splitted 
                 values += map(int, e.split())
         return values
+
+    def createVolumesSqlite(self, files, path, samplingRate):
+
+        cleanPath(path)
+        volSet = SetOfVolumes(filename=path)
+        volSet.setSamplingRate(samplingRate)
+
+        for volFn in files:
+                    vol = Volume()
+                    vol.setFileName(volFn)
+                    volSet.append(vol)
+        volSet.write()
+        return volSet

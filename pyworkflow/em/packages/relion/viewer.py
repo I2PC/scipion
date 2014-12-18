@@ -26,7 +26,7 @@
 
 import os
 
-from pyworkflow.utils.path import cleanPath
+
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 
 import pyworkflow.em as em
@@ -323,24 +323,25 @@ Examples:
 #===============================================================================
 # ShowVolumes
 #===============================================================================
+
+
+
+
     def _createVolumesSqlite(self):
         """ Write an sqlite with all volumes selected for visualization. """
 
         prefixes = self._getPrefixes()
 
         path = self.protocol._getExtraPath('relion_viewer_volumes.sqlite')
-        cleanPath(path)
-        volSet = em.SetOfVolumes(filename=path)
-        volSet.setSamplingRate(self.protocol.inputParticles.get().getSamplingRate())
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
 
+        files = []
         for it in self._iterations:
             for ref3d in self._refsList:
                 for prefix in prefixes:
                     volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                    vol = em.Volume()
-                    vol.setFileName(volFn)
-                    volSet.append(vol)
-        volSet.write()
+                    files.append(volFn)
+        self.createVolumesSqlite(files, path, samplingRate)
         return [em.ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _showVolumesChimera(self):

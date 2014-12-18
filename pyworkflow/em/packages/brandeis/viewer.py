@@ -92,13 +92,17 @@ Examples:
     
     def _view3DRefsVolumes(self, e=None):
         files = self._getIterationFile("reference_volume_iter_%03d.mrc")
-        #TODO: Instead of opening a showj separated with each volume, write a md 
-        return [self.createDataView(files[0])]
+        path = self.protocol._getExtraPath('viewer_refvolumes.sqlite')
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
+        self.createVolumesSqlite(files, path, samplingRate)
+        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
         
     def _view3DReconVolumes(self, e=None):
-        #TODO: Instead of opening a showj separated with each volume, write a md
         files = self._getIterationFile("volume_iter_%03d.mrc")
-        return [self.createDataView(files[0])]
+        path = self.protocol._getExtraPath('viewer_volumes.sqlite')
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
+        self.createVolumesSqlite(files, path, samplingRate)
+        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _viewMatchProj(self, e=None):
         files = self._getIterationFile("particles_match_iter_%03d.mrc")

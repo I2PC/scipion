@@ -97,7 +97,7 @@ class XmippML2DViewer(ProtocolViewer):
     def _getClassesSqlite(self, fnXmd, it):
         """ Return the sqlite file given the xmd of classes. """
         fnSqlite = join(dirname(fnXmd), 'classes_it%03d.sqlite' % it)
-        print "_getClassesSqlite: fnXmd=", fnXmd
+
         
         if not exists(fnSqlite): # Create the sqlite if not exists
             print "   print creating fnSqlite=", fnSqlite
