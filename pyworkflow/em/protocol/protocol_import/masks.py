@@ -80,12 +80,20 @@ class ProtImportMask(ProtImport):
         mask.setFileName(dst)
         mask.setSamplingRate(samplingRate)
 
-        self._defineOutputs(outputVolume=mask)
+        self._defineOutputs(outputMask=mask)
 
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
-        return []
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
+        errors = []
+        if not self.maskPath.hasValue():
+            errors.append("Mask path cannot be empty.")
+        elif not exists(self.maskPath.get()):
+            errors.append("Mask not found at *%s*" % self.maskPath.get())
+        if not self.samplingRate.hasValue():
+            errors.append("Sampling rate cannot be empty.")
+        return errors
 
+    def _summary(self):
+        summary = ['Mask file imported from *%s*' % self.maskPath.get()]
 
+        return summary
