@@ -79,6 +79,7 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
     elif arg == '--overwrite':
         overwriteConfs = True
+        sys.argv.insert(1, value)  # hack, there is no "value" to read here
     else:
         sys.exit('Unknown argument: %s' % arg)
 
