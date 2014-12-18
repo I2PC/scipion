@@ -100,7 +100,6 @@ class XmippML2DViewer(ProtocolViewer):
 
         
         if not exists(fnSqlite): # Create the sqlite if not exists
-            print "   print creating fnSqlite=", fnSqlite
             classes2DSet = SetOfClasses2D(filename=fnSqlite)
             classes2DSet.setImages(self.protocol.inputParticles.get())
             readSetOfClasses2D(classes2DSet, fnXmd)
