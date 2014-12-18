@@ -55,7 +55,7 @@ from viewer_movie_alignment import XmippMovieAlignViewer
 
 from plotter import XmippPlotter
 
-from protocol_align_volume import XmippProtAlignVolume
+from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
