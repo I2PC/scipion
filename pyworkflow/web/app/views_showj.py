@@ -591,6 +591,9 @@ def chimera_headless(volPath, threshold):
         For example:
         export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera """
     
+    # Patch for files ended in :mrc
+    volPath = volPath.split(":mrc")[0]
+    
     # Create or Modify the file to exportS
     htmlFile = os.path.join(pw.WEB_RESOURCES, 'chimera', 'output.html')
     outputHtmlFile = open(htmlFile, 'w+')
@@ -617,9 +620,18 @@ def chimera_headless(volPath, threshold):
     chimeraHtml = outputHtmlFile.read()
     
 #     Format information
-    chimeraHtml = chimeraHtml.decode('string-escape').decode("utf-8").split("</html>")[1]
+#     print "HTML =", chimeraHtml
+    chimeraHtml = chimeraHtml.decode('string-escape')
+#     print "HTML DECODE STRING =", chimeraHtml
+    chimeraHtml = chimeraHtml.decode("utf-8")
+#     print "HTML DECODE UTF8 =", chimeraHtml
+    chimeraHtml = chimeraHtml.split("</html>")
+#     print "HTML SPLIT =", chimeraHtml
+    chimeraHtml = chimeraHtml[1]
+#     print "HTML SPLIT[1] =", chimeraHtml
     chimeraHtml = '<canvas id="molview" width="320" height="240"></canvas>' + chimeraHtml
-
+#     print "HTML CANVAS =", chimeraHtml
+    
     # Close file
     outputHtmlFile.close()
     
