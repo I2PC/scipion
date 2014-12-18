@@ -384,11 +384,10 @@ Initial_Volume = [
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
         {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - ransac"},
         {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
-        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"},
-        {"tag": "protocol", "value": "ProtPrime", "text": "simple - prime"}]},
+        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
         {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]}]
-            ''')
+        ''')
         f.close()
         
 def create_service_project(request):
@@ -428,7 +427,7 @@ def create_service_project(request):
             
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
-            protImport.setObjectLabel('import averages (%s)' % testDataKey)
+#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
             
             project.launchProtocol(protImport, wait=True)
         else:

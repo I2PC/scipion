@@ -70,7 +70,7 @@
 <!-- BOOLEAN PARAM -->
 							{% if param.getClassName == "BooleanParam" %}
 							  <input type="radio" id="{{paramName}}_yes" name={{paramName}} onChange="javascript:onChangeParam('true','{{paramName}}');" value="true"
-							  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}min-width: 230px;
+							  {% if param.htmlValue == 'true' %} checked {% endif %}/>{{msg.LABEL_PARAM_YES}}
 							  <input type="radio" id="{{paramName}}_no" name={{paramName}} onChange="javascript:onChangeParam('false','{{paramName}}');" value="false"
 							  {% if param.htmlValue == 'false' %} checked {% endif %} />{{msg.LABEL_PARAM_NO}}
 							{% elif param.getClassName == "EnumParam" %}
