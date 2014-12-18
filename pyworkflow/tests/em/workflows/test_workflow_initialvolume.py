@@ -133,10 +133,11 @@ class TestBPV(tests.BaseTest):
         # 2a. Ransac 
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
-                                      objComment='',
+                                      objComment='Since there are only 8 projections, a dimensionality reduction cannot be safely done. In this case, it is better to take only 3 images in every RANSAC iterations and lower the inlier threshold to 0.65 so that more images can have the chances of being considered during the reconstruction process.',
                                       symmetryGroup=sym,
                                       dimRed=False,
                                       numSamples=3, # less than 8 classes provided
+                                      corrThresh=0.65, 
                                       numberOfMpi=1,
                                       numberOfThreads=cpus
                                       )
