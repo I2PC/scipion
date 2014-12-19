@@ -5,15 +5,9 @@
  */
 package xmipp.viewer.scipion;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
@@ -21,10 +15,8 @@ import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MDLabel;
-import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
-import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
@@ -43,9 +35,6 @@ public class ScipionGalleryData extends GalleryData {
 
     public ScipionGalleryData(ScipionGalleryJFrame window, Params parameters, ScipionMetaData md) {
         super(window, parameters, md);
-
-        
-
     }
 
     public void setFileName(String file) {

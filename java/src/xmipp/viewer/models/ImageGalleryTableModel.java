@@ -26,10 +26,10 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Point;
 import java.util.ArrayList;
 import javax.swing.JTable;
 import javax.swing.border.Border;
@@ -347,10 +347,12 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @return index of the element
 	 */
 	public int getIndex(int row, int col) {
-		int index = row * cols + col; 
-		return index;
+                
+                return row * cols + col; 
 		
 	}
+        
+       
 	
 	public long getId(int row, int col) {
 		int index = getIndex(row, col);
@@ -372,11 +374,11 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	 * @param index
 	 * @return
 	 */
-	public int[] getCoords(int index) {
-		int[] coords = new int[2];
-		coords[0] = index / cols;
-		coords[1] = index % cols;
-		return coords;
+	public Point getCoords(int index) {
+                Point p = new Point();
+		p.x = index / cols;
+		p.y = index % cols;
+		return p;
 	}
 
 	/** Functions to handle selections */
@@ -391,8 +393,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
                                 
                         if(from != -1)
                         {
-                            from = getCoords(from)[0];
-                            to = getCoords(to)[0];
+                            from = getCoords(from).x;
+                            to = getCoords(to).x;
                             fireTableRowsUpdated(from, to);
                         }
 	            
@@ -415,8 +417,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void selectRange(int first_index, int last_index, boolean value) {
 		for (int i = first_index; i <= last_index; ++i)
 			data.setSelected(i, value);
-                int from = getCoords(first_index)[0];
-                int to = getCoords(last_index)[0];
+                int from = getCoords(first_index).x;
+                int to = getCoords(last_index).x;
 		fireTableRowsUpdated(from, to);
 	}
 
@@ -451,6 +453,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Set the selection state of an element give row and col */
 	public void touchItem(int row, int col) {
+            
 		int i = getIndex(row, col);
 		if (isValidIndex(i)) {
 			data.setSelected(i, !data.isSelected(i));
@@ -477,8 +480,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	public void gotoItem(int i) {
 		clearSelection();
 		data.setSelected(i, !data.isSelected(i));
-		int[] coords = getCoords(i);
-		fireTableCellUpdated(coords[0], coords[1]);
+		Point coords = getCoords(i);
+		fireTableCellUpdated(coords.x, coords.y);
 	}
 
 	/** Return the number of selected elements */
@@ -633,8 +636,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		}
 
 		public String getLabel() {
-			int[] coords = getCoords(index);
-			return ImageGalleryTableModel.this.getLabel(coords[0], coords[1]);
+			Point coords = getCoords(index);
+			return ImageGalleryTableModel.this.getLabel(coords.x, coords.y);
 		}
 
 		public String getKey() {

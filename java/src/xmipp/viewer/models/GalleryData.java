@@ -711,13 +711,13 @@ public class GalleryData {
             {
                 selection = new boolean[ids.length];
             }
-        } else if (isRotSpectraMd()) {
+        } else if (isRotSpectraMd())
             mode = Mode.GALLERY_ROTSPECTRA;
-        } else if ( isVolumeMd) {
+        else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;
-        } else {
+        else
             mode = Mode.GALLERY_MD;
-        }
+        
 
     }
 
@@ -1427,7 +1427,7 @@ public class GalleryData {
                     }
         }      
         
-        if (isVolumeMd)
+        if (isVolumeMd && isTableMode())
             selectedVolFn = isselected? getVolumeAt(index): getVolumeAt(0);
             
     }
@@ -1914,5 +1914,13 @@ public class GalleryData {
             return imagesmd;
        }
        
+        public ColumnInfo getColumn(int row, int col)
+        {
+            if(isGalleryMode())
+                return ciFirstRender;
+            if(isColumnFormat())
+                return getColumnInfo(col);
+            return getColumnInfo(row); 
+        }
         
 }// class GalleryDaa

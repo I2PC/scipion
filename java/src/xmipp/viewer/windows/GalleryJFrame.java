@@ -728,11 +728,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	private void makeVisible(int index)
 	{
-		int coords[] = gallery.getCoords(index);
+		Point coords = gallery.getCoords(index);
 		//DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
 
 		// Gets current selected cell bounds.
-		Rectangle rect = table.getCellRect(coords[0], coords[1], true);
+		Rectangle rect = table.getCellRect(coords.x, coords.y, true);
 
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
@@ -866,6 +866,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 			menu.update();
 			updateVisibleCombos();
+                        searchbt.setEnabled(data.isTableMode());
 			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
 
@@ -1106,6 +1107,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		initResliceButtonMenu();
 		toolBar.add(reslicebt);
                 searchbt = new JButton(XmippResource.getIcon("binocular.png"));
+                searchbt.setEnabled(data.isTableMode());
                 searchbt.addActionListener(new ActionListener() {
 
                     @Override
@@ -1324,15 +1326,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		if (row < 0 || row > table.getRowCount() - 1 || col < 0 || col > table.getColumnCount())
 			return;
 		
-		if (gallery.data.isGalleryMode() && 
-			row * table.getColumnCount() + col + 1 > gallery.getSize())
+		if (gallery.data.isGalleryMode() && row * table.getColumnCount() + col + 1 > gallery.getSize())
 		{
-			int[] coords = gallery.getCoords(gallery.getSize() - 1);
-			row = coords[0];
-			col = coords[1];
-
+			Point coords = gallery.getCoords(gallery.getSize() - 1);
+			row = coords.x;
+			col = coords.y;
 		}
-
 		gallery.clearSelection();
 		gallery.touchItem(row, col);
 		makeVisible(row);
@@ -1874,7 +1873,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		@Override
 		public void initItems()
 		{
-			setItemVisible(OPEN, false);
+			setItemVisible(OPEN, true);
 			setItemVisible(OPEN_ASTEXT, false);
 			setItemVisible(CTF_PROFILE, data.isCTFMd());
 			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
@@ -1924,15 +1923,13 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			else if (cmd.equals(OPEN))
 			{
                                
-                                MetadataGalleryTableModel mg = (MetadataGalleryTableModel) gallery;
-
-                                ColumnInfo ci = mg.visibleLabels.get(col);
-
+                                ColumnInfo ci = data.getColumn(row, col);
                                 if (ci.allowRender)
                                         gallery.handleDoubleClick(row, col);
                                 else
                                 {
-                                        String file = data.getValueFromCol(row, ci);
+                                        int index = gallery.getIndex(row, col);
+                                        String file = data.getValueFromCol(index, ci);
                                         ImagesWindowFactory.openFileAsDefault(file);
                                 }
 			}
@@ -2127,10 +2124,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         ExportImagesJDialog d = new ExportImagesJDialog(GalleryJFrame.this);
                     }
                 });
-
-			
-		
-
 	}
 
 	public void openMicrographs()

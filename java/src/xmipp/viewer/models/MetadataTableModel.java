@@ -26,6 +26,7 @@
 package xmipp.viewer.models;
 
 import java.awt.Component;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.regex.Matcher;
@@ -83,15 +84,17 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public int getIndex(int row, int col) {
-		return row;
+                if(data.isColumnFormat())
+                    return row;
+		return 0;
 	}
 
 	@Override
-	public int[] getCoords(int index) {
-		int[] coords = new int[2];
-		coords[0] = index;
-		coords[1] = 0;
-		return coords;
+	public Point getCoords(int index) {
+		Point p = new Point();
+		p.x = index;
+		p.y = 0;
+		return p;
 	}
 
 	/**
