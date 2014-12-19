@@ -90,10 +90,10 @@ class TestBasic(BaseTest):
 
 
 
-SHOW_IMAGES  = False#True # Launch xmipp_showj to open intermediate results
+SHOW_IMAGES  = True#True # Launch xmipp_showj to open intermediate results
 CLEAN_IMAGES = True # Remove the output temporary files
-PRINT_MATRIX = False
-PRINT_FILES  = False
+PRINT_MATRIX = True
+PRINT_FILES  = True
 
 
 def runXmippProgram(cmd):
@@ -148,7 +148,7 @@ class TestConvertBase(BaseTest):
             print "OUTPUT:      ", outputFn
             print "GOLD:        ", goldFn
 
-        if is2D:
+        if alignType == ALIGN_2D or alignType == ALIGN_PROJ:
             partSet = SetOfParticles(filename=partFn1)
         else:
             partSet = SetOfVolumes(filename=partFn1)
@@ -171,7 +171,7 @@ class TestConvertBase(BaseTest):
 
         # Convert to a Xmipp metadata and also check that the images are
         # aligned correctly
-        if is2D:
+        if alignType == ALIGN_2D or alignType == ALIGN_PROJ:
             writeSetOfParticles(partSet, mdFn, alignType=alignType)
             partSet2 = SetOfParticles(filename=partFn2)
         else:
@@ -180,7 +180,7 @@ class TestConvertBase(BaseTest):
         # Let's create now another SetOfImages reading back the written
         # Xmipp metadata and check one more time.
         partSet2.copyInfo(partSet)
-        if is2D:
+        if alignType == ALIGN_2D or alignType == ALIGN_PROJ:
             readSetOfParticles(mdFn, partSet2, alignType=alignType)
         else:
             readSetOfVolumes(mdFn, partSet2, alignType=alignType)
@@ -218,26 +218,73 @@ class TestAlignment(TestConvertBase):
     CMD = "xmipp_transform_geometry  -i %(mdFn)s -o %(outputFn)s --apply_transform"
     
     def test_isInverse(self):
-        def _testInv(matrixList):
-            a = Transform(matrixList)
+        """I wish I knew what is being tested here ROB"""
+        def _testInv(matrix):
+            matrix = np.array(matrix)
+            a = Transform(matrix)
             
             row = XmippMdRow()
             alignmentToRow(a, row, alignType=ALIGN_2D)
-            print "isInv=False, row", row      
-            
+
             row2 = XmippMdRow()
-            alignmentToRow(a, row2, alignType=ALIGN_2D)
-            print "isInv=True, row2", row2
-          
-        _testInv([[1.0, 0.0, 0.0, 20.0],
+            alignmentToRow(a, row2, alignType=ALIGN_3D)
+
+            row3 = XmippMdRow()
+            alignmentToRow(a, row3, alignType=ALIGN_PROJ)
+
+            return row, row2, row3
+
+        row, row2, row3 = _testInv([[1.0, 0.0, 0.0, 20.0],
                   [0.0, 1.0, 0.0, 0.0],
                   [0.0, 0.0, 1.0, 0.0],
                   [0.0, 0.0, 0.0, 1.0]])
-          
-        _testInv([[0.93969, 0.34202, 0.0, -6.8404],
+
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_SHIFT_X),20.,4)
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_SHIFT_Y),0.,4)
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_ANGLE_PSI),0.,4)
+        self.assertEqual(row.getValue(xmipp.MDL_FLIP),False)
+
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_X),20.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_Y),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_Z),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_ROT),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_TILT),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_PSI),0.,4)
+        self.assertEqual(row2.getValue(xmipp.MDL_FLIP),False)
+
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_X),20.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_Y),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_Z),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_ROT),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_TILT),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_PSI),0.,4)
+        self.assertEqual(row3.getValue(xmipp.MDL_FLIP),False)
+
+
+        row, row2, row3 = _testInv([[0.93969, 0.34202, 0.0, -6.8404],
                   [-0.34202, 0.93969, 0.0, 18.7939],
                   [0.0, 0.0, 1.0, 0.0],
-                  [0.0, 0.0, 0.0, 1.0]])    
+                  [0.0, 0.0, 0.0, 1.0]])
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_SHIFT_X),-6.8404,4)
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_SHIFT_Y),18.7939,4)
+        self.assertAlmostEqual(row.getValue(xmipp.MDL_ANGLE_PSI),20.,4)
+        self.assertEqual(row.getValue(xmipp.MDL_FLIP),False)
+
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_X),-6.8404,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_Y),18.7939,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_SHIFT_Z),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_ROT),20.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_TILT),0.,4)
+        self.assertAlmostEqual(row2.getValue(xmipp.MDL_ANGLE_PSI),0.,4)
+        self.assertEqual(row2.getValue(xmipp.MDL_FLIP),False)
+
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_X),-12.8558097352,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_Y),15.3209632479,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_SHIFT_Z),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_ROT),-20.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_TILT),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_ANGLE_PSI),0.,4)
+        self.assertAlmostEqual(row3.getValue(xmipp.MDL_FLIP),False)
 
 
     def test_alignShiftRotExp(self):
@@ -277,12 +324,12 @@ class TestAlignment(TestConvertBase):
         """
         mList = [[[ -1.0, 0.0, 0.0, 20.0],
                   [ 0.0, 1.0, 0.0,  0.0],
-                  [ 0.0, 0.0, 1.0,  0.0],
-                  [ 0.0, 0.0, 0.0,  -1.0]],
+                  [ 0.0, 0.0, -1.0,  0.0],
+                  [ 0.0, 0.0, 0.0,  1.0]],
                  [[-0.86602539, -0.5, 0.0, 20.0],
                   [ -0.5,0.86602539, 0.0, 0.0],
-                  [ 0.0, 0.0, 1.0, 0.0],
-                  [ 0.0, 0.0, 0.0, -1.0]],
+                  [ 0.0, 0.0, -1.0, 0.0],
+                  [ 0.0, 0.0, 0.0, 1.0]],
                  [[0.86602539, 0.5, 0.0, 27.706396],
                   [ -0.5,0.86602539, 0.0,0.331312],
                   [ 0.0, 0.0, 1.0, 0.0],
@@ -295,10 +342,10 @@ class TestAlignment(TestConvertBase):
                   [ -1.0, 0.0, 0.0, 3.6349521],
                   [ 0.0, 0.0, 1.0, 0.0],
                   [ 0.0, 0.0, 0.0, 1.0]]]
-        fileKey='alignShiftRotflip'
+        fileKey = 'alignShiftRotflip'
         stackFn = self.dataset.getFile(fileKey)
         partFn1 = self.getOutputPath(fileKey + "_particles1.sqlite")
-        mdFn = self.getOutputPath(fileKey + "_particles.xmd")
+        mdFn    = self.getOutputPath(fileKey + "_particles.xmd")
         partFn2 = self.getOutputPath(fileKey + "_particles2.sqlite")
 
         partSet = SetOfParticles(filename=partFn1)
@@ -306,6 +353,8 @@ class TestAlignment(TestConvertBase):
                                   sphericalAberration=2,
                                   amplitudeContrast=0.1,
                                   magnification=60000))
+        print "input Filename", stackFn
+        print "input Filename", partFn1
         # Populate the SetOfParticles with  images
         # taken from images.mrc file
         # and setting the previous alignment parameters
@@ -342,13 +391,8 @@ class TestAlignment(TestConvertBase):
                 print  >> sys.stderr, 'm1:\n', m1
                 print  >> sys.stderr, 'm2:\n', m2
                 self.assertTrue(np.allclose(m1, m2, rtol=1e-2))
-#        if commandLine is not None:
-#            import subprocess
-#            print ("Computing: ", commandLine%locals())
-#            p = subprocess.Popen(commandLine%locals(), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#            for line in p.stdout.readlines():
-#                print line,
-#            retval = p.wait()
+
+#        self.launchTest('alignShiftRotExp', mList, alignType=ALIGN_2D)
 
         
     def test_alignFlip(self):
@@ -357,10 +401,10 @@ class TestAlignment(TestConvertBase):
         Goal: 2D alignment
         Misalignment: flip
         """
-        mList = [[[ -1., -0., -0.,  0.],
+        mList = [[[ -1.,  0.,  0.,  0.],
                   [  0.,  1.,  0.,  0.],
-                  [  0.,  0.,  1.,  0.],
-                  [  0,   0.,  0., -1.]],
+                  [  0.,  0.,  -1.,  0.],
+                  [  0,   0.,  0.,  1.]],
                  
                  [[ 1.0, 0.0, 0.0, 0.0],
                   [ 0.0, 1.0, 0.0, 0.0],
@@ -378,8 +422,8 @@ class TestAlignment(TestConvertBase):
         """
         mList = [[[-0.86603,-0.50000,  0.00000, -17.32051],
                   [-0.50000, 0.86603, -0.00000, -10.00000],
-                  [ 0.00000, 0.00000,  1.00000,  -0.00000],
-                  [ 0.00000, 0.00000,  0.00000,  -1.00000]],
+                  [ 0.00000, 0.00000,  -1.00000,  -0.00000],
+                  [ 0.00000, 0.00000,  0.00000,  1.00000]],
 
                  [[ 1.0, 0.0, 0.0, 0.0],
                   [ 0.0, 1.0, 0.0, 0.0],
@@ -636,6 +680,34 @@ class TestReconstruct(TestConvertBase):
                 ]
 
         self.launchTest('reconstRotandShift', mList, alignType=ALIGN_PROJ)
+
+    def test_reconstRotandShiftFlip(self):
+        """ Check that for a given alignment object,
+        a1 -> reference
+        a2 -> projection at random
+        a3 -> flip(a2) with equivalent euler angles
+        a4 -> flip a1 matrix. a3 and a4 matrix are equivalent
+        """
+        mList = [
+                 [[1., 0., 0., 0.],#a1
+                  [0., 1., 0., 0.],
+                  [0., 0., 1., 0.],
+                  [0., 0., 0., 1.]],
+                 [[  0.04341204, -0.82959837,  0.5566704,   7.42774284],#a2
+                  [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
+                  [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
+                  [  0.,          0.,          0.,          1.        ]],
+                 [[  0.04341204,   0.82959837,   0.5566704,   -7.42774284],#a3
+                  [  0.90961589,  -0.26325835,   0.3213938,   20.82490128],
+                  [  0.41317591,   0.49240388,  -0.76604444,   3.33947946],
+                  [  0.,           0.,           0.,           1.        ]],
+                 [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
+                  [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
+                  [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
+                  [  0.,          0.,          0.,           1.        ]],
+                ]
+
+        self.launchTest('reconstRotandShiftFlip', mList, alignType=ALIGN_PROJ)
 
     
 class TestSetConvert(BaseTest):
