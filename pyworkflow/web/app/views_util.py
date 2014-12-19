@@ -536,6 +536,7 @@ def get_slice(request):
             
     if 'projectPath' in request.session:
         imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+        imagePath = imagePathTmp
 #         if not os.path.isfile(imagePathTmp):
 #             raise Exception('should not use getInputPath')
             #imagePath = getInputPath('showj', imagePath)
