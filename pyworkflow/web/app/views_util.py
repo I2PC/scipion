@@ -614,7 +614,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if convert or reslice:
         fileName, _ = os.path.splitext(path)
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
-        img.write(str(_newPath))
+        img.write(os.path.join(request.session['projectPath'], _newPath))
     
     return _newPath, _stats
 
