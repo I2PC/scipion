@@ -505,7 +505,12 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
 
-    hFile->exist = fileName.exists() && fileName.getFileSize() > 0;
+     bool exist = fileName.exists();
+     bool sizeZero = true;
+
+     if (exist)
+         sizeZero = fileName.getFileSize() <= 0;
+    hFile->exist = exist && !sizeZero;
     hFile->mode = mode;
 
     String wmChar;
@@ -513,8 +518,11 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     switch (mode)
     {
     case WRITE_READONLY:
-        if (!hFile->exist)
-            REPORT_ERROR(ERR_IO_NOTEXIST, formatString("Cannot read file '%s'. It doesn't exist", name.c_str()));
+        if (!exist)
+          REPORT_ERROR(ERR_IO_NOTEXIST, formatString("Cannot access file '%s'. It doesn't exist", name.c_str()));
+        else if (sizeZero)
+          REPORT_ERROR(ERR_IO_SIZE, formatString("Cannot read zero size file '%s'.", name.c_str()));
+
         wmChar = "r";
         break;
     case WRITE_OVERWRITE:
