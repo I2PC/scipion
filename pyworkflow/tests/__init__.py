@@ -65,6 +65,8 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_2_iter_002.mrc',
                'volumes': 'volumes/*.mrc',
+               'mask2d': 'masks/mask2d.xmp',
+               'mask3d': 'masks/mask.vol',
                })
 
 

@@ -124,9 +124,10 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         line.addParam('maximumScale', params.FloatParam, default=1, label='Max')
         line.addParam('stepScale', params.FloatParam, default=0.005, label='Step')          
                         
-        group = form.addGroup('Initial values', condition='alignmentAlgorithm==%d' % ALIGN_ALGORITHM_LOCAL)
-        line = group.addLine('Initial angles', expertLevel=params.LEVEL_ADVANCED,
-                            )        
+        group = form.addGroup('Initial values', 
+                              condition='alignmentAlgorithm==%d' % ALIGN_ALGORITHM_LOCAL, 
+                              expertLevel=params.LEVEL_ADVANCED)
+        line = group.addLine('Initial angles')        
         line.addParam('initialRotAngle', params.FloatParam, default=0, label='Rot')        
         line.addParam('initialTiltAngle', params.FloatParam, default=0, label='Tilt')
         line.addParam('initialInplaneAngle', params.FloatParam, default=0, label='Psi') 
@@ -188,13 +189,25 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
         
         for vol in self._iterInputVolumes():
-            vol.setLocation(vol.outputName)
-            volSet.append(vol) 
+            outVol = em.Volume()
+            outVol.setLocation(vol.getLocation())
+            outVol.setObjLabel(vol.getObjLabel())
+            outVol.setObjComment(vol.getObjComment())
+            volSet.append(outVol) 
         
         self._defineOutputs(outputVolumes=volSet)
         #TODO: define the source relation from each input
     
     #--------------------------- INFO functions --------------------------------------------
+    
+    def _validate(self):
+        errors = []
+        for pointer in self.inputVolumes:
+            if pointer.pointsNone():
+                errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
+                errors.append('              extended: %s' % pointer.getExtendedValue())
+        return errors    
+    
     def _summary(self):
         summary = []
         nVols = 0

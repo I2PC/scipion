@@ -67,6 +67,8 @@ SCIPION_HOME = dirname(os.path.realpath(__file__))
 SCIPION_CONFIG = os.path.expanduser('~/.config/scipion/scipion.conf')
 SCIPION_MENU = os.path.expanduser('~/.config/scipion/menu.conf')
 
+overwriteConfs = False  # regenerate config files?
+
 # Allow the user to override them (and remove them from sys.argv).
 while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
     arg = sys.argv.pop(1)
@@ -75,6 +77,9 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_CONFIG = os.path.abspath(os.path.expanduser(value))
     elif arg == '--menu':
         SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
+    elif arg == '--overwrite':
+        overwriteConfs = True
+        sys.argv.insert(1, value)  # hack, there is no "value" to read here
     else:
         sys.exit('Unknown argument: %s' % arg)
 
@@ -96,11 +101,11 @@ def createConf(fpath, ftemplate):
 #
 
 try:
-    if not exists(SCIPION_CONFIG):
+    if not exists(SCIPION_CONFIG) or overwriteConfs:
         sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_CONFIG)
         createConf(SCIPION_CONFIG, '%s/settings/scipion.conf' % SCIPION_HOME)
 
-    if not exists(SCIPION_MENU):
+    if not exists(SCIPION_MENU) or overwriteConfs:
         sys.stdout.write('Creating local configuration file: %s\n' % SCIPION_MENU)
         createConf(SCIPION_MENU, '%s/settings/menu.conf' % SCIPION_HOME)
 
@@ -331,6 +336,7 @@ def main():
         sys.exit(ret)
 
     elif mode == MODE_CONFIG:
+        assert n == 2, "config takes no arguments (got %s)" % sys.argv[2:]
         runApp('pw_config.py')
 
     elif mode == MODE_STATS:
@@ -344,7 +350,7 @@ def main():
         sys.exit(0)
 
     elif mode == MODE_RUNPROTOCOL:
-        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % n
+        assert n == 6, 'runprotocol takes exactly 5 arguments, not %d' % (n - 1)
         # this could be pw_protocol_run.py or pw_protocol_mpirun.py
         protocolApp = sys.argv[2]
         # This should be (projectPath, protocolDb and protocolId)
@@ -435,4 +441,8 @@ Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        # This way of catching exceptions works with Python 2 & 3
+        sys.stderr.write('Error: %s\n' % sys.exc_info()[1])

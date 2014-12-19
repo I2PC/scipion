@@ -35,11 +35,11 @@ from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Acquisition
 
-from base import ProtImport
+from base import ProtImportFiles
 
 
 
-class ProtImportImages(ProtImport):
+class ProtImportImages(ProtImportFiles):
     """Common protocol to import a set of images into the project"""
     # This label should be set in subclasses
     _label = 'None'
@@ -54,7 +54,7 @@ class ProtImportImages(ProtImport):
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        ProtImport._defineParams(self, form)
+        ProtImportFiles._defineParams(self, form)
         self._defineAcquisitionParams(form)
         
     def _defineAcquisitionParams(self, form):

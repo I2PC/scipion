@@ -87,6 +87,12 @@ class TestSetOfMicrographs(BaseTest):
         micSet.write()    
         
         self.checkSet(micSet)
+        
+        # Check copy info also copies the samplingRate
+        micSet2 = SetOfMicrographs(filename=':memory:')
+        micSet2.copyInfo(micSet)
+        self.assertAlmostEqual(micSet.getSamplingRate(), micSet2.getSamplingRate())
+         
         os.chdir(cwd)
         
     def testRead(self):
@@ -144,6 +150,10 @@ class TestSetOfParticles(BaseTest):
         
         print "writing particles to: ", outFn
         imgSet.write()
+        
+        imgSet2 = SetOfParticles(filename=':memory:')
+        imgSet2.copyInfo(imgSet)
+        self.assertAlmostEqual(imgSet.getSamplingRate(), imgSet2.getSamplingRate())
         
     def test_hugeSet(self):
         """ Create a set of a big number of particles to measure

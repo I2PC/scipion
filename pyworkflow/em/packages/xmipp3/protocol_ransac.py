@@ -97,7 +97,7 @@ class XmippProtRansac(ProtInitialVolume):
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
                 
-        form.addParam('maxFreq', IntParam, default=20, expertLevel=LEVEL_EXPERT,
+        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
@@ -121,7 +121,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Use all images to refine', 
                       help=' When refining a RANSAC volume, use all images to refine it instead of only inliers')
         
-        form.addParallelSection(mpi=2)
+        form.addParallelSection(threads=8, mpi=1)
             
          
     #--------------------------- INSERT steps functions --------------------------------------------    

@@ -27,7 +27,7 @@
 # *
 # **************************************************************************
 
-# Builders and pseudobuilders used be SConscript to install things.
+# Builders and pseudobuilders used by SConscript to install things.
 
 
 import os
@@ -36,11 +36,6 @@ import platform
 import subprocess
 import SCons.Script
 
-
-# OS boolean vars
-MACOSX = (platform.system() == 'Darwin')
-WINDOWS = (platform.system() == 'Windows')
-LINUX = (platform.system() == 'Linux')
 
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
@@ -61,7 +56,7 @@ env = Environment(ENV=os.environ,
 
 # Message from autoconf and make, so we don't see all its verbosity.
 env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
-env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
+env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES"
 
 
 def progInPath(env, prog):
@@ -108,13 +103,16 @@ CheckConfigLib = Builder(action=checkConfigLib)
 
 
 # Add the path to dynamic libraries so the linker can find them.
-if LINUX:
+
+if platform.system() == 'Linux':
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH'))
-elif MACOSX:
+elif platform.system() == 'Darwin':
     print "OS not tested yet"
     env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH'))
-elif WINDOWS:
+elif platform.system() == 'Windows':
     print "OS not tested yet"
+else:
+    print "Unknown system: %s\nPlease tell the developers." % platform.system()
 
 
 #  ************************************************************************

@@ -35,7 +35,7 @@ import pyworkflow.em as em
 from pyworkflow.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile, timeit
+from pyworkflow.utils import makeFilePath
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
@@ -202,6 +202,8 @@ class Project(object):
                 # FIXME: this will not work for a real remote host
                 jobId = protocol.getJobId() # Preserve the jobId before copy
                 dbPath = self.getPath(protocol.getDbPath())
+                if not exists(dbPath):
+                    return
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
                 prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
                 # Copy is only working for db restored objects
@@ -212,7 +214,7 @@ class Project(object):
                 self.mapper.store(protocol)
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
-                if tries == 2: # 3 tries have been failed
+                if tries == 0: # 3 tries have been failed
                     import traceback
                     traceback.print_exc()
                     # If any problem happens, the protocol will be marked wih a status fail
@@ -418,6 +420,13 @@ class Project(object):
         """
         hostName = protocol.getHostName()
         hostConfig = self.settings.getHostByLabel(hostName)
+        if hostConfig is None:
+            print ">>>>>>> Unexpected error: hostConfig is None"
+            print "         hostName: ", hostName
+            print "        Using 'localhost' instead"
+            hostConfig = self.settings.getHostByLabel('localhost')
+            protocol.setHostName('localhost')
+            
         hostConfig.cleanObjId()
         # Add the project name to the hostPath in remote execution host
         hostRoot = hostConfig.getHostPath()

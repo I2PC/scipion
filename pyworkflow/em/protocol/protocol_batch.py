@@ -78,7 +78,7 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
-        self._defineSourceRelation(inputImages, output)
+        return output
 
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
@@ -94,14 +94,14 @@ class ProtUserSubSet(BatchProtocol):
             itemClassName = db.getSelfClassName()
             if itemClassName.startswith('Class'):
                 if outputClassName.startswith('SetOfParticles'):
-                    self._createImagesFromClasses(inputClasses)
+                    return self._createImagesFromClasses(inputClasses)
                 else:
-                    self._createRepresentativesFromClasses(inputClasses, 
+                    return self._createRepresentativesFromClasses(inputClasses,
                                                            outputClassName.split(',')[0])
             else:
-                self._createSubSetFromImages(inputClasses.getImages())
+                return self._createSubSetFromImages(inputClasses.getImages())
         elif outputClassName.startswith('SetOfClasses'):
-            self._createClassesFromClasses(inputClasses)
+            return self._createClassesFromClasses(inputClasses)
         else:
             raise Exception("Unrecognized output type: '%s'" % outputClassName)  
               
@@ -120,6 +120,7 @@ class ProtUserSubSet(BatchProtocol):
                 
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineTransformRelation(setOfMics, outputMics)
+        return outputMics
         
     def _createSubSetOfCTF(self, inputCtf):
         """ Create a subset of CTF and Micrographs analyzing the CTFs. """
@@ -134,6 +135,8 @@ class ProtUserSubSet(BatchProtocol):
                 
         # Register outputs
         self._defineOutput(self.outputClassName.get(), setOfCtf)
+        self._defineSourceRelation(inputCtf, setOfCtf)
+        return setOfCtf
         
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
         """ Create a new set of images joining all images
@@ -153,7 +156,8 @@ class ProtUserSubSet(BatchProtocol):
                 output.append(img)
         # Register outputs
         self._defineOutput('Representatives', output)
-        
+        return output
+
     def _createImagesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -173,6 +177,7 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        return output
  
     def _createClassesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
@@ -188,6 +193,7 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        return output
         
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
@@ -206,7 +212,8 @@ class ProtUserSubSet(BatchProtocol):
                 output.append(micPairO)
         # Register outputs
         outputDict = {'outputMicrographsTiltPair': output}
-        self._defineOutputs(**outputDict) 
+        self._defineOutputs(**outputDict)
+        return output
 
     def createSetStep(self):
         setObj = self.createSetObject()
@@ -216,18 +223,17 @@ class ProtUserSubSet(BatchProtocol):
 
             if isinstance(setObj, SetOfVolumes):
                 volSet = SetOfVolumes(filename=self._dbName)
-                vol = volSet[self.volId.get()]
+                output = volSet[self.volId.get()]
             else:
                 classSet = SetOfClasses3D(filename=self._dbName)
-                vol = classSet[self.volId.get()].getRepresentative()
-            self._defineOutputs(outputVolume=vol)
-            self._defineSourceRelation(inputObj, vol)
+                output = classSet[self.volId.get()].getRepresentative()
+            self._defineOutputs(outputVolume=output)
 
         elif isinstance(inputObj, SetOfImages):
-                self._createSubSetFromImages(inputObj)
+                output = self._createSubSetFromImages(inputObj)
 
         elif isinstance(inputObj, SetOfClasses):
-            self._createSubSetFromClasses(inputObj)
+            output = self._createSubSetFromClasses(inputObj)
 
         elif isinstance(inputObj, SetOfCTF):
             outputClassName = self.outputClassName.get()
@@ -244,11 +250,11 @@ class ProtUserSubSet(BatchProtocol):
 
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
-                self._createSubSetFromClasses(setObj)
+                output = self._createSubSetFromClasses(setObj)
 
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
-                self._createSubSetFromImages(setObj)
+                output = self._createSubSetFromImages(setObj)
         else:
             className = inputObj.getClassName()
             createFunc = getattr(self, '_create' + className)
@@ -263,7 +269,15 @@ class ProtUserSubSet(BatchProtocol):
                 modifiedSet.copyInfo(output)
             # Register outputs
             self._defineOutput(className, output)
-            self._defineSourceRelation(inputObj, output)
+
+
+        if isinstance(inputObj, EMProtocol):
+            for key, attr in inputObj.iterInputAttributes():
+                print attr
+                self._defineSourceRelation(attr.get(), output)
+        else:
+            if not isinstance(inputObj, SetOfCTF):#otherwise setted before
+                self._defineSourceRelation(inputObj, output)
     
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')

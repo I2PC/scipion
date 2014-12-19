@@ -436,6 +436,20 @@ eprint = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3719433/pdf/nihms485040.pd
 journal = {IEEE Trans Image Process}
 }
 
+@article{Radermacher1987,
+author = {Radermacher, M. and Wagenknecht, T. and Frank, J.},
+title = {Three-dimensional reconstruction from a single-exposure, random conical tilt series applied to the 50S ribosomal subunit of Escherichia coli.},
+volume = {146},
+number = {2},
+pages = {113-36},
+year = {1987},
+doi = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+abstract = {},
+url = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+eprint = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+journal = {Journal of Microscopy}
+}
+
 @article{Vargas2014a,
 title = "A general validation approach for cryoEM ",
 journal = "Nature Methods",
@@ -465,7 +479,6 @@ url = "",
 author = "Marabini et al.",
 keywords = "Contrast transfer function"
 }
-
 
 
 """

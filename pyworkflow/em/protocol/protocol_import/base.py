@@ -37,8 +37,10 @@ from pyworkflow.utils.path import expandPattern, createLink, copyFile
 from pyworkflow.em.protocol import EMProtocol
 
 
-
 class ProtImport(EMProtocol):
+    """ Base class for other all Import protocols. """
+
+class ProtImportFiles(ProtImport):
     """ Base class for other Import protocols. 
     All imports protocols will have:
     1) Several options to import from (_getImportOptions function)
