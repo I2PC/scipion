@@ -41,6 +41,7 @@ class DataSet(object):
         #NAPA de LUXE: Hay que ver si el volumen name se usa en algun lado        
         self._volumeName = volumeName 
         self._numberSlices = numberSlices 
+        self.projectPath = None
         
         
     def currentTable(self):
@@ -362,7 +363,9 @@ class SqliteDataSet(DataSet):
                 if k in imgCols:
                     colName = imgCols[k]
                     index = rowDict[colName]
-                    filename = rowDict[k]
+                    import os
+                    filename = os.path.join(self.projectPath, rowDict[k])
+                    print "FILENAME: ", filename
                     if not checkedImgCols.get(colName, False):
                         x, y, z, n = ih.getDimensions((index, filename))
                         if z > 1:

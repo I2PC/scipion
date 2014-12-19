@@ -59,7 +59,8 @@ def loadDataSet(request, inputParams, firstTime):
 def loadTable(request, dataset, inputParams):
     if inputParams[sj.TABLE_NAME] is not None:
         updateTable(inputParams, dataset)
-        
+    
+    dataset.projectPath = request.session['projectPath']
     table = dataset.getTable(inputParams[sj.TABLE_NAME])
         
     # Update inputParams to make sure have a valid table name (if using first table)
@@ -495,6 +496,7 @@ def testingSSH(request):
 
 
 def create_context_volume(request, inputParams, volPath, param_stats):
+    import os
 #   volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
 
     threshold = calculateThreshold(param_stats)
@@ -511,7 +513,7 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
         # Using the .vol file
         volPath = inputParams['volOld']
-        volPath = request.session['projectPath'] + "/" + volPath
+        volPath = os.path.join(request.session['projectPath'], volPath)
            
         context.update(create_context_chimera(volPath, threshold))
         
