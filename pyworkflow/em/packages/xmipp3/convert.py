@@ -1061,10 +1061,6 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    flip = bool(matrix[3][3]<0)
-    if flip:
-        matrix[3][3] *= -1.#redundant?
-        matrix[0,:3] *= -1.
     if inverseTransform:
         from numpy.linalg import inv
         matrix = inv(matrix)
@@ -1072,17 +1068,17 @@ def geometryFromMatrix(matrix, inverseTransform):
     else:
         shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-    return shifts, angles, flip
+    return shifts, angles
 
 
-def matrixFromGeometry(shifts, angles, flip, inverseTransform):
+def matrixFromGeometry(shifts, angles, inverseTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
     from pyworkflow.em.transformations import euler_matrix
     from numpy import deg2rad
     radAngles = -deg2rad(angles)
-    
+
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:
         from numpy.linalg import inv
@@ -1091,10 +1087,6 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
     else:
         M[:3, 3] = shifts[:3]
 
-    if flip:
-        #M[0,:4]*=-1.
-        M[0,:3]*=-1.
-        M[3][3]*=-1.
     return M
 
 
@@ -1111,18 +1103,35 @@ def rowToAlignment(alignmentRow, alignType):
         alignment = Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
-        angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
         shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
         shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
         if not is2D:
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
-
+            angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+        else:
+            psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+            rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
+            if rot !=0. and psi !=0:
+                print "HORROR rot and psi are different from zero"
+            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) +\
+                        alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
-        
-        M = matrixFromGeometry(shifts, angles, flip, inverseTransform)
-        alignment.setMatrix(M)
+        #if alignment
+        matrix = matrixFromGeometry(shifts, angles, inverseTransform)
+##
+        if flip:
+            if alignType==ALIGN_2D:
+                matrix[0,:2] *=  -1.#invert only the first two columns keep x
+                matrix[2,2]   =  -1.#set 3D rot
+            elif alignType==ALIGN_3D:
+                matrix[0,:3] *= -1.#now, invert first line excluding x
+                matrix[3,3] *= -1.
+            else:
+                matrix[0,:4] *= -1.#now, invert first line including x
+##
+        alignment.setMatrix(matrix)
         
         #FIXME: now are also storing the alignment parameters since
         # the conversions to the Transform matrix have not been extensively tested.
@@ -1145,9 +1154,32 @@ def alignmentToRow(alignment, alignmentRow, alignType):
     """
     is2D = alignType == ALIGN_2D
     inverseTransform = alignType == ALIGN_PROJ
-    
-    shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(), inverseTransform)
+    #only flip is meaninfull if 2D case
+    #in that case the 2x2 determinant is negative
+    flip = False
+    matrix = alignment.getMatrix()
+    if alignType==ALIGN_2D:
+        #get 2x2 matrix and check if negative
+        flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
+        if flip:
+            matrix[0,:2] *= -1.#invert only the first two columns keep x
+            matrix[2,2]   =  1.#set 3D rot
+        else:
+            pass
 
+    elif alignType==ALIGN_3D:
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            matrix[0,:4] *= -1.#now, invert first line including x
+            matrix[3,3]   =  1.#set 3D rot
+        else:
+            pass
+
+    else:
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            matrix[0,:4] *= -1.#now, invert first line including x
+    shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
     
@@ -1155,6 +1187,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         angle = angles[0] + angles[2]
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
     else:
+        #if alignType == ALIGN_3D:
         alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
