@@ -178,6 +178,9 @@ DataSet(name='emx',  folder='emx',
                
                'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
                'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
+
+               'reconstRotandShiftFlip': 'reconstruction/reconstRotandShiftFlip.mrcs',
+               'reconstRotandShiftFlipGold': 'reconstruction/gold/reconstRotandShiftFlip_output.vol',
               })
                
                
