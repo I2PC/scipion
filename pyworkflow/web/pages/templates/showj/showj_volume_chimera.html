@@ -46,6 +46,7 @@
   	}
 	
   	function updateThreshold(){
+  		$("div#chimeraContent").html("<h2>Refreshing...</h2>");
   		putWait();
   		
 		var threshold = $("input#thresholdValue").val();
@@ -59,7 +60,7 @@
 			dataType : "html",
 			async: false,
 			success : function(data) {
-				$("div#chimeraContent").html("<h2>Refreshing page...</h2>");
+				$("div#chimeraContent").empty();
 				$("div#chimeraContent").html(data);
 				webGLStart();
 				removeWait();
