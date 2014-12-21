@@ -46,7 +46,6 @@
   	}
 	
   	function updateThreshold(){
-  		$("div#chimeraContent").html("<h2>Refreshing...</h2>");
   		putWait();
   		
 		var threshold = $("input#thresholdValue").val();
@@ -58,7 +57,7 @@
 			type : "GET",
 			url : getSubDomainURL() + "/get_chimera_html/?volPath={{volPath}}&threshold="+threshold,
 			dataType : "html",
-			async: false,
+// 			async: false,
 			success : function(data) {
 				$("div#chimeraContent").empty();
 				$("div#chimeraContent").html(data);
