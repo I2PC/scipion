@@ -97,12 +97,19 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+pcre = env.AddLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=['bin/pcretest'],
+    default=False)
+
 swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
     targets=['bin/swig'],
-    flags=['--without-pcre'],
+    deps=[pcre],
     default=False)
+
 
 env.AddLibrary(
     'parallel',
