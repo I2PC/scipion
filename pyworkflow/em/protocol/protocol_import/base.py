@@ -68,30 +68,30 @@ class ProtImportFiles(ProtImport):
                           help='Select the type of import.')
         form.addParam('filesPath', PathParam, 
                       condition=filesCondition,
-                      label="Files path",
-                      help="Select the files path from where do you want to import\n"
-                           "the files. The path can also contains wildcards to select\n"
-                           "files from different folders.\n"
-                           "Examples:\n"
-                           "data/day??_micrographs/ \n"
-                           "~/Particles/")
+                      label="Files directory",
+                      help="Directory with the files you want to import.\n\n"
+                           "The path can also contain wildcards to select\n"
+                           "from several folders.\n\n"
+                           "For example:\n"
+                           "  ~/Particles/\n"
+                           "  data/day??_micrographs/")
         form.addParam('filesPattern', StringParam,
                       label='Pattern', 
                       condition=filesCondition,
-                      help="Select the pattern of the files to be imported.\n"
-                           "The pattern can contains standard wildcards such as:\n"
-                           "*, ?, etc ... or special ones as ### to mark some\n"
-                           "digits in the filename to be used as ID. ")
-        
+                      help="Pattern of the files to be imported.\n\n"
+                           "The pattern can contain standard wildcards such as\n"
+                           "*, ?, etc, or special ones like ### to mark some\n"
+                           "digits in the filename as ID.")
+
         form.addParam('copyFiles', BooleanParam, default=False, 
                       expertLevel=LEVEL_ADVANCED, 
                       label="Copy files?",
-                      help="By default the files are not copied into\n"
-                           "the project to avoid data duplication and to save\n"
+                      help="By default the files are not copied into the\n"
+                           "project to avoid data duplication and to save\n"
                            "disk space. Instead of copying, symbolic links are\n"
                            "created pointing to original files. This approach\n"
                            "has the drawback that if the project is moved to\n"
-                           "another computer, the links needs to be restored.\n")
+                           "another computer, the links need to be restored.\n")
         self._defineImportParams(form)
         
     def _defineImportParams(self, form):
