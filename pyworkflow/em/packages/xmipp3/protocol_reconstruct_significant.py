@@ -23,14 +23,16 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
-from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 """
 This sub-package contains wrapper around reconstruct_significant Xmipp program
 """
 
 from pyworkflow.em import *  
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
+from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
+
+
 
 class XmippProtReconstructSignificant(ProtInitialVolume):
     """ Produces one or several initial volumes using reconstruct_significant """

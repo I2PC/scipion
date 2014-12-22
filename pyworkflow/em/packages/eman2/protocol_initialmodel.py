@@ -45,6 +45,9 @@ class EmanProtInitModel(ProtInitialVolume):
     particle reconstruction. The output set is theoretically sorted 
     in order of quality (best one is numbered 1), though it's best 
     to look at the other answers as well. 
+    
+    See more details in:
+    http://blake.bcm.edu/emanwiki/EMAN2/Programs/e2initialmodel
     """
     
     _label = 'initial model'
