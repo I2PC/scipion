@@ -250,7 +250,7 @@ env.AddPackage('ctffind',
                default=False)
 
 env.AddPackage('eman',
-               tar='eman2.1beta3.linux64.tgz',
+               tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
