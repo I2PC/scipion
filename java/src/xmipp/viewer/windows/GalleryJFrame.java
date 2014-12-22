@@ -1486,6 +1486,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		public void update()
 		{
+                        
                         boolean isscipion = (data instanceof ScipionGalleryData);
 			boolean galMode = data.isGalleryMode();
 			boolean volMode = !data.getSelVolumeFile().isEmpty();
@@ -1501,6 +1502,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemSelected(DISPLAY_APPLYGEO, data.useGeo());
 			setItemEnabled(DISPLAY_RENDERIMAGES, !galMode && data.hasRenderLabel());
 			setItemSelected(DISPLAY_RENDERIMAGES, data.renderImages());
+                        setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
 			setItemEnabled(DISPLAY_RENDERIMAGE, galMode);
 			for (int i = 0; i < ImageGeneric.VIEWS.length; ++i)
 				setItemSelected(DISPLAY_RESLICE_VIEWS[i], (data.getResliceView() == ImageGeneric.VIEWS[i]));
@@ -1545,7 +1547,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				else if (cmd.equals(DISPLAY_RENDERIMAGES))
 				{
                                         if(gallery instanceof MetadataTableModel)
+                                        {
                                             ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
+                                            setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
+                                        }
 					makeVisible(gallery.getFirstSelectedIndex());
 				}
 				
@@ -2205,9 +2210,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		});
 
 	}
-	
-	
-		
 	
 
 	class ResliceActionListener implements ActionListener

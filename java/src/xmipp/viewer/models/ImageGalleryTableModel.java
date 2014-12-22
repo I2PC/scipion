@@ -585,6 +585,8 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
             return isSelected(index);
         }
 
+        public abstract boolean showLabels() ;
+
     
 
 	/**

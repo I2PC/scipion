@@ -152,6 +152,11 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		return false;
 	}
 
+    @Override
+    public boolean showLabels() {
+        return false;
+    }
+
 	
 
 }// class VolumeGallery

@@ -124,4 +124,9 @@ public class MetadataRowTableModel extends MetadataTableModel {
                 	fireTableCellUpdated(i, 0);
                     }
 	}
+        
+          @Override
+    public boolean showLabels() {
+        return false;
+    }
 }//class MetadataRow

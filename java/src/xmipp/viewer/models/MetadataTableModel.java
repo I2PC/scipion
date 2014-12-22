@@ -291,7 +291,10 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
 
-	
+	@Override
+        public boolean showLabels() {
+            return data.renderImages;
+        }
 
 	@Override
 	protected void calculateCellSize() {

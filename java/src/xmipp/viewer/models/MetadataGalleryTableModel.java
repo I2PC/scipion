@@ -330,6 +330,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
+
+    @Override
+    public boolean showLabels() {
+        return true;
+    }
 	
         
 
