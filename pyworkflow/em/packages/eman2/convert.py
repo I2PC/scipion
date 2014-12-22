@@ -32,9 +32,11 @@ This module contains converter functions that will serve to:
 """
 
 import subprocess
-from data import *
-from eman2 import *
-import glob
+import json
+import os, sys
+from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand
+import pyworkflow as pw
+
 from pyworkflow.em.constants import NO_INDEX
 from os.path import abspath
 
@@ -101,7 +103,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     size = int(jsonBoxDict["box_size"])
     jsonFninfo = join(workDir, 'info/')
     
-    
+
     for mic in micSet:
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
@@ -121,10 +123,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
 def writeSetOfCoordinates():
     pass
 
-def readSetOfParticles(filename):
-    pass
-
-def writeSetOfParticles(partSet, filename, inputdir):
+def writeSetOfParticles(partSet, filename, **kwargs):
     """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
     This function should be called from a current dir where
     the images in the set are available.
@@ -144,14 +143,17 @@ def writeSetOfParticles(partSet, filename, inputdir):
     proc = subprocess.Popen(cmd, shell=True, 
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
-    
+
+
     for part in partSet:
-        index, fn = part.getLocation()
+        objDict = part.getObjDict()
+        objDict['_itemId']=part.getObjId()
         # Write the e2converter.py process from where to read the image
-        print "sending: ", part.getObjId(), index, join(inputdir, fn)
-        print >> proc.stdin, part.getObjId(), index, join(inputdir, fn)
+        print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         response = proc.stdout.readline()
-        print "response: ", response
     #proc.wait()
     os.chdir(cwd)
+
+def readSetOfParticles(filename, partSet, **kwargs):
+    pass

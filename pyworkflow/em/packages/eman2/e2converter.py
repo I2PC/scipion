@@ -33,6 +33,21 @@ As parameters will receive the output filename for the hdf stack
 """
 
 import os, sys
+import json
+import numpy as np
+from EMAN2 import Transform
+
+def geometryFromMatrix(matrix, inverseTransform):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    if inverseTransform:
+        from numpy.linalg import inv
+        matrix = inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
+    rad_to_ang = 180./np.pi
+    angles = -1.*rad_to_ang* euler_from_matrix(matrix, axes='szyz')
+    return shifts, angles
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -48,14 +63,45 @@ if __name__ == '__main__':
         line = sys.stdin.readline()
         while line:
         #for line in sys.stdin:
-            imgId, index, filename = line.split()
-            if index: # NO_INDEX is zero, otherwise remove one due EMAN2 is zero based index
-                index = int(index) - 1
-            imageData = EMData(filename, index, False)
-            imageData['item_id'] = imgId
+            objDict=json.loads(line)
+            ###imgId, index, filename = line.split()
+            print >> sys.stderr,"objDict", objDict
+            if '_index' in objDict.keys():
+                index = int(objDict['_index']) - 1
+            if '_filename' in objDict.keys():
+                filename = str(objDict['_filename'])
+            else:
+                raise Exception('ERROR (e2converter): Cannot process a particle without filename')
+            imageData = EMData()
+            t= None
+            if '_transform._matrix' in objDict.keys():
+                transform_matrix = np.matrix(str(objDict['_transform._matrix']))
+                print >> sys.stderr, "transform_matrix", transform_matrix[0,0]
+                shifts, angles = geometryFromMatrix(transform_matrix, False)
+                t = Transform({"type":"spider",
+                               "phi":angles[0],
+                               "theta":angles[1],
+                               "psi":angles[2],
+                               "tx":shifts[0],
+                               "ty":shifts[1],
+                               "tz":shifts[2],
+                               "mirror":0,####TODO: test flip
+                               "scale":1.0})
+
+            #EMData.read_image(imageData, filename,index)
+            imageData.read_image(filename,index)
+            if t is not None:
+                imageData.set_attr('xform.projection', t)
+
+#            if '_itemId' in objDict.keys():
+#                itemId = objDict['_itemId']
+#            else:
+#                raise Exception('ERROR (e2converter): Cannot process a particle without _itemId')
+#            imageData['item_id'] = itemId
+
             imageData.write_image(outputFile, i, EMUtil.ImageType.IMAGE_HDF, False)
             i += 1
-            print "EMAN2: ", line.strip()
+            print "EMAN2: "
             sys.stdout.flush()
             line = sys.stdin.readline()
         print "DONE"
@@ -63,4 +109,3 @@ if __name__ == '__main__':
         print "usage: %s outputFile" % os.path.basename(sys.argv[0])
 
 
-    
