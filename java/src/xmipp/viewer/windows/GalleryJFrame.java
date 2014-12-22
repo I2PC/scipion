@@ -554,7 +554,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		table.addMouseListener(new java.awt.event.MouseAdapter()
 		{
-			public void mouseReleased(java.awt.event.MouseEvent evt)
+			public void mouseClicked(java.awt.event.MouseEvent evt)
 			{
 				tableMouseClicked(evt);
 			}
@@ -1364,25 +1364,18 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 jsGoToImage.setValue(index + 1);
                         isUpdating = false;
                         // Ctrl adds items to selection, otherwise previous ones are removed.
-                        if (!evt.isControlDown() && !evt.isShiftDown())
-                        {
-                                if(evt.getButton() == MouseEvent.BUTTON1)
+                        if (!evt.isControlDown() && !evt.isShiftDown() && evt.getButton() == MouseEvent.BUTTON1)
                                 {
                                     gallery.clearSelection();
                                     gallery.touchItem(row, col);
                                     
                                 }
-                                else
-                                {
-                                    if(!gallery.isSelected(row, col))
-                                        gallery.clearSelection();
-                                    gallery.touchItem(row, col, true);
-                                }
-                        }
+                               
+                       
                         else
                         {
                                 if (evt.isShiftDown())
-                                        gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col, true);
+                                        gallery.selectRange(previousSelectedRow, previousSelectedCol, row, col);
                                 else if (evt.isControlDown())
                                         gallery.touchItem(row, col);
                         }

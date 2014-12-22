@@ -424,13 +424,13 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 
 	/** Select a range of elements given the coordinates */
 	public void selectRange(int first_row, int first_col, int last_row,
-			int last_col, boolean value) {
+			int last_col) {
 		int i1 = getIndex(first_row, first_col);
 		int i2 = getIndex(last_row, last_col);
 		int i = Math.min(i1, i2);
 		i2 = Math.max(i1, i2);
 		for (; i <= i2; ++i)
-			setSelected(i, value);
+			setSelected(i, true);
 		fireTableRowsUpdated(first_row, last_row);
 	}
 
@@ -793,7 +793,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
         
         if (data.isVolumeMd && data.isTableMode())
             data.selectedVolFn = isselected? data.getVolumeAt(index): data.getVolumeAt(0);
-        System.out.printf("selfrom:%s selto:%s index:%s selected:%s\n", selfrom, selto, index, isselected);
 
             
     }
