@@ -109,13 +109,12 @@ public class MetadataRowTableModel extends MetadataTableModel {
         }
         
         public void setSelected(int row, int col, boolean b) {
-          setSelected(row, b);
+            setSelected(row, b);
         }
 
 	//** Select a range of elements given the coordinates */
         @Override
-	public void selectRange(int first_row, int first_col, int last_row,
-			int last_col) {
+	public void selectRange(int first_row, int first_col, int last_row, int last_col) {
 		int min = Math.min(first_row, last_row);
                 int max = Math.max(first_row, last_row);
 		for (int i = min; i <= max; i++)

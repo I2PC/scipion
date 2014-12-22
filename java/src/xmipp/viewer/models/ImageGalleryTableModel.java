@@ -423,8 +423,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	/** Select a range of elements given the coordinates */
-	public void selectRange(int first_row, int first_col, int last_row,
-			int last_col) {
+	public void selectRange(int first_row, int first_col, int last_row, int last_col) {
 		int i1 = getIndex(first_row, first_col);
 		int i2 = getIndex(last_row, last_col);
 		int i = Math.min(i1, i2);
