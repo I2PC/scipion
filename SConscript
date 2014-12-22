@@ -97,6 +97,13 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+swig = env.AddLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=['bin/swig'],
+    flags=['--without-pcre'],
+    default=False)
+
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
@@ -111,11 +118,7 @@ boost_headers_only = env.ManualInstall(
          'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
     default=False)
 
-swig = env.AddLibrary(
-    'swig',
-    tar='swig-3.0.2.tgz',
-    flags=['--without-pcre'],
-    default=False)
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
