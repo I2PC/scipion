@@ -36,6 +36,7 @@ import json
 import os, sys
 from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand
 import pyworkflow as pw
+import numpy
 
 from pyworkflow.em.constants import NO_INDEX
 from os.path import abspath
@@ -146,8 +147,15 @@ def writeSetOfParticles(partSet, filename, **kwargs):
 
 
     for part in partSet:
+        #tranformation matrix is procesed here because
+        #it uses routines available thrrough scipion python
+        matrix = part.getTransform().getMatrix()
+        shifts, angles = geometryFromMatrix(matrix, True)
         objDict = part.getObjDict()
         objDict['_itemId']=part.getObjId()
+        #json cannot encode arrays so I convert them to lists
+        objDict['_angles']=angles.tolist()
+        objDict['_shifts']=shifts.tolist()
         # Write the e2converter.py process from where to read the image
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
@@ -157,3 +165,16 @@ def writeSetOfParticles(partSet, filename, **kwargs):
 
 def readSetOfParticles(filename, partSet, **kwargs):
     pass
+
+def geometryFromMatrix(matrix, inverseTransform):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    if inverseTransform:
+        from numpy.linalg import inv
+        matrix = inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
+    rad_to_ang = 180./numpy.pi
+    angles = -numpy.rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    return shifts, angles
+
