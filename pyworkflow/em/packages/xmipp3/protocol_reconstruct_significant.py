@@ -35,7 +35,12 @@ from convert import writeSetOfClasses2D, writeSetOfParticles
 
 
 class XmippProtReconstructSignificant(ProtInitialVolume):
-    """ Produces one or several initial volumes using reconstruct_significant """
+    """ 
+    This algorithm addresses the initial volume problem in SPA
+    by setting it in a Weighted Least Squares framework and 
+    calculating the weights through a statistical approach based on
+    the cumulative density function of different image similarity measures. 
+    """    
     _label = 'reconstruct significant'
 
     #--------------------------- DEFINE param functions --------------------------------------------
