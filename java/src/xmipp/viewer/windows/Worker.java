@@ -38,7 +38,7 @@ public class Worker implements Runnable
                         this.frame = frame;
                         
 			op = operation;
-                        imagesmd = frame.data.getImagesMd(selected);
+                        imagesmd = frame.data.getImagesMd(frame.gallery.getSelection(), selected);
 			if (imagesmd.size() == 0)
 				throw new IllegalArgumentException("No images available");
                         

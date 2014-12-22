@@ -73,7 +73,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		else if (ci.isEnable())
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
-                        Class c = MetaData.getLabelClass(ci.label);
+                        Class c = MetaData.getClassForType(ci.type);
 			return c;
                         
 		} catch (Exception e) {
@@ -84,9 +84,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public int getIndex(int row, int col) {
-                if(data.isColumnFormat())
-                    return row;
-		return 0;
+                return row;
 	}
 
 	@Override
@@ -336,8 +334,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public void updateTableSelection(JTable table) {
 		table.clearSelection();
-		for (int i = 0; i < n; ++i)
-			if (data.selection[i]) {
+		for (int i = 0; i < selection.length; ++i)
+			if (selection[i]) {
 				table.addRowSelectionInterval(i, i);
 			}
 	}
@@ -348,8 +346,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
              if (isBusy(row, col))
                     return false;
 		xpopup.initItems();
-               
+                
 		if (data.isFile(visibleLabels.get(col))) {
+                        
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
@@ -444,6 +443,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 
 		public void mouseClicked(MouseEvent e) {
+                        
 			TableColumnModel colModel = table.getColumnModel();
 			// Get the clicked column index
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());

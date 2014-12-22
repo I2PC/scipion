@@ -25,11 +25,8 @@
 
 package xmipp.viewer.models;
 
-import java.awt.Window;
 
 import javax.swing.JTable;
-
-import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
 import xmipp.utils.XmippPopupMenuCreator;
@@ -51,6 +48,7 @@ public class MetadataRowTableModel extends MetadataTableModel {
 		rows = visibleLabels.size();
 		id = data.md.firstObject();
 		// TODO Auto-generated constructor stub
+                selection = new boolean[rows];
 	}
 	
 	@Override
@@ -86,9 +84,40 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	}
 	
 	@Override
-	public boolean handleRightClick(int row, int col,
-			XmippPopupMenuCreator xpopup) {
+	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
 		return super.handleRightClick(0, row, xpopup);
 	}
-	
+        
+       @Override
+	public int getIndex(int row, int col) {
+
+                    return 0;
+
+	}
+        
+        /** Set the selection state of an element give row and col */
+        @Override
+	public void touchItem(int row, int col) {
+                    setSelected(row, !isSelected(row));
+                    adjustWidth = false;
+                    //fireTableCellUpdated(row, col);//item was clicked
+	}
+        
+        public boolean isSelected(int row, int col) {
+           
+            return isSelected(row);
+        }
+        
+        public void setSelected(int row, int col, boolean b) {
+          setSelected(row, b);
+        }
+
+	//** Select a range of elements given the coordinates */
+	public void selectRange(int first_row, int first_col, int last_row,
+			int last_col, boolean value) {
+		
+		for (int i = first_row; i <= last_row; i++)
+			setSelected(i, value);
+		fireTableRowsUpdated(first_row, last_row);
+	}
 }//class MetadataRow

@@ -96,7 +96,7 @@ public class GalleryData {
     protected boolean isClassification = false;
     protected int refLabel;
     // Store the selection state for each item
-    protected boolean[] selection;
+    
 
     // Array with all ClassInfo
     protected ArrayList<ClassInfo> classesArray;
@@ -108,7 +108,7 @@ public class GalleryData {
     
     protected String[] displayLabels;
     protected String[] sortby;
-    protected int selfrom = -1, selto = -1;
+    
     protected boolean isVolumeMd;
     
 
@@ -319,7 +319,7 @@ public class GalleryData {
         if (!containsGeometryInfo()) {
             useGeo = false;
         }
-        selection = new boolean[ids.length];
+        
         isClassification = checkifIsClassificationMd();
 
         if (isClassification) {
@@ -572,7 +572,6 @@ public class GalleryData {
     public void sortMd(int label, boolean ascending) {
         try {
             md.sort(label, ascending);
-            clearSelection();
             hasMdChanges = true;
             ids = md.findObjects();
         } catch (Exception e) {
@@ -582,13 +581,7 @@ public class GalleryData {
     
     
 
-    public void clearSelection() {
-        for (int i = 0; i < selection.length; ++i) {
-            selection[i] = false;
-        }
-        selfrom = selto = -1;
-
-    }
+   
 
     /**
      * Reload current metadata from file
@@ -707,10 +700,7 @@ public class GalleryData {
     public void changeMode() {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
-            if (selection.length < ids.length) //This can happen when in volume mode, that changes the selection array
-            {
-                selection = new boolean[ids.length];
-            }
+           
         } else if (isRotSpectraMd())
             mode = Mode.GALLERY_ROTSPECTRA;
         else if ( isVolumeMd) 
@@ -958,31 +948,17 @@ public class GalleryData {
         }
     }// function loadClassesInfo
 
-    /**
-     * Return the number of selected elements
-     */
-    public int getSelectionCount() {
-        int count = 0;
-
-        if (!isVolumeMode() && hasSelection()) {
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    ++count;
-                }
-            }
-        }
-        return count;
-    }
+    
 
     /**
      * Create a metadata just with selected items
      */
-    public MetaData getSelectionMd() {
+    public MetaData getSelectionMd(boolean[] selection) {
         MetaData selectionMd = null;
-        if (!isVolumeMode() && hasSelection()) {
-            long[] selectedIds = new long[getSelectionCount()];
+        if (!isVolumeMode()) {
+            long[] selectedIds = new long[selection.length];
             int count = 0;
-            for (int i = selfrom; i <= selto; ++i) {
+            for (int i = 0; i <= selection.length; i++) {
                 if (selection[i]) {
                     selectedIds[count++] = ids[i];
                 }
@@ -1064,11 +1040,10 @@ public class GalleryData {
     /**
      * Get all the images assigned to all selected classes
      */
-    public MetaData getClassesImages() {
+    public MetaData getClassesImages(boolean[] selection) {
         MetaData mdImages = new MetaData();
         MetaData md;
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
+            for (int i = 0; i <= selection.length; i++) {
                 if (selection[i]) {
                     md = getClassImages(i);
                     if (md != null) {
@@ -1212,9 +1187,9 @@ public class GalleryData {
     /**
      * Delete from metadata selected items
      */
-    public void removeSelection() throws Exception {
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
+    public void removeSelection(boolean[] selection) throws Exception {
+
+            for (int i = 0; i <= selection.length; i++) {
                 if (selection[i]) {
                     md.removeObject(ids[i]);
                     hasMdChanges = true;
@@ -1325,13 +1300,12 @@ public class GalleryData {
         return fileInfo;
     }
 
-    public void saveClassSelection(String path) {
+    public void saveClassSelection(boolean[]selection, String path) {
         try {
-            saveSelection("classes" + Filename.SEPARATOR + path, true);
+            saveSelection(selection, "classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-            if(hasSelection())
-                for (int i = selfrom; i <= selto; ++i) {
+                for (int i = 0; i <= selection.length; i++) {
                     if (selection[i]) {
                         long id = ids[i];
                         int ref = md.getValueInt(MDLabel.MDL_REF, id);
@@ -1356,14 +1330,14 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection() throws Exception {
+    public void saveSelection(boolean[] selection) throws Exception {
 
         SaveJDialog dlg = new SaveJDialog(window, "selection" + getFileExtension(), true);
         boolean save = dlg.showDialog();
         if (save) {
             boolean overwrite = dlg.isOverwrite();
             String path = dlg.getMdFilename();
-            saveSelection(path, overwrite);
+            saveSelection(selection, path, overwrite);
         }
 
     }
@@ -1371,8 +1345,8 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection(String path, boolean overwrite) throws Exception {
-        MetaData md = getSelectionMd();
+    public void saveSelection(boolean[] selection, String path, boolean overwrite) throws Exception {
+        MetaData md = getSelectionMd(selection);
 
         String file = path.substring(path.lastIndexOf("@") + 1, path.length());
         if (!new File(file).exists())// overwrite or append, save selection
@@ -1390,47 +1364,9 @@ public class GalleryData {
         md.destroy();
     }
 
-    public boolean isSelected(int index) {
-        if(!isColumnFormat())
-            return true;
-        return selection[index];
-    }
+    
 
-    public void setSelected(int index, boolean isselected) {
-        if(isselected && (selfrom > index || selfrom == -1))
-            selfrom = index;
-        if(isselected && selto < index)
-            selto = index;
-        boolean hasSelection = (isselected || selto != selfrom || selfrom != index);
-        selection[index] = isselected;
-        if(!isselected && selfrom == index)
-        {
-            selfrom = -1;
-            if(hasSelection)
-                for(int i = index; i <= selto; i ++)
-                    if(selection[i])
-                    {
-                        selfrom = i;
-                        break;
-                    }
-        }       
-        
-        if(!isselected && selto == index)
-        {
-            selto = -1;
-            if(hasSelection)
-                for(int i = index; i >= selfrom; i --)
-                    if(selection[i])
-                    {
-                        selto = i;
-                        break;
-                    }
-        }      
-        
-        if (isVolumeMd && isTableMode())
-            selectedVolFn = isselected? getVolumeAt(index): getVolumeAt(0);
-            
-    }
+   
     public int size() {
         return ids.length;
     }
@@ -1696,11 +1632,7 @@ public class GalleryData {
         md.write(path);
     }
 
-    public boolean hasSelection() {
-        if(selfrom == -1)
-            return false;
-        return true;
-    }
+  
 
     public MetaData getMd() {
         return md;
@@ -1829,15 +1761,7 @@ public class GalleryData {
             return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
-        public int getSelFrom()
-        {
-            return selfrom;
-        }
         
-        public int getSelTo()
-        {
-            return selto;
-        }
         
             
 	public void setRenderLabels(String[] renderLabels) {
@@ -1888,7 +1812,7 @@ public class GalleryData {
            return null;
        }
        
-       public MetaData getImagesMd(boolean selected) {
+       public MetaData getImagesMd(boolean[] selection, boolean selected) {
             int idlabel = getRenderLabel();
             MDRow mdRow;
             MetaData imagesmd = new MetaData();
@@ -1896,7 +1820,7 @@ public class GalleryData {
             String imagepath;
             long imageid;
             for (long id : md.findObjects()) {
-                if (isEnabled(index) && (!selected ||isSelected(index))) {
+                if (isEnabled(index) && (!selected || selection[index])) {
                     imagepath = md.getValueString(idlabel, id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
                         imageid = imagesmd.addObject();
