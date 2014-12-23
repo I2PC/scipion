@@ -96,8 +96,7 @@ class ProtUserSubSet(BatchProtocol):
                 if outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
                 else:
-                    return self._createRepresentativesFromClasses(inputClasses,
-                                                           outputClassName.split(',')[0])
+                    return self._createRepresentativesFromClasses(inputClasses, outputClassName.split(',')[0])
             else:
                 return self._createSubSetFromImages(inputClasses.getImages())
         elif outputClassName.startswith('SetOfClasses'):
