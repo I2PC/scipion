@@ -353,7 +353,7 @@ enum MDLabel
     MDL_SYMNO, ///< Symmetry number for a projection (used in ART)
     MDL_TOMOGRAM_VOLUME, ///< Name for the reconstructed tomogram volume (std::string)
     MDL_TOMOGRAMMD, ///< Name for a Metadata file (std::string)
-    MDL_TRANSFORM_MATRIX, ///< transformation matrix(vector double)
+    MDL_TRANSFORM_MATRIX, ///< transformation matrix in numpy string format or space separated (std::string)
 
     MDL_TEST_SIZE,// < number of test assigned to a program
 
@@ -1674,7 +1674,7 @@ private:
         MDL::addLabel(MDL_TOMOGRAM_VOLUME, LABEL_STRING, "tomogramVolume", TAGLABEL_IMAGE);
         MDL::addLabel(MDL_TOMOGRAMMD, LABEL_STRING, "tomogramMetadata", TAGLABEL_METADATA);
 
-        MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_VECTOR_DOUBLE, "transformMatrix");
+        MDL::addLabel(MDL_TRANSFORM_MATRIX, LABEL_STRING, "transformMatrix");
 
         MDL::addLabel(MDL_TEST_SIZE, LABEL_INT, "testSize");
 
@@ -1743,7 +1743,7 @@ private:
         MDL::addLabel(RLN_CTF_DETECTOR_PIXEL_SIZE, LABEL_DOUBLE, "rlnDetectorPixelSize");
         MDL::addLabel(RLN_CTF_ENERGY_LOSS, LABEL_DOUBLE, "rlnEnergyLoss");
         MDL::addLabel(RLN_CTF_FOM, LABEL_DOUBLE, "rlnCtfFigureOfMerit");
-        MDL::addLabel(RLN_CTF_IMAGE, LABEL_STRING, "rlnCtfImage");
+        MDL::addLabel(RLN_CTF_IMAGE, LABEL_STRING, "rlnCtfImage", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_CTF_LENS_STABILITY, LABEL_DOUBLE, "rlnLensStability");
         MDL::addLabel(RLN_CTF_MAGNIFICATION, LABEL_DOUBLE, "rlnMagnification");
         MDL::addLabel(RLN_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "rlnConvergenceCone");
@@ -1752,8 +1752,8 @@ private:
         MDL::addLabel(RLN_CTF_Q0, LABEL_DOUBLE, "rlnAmplitudeContrast");
         MDL::addLabel(RLN_CTF_VALUE, LABEL_DOUBLE, "rlnCtfValue");
 
-        MDL::addLabel(RLN_IMAGE_NAME, LABEL_STRING, "rlnImageName");
-        MDL::addLabel(RLN_IMAGE_RECONSTRUCT_NAME, LABEL_STRING, "rlnReconstructImageName");
+        MDL::addLabel(RLN_IMAGE_NAME, LABEL_STRING, "rlnImageName", TAGLABEL_IMAGE);
+        MDL::addLabel(RLN_IMAGE_RECONSTRUCT_NAME, LABEL_STRING, "rlnReconstructImageName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_IMAGE_ID, LABEL_SIZET, "rlnImageId");
         MDL::addLabel(RLN_IMAGE_ENABLED, LABEL_BOOL, "rlnEnabled");
         MDL::addLabel(RLN_IMAGE_DATATYPE, LABEL_INT, "rlnDataType");
@@ -1796,7 +1796,7 @@ private:
         MDL::addLabel(RLN_MATRIX_3_3, LABEL_DOUBLE, "rlnMatrix_3_3");
 
         MDL::addLabel(RLN_MICROGRAPH_ID, LABEL_SIZET, "rlnMicrographId");
-        MDL::addLabel(RLN_MICROGRAPH_NAME, LABEL_STRING, "rlnMicrographName");
+        MDL::addLabel(RLN_MICROGRAPH_NAME, LABEL_STRING, "rlnMicrographName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_MICROGRAPH_TILT_ANGLE, LABEL_DOUBLE, "rlnMicrographTiltAngle");
         MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_DIRECTION, LABEL_DOUBLE, "rlnMicrographTiltAxisDirection");
         MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_OUTOFPLANE, LABEL_DOUBLE, "rlnMicrographTiltAxisOutOfPlane");
@@ -1854,7 +1854,7 @@ private:
         MDL::addLabel(RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, LABEL_DOUBLE, "rlnChangesOptimalOrientations");
         MDL::addLabel(RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES, LABEL_DOUBLE, "rlnChangesOptimalClasses");
         MDL::addLabel(RLN_OPTIMISER_DATA_ARE_CTF_PHASE_FLIPPED, LABEL_BOOL, "rlnCtfDataArePhaseFlipped");
-        MDL::addLabel(RLN_OPTIMISER_DATA_STARFILE, LABEL_STRING, "rlnExperimentalDataStarFile");
+        MDL::addLabel(RLN_OPTIMISER_DATA_STARFILE, LABEL_STRING, "rlnExperimentalDataStarFile", TAGLABEL_METADATA);
         MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_CTF, LABEL_BOOL, "rlnDoCorrectCtf");
         MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_MAGNIFICATION, LABEL_BOOL, "rlnDoCorrectMagnification");
         MDL::addLabel(RLN_OPTIMISER_DO_CORRECT_NORM, LABEL_BOOL, "rlnDoCorrectNorm");
@@ -1883,8 +1883,8 @@ private:
         MDL::addLabel(RLN_OPTIMISER_MAGNIFICATION_STEP, LABEL_DOUBLE, "rlnMagnificationSearchStep");
         MDL::addLabel(RLN_OPTIMISER_MAX_COARSE_SIZE, LABEL_INT, "rlnMaximumCoarseImageSize");
         MDL::addLabel(RLN_OPTIMISER_MAX_NR_POOL, LABEL_INT, "rlnMaxNumberOfPooledParticles");
-        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE, LABEL_STRING, "rlnModelStarFile");
-        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE2, LABEL_STRING, "rlnModelStarFile2");
+        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE, LABEL_STRING, "rlnModelStarFile", TAGLABEL_METADATA);
+        MDL::addLabel(RLN_OPTIMISER_MODEL_STARFILE2, LABEL_STRING, "rlnModelStarFile2", TAGLABEL_METADATA);
         MDL::addLabel(RLN_OPTIMISER_NR_ITERATIONS, LABEL_INT, "rlnNumberOfIterations");
         MDL::addLabel(RLN_OPTIMISER_NR_ITER_WO_RESOL_GAIN, LABEL_INT, "rlnNumberOfIterWithoutResolutionGain");
         MDL::addLabel(RLN_OPTIMISER_NR_ITER_WO_HIDDEN_VAR_CHANGES, LABEL_INT, "rlnNumberOfIterWithoutChangingAssignments");
@@ -1897,7 +1897,7 @@ private:
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_CLASSES, LABEL_INT, "rlnSmallestChangesClasses");
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_OFFSETS, LABEL_DOUBLE, "rlnSmallestChangesOffsets");
         MDL::addLabel(RLN_OPTIMISER_SMALLEST_CHANGES_OPT_ORIENTS, LABEL_DOUBLE, "rlnSmallestChangesOrientations");
-        MDL::addLabel(RLN_OPTIMISER_SAMPLING_STARFILE, LABEL_STRING, "rlnOrientSamplingStarFile");
+        MDL::addLabel(RLN_OPTIMISER_SAMPLING_STARFILE, LABEL_STRING, "rlnOrientSamplingStarFile", TAGLABEL_METADATA);
         MDL::addLabel(RLN_OPTIMISER_SOLVENT_MASK_NAME, LABEL_STRING, "rlnSolventMaskName");
         MDL::addLabel(RLN_OPTIMISER_SOLVENT_MASK2_NAME, LABEL_STRING, "rlnSolventMask2Name");
         MDL::addLabel(RLN_OPTIMISER_TAU_SPECTRUM_NAME, LABEL_STRING, "rlnTauSpectrumName");
