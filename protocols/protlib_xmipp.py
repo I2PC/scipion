@@ -657,10 +657,18 @@ class ScriptShowJ(ScriptAppIJ):
         
     def readOtherParams(self):
         #FIXME: params seems to be they cannot be passed directly to java
-        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render', '--visible', '--order', '--labels', '--sortby']
+        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--sortby']
         for p in params:
             if self.checkParam(p):
                 self.args += " %s %s" % (p, self.getParam(p))
+        params = [ '--render', '--visible', '--order', '--labels']
+        pvalues = ''
+        for p in params:
+            if self.checkParam(p):
+                for pvalue in self.getListParam(p):
+                    pvalues = '%s %s'%(pvalues, pvalue)
+                    
+                self.args += " %s %s" % (p, pvalues)
         params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap', '--mask_toolbar']
         for p in params:
             if self.checkParam(p):
