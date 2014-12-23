@@ -1364,14 +1364,22 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 jsGoToImage.setValue(index + 1);
                         isUpdating = false;
                         // Ctrl adds items to selection, otherwise previous ones are removed.
-                        if (!evt.isControlDown() && !evt.isShiftDown() && evt.getButton() == MouseEvent.BUTTON1)
+                        if (!evt.isControlDown() && !evt.isShiftDown())
+                        {
+                                if(evt.getButton() == MouseEvent.BUTTON1)
                                 {
                                     gallery.clearSelection();
                                     gallery.touchItem(row, col);
                                     
                                 }
+                                else
+                                {
+                                    if(!gallery.isSelected(row, col))
+                                        gallery.clearSelection();
+                                    gallery.touchItem(row, col, true);
+                                }
                                
-                       
+                        }
                         else
                         {
                                 if (evt.isShiftDown())

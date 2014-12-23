@@ -85,7 +85,11 @@ public class MetadataRowTableModel extends MetadataTableModel {
 	
 	@Override
 	public boolean handleRightClick(int row, int col, XmippPopupMenuCreator xpopup) {
-		return super.handleRightClick(0, row, xpopup);
+		boolean result =  super.handleRightClick(0, row, xpopup);
+                xpopup.setItemVisible(XmippPopupMenuCreator.SELECT, false);
+                xpopup.setItemVisible(XmippPopupMenuCreator.ENABLED, false);
+                xpopup.setItemVisible(XmippPopupMenuCreator.DISABLED, false);
+                return result;
 	}
         
        @Override
