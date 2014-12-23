@@ -288,7 +288,7 @@ class TestSignificant(tests.BaseTest):
         args = {'symmetryGroup': 'i1',
                 'iter': 3,
                 'numberOfMpi': cpus,
-                'inputClasses': protImport.outputAverages,
+                'inputSet': protImport.outputAverages,
                 'Nvolumes': 1
                 }
         # Run significant with one volume
