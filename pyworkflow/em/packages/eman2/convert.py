@@ -31,15 +31,18 @@ This module contains converter functions that will serve to:
 2. Read from Eman files to base classes
 """
 
-import subprocess
+import os, glob
 import json
-import os, sys
-from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand
-import pyworkflow as pw
 import numpy
+import subprocess
 
-from pyworkflow.em.constants import NO_INDEX
-from os.path import abspath
+from os.path import join, exists
+
+import pyworkflow as pw
+from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand, loadJson
+from pyworkflow.utils.path import removeBaseExt
+
 
 # LABEL_TYPES = { 
 #                xmipp.LABEL_SIZET: long,
