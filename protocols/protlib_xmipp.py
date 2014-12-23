@@ -634,7 +634,7 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('                          : by default the first one that can be visualized is rendered')
         self.addParamsLine('  [--visible <...>]    : Specifies visible labels')
         self.addParamsLine('  [--order <...>]    : Specifies labels order')
-        self.addParamsLine('  [--label <label>]    : Specifies label to display')
+        self.addParamsLine('  [--labels <...>]    : Specifies labels to display')
         self.addParamsLine('  [--sortby <...>]    : Specifies label to sort by. asc or desc mode can be added')
         
         self.addParamsLine('         alias -e;')
@@ -657,10 +657,18 @@ class ScriptShowJ(ScriptAppIJ):
         
     def readOtherParams(self):
         #FIXME: params seems to be they cannot be passed directly to java
-        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render', '--visible', '--order', '--label', '--sortby']
+        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--sortby']
         for p in params:
             if self.checkParam(p):
                 self.args += " %s %s" % (p, self.getParam(p))
+        params = [ '--render', '--visible', '--order', '--labels']
+        pvalues = ''
+        for p in params:
+            if self.checkParam(p):
+                for pvalue in self.getListParam(p):
+                    pvalues = '%s %s'%(pvalues, pvalue)
+                    
+                self.args += " %s %s" % (p, pvalues)
         params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap', '--mask_toolbar']
         for p in params:
             if self.checkParam(p):

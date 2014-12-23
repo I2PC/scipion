@@ -958,7 +958,7 @@ public class GalleryData {
         if (!isVolumeMode()) {
             long[] selectedIds = new long[selection.length];
             int count = 0;
-            for (int i = 0; i <= selection.length; i++) {
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     selectedIds[count++] = ids[i];
                 }
@@ -1043,15 +1043,15 @@ public class GalleryData {
     public MetaData getClassesImages(boolean[] selection) {
         MetaData mdImages = new MetaData();
         MetaData md;
-            for (int i = 0; i <= selection.length; i++) {
-                if (selection[i]) {
-                    md = getClassImages(i);
-                    if (md != null) {
-                        mdImages.unionAll(md);
-                        md.destroy();
-                    }
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i]) {
+                md = getClassImages(i);
+                if (md != null) {
+                    mdImages.unionAll(md);
+                    md.destroy();
                 }
             }
+        }
         return mdImages;
     }
 
@@ -1189,7 +1189,7 @@ public class GalleryData {
      */
     public void removeSelection(boolean[] selection) throws Exception {
 
-            for (int i = 0; i <= selection.length; i++) {
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     md.removeObject(ids[i]);
                     hasMdChanges = true;
@@ -1305,7 +1305,7 @@ public class GalleryData {
             saveSelection(selection, "classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-                for (int i = 0; i <= selection.length; i++) {
+                for (int i = 0; i < selection.length; i++) {
                     if (selection[i]) {
                         long id = ids[i];
                         int ref = md.getValueInt(MDLabel.MDL_REF, id);

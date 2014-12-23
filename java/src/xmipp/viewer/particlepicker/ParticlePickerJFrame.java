@@ -832,28 +832,33 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     @Override
                     public void focusLost(FocusEvent fe) {
                         // event from sizes
-                        if(!fe.isTemporary())
-                        {
-                            try {
-                                sizetf.commitEdit();
-                                int size = ((Number) sizetf.getValue()).intValue();
-                                if (size == getParticlePicker().getSize())
-                                    return;
-                                
-                                if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
-                                {
-                                    
-                                    int prevsize = getParticlePicker().getSize();
-                                    sizetf.setText(Integer.toString(prevsize));
-                                    return;
-                                }
-                                updateSize(size);
-                            } catch (ParseException ex) {
-                                XmippDialog.showError(ParticlePickerJFrame.this, XmippMessage.getIllegalValueMsg("size", sizetf.getText()));
-                                Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        try {
+                            if(!fe.isTemporary())
+                            {
+
+                                    sizetf.commitEdit();
+                                    readSizeFromTextField();
                             }
+                        } catch (Exception ex) {
+                            XmippDialog.showError(ParticlePickerJFrame.this, XmippMessage.getIllegalValueMsg("size", sizetf.getText()));
+                            Logger.getLogger(ParticlePickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
+		});
+                sizetf.addActionListener(new ActionListener()
+		{
+
+                    
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // event from sizes
+                        
+                            readSizeFromTextField();
+                        
+                    }
+
+                   
 		});
 
 		sizesl.addChangeListener(new ChangeListener()
@@ -882,7 +887,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
         
-        
+        protected void readSizeFromTextField()
+        {
+            
+                    int size = ((Number) sizetf.getValue()).intValue();
+                if (size == getParticlePicker().getSize())
+                    return;
+
+                if (!getParticlePicker().isValidSize(ParticlePickerJFrame.this, size))
+                {
+
+                    int prevsize = getParticlePicker().getSize();
+                    sizetf.setText(Integer.toString(prevsize));
+                    return;
+                }
+                updateSize(size);
+           
+        }
 
 	public void updateSize(int size)
 	{
