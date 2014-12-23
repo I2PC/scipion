@@ -554,7 +554,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 		table.addMouseListener(new java.awt.event.MouseAdapter()
 		{
-			public void mouseClicked(java.awt.event.MouseEvent evt)
+			public void mouseReleased(java.awt.event.MouseEvent evt)
 			{
 				tableMouseClicked(evt);
 			}
