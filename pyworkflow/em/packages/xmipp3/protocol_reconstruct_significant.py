@@ -23,24 +23,31 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
-from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 """
 This sub-package contains wrapper around reconstruct_significant Xmipp program
 """
 
 from pyworkflow.em import *  
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfVolumes, volumeToRow
+from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
 
+
+
 class XmippProtReconstructSignificant(ProtInitialVolume):
-    """ Produces one or several initial volumes using reconstruct_significant """
+    """ 
+    This algorithm addresses the initial volume problem in SPA
+    by setting it in a Weighted Least Squares framework and 
+    calculating the weights through a statistical approach based on
+    the cumulative density function of different image similarity measures. 
+    """    
     _label = 'reconstruct significant'
 
     #--------------------------- DEFINE param functions --------------------------------------------
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputClasses', PointerParam, label="Input classes", important=True, 
+        form.addParam('inputSet', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfClasses2D, SetOfAverages',
                       help='Select the input classes2D from the project.\n'
                            'It should be a SetOfClasses2D class with class representative')
@@ -149,12 +156,12 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self, classesFn):
-        inputClasses = self.inputClasses.get()
+        inputSet = self.inputSet.get()
         
-        if isinstance(inputClasses, SetOfClasses2D):
-            writeSetOfClasses2D(inputClasses, classesFn, writeParticles=False)
+        if isinstance(inputSet, SetOfClasses2D):
+            writeSetOfClasses2D(inputSet, classesFn, writeParticles=False)
         else:
-            writeSetOfParticles(inputClasses, classesFn)
+            writeSetOfParticles(inputSet, classesFn)
             
         if self.thereisRefVolume:
             inputVolume= self.refVolume.get()
@@ -197,19 +204,20 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         if Nvolumes==1:
             vol = Volume()
             vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
-            vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
+            vol.setSamplingRate(self.inputSet.get().getSamplingRate())
+            self._defineOutputs(outputVolume=vol)
         else:
             vol = self._createSetOfVolumes()
-            vol.setSamplingRate(self.inputClasses.get().getSamplingRate())
+            vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             fnVolumes=glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
             fnVolumes.sort()
             for fnVolume in fnVolumes:
                 aux=Volume()
                 aux.setLocation(fnVolume)
                 vol.append(aux)
+            self._defineOutputs(outputVolumes=vol)
 
-        self._defineOutputs(outputVol=vol)
-        self._defineSourceRelation(vol, self.inputClasses)
+        self._defineSourceRelation(vol, self.inputSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -218,7 +226,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             if self.refVolume.hasValue():
                 refVolume = self.refVolume.get()
                 x1, y1, _ = refVolume.getDim()
-                x2, y2, _ = self.inputClasses.get().getDimensions()
+                x2, y2, _ = self.inputSet.get().getDimensions()
                 if x1!=x2 or y1!=y2:
                     errors.append('The input images and the reference volume have different sizes') 
             else:
@@ -227,7 +235,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         
     def _summary(self):
         summary = []
-        summary.append("Input classes: %s" % self.inputClasses.get().getNameId())
+        summary.append("Input classes: %s" % self.inputSet.get().getNameId())
         if self.thereisRefVolume:
             summary.append("Starting from: %s" % self.refVolume.get().getNameId())
         else:
@@ -244,9 +252,9 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
     
     def _methods(self):
         retval = ""
-        if self.inputClasses.get() is not None:
+        if self.inputSet.get() is not None:
             retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
-               self.inputClasses.get().getNameId()
+               self.inputSet.get().getNameId()
             if self.thereisRefVolume:
                 retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
             else:

@@ -260,4 +260,22 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
                 self.minimumScale, self.maximumScale, self.stepScale)
                
         return alignArgs
-            
+     
+     
+class XmippProtAlignVolumeForWeb(XmippProtAlignVolume):
+    """ Aligns a set of volumes using cross correlation.
+    Based on Xmipp protocol for aligning volumes, but
+    the parameters are restricted for ease of use.
+    """
+    _label = 'align volume web'
+    
+    def _defineParams(self, form):
+        XmippProtAlignVolume._defineParams(self, form)
+        
+        maskGroup = form.getParam('Mask')
+        maskGroup.config(condition='False')
+        
+        # Set as default the fast fourier align method
+        # this requires that the Xmipp is compiled with
+        # the corresponding flag
+        form.getParam('alignmentAlgorithm').config(default=ALIGN_ALGORITHM_FAST_FOURIER)
