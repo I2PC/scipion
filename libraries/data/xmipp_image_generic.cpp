@@ -554,6 +554,27 @@ void ImageGeneric::subtract(const ImageGeneric &img)
 
 }
 
+void ImageGeneric::multiply(const double value)
+{
+
+#define MULTIPLY(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\
+                     kk *= value;
+
+    SWITCHDATATYPE(datatype, MULTIPLY);
+#undef MULTIPLY
+
+}
+
+void ImageGeneric::divide(const double value)
+{
+
+#define DIVIDE(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\
+                     kk /= value;
+
+    SWITCHDATATYPE(datatype, DIVIDE);
+#undef DIVIDE
+
+}
 
 void createEmptyFile(const FileName &filename, int xdim, int ydim, int Zdim,
                      size_t select_img, bool isStack, int mode, int _swapWrite)

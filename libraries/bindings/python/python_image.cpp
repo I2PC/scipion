@@ -44,8 +44,8 @@ PyNumberMethods Image_NumberMethods =
     {
         Image_add, //binaryfunc  nb_add;
         Image_subtract, //binaryfunc  nb_subtract;
-        0, //binaryfunc  nb_multiply;
-        0, //binaryfunc  nb_divide;
+        Image_multiply, //binaryfunc  nb_multiply;
+        Image_divide, //binaryfunc  nb_divide;
         0, //binaryfunc  nb_remainder;
         0, //binaryfunc  nb_divmod;
         0, //ternaryfunc nb_power;
@@ -69,8 +69,8 @@ PyNumberMethods Image_NumberMethods =
         /* Added in release 2.0 */
         Image_iadd, //binaryfunc  nb_inplace_add;
         Image_isubtract, //binaryfunc  nb_inplace_subtract;
-        0, //binaryfunc  nb_inplace_multiply;
-        0, //binaryfunc  nb_inplace_divide;
+        Image_imultiply, //binaryfunc  nb_inplace_multiply;
+        Image_idivide, //binaryfunc  nb_inplace_divide;
         0, //binaryfunc  nb_inplace_remainder;
         0, //ternaryfunc nb_inplace_power;
         0, //binaryfunc  nb_inplace_lshift;
@@ -183,7 +183,7 @@ PyTypeObject ImageType = {
                              0, /*tp_getattro*/
                              0, /*tp_setattro*/
                              0, /*tp_as_buffer*/
-                             Py_TPFLAGS_DEFAULT, /*tp_flags*/
+                             Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
                              "Python wrapper to Xmipp Image class",/* tp_doc */
                              0, /* tp_traverse */
                              0, /* tp_clear */
@@ -1217,6 +1217,7 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator +=
 
+
 /* Subtract two images, operator - */
 PyObject *
 Image_subtract(PyObject *obj1, PyObject *obj2)
@@ -1231,12 +1232,12 @@ Image_subtract(PyObject *obj1, PyObject *obj2)
         }
         catch (XmippError &xe)
         {
-        	result=NULL;
+            result = NULL;
             PyErr_SetString(PyXmippError, xe.msg.c_str());
         }
     }
     return (PyObject *)result;
-}//operator +
+}//operator -
 
 /** Image inplace subtraction, equivalent to -= operator */
 PyObject *
@@ -1251,11 +1252,104 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     }
     catch (XmippError &xe)
     {
-    	result=NULL;
+        result = NULL;
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return (PyObject *)result;
-}//operator +=
+}//operator -=
+
+/* Multiply image and constant, operator * */
+PyObject *
+Image_multiply(PyObject *obj1, PyObject *obj2)
+{
+    ImageObject * result = PyObject_New(ImageObject, &ImageType);
+    if (result != NULL)
+    {
+        try
+        {
+            result->image = new ImageGeneric(Image_Value(obj1));
+            double value = PyFloat_AsDouble(obj2);
+            Image_Value(result).multiply(value);
+        }
+        catch (XmippError &xe)
+        {
+            result = NULL;
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return (PyObject *)result;
+}//operator *
+
+/** Image inplace multiply, equivalent to *= operator
+ * NOTE (JM): For efficiency reasons, we break the Python convention
+ * and return None instead of a new reference of Image
+ * just to avoid creating a new Image object.
+ * */
+PyObject *
+Image_imultiply(PyObject *obj1, PyObject *obj2)
+{
+    try
+    {
+        ImageObject * result = NULL;
+        if ((result = PyObject_New(ImageObject, &ImageType)))
+            result->image = new ImageGeneric(Image_Value(obj1));
+        double value = PyFloat_AsDouble(obj2);
+        Image_Value(result).multiply(value);
+        return (PyObject*) result;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}//operator *=
+
+/* Divide image and constant, operator * */
+PyObject *
+Image_divide(PyObject *obj1, PyObject *obj2)
+{
+    ImageObject * result = PyObject_New(ImageObject, &ImageType);
+    if (result != NULL)
+    {
+        try
+        {
+            result->image = new ImageGeneric(Image_Value(obj1));
+            double value = PyFloat_AsDouble(obj2);
+            Image_Value(result).divide(value);
+        }
+        catch (XmippError &xe)
+        {
+            result = NULL;
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return (PyObject *)result;
+}//operator /
+
+/** Image inplace multiply, equivalent to *= operator
+ * NOTE (JM): For efficiency reasons, we break the Python convention
+ * and return None instead of a new reference of Image
+ * just to avoid creating a new Image object.
+ * */
+PyObject *
+Image_idivide(PyObject *obj1, PyObject *obj2)
+{
+    try
+    {
+      ImageObject * result = NULL;
+      if ((result = PyObject_New(ImageObject, &ImageType)))
+          result->image = new ImageGeneric(Image_Value(obj1));
+      double value = PyFloat_AsDouble(obj2);
+      Image_Value(result).divide(value);
+      return (PyObject*) result;
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}//operator /=
+
 
 /** Image inplace subtraction, equivalent to -= operator */
 PyObject *
