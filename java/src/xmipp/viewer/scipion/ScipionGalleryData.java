@@ -69,7 +69,7 @@ public class ScipionGalleryData extends GalleryData {
      * Create a metadata just with selected items
      */
     @Override
-    public ScipionMetaData getSelectionMd() {
+    public ScipionMetaData getSelectionMd(boolean[] selection) {
         return null;//metadata operations are not used in scipion
     }
 
@@ -262,15 +262,15 @@ public class ScipionGalleryData extends GalleryData {
         {
             
             ScipionMetaData.EMObject emo;
-            for(int i = selfrom; i <= selto; i ++)
-                if(selection[i] && isEnabled(i))
+            
+                if(isEnabled(row))
                 {
-                    emo = ((ScipionMetaData) md).getEMObjects().get(i);
-                    md.putCTF(ids[i], ellipseCTF);
+                    emo = ((ScipionMetaData) md).getEMObjects().get(row);
+                    md.putCTF(ids[row], ellipseCTF);
                     emo.setLabel("(recalculate ctf)");
                     emo.setComment(ellipseCTF.toString());
                 }
-            window.fireTableRowsUpdated(selfrom, selto);
+            window.fireTableRowsUpdated(row, row);
         }
     }
     
@@ -415,7 +415,7 @@ public class ScipionGalleryData extends GalleryData {
     
     
     
-    public MetaData getImagesMd(boolean selected) {
+    public MetaData getImagesMd(boolean[] selection, boolean selected) {
                     
             MetaData imagesmd = new MetaData();
             int index = 0;
@@ -424,7 +424,7 @@ public class ScipionGalleryData extends GalleryData {
             long imageid;
             String matrix;
             for (long id : md.findObjects()) {
-                if (isEnabled(index) && (!selected ||isSelected(index))) {
+                if (isEnabled(index) && (!selected ||selection[index])) {
                         
                     imagepath = md.getValueString(getRenderLabel(), id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
@@ -444,6 +444,6 @@ public class ScipionGalleryData extends GalleryData {
         
     }
     
-
+    
     
 }

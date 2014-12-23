@@ -26,18 +26,14 @@
 package xmipp.viewer.models;
 
 import ij.ImagePlus;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippMenuBar;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.jni.MetaData;
 import xmipp.utils.DEBUG;
-import xmipp.utils.Params;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.ImageDimension;
@@ -334,6 +330,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
+
+    @Override
+    public boolean showLabels() {
+        return true;
+    }
 	
         
 

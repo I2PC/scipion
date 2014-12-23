@@ -53,9 +53,10 @@ public class SaveImagesJDialog extends SaveJDialog {
 	@Override
 	protected void createContent(JPanel panel) {
 		super.createContent(panel);
-		imagesMd = gallery.data.getClassesImages();
+                
+		imagesMd = gallery.data.getClassesImages(gallery.getSelection());
 		String text = String.format("<html>You are about to save <font color='red'>%d</font> images from <font color='red'>%d</font> classes.",
-				imagesMd.size(), gallery.data.getSelectionCount());
+				imagesMd.size(), gallery.getSelectionCount());
 		panel.add(new JLabel(text), XmippWindowUtil.getConstraints(gbc, 0, 1, 2));
 	}// function initComponents
 	

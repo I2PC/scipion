@@ -211,10 +211,9 @@ public class MetaData {
 	public native int[] getActiveLabels();
 
 	public static native int getLabelType(int label);
-
-	public static Class getLabelClass(int label) {
-		int type = getLabelType(label);
-		switch (type) {
+        
+        public static Class getClassForType(int type) {
+            switch (type) {
 		case LABEL_INT:
 			return Integer.class;
 		case LABEL_BOOL:
@@ -230,6 +229,11 @@ public class MetaData {
 
 		}
 		return null;
+        }
+
+	public static Class getLabelClass(int label) {
+		int type = getLabelType(label);
+		return getClassForType(type);
 	}
 
 	/** Return an String representing the label type */
