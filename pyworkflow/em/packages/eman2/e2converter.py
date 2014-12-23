@@ -35,7 +35,8 @@ As parameters will receive the output filename for the hdf stack
 import os, sys
 import json
 import numpy as np
-from EMAN2 import Transform
+import EMAN2 as eman
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -45,8 +46,6 @@ if __name__ == '__main__':
         #print 'PYTHONPATH', os.environ['PYTHONPATH'], '\n'
         #print 'LD_LIBRARY_PATH', os.environ['LD_LIBRARY_PATH']
             
-        from EMAN2 import EMData, EMUtil
-        
         i = 0
         line = sys.stdin.readline()
         while line:
@@ -60,13 +59,13 @@ if __name__ == '__main__':
                 filename = str(objDict['_filename'])
             else:
                 raise Exception('ERROR (e2converter): Cannot process a particle without filename')
-            imageData = EMData()
-            t= None
+            imageData = eman.EMData()
+            transformation = None
             if '_angles' in objDict.keys():
                 #TODO: convert to vector not matrix
                 angles = objDict['_angles']
                 shifts = objDict['_shifts']
-                t = Transform({"type":"spider",
+                transformation = eman.Transform({"type":"spider",
                                "phi":angles[0],
                                "theta":angles[1],
                                "psi":angles[2],
@@ -76,10 +75,9 @@ if __name__ == '__main__':
                                "mirror":0,####TODO: test flip
                                "scale":1.0})
 
-            #EMData.read_image(imageData, filename,index)
-            imageData.read_image(filename,index)
-            if t is not None:
-                imageData.set_attr('xform.projection', t)
+            imageData.read_image(filename, index)
+            if transformation is not None:
+                imageData.set_attr('xform.projection', transformation)
 
 #            if '_itemId' in objDict.keys():
 #                itemId = objDict['_itemId']
@@ -87,7 +85,7 @@ if __name__ == '__main__':
 #                raise Exception('ERROR (e2converter): Cannot process a particle without _itemId')
 #            imageData['item_id'] = itemId
 
-            imageData.write_image(outputFile, i, EMUtil.ImageType.IMAGE_HDF, False)
+            imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
             i += 1
             print "OK"
             sys.stdout.flush()
