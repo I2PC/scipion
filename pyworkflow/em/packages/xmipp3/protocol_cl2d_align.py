@@ -102,6 +102,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         # Generate the Set of Particles with alignment
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
+        alignedSet.setRepresentative(avg)
         readSetOfParticles(self.imgsFn, alignedSet)
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)

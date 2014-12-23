@@ -31,12 +31,18 @@ This module contains converter functions that will serve to:
 2. Read from Eman files to base classes
 """
 
+import os, glob
+import json
+import numpy
 import subprocess
-from data import *
-from eman2 import *
-import glob
-from pyworkflow.em.constants import NO_INDEX
-from os.path import abspath
+
+from os.path import join, exists
+
+import pyworkflow as pw
+from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand, loadJson
+from pyworkflow.utils.path import removeBaseExt
+
 
 # LABEL_TYPES = { 
 #                xmipp.LABEL_SIZET: long,
@@ -101,7 +107,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     size = int(jsonBoxDict["box_size"])
     jsonFninfo = join(workDir, 'info/')
     
-    
+
     for mic in micSet:
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         if exists(micPosFn):
@@ -121,10 +127,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
 def writeSetOfCoordinates():
     pass
 
-def readSetOfParticles(filename):
-    pass
-
-def writeSetOfParticles(partSet, filename, inputdir):
+def writeSetOfParticles(partSet, filename, **kwargs):
     """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
     This function should be called from a current dir where
     the images in the set are available.
@@ -144,14 +147,37 @@ def writeSetOfParticles(partSet, filename, inputdir):
     proc = subprocess.Popen(cmd, shell=True, 
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
-    
+
+
     for part in partSet:
-        index, fn = part.getLocation()
+        #tranformation matrix is procesed here because
+        #it uses routines available thrrough scipion python
+        matrix = part.getTransform().getMatrix()
+        shifts, angles = geometryFromMatrix(matrix, True)
+        objDict = part.getObjDict()
+        objDict['_itemId']=part.getObjId()
+        #json cannot encode arrays so I convert them to lists
+        objDict['_angles']=angles.tolist()
+        objDict['_shifts']=shifts.tolist()
         # Write the e2converter.py process from where to read the image
-        print "sending: ", part.getObjId(), index, join(inputdir, fn)
-        print >> proc.stdin, part.getObjId(), index, join(inputdir, fn)
+        print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         response = proc.stdout.readline()
-        print "response: ", response
     #proc.wait()
     os.chdir(cwd)
+
+def readSetOfParticles(filename, partSet, **kwargs):
+    pass
+
+def geometryFromMatrix(matrix, inverseTransform):
+    from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    if inverseTransform:
+        from numpy.linalg import inv
+        matrix = inv(matrix)
+        shifts = -translation_from_matrix(matrix)
+    else:
+        shifts = translation_from_matrix(matrix)
+    rad_to_ang = 180./numpy.pi
+    angles = -numpy.rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    return shifts, angles
+

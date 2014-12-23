@@ -97,6 +97,20 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+pcre = env.AddLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=['bin/pcretest'],
+    default=False)
+
+swig = env.AddLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=['bin/swig'],
+    deps=[pcre],
+    default=False)
+
+
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
@@ -111,11 +125,7 @@ boost_headers_only = env.ManualInstall(
          'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
     default=False)
 
-swig = env.AddLibrary(
-    'swig',
-    tar='swig-3.0.2.tgz',
-    flags=['--without-pcre'],
-    default=False)
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -250,7 +260,7 @@ env.AddPackage('ctffind',
                default=False)
 
 env.AddPackage('eman',
-               tar='eman2.1beta3.linux64.tgz',
+               tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
