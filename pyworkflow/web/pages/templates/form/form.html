@@ -83,6 +83,12 @@
 	<script>
 	  $(function() {
 	    $("#tabs").tabs();
+	    
+	    // to short the file path
+	    var path = $("input#inputPath").val()
+	    var pathSplitted = path.split("/")
+
+	    $("input#inputPath").val(pathSplitted[pathSplitted.length-1])
 	  });
   	</script>
 	</head>
