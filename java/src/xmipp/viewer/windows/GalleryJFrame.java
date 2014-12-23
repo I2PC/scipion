@@ -2045,12 +2045,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	protected void saveMd() throws Exception
 	{
-		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite() );
+		saveMd(dlgSave.getMdFilename(), false, dlgSave.isOverwrite(), true );
 	}
         
       
 
-	protected void saveMd(String path, boolean saveall, boolean isoverwrite) throws Exception
+	protected void saveMd(String path, boolean saveall, boolean isoverwrite, boolean reload) throws Exception
 	{
 		try
 		{
@@ -2063,11 +2063,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                 file = path;
                                 path = getBlock() + "@" + file;
                         }
-                        gallery.data.setFileName(file);
-                        if (path.contains("@"))
-                                gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
-                        reloadFile(file, false);
-                        setGalleryTitle();
+                        if(reload)
+                            {
+                            gallery.data.setFileName(file);
+                            if (path.contains("@"))
+                                    gallery.data.selectBlock(path.substring(0, path.lastIndexOf("@")));
+                            reloadFile(file, false);
+                            setGalleryTitle();
+                        }
 		}
 		catch (Exception e)
 		{

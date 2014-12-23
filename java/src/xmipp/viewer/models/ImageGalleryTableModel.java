@@ -109,6 +109,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		// DEBUG.printMessage(String.format("col: %d, rows: %d", cols, rows));
 		//resizeCache(); NOw this is done when setZoomValue
                 selection = new boolean[data.ids.length];
+                selfrom = selto = -1;
 	}
 	
 	public int getImageWidth()
