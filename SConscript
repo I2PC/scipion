@@ -107,6 +107,7 @@ swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
     targets=['bin/swig'],
+    makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
     default=False)
 

@@ -147,7 +147,8 @@ else:
 # http://www.scons.org/wiki/SConsMethods/SideEffect), and does not try
 # to do one step while the previous one is still running in the background.
 
-def addLibrary(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
+def addLibrary(env, name, tar=None, buildDir=None, targets=None,
+               makeTargets=None, libChecks=[],
                url=None, flags=[], addPath=True, autoConfigTarget='Makefile',
                deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
@@ -216,8 +217,24 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None, libChecks=[],
         AutoConfigParams=flags,
         AutoConfigStdOut='software/log/%s_config.log' % name)
     SideEffect('dummy', tConfig)  # so it works fine in parallel builds
+
+    if not makeTargets:
+        # This should be the normal case
+        lastTarget = tConfig
+    else:
+        # Some libraries (like swig) need to call "make" before "make
+        # install", and so we have to complicate things. Thank you, swig.
+        tMakePreInstall = env.Make(
+            source=tConfig,
+            target=['software/tmp/%s' % t for t in makeTargets],
+            MakePath='software/tmp/%s' % buildDir,
+            MakeEnv=os.environ,
+            MakeStdOut='software/log/%s_make_pre-install.log' % name)
+        SideEffect('dummy', tMakePreInstall)
+        lastTarget = tMakePreInstall
+
     tMake = env.Make(
-        source=tConfig,
+        source=lastTarget,
         target=['software/%s' % t for t in targets],
         MakePath='software/tmp/%s' % buildDir,
         MakeEnv=os.environ,
