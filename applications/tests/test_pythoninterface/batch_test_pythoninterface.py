@@ -251,8 +251,13 @@ class TestXmippPythonInterface(unittest.TestCase):
         img1 = Image("1@" + stackPath)
         img2 = Image("2@" + stackPath)
         sum = img1 + img2
+        sum2 = Image("1@" + stackPath)
+        sum2.inplaceAdd(img2)
+        
         sumRef = Image(testFile("sum.spi"))
         self.assertEqual(sum, sumRef)
+        self.assertEqual(sum2, sumRef)
+        
         img1 += img2     
         self.assertEqual(sum, img1)
         img1 += img2
@@ -263,19 +268,30 @@ class TestXmippPythonInterface(unittest.TestCase):
         img1 = Image(imgPath)
         img2 = Image(imgPath)
         imgSum = Image(imgPath)
+        imgSum2 = Image(imgPath)
         
         for i in range(2):
             imgSum += img1
+            imgSum2.inplaceAdd(img1)
             
         imgMult = img1 * 3
+        imgMult2 = Image(imgPath)
+        imgMult2.inplaceMultiply(3)
         
         self.assertEqual(imgSum, imgMult)
+        self.assertEqual(imgSum, imgSum2)
+        self.assertEqual(imgSum, imgMult2)
+        
         img1 *= 3
-        self.assertEqual(imgSum, img1)
+        self.assertEqual(imgSum, img1)        
         
         imgSum /= 3
+        imgSum2.inplaceDivide(3)
+        
+        self.assertEqual(imgSum, imgSum2)
         self.assertNotEqual(imgSum, img1)
         self.assertEqual(imgSum, img2)
+        
             
     
     def test_Image_compare(self):
