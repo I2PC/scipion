@@ -157,6 +157,17 @@ PyMethodDef Image_methods[] =
           "Compute image statistics, return mean, dev, min and max" },
         { "adjustAndSubtract", (PyCFunction) Image_adjustAndSubtract, METH_VARARGS,
           "I1=I1-adjusted(I2)" },
+        /* Equivalent methods to inplace operations, but without creating new instances of Image */
+        { "inplaceAdd", (PyCFunction) Image_inplaceAdd, METH_VARARGS,
+          "Add another image to self (does not create another Image instance)" },
+        { "inplaceSubtract", (PyCFunction) Image_inplaceSubtract, METH_VARARGS,
+          "Subtract another image from self (does not create another Image instance)" },
+        { "inplaceMultiply", (PyCFunction) Image_inplaceMultiply, METH_VARARGS,
+          "Multiply image by a constant (does not create another Image instance)" },
+        { "inplaceDivide", (PyCFunction) Image_inplaceDivide, METH_VARARGS,
+          "Divide image by a constant (does not create another Image instance)" },
+
+
         { NULL } /* Sentinel */
     };//Image_methods
 
@@ -1217,6 +1228,32 @@ Image_iadd(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator +=
 
+/** Image inplace add, equivalent to *= operator
+ * but this not return a new instance of image, mainly
+ * for efficiency reasons.
+ * */
+PyObject *
+Image_inplaceAdd(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+      PyObject *other = NULL;
+      if (PyArg_ParseTuple(args, "O", &other) &&
+          Image_Check(other))
+      {
+        Image_Value(self).add(Image_Value(other));
+        Py_RETURN_NONE;
+      }
+      else
+        PyErr_SetString(PyXmippError, "Expecting Image as second argument");
+    }
+    catch (XmippError &xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}// similar to -=
+
 
 /* Subtract two images, operator - */
 PyObject *
@@ -1258,6 +1295,32 @@ Image_isubtract(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator -=
 
+/** Image inplace substract, equivalent to *= operator
+ * but this not return a new instance of image, mainly
+ * for efficiency reasons.
+ * */
+PyObject *
+Image_inplaceSubtract(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    PyObject *other = NULL;
+    if (PyArg_ParseTuple(args, "O", &other) &&
+        Image_Check(other))
+    {
+      Image_Value(self).subtract(Image_Value(other));
+      Py_RETURN_NONE;
+    }
+    else
+      PyErr_SetString(PyXmippError, "Expecting Image as second argument");
+  }
+  catch (XmippError &xe)
+  {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return NULL;
+}// similar to -=
+
 /* Multiply image and constant, operator * */
 PyObject *
 Image_multiply(PyObject *obj1, PyObject *obj2)
@@ -1280,11 +1343,7 @@ Image_multiply(PyObject *obj1, PyObject *obj2)
     return (PyObject *)result;
 }//operator *
 
-/** Image inplace multiply, equivalent to *= operator
- * NOTE (JM): For efficiency reasons, we break the Python convention
- * and return None instead of a new reference of Image
- * just to avoid creating a new Image object.
- * */
+
 PyObject *
 Image_imultiply(PyObject *obj1, PyObject *obj2)
 {
@@ -1303,6 +1362,32 @@ Image_imultiply(PyObject *obj1, PyObject *obj2)
     }
     return NULL;
 }//operator *=
+
+/** Image inplace multiply, equivalent to *= operator
+ * but this not return a new instance of image, mainly
+ * for efficiency reasons.
+ * */
+PyObject *
+Image_inplaceMultiply(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    PyObject *other = NULL;
+    if (PyArg_ParseTuple(args, "O", &other))
+    {
+      double value = PyFloat_AsDouble(other);
+      Image_Value(self).multiply(value);
+      Py_RETURN_NONE;
+    }
+    else
+      PyErr_SetString(PyXmippError, "Expecting Number as second argument");
+  }
+  catch (XmippError &xe)
+  {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return NULL;
+}// similar to *=
 
 /* Divide image and constant, operator * */
 PyObject *
@@ -1350,6 +1435,31 @@ Image_idivide(PyObject *obj1, PyObject *obj2)
     return NULL;
 }//operator /=
 
+/** Image inplace divide, equivalent to /= operator
+ * but this not return a new instance of image, mainly
+ * for efficiency reasons.
+ * */
+PyObject *
+Image_inplaceDivide(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    PyObject *other = NULL;
+    if (PyArg_ParseTuple(args, "O", &other))
+    {
+      double value = PyFloat_AsDouble(other);
+      Image_Value(self).divide(value);
+      Py_RETURN_NONE;
+    }
+    else
+      PyErr_SetString(PyXmippError, "Expecting Number as second argument");
+  }
+  catch (XmippError &xe)
+  {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return NULL;
+}// similar to /=
 
 /** Image inplace subtraction, equivalent to -= operator */
 PyObject *
