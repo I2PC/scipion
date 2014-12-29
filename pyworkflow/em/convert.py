@@ -128,3 +128,19 @@ class ImageHandler(object):
         loc2 = self._convertToLocation(locationObj2)
         
         return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)
+
+    def computeAverage(self, inputSet):
+        n = inputSet.getSize()
+        if n > 0:
+            imageIter = iter(inputSet)
+            img = imageIter.next()
+            avgImage = self.read(img)
+
+            for img in imageIter:
+                self._img.read(self._convertToLocation(img))
+                avgImage.inplaceAdd(self._img)
+
+            avgImage.inplaceDivide(n)
+            return avgImage
+        else:
+            return None
