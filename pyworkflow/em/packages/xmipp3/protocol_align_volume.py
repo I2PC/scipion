@@ -149,7 +149,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         group.addParam('initialScale', params.FloatParam, default=1, expertLevel=params.LEVEL_ADVANCED,
                       label='Initial scale')  
         
-        form.addParallelSection()
+        form.addParallelSection(threads=8, mpi=1)
         
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
