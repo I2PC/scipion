@@ -255,18 +255,18 @@ class TestSignificant(tests.BaseTest):
         nVols = myargs['Nvolumes']
         
         prot1 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
-            objLabel='significant i1 vol=%d' % nVols, 
+            objLabel='significant d7 vol=%d' % nVols, 
             **myargs
             )
         #prot1.inputClasses.set(inputSet)
         self.launchProtocol(prot1)
         
-        output = prot1.outputVol if nVols == 1 else prot1.outputVolumes
+        output = prot1.outputVolume if nVols == 1 else prot1.outputVolumes
         
         myargs['thereisRefVolume'] = True
          
         prot2 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
-            objLabel='significant i1 vol=%d (with ref)' % nVols, 
+            objLabel='significant d7 vol=%d (with ref)' % nVols, 
             **myargs
             )
         #prot2.inputClasses.set(inputSet)
@@ -278,14 +278,14 @@ class TestSignificant(tests.BaseTest):
         """ Run an Import particles protocol. """
         cpus = os.environ.get('SCIPION_TEST_CPU', 4)
         # 1. Run import of averages
-        avg = self.ds.getFile('bpv')
+        avg = self.ds.getFile('groel')
         
         protImport = self.newProtocol(em.ProtImportAverages, 
                                       filesPath=avg, 
                                       samplingRate=1)
         self.launchProtocol(protImport)
         
-        args = {'symmetryGroup': 'i1',
+        args = {'symmetryGroup': 'd7',
                 'iter': 3,
                 'numberOfMpi': cpus,
                 'inputSet': protImport.outputAverages,
