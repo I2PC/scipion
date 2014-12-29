@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
@@ -423,19 +424,21 @@ public class ScipionGalleryData extends GalleryData {
             EMObject emo;
             long imageid;
             String matrix;
+            
             for (long id : md.findObjects()) {
                 if (isEnabled(index) && (!selected ||selection[index])) {
                         
                     imagepath = md.getValueString(getRenderLabel(), id, true);
                     if (imagepath != null && ImageGeneric.exists(imagepath)) {
                         imageid = imagesmd.addObject();
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
                         if (useGeo()) 
                         {
                             emo = ((ScipionMetaData)md).getEMObject(id);
-                            matrix = emo.getValueString(getGeoMatrixColumn());
+                            matrix = String.format("'%s'", emo.getValueString(getGeoMatrixColumn()));
                             imagesmd.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, matrix, imageid);//copy geo info in mdRow
                         }
-                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
+                        
                     }
                 }
                 index++;

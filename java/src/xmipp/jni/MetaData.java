@@ -409,6 +409,7 @@ public class MetaData {
 
 	public native boolean setValueDouble(int label, double value, long objId);
 
+        //NOTE: if value contains spaces it should be quoted, otherwise string will be cut!!!
 	public native boolean setValueString(int label, String value, long objId);
 
 	public native boolean setValueBoolean(int label, boolean value, long objId);

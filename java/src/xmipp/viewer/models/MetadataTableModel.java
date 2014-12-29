@@ -36,6 +36,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
@@ -141,7 +142,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			case MetaData.LABEL_STRING:
                                 String str = md.getValueString(label, data.ids[row]);
                                 if (ci.labelName.contains("_transform._matrix"))
-                                    return String.format("<html>%s</html>", formatNumbers(str).replace("],", "]<br>"));
+                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
                                 
 				return str;
 			case MetaData.LABEL_VECTOR_DOUBLE:
@@ -158,19 +159,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 return null;
 	}// function getValueAt
         
-        public String formatNumbers(String str)
-        {
-            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
-            Matcher m = p.matcher(str);
-            StringBuffer sb = new StringBuffer(str.length());
-            while(m.find())
-            {
-                String number = m.group(1);
-                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
-            }
-            m.appendTail(sb);
-            return sb.toString();
-        }
+       
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
