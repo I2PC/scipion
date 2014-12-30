@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.process import runJob
 """
 This sub-package contains wrapper around CL2D Xmipp program
 """
@@ -36,6 +37,7 @@ from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
                                         LEVEL_ADVANCED, LEVEL_EXPERT,
     BooleanParam)
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
+from pyworkflow.utils.path import cleanPath, makePath
 
 from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
 
@@ -175,10 +177,12 @@ class XmippProtCL2D(ProtClassify2D):
             args = "--dir %(extraDir)s --root level "
             # core analysis
             self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
+            self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
 
             if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
                 # stable core analysis
                 self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
+                self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
 
     def _insertClassifySteps(self, program, args, subset=CLASSES):
         """ Defines four steps for the subset:
@@ -244,6 +248,44 @@ class XmippProtCL2D(ProtClassify2D):
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
         self._defineSourceRelation(inputParticles, classes2DSet)
+    
+    def analyzeOutOfCores(self,subset):
+        """ Analyze which images are out of cores """
+        levelMdFiles = self._getLevelMdFiles(subset)
+        for fn in levelMdFiles:
+            mdAll=xmipp.MetaData()
+            blocks = xmipp.getBlocksInMetaDataFile(fn)
+            fnDir=dirname(fn)
+            # Gather all images in block
+            for block in blocks:
+                if block.startswith('class0'):
+                    mdClass=xmipp.MetaData(block+"@"+fn)
+                    mdAll.unionAll(mdClass)
+            if mdAll.size()>0:
+                # Compute difference to images
+                fnSubset=join(fnDir,"images%s.xmd"%subset)
+                mdAll.write(fnSubset)
+                fnOutOfSubset=join(fnDir,"imagesOut.xmd")
+                self.runJob("xmipp_metadata_utilities","-i %s --set subtraction %s -o %s"%(self.imgsFn,fnSubset,fnOutOfSubset),
+                            numberOfMpi=1,numberOfThreads=1)
+                
+                # Remove disabled and intermediate files
+                mdClass=xmipp.MetaData(fnOutOfSubset)
+                mdClass.removeDisabled()
+                fnRejected="images_rejected@"+fn
+                mdClass.write(fnRejected,xmipp.MD_APPEND)
+                cleanPath(fnOutOfSubset)
+                cleanPath(fnSubset)
+                
+                # If enough images, make a small summary
+                if mdClass.size()>100:
+                    from math import ceil
+                    fnRejectedDir=join(fnDir,"rejected%s"%subset)
+                    makePath(fnRejectedDir)
+                    Nclasses=int(ceil(mdClass.size()/300))
+                    self.runJob("xmipp_classify_CL2D",
+                                "-i %s --nref0 1 --nref %d --iter 5 --distance correlation --classicalMultiref --classifyAllImages --odir %s"\
+                                %(fnRejected,Nclasses,fnRejectedDir))
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
