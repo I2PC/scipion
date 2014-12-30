@@ -169,6 +169,7 @@ enum MDLabel
     MDL_CTF_XRAY_LENS_TYPE, ///Algorithm used to generate Xray PSF
     MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
+    MDL_CUMULATIVE_SSNR, ///<Cumulative SSNR (double)
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
     MDL_DIMRED, ///< Projection onto a reduced manifold (vector double)
@@ -1405,6 +1406,7 @@ private:
         MDL::addLabel(MDL_CTF_XRAY_LENS_TYPE, LABEL_STRING, "ctfXrayLensType");
         MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "ctfXrayOuterZoneWidth");
         MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "ctfXrayZonesN");
+        MDL::addLabel(MDL_CUMULATIVE_SSNR, LABEL_DOUBLE, "cumulativeSSNR");
 
         MDL::addLabelAlias(MDL_CTF_CA, "CTF_Chromatic_aberration"); //3.0
         MDL::addLabelAlias(MDL_CTF_CONVERGENCE_CONE, "CTF_Convergence_cone"); //3.0
