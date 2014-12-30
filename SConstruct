@@ -430,7 +430,7 @@ Continue anyway? (y/n)""" % (p, name)
     return lastTarget
 
 
-def manualInstall(env, name, tar=None, buildDir=None, url=None,
+def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                   extraActions=[], deps=[], clean=[], default=True):
     """Just download and run extraActions.
 
@@ -457,6 +457,18 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate %s' % name)
+
+    # Check that all needed programs are there.
+    for p in neededProgs:
+        if not progInPath(env, p):
+            print """
+  ************************************************************************
+    Warning: Cannot find program "%s" needed by %s
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Donload, untar, and execute any extra actions.
     tDownload = Download(env, 'software/tmp/%s' % tar, Value(url))
