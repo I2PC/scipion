@@ -85,15 +85,17 @@ class XmippProcessParticles(ProtProcessParticles):
         # then the new location (index, filename) is the most
         # common property to update in the single items.
         if hasattr(self, 'inputVolumes2'):
-           if isinstance(self.inputVolumes2.get(), Volume):
-               print ("WRITE  A SINGLE VOLUME1")
-               return
+            if isinstance(self.inputVolumes2.get(), Volume):
+                print ("WRITE  A SINGLE VOLUME1")
+                return
         writeSetOfParticles(self.inputParticles.get(), self.inputFn,
                             alignType=ALIGN_NONE)
         
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
-        outputSet = self._createSetOfParticles()
+        # outputSet could be SetOfParticles, SetOfAverages or any future sub-class of SetOfParticles
+        className = inputSet.getClassName()
+        outputSet = self._createSetFromName(className)
         outputSet.copyInfo(inputSet)
 
         self._preprocessOutput(outputSet)
@@ -104,7 +106,8 @@ class XmippProcessParticles(ProtProcessParticles):
         #readSetOfParticles(self.outputMd, outputSet)
         self._postprocessOutput(outputSet)
         
-        self._defineOutputs(outputParticles=outputSet)
+        outputKey = className.replace('SetOf', 'output')
+        self._defineOutputs(**{outputKey: outputSet})
         self._defineTransformRelation(inputSet, outputSet)
     
     #--------------------------- UTILS functions ---------------------------------------------------

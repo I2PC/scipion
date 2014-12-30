@@ -180,22 +180,22 @@ class XmippFilterHelper():
 
     @classmethod
     def getLowFreq(cls, protocol):
-        if protocol.freqInAngstrom.get():
-            return protocol.lowFreqA.get() / (2. * protocol.getInputSampling())
+        if protocol.freqInAngstrom:
+            return protocol.getInputSampling() / protocol.lowFreqA.get()
         else:
             return protocol.lowFreqDig.get()
 
     @classmethod
     def getHighFreq(cls,protocol):
-        if protocol.freqInAngstrom.get():
-            return protocol.highFreqA.get() / (2. * protocol.getInputSampling())
+        if protocol.freqInAngstrom:
+            return protocol.getInputSampling() / protocol.highFreqA.get()
         else:
             return protocol.highFreqDig.get()
 
     @classmethod
     def getFreqDecay(cls,protocol):
-        if protocol.freqInAngstrom.get():
-            return protocol.freqDecayA.get() / (2. * protocol.getInputSampling())
+        if protocol.freqInAngstrom:
+            return protocol.getInputSampling() / protocol.freqDecayA.get()
         else:
             return protocol.freqDecayDig.get()
 
@@ -209,16 +209,12 @@ class XmippFilterHelper():
     def _insertProcessStep(cls, protocol):
 
         if protocol.filterSpace == FILTER_SPACE_FOURIER:
-            if protocol.freqInAngstrom:
-                lowFreq = protocol.lowFreqA.get()
-                highFreq = protocol.highFreqA.get()
-                freqDecay = protocol.freqDecayA.get()
-                samplingStr = ' --sampling %f ' % protocol.getInputSampling()
-            else:
-                lowFreq = protocol.lowFreqDig.get()
-                highFreq = protocol.highFreqDig.get()
-                freqDecay = protocol.freqDecayDig.get()
-                samplingStr = ''
+            lowFreq = cls.getLowFreq(protocol)
+            highFreq = cls.getHighFreq(protocol)
+            freqDecay = cls.getFreqDecay(protocol)
+            print "protocol.freqInAngstrom: ", protocol.freqInAngstrom.get()
+            print "lowFreq, highFreq, freqDecay: ", lowFreq, highFreq, freqDecay 
+            
             mode = protocol.filterModeFourier.get()
 
             if mode == cls.FM_LOW_PASS:
@@ -235,7 +231,7 @@ class XmippFilterHelper():
             else:
                 raise Exception("Unknown fourier filter mode: %d" % mode)
 
-            args = " --fourier " + filterStr + samplingStr
+            args = " --fourier " + filterStr
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             mode = protocol.filterModeReal.get()
             if mode == cls.FM_MEDIAN:
@@ -326,6 +322,7 @@ class XmippFilterHelper():
         Should be implemented for filter volumes and particles.
         """
         pass
+
 
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
     """ Apply Fourier filters to a set of particles  """
