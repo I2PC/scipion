@@ -932,6 +932,7 @@ class ProtocolsView(tk.Frame):
             
     def _fillSummary(self):
         self.summaryText.clear()
+        self.infoTree.clear()
         n = len(self._selection)
         
         if n == 1:
@@ -1012,6 +1013,7 @@ class ProtocolsView(tk.Frame):
         if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
             self.project.deleteProtocol(*self._getSelectedProtocols())
             self._selection.clear()
+            self._updateSelection()
             self._scheduleRunsUpdate()
             
     def _copyProtocols(self):

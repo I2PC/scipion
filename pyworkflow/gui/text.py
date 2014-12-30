@@ -161,6 +161,7 @@ class Text(tk.Text, Scrollable):
     def clear(self):
         self.config(state=tk.NORMAL)
         self.delete(0.0, tk.END)
+        self.config(state=tk.DISABLED)
 
     def getText(self):
         return self.get(0.0, tk.END)
