@@ -110,7 +110,8 @@ swig = env.AddLibrary(
     makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
     default=False)
-
+# We have to add the "makeTargets" part because swig needs to call
+# "make" before "make install". Horrible.
 
 env.AddLibrary(
     'parallel',

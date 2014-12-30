@@ -116,7 +116,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
     def _getCommonParams(self):
         params =  '  -i %s' % self._getTmpPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --alpha0 %0.3f' % self.alpha.get()
+        params += ' --alpha0 %0.3f --alphaF %0.3f' % (self.alpha.get(),self.alpha.get())
         params += ' --angularSampling %0.3f' % self.angularSampling.get()
         return params
     
