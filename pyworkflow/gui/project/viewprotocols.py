@@ -1010,8 +1010,11 @@ class ProtocolsView(tk.Frame):
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
-        if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
-            self.project.deleteProtocol(*self._getSelectedProtocols())
+        protocols = self._getSelectedProtocols()
+        if askYesNo(Message.TITLE_DELETE_FORM, 
+                    Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
+                    self.root):
+            self.project.deleteProtocol(*protocols)
             self._selection.clear()
             self._updateSelection()
             self._scheduleRunsUpdate()
