@@ -890,7 +890,7 @@ class ProtocolsView(tk.Frame):
         hosts = [host.getLabel() for host in self.settings.getHosts()]
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
-                       hostList=hosts)
+                       hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
         
@@ -1002,8 +1002,13 @@ class ProtocolsView(tk.Frame):
             msg = ""
             self.outputViewer.refreshOutput()
 
-        
         return msg
+    
+    def _updateProtocol(self, prot):
+        """ Callback to notify about the change of a protocol
+        label or comment. 
+        """
+        self._scheduleRunsUpdate()
         
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)

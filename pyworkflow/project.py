@@ -197,10 +197,20 @@ class Project(object):
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
+        #if os.environ.get('SCIPION_DEBUG', False):
+        #    from rpdb2 import start_embedded_debugger
+        #    start_embedded_debugger('a')
+        
         if not self.isReadOnly():
             try:
-                # FIXME: this will not work for a real remote host
-                jobId = protocol.getJobId() # Preserve the jobId before copy
+                # Backup the values of 'jobId', 'label' and 'comment'
+                # to be restored after the .copy
+                jobId = protocol.getJobId() 
+                label = protocol.getObjLabel()
+                comment = protocol.getObjComment()
+                
+                #TODO: when launching remote protocols, the db should be retrieved 
+                # in a different way.
                 dbPath = self.getPath(protocol.getDbPath())
                 if not exists(dbPath):
                     return
@@ -209,9 +219,13 @@ class Project(object):
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
                 protocol.copy(prot2, copyId=False)
-                # Restore jobId
+                # Restore backup values
                 protocol.setJobId(jobId)
+                protocol.setObjLabel(label)
+                protocol.setObjComment(comment)
+                
                 self.mapper.store(protocol)
+            
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 0: # 3 tries have been failed
