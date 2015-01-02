@@ -804,7 +804,7 @@ class PointerList(List):
         if isinstance(value, list):
             self.clear()
             for obj in value:
-                self.append(Pointer(value=obj))
+                self.append(obj)
         else:
             raise Exception("Could not set a PointerList value to: %s" % value)
 
