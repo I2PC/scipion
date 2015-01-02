@@ -24,16 +24,22 @@
 # *
 # **************************************************************************
 
-"""
-Sub-packages containing different sub-modules to import different type
-of objects.
-"""
+from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
 
-from base import ProtImportFiles
-from images import ProtImportImages
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from volumes import ProtImportVolumes, ProtImportPdb
-from masks import ProtImportMask
+
+class BrandeisImport():
+    """ Class used to import different kind of objects
+    from Brandeis projects into Scipion.
+    """
+    def __init__(self, protocol):
+        self.protocol = protocol
+        self.copyOrLink = self.protocol.getCopyOrLink()
+
+
+    def getCTFParams(self, micId):
+        return parseCtffindOutput(micId)
+
+
+    
+
+                

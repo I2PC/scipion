@@ -110,19 +110,24 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
 
     for mic in micSet:
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
-        if exists(micPosFn):
-            jsonPosDict = loadJson(micPosFn)
-            
+        readCoordinates(mic, micPosFn, coordSet)
+    coordSet.setBoxSize(size)
+
+
+def readCoordinates(mic, fileName, coordsSet):
+     if exists(fileName):
+            jsonPosDict = loadJson(fileName)
+
             if jsonPosDict.has_key("boxes"):
                 boxes = jsonPosDict["boxes"]
-    
+
                 for box in boxes:
-                    x, y = box[:2] 
+                    x, y = box[:2]
                     coord = Coordinate()
                     coord.setPosition(x, y)
                     coord.setMicrograph(mic)
-                    coordSet.append(coord)
-    coordSet.setBoxSize(size)
+                    coordsSet.append(coord)
+
 
 def writeSetOfCoordinates():
     pass

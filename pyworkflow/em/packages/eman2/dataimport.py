@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,16 +24,17 @@
 # *
 # **************************************************************************
 
-"""
-Sub-packages containing different sub-modules to import different type
-of objects.
-"""
 
-from base import ProtImportFiles
-from images import ProtImportImages
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from volumes import ProtImportVolumes, ProtImportPdb
-from masks import ProtImportMask
+
+from pyworkflow.em.packages.eman2.convert import readCoordinates
+
+
+class EmanImport():
+
+    def __init__(self, protocol):
+        self.protocol = protocol
+
+    def importCoordinates(self, mic, fileName, coordsSet):
+
+        print 'import from eman ' + fileName
+        readCoordinates(mic, fileName, coordsSet)
