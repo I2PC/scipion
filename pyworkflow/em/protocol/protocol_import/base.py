@@ -50,15 +50,16 @@ class ProtImportFiles(ProtImport):
       - For each file a function to process it will be called (_importFile(fileName, fileId))
     """
     IMPORT_FROM_FILES = 0
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        importChoices = ['files'] + self._getImportChoices()
+        importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
         
         form.addSection(label='Import')
         if len(importChoices) > 1: # only from files
             form.addParam('importFrom', EnumParam, 
-                          choices=importChoices, default=self.IMPORT_FROM_FILES,
+                          choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
                           help='Select the type of import.')
         else:
@@ -99,7 +100,9 @@ class ProtImportFiles(ProtImport):
         of import that are allowed by each protocol.
         """
         pass
-        
+
+    def _getDefaultChoice(self):
+        return  self.IMPORT_FROM_FILES
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
@@ -120,7 +123,7 @@ class ProtImportFiles(ProtImport):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return []
+        return ['files']
     
     def _getFilesCondition(self):
         """ Return an string representing the condition

@@ -84,7 +84,8 @@ class ProtImportMicrographs(ProtImportMicBase):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return ['emx', 'xmipp3']
+        choices = ProtImportImages._getImportChoices(self)
+        return choices + ['emx', 'xmipp3']
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
