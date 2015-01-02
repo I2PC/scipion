@@ -272,7 +272,7 @@ class XmippImport():
         return acquisitionDict
 
 
-    def importCoordinates(self):
-        print 'import from xmipp'
-        pass
+    def importCoordinates(self, mic, fileName, coordSet):
+        print 'import from xmipp ' + fileName
+
                 

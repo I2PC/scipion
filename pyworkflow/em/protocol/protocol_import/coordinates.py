@@ -30,6 +30,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from pyworkflow.object import Float, Integer
 from pyworkflow.protocol.params import PathParam, IntParam, PointerParam
 from pyworkflow.em.data import Coordinate
+from pyworkflow.utils.path import removeBaseExt
 
 
 
@@ -42,7 +43,7 @@ class ProtImportCoordinates(ProtImportFiles):
     _label = 'import coordinates'
 
     IMPORT_FROM_AUTO = 0
-    IMPORT_FROM_XMIPP3 = 1
+    IMPORT_FROM_XMIPP = 1
     IMPORT_FROM_RELION = 2
     IMPORT_FROM_EMAN = 3
 
@@ -81,14 +82,17 @@ class ProtImportCoordinates(ProtImportFiles):
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
-        self.filesPath = self.filesPath.get()
-        if self.importFrom == self.IMPORT_FROM_XMIPP3:
+        filesPath = self.filesPath.get()
+        importFrom = self.importFrom
+        if importFrom == self.IMPORT_FROM_AUTO:
+            importFrom = self.getFormat()
+        if importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+            return XmippImport(self, filesPath)
 
-            return XmippImport(self, self.filesPath)
-        elif self.importFrom == self.IMPORT_FROM_RELION:
+        elif importFrom == self.IMPORT_FROM_RELION:
             from pyworkflow.em.packages.relion.dataimport import RelionImport
-            return RelionImport(self, self.filesPath)
+            return RelionImport(self, filesPath)
         #elif self.importFrom == self.IMPORT_FROM_EMAN:
         #    self.importFilePath = self.sqliteFile.get('').strip()
         #    return EmanImport(self, self.importFilePath)
@@ -97,6 +101,7 @@ class ProtImportCoordinates(ProtImportFiles):
             return None
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
+
         self._insertFunctionStep('importCoordinatesStep',
                                  self.inputMicrographs.get().getObjId(),
                                  self.getPattern())
@@ -104,12 +109,26 @@ class ProtImportCoordinates(ProtImportFiles):
 
 
     def importCoordinatesStep(self, importFrom, *args):
-        ci = self.getImportClass()
-        ci.importCoordinates()
+         inputMics = self.inputMicrographs.get()
+         coordSet = self._createSetOfCoordinates(inputMics)
+         coordSet.setBoxSize(self.boxSize.get())
+
+         ci = self.getImportClass()
+         for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            for mic in inputMics:
+                if removeBaseExt(mic.getFileName()) == removeBaseExt(fileName):
+                    ci.importCoordinates(mic, fileName, coordSet)
 
     #--------------------------- STEPS functions ---------------------------------------------------
 
-        
+    def getFormat(self):
+        for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            if fileName.endswith('.pos'):
+                return self.IMPORT_FROM_XMIPP
+            if fileName.endswith('.star'):
+                return self.IMPORT_FROM_RELION
+        return -1
+
     def _summary(self):
         summary = []
         return summary    
