@@ -30,88 +30,85 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from pyworkflow.object import Float, Integer
 from pyworkflow.protocol.params import PathParam, IntParam, PointerParam
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
+
+
 
 from base import ProtImportFiles
 
 
 
-class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
+class ProtImportCoordinates(ProtImportFiles):
     """ Protocol to import a set of coordinates """
     _label = 'import coordinates'
-    
+
+    IMPORT_FROM_AUTO = 0
+    IMPORT_FROM_XMIPP3 = 1
+    IMPORT_FROM_RELION = 2
+    IMPORT_FROM_EMAN = 3
+
+
+
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        form.addSection('Input')
+        ProtImportFiles._defineParams(self, form)
+
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
                           label='Input micrographs',
                           help='Select the particles that you want to import coordinates.')
-        form.addParam('pattern', PathParam, 
-                      label='Coordinate files pattern',
-                      help='Select files containing the coordinate files in Arachnid format.\n'
-                           'You should use #### characters in the pattern\n'
-                           'to mark where the micrograph id will be taken from. ')
+
         form.addParam('boxSize', IntParam, 
                       label='Box size',
                       help='')
-    
+
+
+    def _getImportChoices(self):
+        """ Return a list of possible choices
+        from which the import can be done.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.
+        """
+        return ['auto', 'xmipp','relion', 'eman']
+
+    def _getDefaultChoice(self):
+        return  self.IMPORT_FROM_AUTO
+
+
+    def _insertAllSteps(self):
+        importFrom = self.importFrom.get()
+
+        ci = self.getImportClass()
+        self._insertFunctionStep('importCoordinatesStep', importFrom,
+                                     self.importFilePath)
+
+    def getImportClass(self):
+        """ Return the class in charge of importing the files. """
+        self.filesPath = self.filesPath.get()
+        if self.importFrom == self.IMPORT_FROM_XMIPP3:
+            from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
+
+            return XmippImport(self, self.filesPath)
+        elif self.importFrom == self.IMPORT_FROM_RELION:
+            from pyworkflow.em.packages.relion.dataimport import RelionImport
+            return RelionImport(self, self.filesPath)
+        #elif self.importFrom == self.IMPORT_FROM_EMAN:
+        #    self.importFilePath = self.sqliteFile.get('').strip()
+        #    return EmanImport(self, self.importFilePath)
+        else:
+            self.importFilePath = ''
+            return None
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importCoordinateStep', 
+        self._insertFunctionStep('importCoordinatesStep',
                                  self.inputMicrographs.get().getObjId(),
                                  self.getPattern())
-    
+
+
+
+    def importCoordinatesStep(self, importFrom, *args):
+        ci = self.getImportClass()
+        ci.importCoordinates()
+
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importCoordinateStep(self, micsId, pattern):
-        """ Copy movies matching the filename pattern
-        Register other parameters.
-        """
-        inputMics = self.inputMicrographs.get()
-        coordSet = self._createSetOfCoordinates(inputMics)
-        coordSet.setBoxSize(self.boxSize.get())
-        
-        coordFiles = self._getFilePaths(pattern)
-        coordDict = {}
-        for fn in coordFiles:
-            # Try to match the micrograph id from filename
-            # this is set by the user by using #### format in the pattern
-            match = self._idRegex.match(fn)
-            if match is None:
-                raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
-            ctfId = int(match.group(1))
-            coordDict[ctfId] = fn
-            
-        coordinate = Coordinate()
-        coordinate._araId = Integer()
-        coordinate._araPeak = Float()
-        
-        for mic in inputMics:
-            micId = mic.getObjId()
-            if micId in coordDict:
-                araFile = coordDict[micId]
-                for araId, araPeak, araX, araY in self._parseCoordinateFile(araFile):
-                    coordinate.setX(araX)
-                    coordinate.setY(araY)
-                    coordinate.setMicId(micId)
-                    coordinate._araId.set(araId)
-                    coordinate._araPeak.set(araPeak)
-                    coordinate.cleanObjId()
-                    coordSet.append(coordinate)
-            else:
-                self.warning("Coordinates for micrograph with id %d were not found." % mic.getObjId())
-            
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(inputMics, coordSet)            
-    
-    def _parseCoordinateFile(self, filename):
-        """ Parse filename and return iterator over rows data """
-        f = open(filename)
-        for line in f:
-            l = line.strip()
-            if not l.startswith(';'):
-                parts = l.split()
-                yield parts[-4:]                
-        f.close()
+
         
     def _summary(self):
         summary = []
@@ -119,3 +116,61 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     
     def _methods(self):
         return []
+
+    def _getFilesCondition(self):
+        """ Return an string representing the condition
+        when to display the files path and pattern to grab
+        files.
+        """
+        return True
+
+    # def importCoordinatesStep(self, micsId, pattern):
+    #     """ Copy movies matching the filename pattern
+    #     Register other parameters.
+    #     """
+    #     inputMics = self.inputMicrographs.get()
+    #     coordSet = self._createSetOfCoordinates(inputMics)
+    #     coordSet.setBoxSize(self.boxSize.get())
+    #
+    #     coordFiles = self._getFilePaths(pattern)
+    #     coordDict = {}
+    #     for fn in coordFiles:
+    #         # Try to match the micrograph id from filename
+    #         # this is set by the user by using #### format in the pattern
+    #         match = self._idRegex.match(fn)
+    #         if match is None:
+    #             raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
+    #         ctfId = int(match.group(1))
+    #         coordDict[ctfId] = fn
+    #
+    #     coordinate = Coordinate()
+    #     coordinate._araId = Integer()
+    #     coordinate._araPeak = Float()
+    #
+    #     for mic in inputMics:
+    #         micId = mic.getObjId()
+    #         if micId in coordDict:
+    #             araFile = coordDict[micId]
+    #             for araId, araPeak, araX, araY in self._parseCoordinateFile(araFile):
+    #                 coordinate.setX(araX)
+    #                 coordinate.setY(araY)
+    #                 coordinate.setMicId(micId)
+    #                 coordinate._araId.set(araId)
+    #                 coordinate._araPeak.set(araPeak)
+    #                 coordinate.cleanObjId()
+    #                 coordSet.append(coordinate)
+    #         else:
+    #             self.warning("Coordinates for micrograph with id %d were not found." % mic.getObjId())
+    #
+    #     self._defineOutputs(outputCoordinates=coordSet)
+    #     self._defineSourceRelation(inputMics, coordSet)
+    #
+    # def _parseCoordinateFile(self, filename):
+    #     """ Parse filename and return iterator over rows data """
+    #     f = open(filename)
+    #     for line in f:
+    #         l = line.strip()
+    #         if not l.startswith(';'):
+    #             parts = l.split()
+    #             yield parts[-4:]
+    #     f.close()

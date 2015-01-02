@@ -272,4 +272,8 @@ class RelionImport():
             print "Error loading acquisition: ", str(ex)
             
         return acquisitionDict
+
+    def importCoordinates(self):
+        print 'importFromRelion'
+        pass
             
