@@ -32,7 +32,8 @@ from pyworkflow.em.data import Micrograph
 import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.xmipp3.convert import (readSetOfMicrographs, readSetOfParticles,
                                                    xmippToLocation, locationToXmipp, 
-                                                   CTF_PSD_DICT, fillClasses)
+                                                   CTF_PSD_DICT, fillClasses, readCoordinates)
+
 
 
 
@@ -272,7 +273,9 @@ class XmippImport():
         return acquisitionDict
 
 
-    def importCoordinates(self, mic, fileName, coordSet):
+    def importCoordinates(self, mic, fileName, coordsSet):
+
         print 'import from xmipp ' + fileName
+        readCoordinates(mic, fileName, coordsSet, self.protocol._getExtraPath())
 
                 

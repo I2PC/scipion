@@ -47,6 +47,7 @@ from protocol_preprocess import (XmippProtFilterParticles, XmippProtFilterVolume
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
 from protocol_helical_parameters import XmippProtHelicalParameters
+from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
 
 from pyworkflow.em.wizard import *
 

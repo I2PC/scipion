@@ -28,7 +28,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 from pyworkflow.object import Float, Integer
-from pyworkflow.protocol.params import PathParam, IntParam, PointerParam
+from pyworkflow.protocol.params import PathParam, IntParam, PointerParam, FloatParam
 from pyworkflow.em.data import Coordinate
 from pyworkflow.utils.path import removeBaseExt
 
@@ -60,6 +60,9 @@ class ProtImportCoordinates(ProtImportFiles):
         form.addParam('boxSize', IntParam, 
                       label='Box size',
                       help='')
+        form.addParam('scale', FloatParam,
+                      label='Scale', default=1,
+                      help='factor to scale coordinates')
 
 
     def _getImportChoices(self):
@@ -86,13 +89,16 @@ class ProtImportCoordinates(ProtImportFiles):
         importFrom = self.importFrom
         if importFrom == self.IMPORT_FROM_AUTO:
             importFrom = self.getFormat()
-        if importFrom == self.IMPORT_FROM_XMIPP3:
+        if importFrom == self.IMPORT_FROM_XMIPP:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
             from pyworkflow.em.packages.relion.dataimport import RelionImport
             return RelionImport(self, filesPath)
+        elif importFrom == self.IMPORT_FROM_EMAN:
+            from pyworkflow.em.packages.eman2.dataimport import EmanImport
+            return EmanImport(self)
         #elif self.importFrom == self.IMPORT_FROM_EMAN:
         #    self.importFilePath = self.sqliteFile.get('').strip()
         #    return EmanImport(self, self.importFilePath)
@@ -110,14 +116,18 @@ class ProtImportCoordinates(ProtImportFiles):
 
     def importCoordinatesStep(self, importFrom, *args):
          inputMics = self.inputMicrographs.get()
-         coordSet = self._createSetOfCoordinates(inputMics)
-         coordSet.setBoxSize(self.boxSize.get())
+         coordsSet = self._createSetOfCoordinates(inputMics)
+         coordsSet.setBoxSize(self.boxSize.get())
 
          ci = self.getImportClass()
          for i, (fileName, fileId) in enumerate(self.iterFiles()):
             for mic in inputMics:
-                if removeBaseExt(mic.getFileName()) == removeBaseExt(fileName):
-                    ci.importCoordinates(mic, fileName, coordSet)
+                if removeBaseExt(mic.getFileName()) in removeBaseExt(fileName):#temporal use of in
+                    ci.importCoordinates(mic, fileName, coordsSet)
+                    break
+
+         self._defineOutputs(outputCoordinates=coordsSet)
+         self._defineSourceRelation(inputMics, coordsSet)
 
     #--------------------------- STEPS functions ---------------------------------------------------
 
@@ -127,6 +137,8 @@ class ProtImportCoordinates(ProtImportFiles):
                 return self.IMPORT_FROM_XMIPP
             if fileName.endswith('.star'):
                 return self.IMPORT_FROM_RELION
+            if fileName.endswith('.json'):
+                return self.IMPORT_FROM_EMAN
         return -1
 
     def _summary(self):
