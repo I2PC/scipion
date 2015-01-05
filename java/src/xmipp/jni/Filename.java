@@ -177,7 +177,7 @@ public class Filename {
 	 */
 	public static String findImagePath(String filename, String mdFilename,
 			boolean shouldExist) {
-                if(filename == null)
+                if(filename == null || filename.equals(""))
                     return null;
 		String path = Filename.getFilename(filename); // Remove special chars
 		String foundPath = null;
@@ -210,7 +210,6 @@ public class Filename {
 		if (foundPath != null && hasSuffix(filename)) {
 			foundPath += getSuffix(filename);
 		}
-		
 		return foundPath;
 	}
 

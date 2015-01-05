@@ -88,11 +88,11 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 			this.psdfile = psdfile;
                         this.profileimp = new ImagePlus(psdfile);
 			ctfmodel = new CTFDescription(ctffile);
-                        MetaData ctfmd = new MetaData(ctffile);
-                        double samplingRate = ctfmd.getValueDouble(MDLabel.MDL_SAMPLINGRATE, ctfmd.firstObject());
+                        double samplingRate = getSamplingRate(ctffile);
 			samples = imp.getWidth() / 2;
 			xvalues = getXValues(samples, samplingRate);
 			initComponents();
+                        
 		}
 		catch (Exception e)
 		{
@@ -509,7 +509,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 		{
 			ex.printStackTrace();
 		}
-                System.out.printf("sampling rate: %f downsampling:%f\n", samplingRate, downsampling);
+                //System.out.printf("sampling rate: %f downsampling:%f\n", samplingRate, downsampling);
 		return samplingRate * downsampling;
 	}
 

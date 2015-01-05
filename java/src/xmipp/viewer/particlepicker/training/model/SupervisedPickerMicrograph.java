@@ -3,15 +3,13 @@ package xmipp.viewer.particlepicker.training.model;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;
-
 import java.awt.Rectangle;
 
-public class SupervisedParticlePickerMicrograph extends Micrograph
+public class SupervisedPickerMicrograph extends Micrograph
 {
 
 	private boolean autopicking = false;	
@@ -20,6 +18,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 	private MicrographState state;
 	private int autopickpercent;
 	private double threshold = 0.0;
+        private Rectangle rectangle;
 
 	public double getThreshold() {
 		return threshold;
@@ -33,7 +32,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 
 
 
-	public SupervisedParticlePickerMicrograph(String file, String psd, String ctf)
+	public SupervisedPickerMicrograph(String file, String psd, String ctf)
 	{
 		super(file, psd, ctf);
                 
@@ -69,7 +68,6 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 		for (ManualParticle p : getManualParticles())
 			if (p.contains(x, y))
 				return p;
-
 		return null;
 	}
 
@@ -266,10 +264,7 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 
 	}
 
-	public String toString()
-	{
-		return String.format("Micrograph: %s State: %s", getName(), state);
-	}
+	
 
 	@Override
 	public boolean hasData()
@@ -287,12 +282,12 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 		this.autopickpercent = autopickpercent;
 	}
 	
-	public Rectangle getParticlesRectangle(SupervisedParticlePicker picker)
+	public void initParticlesRectangle(SupervisedParticlePicker picker)
 	{
 		double x1 = Double.POSITIVE_INFINITY, y1 = Double.POSITIVE_INFINITY, x2 = Double.NEGATIVE_INFINITY, y2 = Double.NEGATIVE_INFINITY;
 		List<ManualParticle> particles = getParticles();
 		if(particles.isEmpty())
-			return null;
+			return;
 		for(Particle p: getParticles())
 		{
 			if(p.getX() < x1)
@@ -309,11 +304,26 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 		radius = radius + radius/5;
 		int x = Math.max(0, (int)(x1 - radius));
 		int y = Math.max(0, (int)(y1 - radius));
-		int width  = Math.min((int)(x2 - x + radius), this.width - 1);
-		int height = Math.min((int)(y2 - y + radius), this.height - 1);
-		return new Rectangle(x, y, width, height);
+		int width  = Math.min((int)(x2 - x + radius), this.getWidth() - 1);
+		int height = Math.min((int)(y2 - y + radius), this.getHeigth() - 1);
+                rectangle = new Rectangle(x, y, width, height);
+		return;
 		
 	}
+        
+        public void resetParticlesRectangle()
+        {
+            rectangle = null;
+        }
+        
+        public boolean isValid(SupervisedParticlePicker picker)
+        {
+                int count = getParticles().size();
+                if(count <= 3)
+                    return false;
+                return true;
+        
+        }
 	
 	public void deleteBelowThreshold() {
 		// TODO Auto-generated method stub
@@ -321,5 +331,11 @@ public class SupervisedParticlePickerMicrograph extends Micrograph
 			if(!p.isDeleted())
 				p.setDeleted(p.getCost() < getThreshold());
 	}
+
+        public Rectangle getRectangle() {
+            return rectangle;
+        }
+        
+        
 
 }

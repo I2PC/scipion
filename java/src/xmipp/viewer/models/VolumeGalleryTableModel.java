@@ -47,8 +47,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		super(data);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
-                data.clearSelection();
-		data.selection = new boolean[n];
+		selection = new boolean[n];
 		calculateMinAndMax();
 	}
 
@@ -108,6 +107,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		volume.getPreview(preview, thumb_width, thumb_height, index + 1,
 				ImageGeneric.FIRST_IMAGE);
 		ImagePlus imp = XmippImageConverter.convertToImagePlus(preview);
+                
 		ImageItem item = new ImageItem(index);
 		item.setImagePlus(imp);
 		return item;
@@ -151,6 +151,11 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 			XmippPopupMenuCreator xpopup) {
 		return false;
 	}
+
+    @Override
+    public boolean showLabels() {
+        return false;
+    }
 
 	
 

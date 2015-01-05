@@ -27,6 +27,7 @@
 
 ProgTransformGeometry::ProgTransformGeometry()
 {}
+
 ProgTransformGeometry::~ProgTransformGeometry()
 {}
 
@@ -36,6 +37,7 @@ void ProgTransformGeometry::defineParams()
     save_metadata_stack = true;
     keep_input_columns = true;
     allow_apply_geo = true;
+    mdVol = false;
     XmippMetadataProgram::defineParams();
     //usage
     addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale a group of images/volumes.");
@@ -58,8 +60,9 @@ void ProgTransformGeometry::defineParams()
     addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
     addParamsLine("[--scale <factor=1>]                      : Perfom Scaling. Factor 0.5 halves and 2 doubles");
     addParamsLine(" alias -s;");
-    addParamsLine("[--shift <x=0> <y=0> <z=0>]    : Shift by x, y and z");
-    addParamsLine("[--flip]                                : Flip images, only valid for 2D");
+    addParamsLine("[--shift <x=0> <y=0> <z=0>]               : Shift by x, y and z");
+    addParamsLine("[--flip]                                  : Flip images, only valid for 2D");
+    addParamsLine("[--matrix <...>]                 : Apply directly the matrix transformation");
     addParamsLine("== Other options ==");
     addParamsLine(" [--interp <interpolation_type=spline>] : Interpolation type to be used. ");
     addParamsLine("      where <interpolation_type>");
@@ -166,6 +169,8 @@ void ProgTransformGeometry::preProcess()
     {
         if (checkParam("--rotate_volume"))
             calculateRotationMatrix();
+        else
+        	mdVol = true;
         rowGeo.setValue(MDL_SHIFT_Z, getDoubleParam("--shift", 2));
 
     }
@@ -190,12 +195,23 @@ void ProgTransformGeometry::preProcess()
 void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
-    B.initIdentity(dim + 1);
+    if (checkParam("--matrix"))
+    {
+      // In this case we are directly reading the transformation matrix
+      // from the arguments passed
+      matrixStr = getParam("--matrix");
+      string2TransformationMatrix(matrixStr, T);
+    }
+    else
+    {
+      B.initIdentity(dim + 1);
 
-    if (apply_geo)
+
+    if (apply_geo || mdVol)
         geo2TransformationMatrix(rowOut, B);
 
-    T = A * B;
+      T = A * B;
+    }
 
     if (checkParam("--write_matrix"))
         std::cerr << T << std::endl;

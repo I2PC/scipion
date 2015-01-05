@@ -34,6 +34,7 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -51,7 +52,7 @@ public class XmippWindowUtil
             isScipion = value;
         }
         
-        public static boolean isScipion()
+        public static boolean isScipionCmd()
         {
             return isScipion;
         }
@@ -122,7 +123,7 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!isScipion())
+                if(!isScipionCmd())
                     btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
@@ -220,10 +221,7 @@ public class XmippWindowUtil
                         XmippWindowUtil.releaseGUI(frame.getRootPane());
 
                         if(output != null && !output.isEmpty())
-                        {
                             System.out.println(output);
-
-                        }
 
                     } catch (Exception ex) {
                         throw new IllegalArgumentException(ex.getMessage());
@@ -234,15 +232,14 @@ public class XmippWindowUtil
         }
         
         public static String executeCommand(String[] command, boolean wait) throws Exception {
-
-        //System.out.println(Arrays.toString(command));
-        Process p = Runtime.getRuntime().exec(command);
-        if(wait)
-        {
-            p.waitFor();
-            return readProcessOutput(p);
-        }
-        return null;
+            System.out.println(Arrays.toString(command));
+            Process p = Runtime.getRuntime().exec(command);
+            if(wait)
+            {
+                p.waitFor();
+                return readProcessOutput(p);
+            }
+            return null;
     }
     
     

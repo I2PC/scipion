@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import java.io.File;
 import org.apache.commons.cli.Option;
 import xmipp.utils.Params;
 import xmipp.utils.XmippWindowUtil;
@@ -16,40 +17,68 @@ import xmipp.utils.XmippWindowUtil;
  */
 public class ScipionParams extends Params {
 
-    public final static String SCIPION = "scipion";
-    public String python;
-    public String scripts;
+    
     public String projectid;
     public String inputid;
     public String other;
+    public String python;
+    public String scripts;
+    public String[] objectCommands;
 
+    public final static String PYTHON = "python";
+    public final static String PROJECT = "project";
     
     
     public ScipionParams(String args[]) {
         super(args);
-        XmippWindowUtil.setIsScipion(true);
+        XmippWindowUtil.setIsScipion(cmdLine.hasOption(PROJECT));
     }
 
     public void defineArgs() {
         super.defineArgs();
-        Option cmdoption = new Option(SCIPION, "");
-        
-        cmdoption.setArgs(5);
-        options.addOption(cmdoption);
+        Option opt = new Option(PROJECT, "");
+        opt.setArgs(3);
+        options.addOption(opt);
+        opt = new Option(PYTHON, "");
+        opt.setArgs(2);
+        options.addOption(opt);
+        opt = new Option(OBJECT_CMDS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
     }
 
     @Override
     public void processArgs(String args[]) {
         super.processArgs(args);
-
-        if (cmdLine.hasOption(SCIPION)) {
-            String[] cmdargs = cmdLine.getOptionValues(SCIPION);
-            python = cmdargs[0];
-            scripts = cmdargs[1]; 
-            projectid = cmdargs[2];
-            inputid = cmdargs[3];
-            other = (cmdargs.length == 5)? cmdargs[4]: "";
+        
+        
+        if (cmdLine.hasOption(PROJECT)) {
+            
+            String[] cmdargs = cmdLine.getOptionValues(PROJECT);
+            projectid = cmdargs[0];
+            inputid = cmdargs[1];
+            other = (cmdargs.length == 3)? cmdargs[2]: "";
         }
+        if(cmdLine.hasOption(PYTHON))
+            {
+                args = cmdLine.getOptionValues(PYTHON);
+            	python = args[0];
+                scripts = args[1];
+            }
+    }
+    
+    public String getCTFScript()
+    {
+        return scripts + File.separator + "pw_recalculate_ctf.py";
+    }
+    
+    public String getSubsetScript()
+    {
+        return scripts + File.separator + "pw_create_image_subset.py";
+    }
+
+    public String getObjectCmdScript() {
+        return scripts + File.separator + "pw_run_obj_cmd.py";
     }
     
    

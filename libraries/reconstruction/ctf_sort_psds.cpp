@@ -54,7 +54,7 @@ void ProgPSDSort::readParams()
     decay_width = getDoubleParam("-decay");
     mask_w1 = getDoubleParam("-m1");
     mask_w2 = getDoubleParam("-m2");
-    downsampling = getDoubleParam("--downsampling");
+    // COSS downsampling = getDoubleParam("--downsampling");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -133,7 +133,7 @@ void ProgPSDSort::defineParams()
     addParamsLine("  [-decay <freq_decay=0.02>] : Decay for the transition bands");
     addParamsLine("  [-m1 <mfreq_low=0.01>]     : Low freq. for mask, max 0.5");
     addParamsLine("  [-m2 <mfreq_high=0.45>]    : High freq. for mask, max 0.5");
-    addParamsLine("  [--downsampling <K=1>]     : Downsampling factor used");
+    // COSS addParamsLine("  [--downsampling <K=1>]     : Downsampling factor used");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -147,8 +147,8 @@ void ProgPSDSort::show()
     << "Filter w2:    " << filter_w2 << std::endl
     << "Filter decay: " << decay_width << std::endl
     << "Mask w1:      " << mask_w1 << std::endl
-    << "Mask w2:      " << mask_w2 << std::endl
-    << "Downsampling: " << downsampling << std::endl;
+    << "Mask w2:      " << mask_w2 << std::endl ;
+    // COSS << "Downsampling: " << downsampling << std::endl;
 }
 
 /* Compute Correlation ----------------------------------------------------- */
@@ -160,11 +160,15 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 
 	evaluation.ctf_envelope_ssnr = fn_in.getDir()+"envelope.xmd";
 
+	int enabled;
+	rowIn.getValue(MDL_ENABLED,enabled);
     rowIn.getValue(MDL_MICROGRAPH, fnMicrograph);
     rowIn.getValue(MDL_PSD,fnPSD);
-
-    if (fnPSD == "NA")
-    	return;
+	if (enabled==-1 || fnPSD == "NA")
+	{
+		rowOut.setValue(MDL_ENABLED,-1);
+		return;
+	}
 
     if (rowIn.containsLabel(MDL_CTF_MODEL))
     {
@@ -238,16 +242,24 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     rotate(LINEAR,PSDrotated(),PSD(),90);
     evaluation.PSDcorrelation90=correlationIndex(PSD(), PSDrotated());
 
-    // Get the fitting score
-    //MetaData MD;
-    //MD.read(fnCTF);
+    // Get the fitting score and other quality criteria computed by ctf_estimate_from_micrograph
+    MetaData MDctf1;
+    MDctf1.read(fnCTF);
+    size_t objId1 = MDctf1.firstObject();
 
-    //size_t objId = MD.firstObject();
-    rowIn.getValue(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
-    rowIn.getValue(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
-    rowIn.getValue(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);
-    rowIn.getValue(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
-    rowIn.getValue(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
+#define GET_CTF_CRITERION(labelll,xxx) \
+    if (rowIn.containsLabel(labelll)) \
+    	rowIn.getValue(labelll,xxx); \
+    else if (MDctf1.containsLabel(labelll)) \
+    	MDctf1.getValue(labelll,xxx,objId1); \
+    else \
+    	xxx=0;
+    GET_CTF_CRITERION(MDL_CTF_CRIT_FITTINGSCORE,evaluation.fittingScore);
+    GET_CTF_CRITERION(MDL_CTF_CRIT_FITTINGCORR13,evaluation.fittingCorr13);
+    GET_CTF_CRITERION(MDL_CTF_CRIT_PSDVARIANCE,evaluation.PSDVariance);
+    GET_CTF_CRITERION(MDL_CTF_CRIT_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
+    GET_CTF_CRITERION(MDL_CTF_CRIT_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
+
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2), freqMin1(2), pixelZero1(2), pixelMin1(2);
     double wmax=0.5/CTF1.Tm;
@@ -266,7 +278,13 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
 
     CTF1.precomputeValues(0.0,0.0);
 	double idamping0=1.0/CTF1.getValueDampingAt();
-	double f2pixel=CTF1.Tm*downsampling*XSIZE(PSD());
+	double f2pixel=CTF1.Tm*XSIZE(PSD()); // COSS *downsampling
+	if (rowIn.containsLabel(MDL_CTF_DOWNSAMPLE_PERFORMED))
+	{
+		double aux;
+		rowIn.getValue(MDL_CTF_DOWNSAMPLE_PERFORMED,aux);
+		f2pixel*=aux;
+	}
 
 	MetaData mdEnvelope;
 	Matrix1D< double > envelope(100);
@@ -285,9 +303,10 @@ void ProgPSDSort::processImage(const FileName &fnImg, const FileName &fnImgOut, 
     	evaluation.firstZeroAvg+=moduleZero;
 
     	// Get the first minimum (it is at higher frequency than the zero)
+    	CTF1.lookFor(1, u, freqMin1, -1);
+
     	pixelZero1=freqZero1*f2pixel;
     	pixelMin1=freqMin1*f2pixel;
-    	CTF1.lookFor(1, u, freqMin1, -1);
     	double psdZero=PSD().interpolatedElement2D(XX(pixelZero1),YY(pixelZero1),0.0);
     	double psdMin=PSD().interpolatedElement2D(XX(pixelMin1),YY(pixelMin1),0.0);
     	firstMinAvgPSD+=psdMin;

@@ -16,11 +16,9 @@
 
 /*----------   Statistics --------------------------------------- */
 //Copy of the Metadata is required to remove disabled objects before computing stats
-void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, double& _min,
-                   double& _max, bool apply_geo, MDLabel image_label)
+void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, bool apply_geo, MDLabel image_label)
 {
-    _min = MAXDOUBLE;
-    _max = -MAXDOUBLE;
+
     bool first = true;
     int n = 0;
     //Remove disabled images if present
@@ -30,7 +28,6 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
         REPORT_ERROR(ERR_MD_OBJECTNUMBER, "There is no selected images in Metadata.");
 
     Image<double> image, tmpImg;
-    double min=0, max=0, avg, stddev;
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
@@ -39,20 +36,13 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
             image.readApplyGeo(fnImg, MD,__iter.objId);
         else
             image.read(fnImg);
-        image().computeStats(avg, stddev, min, max);
-        if (min < _min)
-            _min = min;
-        if (max > _max)
-            _max = max;
         if (first)
         {
             _ave = image;
             first = false;
         }
         else
-        {
             _ave() += image();
-        }
         n++;
     }
 
@@ -75,6 +65,37 @@ void getStatistics(MetaData MD, Image<double> & _ave, Image<double> & _sd, doubl
     _sd() /= (n - 1);
     _sd().selfSQRT();
 }
+
+
+/*----------   Statistics --------------------------------------- */
+
+Matrix2D<double> getMatrix(char* matrix)
+{
+		 // Parse the string values as floats
+		 std::stringstream ss(matrix);
+		 double values[16];
+		 for (int i = 0; i < 16; i++)
+		   ss >> values[i];
+
+		 //build the matrix from the parsed values
+
+
+		 Matrix2D<double> transformM(3, 3);
+		 dMij(transformM, 0, 2) = 0;
+		 dMij(transformM, 1, 2) = 0;
+		 dMij(transformM, 2, 0) = 0;
+		 dMij(transformM, 2, 1) = 0;
+		 dMij(transformM, 2, 2) = 1;
+		 dMij(transformM, 0, 0) = values[0]; // cosine
+		 dMij(transformM, 0, 1) = values[1]; // sine
+		 dMij(transformM, 1, 0) = values[4]; // -sine
+		 dMij(transformM, 1, 1) = values[5]; // cosine
+		 dMij(transformM, 0, 2) = values[3]; // shiftx;
+		 dMij(transformM, 1, 2) = values[7]; // shifty;
+		 return transformM;
+}
+
+
 
 //Copy of the Metadata is required to remove disabled objects before computing stats
 void getAverageApplyGeo(MetaData MD, MultidimArray<double> & _ave, MDLabel image_label)
@@ -161,9 +182,8 @@ void getFourierStatistics(MetaData &MDin, double sam, MetaData &MDout,
     MetaData &MD2 = vMD.at(1);
 
     Image<double> I1, I2, Id;
-    double dummy;
-    getStatistics(MD1,I1,Id,dummy,dummy,true, image_label);
-    getStatistics(MD2,I2,Id,dummy,dummy,true, image_label);
+    getStatistics(MD1,I1,Id,true, image_label);
+    getStatistics(MD2,I2,Id,true, image_label);
     I1().setXmippOrigin();
     I2().setXmippOrigin();
 
@@ -387,5 +407,95 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
         auxFn.compose(blocks[b],fnOut);
         md.write(auxFn, MD_APPEND);
         //MD._write(fnOut,blocks[b],MD_APPEND);
+    }
+}
+
+void bsoftRemoveLoopBlock(const FileName &_inFile, const FileName &_outFile)
+{
+    std::ifstream in(_inFile.c_str());
+    std::ofstream out(_outFile.c_str());
+
+    if (!in)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _inFile);
+
+    if (!out)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _outFile);
+
+    std::string line;
+    size_t len = 5;
+    bool newData = false;
+    size_t pos;
+    std::string _data;
+    int counter=1;
+    bool comment=true;
+
+    while (getline(in, line))
+    {
+        //remove comments xmipp cannot handle them outside header
+        pos = line.substr(0,1).find("#",0,1);
+        if (pos != std::string::npos)
+        {
+            if(comment)
+                out << line << '\n';
+            continue;
+        }
+        //make sure that data block does not start with a number xmipp cannot handle them
+        pos = line.substr(0,5).find("data_",0,5);
+        if (pos != std::string::npos)
+        {
+            if(('0' <= line[5]) && (line[5]<='9'))
+                line.replace(pos, len, "data_A");
+            newData = true;
+            comment=false;
+            out << line << '\n';
+            continue;
+        }
+        pos = line.substr(0,5).find("loop_",0,5);
+        if (pos != std::string::npos)
+        {
+            std::stringstream ss;
+            ss << "data_loop_" << counter++;
+            if (!newData)
+            {
+                line.replace(pos, len, ss.str());
+                out << line << "\nloop_\n";
+            }
+            else
+                out << line << '\n';
+            newData = false;
+            continue;
+        }
+        //line no data no comment no loop
+        pos = line.substr(0,2).find("_",0,1);
+        if (pos != std::string::npos)
+        {
+            newData = false;
+            out << line << '\n';
+            continue;
+        }
+        out << line << '\n';
+    }
+}
+void bsoftRestoreLoopBlock(const FileName &_inFile, const FileName &_outFile)
+{
+    std::ifstream in(_inFile.c_str());
+    std::ofstream out(_outFile.c_str());
+
+    if (!in)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _inFile);
+
+    if (!out)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"can not open file: " + _outFile);
+
+    std::string line;
+    size_t len = 10;
+    size_t pos;
+
+    while (getline(in, line))
+    {
+        pos = line.substr(0,10).find("data_loop_",0,len);
+        if (pos != std::string::npos)
+            continue;
+        out << line << '\n';
     }
 }

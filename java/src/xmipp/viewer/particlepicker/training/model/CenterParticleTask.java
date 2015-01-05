@@ -2,17 +2,17 @@ package xmipp.viewer.particlepicker.training.model;
 
 import javax.swing.SwingWorker;
 
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerCanvas;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerCanvas;
 
 public class CenterParticleTask extends SwingWorker<String, Object>
 {
 
-	private static SupervisedParticlePickerCanvas canvas;
+	private static SupervisedPickerCanvas canvas;
 	private ManualParticle particle;
         private SupervisedParticlePicker ppicker;
 
 	
-	public CenterParticleTask(SupervisedParticlePickerCanvas canvas, SupervisedParticlePicker ppicker, ManualParticle particle)
+	public CenterParticleTask(SupervisedPickerCanvas canvas, SupervisedParticlePicker ppicker, ManualParticle particle)
 	{
             this.canvas = canvas;
             this.ppicker = ppicker;

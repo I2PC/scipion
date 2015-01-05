@@ -251,12 +251,48 @@ class TestXmippPythonInterface(unittest.TestCase):
         img1 = Image("1@" + stackPath)
         img2 = Image("2@" + stackPath)
         sum = img1 + img2
+        sum2 = Image("1@" + stackPath)
+        sum2.inplaceAdd(img2)
+        
         sumRef = Image(testFile("sum.spi"))
         self.assertEqual(sum, sumRef)
+        self.assertEqual(sum2, sumRef)
+        
         img1 += img2     
         self.assertEqual(sum, img1)
         img1 += img2
-        self.assertNotEqual(sum, img1)   
+        self.assertNotEqual(sum, img1)
+        
+    def test_Image_multiplyDivide(self):
+        imgPath = testFile("singleImage.spi")
+        img1 = Image(imgPath)
+        img2 = Image(imgPath)
+        imgSum = Image(imgPath)
+        imgSum2 = Image(imgPath)
+        
+        for i in range(2):
+            imgSum += img1
+            imgSum2.inplaceAdd(img1)
+            
+        imgMult = img1 * 3
+        imgMult2 = Image(imgPath)
+        imgMult2.inplaceMultiply(3)
+        
+        self.assertEqual(imgSum, imgMult)
+        self.assertEqual(imgSum, imgSum2)
+        self.assertEqual(imgSum, imgMult2)
+        
+        img1 *= 3
+        self.assertEqual(imgSum, img1)        
+        
+        imgSum /= 3
+        imgSum2.inplaceDivide(3)
+        
+        self.assertEqual(imgSum, imgSum2)
+        self.assertNotEqual(imgSum, img1)
+        self.assertEqual(imgSum, img2)
+        
+            
     
     def test_Image_compare(self):
         imgPath = testFile("singleImage.spi")
@@ -471,12 +507,12 @@ class TestXmippPythonInterface(unittest.TestCase):
              i += 1
         
     def test_Metadata_existsBlockInMetaDataFile(self):
-         mdPath = "b2@"+testFile("testBlock.xmd")
-         self.assertTrue(existsBlockInMetaDataFile(mdPath))
-         mdPath = "nonexisting@"+testFile("testBlock.xmd")
-         self.assertFalse(existsBlockInMetaDataFile(mdPath))
-         mdPath = "gggg@"+testFile("testBlock.xmd")
-         self.assertRaises(Exception,existsBlockInMetaDataFile(mdPath))
+        mdPath = "b2@"+testFile("testBlock.xmd")
+        self.assertTrue(existsBlockInMetaDataFile(mdPath))
+        mdPath = "nonexisting@"+testFile("testBlock.xmd")
+        self.assertFalse(existsBlockInMetaDataFile(mdPath))
+        mdPath = "gggg@"+testFile("testBlock.xmd")
+        self.assertRaises(Exception,existsBlockInMetaDataFile(mdPath))
          
     def test_Metadata_operate(self):
         md = MetaData()
@@ -565,7 +601,6 @@ _rlnDefocusU #2
         self.assertEqual(md, md2)
         os.remove(tmpFileNameRe)
         os.remove(tmpFileNameXm)
-        #print tmpFileNameRe,tmpFileNameXm
         
     def test_Metadata_renameColumn(self):
         '''test_Metadata_renameColumn'''
@@ -764,8 +799,36 @@ _rlnDefocusU #2
         md2 = MetaData()
         md2.read(tmpFileName)
         os.remove(tmpFileName)
-        
         self.assertEqual(md, md2)
+
+    def test_Metadata_read_write_bsoft(self):
+        '''MetaData_setValues'''
+        '''check bsoft metadata access extension
+        '''
+        mdPath = testFile("Bsoft/symop.star")
+        mdTmpPath = "/tmp/xmipp.star"
+        ##create reference metadata
+        md1a =MetaData()
+        md1a.setColumnFormat(False)
+        id = md1a.addObject()
+        md1a.setValue(BSOFT_SYMMETRY_INT_TABLES_NUMBER,1,id)
+        md1a.setValue(BSOFT_SYMMETRY_SPACE_GROUP_NAME_H_M,"P1",id)
+        md1a.setValue(BSOFT_SYMMETRY_CELL_SETTING,"TRICLINIC",id)
+
+        md1b =MetaData()
+        md1b.setColumnFormat(True);
+        id = md1b.addObject();
+        md1b.setValue(BSOFT_SYMMETRY_EQUIV_ID,1,id);
+        md1b.setValue(BSOFT_SYMMETRY_EQUIV_POS_AS_XYZ,"X,Y,Z",id);
+        
+        #transform bsoftMetadata to xmippMetadata
+        bsoftRemoveLoopBlock(mdPath,mdTmpPath)
+        mdRead1a = MetaData("A1@" + mdTmpPath)
+        mdRead1b = MetaData("loop_1@" + mdTmpPath)
+
+        self.assertEqual(md1a, mdRead1a)
+        self.assertEqual(md1b, mdRead1b)
+        #os.remove(tmpFileName)
 
     def test_Metadata_read_with_labels(self):
         '''MetaData_setValues'''
@@ -908,7 +971,7 @@ _rlnDefocusU #2
             auxMd.setValue(MDL_IMAGE, "image_data_A_2.xmp", auxMd.addObject())
             auxMd.write("block_000001@" + fn2, MD_APPEND)
             auxMd.clear()
-        
+
             self.assertFalse(compareTwoMetadataFiles(fn, fn2))
             self.assertTrue(compareTwoMetadataFiles(fn, fn))
 
@@ -1004,12 +1067,13 @@ _rlnDefocusU #2
         ctf.setValue(MDL_CTF_DEFOCUSV, v1, objId)
         ctfFn1 = self.getTmpName(suffix='_ctf1.param')
         ctf.write(ctfFn1)
+
         # Create ctf param metadata 2
         ctf.setValue(MDL_CTF_DEFOCUSU, u2, objId)
         ctf.setValue(MDL_CTF_DEFOCUSV, v2, objId)
         ctfFn2 = self.getTmpName(suffix='_ctf2.param')
         ctf.write(ctfFn2)
-        
+
         # True values
         ctfs = [ctfFn1, ctfFn1, ctfFn2]
         defocusU = [u1, u1, u2]
@@ -1021,7 +1085,7 @@ _rlnDefocusU #2
             img = '00000%i@pythoninterface/proj_ctf_1.stk' % (i + 1)
             md1.setValue(MDL_IMAGE, img, objId)
             md1.setValue(MDL_CTF_MODEL, ctfs[i], objId)
-            
+
         # Create the expected metadata after call fillExpand
         md2 = MetaData()
         for i in range(3):
@@ -1031,10 +1095,9 @@ _rlnDefocusU #2
             md2.setValue(MDL_CTF_MODEL, ctfs[i], objId)
             md2.setValue(MDL_CTF_DEFOCUSU, defocusU[i], objId)
             md2.setValue(MDL_CTF_DEFOCUSV, defocusV[i], objId)            
-        
         md1.fillExpand(MDL_CTF_MODEL)
         self.assertEqual(md1, md2)
-        
+
 #RESULTS test_metadata_stress
 #no blocks:1000, no lines=100
 #BUFFER FILLING took 11.34 seconds

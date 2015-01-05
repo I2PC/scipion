@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker.tiltpair.gui;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import xmipp.jni.Particle;
@@ -48,17 +49,7 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 	 * point. Sets dragged if onpick
 	 */
 
-	public void mouseWheelMoved(int x, int y, int rotation)
-	{
-		getIw().setSize(uc.getIw().getSize());
-		if (rotation < 0)
-			zoomIn(x, y);
-		else
-			zoomOut(x, y);
-		if (getMagnification() <= 1.0)
-			imp.repaintWindow();
-
-	}
+	
 
 	public void mousePressed(MouseEvent e)
 	{
@@ -147,6 +138,26 @@ public class TiltedMicrographCanvas extends ParticlePickerCanvas
 			int y = super.offScreenY(e.getY());
 			manageActive(x, y);
 		}
+	}
+        
+        @Override
+	public void mouseWheelMoved(MouseWheelEvent e)
+	{
+		super.mouseWheelMoved(e);
+		if (!e.isShiftDown())
+			return;
+		int x = e.getX();
+		int y = e.getY();
+		uc.setMagnification(magnification);
+		int rotation = e.getWheelRotation();
+		if (rotation < 0)
+			zoomIn(x, y);
+		else
+			zoomOut(x, y);
+		if (getMagnification() <= 1.0)
+			imp.repaintWindow();
+
+		uc.mouseWheelMoved(x, y, rotation, iw.getSize());
 	}
 
 	@Override

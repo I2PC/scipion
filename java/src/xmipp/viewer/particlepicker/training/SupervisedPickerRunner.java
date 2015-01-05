@@ -9,7 +9,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerParams;
-import xmipp.viewer.particlepicker.training.gui.SupervisedParticlePickerJFrame;
+import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
@@ -35,14 +35,14 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
-            if(XmippWindowUtil.isScipion())
+            if(XmippWindowUtil.isScipionCmd())
             {
                 ppicker.setPython(params.python);
                 ppicker.setScipionScript(params.script);
                 ppicker.setProjectId(params.projectid);
                 ppicker.setProtId(params.protid);
             }
-            new SupervisedParticlePickerJFrame(ppicker);
+            new SupervisedPickerJFrame(ppicker);
         } catch (Exception e) {
             System.out.println("Error catched on main");
             ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);

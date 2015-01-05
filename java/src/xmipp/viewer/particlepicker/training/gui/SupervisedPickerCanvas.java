@@ -16,18 +16,18 @@ import xmipp.viewer.particlepicker.training.model.CenterParticleTask;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
-import xmipp.viewer.particlepicker.training.model.SupervisedParticlePickerMicrograph;
+import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
-public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
+public class SupervisedPickerCanvas extends ParticlePickerCanvas
 {
 
-	private SupervisedParticlePickerJFrame frame;
-	private SupervisedParticlePickerMicrograph micrograph;
+	private SupervisedPickerJFrame frame;
+	private SupervisedPickerMicrograph micrograph;
 	private ManualParticle active;
 	private SupervisedParticlePicker ppicker;
 
-	public SupervisedParticlePickerCanvas(SupervisedParticlePickerJFrame frame)
+	public SupervisedPickerCanvas(SupervisedPickerJFrame frame)
 	{
 		super(frame.getMicrograph().getImagePlus(frame.getParticlePicker().getFilters()));
 
@@ -220,7 +220,7 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 			BasicStroke activest = (active instanceof AutomaticParticle) ? activedst : activecst;
 			drawShape(g2, active, true, activest);
 		}
-		Rectangle autopickout = frame.getParticlesRectangle();
+		Rectangle autopickout = micrograph.getRectangle();
 		if (autopickout != null && micrograph.hasManualParticles())
 		{
 			g2.setColor(Color.yellow);
@@ -264,7 +264,7 @@ public class SupervisedParticlePickerCanvas extends ParticlePickerCanvas
 	@Override
 	public void setMicrograph(Micrograph m)
 	{
-		micrograph = (SupervisedParticlePickerMicrograph) m;
+		micrograph = (SupervisedPickerMicrograph) m;
 
 	}
 

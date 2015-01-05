@@ -26,7 +26,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	  {
 		  mdImages.read(fnDone);
 		  if (!mdImages.containsLabel(MDL_NMA))
-		     REPORT_ERROR(ERR_MD_MISSINGLABEL,"Cannot find NMA displacements");
+		     REPORT_ERROR(ERR_MD_MISSINGLABEL,"Cannot find NMA displacements in nmaDone.xmd");
 		  // Write the deformations file because it does not exist yet
 		  std::vector< std::vector<double> > nmaDisplacements;
 		  mdImages.getColumnValues(MDL_NMA, nmaDisplacements);

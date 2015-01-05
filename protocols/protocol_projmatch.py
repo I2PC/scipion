@@ -1186,8 +1186,8 @@ data_noname
                     
                 if(self.DoSplitReferenceImages[iterN]):
                     if (self.DoComputeResolution[iterN]):
-                        insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1',self.CleanUpFiles)
-                        insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2',self.CleanUpFiles)
+                        insertReconstructStep('ReconstructedFileNamesItersSplit1', 'ReconstructionXmdSplit1', 'ReconstructedFileNamesItersSplit1',False)
+                        insertReconstructStep('ReconstructedFileNamesItersSplit2', 'ReconstructionXmdSplit2', 'ReconstructedFileNamesItersSplit2',False)
 
                         _VerifyFiles = [self.getFilename('ResolutionXmdFile', iter=iterN, ref=refN)]
                         id = _dataBase.insertStep('compute_resolution', verifyfiles=_VerifyFiles

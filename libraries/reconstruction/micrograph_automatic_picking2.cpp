@@ -599,6 +599,7 @@ void AutoParticlePicking2::train(const std::vector<MDRow> &MD, bool corrFlag, in
             dataSet.clear();
             classLabel.clear();
         }
+        std::cout << "Read the data for PCA, Rot PCA, Average ..." << std::endl;
         // Read the data for PCA, Rot PCA, Average
         particleAvg.initZeros(particle_size+1,particle_size+1);
         particleAvg.setXmippOrigin();
@@ -608,6 +609,7 @@ void AutoParticlePicking2::train(const std::vector<MDRow> &MD, bool corrFlag, in
         Image<double> II;
         II.read(fnPCAModel);
         pcaModel=II();
+        std::cout << "Read rotational PCA model ..." << std::endl;
         // Read rotational PCA model
         II.read(fnPCARotModel);
         pcaRotModel=II();
@@ -1097,8 +1099,8 @@ int AutoParticlePicking2::readNextMic(FileName &fnmicrograph)
 
 int AutoParticlePicking2::getParticlesThreshold()
 {
+    return 15;
 
-    return 30;
 }
 
 //void AutoParticlePicking2::correction(const MetaData &addedParticlesMD,const MetaData &removedParticlesMD)

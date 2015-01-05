@@ -176,24 +176,26 @@ def getXmippLabels():
     f = open(labelHeader)
     labels = []
     comments = {}
+    labelsPrefixes = ['MDL_', 'RLN_', 'BSOFT_']
     
     for line in f:
         line = line.strip()
-        if line.startswith('MDL_') and '///<' in line:
-            parts = line.split('///<')
-            mdl = parts[0].strip()[:-1] # remove last comma
-            comm = parts[1].strip()
-            comments[mdl] = comm
-        if line.startswith('MDL::addLabel(MDL_'):
-            l = line.find('(')
-            r = line.find(')')
-            parts = line[l + 1:r].split(',')
-            label = {}
-            label['name'] = parts[2].replace('"', '').strip()
-            label['type'] = parts[1].strip()
-            label['enum'] = parts[0].strip()
-            label['comment'] = comments.get(label['enum'], "")
-            labels.append(label)
+        for prefix in labelsPrefixes:
+            if line.startswith(prefix) and '///<' in line:
+                parts = line.split('///<')
+                mdl = parts[0].strip()[:-1] # remove last comma
+                comm = parts[1].strip()
+                comments[mdl] = comm
+            if line.startswith('MDL::addLabel(' + prefix):
+                l = line.find('(')
+                r = line.find(')')
+                parts = line[l + 1:r].split(',')
+                label = {}
+                label['name'] = parts[2].replace('"', '').strip()
+                label['type'] = parts[1].strip()
+                label['enum'] = parts[0].strip()
+                label['comment'] = comments.get(label['enum'], "")
+                labels.append(label)
     return labels
 
 def getXmippLabelsName():
@@ -632,7 +634,7 @@ class ScriptShowJ(ScriptAppIJ):
         self.addParamsLine('                          : by default the first one that can be visualized is rendered')
         self.addParamsLine('  [--visible <...>]    : Specifies visible labels')
         self.addParamsLine('  [--order <...>]    : Specifies labels order')
-        self.addParamsLine('  [--label <label>]    : Specifies label to display')
+        self.addParamsLine('  [--labels <...>]    : Specifies labels to display')
         self.addParamsLine('  [--sortby <...>]    : Specifies label to sort by. asc or desc mode can be added')
         
         self.addParamsLine('         alias -e;')
@@ -655,10 +657,18 @@ class ScriptShowJ(ScriptAppIJ):
         
     def readOtherParams(self):
         #FIXME: params seems to be they cannot be passed directly to java
-        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--render', '--visible', '--order', '--label', '--sortby']
+        params = ['--mode', '--rows', '--columns', '--zoom', '--view', '--sortby']
         for p in params:
             if self.checkParam(p):
                 self.args += " %s %s" % (p, self.getParam(p))
+        params = [ '--render', '--visible', '--order', '--labels']
+        pvalues = ''
+        for p in params:
+            if self.checkParam(p):
+                for pvalue in self.getListParam(p):
+                    pvalues = '%s %s'%(pvalues, pvalue)
+                    
+                self.args += " %s %s" % (p, pvalues)
         params = ['--poll', '--debug', '--dont_apply_geo', '--dont_wrap', '--mask_toolbar']
         for p in params:
             if self.checkParam(p):

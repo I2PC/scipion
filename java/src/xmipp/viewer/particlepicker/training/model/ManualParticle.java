@@ -4,6 +4,8 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
 import java.awt.Rectangle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import xmipp.ij.commons.XmippImageConverter;
 import xmipp.jni.ImageGeneric;
@@ -15,14 +17,9 @@ import xmipp.viewer.particlepicker.PickerParticle;
 public class ManualParticle extends PickerParticle{
 	
 	protected ParticlePicker picker;
-	protected ImagePlus img;
-	protected double cost = 2;
+        protected ImageGeneric ig;
 
 	protected double[] lastalign;
-
-	
-	
-	
 
 	public double[] getLastalign()
 	{
@@ -41,25 +38,15 @@ public class ManualParticle extends PickerParticle{
 	
 	public ManualParticle(int x, int y, ParticlePicker picker, Micrograph micrograph, double cost)
 	{
-		super(x, y, micrograph);
-		
+		super(x, y, micrograph, cost);
 		this.picker = picker;
-		this.cost = cost;
 	}
 	
-	
-	public double getCost()
-	{
-		return cost;
-	}
-
 
 	public ParticlePicker getParticlePicker()
 	{
 		return picker;
 	}
-
-
 
 	
 	public int getX0()
@@ -80,21 +67,26 @@ public class ManualParticle extends PickerParticle{
 	}
 
 	
-	public ImagePlus getImagePlus()
+	protected void loadImagePlus()
 	{
-		if(img == null)
+		if(ig == null)
 		{
-			int size = picker.getSize();
-			ImagePlus mimage = micrograph.getImagePlus();
-			int radius = size/2;
-			Rectangle r = new Rectangle(x - radius , y - radius, size, size);
-			Roi roi = mimage.getRoi();
-			mimage.setRoi(r);
-			ImageProcessor processor = mimage.getProcessor().crop();
-			img = new ImagePlus("", processor);
-			mimage.setRoi(roi);
+                    try {
+                        int size = picker.getSize();
+                        ImagePlus mimage = micrograph.getImagePlus();
+                        int radius = size/2;
+                        Rectangle r = new Rectangle(x - radius , y - radius, size, size);
+                        Roi roi = mimage.getRoi();
+                        mimage.setRoi(r);
+                        ImageProcessor processor = mimage.getProcessor().crop();
+                        ImagePlus img = new ImagePlus("", processor);
+                        mimage.setRoi(roi);
+                        ig = XmippImageConverter.convertToImageGeneric(img);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ManualParticle.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new IllegalArgumentException(ex.getMessage());
+                    }
 		}
-		return img;
 	}
 	
 	@Override
@@ -104,29 +96,23 @@ public class ManualParticle extends PickerParticle{
 		if(!getMicrograph().fits(x, y, picker.getSize()))
 			throw new IllegalArgumentException(XmippMessage.getOutOfBoundsMsg(String.format("Particle centered at %s, %s with size %s", x, y, picker.getSize())));
 		super.setPosition(x, y);
-		
-		img = null;
+		ig = null;
 	}
 	
-	public ImageIcon getImageIcon()
-	{
-		
-		ImageIcon icon = new ImageIcon(getImagePlus().getImage());
-		return icon;
-	}
 	
-	public void resetImagePlus()
+	
+	public void resetImage()
 	{
-		img = null;
+//                if(ig != null)
+//                    ig.destroy();
+                lastalign = null;
+		ig = null;
 	}
 	
 
 	public ImageGeneric getImageGeneric() {
-		try {
-			return XmippImageConverter.convertToImageGeneric(getImagePlus());
-		} catch (Exception e) {
-			throw new IllegalArgumentException(e.getMessage());
-		}
+                loadImagePlus();//to ensure there is an image generic setted
+                return ig;
 	}
 
 	public double getTemplateRotation()

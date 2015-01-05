@@ -134,8 +134,9 @@ class ProtExtractParticles(ProtParticlesBase):
                             fnMicrographs=self.micrographs)
         else:
             self.insertStep('createImagesMd', verifyfiles=[ImagesFn], ImagesFn=ImagesFn, ExtraDir=self.ExtraDir)
-            self.insertStep('sortImages',ImagesFn=ImagesFn,rejectionMethod=self.RejectionMethod, maxZscore=self.MaxZscore, percentage=self.Percentage)
-            self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
+            if self.DoSort:
+                self.insertStep('sortImages',ImagesFn=ImagesFn,rejectionMethod=self.RejectionMethod, maxZscore=self.MaxZscore, percentage=self.Percentage)
+                self.insertStep('avgZscore',WorkingDir=self.WorkingDir, micrographSelfile=self.micrographs)
 
     def validate(self):
         errors = []

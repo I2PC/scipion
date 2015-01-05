@@ -190,8 +190,10 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		if (getMagnification() <= 1.0)
 			imp.repaintWindow();
 
-		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation);
+		frame.getTiltedCanvas().mouseWheelMoved(x, y, rotation, iw.getSize());
 	}
+        
+       
 
 	@Override
 	protected void doCustomPaint(Graphics2D g2)
@@ -321,5 +323,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 		frame.getTiltedCanvas().repaint();
 		setActiveMoved(false);
 	}
+        
+        
 
 }

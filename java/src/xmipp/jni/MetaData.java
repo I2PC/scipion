@@ -34,10 +34,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import xmipp.utils.DEBUG;
 
 /**
  * Binding class for accessing C++ MetaData implementation.
@@ -59,10 +59,7 @@ public class MetaData {
 	public static final String FILL_RAND_UNIFORM = "random uniform";
 	public static final String FILL_RAND_GAUSSIAN = "random gaussian";
         
-        protected String[] renderLabels;
-        protected String renderLabel = "first";
-        protected String[] visibleLabels;
-        protected String[] orderLabels;
+       
 
 	//
 	// // Fields whose content is a path. They will be "fixed" conveniently.
@@ -96,6 +93,8 @@ public class MetaData {
 	// keep labels for avoid read all the time
 	int[] activeLabels;
         
+        protected HashMap<Long, EllipseCTF> ctfs = new HashMap<Long, EllipseCTF>();
+        
 
 	static {
 		System.loadLibrary("XmippJNI");
@@ -104,8 +103,9 @@ public class MetaData {
 
         	/** Create empty metadata */
 	public MetaData() {
-		//DEBUG.printFormat("Java: Creating metadata\n");
-		//DEBUG.printStackTrace();
+		//System.out.format("Java: Creating metadata\n");
+		//Exception ex = new Exception();
+    		//ex.printStackTrace();
 		create();
 	}
 
@@ -211,10 +211,9 @@ public class MetaData {
 	public native int[] getActiveLabels();
 
 	public static native int getLabelType(int label);
-
-	public static Class getLabelClass(int label) {
-		int type = getLabelType(label);
-		switch (type) {
+        
+        public static Class getClassForType(int type) {
+            switch (type) {
 		case LABEL_INT:
 			return Integer.class;
 		case LABEL_BOOL:
@@ -230,6 +229,11 @@ public class MetaData {
 
 		}
 		return null;
+        }
+
+	public static Class getLabelClass(int label) {
+		int type = getLabelType(label);
+		return getClassForType(type);
 	}
 
 	/** Return an String representing the label type */
@@ -405,6 +409,7 @@ public class MetaData {
 
 	public native boolean setValueDouble(int label, double value, long objId);
 
+        //NOTE: if value contains spaces it should be quoted, otherwise string will be cut!!!
 	public native boolean setValueString(int label, String value, long objId);
 
 	public native boolean setValueBoolean(int label, boolean value, long objId);
@@ -438,6 +443,8 @@ public class MetaData {
 	/** Get the average and std images, result is left on input image */
 	public native void getStatsImages(ImageGeneric imageAvg,
 			ImageGeneric imageStd, boolean applyGeo, int label);
+        
+        
 
 	public native void getPCAbasis(ImageGeneric basis, int label);
 
@@ -523,43 +530,7 @@ public class MetaData {
 	
 	public native double getColumnMax(int column);
 
-    
-	public void setRenderLabels(String[] renderLabels) {
-            this.renderLabels = renderLabels;
-        }
 
-        public void setVisibleLabels(String[] visibleLabels) {
-            this.visibleLabels = visibleLabels;
-        }
-
-        public void setOrderLabels(String[] orderLabels) {
-            this.orderLabels = orderLabels;
-        }
-
-        public void setRenderLabel(String renderLabel) {
-            this.renderLabel = renderLabel;
-        }
-        
-        public String getRenderLabel()
-        {
-            return renderLabel;
-        }
-        
-        
-         public String[] getRenderLabels()
-       {
-           return renderLabels;
-       }
-       
-       public String[] getVisibleLabels()
-       {
-           return visibleLabels;
-       }
-       
-       public String[] getOrderLabels()
-       {
-           return orderLabels;
-       }
        
 
 	
@@ -609,6 +580,10 @@ public class MetaData {
         return getValueString(MDLabel.MDL_PSD, id);
     }
     
+    public String getPSDEnhanced(long id) {
+        return getValueString(MDLabel.MDL_PSD_ENHANCED, id);
+    }
+    
     public CTFDescription getCTFDescription(long id)
      {
             try {
@@ -649,6 +624,25 @@ public class MetaData {
         return true;
     }
 
+   
+    public boolean hasRecalculateCTF() {
+        return !ctfs.isEmpty();
+    }
+
+    public void removeCTF(long id) {
+        ctfs.remove(id);
+    }
+
+    public boolean containsCTF(long id) {
+        return ctfs.containsKey(id);
+    }
+
+    public void putCTF(long id, EllipseCTF ellipseCTF) {
+        ctfs.put(id, ellipseCTF);
+    }
+    
+
+    
        
        
        

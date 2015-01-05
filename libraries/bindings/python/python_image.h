@@ -198,12 +198,34 @@ Image_adjustAndSubtract(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_add(PyObject *obj1, PyObject *obj2);
 PyObject *
-Image_subtract(PyObject *obj1, PyObject *obj2);
-
-PyObject *
 Image_iadd(PyObject *obj1, PyObject *obj2);
 PyObject *
+Image_inplaceAdd(PyObject *self, PyObject *args, PyObject *kwargs);
+
+
+PyObject *
+Image_subtract(PyObject *obj1, PyObject *obj2);
+PyObject *
 Image_isubtract(PyObject *obj1, PyObject *obj2);
+PyObject *
+Image_inplaceSubtract(PyObject *self, PyObject *args, PyObject *kwargs);
+
+PyObject *
+Image_multiply(PyObject *obj1, PyObject *obj2);
+PyObject *
+Image_imultiply(PyObject *obj1, PyObject *obj2);
+PyObject *
+Image_inplaceMultiply(PyObject *self, PyObject *args, PyObject *kwargs);
+
+PyObject *
+Image_divide(PyObject *obj1, PyObject *obj2);
+PyObject *
+Image_idivide(PyObject *obj1, PyObject *obj2);
+PyObject *
+Image_inplaceDivide(PyObject *self, PyObject *args, PyObject *kwargs);
+
+
+
 
 extern PyNumberMethods Image_NumberMethods;
 extern PyMethodDef Image_methods[];

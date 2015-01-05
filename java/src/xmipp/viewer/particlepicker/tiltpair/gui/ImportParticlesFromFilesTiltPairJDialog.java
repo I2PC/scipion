@@ -15,6 +15,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import xmipp.utils.XmippFileChooser;
 
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -47,20 +48,20 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 		gbc.anchor = GridBagConstraints.EAST;
 		panel.add(new JLabel("Format:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 0, 1));
-		panel.add(new JLabel("Untilted Source:"),
+		panel.add(new JLabel("Untilted:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 1, 1));
 		
-		panel.add(new JLabel("Tilted Source:"),
+		panel.add(new JLabel("Tilted:"),
 				XmippWindowUtil.getConstraints(gbc, 0, 2, 1));
 
 		gbc.anchor = GridBagConstraints.WEST;
 		/** Create a combobox with possible formats */
-		jcbFormat = new JComboBox(FormatStrings);
+		jcbFormat = new JComboBox(formatsString);
 		jcbFormat.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				format = FormatList[jcbFormat.getSelectedIndex()];
+				format = formatsList[jcbFormat.getSelectedIndex()];
 				
 			}
 		});
@@ -104,18 +105,29 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 			browseDirectory(sourcetf2);
 	}// function actionPerformed
 
-	
+        protected void browseDirectory(JTextField sourcetf) {
+		int returnVal = xfc.showOpenDialog(this);
+		try {
+			if (returnVal == XmippFileChooser.APPROVE_OPTION) {
+				path = xfc.getSelectedPath();
+				sourcetf.setText(path);
+			}
+		} catch (Exception ex) {
+			showException(ex);
+		}
+
+	}
 	
 	
 	protected String importParticles() {
 		path = sourcetf.getText().trim();
 
 		if (path == null || path.equals("") )
-			showError(XmippMessage.getEmptyFieldMsg("Untilted Source"));
+			showError(XmippMessage.getEmptyFieldMsg("Untilted"));
 		path2 = sourcetf2.getText().trim();
 
 		if (path2 == null || path2.equals("") )
-			showError(XmippMessage.getEmptyFieldMsg("Tilted Source"));
+			showError(XmippMessage.getEmptyFieldMsg("Tilted"));
 		return ((TiltPairPickerJFrame)parent).importParticlesFromFiles(format, path, path2, ((Number)scaletf.getValue()).floatValue(), invertxcb.isSelected(), invertycb.isSelected());
 		
 	}

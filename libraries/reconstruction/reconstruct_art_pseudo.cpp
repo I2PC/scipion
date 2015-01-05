@@ -268,12 +268,13 @@ void ProgARTPseudo::produceSideInfo()
     if (!fnNMA.empty())
     {
         MetaData DFNMA(fnNMA);
+        DFNMA.removeDisabled();
         FOR_ALL_OBJECTS_IN_METADATA(DFNMA)
         {
             Matrix2D<double> mode;
             mode.initZeros(atomPosition.size(),3);
             FileName fnMode;
-            DFNMA.getValue( MDL_IMAGE, fnMode,__iter.objId);
+            DFNMA.getValue( MDL_NMA_MODEFILE, fnMode,__iter.objId);
             mode.read(fnMode);
             NMA.push_back(mode);
         }
@@ -308,7 +309,7 @@ void ProgARTPseudo::run()
 
             Iexp.read(fnExp);
             Iexp().setXmippOrigin();
-            itError+=ART_single_step(Iexp(),rot,tilt,psi,shiftX,shiftY,lambda);
+            itError+=ART_single_step(Iexp(),rot,tilt,psi,-shiftX,-shiftY,lambda);
         }
         if (DF.size()>0)
             itError/=DF.size();
@@ -345,7 +346,7 @@ void ProgARTPseudo::writePseudo()
             for (int z = ZZ_corner1; z <= ZZ_corner2; z++)
                 for (int y = YY_corner1; y <= YY_corner2; y++)
                     for (int x = XX_corner1; x <= XX_corner2; x++)
-                        V(z,y,x)+=
+                        V(z,y,x)+=atomWeight[n]*
                             gaussian1D(z-ZZ(atomPosition[n]),sigma)*
                             gaussian1D(y-YY(atomPosition[n]),sigma)*
                             gaussian1D(x-XX(atomPosition[n]),sigma);

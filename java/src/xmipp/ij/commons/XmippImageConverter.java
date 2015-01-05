@@ -217,7 +217,6 @@ public class XmippImageConverter {
 		else
 			image.read(fn, true);
 		ImagePlus ip = convertToImagePlus(image, ImageGeneric.ALL_IMAGES);
-                System.out.println(ip.getStackSize());
 		image.destroy();
 		return ip;
 	}

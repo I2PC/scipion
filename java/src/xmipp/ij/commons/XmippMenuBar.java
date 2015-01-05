@@ -512,9 +512,9 @@ public class XmippMenuBar extends MenuBar
 		IJ.run(xw.getImagePlusLoader().getImagePlus(), command, "");
 	}//function runCommand
 	
-	public Map<String, String> getKeyAssist()
+	public Map<Object, Object> getKeyAssist()
 	{
-		Map<String, String> map = Collections.synchronizedMap(new LinkedHashMap<String, String>());
+		Map<Object, Object> map = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 		map.put("Shift + Scroll Up", "Zoom in");
 		map.put("Shift + Scroll Down", "Zoom out");
 		map.put("Right click + Mouse move", "Moves image previously expanded");

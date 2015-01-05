@@ -56,7 +56,6 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		super(picker);
 		tppicker = picker;
 		initComponents();
-
 		setChanged(false);
 	}
 
@@ -73,11 +72,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 		initToolBar();
 		add(tb);
-		initShapePane();
-		JPanel shapepn2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		shapepn2.add(new JLabel("Shape:"));
-		shapepn2.add(shapepn);
-		add(shapepn2, XmippWindowUtil.getConstraints(constraints, 0, 1, 3));
+		
 		initMicrographsPane();
 		add(micrographpn, XmippWindowUtil.getConstraints(constraints, 0, 2, 3));
 		JPanel actionspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -109,7 +104,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		filemn.add(importmi);
 		if (tppicker.getMode() != Mode.Manual)
 			importmi.setEnabled(false);
-		importffilesmi = new JMenuItem("import coordinates from files");
+		importffilesmi = new JMenuItem("Import coordinates from files...");
 		importffilesmi.addActionListener(new ActionListener() {
 
 			@Override
@@ -186,10 +181,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		micrographstb.getColumnModel().getColumn(0).setPreferredWidth(35);
 		micrographstb.getColumnModel().getColumn(1).setPreferredWidth(220);
 		micrographstb.getColumnModel().getColumn(2).setPreferredWidth(220);
-		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(60);
-		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(60);
+		micrographstb.getColumnModel().getColumn(3).setPreferredWidth(65);
+		micrographstb.getColumnModel().getColumn(4).setPreferredWidth(70);
 		micrographstb
-				.setPreferredScrollableViewportSize(new Dimension(595, 304));
+				.setPreferredScrollableViewportSize(new Dimension(610, 304));
 		micrographstb.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		int index = tppicker.getMicrographIndex();
 		if (index != -1)
@@ -209,7 +204,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 	public void updateMicrographsModel(boolean all) {
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 		int index = tppicker.getMicrographIndex();
 		if (all)
 			micrographsmd.fireTableRowsUpdated(0,
@@ -226,13 +221,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
+                        
+                        // needs both canvas to be initialized
 			if (!particles.isEmpty())
-				canvas.refreshActive(particles.get(particles.size() - 1));// needs
-																			// both
-																			// canvas
-																			// to
-																			// be
-																			// initialized
+				canvas.refreshActive(particles.get(particles.size() - 1));
 		} else {
 			canvas.updateMicrograph();
 			tiltedcanvas.updateMicrograph();
@@ -282,9 +274,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		tiltedcanvas.repaint();
 	}
 
-	public String importParticlesFromFolder(Format format, String dir,
+	public String importParticlesFromFolder(Format format, String dir, String preffix, String suffix,
 			float scale, boolean invertx, boolean inverty) {
-		String result = tppicker.importParticlesFromFolder(dir, format, scale,
+		String result = tppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale,
 				invertx, inverty);
 		sizetf.setValue(tppicker.getSize());
 		getCanvas().repaint();
@@ -335,7 +327,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 		pack();
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 	}
 
 	@Override
@@ -361,9 +353,9 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	}
 
 	@Override
-	public String importParticles(Format format, String dir, float scale,
+	public String importParticles(Format format, String dir, String preffix, String suffix,float scale, 
 			boolean invertx, boolean inverty) {
-		return importParticlesFromFolder(format, dir, scale, invertx, inverty);
+		return importParticlesFromFolder(format, dir,preffix, suffix,  scale, invertx, inverty);
 
 	}
 

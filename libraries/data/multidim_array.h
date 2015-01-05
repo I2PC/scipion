@@ -3598,7 +3598,8 @@ public:
         size_t n;
         // Loop unrolling
         const size_t unroll=4;
-        size_t nmax=unroll*(op1.zyxdim/unroll);
+//        size_t nmax=unroll*(op1.zyxdim/unroll);
+        size_t nmax=unroll*(op1.nzyxdim/unroll);
         switch (operation)
         {
         case '+':

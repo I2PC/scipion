@@ -166,7 +166,8 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
 
         std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
         std::string command = (std::string)"cp " + fn_in + " " + fn_out;
-        system(command.c_str());
+        if (!system(command.c_str()))
+        	REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot copy files");
 
         counter++;
     }

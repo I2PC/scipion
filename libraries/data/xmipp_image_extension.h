@@ -57,6 +57,10 @@ bool checkImageFileSize(const FileName &name, bool error = false);
  * The test of equality of variances F-Snedecor is applied with 99.99% of confidence
  */
 bool checkImageCorners(const FileName &name);
+
+/// binary comparison of two images with a tolerance factor
+bool compareTwoImageTolerance(const FileName &fn1, const FileName &fn2, double tolerance=0., size_t index1=0, size_t index2=0);
+
 //@}
 
 #endif /* XMIPP_IMAGE_EXTENSION_H_ */

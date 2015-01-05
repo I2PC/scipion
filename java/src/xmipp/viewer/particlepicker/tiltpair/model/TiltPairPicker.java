@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
@@ -18,6 +19,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
  * Business object for Tilt Pair Picker GUI. Inherits from ParticlePicker 
  * @author airen
  *
+ * 
  */
 public class TiltPairPicker extends ParticlePicker
 {
@@ -31,6 +33,7 @@ public class TiltPairPicker extends ParticlePicker
 
 		for (UntiltedMicrograph um : micrographs)
 			loadMicrographParticles(um);
+                
 	}
 
 	public void loadData()
@@ -78,6 +81,7 @@ public class TiltPairPicker extends ParticlePicker
 			md.destroy();
 			if (micrographs.isEmpty())
 				throw new IllegalArgumentException(String.format("No micrographs specified on %s", selfile));
+                        
 
 		}
 		catch (Exception e)
@@ -235,7 +239,6 @@ public class TiltPairPicker extends ParticlePicker
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y,  m.getUntiltedAngle(), micId);
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_Y2, m.getTiltedAngle(), micId);
 			anglesmd.setValueDouble(MDLabel.MDL_ANGLE_TILT, m.getTiltAngle(), micId);
-			
 			anglesmd.writeBlock(selfile);
 			
 		}
@@ -263,9 +266,8 @@ public class TiltPairPicker extends ParticlePicker
 			else
 			{
 				TiltedParticle tp;
-
 				MetaData mdU = new MetaData(); // untilted micrograph particles
-				MetaData mdT = new MetaData(); // tilted micrograph particles
+                                MetaData mdT = new MetaData(); // tilted micrograph particles
 
 				for (UntiltedParticle p : um.getParticles())
 				{
@@ -288,7 +290,6 @@ public class TiltPairPicker extends ParticlePicker
 				
 				mdU.destroy();
 				mdT.destroy();
-                                saveMicrographAngles(um);
 			}
                         saveMicrographAngles(um);
 		}
@@ -302,48 +303,62 @@ public class TiltPairPicker extends ParticlePicker
         
         
 
-	public String importParticlesFromFolder(String path, Format f, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFolder(String path, Format f, String preffix, String suffix, float scale, boolean invertx, boolean inverty)
 	{
 		if (f == Format.Auto)
-			f = detectFormat(path);
-		if (f == Format.Unknown)
+			f = detectFormat(path, preffix, suffix);
+		if (f == Format.None)
 			throw new IllegalArgumentException("Unable to detect format");
 
-		String uFn = null, tFn = null;
+		String uFn, tFn, file;
 		String result = "";
                 importSize(path, f, scale);
 
-		
+		MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
                 for(UntiltedMicrograph m: micrographs)
                 {
                     uFn = null; tFn = null;
-                    for (File file: getCoordsFiles(path))
-                    {
-                        if(file.getName().contains(m.getName()))
-                            uFn = file.getAbsolutePath();
-                        if(file.getName().contains(m.getTiltedMicrograph().getName()))
-                            tFn = file.getAbsolutePath();
-                    }
+                    file = Filename.join(path, preffix + m.getName() + suffix);
+                    if(new File(file).exists())
+                        uFn = file;
+                    file = Filename.join(path, preffix + m.getTiltedMicrograph().getName() + suffix);
+                    if(new File(file).exists())
+                        tFn = file;
+                    
                     if(uFn != null && tFn != null)
                     {
-                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty);
+                        uMd.clear();
+                        tMd.clear();
+                        result += importParticlesFromFiles(uFn, tFn, f, m, scale, invertx, inverty, uMd, tMd);
                         saveData(m);
                     }           
 		}
+                uMd.destroy();
+               tMd.destroy();
                 super.saveData();
+                
+                
 		return result;
 	}// function importParticlesFromFolder
+        
+        public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+        {
+            	MetaData uMd = new MetaData();
+                MetaData tMd = new MetaData();
+                String result = importParticlesFromFiles(uPath, tPath, f, um, scale, invertx, inverty, uMd, tMd);
+                uMd.destroy();
+                tMd.destroy();
+                return result;
+            
+        }
 
-	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty)
+	public String importParticlesFromFiles(String uPath, String tPath, Format f, UntiltedMicrograph um, float scale, boolean invertx, boolean inverty, MetaData uMd, MetaData tMd)
 	{
-		MetaData uMd = new MetaData();
 		fillParticlesMdFromFile(uPath, f, um, uMd, scale, invertx, inverty);
-		MetaData tMd = new MetaData();
 		fillParticlesMdFromFile(tPath, f, um.getTiltedMicrograph(), tMd, scale, invertx, inverty);
-
 		String result = loadMicrographParticles(um, uMd, tMd);
-		uMd.destroy();
-		tMd.destroy();
+                
 		return result;
 	}// function importParticlesFromFiles
 
@@ -364,21 +379,46 @@ public class TiltPairPicker extends ParticlePicker
 	@Override
 	public boolean isValidSize(JFrame parent, int size)
 	{
+                boolean valid = true;
 		UntiltedMicrograph um = getMicrograph();
 		for (UntiltedParticle p : um.getParticles())
 			if (!getMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
+                        {
+				valid = false;
+                                break;
+                        }
 		for (TiltedParticle p : um.getTiltedMicrograph().getParticles())
 			if (!um.getTiltedMicrograph().fits(p.getX(), p.getY(), size))
-				return false;
-		return true;
+                        {
+				valid = false;
+                                break;
+                        }
+                if (!valid) 
+                    XmippDialog.showInfo(parent, String.format("Particles out of bounds, %s not allowed.", size));
+		return valid;
 	}
 
     @Override
     public int getParticlesCount() {
         return getUntiltedNumber();
             
-            
     }
+    
+    @Override
+	protected synchronized void saveConfig(MetaData md, long id)
+	{
+		try
+		{
+			super.saveConfig(md, id);
+			md.setValueInt(MDLabel.MDL_PICKING_MANUALPARTICLES_SIZE, getParticlesCount(), id);
+
+
+		}
+		catch (Exception e)
+		{
+			getLogger().log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalArgumentException(e.getMessage());
+		}
+	}
 
 }// class TiltPairPicker

@@ -4,7 +4,6 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-
 import xmipp.jni.ImageGeneric;
 
 
@@ -34,7 +33,7 @@ public class Params {
     public final static String VISIBLE_LABELS = "visible";
     public final static String ORDER_LABELS = "order";
     public final static String SORTBY_LABEL = "sortby";
-    public final static String DISPLAY_LABEL = "label";
+    public final static String DISPLAY_LABELS = "labels";
     public final static String FILTER = "filter";
     public final static String FILTERS_SEPARATOR = ",";
     public final static String PORT = "port";
@@ -49,6 +48,7 @@ public class Params {
     public final static String VIEW = "view";
     public final static String NO_GEO = "dont_apply_geo";
     public final static String NO_WRAP = "dont_wrap";
+    public final static String OBJECT_CMDS = "object_commands";
     
     
     
@@ -62,7 +62,7 @@ public class Params {
     public int zoom = 0;
     public String[] renderLabels = new String[]{"first"}; //Label to render, by default first
     public String renderLabel;
-    public String displayLabel;
+    public String[] displayLabels;
     public boolean debug = false;
     public boolean mask_toolbar = false;
     public int rows = -1, columns = -1;
@@ -83,6 +83,9 @@ public class Params {
     public String[] visibleLabels;
     public String[] orderLabels;
     public String[] sortby;
+    private String block;
+    public String[] objectCommands;
+    
     
     
     
@@ -123,7 +126,9 @@ public class Params {
         opt.setArgs(2);
         options.addOption(opt);
         
-        options.addOption(DISPLAY_LABEL, true, "");
+        opt = new Option(DISPLAY_LABELS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
         options.addOption(DEBUG, false, "");
         options.addOption(MASKTOOLBAR, false, "");
         options.addOption(TABLE_ROWS, true, "");
@@ -145,6 +150,10 @@ public class Params {
         options.addOption(VIEW, true, "z");
         options.addOption(NO_GEO, false, "");
         options.addOption(NO_WRAP, false, "");
+        opt = new Option(OBJECT_CMDS, "");
+        opt.setArgs(Integer.MAX_VALUE);
+        options.addOption(opt);
+        
 
     }
     
@@ -152,9 +161,6 @@ public class Params {
     public void processArgs(String args[]) {
 
 
-       
-       
-        
         try {
             BasicParser parser = new BasicParser();
             cmdLine = parser.parse(options, args);
@@ -202,8 +208,8 @@ public class Params {
             	sortby = cmdLine.getOptionValues(SORTBY_LABEL);
                 
             }
-            if(cmdLine.hasOption(DISPLAY_LABEL))
-            	displayLabel = cmdLine.getOptionValue(DISPLAY_LABEL);
+            if(cmdLine.hasOption(DISPLAY_LABELS))
+            	displayLabels = cmdLine.getOptionValues(DISPLAY_LABELS);
             
             debug = cmdLine.hasOption(DEBUG);
             mask_toolbar = cmdLine.hasOption(MASKTOOLBAR);
@@ -273,6 +279,9 @@ public class Params {
             		resliceView = ImageGeneric.X_POS;
             }
             
+            if(cmdLine.hasOption(OBJECT_CMDS))
+            	objectCommands = cmdLine.getOptionValues(OBJECT_CMDS);
+           
            
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -284,10 +293,21 @@ public class Params {
         return renderLabels[0];
     }
     
-    public String getDisplayLabel()
+    public String[] getDisplayLabels()
     {
-        return displayLabel;
+        return displayLabels;
     }
+    
+    public void setBlock(String block)
+    {
+        this.block = block;
+    }
+    
+    public String getBlock()
+    {
+        return block;
+    }
+    
     
    
 }

@@ -844,7 +844,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
     model.resizeNoCopy(enhancedPSD);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
-        if (j >= Xdim / 2)
+        if (j < Xdim / 2)
             continue;
 
         XX(idx) = j;
@@ -865,7 +865,7 @@ void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
 
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
-    if (j >= Xdim / 2)
+    if (j < Xdim / 2)
         model(i, j) = enhancedPSD(i, j);
 
     // Produce a centered image

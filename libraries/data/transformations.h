@@ -55,6 +55,16 @@
 void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
                               bool only_apply_shifts = false);
 
+/** Retrieve the matrix from an string representation
+ * Valid formats are:
+ * [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+ * or
+ * 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1
+ * or
+ * 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+ */
+void string2TransformationMatrix(const String &matrixStr, Matrix2D<double> &matrix);
+
 /** Retrieve the geometry transformations from matrix for 2D. */
 void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
                                        double &scale, double &shiftX, double &shiftY,
