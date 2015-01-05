@@ -220,7 +220,11 @@ public class GalleryData {
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+            {
                 mode = Mode.TABLE_MD;
+                if(renderLabel.equals("first"))
+                    renderImages = false;
+            }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
                 mode = Mode.GALLERY_ROTSPECTRA;
         }
