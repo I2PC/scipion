@@ -24,19 +24,18 @@
 # *
 # **************************************************************************
 
-from os import remove
-from os.path import exists
+
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from pyworkflow.em import data
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.em.viewer import ObjectView, MODE, MODE_MD, ORDER, VISIBLE
 from pyworkflow.protocol.params import FloatParam, IntParam, HiddenBooleanParam
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO, \
-    ProtocolViewer
-import collections
+from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+from pyworkflow.utils.path import cleanPath
 import numpy as np
 
-#class XmippCTFDiscrepancyViewer(Viewer):
+
+
 class XmippCTFDiscrepancyViewer(ProtocolViewer):
     """ This protocol computes the maximum resolution up to which two
      CTF estimations would be ``equivalent'', defining ``equivalent'' as having
@@ -51,30 +50,35 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
     tmpMetadataFile='viewersTmp.sqlite'
 
     def _defineParams(self, form):
+        
+        self.averagesFile, self.pairsFile = self.protocol._getAnalyzeFiles()
+        
         form.addSection(label='Visualization')
         #group = form.addGroup('Overall results')
         form.addParam('resolutionThreshold', FloatParam, default=999999.,
-                      label='resolution threshold (A)',
+                      label='Resolution threshold (A)',
                       help='Select only CTF consistent at this resolution (in A).')
-        form.addParam('visualizeTable', HiddenBooleanParam, default=False,
-                      label="Visualize Table.",
+        form.addParam('visualizePairs', HiddenBooleanParam, default=False,
+                      label="Visualize comparison table.",
                       help="List with resolution at which the CTF estimated by a pair of methods"
                            " is no longer equivalent."  )
+        form.addParam('visualizeAverage', HiddenBooleanParam, default=False,
+                      label="Visualize average table.",
+                      help="Show a table with the averaged CTFs."  )     
         form.addParam('visualizeMatrix', HiddenBooleanParam, default=False,
-                      label="Visualize Matrix.",
+                      label="Visualize comparison matrix.",
                       help="Number of micrographs that have a CTF estimation"
                            " -given by two methods- that are equivalent at resolution=threshold")
         form.addParam('visualizeHistogram', IntParam, default=10,
                       label="Visualize Histogram (Bin size)",
                       help="Histogram of the resolution at which two methods are equivalent")
 
-
-
     def _getVisualizeDict(self):
         return {
-                 'visualizeTable': self._visualizeTable
-                ,'visualizeMatrix': self._visualizeMatrix
-                ,'visualizeHistogram': self._visualizeHistogram
+                 'visualizePairs': self._visualizePairs,
+                 'visualizeAverage': self._visualizeAverages,
+                 'visualizeMatrix': self._visualizeMatrix,
+                 'visualizeHistogram': self._visualizeHistogram
                 }        
 
     def _calculateAuxiliaryFile(self):
@@ -90,27 +94,26 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
             self.setOfCTFsConst.close()
 
         #metadata file with protocol output
-        self.sourceFile = self.protocol.outputCTF.getFileName()
         #get temporary fileName for metadata file
         self.targetFile = self.protocol._getTmpPath(self.tmpMetadataFile)
         resolutionThreshold = self.resolutionThreshold.get()
         print "TODO: this should be closer to the mapper. Here it does not make any sense. ROB"
         #TODO check if this is necessary
-        if exists(self.targetFile):
-            remove(self.targetFile)
+        cleanPath(self.targetFile)
+        
         #metadata with selected CTFs
         self.setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
         #object read metadata file
-        ctfs  = data.SetOfCTF(filename = self.sourceFile)
+        ctfs  = data.SetOfCTF(filename=self.pairsFile)
         #condition to be satisfized for CTFs
         for ctf in ctfs:
             print "ctf", ctf.printAll()
-            if ctf.resolution.get()<resolutionThreshold:
+            if ctf.resolution < resolutionThreshold:
                 self.setOfCTFsConst.append(ctf)
         #new file with selected CTFs
         self.setOfCTFsConst.write()
         #check if empty
-        if self.setOfCTFsConst.getSize()<1:
+        if self.setOfCTFsConst.getSize() < 1:
             print "WARNING: Empty set of CTFs."
         #TODO aggregation function to compute the minimum resolution by micrograph
         #TODO aggregation function to compute the average resolution by micrograph
@@ -122,7 +125,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
             self._calculateAuxiliaryFile()
             self.resolutionThresholdOLD = _resolutionThreshold
 
-    def _visualizeTable(self, e=None):
+    def _visualizePairs(self, e=None):
         """ From here call all visualizations
         """
         self.isComputed()
@@ -136,6 +139,19 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views 
 
+    def _visualizeAverages(self, e=None):
+        """ From here call all visualizations
+        """
+        views = []
+
+        #display metadata with selected variables
+        labels = '_micObj._filename averageDefocusU averageDefocusV averageDefocusAngle averageResolution' 
+        views.append(ObjectView(self._project.getName(), 
+                                self.protocol.strId(), 
+                                self.averagesFile,
+                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
+        return views 
+    
     def _visualizeHistogram(self, e=None):
         views = []
         self.isComputed()
@@ -143,7 +159,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
         plotter = EmPlotter()
         plotter.createSubPlot("Resolution Discrepancies histogram", 
-                      "Resolution (A)", "# of Micrographs")
+                      "Resolution (A)", "# of Comparisons")
         resolution = [ctf.resolution.get() for ctf in self.setOfCTFsConst]
         plotter.plotHist(resolution, nbins=numberOfBins)
         return views.append(plotter)

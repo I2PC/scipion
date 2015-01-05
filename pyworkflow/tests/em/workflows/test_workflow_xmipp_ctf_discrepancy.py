@@ -78,7 +78,9 @@ class TestXmippCTFDiscrepancyBase(TestWorkflow):
         self.launchProtocol(protCtfDiscrepancy)
 
         ctfsGold = SetOfCTF(filename = self.dataset.getFile('ctfsGold'))
-        ctfComputed = protCtfDiscrepancy.outputCTFPair
+        ctfSetFn, ctfSetPairFn = protCtfDiscrepancy._getAnalyzeFiles()
+        
+        ctfComputed = SetOfCTF(filename=ctfSetPairFn)
         for ctf1, ctf2 in izip(ctfComputed, ctfsGold):
             ctf1.getMicrograph().setFileName(os.path.basename(ctf1.getMicrograph().getFileName()))
             ctf2.getMicrograph().setFileName(os.path.basename(ctf2.getMicrograph().getFileName()))
