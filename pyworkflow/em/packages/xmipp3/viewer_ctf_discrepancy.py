@@ -107,7 +107,6 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
         ctfs  = data.SetOfCTF(filename=self.pairsFile)
         #condition to be satisfized for CTFs
         for ctf in ctfs:
-            print "ctf", ctf.printAll()
             if ctf.resolution < resolutionThreshold:
                 self.setOfCTFsConst.append(ctf)
         #new file with selected CTFs
