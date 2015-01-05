@@ -110,7 +110,6 @@ public class ImportParticlesJDialog extends XmippDialog {
                 suffixtf.setToolTipText(tooltip);
 		panel.add(suffixtf, XmippWindowUtil.getConstraints(gbc, 1, 3));
                 
-                
 		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 4));
 		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance(Locale.ENGLISH));
 		scaletf.setColumns(3);
