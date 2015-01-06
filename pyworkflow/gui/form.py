@@ -117,9 +117,9 @@ class MultiPointerVar():
         self.tree.update() # Update the tkinter tree gui
         
     def set(self, value):
-        if isinstance(value, PointerList):
+        if isinstance(value, list):
             for pointer in value:
-                self.provider.addObject(pointer.get())
+                self.provider.addObject(pointer)
             self._updateObjectsList()
         elif isinstance(value, Object):
             self.provider.addObject(value)
@@ -127,10 +127,10 @@ class MultiPointerVar():
           
     def remove(self):
         """ Remove first element selected. """
-        value = self.tree.getFirst()
-        if value:
-            self.provider.removeObject(value)
-            self._updateObjectsList()
+        values = self.tree.getSelectedObjects()
+        for v in values:
+            self.provider.removeObject(v.getObjId())
+        self._updateObjectsList()
         
     def get(self):
         return self.provider.getObjects()
@@ -339,7 +339,11 @@ class MultiPointerTreeProvider(TreeProvider):
         self._mapper = mapper
         
     def addObject(self, obj):
-        self._objectDict[obj.getObjId()] = obj 
+        if isinstance(obj, list):
+            for o in obj:
+                self._objectDict[o.getObjId()] = o
+        else: 
+            self._objectDict[obj.getObjId()] = obj 
         
     def removeObject(self, objId):
         objId = int(objId)
@@ -680,14 +684,19 @@ class ParamWidget():
             tree.grid(row=0, column=0, sticky='w')
             self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
             self._addButton("Remove", Icon.ACTION_DELETE, self._removeObject)
+            self._selectmode = 'extended' # allows multiple object selection
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar(self._protocol)
             entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
-            btnFunc = self._browseObject
+            
             if t is RelationParam:
                 btnFunc = self._browseRelation
+            else:
+                btnFunc = self._browseObject
+            self._selectmode = 'browse' # single object selection
+                
             self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
         
         elif t is ProtocolClassParam:
@@ -761,11 +770,11 @@ class ParamWidget():
 
         dlg = ListDialog(self.parent, "Select object", tp, 
                          "Double click an item to preview the object",
-                         validateSelected)
-        dlg.validateItem = validateSelected
+                         selectmode=self._selectmode)
         
-        if dlg.value is not None:
-            self.set(dlg.value)
+        if dlg.values:
+            print "dlg.values: ", dlg.values
+            self.set(dlg.values)
         
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
