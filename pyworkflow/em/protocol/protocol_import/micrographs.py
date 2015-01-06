@@ -170,7 +170,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         if self.importFrom == self.IMPORT_FROM_FILES:
             return ProtImportMicBase._summary(self)
         else:
-            return [self.summaryVar.get()]
+            return [self.summaryVar.get('No summary information.')]
         
 
 class ProtImportMovies(ProtImportMicBase):

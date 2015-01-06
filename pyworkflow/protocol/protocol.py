@@ -1134,7 +1134,7 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         try:
-            baseSummary = self._summary() or []
+            baseSummary = self._summary() or ['No summary information.']
         except Exception as ex:
             baseSummary = [str(ex)]        
             
