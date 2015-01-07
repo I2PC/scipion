@@ -998,9 +998,13 @@ class ProtocolsView(tk.Frame):
 #            msg = "Protocol successfully saved."
         else:
             self.project.launchProtocol(prot)
+            # Select the launched protocol to display its summary, methods..etc
+            self._selection.clear()
+            self._selection.append(prot.getObjId())
+            self._updateSelection()
             self._scheduleRunsUpdate()
             msg = ""
-            self.outputViewer.refreshOutput()
+            #self.outputViewer.refreshOutput()
 
         return msg
     
