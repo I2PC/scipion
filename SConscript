@@ -50,6 +50,7 @@ DIR = 3 # base dir
 DEPS = 4
 
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
+BASIC_INCS = [join('external','fftw-3.3.3'), join('external','tiff-3.9.4'), join('external','tiff-3.9.4','libtiff'), join('external','jpeg-8c'), join('external','sqlite-3.6.23'), join('external','hdf5-1.8.10','src'), join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')]
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -95,31 +96,31 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                                DIR: 'external',
                                DEPS: ['m']
                                 },
-             'XmippData': {INCS: [],
+             'XmippData': {INCS: BASIC_INCS,
                                LIBS: ['XmippData'],
                                SRC: [join('libraries','data','*.cpp')],
                                DIR: join('libraries','data'),
                                DEPS: ['XmippExternal'] + BASIC_DEPS
                                 }, 
-             'XmippClassif': {INCS: [],
+             'XmippClassif': {INCS: BASIC_INCS,
                                LIBS: ['XmippClassif'],
                                SRC: [join('libraries','classification','*.cpp')],
                                DIR: join('libraries','classification'),
                                DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
                                 }, 
-             'XmippDimred': {INCS: [],
+             'XmippDimred': {INCS: BASIC_INCS,
                                LIBS: ['XmippDimred'],
                                SRC: [join('libraries','dimred','*.cpp')],
                                DIR: join('libraries','dimred'),
                                DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
                                 }, 
-             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include"), join('external', 'hdf5-1.8.10', 'src')],
+             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include"), join('external', 'hdf5-1.8.10', 'src')] + BASIC_INCS,
                                LIBS: ['XmippInterface'],
                                SRC: [join('libraries','interface','*.cpp')],
                                DIR: join('libraries','interface'),
                                DEPS: ['XmippExternal', 'XmippData', 'pthread']
                                 }, 
-             'XmippRecons': {INCS: ['external'],
+             'XmippRecons': {INCS: ['external']+BASIC_INCS,
                                LIBS: ['XmippRecons'],
                                SRC: [join('libraries','reconstruction','*.cpp')],
                                DIR: join('libraries','reconstruction'),
@@ -130,19 +131,19 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                                        join('lib','python2.7','site-packages','numpy','core','include'),
                                        join('libraries','bindings','python'),
                                        'libraries',
-                                       'external'],
+                                       'external']+BASIC_INCS,
                                LIBS: ['xmipp'],
                                SRC: [join('libraries','bindings','python','*.cpp')],
                                DIR: join('libraries','bindings','python'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
                                 }, 
-             'XmippParallel': {INCS: ['external', env['MPI_INCLUDE']],
+             'XmippParallel': {INCS: ['external', env['MPI_INCLUDE']] + BASIC_INCS,
                                LIBS: ['XmippParallel'],
                                SRC: [join('libraries','parallel','*.cpp')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
                                 },                                                   
-              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java'), env['JNI_CPPPATH']],
+              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java'), env['JNI_CPPPATH']] + BASIC_INCS,
                                LIBS: ['XmippJNI'],
                                SRC: [join('libraries','bindings','java','*.cpp')],
                                DIR: join('libraries','bindings','java'),
@@ -282,7 +283,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     program = env.Program(
         join(basedir, fullname),
         sources,
-        CPPPATH=includes + [env['CPPPATH']],
+        CPPPATH=includes + [env['CPPPATH']] + BASIC_INCS,
         LIBPATH=libpath + [env['LIBPATH']],
         LIBS=libs + [env['LIBS']],
         CXXFLAGS=cxxflags + [env['CXXFLAGS']],
@@ -304,6 +305,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = join(env['prefix'], 'bin')
+    
 
     # FIXME fix for static executables
     if env['static']:
@@ -316,7 +318,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
         sources,
         CC=env['MPI_CC'],
         CXX=env['MPI_CXX'],
-        CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+        CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']] + BASIC_INCS,
         LIBPATH=libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
         LIBS=libs + [env['LIBS']] + [env['MPI_LIB']],
         CXXFLAGS=cxxflags + [env['CXXFLAGS']],
@@ -446,7 +448,7 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
         library = env.SharedLibrary(
             basedir + name,
             sources,
-            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']] + BASIC_INCS,
             CC=env['MPI_CC'],
             CXX=env['MPI_CXX'],
             LIBPATH=[env['MPI_LIBDIR']] + libpath,
