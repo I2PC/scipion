@@ -119,12 +119,13 @@ env.AddLibrary(
     targets=['bin/parallel'],
     deps=[zlib])
 
+shome = env['SCIPION_HOME']  # short notation, we use it quite a lot
 boost_headers_only = env.ManualInstall(
     'boost_headers_only',
     tar='boost_1_56_0.tgz',
     extraActions=[
-        ('%s/software/include/boost' % env['SCIPION_HOME'],
-         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+        ('%s/software/include/boost' % shome,
+         'cp -rf boost %s/software/include' % shome)],
     default=False)
 
 lapack = env.ManualInstall(
@@ -132,10 +133,21 @@ lapack = env.ManualInstall(
     tar='lapack-3.5.0.tgz',
     neededProgs=['cmake'],
     extraActions=[
-        ('%s/software/tmp/lapack-3.5.0/Makefile' % env['SCIPION_HOME'],
+        ('%s/software/tmp/lapack-3.5.0/Makefile' % shome,
          'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
-         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % env['SCIPION_HOME']),
-        ('%s/software/lib/liblapack.so' % env['SCIPION_HOME'],
+         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/liblapack.so' % shome,
+         'make install')],
+    default=False)
+
+opencv = env.ManualInstall(
+    'opencv',
+    tar='opencv-2.4.9.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/opencv-2.4.9/Makefile' % shome,
+         'cmake -DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/libopencv_core.so' % shome,
          'make install')],
     default=False)
 
@@ -286,7 +298,7 @@ env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
-                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
+                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
                deps=[boost_headers_only, fftw, swig],
                default=False)
 
