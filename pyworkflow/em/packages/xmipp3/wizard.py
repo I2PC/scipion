@@ -176,6 +176,10 @@ class XmippBoxSizeWizard(Wizard):
     def show(self, form):
         form.setVar('boxSize', self._getBoxSize(form.protocol))
 
+
+
+
+
 #===============================================================================
 # NUMBER OF CLASSES
 #===============================================================================
