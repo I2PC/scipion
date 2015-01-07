@@ -657,13 +657,17 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
 
     coordSet._xmippMd = String(outputDir)
 
+
+
 def readCoordinates(mic, fileName, coordsSet, outputDir):
         posMd = readPosCoordinates(fileName)
-        posMd.addLabel(xmipp.MDL_ITEM_ID)
+        posMd.addLabel(xmipp.MDL_ITEM_ID)#TODO: CHECK IF THIS LABEL IS STILL NECESSARY
 
         for objId in posMd:
             coord = rowToCoordinate(rowFromMd(posMd, objId))
             coord.setMicrograph(mic)
+            coord.setX(coord.getX())
+            coord.setY(coord.getY())
             coordsSet.append(coord)
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)

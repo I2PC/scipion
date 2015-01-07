@@ -28,13 +28,26 @@
 
 from pyworkflow.em.packages.eman2.convert import readCoordinates
 
+from os.path import  exists
+from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.eman2 import loadJson
 
 class EmanImport():
 
     def __init__(self, protocol):
         self.protocol = protocol
 
-    def importCoordinates(self, mic, fileName, coordsSet):
+    def importCoordinates(self, fileName, addCoordinate):
 
         print 'import from eman ' + fileName
-        readCoordinates(mic, fileName, coordsSet)
+        if exists(fileName):
+            jsonPosDict = loadJson(fileName)
+
+            if jsonPosDict.has_key("boxes"):
+                boxes = jsonPosDict["boxes"]
+
+                for box in boxes:
+                    x, y = box[:2]
+                    coord = Coordinate()
+                    coord.setPosition(x, y)
+                    addCoordinate(coord)

@@ -51,6 +51,8 @@ from pyworkflow.em.constants import (UNIT_PIXEL,
 from pyworkflow.em.data import (Volume, 
                                 SetOfMicrographs, SetOfParticles, SetOfVolumes)
 from pyworkflow.em.protocol import ProtImportImages
+from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+from pyworkflow.utils.path import join
 
 import xmipp
 
@@ -776,3 +778,30 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
     
+class ImportCoordinatesBoxSizeWizard(Wizard):
+    _targets = [(ProtImportCoordinates, ['boxSize'])]
+
+    def _getBoxSize(self, protocol):
+        boxSize = 0
+        importFrom = protocol.getImportFrom()
+        scale = protocol.scale.get()
+
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_XMIPP:
+            configfile = join(protocol.filesPath.get(), 'config.xmd')
+            existsConfig = exists(configfile)
+            if existsConfig:
+                md = xmipp.MetaData('properties@' + configfile)
+                configobj = md.firstObject()
+                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
+            # Read the boxSize from the e2boxercache/base.json
+            jsonFnbase = join(protocol.filesPath.get(), 'e2boxercache', 'base.json')
+            from pyworkflow.em.packages.eman2 import loadJson
+            jsonBoxDict = loadJson(jsonFnbase)
+            boxSize = int(jsonBoxDict["box_size"])
+        boxSize = boxSize * scale
+        return boxSize
+
+
+    def show(self, form):
+        form.setVar('boxSize', self._getBoxSize(form.protocol))
