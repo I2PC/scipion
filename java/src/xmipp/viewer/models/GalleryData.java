@@ -220,7 +220,11 @@ public class GalleryData {
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+            {
                 mode = Mode.TABLE_MD;
+                if(renderLabel.equals("first"))
+                    renderImages = false;
+            }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
                 mode = Mode.GALLERY_ROTSPECTRA;
         }
@@ -1641,8 +1645,13 @@ public class GalleryData {
     public boolean isRenderLabel(ColumnInfo ci) {
         if(!renderImages)
             return false;
-        if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
+        if (renderLabel.equals("first") )
+        {
+            if(md instanceof ScipionMetaData)
+                return ci.render && ci.visible;
+            else
                 return MetaData.isImage(ci.label) && ci.visible;
+        }
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
