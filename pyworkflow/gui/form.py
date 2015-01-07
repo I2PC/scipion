@@ -1388,7 +1388,9 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         if (self.protocol.getRunMode() == MODE_RESTART and 
-            not askYesNo(Message.TITLE_RESTART_FORM, Message.LABEL_DELETE_FORM, self.root)):
+            not askYesNo(Message.TITLE_RESTART_FORM, 
+                         Message.LABEL_RESTART_FORM % ('*%s*' % self.protocol.getRunName()), 
+                         self.root)):
             return
             
         errors = self.protocol.validate()

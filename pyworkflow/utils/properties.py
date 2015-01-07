@@ -242,9 +242,16 @@ It is used by a few programs like Ctffind or Frealign."""
     TITLE_SAVED_FORM = 'Success'
     LABEL_SAVED_FORM = 'The protocol was saved successfuly.'
     TITLE_DELETE_FORM = 'Confirm DELETE'
-    TITLE_RESTART_FORM = 'Confirm DELETE'
+    TITLE_RESTART_FORM = 'Confirm RESTART'
     LABEL_DELETE_FORM = """
 You are going to *DELETE* the run(s): 
+  - %s
+*ALL DATA* related will be permanently removed.
+
+Do you really want to continue?'
+"""
+    LABEL_RESTART_FORM = """
+You are going to *RESTART* the run: 
   - %s
 *ALL DATA* related will be permanently removed.
 
