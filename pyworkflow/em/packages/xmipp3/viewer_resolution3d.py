@@ -93,17 +93,41 @@ class XmippResolution3DViewer(ProtocolViewer):
         Y=np.array(Y)
         A=np.array([np.ones(X.size), X.T])
         beta=np.linalg.lstsq(A.T,Y)[0]
-        y=[beta[0]+beta[1]*xi for xi in x]
-        Bfactor=beta[1]
-        print "y: ",y
+        y = [beta[0]+beta[1]*xi for xi in x]
+        Bfactor = -4*beta[1]
+
+        # Update new Y values
+        data.getPoint(0).setY(y[0])
+        data.getPoint(1).setY(y[1])
+            
+        f = open(self.protocol._getPath('bfactor.txt'), 'w')
+        print >> f, x[0], y[0], x[1], y[1], Bfactor
+        f.close()
+            
+    def _loadData(self):
+        from pyworkflow.em.packages.xmipp3.nma.data import PathData
+        data = PathData(dim=2)
+        bfactorFile = self.protocol._getPath('bfactor.txt')
+        if os.path.exists(bfactorFile):
+            f = open(bfactorFile)
+            values = map(float, f.readline().split())
+            p1 = data.createEmptyPoint()
+            p1.setX(values[0])
+            p1.setY(values[1])
+            data.addPoint(p1)
+            p2 = data.createEmptyPoint()
+            p2.setX(values[2])
+            p2.setY(values[3])
+            data.addPoint(p2)
+            
+        return data
         
     def _viewStructureFactor(self, e=None):
-        from pyworkflow.em.packages.xmipp3.nma.data import PathData
         strFactFn = self.protocol._defineStructFactorName()
         self.md = MetaData(strFactFn)
         plotter = self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 'log(Structure Factor)', 
                                self.md, xmipp.MDL_RESOLUTION_FREQ2, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
-        self.path = PointPath(plotter.getLastSubPlot(), PathData(dim=2), 
+        self.path = PointPath(plotter.getLastSubPlot(), self._loadData(), 
                               callback=self._adjustPoints,
                               tolerance=0.1)
         return [plotter]        
@@ -200,7 +224,7 @@ class PointPath():
     
     def plotPath(self):
         xs, ys = self.getXYData()
-        self.path_line, = self.ax.plot(xs, ys, alpha=0.75, color='green')
+        self.path_line, = self.ax.plot(xs, ys, alpha=0.75, color='blue')
         self.path_points, = self.ax.plot(xs, ys, 'o', color='red')  # 5 points tolerance, mark line points
         
     def onMotion(self, event):
