@@ -329,7 +329,8 @@ class Protocol(Step):
         self.allowHeader = Boolean(True)    
         # Create an String variable to allow some protocol to precompute
         # the summary message
-        self.summaryVar = String()    
+        self.summaryVar = String()
+        self.methodsVar = String()    
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 

@@ -122,24 +122,20 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
-        # Get the reference to the input NMA alignment protocol
-        # to grab some parameters
-        inputNMA = self.inputNMA.get()
         # Take deforamtions text file and the number of images and modes
         inputSet = self.getInputParticles()
         rows = inputSet.getSize()
-        columns = inputNMA.inputModes.get().getSize()
         reducedDim = self.reducedDim.get()
         method = self.dimredMethod.get()
         extraParams = self.extraParams.get('')
         
         deformationsFile = self._getExtraPath('deformations.txt')
-
+        
         self._insertFunctionStep('convertInputStep', 
                                  deformationsFile, inputSet.getObjId())
         self._insertFunctionStep('performDimredStep', 
                                  deformationsFile, method, extraParams,
-                                 rows, columns, reducedDim) 
+                                 rows, reducedDim) 
         self._insertFunctionStep('createOutputStep')
         
         
@@ -159,13 +155,19 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         f.close()
     
     def performDimredStep(self, deformationsFile, method, extraParams,
-                          rows, columns, reducedDim):
+                          rows, reducedDim):
         outputMatrix = self.getOutputMatrixFile()
         methodName = DIMRED_VALUES[method]
+        # Get number of columes in deformation files
+        # it can be a subset of inputModes
+        f = open(deformationsFile)
+        columns = len(f.readline().split()) # count number of values in first line
+        f.close()
+        
         args = "-i %(deformationsFile)s -o %(outputMatrix)s -m %(methodName)s %(extraParams)s"
         args += "--din %(columns)d --samples %(rows)d --dout %(reducedDim)d"
         if method in DIMRED_MAPPINGS:
-            mappingFile = self._getExtraPath('projections.txt')
+            mappingFile = self._getExtraPath('projector.txt')
             args += " --saveMapping %(mappingFile)s"
             self.mappingFile.set(mappingFile)
         self.runJob("xmipp_matrix_dimred", args % locals())
