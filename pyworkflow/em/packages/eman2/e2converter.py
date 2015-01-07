@@ -52,7 +52,6 @@ if __name__ == '__main__':
         #for line in sys.stdin:
             objDict=json.loads(line)
             ###imgId, index, filename = line.split()
-            print >> sys.stderr,"objDict", objDict
             if '_index' in objDict.keys():
                 index = int(objDict['_index']) - 1
             if '_filename' in objDict.keys():
@@ -66,15 +65,14 @@ if __name__ == '__main__':
                 angles = objDict['_angles']
                 shifts = objDict['_shifts']
                 transformation = eman.Transform({"type":"spider",
-                               "phi":angles[0],
-                               "theta":angles[1],
-                               "psi":angles[2],
-                               "tx":shifts[0],
-                               "ty":shifts[1],
-                               "tz":shifts[2],
-                               "mirror":0,####TODO: test flip
-                               "scale":1.0})
-
+                                                 "phi":angles[0],
+                                                 "theta":angles[1],
+                                                 "psi":angles[2],
+                                                 "tx":shifts[0],
+                                                 "ty":shifts[1],
+                                                 "tz":shifts[2],
+                                                 "mirror":0,  ####TODO: test flip
+                                                 "scale":1.0})
             imageData.read_image(filename, index)
             if transformation is not None:
                 imageData.set_attr('xform.projection', transformation)
@@ -93,5 +91,4 @@ if __name__ == '__main__':
         print "DONE"
     else:
         print "usage: %s outputFile" % os.path.basename(sys.argv[0])
-
 
