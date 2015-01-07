@@ -50,7 +50,16 @@ DIR = 3 # base dir
 DEPS = 4
 
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
-BASIC_INCS = [join('external','fftw-3.3.3'), join('external','tiff-3.9.4'), join('external','tiff-3.9.4','libtiff'), join('external','jpeg-8c'), join('external','sqlite-3.6.23'), join('external','hdf5-1.8.10','src'), join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')]
+BASIC_INCS = ['external',
+              'libraries',
+              join('external','fftw-3.3.3'), 
+              join('external','tiff-3.9.4'), 
+              join('external','tiff-3.9.4','libtiff'), 
+              join('external','jpeg-8c'), 
+              join('external','sqlite-3.6.23'), 
+              join('external','hdf5-1.8.10','src'), 
+              join('external','hdf5-1.8.10','c++'), 
+              join('external','hdf5-1.8.10','c++','src')]
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -59,28 +68,28 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                       },
              'tiff': {INCS: [join('external','tiff-3.9.4'), join('external','tiff-3.9.4','libtiff')],
                       LIBS: ['tiff']
-                     },
+                      },
              'jpeg': {INCS: [join('external','jpeg-8c')],
                       LIBS: ['jpeg']
-                     },        
+                      },        
              'sqlite': {INCS: [join('external','sqlite-3.6.23')],
                         LIBS: ['sqlite3']
-                     },
+                        },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
-                        LIBS: ['hdf5']
-                     },
+                      LIBS: ['hdf5']
+                      },
              'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')],
-                        LIBS: ['hdf5_cpp']
-                     },
+                          LIBS: ['hdf5_cpp']
+                          },
              'opencv': {INCS: [],
                         LIBS: ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video']
-                     },
+                        },
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']
 #                     },
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
                       LIBS: ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
-                     },
+                      },
              'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
                                SRC: [join('external','bilib','sources','*.cc'), 
@@ -89,66 +98,69 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                                      join('external','alglib-3.8.0.cpp','src','*.cpp')
                                      ],
                                DIR: 'external'
-                                },
-             'XmippSqliteExt': {INCS: [],
-                               LIBS: ['XmippSqliteExt'],
-                               SRC: [join('external','sqliteExt','*.c')],
-                               DIR: 'external',
-                               DEPS: ['m']
+                               },
+             'XmippSqliteExt': {INCS: BASIC_INCS,
+                                LIBS: ['XmippSqliteExt'],
+                                SRC: [join('external','sqliteExt','*.c')],
+                                DIR: 'external',
+                                DEPS: ['m']
                                 },
              'XmippData': {INCS: BASIC_INCS,
-                               LIBS: ['XmippData'],
-                               SRC: [join('libraries','data','*.cpp')],
-                               DIR: join('libraries','data'),
-                               DEPS: ['XmippExternal'] + BASIC_DEPS
-                                }, 
+                           LIBS: ['XmippData'],
+                           SRC: [join('libraries','data','*.cpp')],
+                           DIR: join('libraries','data'),
+                           DEPS: ['XmippExternal'] + BASIC_DEPS
+                           }, 
              'XmippClassif': {INCS: BASIC_INCS,
-                               LIBS: ['XmippClassif'],
-                               SRC: [join('libraries','classification','*.cpp')],
-                               DIR: join('libraries','classification'),
-                               DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
-                                }, 
+                              LIBS: ['XmippClassif'],
+                              SRC: [join('libraries','classification','*.cpp')],
+                              DIR: join('libraries','classification'),
+                              DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
+                              }, 
              'XmippDimred': {INCS: BASIC_INCS,
-                               LIBS: ['XmippDimred'],
-                               SRC: [join('libraries','dimred','*.cpp')],
-                               DIR: join('libraries','dimred'),
-                               DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
+                             LIBS: ['XmippDimred'],
+                             SRC: [join('libraries','dimred','*.cpp')],
+                             DIR: join('libraries','dimred'),
+                             DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
+                             }, 
+             'XmippInterface': {INCS: [PYTHON_DIR, 
+                                       join(PYTHON_DIR,"Include"), 
+                                       join("lib","python2.7","site-packages","numpy","core","include")] + BASIC_INCS,
+                                LIBS: ['XmippInterface'],
+                                SRC: [join('libraries','interface','*.cpp')],
+                                DIR: join('libraries','interface'),
+                                DEPS: ['XmippExternal', 'XmippData', 'pthread']
                                 }, 
-             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include"), join('external', 'hdf5-1.8.10', 'src')] + BASIC_INCS,
-                               LIBS: ['XmippInterface'],
-                               SRC: [join('libraries','interface','*.cpp')],
-                               DIR: join('libraries','interface'),
-                               DEPS: ['XmippExternal', 'XmippData', 'pthread']
-                                }, 
-             'XmippRecons': {INCS: ['external']+BASIC_INCS,
-                               LIBS: ['XmippRecons'],
-                               SRC: [join('libraries','reconstruction','*.cpp')],
-                               DIR: join('libraries','reconstruction'),
-                               DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'pthread'] + BASIC_DEPS
-                                },              
+             'XmippRecons': {INCS: BASIC_INCS,
+                             LIBS: ['XmippRecons'],
+                             SRC: [join('libraries','reconstruction','*.cpp')],
+                             DIR: join('libraries','reconstruction'),
+                             DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'pthread'] + BASIC_DEPS
+                             },              
               # Python binding named: xmipp.so
-              'xmipp': {INCS: [PYTHON_DIR, join(PYTHON_DIR, 'Include'),
-                                       join('lib','python2.7','site-packages','numpy','core','include'),
-                                       join('libraries','bindings','python'),
-                                       'libraries',
-                                       'external']+BASIC_INCS,
-                               LIBS: ['xmipp'],
-                               SRC: [join('libraries','bindings','python','*.cpp')],
-                               DIR: join('libraries','bindings','python'),
-                               DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
-                                }, 
-             'XmippParallel': {INCS: ['external', env['MPI_INCLUDE']] + BASIC_INCS,
+              'xmipp': {INCS: [PYTHON_DIR, 
+                               join(PYTHON_DIR, 'Include'),
+                               join('lib','python2.7','site-packages','numpy','core','include'),
+                               join('libraries','bindings','python'),
+                               'libraries',
+                               'external'] + BASIC_INCS,
+                        LIBS: ['xmipp'],
+                        SRC: [join('libraries','bindings','python','*.cpp')],
+                        DIR: join('libraries','bindings','python'),
+                        DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
+                        }, 
+             'XmippParallel': {INCS: [env['MPI_INCLUDE']] + BASIC_INCS,
                                LIBS: ['XmippParallel'],
                                SRC: [join('libraries','parallel','*.cpp')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
-                                },                                                   
-              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java'), env['JNI_CPPPATH']] + BASIC_INCS,
-                               LIBS: ['XmippJNI'],
-                               SRC: [join('libraries','bindings','java','*.cpp')],
-                               DIR: join('libraries','bindings','java'),
-                               DEPS: ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_DEPS
-                                },                                                   
+                               },                                                   
+              'XmippJNI': {INCS: [join('libraries','bindings','java'), env['JNI_CPPPATH']] + BASIC_INCS,
+                           LIBS: ['XmippJNI'],
+                           SRC: [join('libraries','bindings','java','*.cpp')],
+                           DIR: join('libraries','bindings','java'),
+                           DEPS: ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_DEPS
+                           },                                                   
             
             }
 
