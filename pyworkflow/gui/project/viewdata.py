@@ -286,11 +286,13 @@ class ProjectDataView(tk.Frame):
         
     def _selectObject(self, obj):
         self._selected = obj
+        self._infoText.setReadOnly(False)
         self._infoText.setText('*Label:* ' + getObjectLabel(obj, self.project.mapper))
         self._infoText.addText('*Info:* ' + str(obj))
         self._infoText.addText('*Created:* ' + '2014-11-22')
         if obj.getObjComment():
             self._infoText.addText('*Comments:* ' + obj.getObjComment())
+        self._infoText.setReadOnly(True)
         
     def _onClick(self, e=None):
         if e.node.object:
