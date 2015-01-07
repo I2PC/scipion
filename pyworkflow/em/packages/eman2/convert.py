@@ -39,9 +39,10 @@ import subprocess
 from os.path import join, exists
 
 import pyworkflow as pw
+import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.packages.eman2 import loadEnvironment, getEmanCommand, loadJson
-from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
+from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt
 
 
 # LABEL_TYPES = { 
@@ -51,14 +52,18 @@ from pyworkflow.utils.path import removeBaseExt
 #                xmipp.LABEL_BOOL: bool              
 #                }
 
+
 def objectToRow(obj, row, attrDict):
     pass
 
+
 def _rowToObject(row, obj, attrDict):
     pass
+
     
 def rowToObject(md, objId, obj, attrDict):
     pass
+
     
 def readCTFModel(filename):
     pass
@@ -73,25 +78,32 @@ def readMicrograph(md, objId):
     """ Create a Micrograph object from a row of Xmipp metadata. """
     pass
 
+
 def locationToEman(index, filename):
     pass
 
+
 def micrographToRow(mic, micRow):
     pass
+
 
 def rowToCoordinate(md, objId):
     """ Create a Coordinate from a json. """
     pass
 
+
 def readSetOfMicrographs(filename):
     pass
 
+
 def writeSetOfMicrographs(micSet, filename, rowFunc=None):
     pass
+
     
 def readPosCoordinates(posFile):
     pass
             
+
 def readSetOfCoordinates(workDir, micSet, coordSet):
     """ Read from Eman .json files.
     It is expected a file named: base.json under the workDir.
@@ -107,7 +119,6 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     size = int(jsonBoxDict["box_size"])
     jsonFninfo = join(workDir, 'info/')
     
-
     for mic in micSet:
         micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
         readCoordinates(mic, micPosFn, coordSet)
@@ -129,37 +140,41 @@ def readCoordinates(mic, fileName, coordsSet):
                     coordsSet.append(coord)
 
 
+
 def writeSetOfCoordinates():
     pass
+
 
 def writeSetOfParticles(partSet, filename, **kwargs):
     """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
     This function should be called from a current dir where
     the images in the set are available.
     """
-    cwd = os.getcwd()
-    workingdir = filename[0: filename.rfind(os.sep)]
+#     cwd = os.getcwd()
+#     workingdir = filename[0: filename.rfind(os.sep)]
     
-    # Change to test path
-    os.chdir(workingdir)
-    print workingdir
-    loadEnvironment()
+#     # Change to test path
+#     os.chdir(workingdir)
+#     print workingdir
+#     loadEnvironment()
     program = pw.join('em', 'packages', 'eman2', 'e2converter.py')        
     cmd = getEmanCommand(program, filename)
     
 #    gcmd = greenStr(cmd)
     print "** Running: '%s'" % cmd
-    proc = subprocess.Popen(cmd, shell=True, 
+    proc = subprocess.Popen(cmd, shell=True, env=getEnviron(), 
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
-
-
+    
     for part in partSet:
         #tranformation matrix is procesed here because
         #it uses routines available thrrough scipion python
         matrix = part.getTransform().getMatrix()
         shifts, angles = geometryFromMatrix(matrix, True)
         objDict = part.getObjDict()
+#         fn = objDict['_filename']
+        # check if the is a file mapping
+#         objDict['_filename'] = filesDict.get(fn, fn)
         objDict['_itemId']=part.getObjId()
         #json cannot encode arrays so I convert them to lists
         objDict['_angles']=angles.tolist()
@@ -169,10 +184,12 @@ def writeSetOfParticles(partSet, filename, **kwargs):
         proc.stdin.flush()
         response = proc.stdout.readline()
     #proc.wait()
-    os.chdir(cwd)
+#     os.chdir(cwd)
+
 
 def readSetOfParticles(filename, partSet, **kwargs):
     pass
+
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
@@ -186,3 +203,47 @@ def geometryFromMatrix(matrix, inverseTransform):
     angles = -numpy.rad2deg(euler_from_matrix(matrix, axes='szyz'))
     return shifts, angles
 
+
+def convertBinaryFiles(imgSet, outputDir):
+    """ Convert binary images files to a format read by Relion.
+    Params:
+        imgSet: input image set to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        A dictionary with old-file as key and new-file as value
+        If empty, not conversion was done.
+    """
+    filesDict = {}
+    ih = em.ImageHandler()
+    # This approach can be extended when
+    # converting from a binary file format that
+    # is not read from Relion
+    def linkMrcsToMrc(fn):
+        """ Just create a link named .mrc to Eman understand 
+        that it is a mrc binary stack.
+        """
+        newFn = join(outputDir, replaceBaseExt(fn, 'mrc'))
+        createLink(fn, newFn)
+        return newFn
+        
+    def convertStack(fn):
+        """ Convert from a format that is not read by Relion
+        to an spider stack.
+        """
+        newFn = join(outputDir, replaceBaseExt(fn, 'stk'))
+        ih.convertStack(fn, newFn)
+        return newFn
+        
+    ext = imgSet.getFirstItem().getFileName()
+    if ext.endswith('.mrcs'):
+        mapFunc = linkMrcsToMrc
+    elif ext.endswith('.hdf'): # assume eman .hdf format
+        mapFunc = convertStack
+    else:
+        mapFunc = None
+        
+    if mapFunc is not None:
+        for fn in imgSet.getFiles():
+            filesDict[fn] = mapFunc(fn) # convert and map new filename
+
+    return filesDict
