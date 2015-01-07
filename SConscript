@@ -53,10 +53,10 @@ BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
-Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
+Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                       LIBS: ['fftw3', 'fftw3_threads']
                       },
-             'tiff': {INCS: [join('external','tiff-3.9.4')],
+             'tiff': {INCS: [join('external','tiff-3.9.4'), join('external','tiff-3.9.4','libtiff')],
                       LIBS: ['tiff']
                      },
              'jpeg': {INCS: [join('external','jpeg-8c')],
@@ -68,7 +68,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
                         LIBS: ['hdf5']
                      },
-             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')],
                         LIBS: ['hdf5_cpp']
                      },
              'opencv': {INCS: [],
@@ -113,7 +113,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                DIR: join('libraries','dimred'),
                                DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
                                 }, 
-             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include")],
+             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include"), join('external', 'hdf5-1.8.10', 'src')],
                                LIBS: ['XmippInterface'],
                                SRC: [join('libraries','interface','*.cpp')],
                                DIR: join('libraries','interface'),
@@ -155,7 +155,7 @@ def getLibraryDict(name):
     return Libraries.get(name, None)
 
 #For backward compatibility
-FFTWDir = join("external", "fftw-3.3.1")
+FFTWDir = join("external", "fftw-3.3.3")
 TIFFDir = join("external", "tiff-3.9.4")
 JPEGDir = join("external", "jpeg-8c")
 HDF5Dir = join("external", "hdf5-1.8.10", "src")

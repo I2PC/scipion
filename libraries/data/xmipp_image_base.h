@@ -33,8 +33,8 @@
 #include "xmipp_datatype.h"
 //
 //// Includes for rwTIFF which cannot be inside it
-#include "../../external/tiff-3.9.4/libtiff/tiffio.h"
-#include "../../external/hdf5-1.8.10/src/hdf5.h"
+#include <tiffio.h>
+#include <hdf5.h>
 
 
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
