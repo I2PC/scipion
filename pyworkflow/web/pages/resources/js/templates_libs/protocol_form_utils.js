@@ -595,33 +595,32 @@ function getTableFormatted(node, json, id, previsualize) {
 			if(previsualize)
 				var func = first + 'launchViewer("'+ key +'")' + second;
 			res += "<tr id='"+ x + "' class='" + key + "' value='"
-			+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
-			+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
+			+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td><i class='fa fa-file'></i>&nbsp;&nbsp;" 
+			+ value["objParentName"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
 			
 		} else if (value["type"] == "set"){
 			if(previsualize)
 				var func = first + 'launchViewer("'+ key +'")' + second;
 			
 			res += "<tr onclick='showHideChildsRow("+ key +")' class='" + key + "' value='" + value["nameId"] +"'>"
-			res += "<td><i id='folderIco-"+ key +"' class='fa fa-folder'></i>&nbsp;&nbsp;"+value["nameId"]+"</td><td>"+ value["info"]+"</td>";
+			res += "<td><i id='folderIco-"+ key +"' class='fa fa-folder'></i>&nbsp;&nbsp;"+value["objParentName"]+"</td><td>"+ value["info"]+"</td>";
 			res += "<td>"+ func +"</td>"
 			res += "</tr>"
 
 			for(i=0; i<value['objects'].length; i++){
-				
-				var idText = value["nameId"] + " [item " + value['objects'][i]["objId"] +"]"
-				var idElm = key + "::" + value['objects'][i]["objId"]
 				var nameIdObj = value['objects'][i]["nameId"]
-				var objName = value['objects'][i]["objName"]
+				var objIdObj = value['objects'][i]["objId"]
 				var infoObj = value['objects'][i]["info"]
-				var objId = value['objects'][i]["objId"]
 				
+				var idText = value["nameId"] + " [item " + objIdObj +"]"
+				var idElm = key + "::" + objIdObj
+
 //				if(previsualize)
 //					var func = first + 'launchViewer("'+ idElm +'")' + second;
 				
 				res += "<tr style='display:none;' data-row='"+ key +"' id='"+ x + "' class='" + idElm + "' value='"
-				+ idText  + "' onclick=javascript:selTableMessi($(this));><td> item " 
-				+ objId + "</td><td>"+ infoObj +"</td>";
+				+ idText  + "' onclick=javascript:selTableMessi($(this));><td style='text-align:center;'><i class='fa fa-file'></i>&nbsp;&nbsp; item " 
+				+ objIdObj + "</td><td>"+ infoObj +"</td>";
 				
 //				res += "<td>"+ func +"</td>"
 				res += "</tr>"

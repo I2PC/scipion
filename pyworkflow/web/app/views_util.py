@@ -237,20 +237,27 @@ def browse_objects(request):
         
         # Object Filter
         for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+            objParent = project.mapper.selectById(obj.getObjParentId())
+            
             objs[obj.getObjId()] = {"type":"obj", 
-                                    "nameId":obj.getNameId(), 
+                                    "nameId":obj.getNameId(),
+                                    "objParentName": objParent.getRunName(),
+                                    "objId": obj.getObjId(),
                                     "info": str(obj)
                                     } 
         # Class Filter
         for obj in project.iterSubclasses("Set", filterObject.classFilter):
+            objParent = project.mapper.selectById(obj.getObjParentId())
+            
             context = {"type":"set", 
-                       "nameId":obj.getNameId(), 
+                       "nameId":obj.getNameId(),
+                       "objParentName": objParent.getRunName(),
+                       "objId": obj.getObjId(),
                        "info": str(obj),
                        "objects": []}
             
             for child in obj._iterItems():
                 obj_context = {"nameId":child.getNameId(), 
-                               "setId": obj.getObjId(),
                                "objId": child.getObjId(),
                                "info": str(child)} 
                 context["objects"].append(obj_context)    
