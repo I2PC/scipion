@@ -329,7 +329,8 @@ class Protocol(Step):
         self.allowHeader = Boolean(True)    
         # Create an String variable to allow some protocol to precompute
         # the summary message
-        self.summaryVar = String()    
+        self.summaryVar = String()
+        self.methodsVar = String()    
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -1134,7 +1135,7 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         try:
-            baseSummary = self._summary() or []
+            baseSummary = self._summary() or ['No summary information.']
         except Exception as ex:
             baseSummary = [str(ex)]        
             

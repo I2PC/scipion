@@ -549,3 +549,12 @@ def getMemoryAvailable():
     """ Return the total memory of the system in MB """
     from psutil import virtual_memory
     return virtual_memory().total // 1024**2
+
+
+def startDebugger(mode='SCIPION_DEBUG', password='a'):
+    if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
+        try:
+            from rpdb2 import start_embedded_debugger
+            start_embedded_debugger('a')
+        except Exception:
+            print "Error importing rpdb2 debugging module, consider install winpdb"

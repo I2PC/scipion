@@ -107,9 +107,11 @@ swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
     targets=['bin/swig'],
+    makeTargets=['Source/Swig/tree.o'],
     deps=[pcre],
     default=False)
-
+# We have to add the "makeTargets" part because swig needs to call
+# "make" before "make install". Horrible.
 
 env.AddLibrary(
     'parallel',
@@ -123,6 +125,18 @@ boost_headers_only = env.ManualInstall(
     extraActions=[
         ('%s/software/include/boost' % env['SCIPION_HOME'],
          'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+    default=False)
+
+lapack = env.ManualInstall(
+    'lapack',
+    tar='lapack-3.5.0.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/lapack-3.5.0/Makefile' % env['SCIPION_HOME'],
+         'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
+         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % env['SCIPION_HOME']),
+        ('%s/software/lib/liblapack.so' % env['SCIPION_HOME'],
+         'make install')],
     default=False)
 
 
@@ -187,7 +201,7 @@ addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
-    deps=[numpy, matplotlib])
+    deps=[lapack, numpy, matplotlib])
 
 addModule(
     'bibtexparser',

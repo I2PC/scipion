@@ -279,6 +279,9 @@ class BoundTree(Tree):
         for treeId in self.selection():
             yield self.getObjectFromId(treeId)
             
+    def getSelectedObjects(self):
+        return [obj for obj in self.iterSelectedObjects()]
+            
     def getObjectFromId(self, treeId):
         """ Return the corresponding object from a given Tree item id. """
         return self._objDict[treeId]

@@ -70,6 +70,11 @@ class EMProtocol(Protocol):
         coordSet.setMicrographs(micSet)       
         return coordSet
     
+    def _createSetFromName(self, className, suffix=''):
+        """ Create a new set from the given className. """
+        _createSetFunc = getattr(self, '_create%s' % className)
+        return _createSetFunc(suffix)
+        
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 

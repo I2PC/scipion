@@ -35,6 +35,8 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
                                            XmippResizeHelper as xrh)
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import ALIGN_ALGORITHM_EXHAUSTIVE,\
+    ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL
 
 
 class TestXmippBase(BaseTest):
@@ -47,6 +49,7 @@ class TestXmippBase(BaseTest):
         cls.vol1 = cls.dataset.getFile('vol1')
         cls.vol2 = cls.dataset.getFile('vol2')
         cls.vol3 = cls.dataset.getFile('vol3')
+        cls.vol4 = cls.dataset.getFile('vol4')
 
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate):
@@ -482,21 +485,93 @@ class TestXmippCropResizeVolumes(TestXmippBase):
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
 
-class TestXmippCLTomo(TestXmippBase):
+class TestXmippProtAlignVolume(TestXmippBase):
+    @classmethod
+    def setData(cls, dataProject='xmipp_tutorial'):
+        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.volumes = cls.dataset.getFile('volumes')
+        cls.vol1 = cls.dataset.getFile('vol1')
+        cls.vol2 = cls.dataset.getFile('vol2')
+        cls.vol3 = cls.dataset.getFile('vol3')
+
+    @classmethod
+    def runImportVolumes(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        return cls.protImport
+    
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestXmippBase.setData('tomo')
-        cls.protImport = cls.runImportVolumes(cls.volumes, 9.896)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
 
-    def testCLTomo(self):
-        print "Run CLTomo"
-        protCLTomo = XmippProtCLTomo(numberOfReferences=1,numberOfIterations=1)
-        protCLTomo.volumelist.set(self.protImport.outputVolumes)
-        self.proj.launchProtocol(protCLTomo, wait=True)
+        cls.protImport1 = cls.newProtocol(ProtImportVolumes,
+                                         filesPath=cls.ds.getFile('volumes/reference_rotated.vol'), 
+                                         samplingRate=1.0)
+        cls.launchProtocol(cls.protImport1)
+        
+        cls.protImport2 = cls.newProtocol(ProtImportVolumes,
+                                         filesPath=cls.ds.getFile('volumes/reference.mrc'), 
+                                         samplingRate=1.0)
+        cls.launchProtocol(cls.protImport2)
+        
+        # Rotate that volume rot=90 tilt=90 to create 
+        # a gold rotated volume
+        os.system('')
 
-        self.assertIsNotNone(protCLTomo.outputClasses, "There was a problem with CLTomo output classes")
-        self.assertIsNotNone(protCLTomo.alignedVolumes, "There was a problem with CLTomo output aligned volumes")
+    def testExhaustive(self):
+        protAlign = self.newProtocol(XmippProtAlignVolume,
+                                     inputReference=self.protImport1.outputVolume,
+                                     alignmentAlgorithm=ALIGN_ALGORITHM_EXHAUSTIVE,
+                                     minRotationalAngle=65, 
+                                     maxRotationalAngle=100,
+                                     stepRotationalAngle=10,
+                                     minTiltAngle=65,
+                                     maxTiltAngle=100,
+                                     stepTiltAngle=10,
+                                     minInplaneAngle=0,
+                                     maxInplaneAngle=0,
+                                     stepInplaneAngle=0,
+                                     numberOfMpi=1, numberOfThreads=1                               
+                                     )
+        protAlign.inputVolumes.append(self.protImport2.outputVolume)
+        self.launchProtocol(protAlign)
+        
+    def testLocal(self):
+        protAlign = self.newProtocol(XmippProtAlignVolume,
+                                     inputReference=self.protImport1.outputVolume,
+                                     alignmentAlgorithm=ALIGN_ALGORITHM_EXHAUSTIVE,
+                                     minRotationalAngle=95,
+                                     maxRotationalAngle=95,
+                                     stepRotationalAngle=1,
+                                     minTiltAngle=95,
+                                     maxTiltAngle=95,
+                                     stepTiltAngle=1,
+                                     minInplaneAngle=0,
+                                     maxInplaneAngle=0,
+                                     stepInplaneAngle=0,
+                                     numberOfMpi=1, numberOfThreads=1                               
+                                     )
+        protAlign.inputVolumes.append(self.protImport2.outputVolume)
+        self.launchProtocol(protAlign)
+        
+    def testExhaustiveLocal(self):
+        protAlign = self.newProtocol(XmippProtAlignVolume,
+                                     inputReference=self.protImport1.outputVolume,
+                                     alignmentAlgorithm=ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,
+                                     minRotationalAngle=65,
+                                     maxRotationalAngle=100,
+                                     stepRotationalAngle=10,
+                                     minTiltAngle=65,
+                                     maxTiltAngle=100,
+                                     stepTiltAngle=10,
+                                     minInplaneAngle=0,
+                                     maxInplaneAngle=0,
+                                     stepInplaneAngle=0,
+                                     numberOfMpi=1, numberOfThreads=1                               
+                                     )
+        protAlign.inputVolumes.append(self.protImport2.outputVolume)
+        self.launchProtocol(protAlign)
+        
 
 
 class TestXmippConvertToPseudoatoms(TestXmippBase):
@@ -518,16 +593,19 @@ class TestXmippProtHelicalParameters(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestXmippBase.setData()
-        cls.protImport = cls.runImportVolumes(cls.vol1, 9.896)
+        cls.ds = DataSet.getDataSet('general')
+        cls.vol = cls.ds.getFile('vol_helix')
+        cls.protImport = cls.runImportVolumes(cls.vol, 1.0)
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=False,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
+        self.assertAlmostEqual(protHelical.deltaRot.get(), 59.4, places=1, msg="Output delta rot is wrong")
+        self.assertAlmostEqual(protHelical.deltaZ.get(), 6.7, places=1, msg="Output delta Z is wrong")
 
 
 class TestXmippRansacMda(TestXmippBase):

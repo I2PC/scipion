@@ -242,12 +242,25 @@ It is used by a few programs like Ctffind or Frealign."""
     TITLE_SAVED_FORM = 'Success'
     LABEL_SAVED_FORM = 'The protocol was saved successfuly.'
     TITLE_DELETE_FORM = 'Confirm DELETE'
-    TITLE_RESTART_FORM = 'Confirm DELETE'
-    LABEL_DELETE_FORM = '*ALL DATA* related to this _protocol run_ will be *DELETED*.\nDo you really want to continue?'    
+    TITLE_RESTART_FORM = 'Confirm RESTART'
+    LABEL_DELETE_FORM = """
+You are going to *DELETE* the run(s): 
+  - %s
+*ALL DATA* related will be permanently removed.
+
+Do you really want to continue?'
+"""
+    LABEL_RESTART_FORM = """
+You are going to *RESTART* the run: 
+  - %s
+*ALL DATA* related will be permanently removed.
+
+Do you really want to continue?'
+"""    
     TITLE_STOP_FORM = 'Confirm STOP'
     LABEL_STOP_FORM = 'Do you really want to *STOP* this run?'
     
-    NO_VIEWER_FOUND = 'There is not viewer for protocol:'
+    NO_VIEWER_FOUND = 'There is not viewer for protocol:' 
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'

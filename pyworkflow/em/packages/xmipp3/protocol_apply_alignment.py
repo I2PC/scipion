@@ -29,8 +29,9 @@ This sub-package contains wrapper around align2d Xmipp program
 
 from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3.utils import iterMdRows
-from convert import (readSetOfParticles, xmippToLocation,
-                     writeSetOfParticles)
+from convert import (xmippToLocation, writeSetOfParticles)
+from pyworkflow.em.convert import ImageHandler
+
 import xmipp
 
        
@@ -91,17 +92,33 @@ class XmippProtApplyAlignment(ProtAlign2D):
             
     def createOutputStep(self):
         particles = self.inputParticles.get()
-            
+
         # Generate the SetOfAlignmet
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
 
         inputMd = self._getPath('aligned_particles.xmd')
         alignedSet.copyItems(particles,
-                            updateItemCallback=self._updateItem,
-                            itemDataIterator=iterMdRows(inputMd))
+                             updateItemCallback=self._updateItem,
+                             itemDataIterator=iterMdRows(inputMd))
         # Remove alignment 2D
         alignedSet.setAlignment(ALIGN_NONE)
+
+        # Define the output average
+
+        avgFile = self._getExtraPath("average.xmp")
+
+        imgh = ImageHandler()
+        avgImage = imgh.computeAverage(alignedSet)
+
+        avgImage.write(avgFile)
+
+        avg = Particle()
+        avg.setLocation(1, avgFile)
+        avg.copyInfo(alignedSet)
+
+        self._defineOutputs(outputAverage=avg)
+        self._defineSourceRelation(particles, avg)
 
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)

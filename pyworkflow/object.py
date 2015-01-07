@@ -650,7 +650,13 @@ class Pointer(Object):
         Object.__init__(self, value, objIsPointer=True, **kwargs)
         # The _extended attribute will be used to point to attributes of a pointed object
         # or the id of an item inside a set
-        self._extended = String() 
+        self._extended = String()
+        
+        if 'extendedAttribute' in kwargs:
+            self.setExtendedAttribute(kwargs.get('extendedAttribute')) 
+        if 'extendedItemId' in kwargs:
+            self.setExtendedItemId(kwargs.get('extendedItemId'))
+        
        
     def __str__(self):
         """String representation of a pointer"""
@@ -721,6 +727,9 @@ class Pointer(Object):
     def hasExtended(self):
         return self._extended.hasValue()
     
+    def getExtended(self):
+        return self._extended.get()
+    
     def getExtendedValue(self):
         if self.hasExtended():
             return self._extended.get().split('__')[-1]
@@ -738,9 +747,9 @@ class List(Object, list):
     ITEM_PREFIX = '__item__'
     
     """Class to store a list of objects"""
-    def __init__(self, **kwargs):
-        Object.__init__(self, **kwargs)
+    def __init__(self, value=None, **kwargs):
         list.__init__(self)
+        Object.__init__(self, value, **kwargs)
         
     def __getattr__(self, name):
         if name.startswith(self.ITEM_PREFIX):
@@ -797,17 +806,9 @@ class List(Object, list):
     
         
 class PointerList(List):
-    def __init__(self, **kwargs):
-        List.__init__(self, **kwargs)
+    def __init__(self, value=None, **kwargs):
+        List.__init__(self, value, **kwargs)
         
-    def _convertValue(self, value):
-        if isinstance(value, list):
-            self.clear()
-            for obj in value:
-                self.append(Pointer(value=obj))
-        else:
-            raise Exception("Could not set a PointerList value to: %s" % value)
-
     def append(self, value):
         """ Append Pointer of objects to the list.
          If value is a Pointer, just add it to the list.

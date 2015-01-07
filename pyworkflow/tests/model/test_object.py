@@ -138,9 +138,21 @@ class TestObject(BaseTest):
         self.assertTrue(o.pointer.hasExtended())
         self.assertTrue(o.pointer.hasExtendedItemId())
         self.assertEqual(o.pointer.getExtendedValue(), "7")
+        
         # Check that the Item 7 of the set is properly
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
+        
+        # Test the keyword arguments of Pointer contructor
+        # repeat above tests with new pointer
+        ptr = Pointer(value=imgSet, extendedItemId=7)
+        self.assertTrue(ptr.hasExtended())
+        self.assertTrue(ptr.hasExtendedItemId())
+        self.assertEqual(ptr.getExtendedValue(), "7")
+        
+        # Check that the Item 7 of the set is properly
+        # retrieved by the pointer after setting the extendedItemId to 7
+        self.assertEqual(imgSet[7], ptr.get())
     
     
     def test_copyAttributes(self):

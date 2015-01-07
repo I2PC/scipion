@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,16 +24,30 @@
 # *
 # **************************************************************************
 
-"""
-Sub-packages containing different sub-modules to import different type
-of objects.
-"""
 
-from base import ProtImportFiles
-from images import ProtImportImages
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from volumes import ProtImportVolumes, ProtImportPdb
-from masks import ProtImportMask
+
+from pyworkflow.em.packages.eman2.convert import readCoordinates
+
+from os.path import  exists
+from pyworkflow.em.data import Coordinate
+from pyworkflow.em.packages.eman2 import loadJson
+
+class EmanImport():
+
+    def __init__(self, protocol):
+        self.protocol = protocol
+
+    def importCoordinates(self, fileName, addCoordinate):
+
+        print 'import from eman ' + fileName
+        if exists(fileName):
+            jsonPosDict = loadJson(fileName)
+
+            if jsonPosDict.has_key("boxes"):
+                boxes = jsonPosDict["boxes"]
+
+                for box in boxes:
+                    x, y = box[:2]
+                    coord = Coordinate()
+                    coord.setPosition(x, y)
+                    addCoordinate(coord)

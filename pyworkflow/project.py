@@ -197,10 +197,20 @@ class Project(object):
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
+        #if os.environ.get('SCIPION_DEBUG', False):
+        #    from rpdb2 import start_embedded_debugger
+        #    start_embedded_debugger('a')
+        
         if not self.isReadOnly():
             try:
-                # FIXME: this will not work for a real remote host
-                jobId = protocol.getJobId() # Preserve the jobId before copy
+                # Backup the values of 'jobId', 'label' and 'comment'
+                # to be restored after the .copy
+                jobId = protocol.getJobId() 
+                label = protocol.getObjLabel()
+                comment = protocol.getObjComment()
+                
+                #TODO: when launching remote protocols, the db should be retrieved 
+                # in a different way.
                 dbPath = self.getPath(protocol.getDbPath())
                 if not exists(dbPath):
                     return
@@ -209,9 +219,13 @@ class Project(object):
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
                 protocol.copy(prot2, copyId=False)
-                # Restore jobId
+                # Restore backup values
                 protocol.setJobId(jobId)
+                protocol.setObjLabel(label)
+                protocol.setObjComment(comment)
+                
                 self.mapper.store(protocol)
+            
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 0: # 3 tries have been failed
@@ -408,7 +422,15 @@ class Project(object):
             self._setupProtocol(protocol)
                 
     def getProtocol(self, protId):
-        return self.mapper.selectById(protId)
+        protocol = self.mapper.selectById(protId)
+        
+        if not isinstance(protocol, Protocol):
+            raise Exception('>>> ERROR: Invalid protocol id: %d' % protId)
+        
+        self._setProtocolMapper(protocol)
+        
+        return protocol
+            
     
     def getObject(self, objId):
         """ Retrieve an object from the db given its id. """
@@ -439,6 +461,11 @@ class Project(object):
             self.mapper.store(protocol)
             self.mapper.commit()
     
+    def _setProtocolMapper(self, protocol):
+        """ Set the project and mapper to the protocol. """
+        protocol.setProject(self)
+        protocol.setMapper(self.mapper)
+        
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         
@@ -448,11 +475,10 @@ class Project(object):
             self._storeProtocol(protocol) # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (protocol.getObjId(), protocol.getClassName())
-            protocol.setProject(self)
+            self._setProtocolMapper(protocol)
             #print protocol.strId(), protocol.getProject().getName()
             #protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
-            protocol.setMapper(self.mapper)
             self._setHostConfig(protocol)
             # Update with changes
             self._storeProtocol(protocol)
@@ -463,8 +489,7 @@ class Project(object):
         if self.runs is None or refresh:
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
-                r.setProject(self)
-                r.setMapper(self.mapper)
+                self._setProtocolMapper(r)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():

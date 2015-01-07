@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,20 +20,22 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
-
 """
-Sub-packages containing different sub-modules to import different type
-of objects.
+This sub-package contains data and protocol classes
+wrapping Pytom programs http://www.pytom.org
 """
+from bibtex import _bibtex # Load bibtex dict with references
 
-from base import ProtImportFiles
-from images import ProtImportImages
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from volumes import ProtImportVolumes, ProtImportPdb
-from masks import ProtImportMask
+_logo = "pytom_logo.png"
+
+from pytom import *
+
+
+_environ = getEnviron()
+
+# from viewer import *
+from protocol_autofocus_classify import ProtAutofocusClassify
+
