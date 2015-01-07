@@ -66,22 +66,15 @@ div#box {
 }
 
 div#minibox {
-	width: 10em;
-	height: 5em; 
+	width:90%;
 	padding: 1em; 
 	background-color: white;
 	border: 1px solid black;
 	border-radius: 5px;
-	font-size: 0.7em;
 	display: inline-table;
 	margin: 1em ;
 }
 
-div#minibox:hover{
-    background-color:firebrick;
-    color: white;
-    border: 1px solid white;
-}
 
 h1 {
 	font-size: 57px;
@@ -95,9 +88,34 @@ h1, h2, h3 {
 
 img.ico{
     background-color:white;
-    padding:0.5em;
-    border-radius:50%;
 }
+
+div#steps{
+	text-align:left;
+/* 	float:left;  */
+	width:100%;
+}
+
+#buttons{
+ 	float:right;
+/* 	width:auto; */
+}
+
+#textbtn{
+/* 	float:left; */
+	width:60%;
+}
+
+#lineOpt{
+	width:100%; 
+	display: flex;
+/* 	text-align: left; */
+}
+
+.btn{
+	width:10em;
+}
+
 </style>
 
 <!-- JS -->
@@ -128,60 +146,77 @@ img.ico{
             <div id="headerLine"></div>
         </header>
 		<div id="box">
-			<h1>Create your initial volume </h1>
+			<h1>Obtain your initial volume </h1>
             <br /> 
-			<h3>This webpage will allow you to create an initial 3D map
+			<h3 style="text-align:justify;">This webportal allows you to obtain an initial 3D map
 			from your average images.
-			Several methods of different packages are available (Xmipp3, Eman2, ...).
-			At the end, you can rank the output volumes and download the desired ones.  
-			
+			Several methods are available from different packages (Xmipp3 and Eman2).
+			At the end of the proccesing you will be able to compare the output volumes from the different methods, downloading the selected ones.  
 			<br /><br />
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-folder-open.png"/><br />
-		    	1. Create a new project (or go to a previous one)
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-upload.png"/><br /><br />
-		    	2. Upload binary image stack file.
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-sign-in.png"/><br /><br />
-		    	3. Import averages into the Project.</div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/favicon.png" style="width:17px;height:17px;"/><br /><br />
-		    	4. Run different initial volumes methods.
-		    </div>
-		    <div id="minibox">
-		    	<img class="ico" src="/resources/fa-download.png"/><br /><br />
-		    	5. Rank volumes and download results.
-		    </div>
-             
-			<br />
+			It is recommended  
+			<a href="http://scipionwiki.cnb.csic.es/bin/view/TWiki/MyFirstMapGuide" style="color:firebrick;" target="_blank">
+				to read the tutorial
+			</a>before using this portal.
 			</h3>
-            
-			<br /> 
-			<!-- CREATE NEW PROJECT --> 
-			<a href="javascript:serviceProjForm();">
-				<button class="btn buttonRed" type="button">Create new
-					project</button>
-			</a>
-			<!-- GO TO YOUR PROJECT -->
-			<a href="javascript:goToProjectForm();">
-				<button class="btn buttonGrey" type="button">Go to your
-					project</button>
-			</a>
-			<!-- EXAMPLE PROJECT -->
-			<a href="javascript:goWithSubDomainURL('/project_content/?projectName=#&mode=service');"
-				class="projName">
-				<button class="btn buttonGrey" type="button">Example
-					Project</button>
-			</a>
+			
+		    <div id="minibox">
+		    	<div id="steps">
+			    	<h2>
+			    		<strong>
+				    		Choose your project
+			    		</strong>
+		    		</h2>
+		    	</div>
+		    	<br />
+		    	<div id="lineOpt">
+				    <h3 id="textbtn">
+			    		Create an empty project
+				    </h3>
+				    <span id="buttons">	
+						<!-- CREATE NEW PROJECT --> 
+						<a href="javascript:serviceProjForm();">
+							<button class="btn buttonRed" type="button">
+								Create
+							</button>
+						</a>
+					</span>
+				</div>
+				<br />
+				<div id="lineOpt">
+			    	<h3 id="textbtn">
+					    	Create a project with Test data 
+		    		</h3>
+			    	<span id="buttons">
+				    	<!-- TEST DATA -->
+						<a href="javascript:serviceTestDataForm();">
+							<button class="btn buttonRed" type="button">
+								Test data
+							</button>
+						</a>
+					</span>
+				</div>
+				<br />
+				<div id="lineOpt">	
+			    	<h3 id="textbtn">	
+				    	Explore project with Test data (read-only)
+			    	</h3>
+			    	<span id="buttons">	
+						<!-- EXAMPLE PROJECT -->
+						<a href="javascript:goExampleForm();">
+							<button class="btn buttonRed" type="button">
+								Explore
+							</button>
+						</a>
+					</span>
+				</div>
+		    </div>
+		    
 		</div>
 		<div style="text-align:center; font-size: 0.8em;">
-			<a href="http://creativecommons.org/licenses/by-nc-nd/3.0/"> ©
-				2014 · Scipion is licenced under the Creative Commons
-				Attribution-NonCommercial-NoDerivs <img
-				src="https://i.creativecommons.org/l/by-nc-nd/3.0/80x15.png" />
+			<a href="http://www.gnu.org/copyleft/gpl.html"> ©
+				2014 · Scipion is licenced under the GNU General Public License
+				&nbsp;&nbsp;
+				<img src="http://www.gnu.org/graphics/gplv3-127x51.png" style="height:1.5em;width:auto;"/>
 			</a>
 		</div>
 	</div>

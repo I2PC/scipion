@@ -37,6 +37,7 @@ from pyworkflow.em import *
 from layout_configuration import ColumnPropertiesEncoder
 from views_base import base_showj
 import pyworkflow.em.showj as sj
+import subprocess
 
 
 def loadDataSet(request, inputParams, firstTime):
@@ -58,7 +59,8 @@ def loadDataSet(request, inputParams, firstTime):
 def loadTable(request, dataset, inputParams):
     if inputParams[sj.TABLE_NAME] is not None:
         updateTable(inputParams, dataset)
-        
+    
+    dataset.projectPath = request.session['projectPath']
     table = dataset.getTable(inputParams[sj.TABLE_NAME])
         
     # Update inputParams to make sure have a valid table name (if using first table)
@@ -147,7 +149,7 @@ def setLabelToRender(request, table, inputParams, extraParams, firstTime):
             inputParams[sj.LABEL_SELECTED] = ''
     
     table.setLabelToRender(inputParams[sj.LABEL_SELECTED]) 
-    
+
 
 def setRenderingOptions(request, dataset, table, inputParams):
     """ Read the first renderizable item and setup some variables.
@@ -164,35 +166,50 @@ def setRenderingOptions(request, dataset, table, inputParams):
         inputParams[sj.MODE] = sj.MODE_TABLE
         dataset.setNumberSlices(0)
     else:
+        #Setting the _imageVolName
+        _imageVolName = inputParams[sj.VOL_SELECTED] 
+        if _imageVolName == None:
+            _imageVolName = table.getValueFromIndex(0, label)
+
         _typeOfColumnToRender = inputParams[sj.COLS_CONFIG].getColumnProperty(label, 'columnType')
-       
         isVol = _typeOfColumnToRender == sj.COL_RENDER_VOLUME
         oldMode =  inputParams[sj.OLDMODE]
-
-        if oldMode == None:
-            _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
-        else:
-            if oldMode == inputParams[sj.MODE]:
-                # No mode change
-                if oldMode == 'table':
-                    pass
-                elif oldMode == 'gallery':
-                    _imageVolName = inputParams[sj.VOL_SELECTED]
-                    index = table.getIndexFromValue(_imageVolName, label) +1
-                    inputParams[sj.SELECTEDITEMS] = index
-                    
-            elif oldMode != inputParams[sj.MODE]:
-                # Mode changed
-                if oldMode == 'gallery':
-                    # New Functionality used to mark elements rendered in gallery mode for volumes
-                    _imageVolName = inputParams[sj.VOL_SELECTED]
-                elif oldMode == 'table':
-                    # New Functionality used to render elements selected in table mode for volumes
-                    lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
-                    index = int(lastItemSelected)-1
-                    _imageVolName = table.getValueFromIndex(index, label)
-                    inputParams[sj.VOL_SELECTED] = _imageVolName
         
+        if isVol:
+            if oldMode == None or oldMode not in ['table', 'gallery']:
+                _imageVolName = inputParams[sj.VOL_SELECTED] or table.getValueFromIndex(0, label)
+            else:
+                if oldMode == inputParams[sj.MODE]:
+                    # No mode change
+                    if oldMode == 'table':
+                        pass
+                    elif oldMode == 'gallery':
+                        _imageVolName = inputParams[sj.VOL_SELECTED]
+                        index = table.getIndexFromValue(_imageVolName, label) +1
+                        inputParams[sj.SELECTEDITEMS] = index
+                        
+                elif oldMode != inputParams[sj.MODE]:
+                    # Mode changed
+                    if oldMode == 'gallery':
+                        # New Functionality used to mark elements rendered in gallery mode for volumes
+                        _imageVolName = inputParams[sj.VOL_SELECTED]
+                    elif oldMode == 'table':
+                        # New Functionality used to render elements selected in table mode for volumes
+                        lastItemSelected = inputParams[sj.SELECTEDITEMS].split(',').pop()
+                        if len(lastItemSelected) > 0:
+                            index = int(lastItemSelected)-1
+                        else:
+                            # To avoid exceptions without selected item between transitions
+                            index = 0
+                        
+                        _imageVolName = table.getValueFromIndex(index, label)
+                        inputParams[sj.VOL_SELECTED] = _imageVolName
+        
+        if _imageVolName is None:
+            # Patch to visualize individual volume
+            pathAux = inputParams[sj.PATH].split("/Runs/")[1]
+            _imageVolName = "Runs/"+pathAux
+            
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
@@ -211,19 +228,21 @@ def setRenderingOptions(request, dataset, table, inputParams):
             #Setting the _imageVolName and _stats     
             
             # CONVERTION TO .mrc DONE HERE!
-            _imageVolName, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
+            _imageVolNameOld = _imageVolName
+            _imageVolNameNew, _stats = readImageVolume(request, _imageVolName, _convert, _dataType, _reslice, int(inputParams[sj.VOL_VIEW]), _getStats)
             
             if isVol:
                 inputParams[sj.COLS_CONFIG].configColumn(label, renderFunc="get_slice")
-                dataset.setVolumeName(_imageVolName)
+                dataset.setVolumeName(_imageVolNameNew)
             else:
                 if inputParams[sj.MODE] != sj.MODE_TABLE:
                     inputParams[sj.MODE] = sj.MODE_GALLERY
                
-        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
+        volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolNameNew)
     
-    return volPath, _stats, _imageDimensions
-    
+    return volPath, _stats, _imageDimensions, _imageVolNameOld
+
+
 #Initialize default values
 DEFAULT_PARAMS = {
     sj.PATH: None,
@@ -321,7 +340,8 @@ def showj(request):
         # Load columns configuration. How to display columns and attributes (visible, render, editable)  
         loadColumnsConfig(request, dataset, table, inputParams, extraParams, firstTime)
         
-        volPath, _stats, _imageDimensions = setRenderingOptions(request, dataset, table, inputParams)
+        volPath, _stats, _imageDimensions, volOld = setRenderingOptions(request, dataset, table, inputParams)
+        inputParams['volOld'] = volOld
         
         #Store variables into session 
         storeToSession(request, inputParams, dataset, _imageDimensions)
@@ -476,21 +496,26 @@ def testingSSH(request):
 
 
 def create_context_volume(request, inputParams, volPath, param_stats):
+    import os
 #   volPath = os.path.join(request.session[sj.PROJECT_PATH], _imageVolName)
 
     threshold = calculateThreshold(param_stats)
     
     context = {"threshold":threshold,
-               'minStats':param_stats[2] if param_stats != None else 1,
-               'maxStats':param_stats[3] if param_stats != None else 1 }
+               'minStats':round(param_stats[2], 3) if param_stats != None else 1,
+               'maxStats':round(param_stats[3], 3) if param_stats != None else 1 }
     
     if inputParams[sj.MODE] == sj.MODE_VOL_ASTEX:
         context.update(create_context_astex(request, inputParams[sj.VOL_TYPE], volPath))
 
 #   'volType': 2, #0->byte, 1 ->Integer, 2-> Float
         
-    elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:   
-        context.update(create_context_chimera(volPath))
+    elif inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA:
+        # Using the .vol file
+        volPath = inputParams['volOld']
+        volPath = os.path.join(request.session['projectPath'], volPath)
+           
+        context.update(create_context_chimera(volPath, threshold))
         
     elif inputParams[sj.MODE] == sj.MODE_VOL_JSMOL:
         context.update(create_context_jsmol(request, volPath))
@@ -500,12 +525,26 @@ def create_context_volume(request, inputParams, volPath, param_stats):
     return context
         
 def create_context_jsmol(request, volPath):
-    
     return {"volLink":volPath,
             'jsmol':getResourceJs('jsmol'),
             "jsmolFolder": getResourceJs('jsmolFolder'),
             }
-
+    
+def jsmol(request):
+    import mimetypes
+    from django.core.servers.basehttp import FileWrapper
+#     call = request.GET.get('call', None)
+#     database = request.GET.get('database', None)
+#     encoding = request.GET.get('encoding', None)
+    query = request.GET.get('query', None)
+    path = query.split("__path__")[1]
+    filename = path.split("/").pop()
+    
+    response = HttpResponse(FileWrapper(open(path)),
+                            content_type=mimetypes.guess_type(path)[0])
+    response['Content-Length'] = os.path.getsize(path)
+    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    return response
 
 def create_context_astex(request, typeVolume, volPath):
 
@@ -520,22 +559,89 @@ def create_context_astex(request, typeVolume, volPath):
             "jquery_ui_css": getResourceCss("jquery_ui")}
     
     
-def create_context_chimera(volPath):
-    from subprocess import Popen, PIPE, STDOUT
+def create_context_chimera(volPath, threshold=None):
+    # Control the threshold value
+    if threshold == None:
+        threshold = 0.1
+    else:
+        threshold = round(threshold, 3)
     
-    p = Popen([os.environ.get('CHIMERA_HEADLESS'), volPath], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    outputHtmlFile = os.path.join(pw.WEB_RESOURCES, 'astex', 'tmp', 'test.html')
-    #chimeraCommand= 'volume #0 level ' + str(threshold) + '; export format WebGL ' + outputHtmlFile + '; stop'
-    chimeraCommand= 'export format WebGL ' + outputHtmlFile + '; stop'
-    stdout_data, stderr_data = p.communicate(input=chimeraCommand)
-    f = open(outputHtmlFile)
-    chimeraHtml = f.read().decode('string-escape').decode("utf-8").split("</html>")[1]
+    chimeraHtml = chimera_headless(volPath, threshold)
     
-    return {"chimeraHtml":chimeraHtml}
+    context = {"chimeraHtml": chimeraHtml,
+               "volPath": volPath, 
+               "threshold": threshold, 
+               "jquery_ui_css": getResourceCss("jquery_ui"),
+               "philogl": getResourceJs("philogl"),
+               }
     
+    return context
+
+def get_chimera_html(request):
+    if request.is_ajax():
+        volPath = request.GET.get('volPath')
+        threshold = request.GET.get('threshold')
+        chimeraHtml = chimera_headless(volPath, threshold)
+        return HttpResponse(chimeraHtml, mimetype='application/javascript')
+    else:
+        return HttpResponse("FAIL", mimetype='application/javascript')
+
+def chimera_headless(volPath, threshold):
+    """ Function that generate the visualization HTML with a 
+        'volPath' and a 'threshold' given by user.
+        Chimera Headless version must be in the evironment variables 
+        For example:
+        export CHIMERA_HEADLESS=/.local/UCSF-Chimera64-2014-10-09/bin/chimera """
+    
+    # Patch for files ended in :mrc
+    volPath = volPath.split(":mrc")[0]
+    
+    # Create or Modify the file to exportS
+    htmlFile = os.path.join(pw.WEB_RESOURCES, 'chimera', 'output.html')
+    outputHtmlFile = open(htmlFile, 'w+')
+    outputHtmlFile.close()
+    
+    # Build chimera command file
+    cmdFile = htmlFile + '.cmd'
+    outputCmdFile = open(cmdFile, 'w+')
+    
+    outputCmdFile.write("""
+    open %(volPath)s
+    volume #0 level %(threshold)s
+    export format WebGL %(htmlFile)s
+    """ % locals())
+    outputCmdFile.close()
+    
+    # Execute command file in chimera headless
+    cmdToExec = [os.environ.get('CHIMERA_HEADLESS_HOME')+"/bin/chimera", cmdFile]
+    import subprocess
+    subprocess.call(cmdToExec, shell=False)
+    
+    # Extract information from HTML output file
+    outputHtmlFile = open(htmlFile, "r")
+    chimeraHtml = outputHtmlFile.read()
+    
+#     Format information
+#     print "HTML =", chimeraHtml
+    chimeraHtml = chimeraHtml.decode('string-escape')
+#     print "HTML DECODE STRING =", chimeraHtml
+    chimeraHtml = chimeraHtml.decode("utf-8")
+#     print "HTML DECODE UTF8 =", chimeraHtml
+    chimeraHtml = chimeraHtml.split("</html>")
+#     print "HTML SPLIT =", chimeraHtml
+    chimeraHtml = chimeraHtml[1]
+#     print "HTML SPLIT[1] =", chimeraHtml
+    chimeraHtml = '<canvas id="molview" width="320" height="240"></canvas>' + chimeraHtml
+#     print "HTML CANVAS =", chimeraHtml
+    
+    # Close file
+    outputHtmlFile.close()
+    
+    return chimeraHtml
     
 def calculateThreshold(params):
-    threshold = (params[2] + params[3])/2 if params != None else 1
+    threshold = params[1] * 2.5
+#     threshold = (params[2] + params[3])/2 if params != None else 1
     
     return threshold
 

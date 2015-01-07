@@ -130,11 +130,33 @@ class TestObject(BaseTest):
         # since it is only an "alias" to an existing pointed value
         self.assertNotIn('refC', attrNames)
         
+        self.assertFalse(o.pointer.hasExtended(), 
+                         'o.pointer should not have extended at this point')
+        
         o.pointer.setExtendedItemId(7)
+        
+        self.assertTrue(o.pointer.hasExtended())
+        self.assertTrue(o.pointer.hasExtendedItemId())
+        self.assertEqual(o.pointer.getExtendedValue(), "7")
         # Check that the Item 7 of the set is properly
         # retrieved by the pointer after setting the extendedItemId to 7
         self.assertEqual(imgSet[7], o.pointer.get())
     
+    
+    def test_copyAttributes(self):
+        """ Check that after copyAttributes, the values
+        were properly copied.
+        """
+        c1 = Complex(imag=10., real=11.)
+        c2 = Complex(imag=0., real=1.0001)
+        
+        # Float values are different, should not be equal
+        self.assertFalse(c1.equalAttributes(c2))
+        c2.copyAttributes(c1, 'imag', 'real')
+        
+        self.assertTrue(c1.equalAttributes(c2), 
+                        'Complex c1 and c2 have not equal attributes\nc1: %s\nc2: %s\n' % (c1, c2))
+        
     def test_equalAttributes(self):
         """ Check that equal attributes function behaves well
         to compare floats with a given precision.
@@ -172,6 +194,18 @@ class TestObject(BaseTest):
         operationLabel  = '_defocusMin' #argument of aggregation function
         groupByLabels   = ['_defocusMin'] # absolute minimum
         print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
+    
+    def test_formatString(self):
+        """ Test that Scalar objects behave well
+        when using string formating such as: %f or %d
+        """
+        i = Integer(10)
+        f = Float(3.345)
+        
+        s1 = "i = %d, f = %0.3f" % (i, f)
+        
+        self.assertEqual(s1, "i = 10, f = 3.345")
+
 
 class TestUtils(BaseTest):
     

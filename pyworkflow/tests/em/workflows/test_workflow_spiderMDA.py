@@ -26,11 +26,10 @@
 
 import os
 
-from pyworkflow.em import (SpiderProtFilter, SpiderProtAlignAPSR, SpiderProtAlignPairwise,
-                           SpiderProtCustomMask, SpiderProtCAPCA, SpiderProtClassifyWard, 
-                           SpiderProtClassifyKmeans, SpiderProtClassifyDiday, ProtImportParticles,
-                           )
+import pyworkflow.em.packages.spider as spider
+
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.protocol import ProtImportParticles
 from pyworkflow.em.packages.spider.convert import writeSetOfImages
 
 from pyworkflow.tests import setupTestProject, DataSet, unittest, BaseTest
@@ -93,41 +92,41 @@ class TestSpiderWorkflow(TestWorkflow):
         if protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % self.particlesFn)
         
-        protFilter = self.newProtocol(SpiderProtFilter)
+        protFilter = self.newProtocol(spider.SpiderProtFilter)
         protFilter.inputParticles.set(protImport)
         protFilter.inputParticles.setExtendedAttribute('outputParticles')
         self.launchProtocol(protFilter)
         
-        protAPSR = self.newProtocol(SpiderProtAlignAPSR)
+        protAPSR = self.newProtocol(spider.SpiderProtAlignAPSR)
         protAPSR.inputParticles.set(protFilter.outputParticles)
         self.launchProtocol(protAPSR)
         
-        protPairwise = self.newProtocol(SpiderProtAlignPairwise)
+        protPairwise = self.newProtocol(spider.SpiderProtAlignPairwise)
         protPairwise.inputParticles.set(protFilter.outputParticles)
         self.launchProtocol(protPairwise)       
          
-        protMask = self.newProtocol(SpiderProtCustomMask)
+        protMask = self.newProtocol(spider.SpiderProtCustomMask)
         protMask.inputImage.set(protAPSR.outputAverage)
         self.launchProtocol(protMask)       
               
-        protCAPCA = self.newProtocol(SpiderProtCAPCA)
+        protCAPCA = self.newProtocol(spider.SpiderProtCAPCA)
         protCAPCA.maskType.set(1)
         protCAPCA.maskImage.set(protMask.outputMask)
         protCAPCA.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protCAPCA)
         
-        protWard = self.newProtocol(SpiderProtClassifyWard)
+        protWard = self.newProtocol(spider.SpiderProtClassifyWard)
         protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protWard)
         
-        protKmeans = self.newProtocol(SpiderProtClassifyKmeans)
+        protKmeans = self.newProtocol(spider.SpiderProtClassifyKmeans)
         protKmeans.pcaFile.set(protCAPCA.imcFile)
         protKmeans.inputParticles.set(protAPSR.outputParticles)
         protKmeans.numberOfClasses.set(4)
         self.launchProtocol(protKmeans)
         
-        protDiday = self.newProtocol(SpiderProtClassifyDiday)
+        protDiday = self.newProtocol(spider.SpiderProtClassifyDiday)
         protDiday.pcaFile.set(protCAPCA.imcFile)
         protDiday.inputParticles.set(protAPSR.outputParticles)
         self.launchProtocol(protDiday)               

@@ -74,7 +74,7 @@ class TestEmanBase(BaseTest):
     @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D,
-                                           numberOfReferences=8, maxIters=4, doMlf=False,
+                                           numberOfClasses=8, maxIters=4, doMlf=False,
                                            numberOfMpi=2, numberOfThreads=2)
         cls.ProtClassify.inputParticles.set(particles)
         cls.launchProtocol(cls.ProtClassify)

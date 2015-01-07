@@ -93,10 +93,10 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor))
+            self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
         else:
             micFnMrc = self._getTmpPath(replaceBaseExt(micFn, "mrc"))
             ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
-        
         
         # Update _params dictionary
         self._params['micFn'] = micFnMrc
@@ -115,12 +115,16 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
         defocusList = []
         
         for fn, micDir, mic in self._iterMicrographs():
+            samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
+            mic.setSamplingRate(samplingRate)
+            
             out = self._getCtfOutPath(micDir)
             psdFile = self._getPsdPath(micDir)
             result = self._parseOutput(out)
             defocusU, defocusV, defocusAngle = result
             # save the values of defocus for each micrograph in a list
             ctfModel = self._getCTFModel(defocusU, defocusV, defocusAngle, psdFile)
+            
             ctfModel.setMicrograph(mic)
             
             defocusList.append(ctfModel.getDefocusU())
@@ -135,7 +139,7 @@ class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     def _prepareCommand(self):
         self._params['step_focus'] = 1000.0
         # Convert digital frequencies to spatial frequencies
-        sampling = self.inputMics.getSamplingRate()
+        sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         self._params['lowRes'] = sampling / self._params['lowRes']
         self._params['highRes'] = sampling / self._params['highRes']        
         self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
@@ -151,17 +155,16 @@ eof
 class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
     """Re-estimate CTF on a set of micrographs
     using the ctffind3 program"""
-    _label = 'ctffind_Recalculate'
+    _label = 'ctffind re-estimation'
     
     def __init__(self, **args):
         ProtRecalculateCTF.__init__(self, **args)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _estimateCTF(self, line):
+    def _estimateCTF(self, id):
         """ Run ctffind3 with required parameters """
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
-        
+
+        ctfModel = self.recalculateSet[id]
         mic = ctfModel.getMicrograph()
         micFn = mic.getFileName()
         micDir = self._getMicrographDir(mic)
@@ -175,7 +178,7 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         ImageHandler().convert(micFn, micFnMrc, DT_FLOAT)
 
         # Update _params dictionary
-        self._prepareCommand(line)
+        self._prepareCommand(ctfModel)
         self._params['micFn'] = micFnMrc
         self._params['micDir'] = micDir
         self._params['ctffindOut'] = out
@@ -199,12 +202,11 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         return ctfModel2
     
     #--------------------------- UTILS functions ---------------------------------------------------
-    def _prepareCommand(self, line):
-        
-        self._defineValues(line)
+    def _prepareCommand(self, ctfModel):
+        line = ctfModel.getObjComment().split()
+        self._defineValues(ctfModel)
         # get the size and the image of psd
-        objId = self._getObjId(line)
-        ctfModel = self.inputCtf.get()[objId]
+
         imgPsd = ctfModel.getPsdFile()
         imgh = ImageHandler()
         size, _, _, _ = imgh.getDimensions(imgPsd)
@@ -215,10 +217,10 @@ class ProtRecalculateCTFFind(ProtBaseCTFFind, ProtRecalculateCTF):
         # Convert digital frequencies to spatial frequencies
         sampling = mic.getSamplingRate()
         self._params['step_focus'] = 1000.0
-        self._params['lowRes'] = sampling / float(line[4])
-        self._params['highRes'] = sampling / float(line[5])
-        self._params['minDefocus'] = min([float(line[1]), float(line[2])])
-        self._params['maxDefocus'] = max([float(line[1]), float(line[2])])
+        self._params['lowRes'] = sampling / float(line[3])
+        self._params['highRes'] = sampling / float(line[4])
+        self._params['minDefocus'] = min([float(line[0]), float(line[1])])
+        self._params['maxDefocus'] = max([float(line[0]), float(line[1])])
         self._params['windowSize'] = size
         
         self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH

@@ -510,6 +510,7 @@ function updateTabs(id) {
 //				$("span#analyzeTool").show();
 				$("span#buttonAnalyzeResult").show();
 				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
+//				$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+id +'")');
 			}
 			
 			//LOGS
@@ -629,8 +630,12 @@ function fillUL(type, list, ulId, icon) {
 			visualize_html += '</a>'
 
 			//Download File Object
-			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
-			'<i class="fa fa-save" style="margin-left:0px;"></i></a>'
+//			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
+//			'<i class="fa fa-save" style="margin-left:0px;"> Download</i></a>'
+			
+			// Update Tab Download Button
+			$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+list[i].id +'")');
+			
 		}
 		
 		// Edit Object
@@ -1035,6 +1040,13 @@ function refreshRuns(mode){
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
+						
+						console.log(status)
+						
+						if (status == "finished"){
+							console.log("protocol finished!")
+	//						updateTabs(id)
+						}
 					}
 				}
 			},
@@ -1064,14 +1076,11 @@ function checkStatusNode(id, status){
 		node.css("background-color", "#D2F5CB");
 	}
 	node.find("#nodeStatus").html(status);
-		
 }
 
 function checkStatusRow(id, status, time){
 	row = $("tr#"+ id);
-	
 	row.find(".status").html(status);
 	row.find(".time").html(time);
-		
 }	 
 

@@ -30,6 +30,8 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 
 from os.path import join
 from protocol import Protocol
+from em import SetOfVolumes, Volume
+from pyworkflow.utils.path import cleanPath
 
 DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
@@ -204,6 +206,13 @@ class ProtocolViewer(Protocol, Viewer):
     functions that will return the corresponding Views.
     """
     def __init__(self, **args):
+        # Here we are going to intercept the original _defineParams function
+        # and replace by an empty one, this is to postpone the definition of 
+        # params until the protocol is set and then self.protocol can be used
+        # for a more dynamic definition
+        object.__setattr__(self, '_defineParamsBackup', self._defineParams)
+        object.__setattr__(self, '_defineParams', self._defineParamsEmpty)
+    
         Protocol.__init__(self, **args)
         Viewer.__init__(self, **args)
         self.allowHeader.set(False)
@@ -212,8 +221,17 @@ class ProtocolViewer(Protocol, Viewer):
         self.formWindow = None
         self.setWorkingDir(self.getProject().getTmpPath())
         
+    def _defineParamsEmpty(self, form):
+        """ Just do nothing and postpone the real definition. """
+        pass
+    
     def setProtocol(self, protocol):
+        """ Set the protocol instance to the viewer and
+        call the definition of the parameters.
+        """
         self.protocol = protocol
+        self._defineParamsBackup(self._definition)
+        self._createVarsFromDefinition()
     
     def visualize(self, obj, **args):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -283,3 +301,16 @@ class ProtocolViewer(Protocol, Viewer):
                 # If values are separated by comma also splitted 
                 values += map(int, e.split())
         return values
+
+    def createVolumesSqlite(self, files, path, samplingRate):
+
+        cleanPath(path)
+        volSet = SetOfVolumes(filename=path)
+        volSet.setSamplingRate(samplingRate)
+
+        for volFn in files:
+                    vol = Volume()
+                    vol.setFileName(volFn)
+                    volSet.append(vol)
+        volSet.write()
+        return volSet

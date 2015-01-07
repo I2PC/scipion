@@ -172,8 +172,8 @@ class ProtocolClassTreeProvider(TreeProvider):
         self.protocolClassName = protocolClassName
      
     def getObjects(self):
-        from pyworkflow.em import findSubClasses, emProtocolsDict
-        return [String(s) for s in findSubClasses(emProtocolsDict, self.protocolClassName).keys()]
+        from pyworkflow.em import findSubClasses, getProtocols
+        return [String(s) for s in findSubClasses(getProtocols(), self.protocolClassName).keys()]
         
     def getColumns(self):
         return [('Protocol', 250)]
@@ -698,8 +698,8 @@ class ParamWidget():
             protClassName = self.param.protocolClassName.get()
             
             if self.param.allowSubclasses:
-                from pyworkflow.em import findSubClasses, emProtocolsDict
-                classes = findSubClasses(emProtocolsDict, protClassName).keys()
+                from pyworkflow.em import findSubClasses, getProtocols
+                classes = findSubClasses(getProtocols(), protClassName).keys()
             else:
                 classes = [protClassName]
             
@@ -921,7 +921,7 @@ class FormWindow(Window):
         3. Params: the expert level and tabs with the Protocol parameters.
         4. Buttons: buttons at bottom for close, save and execute.
     """
-    def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **args):
+    def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **kwargs):
         """ Constructor of the Form window. 
         Params:
          title: title string of the windows.
@@ -929,21 +929,21 @@ class FormWindow(Window):
          callback: callback function to call when Save or Excecute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
-                        weight=False, minsize=(600, 450), **args)
+                        weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
-        self.visualizeDict = args.get('visualizeDict', {})
+        self.visualizeDict = kwargs.get('visualizeDict', {})
         self.bindings = []
         self.hostList = hostList
         self.protocol = protocol
-        self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
+        self.visualizeMode = kwargs.get('visualizeMode', False)  # This control when to close or not after execute
         self.headerBgColor = Color.RED_COLOR
         if self.visualizeMode:
             self.headerBgColor = Color.DARK_GREY_COLOR
-        self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
-        
+        self.childMode = kwargs.get('childMode', False) # Allow to open child protocols form (for workflows)
+        self.updateProtocolCallback = kwargs.get('updateProtocolCallback', None)
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
@@ -1081,7 +1081,8 @@ class FormWindow(Window):
             procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
         # Queue
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', column=c, padx=(15,5), pady=0)
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
+                                column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
@@ -1106,10 +1107,13 @@ class FormWindow(Window):
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
         self.setProtocolLabel()        
-        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
+        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, 
+                             self.protocol, self.protocol.mapper)
         
         if d.resultYes():
             self.updateLabelAndComment()
+            if self.updateProtocolCallback:
+                self.updateProtocolCallback(self.protocol)
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1118,7 +1122,8 @@ class FormWindow(Window):
         expFrame = tk.Frame(paramsFrame)
         expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged) 
+        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, 
+                                          self._onExpertLevelChanged) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
@@ -1263,10 +1268,12 @@ class FormWindow(Window):
                 if not onlySave:
                     self.close()
         except Exception, ex:
+            import traceback
+            traceStr = traceback.format_exc()
             action = "EXECUTE"
             if onlySave:
                 action = "SAVE"
-            self.showError("Error during %s: %s" % (action, ex))
+            self.showError("Error during %s: %s\n\nTraceback:\n%s" % (action, ex, traceStr))
     
     
     def getWidgetValue(self, protVar, param):

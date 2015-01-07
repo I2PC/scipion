@@ -42,7 +42,18 @@ from utils import isMdEmpty
 
 
 class XmippProtRansac(ProtInitialVolume):
-    """ Computes from a set of projections/classes using RANSAC algorithm """
+    """ 
+    Computes an initial 3d model from a set of projections/classes 
+    using RANSAC algorithm.
+    
+    This method is based on an initial non-lineal dimensionality
+    reduction approach which allows to select representative small 
+    sets of class average images capturing the most of the structural 
+    information of the particle under study. These reduced sets are 
+    then used to generate volumes from random orientation assignments. 
+    The best volume is determined from these guesses using a random 
+    sample consensus (RANSAC) approach.    
+     """
     _label = 'ransac'
     
     def __init__(self, **args):
@@ -59,9 +70,10 @@ class XmippProtRansac(ProtInitialVolume):
                       help='Select the input images from the project.'
                            'It should be a SetOfClasses2D class')  
         form.addParam('symmetryGroup', StringParam, default="c1",
-                      label='Symmetry group', 
-                      help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
-                        'If no symmetry is present, give c1')
+                      label='Symmetry group',  
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
+                           " for a description of the symmetry groups format in Xmipp.\n"
+                           "If no symmetry is present, use _c1_.")
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Angular sampling rate',
                       help='In degrees.'
@@ -90,27 +102,27 @@ class XmippProtRansac(ProtInitialVolume):
         form.addParam('numIter', IntParam, default=10, expertLevel=LEVEL_EXPERT,
                       label='Number of iterations to refine the volumes',
                       help='Number of iterations to refine the best volumes using projection matching approach and the input classes')
-        form.addParam('initialVolume', PointerParam, label="Initial volume",  
+        form.addParam('initialVolume', PointerParam, label="Initial volume",  expertLevel=LEVEL_EXPERT,
                       pointerClass='SetOfVolumes', allowsNull=True,
                       help='You may provide a very rough initial volume as a way to constraint the angular search.'
                             'For instance, when reconstructing a fiber, you may provide a cylinder so that side views'
                             'are assigned to the correct tilt angle, although the rotational angle may be completely wrong')           
                 
-        form.addParam('maxFreq', IntParam, default=5,
+        form.addParam('maxFreq', IntParam, default=5, expertLevel=LEVEL_EXPERT,
                       label='Max frequency of the initial volume',
                       help=' Max frequency of the initial volume in Angstroms')
         
-        form.addParam('useSA', BooleanParam, default=False,
+        form.addParam('useSA', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
                       label='Combine simulated annealing and RANSAC', 
                       help='This option produces better results at a higher computational cost')
-        form.addParam('nIterRandom', IntParam, default=10, condition='useSA',
+        form.addParam('nIterRandom', IntParam, default=10, condition='useSA', expertLevel=LEVEL_EXPERT,
                       label='Number of simulated annealing iterations',
                       help='During the simulated annealing iterations, all those particles positively'
                         'contributing to the improvement of the volume are considered. In this way,' 
                         'the same image may participate several times from different projection '
                         'directions (but different weights) depending on whether it improves the'
                         'correlation with the volume or not')
-        form.addParam('rejection', IntParam, default=50, condition='useSA',
+        form.addParam('rejection', IntParam, default=50, condition='useSA', expertLevel=LEVEL_EXPERT,
                       label='Percentage of rejected particles',
                        help='At each iteration, the lowest correlated particles are'
                             'removed from the 3D reconstruction, although they may '
@@ -120,7 +132,7 @@ class XmippProtRansac(ProtInitialVolume):
                       label='Use all images to refine', 
                       help=' When refining a RANSAC volume, use all images to refine it instead of only inliers')
         
-        form.addParallelSection(mpi=2)
+        form.addParallelSection(threads=8, mpi=1)
             
          
     #--------------------------- INSERT steps functions --------------------------------------------    
@@ -414,7 +426,7 @@ class XmippProtRansac(ProtInitialVolume):
 
 
     def projectInitialVolume(self):
-        self.volFn = createXmippInputVolumes(self, self.initialVolume.get())
+        self.volFn = createXmippInputVolumes(self, self.initialVolume.get()) # This function is deprecated
         
         fnOutputInitVolume=self._getTmpPath("initialVolume.vol")
         self.runJob('xmipp_image_convert',"-i %s -o %s"%(removeExt(self.volFn),fnOutputInitVolume))
@@ -424,6 +436,10 @@ class XmippProtRansac(ProtInitialVolume):
         self.runJob("xmipp_angular_project_library", "-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                               %(fnOutputInitVolume,fnGallery,self.angularSampling.get(),self.symmetryGroup.get(),fnOutputReducedClass))
    
+    def _postprocessVolume(self, vol, row):
+        self._counter += 1
+        vol.setObjComment('ransac volume %02d' % self._counter)
+        
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         fn = self._getPath('proposedVolumes.xmd')
@@ -433,7 +449,13 @@ class XmippProtRansac(ProtInitialVolume):
         
         volumesSet = self._createSetOfVolumes()
         volumesSet.setSamplingRate(inputSet.getSamplingRate())
-        readSetOfVolumes(fn, volumesSet)
+        self._counter = 0
+        readSetOfVolumes(fn, volumesSet, postprocessImageRow=self._postprocessVolume)
+        
+        # Set a meanful comment
+#         for vol in volumesSet:
+#             vol.setObjComment('ransac volume %02d' % vol.getObjId())
+#             volumesSet.update(vol)
         
         self._defineOutputs(outputVolumes=volumesSet)
         self._defineSourceRelation(inputSet, volumesSet)
@@ -442,9 +464,20 @@ class XmippProtRansac(ProtInitialVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
-        if isinstance(self.inputSet.get(), SetOfClasses2D):
+        inputSet = self.inputSet.get()
+        if isinstance(inputSet, SetOfClasses2D):
             if not self.inputSet.get().hasRepresentatives():
                 errors.append("The input classes should have representatives.")
+                
+                
+        if self.dimRed:
+            nGrids = self.numGrids.get()
+            if (nGrids * nGrids) > inputSet.getSize():
+                errors.append('Dimensionaly reduction could not be applied')
+                errors.append('if the number of classes is less than the number')
+                errors.append('of grids squared. \n')
+                errors.append('Consider either provide more classes or')
+                errors.append('disable dimensionality reduction')
         return errors
     
     def _summary(self):
@@ -495,3 +528,6 @@ class XmippProtRansac(ProtInitialVolume):
                 
         msg = msg1 + msg2
         self.summaryInfo.set(msg)
+
+    def _citations(self):
+        return ['Vargas2014']

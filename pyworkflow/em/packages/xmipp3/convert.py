@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Xmipp specific files
@@ -300,7 +301,7 @@ def micrographToCTFParam(mic, ctfparam):
     md.write(ctfparam)
     
     return ctfparam
-    
+
     
 def imageToRow(img, imgRow, imgLabel, **kwargs):
     # Provide a hook to be used if something is needed to be 
@@ -317,11 +318,13 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     if kwargs.get('writeCtf', True) and img.hasCTF():
         ctfModelToRow(img.getCTF(), imgRow)
         
-    if kwargs.get('writeAlignment', True) and img.hasAlignment():
-        is2D = kwargs.get('is2D', True)
-        inverseTransform = kwargs.get('inverseTransform', True)
-        alignmentToRow(img.getAlignment(), imgRow, is2D, inverseTransform)
-        
+    # alignment is mandatory at this point, it shoud be check
+    # and detected defaults if not passed at readSetOf.. level
+    alignType = kwargs.get('alignType') 
+    
+    if alignType != ALIGN_NONE:
+        alignmentToRow(img.getTransform(), imgRow, alignType)
+                
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
     
@@ -334,8 +337,8 @@ def imageToRow(img, imgRow, imgLabel, **kwargs):
     postprocessImageRow = kwargs.get('postprocessImageRow', None)
     if postprocessImageRow:
         postprocessImageRow(img, imgRow)
+
     
-        
 def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     """ Create an Image from a row of a metadata. """
     img = imgClass()
@@ -350,13 +353,20 @@ def rowToImage(imgRow, imgLabel, imgClass, **kwargs):
     index, filename = xmippToLocation(imgRow.getValue(imgLabel))
     img.setLocation(index, filename)
     
+    if imgRow.containsLabel(xmipp.MDL_REF):
+        img.setClassId(imgRow.getValue(xmipp.MDL_REF))
+    elif imgRow.containsLabel(xmipp.MDL_REF3D):
+        img.setClassId(imgRow.getValue(xmipp.MDL_REF3D))
+    
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(imgRow))
         
-    if kwargs.get('readAlignment', True):
-        is2D = kwargs.get('is2D', True)
-        inverseTransform = kwargs.get('inverseTransform', True)
-        img.setAlignment(rowToAlignment(imgRow, is2D, inverseTransform))
+    # alignment is mandatory at this point, it shoud be check
+    # and detected defaults if not passed at readSetOf.. level
+    alignType = kwargs.get('alignType') 
+    
+    if alignType != ALIGN_NONE:
+        img.setTransform(rowToAlignment(imgRow, alignType))
         
     if kwargs.get('readAcquisition', True):
         img.setAcquisition(rowToAcquisition(imgRow))
@@ -429,16 +439,22 @@ def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a metadata. """
     img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
-    # Setup the micId if is integer value
+    # copy micId if available
+    # if not copy micrograph name if available
     try:
         if partRow.hasLabel(xmipp.MDL_MICROGRAPH_ID):
             img.setMicId(partRow.getValue(xmipp.MDL_MICROGRAPH_ID))
-        else:
-            # this is changed to get the micId from relion metadata micrograph name(rlnMicrographName)
-            micName = removeExt(partRow.getValue(xmipp.MDL_MICROGRAPH))
-            img.setMicId([int(s) for s in micName.split("_") if s.isdigit()][0])
-    except Exception:
-        pass    
+#        elif partRow.hasLabel(xmipp.MDL_MICROGRAPH):
+#            micName = partRow.getValue(xmipp.MDL_MICROGRAPH)
+#            img._micrograph = micName
+#            print "setting micname as", micName
+#            img.printAll()
+#            print "getAttributes1", img._micrograph
+#            print "getAttributes2", getattr(img,"_micrograph",'kk')
+#        else:
+#            print "WARNING: No micname"
+    except Exception as e:
+        print "Warning:", e.message
     return img
     
     
@@ -480,6 +496,7 @@ def class2DToRow(class2D, classRow):
     n = long(len(class2D))
     classRow.setValue(xmipp.MDL_CLASS_COUNT, n)
     classRow.setValue(xmipp.MDL_REF, int(class2D.getObjId()))
+    classRow.setValue(xmipp.MDL_ITEM_ID, long(class2D.getObjId()))
     
         
 def ctfModelToRow(ctfModel, ctfRow):
@@ -635,19 +652,23 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         coordSet.setBoxSize(boxSize)
     for mic in micSet:
         posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
-        scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
-        posMd = readPosCoordinates(posFile)
+        readCoordinates(mic, posFile, coordSet, outputDir)
+
+    coordSet._xmippMd = String(outputDir)
+
+def readCoordinates(mic, fileName, coordsSet, outputDir):
+        posMd = readPosCoordinates(fileName)
         posMd.addLabel(xmipp.MDL_ITEM_ID)
-        
+
         for objId in posMd:
             coord = rowToCoordinate(rowFromMd(posMd, objId))
             coord.setMicrograph(mic)
-            coordSet.append(coord)      
+            coordsSet.append(coord)
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
+            scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
             posMd.write("particles@%s"  % scipionPosFile)
-    coordSet._xmippMd = String(outputDir)
     
 
 def readPosCoordinates(posFile):
@@ -678,36 +699,30 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         rowToFunc: this function will be used to convert the row to Object
     """    
     imgMd = xmipp.MetaData(filename)
-    # This patch is just to avoid removing disabled images
-    # after extracting particles from frames.
+    # By default remove disabled items from metadata
+    # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
         imgMd.removeDisabled()
-    # Read the sampling rate from the acquisition info file if exists
-    
-    acqFile = join(dirname(filename), 'acquisition_info.xmd')
-    if exists(acqFile):
-        md = RowMetaData(acqFile)
-        samplingRate = md.getValue(xmipp.MDL_SAMPLINGRATE)
-        imgSet.setSamplingRate(samplingRate)
-    else:
-        pass # TODO: what to do if not exists
-    
-    hasCtf = False
-    hasAlignment = False
+        
+    # If the type of alignment is not sent throught the kwargs
+    # try to deduced from the metadata labels
+    if 'alignType' not in kwargs:
+        imgRow = rowFromMd(imgMd, imgMd.firstObject())
+        if _containsAny(imgRow, ALIGNMENT_DICT):
+            if imgRow.containsLabel(xmipp.MDL_ANGLE_TILT):
+                kwargs['alignType'] = ALIGN_PROJ
+            else:
+                kwargs['alignType'] = ALIGN_2D
+        else:
+            kwargs['alignType'] = ALIGN_NONE
     
     for objId in imgMd:
         imgRow = rowFromMd(imgMd, objId)
         img = rowToFunc(imgRow, **kwargs)
         imgSet.append(img)
-        hasCtf = img.hasCTF()
-        hasAlignment = img.hasAlignment()
         
-    imgSet.setHasCTF(hasCtf)
-    if hasAlignment:
-        if kwargs.get('is2D', True):
-            imgSet.setAlignment2D()
-        else:
-            imgSet.setAlignment3D()
+    imgSet.setHasCTF(img.hasCTF())
+    imgSet.setAlignment(kwargs['alignType'])
         
 
 def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
@@ -718,6 +733,10 @@ def setOfImagesToMd(imgSet, md, imgToFunc, **kwargs):
         rowFunc: this function can be used to setup the row before 
             adding to metadata.
     """
+    
+    if 'alignType' not in kwargs:
+        kwargs['alignType'] = imgSet.getAlignment()
+        
     for img in imgSet:
         objId = md.addObject()
         imgRow = XmippMdRow()
@@ -748,6 +767,7 @@ def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
             adding to metadata.
     """
     md = xmipp.MetaData()
+        
     setOfImagesToMd(imgSet, md, imgToFunc, **kwargs)
     md.write('%s@%s' % (blockName, filename))
         
@@ -825,7 +845,7 @@ def writeSetOfDefocusGroups(defocusGroupSet, fnDefocusGroup): # also metadata
     defocusGroupSet._xmippMd = String(fnDefocusGroup)
 
 
-def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeOnlyRepresentatives=False):    
+def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeParticles=True):    
     """ This function will write a SetOfClasses2D as Xmipp metadata.
     Params:
         classes2DSet: the SetOfClasses2D instance.
@@ -839,7 +859,7 @@ def writeSetOfClasses2D(classes2DSet, filename, classesBlock='classes', writeOnl
     for class2D in classes2DSet:        
         class2DToRow(class2D, classRow)
         classRow.writeToMd(classMd, classMd.addObject())
-        if not writeOnlyRepresentatives:
+        if writeParticles:
             ref = class2D.getObjId()
             imagesFn = 'class%06d_images@%s' % (ref, filename)
             imagesMd = xmipp.MetaData()
@@ -1045,10 +1065,6 @@ def createXmippInputCTF(prot, ctfSet, ctfFn=None):
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
     from numpy import rad2deg
-    flip = bool(matrix[3][3]<0)
-    if flip:
-        matrix[3][3] *= -1.#redundant?
-        matrix[0,:3] *= -1.
     if inverseTransform:
         from numpy.linalg import inv
         matrix = inv(matrix)
@@ -1056,17 +1072,17 @@ def geometryFromMatrix(matrix, inverseTransform):
     else:
         shifts = translation_from_matrix(matrix)
     angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
-    return shifts, angles, flip
+    return shifts, angles
 
 
-def matrixFromGeometry(shifts, angles, flip, inverseTransform):
+def matrixFromGeometry(shifts, angles, inverseTransform):
     """ Create the transformation matrix from a given
     2D shifts in X and Y...and the 3 euler angles.
     """
     from pyworkflow.em.transformations import euler_matrix
     from numpy import deg2rad
     radAngles = -deg2rad(angles)
-    
+
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:
         from numpy.linalg import inv
@@ -1075,38 +1091,51 @@ def matrixFromGeometry(shifts, angles, flip, inverseTransform):
     else:
         M[:3, 3] = shifts[:3]
 
-    if flip:
-        #M[0,:4]*=-1.
-        M[0,:3]*=-1.
-        M[3][3]*=-1.
     return M
 
 
-def _setAlignmentParam(alignmentRow, label, alignment, paramName):
-    """ Check if the row contains a label and set as an alignment parameter. """
-    
-def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
+def rowToAlignment(alignmentRow, alignType):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
         """
+    is2D = alignType == ALIGN_2D
+    inverseTransform = alignType == ALIGN_PROJ
+    
     if _containsAny(alignmentRow, ALIGNMENT_DICT):
-        alignment = Alignment()
+        alignment = Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
-        angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
         shifts[0] = alignmentRow.getValue(xmipp.MDL_SHIFT_X, 0.)
         shifts[1] = alignmentRow.getValue(xmipp.MDL_SHIFT_Y, 0.)
         if not is2D:
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
             angles[1] = alignmentRow.getValue(xmipp.MDL_ANGLE_TILT, 0.)
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
-
+            angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+        else:
+            psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
+            rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
+            if rot !=0. and psi !=0:
+                print "HORROR rot and psi are different from zero"
+            angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) +\
+                        alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
         flip = alignmentRow.getValue(xmipp.MDL_FLIP)
-        
-        M = matrixFromGeometry(shifts, angles, flip, inverseTransform)
-        alignment.setMatrix(M)
+        #if alignment
+        matrix = matrixFromGeometry(shifts, angles, inverseTransform)
+##
+        if flip:
+            if alignType==ALIGN_2D:
+                matrix[0,:2] *=  -1.#invert only the first two columns keep x
+                matrix[2,2]   =  -1.#set 3D rot
+            elif alignType==ALIGN_3D:
+                matrix[0,:3] *= -1.#now, invert first line excluding x
+                matrix[3,3] *= -1.
+            else:
+                matrix[0,:4] *= -1.#now, invert first line including x
+##
+        alignment.setMatrix(matrix)
         
         #FIXME: now are also storing the alignment parameters since
         # the conversions to the Transform matrix have not been extensively tested.
@@ -1120,17 +1149,41 @@ def rowToAlignment(alignmentRow,is2D=True, inverseTransform=False):
     return alignment
 
 
-def alignmentToRow(alignment, alignmentRow,
-                   is2D=True, inverseTransform=False):
+def alignmentToRow(alignment, alignmentRow, alignType):
     """
     is2D == True-> matrix is 2D (2D images alignment)
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
                           -> for xmipp implies alignment
     """
+    is2D = alignType == ALIGN_2D
+    inverseTransform = alignType == ALIGN_PROJ
+    #only flip is meaninfull if 2D case
+    #in that case the 2x2 determinant is negative
+    flip = False
     matrix = alignment.getMatrix()
-    shifts, angles, flip = geometryFromMatrix(alignment.getMatrix(),inverseTransform)
+    if alignType==ALIGN_2D:
+        #get 2x2 matrix and check if negative
+        flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
+        if flip:
+            matrix[0,:2] *= -1.#invert only the first two columns keep x
+            matrix[2,2]   =  1.#set 3D rot
+        else:
+            pass
 
+    elif alignType==ALIGN_3D:
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            matrix[0,:4] *= -1.#now, invert first line including x
+            matrix[3,3]   =  1.#set 3D rot
+        else:
+            pass
+
+    else:
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            matrix[0,:4] *= -1.#now, invert first line including x
+    shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])
     
@@ -1138,15 +1191,105 @@ def alignmentToRow(alignment, alignmentRow,
         angle = angles[0] + angles[2]
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angle)
     else:
+        #if alignType == ALIGN_3D:
         alignmentRow.setValue(xmipp.MDL_SHIFT_Z, shifts[2])
         alignmentRow.setValue(xmipp.MDL_ANGLE_ROT,  angles[0])
         alignmentRow.setValue(xmipp.MDL_ANGLE_TILT, angles[1])
         alignmentRow.setValue(xmipp.MDL_ANGLE_PSI,  angles[2])
     alignmentRow.setValue(xmipp.MDL_FLIP, flip)
-    #alignmentRow.setValue(xmipp.MDL_FLIP, True)
 
-def createClassesFromImages(inputImages, inputMd, classesFn, ClassType, 
-                            classLabel, classFnTemplate, iter, preprocessImageRow=None):
+
+def fillClasses(clsSet, updateClassCallback=None):
+    """ Give an empty SetOfClasses (either 2D or 3D).
+    Iterate over the input images and append to the corresponding class.
+    It is important that each image has the classId properly set.
+    """
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    inputImages = clsSet.getImages()
+    
+    for img in inputImages:
+        ref = img.getClassId()
+        if ref is None:
+            raise Exception('Particle classId is None!!!')
+        
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            classItem = clsSet.ITEM_TYPE(objId=ref)
+            rep = clsSet.REP_TYPE()
+            classItem.setRepresentative(rep)            
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputImages)
+            classItem.setAcquisition(inputImages.getAcquisition())
+            if updateClassCallback is not None:
+                updateClassCallback(classItem)
+            clsSet.append(classItem)
+        else:
+            classItem = clsDict[ref] # Try to get the class set given its ref number
+        classItem.append(img)
+        
+    for classItem in clsDict.values():
+        clsSet.update(classItem)
+    
+    
+#FIXME: USE THIS FUNCTION AS THE WAY TO CREATE CLASSES, REMOVE THE NEXT ONE
+def createClassesFromImages2(inputImages, inputMd, 
+                             classesFn, ClassType, classLabel, 
+                             alignType, getClassFn=None, preprocessImageRow=None):
+    """ From an intermediate X.xmd file produced by xmipp, create
+    the set of classes in which those images are classified.
+    Params:
+        inputImages: the SetOfImages that were initially classified by relion. 
+        inputMd: the filename metadata.
+        classesFn: filename where to write the classes.
+        ClassType: the output type of the classes set ( usually SetOfClass2D or 3D )
+        classLabel: label that is the class reference.
+        classFnTemplate: the template to get the classes averages filenames
+        iter: the iteration number, just used in Class template
+    """
+    mdIter = iterMdRows(inputMd)
+    clsDict = {} # Dictionary to store the (classId, classSet) pairs
+    clsSet = ClassType(filename=classesFn)
+    clsSet.setImages(inputImages)
+    hasCtf = inputImages.hasCTF()
+    sampling = inputImages.getSamplingRate()
+    
+    for img, row in izip(inputImages, mdIter):
+        ref = row.getValue(xmipp.MDL_REF)
+        if ref is None:
+            raise Exception('MDL_REF not found in metadata: %s' % inputMd)
+        
+        if not ref in clsDict: # Register a new class set if the ref was not found.
+            classItem = clsSet.ITEM_TYPE(objId=ref)
+            if getClassFn is None:
+                refFn = ''
+            else:
+                refFn = getClassFn(ref)
+            refLocation = xmippToLocation(refFn)
+            rep = clsSet.REP_TYPE()
+            rep.setLocation(refLocation)
+            rep.setSamplingRate(sampling)
+            classItem.setRepresentative(rep)
+            
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputImages)
+            classItem.setAlignment(alignType)
+            classItem.setAcquisition(inputImages.getAcquisition())
+            clsSet.append(classItem)
+        else:
+            classItem = clsDict[ref] # Try to get the class set given its ref number
+        
+        img.setTransform(rowToAlignment(row, alignType))
+        classItem.append(img)
+        
+    for classItem in clsDict.values():
+        clsSet.update(classItem)
+        
+    clsSet.write()
+    return clsSet
+    
+#FIXME: remove this function and use previous one
+def createClassesFromImages(inputImages, inputMd, 
+                            classesFn, ClassType, classLabel, classFnTemplate, 
+                            alignType, iter, preprocessImageRow=None):
     """ From an intermediate X.xmd file produced by xmipp, create
     the set of classes in which those images are classified.
     Params:
@@ -1165,36 +1308,13 @@ def createClassesFromImages(inputImages, inputMd, classesFn, ClassType,
         tmpDir = os.path.dirname(inputFn)
     else:
         tmpDir = os.path.dirname(inputMd)
-    rootDir = tmpDir
-    md = xmipp.MetaData(inputMd)
-    clsDict = {} # Dictionary to store the (classId, classSet) pairs
-    clsSet = ClassType(filename=classesFn)
-    clsSet.setImages(inputImages)
-    hasCtf = inputImages.hasCTF()
     
-    for objId in md:
-        ref = md.getValue(classLabel, objId)
-        if not ref in clsDict: # Register a new class set if the ref was not found.
-            cls = clsSet.ITEM_TYPE(objId=ref)
-            refFn = classFnTemplate % locals()
-            refLocation = xmippToLocation(refFn)
-            rep = clsSet.REP_TYPE()
-            rep.setLocation(refLocation)
-            cls.setRepresentative(rep)
-            
-            clsDict[ref] = cls
-            cls.copyInfo(inputImages)
-            cls.setAcquisition(inputImages.getAcquisition())
-            clsSet.append(cls)
-        classItem = clsDict[ref] # Try to get the class set given its ref number
-        # Set images attributes from the md row values
-        imgRow = rowFromMd(md, objId)
-        img = rowToParticle(imgRow, preprocessImageRow=preprocessImageRow)
-        
-        classItem.append(img)
-        
-    for classItem in clsDict.values():
-        clsSet.update(classItem)
-        
-    clsSet.write()
+    def getClassFn(ref):
+        args = {'rootDir': tmpDir, 'iter': iter, 'ref': ref}
+        return classFnTemplate % args
+    
+    createClassesFromImages2(inputImages, inputMd, 
+                             classesFn, ClassType, classLabel, 
+                             alignType, getClassFn=getClassFn, 
+                             preprocessImageRow=preprocessImageRow)
     

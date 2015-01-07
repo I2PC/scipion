@@ -63,16 +63,22 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'rctMicsU': 'rct/micrographs/*U.mrc',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
-               'vol3': 'volumes/volume_1_iter_002.mrc',
+               'vol3': 'volumes/volume_2_iter_002.mrc',
+               'vol4': 'volumes/helix_59_4__6_7.vol',
                'volumes': 'volumes/*.mrc',
+               'mask2d': 'masks/mask2d.xmp',
+               'mask3d': 'masks/mask.vol',
                })
 
 
 DataSet(name='mda', folder='hemoglobin_mda', 
         files={
                'particles': 'particles/*.spi',
+               'particlesDir': 'particles',
                'volumes': 'volumes/*.spi',
-               'averages':'averages/averages.stk'})
+               'volumesDir': 'volumes',
+               'averages':'averages/averages.stk',
+               'averagesDir': 'averages'})
 
 
 DataSet(name='nma', folder='nma', 
@@ -175,6 +181,9 @@ DataSet(name='emx',  folder='emx',
                
                'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
                'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
+
+               'reconstRotandShiftFlip': 'reconstruction/reconstRotandShiftFlip.mrcs',
+               'reconstRotandShiftFlipGold': 'reconstruction/gold/reconstRotandShiftFlip_output.vol',
               })
                
                
@@ -192,4 +201,17 @@ DataSet(name='movies',  folder='movies',
                'movie3':'Falcon_2012_06_12-17_26_54_0_movie.mrcs',
                 })             
                
+DataSet(name='grigorieff',  folder='grigorieff',
+        files={'particles_rot_shift':'particles.sqlite',
+               'ref_volume':'ref_volume.vol',
+                })
                
+DataSet(name='initial_volume',  folder='initial_volume',
+        files={'groel': 'groel_64.stk',
+               'ribosome': 'ribosomeFrank_64_preprocessed.stk',
+               'bpv': 'bpv_100.stk'
+                })
+
+DataSet(name='general',  folder='general',
+        files={'vol_helix': 'volumes/helix_59_4__6_7.vol'
+                })

@@ -43,7 +43,7 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('volumelist', PointerParam, pointerClass="SetOfVolumes", label='Set of volumes',
                       help="Set of volumes to align")
         form.addParam('numberOfReferences',IntParam,label='Number of references', default=3,
-                      help="How many classes are computed at the end of the process")
+                      help="How many references are computed at the end of the process")
         form.addParam('numberOfIterations',IntParam,label='Number of iterations', default=15,
                       expertLevel=LEVEL_ADVANCED,help="How many iterations at each of the Clustering levels")
         form.addParam('generateAligned',BooleanParam,default=True,label='Generate aligned subvolumes',
@@ -51,10 +51,10 @@ class XmippProtCLTomo(ProtClassify3D):
         form.addParam('dontAlign',BooleanParam,default=False,label="Do not align",
                       help="Volumes are already aligned, only classify")
         
-        form.addSection(label='Initial classes')
+        form.addSection(label='Initial references')
         form.addParam('doGenerateInitial',BooleanParam,default=True,label='Generate initial volume',
-                      help="Let CLTomo to automatically generate the initial classes")
-        form.addParam('numberOfReferences0',IntParam,label='Number of initial', default=1, condition="doGenerateInitial",
+                      help="Let CLTomo to automatically generate the initial references")
+        form.addParam('numberOfReferences0',IntParam,label='Number of initial references', default=1, condition="doGenerateInitial",
                       help="How many initial volumes. If set to 1, all subvolumes are aligned to a single reference, "\
                            "and then they are classified")
         form.addParam('randomizeOrientation',BooleanParam,default=False,label='Randomize orientation', condition="doGenerateInitial",
@@ -151,7 +151,7 @@ class XmippProtCLTomo(ProtClassify3D):
                 messages.append('Input subvolume orientations were randomized')
         if self.dontAlign.get():
             messages.append('Input subvolumes were assumed to be already aligned')
-        messages.append('Number of output classes: %d'%self.numberOfReferences.get())
+        messages.append('Number of output references: %d'%self.numberOfReferences.get())
         return messages
 
     def _validate(self):

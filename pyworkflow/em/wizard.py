@@ -29,20 +29,28 @@ This module implement some wizards
 """
 
 import os
+from os.path import basename, exists
 import Tkinter as tk
 import ttk
-from os.path import basename
-from pyworkflow.em.constants import *
-from pyworkflow.em.convert import ImageHandler
 
-from pyworkflow.wizard import Wizard, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, SetOfParticles, SetOfVolumes, ProtCTFMicrographs
-from pyworkflow.em.data import Micrograph
-
+from pyworkflow.wizard import Wizard
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider
 from pyworkflow.gui.tree import BoundTree, TreeProvider
 from pyworkflow import findResource
+
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.constants import (UNIT_PIXEL, 
+                                     UNIT_PIXEL_FOURIER,
+                                     UNIT_ANGSTROM,
+                                     UNIT_ANGSTROM_FOURIER,
+                                     FILTER_LOW_PASS, 
+                                     FILTER_BAND_PASS, 
+                                     FILTER_HIGH_PASS
+                                     )
+from pyworkflow.em.data import (Volume, 
+                                SetOfMicrographs, SetOfParticles, SetOfVolumes)
+from pyworkflow.em.protocol import ProtImportImages
 
 import xmipp
 
@@ -266,15 +274,14 @@ class VolumeMaskRadiiWizard(MaskRadiiWizard):
 
 class FilterWizard(EmWizard):
                 
-    def show(self, form, value, label, mode, units=UNIT_PIXEL):
+    def show(self, form, value, label, mode, unit=UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
         if provider is not None:
             self.mode = mode
             args = {'mode':  self.mode,
-                    'unit': units}
-            
+                    'unit': unit}
             if self.mode == FILTER_LOW_PASS:
                 args['showLowFreq'] = False                
                 args['highFreq'] = value[1]
@@ -287,29 +294,29 @@ class FilterWizard(EmWizard):
                 args['lowFreq'] = value[0]
                 args['highFreq'] = value[1]
                 args['freqDecay'] = value[2]
-            elif self.mode == FILTER_LOW_PASS_NO_DECAY:
-                args['showLowFreq'] = False
-                args['showDecay'] = False
-                args['highFreq'] = value[1]
-            elif self.mode == FILTER_NO_DECAY:
-                args['lowFreq'] = value[0]
-                args['highFreq'] = value[1]
-                args['showDecay'] = False
+            #elif self.mode == FILTER_LOW_PASS_NO_DECAY:
+            #    args['showLowFreq'] = False
+            #    args['showDecay'] = False
+            #    args['highFreq'] = value[1]
+            #elif self.mode == FILTER_NO_DECAY:
+            #    args['lowFreq'] = value[0]
+            #    args['highFreq'] = value[1]
+            #    args['showDecay'] = False
             else:
                 raise Exception("Unknown mode '%s'" % self.mode)
-                
+
             d = BandPassFilterDialog(form.root, provider, **args)
-            
+
             if d.resultYes():
                 def setFormValue(flag, value, index):
                     if args.get(flag, True):
-                        if units == UNIT_ANGSTROM:
-                            value = round(provider.getObjects()[0].getSamplingRate()/value, 2) # Round 2 digits after the decimal point
+                        if unit == UNIT_ANGSTROM:
+                            value = d.samplingRate / (value)
                         form.setVar(label[index], value)
-                
-                setFormValue('showLowFreq', d.getLowFreq(), 0)
+
+                setFormValue('showLowFreq',  d.getLowFreq(), 0)
                 setFormValue('showHighFreq', d.getHighFreq(), 1)
-                setFormValue('showDecay', d.getFreqDecay(), 2)
+                setFormValue('showDecay',    d.getFreqDecay(), 2)
                 
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
@@ -346,6 +353,33 @@ class GaussianParticlesWizard(GaussianWizard):
 class GaussianVolumesWizard(GaussianWizard):
     pass   
     
+    
+class ImportAcquisitionWizard(EmWizard):
+    _targets = [(ProtImportImages, ['acquisitionWizard'])]
+    
+    def show(self, form, *params):
+        prot = form.protocol
+        acquisitionInfo = prot.loadAcquisitionInfo()
+        
+        if prot.importFilePath:
+            if exists(prot.importFilePath):
+                if acquisitionInfo:
+                    msg = ''
+                    for k, v in acquisitionInfo.iteritems():
+                        msg += '%s = %s\n' % (k, v)
+                    msg += '\n*Do you want to use detected acquisition values?*'
+                    response = dialog.askYesNo("Import acquisition", msg, form.root)
+                    if response:
+                        for k, v in acquisitionInfo.iteritems():
+                            form.setVar(k, v)
+                else:
+                    dialog.showWarning("Import failed", 
+                                       "Could not import acquisition info.", form.root)
+            else:
+                dialog.showError("Input error", "*Import file doesn't exist.*\nFile:\n%s" % prot.importFilePath, form.root)
+        else:
+            dialog.showError("Input error", "Select import file first", form.root) 
+            
 
 #===============================================================================
 #  Dialogs used by wizards
@@ -604,14 +638,14 @@ class BandPassFilterDialog(DownsampleDialog):
             self.hfSlider = self.addFreqSlider(label_high, self.highFreq, col=1)
         if self.showDecay:
             self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
-                                   
+
     def addFreqSlider(self, label, value, col):
         fromValue = self.sliFrom
         toValue = self.sliTo
         if self.unit == UNIT_ANGSTROM:
             fromValue = self.sliTo
             toValue = self.sliFrom
-        slider = LabelSlider(self.freqFrame, label, from_=fromValue, to=toValue, 
+        slider = LabelSlider(self.freqFrame, label, from_=fromValue, to=toValue,
                              step=self.step , value=value, callback=lambda a, b, c:self.updateFilteredImage())
         slider.grid(row=0, column=col, padx=5, pady=5)
         return slider
@@ -646,7 +680,7 @@ class BandPassFilterDialog(DownsampleDialog):
     def getFreqDecay(self):
         if self.showDecay:
             if self.unit == UNIT_ANGSTROM:
-                return 1/self.freqDecaySlider.get()*self.itemDim
+                return self.samplingRate/self.freqDecaySlider.get()
             else:  
                 return self.freqDecaySlider.get()
         return 0.    

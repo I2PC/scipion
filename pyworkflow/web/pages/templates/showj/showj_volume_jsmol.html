@@ -12,9 +12,6 @@
 {% block content_view %}
 
 <script type="text/javascript">
-	console.log("FOLDER: {{jsmolFolder}}")
-	console.log("VOL: {{volLink}}")
-
 	var Info = {
 		color: "#FFFFFF", // white background (note this changes legacy default which was black)
 		height: 500,      // pixels (but it may be in percent, like "100%")
@@ -24,19 +21,17 @@
 // 		jarPath: "java",               // only used in the Java modality
 // 		jarFile: "JmolApplet0.jar",    // only used in the Java modality
 // 		isSigned: false,               // only used in the Java modality
-		serverURL: "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php",  // this is not applied by default; you should set this value explicitly
-		src: "{{volLink}}",          // file to load
-		script: null,       // script to run
+ 		serverURL: "/jsmol/",  // this is not applied by default; you should set this value explicitly
+		src: "__path__{{volLink}}",          // file to load
+		script: '',       // script to run
 		defaultModel: "",   // name or id of a model to be retrieved from a database
 		addSelectionOptions: false,  // to interface with databases
-		debug: true
+		debug: false
 	};
 
 // 	Jmol.getApplet("myJmol")
 	Jmol.getApplet("myJmol", Info)
 	
-
 </script>
 
-			
 {% endblock %}

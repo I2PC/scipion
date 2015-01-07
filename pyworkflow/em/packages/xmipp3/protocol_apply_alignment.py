@@ -27,9 +27,12 @@
 This sub-package contains wrapper around align2d Xmipp program
 """
 
-from pyworkflow.em import *  
-from convert import (readSetOfParticles, locationToXmipp, 
-                     writeSetOfParticles)
+from pyworkflow.em import *
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+from convert import (xmippToLocation, writeSetOfParticles)
+from pyworkflow.em.convert import ImageHandler
+
+import xmipp
 
        
         
@@ -72,17 +75,51 @@ class XmippProtApplyAlignment(ProtAlign2D):
         args = '-i %(inputFn)s -o %(outputStk)s --apply_transform ' % locals()
         self.runJob('xmipp_transform_geometry', args)
         
-        return [outputStk]  
+        return [outputStk]
+
+    def _updateItem(self, item, row):
+        """ Implement this function to do some
+        update actions over each single item
+        that will be stored in the output Set.
+        """
+        # By default update the item location (index, filename) with the new binary data location
+        newFn = row.getValue(xmipp.MDL_IMAGE)
+        newLoc = xmippToLocation(newFn)
+        item.setLocation(newLoc)
+        # Also remove alignment info
+        item.setTransform(None)
+
             
     def createOutputStep(self):
         particles = self.inputParticles.get()
-            
+
         # Generate the SetOfAlignmet
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
-        
-        readSetOfParticles(self._getPath('aligned_particles.xmd'), alignedSet)
-        
+
+        inputMd = self._getPath('aligned_particles.xmd')
+        alignedSet.copyItems(particles,
+                             updateItemCallback=self._updateItem,
+                             itemDataIterator=iterMdRows(inputMd))
+        # Remove alignment 2D
+        alignedSet.setAlignment(ALIGN_NONE)
+
+        # Define the output average
+
+        avgFile = self._getExtraPath("average.xmp")
+
+        imgh = ImageHandler()
+        avgImage = imgh.computeAverage(alignedSet)
+
+        avgImage.write(avgFile)
+
+        avg = Particle()
+        avg.setLocation(1, avgFile)
+        avg.copyInfo(alignedSet)
+
+        self._defineOutputs(outputAverage=avg)
+        self._defineSourceRelation(particles, avg)
+
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)
                 
@@ -90,9 +127,22 @@ class XmippProtApplyAlignment(ProtAlign2D):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if not self.inputParticles.get().hasAlignment2D():
+            errors.append("Input particles should have alignment 2D.")
         return errors
         
     def _summary(self):
         summary = []
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Applied alignment to %s particles." % self.inputParticles.get().getSize())
         return summary
+
+    def _methods(self):
+        if not hasattr(self, 'outputParticles'):
+            return ["Output particles not ready yet."]
+        else:
+            return ["We applied alignment to %s particles." % self.inputParticles.get().getSize()]
+
     

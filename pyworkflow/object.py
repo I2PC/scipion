@@ -29,7 +29,7 @@ The Object class is the root in the hierarchy and some other
 basic classes.
 """
 
-import sys
+from itertools import izip
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -41,22 +41,21 @@ RELATION_PARENTS = 1
 class Object(object):
     """ All objects in our Domain should inherit from this class
     that will contains all base properties"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__init__(self)
-        self._objIsPointer =  args.get('objIsPointer', False) # True if will be treated as a reference for storage
-        self._objId =  args.get('objId', None) # Unique identifier of this object in some context
-        self._objParentId =  args.get('objParentId', None) # identifier of the parent object
-        self._objName =  args.get('objName', '') # The name of the object will contains the whole path of ancestors
-        self._objLabel = args.get('objLabel', '') # This will serve to label the objects
-        self._objComment = args.get('objComment', '')
-        self._objTag =  args.get('objTag', None) # This attribute serve to make some annotation on the object.
-        self._objDoStore =  args.get('objDoStore', True) # True if this object will be stored from his parent
+        self._objIsPointer = kwargs.get('objIsPointer', False) # True if will be treated as a reference for storage
+        self._objId = kwargs.get('objId', None) # Unique identifier of this object in some context
+        self._objParentId = kwargs.get('objParentId', None) # identifier of the parent object
+        self._objName = kwargs.get('objName', '') # The name of the object will contains the whole path of ancestors
+        self._objLabel = kwargs.get('objLabel', '') # This will serve to label the objects
+        self._objComment = kwargs.get('objComment', '')
+        self._objTag = kwargs.get('objTag', None) # This attribute serve to make some annotation on the object.
+        self._objDoStore = kwargs.get('objDoStore', True) # True if this object will be stored from his parent
         self._objCreation = None
         self._objParent = None # Reference to parent object
         self._objEnabled = True
         self.set(value)
-    
-        
+
     def getClassName(self):
         return self.__class__.__name__
     
@@ -258,13 +257,16 @@ class Object(object):
             return object.__eq__(other)
         return self._objValue == other._objValue
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
-        for k, _ in self.getAttributes():
-            v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
+        for k, v1 in self.getAttributes():
+            #v1 = getattr(self, k) # This is necessary because of FakedObject simulation of getattr
+            # Skip comparison of attribute names in 'ignore' list
+            if k in ignore:
+                continue
             v2 = getattr(other, k)
             if issubclass(type(v1), Object):
-                comp = v1.equalAttributes(v2, verbose)
+                comp = v1.equalAttributes(v2, ignore=ignore, verbose=verbose)
             else:
                 comp = v1 == v2
             if not comp:
@@ -279,13 +281,20 @@ class Object(object):
         """ Copy attributes in attrNames from other to self. 
         If the name X is in attrNames, it would be equivalent to:
         self.X.set(other.X.get())
+        This method is more useful for Scalar attributes.
+        There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            if isinstance(getattr(other, name), PointerList):
-                for pointer in getattr(other, name):
-                    getattr(self, name).append(pointer)
+            attr = getattr(self, name)
+            otherAttr = getattr(other, name)
+            
+            if isinstance(attr, Pointer):
+                attr.copy(otherAttr)
+            elif isinstance(attr, PointerList):
+                for pointer in otherAttr:
+                    attr.append(pointer)
             else:
-                getattr(self, name).set(getattr(other, name).get())
+                attr.set(otherAttr.get())
             
     def __getObjDict(self, prefix, objDict, includeClass):
         if prefix:
@@ -397,7 +406,7 @@ class Object(object):
         """Print object and all its attributes.
         Mainly for debugging"""
         tab = ' ' * (level*3)
-        idStr = ' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
+        idStr = '' #' (id = %s, pid = %s)' % (self.getObjId(), self._objParentId)
         if name is None:
             print tab, self.getClassName(), idStr
         else:
@@ -421,9 +430,9 @@ class OrderedObject(Object):
     """This is based on Object, but keep the list
     of the attributes to store in the same order
     of insertion, this can be useful where order matters"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__setattr__(self, '_attributes', [])
-        Object.__init__(self, value, **args)
+        Object.__init__(self, value, **kwargs)
 
     def __attrPointed(self, name, value):
         """ Check if a value is already pointed by other
@@ -463,12 +472,12 @@ class OrderedObject(Object):
 class FakedObject(Object):
     """This is based on Object, but will hide the set and get
     access to the attributes, they need to be defined with addAttribute"""
-    def __init__(self, value=None, **args):
+    def __init__(self, value=None, **kwargs):
         object.__setattr__(self, '_attributes', {})
-        Object.__init__(self, value, **args)
+        Object.__init__(self, value, **kwargs)
         
-    def addAttribute(self, name, attrClass, **args):
-        self._attributes[name] = attrClass(**args)
+    def addAttribute(self, name, attrClass, **kwargs):
+        self._attributes[name] = attrClass(**kwargs)
            
     def __setattr__(self, name, value):
         if name in self._attributes:
@@ -499,7 +508,7 @@ class Scalar(Object):
     def hasValue(self):        
         return self._objValue is not None
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
         return self._objValue == other._objValue
     
@@ -530,7 +539,7 @@ class Scalar(Object):
             return self._objValue
         return default
     
-    def _copy(self, other, *args):
+    def _copy(self, other, *args, **kwargs):
         self.set(other.get())
         
     def swap(self, other):
@@ -556,6 +565,15 @@ class Integer(Scalar):
     def increment(self):
         """ Add 1 to the current value. """
         self._objValue += 1
+        
+    def __float__(self):
+        return float(self.get())
+    
+    def __int__(self):
+        return self.get()
+    
+    def __long__(self):
+        return long(self.get())
     
         
 class String(Scalar):
@@ -584,7 +602,7 @@ class Float(Scalar):
     def _convertValue(self, value):
         return float(value)
     
-    def equalAttributes(self, other, verbose=False):
+    def equalAttributes(self, other, ignore=[], verbose=False):
         """Compare that all attributes are equal"""
         # If both float has some value distinct of None
         # then we should compare the absolute value of difference 
@@ -597,6 +615,9 @@ class Float(Scalar):
             return True
         
         return False
+    
+    def __float__(self):
+        return self.get()
         
         
 class Boolean(Scalar):
@@ -622,8 +643,11 @@ class Boolean(Scalar):
     
 class Pointer(Object):
     """Reference object to other one"""
-    def __init__(self, value=None, **args):
-        Object.__init__(self, value, objIsPointer=True, **args)
+    EXTENDED_ATTR = '__attribute__'
+    EXTENDED_ITEMID = '__itemid__'
+    
+    def __init__(self, value=None, **kwargs):
+        Object.__init__(self, value, objIsPointer=True, **kwargs)
         # The _extended attribute will be used to point to attributes of a pointed object
         # or the id of an item inside a set
         self._extended = String() 
@@ -646,10 +670,10 @@ class Pointer(Object):
         """
         extended = self._extended.get()
         if extended:
-            if extended.startswith('__attribute__'):
+            if extended.startswith(self.EXTENDED_ATTR):
                 attribute = extended.split('__')[-1]
                 value = getattr(self._objValue, attribute, default)
-            elif extended.startswith('__itemid__'):
+            elif extended.startswith(self.EXTENDED_ITEMID):
                 itemId = int(extended.split('__')[-1])
                 value = self._objValue[itemId]
                 value._parentObject = self._objValue
@@ -679,22 +703,43 @@ class Pointer(Object):
         
     def setExtendedAttribute(self, attributeName):
         """ Point to an attribute of the pointed object. """
-        self._extended.set('__attribute__' + attributeName)
+        self._extended.set(self.EXTENDED_ATTR + attributeName)
+        
+    def hasExtendedAttribute(self):
+        return (self._extended.hasValue() and
+                self._extended.get().startswith(self.EXTENDED_ATTR))
         
     def setExtendedItemId(self, itemId):
         """ Point to an specific item of a pointed Set. """
-        self._extended.set('__itemid__%d' % itemId)
+        self._extended.set(self.EXTENDED_ITEMID + str(itemId))
+         
+    def hasExtendedItemId(self):
+        return (self._extended.hasValue() and
+                self._extended.get().startswith(self.EXTENDED_ITEMID))       
+        
+        
+    def hasExtended(self):
+        return self._extended.hasValue()
+    
+    def getExtendedValue(self):
+        if self.hasExtended():
+            return self._extended.get().split('__')[-1]
+        else:
+            return None
         
     def getAttributes(self):
         yield ('_extended', getattr(self, '_extended'))
+        
+    def pointsNone(self):
+        return self.get() is None
     
 
 class List(Object, list):
     ITEM_PREFIX = '__item__'
     
     """Class to store a list of objects"""
-    def __init__(self, **args):
-        Object.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Object.__init__(self, **kwargs)
         list.__init__(self)
         
     def __getattr__(self, name):
@@ -759,7 +804,7 @@ class PointerList(List):
         if isinstance(value, list):
             self.clear()
             for obj in value:
-                self.append(Pointer(value=obj))
+                self.append(obj)
         else:
             raise Exception("Could not set a PointerList value to: %s" % value)
 
@@ -823,8 +868,8 @@ class CsvList(Scalar, list):
         
 class Array(Object):
     """Class for holding fixed len array"""
-    def __init__(self, size=10, **args):
-        Object.__init__(self, size, **args)
+    def __init__(self, size=10, **kwargs):
+        Object.__init__(self, size, **kwargs)
         
     def set(self, size):
         """Set the array size"""
@@ -853,9 +898,9 @@ class Set(OrderedObject):
     ITEM_TYPE = None # This property should be defined to know the item type
     
     def __init__(self, filename=None, prefix='', 
-                 mapperClass=None, classesDict=None, **args):
+                 mapperClass=None, classesDict=None, **kwargs):
         # Use the object value to store the filename
-        OrderedObject.__init__(self, **args)
+        OrderedObject.__init__(self, **kwargs)
         self._mapper = None
         self._idCount = 0
         self._size = Integer(0) # cached value of the number of images  
@@ -1005,8 +1050,28 @@ class Set(OrderedObject):
     def hasRepresentative(self):
         """ Return true if have a representative image. """
         return self._representative is not None
+
+    def equalItemAttributes(self, other, ignore=[], verbose=False):
+        """Compare that all items in self and other
+        return True for equalAttributes.
+        """
+        return all(x.getObjId() == y.getObjId() and
+                   x.equalAttributes(y, ignore=ignore, verbose=verbose)
+                   for x, y in izip(self, other))
+        
+    def hasProperty(self, key):
+        return self._mapper.hasProperty(key)
+        
+    def getProperty(self, key, defaultValue=None):
+        return self._mapper.getProperty(key, defaultValue)
     
-    
+    def loadProperty(self, propertyName, defaultValue=None):
+        """ Get the value of a property and
+        set its value as an object attribute.
+        """
+        self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
+
+
 def ObjectWrap(value):
     """This function will act as a simple Factory
     to create objects from Python basic types"""

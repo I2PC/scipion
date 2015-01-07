@@ -34,9 +34,9 @@ from glob import glob
 from os.path import exists
 
 import xmipp
-from pyworkflow.object import String
+from pyworkflow.object import String, Float
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER, ORIGINAL
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
+from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_FINISHED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam, 
                                         BooleanParam, RelationParam, Positive)
 from pyworkflow.em.protocol import  ProtExtractParticles
@@ -66,7 +66,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputCoordinates', PointerParam, label="Coordinates", 
+        form.addParam('inputCoordinates', PointerParam, label="Coordinates", important=True,
                       pointerClass='SetOfCoordinates',
                       help='Select the SetOfCoordinates ')
         
@@ -85,29 +85,33 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       condition='downsampleType != 0',
                       pointerClass='SetOfMicrographs',
                       help='Select the original SetOfMicrographs')
-        
+
         form.addParam('ctfRelations', RelationParam, allowsNull=True,
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
-                      label='CTF estimation', 
+                      label='CTF estimation',
                       help='Choose some CTF estimation related to input micrographs. \n'
                            'CTF estimation is need if you want to do phase flipping or \n'
-                           'you want to associate CTF information to the particles.')     
+                           'you want to associate CTF information to the particles.')
 
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
-                      help='In pixels. The box size is the size of the boxed particles, ' 
+                      help='In pixels. The box size is the size of the boxed particles, '
                       'actual particles may be smaller than this.')
-        
-        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'], 
-                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO,
+
+        form.addParam('doSort', BooleanParam, default=False,
+                      label='Perform sort by statistics',
+                      help='Perform sort by statistics to add zscore info to particles.')
+
+        form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'],
+                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO, condition='doSort==True',
                       label='Automatic particle rejection',
                       help='How to automatically reject particles. It can be none (no rejection),'
                       ' maxZscore (reject a particle if its Zscore is larger than this value), '
-                      'Percentage (reject a given percentage in each one of the screening criteria).', 
+                      'Percentage (reject a given percentage in each one of the screening criteria).',
                       expertLevel=LEVEL_ADVANCED)
-        
+
         form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
-                      condition='rejectionMethod==%d' % REJECT_MAXZSCORE,
+                      condition='doSort==True and rejectionMethod==%d' % REJECT_MAXZSCORE,
                       label='Maximum Zscore',
                       help='Maximum Zscore above which particles are rejected.')
         
@@ -331,16 +335,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         #imgsXmd.sort(xmipp.MDL_IMAGE)
         imgsXmd.write(fnImages)
 
-        # Run xmipp_image_sort_by_statistics to add zscore info to images.xmd
-        args="-i %(fnImages)s --addToInput"
-        if self.rejectionMethod == REJECT_MAXZSCORE:
-            maxZscore = self.maxZscore.get()
-            args += " --zcut " + str(maxZscore)
-        elif self.rejectionMethod == REJECT_PERCENTAGE:
-            percentage = self.percentage.get()
-            args += " --percent " + str(percentage)
-        
-        self.runJob("xmipp_image_sort_by_statistics", args % locals())
+        # IF selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
+        if self.doSort:
+            args="-i %(fnImages)s --addToInput"
+            if self.rejectionMethod == REJECT_MAXZSCORE:
+                maxZscore = self.maxZscore.get()
+                args += " --zcut " + str(maxZscore)
+            elif self.rejectionMethod == REJECT_PERCENTAGE:
+                percentage = self.percentage.get()
+                args += " --percent " + str(percentage)
+
+            self.runJob("xmipp_image_sort_by_statistics", args % locals())
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
@@ -409,22 +414,30 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _methods(self):
         methodsMsgs = []
 
-        if self.methodsInfo.hasValue():
-            methodsMsgs.append(self.methodsInfo.get())
-            
-        methodsMsgs.append("Particle box size %d" % self.boxSize.get())
-        methodsMsgs.append("Automatic Rejection method selected: %s" % (self.rejectionMethod))    
-        methodsMsgs.append("Phase flipping performed?: %s" % (self.doFlip.get()))
-        if self.doFlip:
-            methodsMsgs.append("CTFs used: %s" % (self.ctfRelations.hasValue()))
-        methodsMsgs.append("Invert contrast performed?: %s" % (self.doInvert.get()))
-        methodsMsgs.append("Normalize performed?: %s" % (self.doNormalize.get()))
-        if self.doNormalize.get():
-            methodsMsgs.append("Nomalization used: %s" % (self.getEnumText('normType')))
-            methodsMsgs.append("Nomalization used: %s" % (self.backRadius.get()))
-        methodsMsgs.append("Remove dust?: %s" % (self.doRemoveDust.get()))
-        if self.doRemoveDust.get():
-            methodsMsgs.append("Dust threshold: %s" % (self.thresholdDust.get()))            
+        if self.getStatus() == STATUS_FINISHED:
+            msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(), self.boxSize.get())
+
+            if self.downsampleType == ORIGINAL:
+                msg += " from original micrographs."
+
+            if self.downsampleType == OTHER:
+                msg += " from original micrographs with downsampling factor of %.2f." % self.downFactor.get()
+
+            if self.downsampleType == SAME_AS_PICKING:
+                msg += "."
+
+            msg += self.methodsInfo.get()
+
+            methodsMsgs.append(msg)
+
+            if self.doInvert:
+                methodsMsgs.append("Inverted contrast on images.")
+
+            if self.doNormalize.get():
+                methodsMsgs.append("Normalization performed of type %s." % (self.getEnumText('normType')))
+
+            if self.doRemoveDust.get():
+                methodsMsgs.append("Removed dust over a threshold of %s." % (self.thresholdDust.get()))
 
         return methodsMsgs
 
@@ -450,11 +463,29 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         md = xmipp.MetaData(fnImages)
         total = md.size() 
         md.removeDisabled()
-        numEnabled = md.size()
-        numAutoDisabled = total - numEnabled
         zScoreMax = md.getValue(xmipp.MDL_ZSCORE, md.lastObject())
-        msg = "A total of %d particles extracted from which %d are enabled and %d disabled" % (total, numEnabled, numAutoDisabled)
-        if zScoreMax is not None:
-            msg += " and a maximun ZScore value of %d\n" % zScoreMax
-        
+        numEnabled = md.size()
+        numRejected = total - numEnabled
+
+        msg = ""
+
+        if self.doSort:
+            if self.rejectionMethod.get() != REJECT_NONE:
+                msg = " %d of them were rejected with Zscore greater than %.2f." % (numRejected, zScoreMax)
+
+        if self.doFlip:
+            msg += "\nPhase flipping was performed."
+
         self.methodsInfo.set(msg)
+
+    def getCoords(self):
+        if self.inputCoordinates.hasValue():
+            return self.inputCoordinates.get()
+        else:
+            return None
+
+    def getOutput(self):
+        if self.outputParticles.hasValue():
+            return self.outputParticles
+        else:
+            return None

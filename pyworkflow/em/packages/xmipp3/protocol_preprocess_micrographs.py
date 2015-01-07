@@ -209,7 +209,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         if not self._hasOutput():
             methods.append("*Output micrographs* not ready yet.")
         else:
-            methods.append("The %d micrographs has been" % self.inputMicrographs.get().getSize())
+            methods.append("The %d micrographs have been" % self.inputMicrographs.get().getSize())
             if self.doCrop.get():
                 methods.append("cropped %d pixels" % self.cropPixels.get())
             if self.doLog.get():

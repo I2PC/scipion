@@ -355,6 +355,16 @@ pages = "171-193",
   doi                      = "http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2014.pdf"
 }
 
+@article{Sorzano2015,
+author = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-Trevin,  J. M. and Oton, J. and Alvarez-Cabrera, A. L. and Abrishami, V. and Sesmero, E. and Marabini, R. and Carazo, J. M.},
+title = {A Statistical approach to the initial volume problem in Single Particle Analysis by Electron Microscopy},
+journal = "(under review)",
+year = {2015},
+volume = {0},
+pages = {0},
+doi = "http://biocomp.cnb.csic.es/~coss"
+}
+
 @article{Vargas2013a,
 author = {Vargas, J. and Otón, J. and Marabini, R. and Jonic, S. and {de la
   Rosa-Trevín}, J. M. and et.al.},
@@ -382,6 +392,62 @@ doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
 author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trevín and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
+}
+
+@article{Vargas2014,
+author = {Vargas, Javier and Álvarez-Cabrera, Ana-Lucia and Marabini, Roberto and Carazo, Jose M. and Sorzano, C. O. S.}, 
+title = {Efficient initial volume determination from electron microscopy images of single particles},
+volume = {30}, 
+number = {20}, 
+pages = {2891-2898}, 
+year = {2014}, 
+doi = {http://dx.doi.org/10.1093/bioinformatics/btu404}, 
+abstract ={Motivation: Structural information of macromolecular complexes provides key insights into the way they carry out their biological functions. The reconstruction process leading to the final 3D map requires an approximate initial model. Generation of an initial model is still an open and challenging problem in single-particle analysis.Results: We present a fast and efficient approach to obtain a reliable, low-resolution estimation of the 3D structure of a macromolecule, without any a priori knowledge, addressing the well-known issue of initial volume estimation in the field of single-particle analysis. The input of the algorithm is a set of class average images obtained from individual projections of a biological object at random and unknown orientations by transmission electron microscopy micrographs. The proposed method is based on an initial non-lineal dimensionality reduction approach, which allows to automatically selecting representative small sets of class average images capturing the most of the structural information of the particle under study. These reduced sets are then used to generate volumes from random orientation assignments. The best volume is determined from these guesses using a random sample consensus (RANSAC) approach. We have tested our proposed algorithm, which we will term 3D-RANSAC, with simulated and experimental data, obtaining satisfactory results under the low signal-to-noise conditions typical of cryo-electron microscopy.Availability: The algorithm is freely available as part of the Xmipp 3.1 package [http://xmipp.cnb.csic.es].Contact: jvargas@cnb.csic.esSupplementary information: Supplementary data are available at Bioinformatics online.}, 
+URL = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.abstract}, 
+eprint = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.full.pdf+html}, 
+journal = {Bioinformatics} 
+}
+
+@article{zhao2013,
+author = {Zhao, Zhizhen and Singer, Amit},
+title = {Fourier-Bessel rotational invariant eigenimages},
+volume = {30},
+number = {5},
+pages = {871--877},
+year = {2013},
+doi = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886/pdf/nihms484949.pdf},
+abstract = {},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886},
+eprint = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3711886/pdf/nihms484949.pdf},
+journal = {Journal of the Optical Society of America. A, Optics, image science, and vision}
+}
+
+@article{ponce2011,
+author = {Ponce, Colin and Singer, Amit},
+title = {Computing Steerable Principal Components of a Large Set of Images and Their Rotations},
+volume = {20},
+number = {11},
+pages = {3051--3062},
+year = {2011},
+doi = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3719433/pdf/nihms485040.pdf},
+abstract = {},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3719433},
+eprint = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3719433/pdf/nihms485040.pdf},
+journal = {IEEE Trans Image Process}
+}
+
+@article{Radermacher1987,
+author = {Radermacher, M. and Wagenknecht, T. and Frank, J.},
+title = {Three-dimensional reconstruction from a single-exposure, random conical tilt series applied to the 50S ribosomal subunit of Escherichia coli.},
+volume = {146},
+number = {2},
+pages = {113-36},
+year = {1987},
+doi = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+abstract = {},
+url = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+eprint = {http://www.ncbi.nlm.nih.gov/pubmed/3302267},
+journal = {Journal of Microscopy}
 }
 
 @article{Vargas2014a,
@@ -413,6 +479,7 @@ url = "",
 author = "Marabini et al.",
 keywords = "Contrast transfer function"
 }
+
 
 """
 

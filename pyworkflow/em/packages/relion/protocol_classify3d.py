@@ -27,10 +27,13 @@
 This module contains the protocol for 3d classification with relion.
 """
 
+import pyworkflow.em.metadata as md
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtClassify3D
 from pyworkflow.em.data import Volume
-from protocol_base import *
 
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
+from pyworkflow.em.packages.relion.convert import relionToLocation, rowToAlignment
 
 
 class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
@@ -42,8 +45,8 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     leads to objective and high-quality results.
     """
     _label = '3D classify'
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS]
+    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)
@@ -63,30 +66,28 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
-        from convert import readSetOfClasses3D
+        partSet = self.inputParticles.get()       
+        inputVol = self.referenceVolume.get()
+        classes3D = self._createSetOfClasses3D(partSet)
+        self._fillClassesFromIter(classes3D, self._lastIter())
         
-        imgSet = self.inputParticles.get()
-        
-        # create a SetOfClasses3D and define its relations
-        classesSqlite = self._getIterClasses(self._lastIter())
-        classes = self._createSetOfClasses3D(imgSet)
-        readSetOfClasses3D(classes, classesSqlite)
-        
-        self._defineOutputs(outputClasses=classes)
-        self._defineSourceRelation(imgSet, classes)
-        self._defineSourceRelation(self.referenceVolume.get(), classes)
-        
+        self._defineOutputs(outputClasses=classes3D)
+        self._defineSourceRelation(partSet, classes3D)
+        self._defineSourceRelation(inputVol, classes3D)
+
+
         # create a SetOfVolumes and define its relations
         volumes = self._createSetOfVolumes()
-        volumes.setSamplingRate(imgSet.getSamplingRate())
+        volumes.setSamplingRate(partSet.getSamplingRate())
         
-        for ref3d in range(1, self.numberOfClasses.get()+1):
-            vol = Volume()
-            vol.setFileName(self._getFileName('volume', iter=self._lastIter(), ref3d=ref3d))
+        for class3D in classes3D:
+            vol = class3D.getRepresentative()
+            vol.setObjId(class3D.getObjId())
             volumes.append(vol)
         
         self._defineOutputs(outputVolumes=volumes)
-        self._defineSourceRelation(imgSet, volumes)
+        self._defineSourceRelation(partSet, volumes)
+        self._defineSourceRelation(inputVol, volumes)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
@@ -118,12 +119,70 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        it = self._lastIter()
+        if it >= 1:
+            row = md.getFirstRow('model_general@' + self._getFileName('model', iter=it))
+            resol = row.getValue("rlnCurrentResolution")
+            summary.append("Current resolution: *%0.2f*" % resol)
+        
+        summary.append("Input Particles: *%d*\nClassified into *%d* 3D classes\n" % (self.inputParticles.get().getSize(),
+                                                                              self.numberOfClasses.get()))
+        
+        return summary
     
     def _summaryContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        summary = []
+        summary.append("Continue from iteration %01d" % self._getContinueIter())
+        return summary
+    
+    def _methods(self):
+        strline=''
+        if hasattr(self, 'outputClasses'):
+            strline += 'We classified %d particles into %d 3D classes using Relion Classify3d. '%\
+                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+        return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _loadClassesInfo(self, iteration):
+        """ Read some information about the produced Relion 3D classes
+        from the *model.star file.
+        """
+        self._classesInfo = {} # store classes info, indexed by class id
+         
+        modelStar = md.MetaData('model_classes@' + self._getFileName('model', iter=iteration))
+        
+        for classNumber, row in enumerate(md.iterRows(modelStar)):
+            index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
+            # Store info indexed by id, we need to store the row.clone() since
+            # the same reference is used for iteration            
+            self._classesInfo[classNumber+1] = (index, fn, row.clone())
+    
+    def _fillClassesFromIter(self, clsSet, iteration):
+        """ Create the SetOfClasses3D from a given iteration. """
+        self._loadClassesInfo(iteration)
+        dataStar = self._getFileName('data', iter=self._lastIter())
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                             updateClassCallback=self._updateClass,
+                             itemDataIterator=md.iterRows(dataStar))
+    
+    def _updateParticle(self, item, row):
+        item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
+        item.setTransform(rowToAlignment(row, em.ALIGN_3D))
+        
+        item._rlnLogLikeliContribution = em.Float(row.getValue('rlnLogLikeliContribution'))
+        item._rlnMaxValueProbDistribution = em.Float(row.getValue('rlnMaxValueProbDistribution'))
+        
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        if  classId in self._classesInfo:
+            index, fn, row = self._classesInfo[classId]
+            fn = fn + ":mrc"
+            item.setAlignment3D()
+            item.getRepresentative().setLocation(index, fn)
+            item._rlnclassDistribution = em.Float(row.getValue('rlnClassDistribution'))
+            item._rlnAccuracyRotations = em.Float(row.getValue('rlnAccuracyRotations'))
+            item._rlnAccuracyTranslations = em.Float(row.getValue('rlnAccuracyTranslations'))

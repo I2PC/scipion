@@ -108,7 +108,7 @@ function detectWebBrowser(){
 	    // Opera 8.0+ (UA detection to detect Blink/v8-powered Opera)
 		res = "opera";
 	}
-	else if(typeof InstallTrigger !== 'undefined'){
+	if(typeof InstallTrigger !== 'undefined'){
 		// Firefox 1.0+
 		res = "firefox";
 	}
@@ -116,7 +116,7 @@ function detectWebBrowser(){
 		// At least Safari 3+: "[object HTMLElementConstructor]"
 		res = "safari"; 
 	}
-	else if(!!window.chrome && !isOpera){
+	else if(!!window.chrome){
 		// Chrome 1+
 		res = "chrome";
 	}
@@ -128,21 +128,27 @@ function detectWebBrowser(){
 	return res;
 }
 
-
 function popup(URL) {
 	/*
 	 * Launch a basic popup (600x500) opening the URL passed by argument.
 	 */
+	
 	var URL = getSubDomainURL() + URL
 	var popup_width = 600;
 	var popup_height = 500;
 	var day = new Date();
-	id = day.getTime();
-	eval("page"
-			+ id
-			+ " = window.open(URL, '"
-			+ id
-			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+popup_width+',height='+popup_height+'');");
+	var id = day.getTime();
+	
+	if(detectWebBrowser()=="safari"){
+		window.location.href = URL;
+	}
+	else{
+		eval("page"
+				+ id
+				+ " = window.open(URL, '"
+				+ id
+				+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+popup_width+',height='+popup_height+'');");
+	}
 }
 
 function customPopup(URL, widthValue, heightValue) {
@@ -153,11 +159,17 @@ function customPopup(URL, widthValue, heightValue) {
 	var URL = getSubDomainURL() + URL
 	var day = new Date();
 	var id = day.getTime();
-	eval("page"
-			+ id
-			+ " = window.open(URL, '"
-			+ id
-			+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
+	
+	if(detectWebBrowser()=="safari"){
+		newTab.location.href = URL;
+	}
+	else{
+		eval("page"
+				+ id
+				+ " = window.open(URL, '"
+				+ id
+				+ "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=0,width='+widthValue+',height='+heightValue+'');");
+	}
 }
 
 function customPopupFileHTML(html, title, widthValue, heightValue) {
@@ -374,6 +386,48 @@ function accessPopup(title, msgText, funcName, btnYes, btnNo){
 	});
 }
 
+function accessPopup2opt(title, msgText, 
+						 btn1, ico1, funcName1, 
+						 btn2, ico2, funcName2, 
+						 btnNo){
+
+	msg = "<table><tr><td>"
+	msg += "</td><td>"+ msgText +"</td></tr></table>"
+
+	new Messi(msg, {
+		title : title,
+		modal : true,
+		buttons : [ {
+			id : 0,
+			label : btn1,
+			val : 'Y',
+			btnClass : ico1,
+			btnFunc : funcName1
+		},{
+			id : 1,
+			label : btn2,
+			val : 'Y',
+			btnClass : ico2,
+			btnFunc : funcName2
+		}, {
+			id : 2,
+			label : btnNo,
+			val : 'C',
+			btnClass : 'fa-ban'
+		} ]
+	});
+}
+
+function putWaitPopup(msg, ico){
+	new Messi("<i class='"+ ico +"'/>  " + msg + "...",{
+		modal : true
+	});
+}
+
+function removeWaitPopup(){
+	$('.messi').remove();
+	$('.messi-modal').remove();
+}
 
 function listToString(list){
 	var res = "";

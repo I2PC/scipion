@@ -34,9 +34,10 @@ from os.path import join
 from pyworkflow.object import String
 from pyworkflow.protocol.params import IntParam, StringParam, BooleanParam, LEVEL_EXPERT, LEVEL_ADVANCED, EnumParam
 from pyworkflow.utils.path import moveFile
-from pyworkflow.em.data import Micrograph
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
+from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -81,8 +82,8 @@ class ProtMovieAlignment(ProtProcessMovies):
                       help="Set to true if you want the GPU implementation of Optical Flow")
         group.addParam('GPUCore', IntParam, default=1,
                       label="Choose GPU core",
-                      condition="doGPU  or alignMethod==%d " % AL_DOSEFGPU,
-                      help="GPU may have several cores. Set it to zero if you do not know what we are talking about")
+                      condition="doGPU  or alignMethod==%d or alignMethod==%d  " % (AL_DOSEFGPU, AL_DOSEFGPUOPTICAL),
+                      help="GPU may have several cores. Set it to one if you do not know what we are talking about")
         group = form.addGroup('Optical Flow parameters',condition="alignMethod==%d or alignMethod==%d " % (AL_OPTICAL, AL_DOSEFGPUOPTICAL))
         group.addParam('winSize', IntParam, default=150,
                       label="Window size", expertLevel=LEVEL_EXPERT,
@@ -136,16 +137,27 @@ class ProtMovieAlignment(ProtProcessMovies):
         movieSet.copyInfo(inputMovies)
         alMethod = self.alignMethod.get()
         for movie in self.inputMovies.get():
-            micName = self._getMicName(movie.getObjId())
-            metadataName = self._getMetadataName(movie.getObjId())
-            mic = Micrograph()
-            # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getExtraPath(micName))
-            micSet.append(mic)
+            micName = self._getNameExt(movie.getFileName(), 'mrc')
+            metadataName = self._getNameExt(movie.getFileName(), 'xmd')
+            plotName = self._getNameExt(movie.getFileName(), 'png')
+
             # Parse the alignment parameters and store the log files
             alignedMovie = movie.clone()
             alignedMovie.alignMetaData = String(self._getExtraPath(metadataName))
+            print String(self._getExtraPath(plotName))
+            alignedMovie.plotPolar = self._getExtraPath(plotName)
+            movieCreatePlot(PLOT_POLAR, alignedMovie, True)
             movieSet.append(alignedMovie)
+            print 'append has been done'
+
+
+            mic = em.Micrograph()
+            # All micrograph are copied to the 'extra' folder after each step
+            mic.setFileName(self._getExtraPath(micName))
+            mic.plotPolar = em.Image()
+            mic.plotPolar.setFileName(self._getExtraPath(plotName))
+            micSet.append(mic)
+
 
             # TODO: Methods for dosefgpu should be transferred to here
             """
@@ -180,11 +192,13 @@ class ProtMovieAlignment(ProtProcessMovies):
         program = self._getProgram()
 
         # Read the parameters
-        micName = self._getMicName(movieId)
-        metadataName = self._getMetadataName(movieId)
+        #micName = self._getMicName(movieId)
+        micName = self._getNameExt(movieName, 'mrc')
+        print micName
+        metadataName = self._getNameExt(movieName, 'xmd')
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
-        gpuId = self.GPUCore.get() -1
+        gpuId = self.GPUCore.get() - 1
         alMethod = self.alignMethod.get()
 
         # For simple average execution
@@ -237,10 +251,10 @@ class ProtMovieAlignment(ProtProcessMovies):
             if self.doGPU:
                 command += ' --gpu %d' % gpuId
             self.runJob(program, command, cwd=movieFolder)
+            moveFile(join(movieFolder, metadataName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, micName), self._getExtraPath())
-        moveFile(join(movieFolder, metadataName), self._getExtraPath())
         if alMethod == AL_DOSEFGPU:
             # Copy the log file to have shifts information
             moveFile(join(movieFolder, logFile), self._getExtraPath())
@@ -307,6 +321,11 @@ class ProtMovieAlignment(ProtProcessMovies):
 
 def createPlots(plotType, protocol, movieId):
 
+    movie = protocol.outputMovies[movieId]
+    return movieCreatePlot(plotType, movie, False)
+
+def movieCreatePlot(plotType, movie, saveFig):
+
     import xmipp
     meanX = []
     meanY = []
@@ -314,13 +333,12 @@ def createPlots(plotType, protocol, movieId):
     stdY = []
     colors = []
     gr = 255.0
-    movie = protocol.outputMovies[movieId]
 
     # if movie is None:
     #     return [self.errorMessage("Invalid movie id *%d*" % movieId,
     #                               title="Invalid input")]
 
-    alignedMovie = protocol.outputMovies[movieId].alignMetaData
+    alignedMovie = movie.alignMetaData
     md = xmipp.MetaData(alignedMovie)
     colorDist = 255 / md.size()
 
@@ -379,5 +397,6 @@ def createPlots(plotType, protocol, movieId):
         c = ax.scatter(np.asarray(meanX), np.asarray(meanY), c=colors, s=area, cmap=plt.cm.hsv)
         c.set_alpha(0.75)
         ax.plot(np.asarray(meanX), np.asarray(meanY), '-^')
-
+    if saveFig:
+        plotter.savefig(movie.plotPolar)
     return plotter

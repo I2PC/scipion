@@ -28,14 +28,15 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.brandeis import *
+from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes
 
 
 class TestBrandeisBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.micFn = cls.dataset.getFile('micrographs/BPV_1386.mrc')
-        cls.volFn = cls.dataset.getFile('volumes/volume_1_iter_002.mrc')
+        cls.micFn = cls.dataset.getFile('allMics')
+        cls.volFn = cls.dataset.getFile('vol2')
         #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
@@ -56,19 +57,37 @@ class TestBrandeisBase(BaseTest):
         return cls.protImport
 
     @classmethod
-    def runImportVolumes(cls, pattern, samplingRate):
+    def runImportVolumes(cls, pattern, samplingRate,
+                         importFrom = ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         filesPath=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate
+                                        )
+                                         #not yet implemented
+                                         #importFrom=importFrom
+                                         #)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate, checkStack=False):
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False,
+                           importFrom = ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
+        if importFrom == ProtImportParticles.IMPORT_FROM_SCIPION:
+            objLabel = 'from scipion (particles)'
+        elif importFrom == ProtImportParticles.IMPORT_FROM_FILES:
+            objLabel = 'from file (particles)'
+
+
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         filesPath=pattern, samplingRate=samplingRate,
-                                         checkStack=checkStack)
+                                         objLabel=objLabel,
+                                         filesPath=pattern,
+                                         sqliteFile=pattern,
+                                         samplingRate=samplingRate,
+                                         checkStack=checkStack,
+                                         importFrom=importFrom)
+
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
@@ -87,16 +106,18 @@ class TestBrandeisBase(BaseTest):
                                        magnification=56000)
 
     @classmethod
-    def runImportParticleBPV(cls, pattern):
+    def runImportParticleGrigorieff(cls, pattern):
         """ Run an Import micrograph protocol. """
         return cls.runImportParticles(pattern,
-                                      samplingRate=1.237,
-                                      checkStack=True)
+                                      samplingRate=4.,
+                                      checkStack=True,
+                            importFrom=ProtImportParticles.IMPORT_FROM_SCIPION)
     @classmethod
-    def runImportVolumesBPV(cls, pattern):
+    def runImportVolumesGrigorieff(cls, pattern):
         """ Run an Import micrograph protocol. """
         return cls.runImportVolumes(pattern,
-                                    samplingRate=1.237)
+                                    samplingRate=4.,
+                                    importFrom=ProtImportParticles.IMPORT_FROM_FILES)
 
 
 class TestBrandeisCtffind(TestBrandeisBase):
@@ -109,33 +130,67 @@ class TestBrandeisCtffind(TestBrandeisBase):
     def testCtffind(self):
         protCTF = ProtCTFFind()
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
+        protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
-        ctfModel = protCTF.outputCTF.getFirstItem()
-        self.assertAlmostEquals(ctfModel.getDefocusU(),23873.5, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusV(),23640.28, places=1)
-        self.assertAlmostEquals(ctfModel.getDefocusAngle(),64.08, places=2)
+        
+        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+
+    def testCtffind2(self):
+        protCTF = ProtCTFFind()
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        protCTF.numberOfThreads.set(4)
+        self.proj.launchProtocol(protCTF, wait=True)
+        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        
+        valuesList = [[23863, 23640, 64], [22159, 21983, 50.6], [22394, 22269, 45]]
+        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+            self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
+            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=1)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
+
 
 class TestBrandeisFrealign(TestBrandeisBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
+        dataProject='grigorieff'
+        dataset = DataSet.getDataSet(dataProject)
         TestBrandeisBase.setData()
-        particlesPattern   = cls.dataset.getFile('particles/BPV_####_ptcls_64.spi')
-        cls.protImportPart = cls.runImportParticleBPV(particlesPattern)
-        cls.protImportVol  = cls.runImportVolumesBPV(cls.volFn)
+        particlesPattern   = dataset.getFile('particles.sqlite')
+        volFn              = dataset.getFile('ref_volume.vol')
+        cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
+        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
 
     def testFrealign(self):
         frealign = self.newProtocol(ProtFrealign,
+                                    inputParticles = self.protImportPart.outputParticles,
+                                    input3DReference = self.protImportVol.outputVolume,
                                     useInitialAngles=True,
                                     mode=MOD_RECONSTRUCTION,
-                                    innerRadius=0,
-                                    outerRadius=32.,
-                                    symmetry='i1'
+                                    innerRadius=0.,
+                                    outerRadius=241.,
+                                    symmetry='C1',
+                                    numberOfThreads=4,
+                                    numberOfIterations=1,
+                                    doWienerFilter=False,
+                                    resolution=2.,
+                                    highResolRefine=2.,
+                                    resolClass=2.,
+                                    writeMatchProjections=False,
+                                    score=0,
                                     )
         frealign.inputParticles.set(self.protImportPart.outputParticles)
         frealign.input3DReference.set(self.protImportVol.outputVolume)
         self.launchProtocol(frealign)
+        print "Assert is missing: testFrealign"
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)

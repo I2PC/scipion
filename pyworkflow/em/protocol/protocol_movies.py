@@ -125,11 +125,9 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     def _getMovieName(self, movieId, ext='.mrc'):
         return 'movie_%06d%s' % (movieId, ext) 
     
-    def _getMicName(self, movieId):
-        return 'micrograph_%06d.mrc' % movieId
-
-    def _getMetadataName(self, movieId):
-        return 'micrograph_%06d.xmd' % movieId
+    def _getNameExt(self, movieName, ext):
+        #return 'micrograph_%06d.mrc' % movieId
+        return removeBaseExt(movieName) + '-aligned.' + ext
 
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)

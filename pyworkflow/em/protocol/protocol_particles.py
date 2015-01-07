@@ -50,21 +50,32 @@ class ProtProcessParticles(ProtParticles):
                       label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
-        form.addParallelSection(threads=2, mpi=1)
+        
+        __threads, __mpi = self._getDefaultParallel()
+        
+        form.addParallelSection(threads=__threads, mpi=__mpi)
         
     def _defineProcessParams(self, form):
         """ This method should be implemented by subclasses
         to add other parameter relatives to the specific operation."""
-        pass  
+        pass
+    
+    def _getDefaultParallel(self):
+        """ Return the default value for thread and MPI
+        for the parallel section definition.
+        """
+        return (2, 1)
 
 
 class ProtFilterParticles(ProtProcessParticles):
     """Base class for filters on particles of type ProtPreprocessParticles"""
     pass
 
+
 class ProtOperateParticles(ProtProcessParticles):
     """Base class for operations on particles of type ProtPreprocessParticles"""
     pass
+
 
 class ProtMaskParticles(ProtProcessParticles):
     """ This is the base for the branch of mask, 

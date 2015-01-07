@@ -27,24 +27,21 @@
 This module contains the protocol base class for Relion protocols
 """
 
-import os
 import re
 from glob import glob
-from os.path import join, exists
+from os.path import exists
 
-import xmipp
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
 from pyworkflow.utils.path import cleanPath
+
+import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import (createClassesFromImages
-                   , addRelionLabels
-                   , restoreXmippLabels
-                   , convertBinaryFiles)
+from convert import convertBinaryFiles, writeSqliteIterData
 
 
 class ProtRelionBase(EMProtocol):
@@ -61,10 +58,10 @@ class ProtRelionBase(EMProtocol):
     IS_2D = False
     OUTPUT_TYPE = SetOfClasses3D
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
-    CLASS_LABEL = xmipp.MDL_REF
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                 xmipp.MDL_AVG_CHANGES_OFFSETS, 
-                 xmipp.MDL_AVG_CHANGES_CLASSES]
+    CLASS_LABEL = md.RLN_PARTICLE_CLASS
+    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
     PREFIXES = ['']
     
     def __init__(self, **args):        
@@ -78,8 +75,6 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.outputClasses = 'classes_ref3D.xmd'
-        self.outputVols = 'volumes.xmd'
         self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
@@ -90,6 +85,7 @@ class ProtRelionBase(EMProtocol):
                   'input_mrcs': self._getPath('input_particles.mrcs'),
                   'data_scipion': self.extraIter + 'data_scipion.sqlite',
                   'classes_scipion': self.extraIter + 'classes_scipion.sqlite',
+                  'model': self.extraIter + 'model.star',
                   'angularDist_xmipp': self.extraIter + 'angularDist_xmipp.xmd',
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
@@ -442,10 +438,7 @@ class ProtRelionBase(EMProtocol):
         continueRun = self.continueRun.get()
         continueRun._initialize()
         
-        if self.continueIter.get() == 'last':
-            continueIter = continueRun._lastIter()
-        else:
-            continueIter = int(self.continueIter.get())
+        continueIter = self._getContinueIter()
         
         if self.IS_CLASSIFY:
             itersToRun = continueIter + self.numberOfIterations.get()
@@ -590,6 +583,11 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
+    def _methods(self):
+        """ Should be overriden in each protocol.
+        """
+        return []
+    
     #--------------------------- UTILS functions --------------------------------------------
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
@@ -620,16 +618,22 @@ class ProtRelionBase(EMProtocol):
     def _firstIter(self):
         return self._getIterNumber(0) or 1
     
-    def _getIterClasses(self, it):
+    def _getIterClasses(self, it, clean=False):
         """ Return the .star file with the classes for this iteration.
         If the file doesn't exists, it will be created. 
         """
-        data_star = self._getFileName('data', iter=it)
         data_classes = self._getFileName('classes_scipion', iter=it)
         
+        if clean:
+            cleanPath(data_classes)
+        
         if not exists(data_classes):
-            createClassesFromImages(self._getInputParticles(), data_star, data_classes, 
-                                    self.OUTPUT_TYPE, self.CLASS_LABEL, self.ClassFnTemplate, it)
+            clsSet = self.OUTPUT_TYPE(filename=data_classes)
+            clsSet.setImages(self.inputParticles.get())
+            self._fillClassesFromIter(clsSet, it)
+            clsSet.write()
+            clsSet.close()
+
         return data_classes
     
     def _getIterData(self, it):
@@ -638,9 +642,6 @@ class ProtRelionBase(EMProtocol):
         
         if not exists(data_sqlite):
             data = self._getFileName('data', iter=it)
-            # TODO: convert the sorted data directly to sqlite
-            # and just displayed sorted by LL
-            from convert import writeSqliteIterData
             writeSqliteIterData(data, data_sqlite)
         
         return data_sqlite
@@ -654,7 +655,7 @@ class ProtRelionBase(EMProtocol):
         if not exists(data_angularDist):
             from convert import writeIterAngularDist
             data_star = self._getFileName('data', iter=it)
-            writeIterAngularDist(data_star, data_angularDist, 
+            writeIterAngularDist(self, data_star, data_angularDist, 
                                  self.numberOfClasses.get(), self.PREFIXES)
  
         return data_angularDist
@@ -663,4 +664,12 @@ class ProtRelionBase(EMProtocol):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
         from convert import splitInCTFGroups
         splitInCTFGroups(imgStar, self.numberOfGroups.get())
-
+    
+    def _getContinueIter(self):
+        continueRun = self.continueRun.get()
+        
+        if self.continueIter.get() == 'last':
+            continueIter = continueRun._lastIter()
+        else:
+            continueIter = int(self.continueIter.get())
+        return continueIter

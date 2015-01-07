@@ -313,7 +313,7 @@ class MdFileHandler(ImageFileHandler):
         filename = objFile.getPath()
         ext = getExt(filename)
         
-        if ext == '.xmd' or ext == '.ctfparam':
+        if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos':
             import xmipp
             msg = "*Metadata File* "
             blocks = xmipp.getBlocksInMetaDataFile(filename)
@@ -333,10 +333,7 @@ class MdFileHandler(ImageFileHandler):
                 msg += "\nAll blocks:" + ''.join(["\n  - %s" % b for b in blocks])
         elif ext == '.star':
             msg = "*Relion STAR file* \n"
-            from pyworkflow.em.packages.relion.convert import addRelionLabels, restoreXmippLabels
-            addRelionLabels(replace=True, extended=True)
             msg += self._getMdString(filename)
-            restoreXmippLabels()
             
         return self._imgPreview, msg
     

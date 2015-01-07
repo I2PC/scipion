@@ -84,6 +84,7 @@ def base_form(request, context):
                     'jquery_ui': getResourceJs('jquery_ui'),
                     'jquery_ui_touch': getResourceJs('jquery_ui_touch'),
                     'jquery_browser': getResourceJs('jquery_browser'),
+                    "upload_utils": getResourceJs('upload_utils'),
                     }
 
     context = base(request, context)

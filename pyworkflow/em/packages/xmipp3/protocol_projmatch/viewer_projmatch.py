@@ -291,6 +291,12 @@ Examples:
             print "Volume: ", volFn, blockName
             md.write("%s@%s"% (blockName, mdPath), xmipp.MD_APPEND)
         return [self.createDataView(mdPath)]
+
+    def viewVolumesSqlite(self, volumes):
+        path = self.protocol._getExtraPath('viewer_volumes.sqlite')
+        samplingRate = self.protocol.inputParticles.get().getSamplingRate()
+        self.createVolumesSqlite(volumes, path, samplingRate)
+        return [ObjectView(self._project.getName(), self.protocol.strId(), path)]
     
     def _showVolumesChimera(self, volumes):
         """ Create a chimera script to visualize selected volumes. """
@@ -316,7 +322,8 @@ Examples:
         if self.showVolume == VOLUME_CHIMERA:
             return self._showVolumesChimera(volumes)
         elif self.showVolume == VOLUME_SLICES:
-            return self._createVolumesMd(volumes)
+            #return self._createVolumesMd(volumes)
+            return self.viewVolumesSqlite(volumes)
     
     def _volFileNames(self, volTemplate):
         volumes = []

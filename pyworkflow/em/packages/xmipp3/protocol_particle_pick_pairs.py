@@ -128,16 +128,17 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
+        outputset.setObjComment(self.getSummary())
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
         self._defineSourceRelation(inputset, outputset)
         
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
-        return ['Abrishami2013']
+        return []
 
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------------------
     def __str__(self):
         """ String representation of a Particle Picking Tilt run """
         if not hasattr(self, 'outputCoordinatesTiltPair'):
@@ -167,7 +168,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return self.getSummary(self.getCoords())
+            return [self.getSummary(self.getCoords())]
 
     def _methods(self):
         if self.getOutputsSize() > 0:
@@ -192,7 +193,9 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             configobj = md.firstObject()
             activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
             summary.append("Particles picked: %d"%manualParticlesSize)
+            summary.append("Particle size: %d"%particleSize)
             summary.append("Last micrograph: " + activemic)
         return "\n".join(summary)
        

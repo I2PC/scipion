@@ -102,6 +102,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
         # Generate the Set of Particles with alignment
         alignedSet = self._createSetOfParticles()
         alignedSet.copyInfo(particles)
+        alignedSet.setRepresentative(avg)
         readSetOfParticles(self.imgsFn, alignedSet)
         self._defineOutputs(outputParticles=alignedSet)
         self._defineSourceRelation(particles, alignedSet)
@@ -125,8 +126,11 @@ class XmippProtCL2DAlign(ProtAlign2D):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output alignment not ready yet.")
         else:
-            summary.append("Input Images: %s" % self.inputParticles.get().getNameId())
-            summary.append("Output Aligned Images: %s" % self.outputParticles.get())
+            summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
+            if self.useReferenceImage:
+                summary.append("Aligned with reference image: %s" % self.referenceImage.get().getNameId())
+            else:
+                summary.append("Aligned with no reference image.")
         return summary
     
     def _citations(self):
@@ -134,7 +138,7 @@ class XmippProtCL2DAlign(ProtAlign2D):
     
     def _methods(self):
         if self.useReferenceImage:
-            return ["We aligned all images with respect to the image "+self.referenceImage.get().getNameId()+" using CL2D [Sorzano2010a]"]
+            return ["We aligned all images with respect to the reference image using CL2D [Sorzano2010a]"]
         else:
             return ["We aligned all images with no reference using CL2D [Sorzano2010a]"]
         

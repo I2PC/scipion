@@ -67,7 +67,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
         
         print "Run CL2D"
-        protCL2D = XmippProtCL2D(numberOfReferences=32, numberOfInitialReferences=4, 
+        protCL2D = XmippProtCL2D(numberOfClasses=32, numberOfInitialClasses=4,
                                  numberOfIterations=2, numberOfMpi=16)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         protCL2D.setObjLabel('CL2D')
@@ -106,6 +106,15 @@ class TestMixedRelionTutorial(TestWorkflow):
         prot2D.setObjLabel('relion 2D')
         self.launchProtocol(prot2D)        
         self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
+        
+        print "Run Relion Refine"
+        proRef = ProtRelionRefine3D(numberOfMpi=4, numberOfThreads=4)
+        proRef.inputParticles.set(protExtract2.outputParticles)
+        proRef.referenceVolume.set(protImportVol.outputVolume)
+        proRef.setObjLabel('relion Refine')
+        self.launchProtocol(proRef)        
+        self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+        self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
 
 
 class TestMixedFrealignClassify(TestWorkflow):

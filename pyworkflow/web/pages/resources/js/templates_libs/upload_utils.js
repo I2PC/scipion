@@ -33,37 +33,100 @@
  /** METHODS ******************************************************************/
 
 // To fill the list of files tab
-$(document).ready(function() {
+function doInitFunction(){
 	var project_folder = $("#project_folder").val()
 	updateListFiles(project_folder)
 	var URL = getSubDomainURL() + '/doUpload/'
 	$("#uploadForm").submit(function(e) {
 		$.ajax({
 			url: URL,
-	        type: 'POST',
-	        data: new FormData( this ),
-	        processData: false,
-	        contentType: false,
-	        async: false
+			type: 'POST',
+			data: new FormData(this),
+			processData: false,
+			contentType: false,
+			dataType: "text",
+			async: false,
+			success: function(data){
+				if(data == "error"){
+					errorPopup('Error', "Problem found with the file selected", 0);
+				}
+				else{
+					infoPopup('Success', "The file was uploaded successfuly", 0);
+				}
+			}
 		});
 		e.preventDefault();
-		infoPopup('Success', "The file was uploaded successfuly",0);
 //		$("#progressbar").hide()
 		updateListFiles(project_folder)
 	});
-});
- 
+}
+
+function browseUpload(paramName){
+	url_param = "/upload/?mode=service"
+	var URL = getSubDomainURL() + url_param
+	
+	$.ajax({
+		type : "GET",
+		url : URL,
+		dataType : "html",
+		async: false,
+		success : function(html) {
+			new Messi(html, {
+				title : 'Select file',
+				modal : true,
+				buttons : [ {
+					id : 0,
+					label : 'Upload',
+					val : 'Y',
+					btnClass : 'fa-cogs',
+					btnFunc : 'uploadService',
+				}, {
+					id : 1,
+					label : 'Cancel',
+					val : 'C',
+					btnClass : 'fa-ban'
+				}]
+			});
+		}
+	});
+}
  
 function launchUpload(){
 	var msg = "</td><td class='content' value='"
 		msg += "'>The file will be <strong>UPLOADED</strong> into the path <strong>PROJECT FOLDER</strong>. "
 		msg += "Do you really want to continue?</td></tr></table>";
-	warningPopup('Confirm UPLOAD',msg, 'launchSubmitUpload')
+	warningPopup('Confirm UPLOAD', msg, 'launchSubmitUpload')
 }
 
 function launchSubmitUpload(){
-//	$("#progressbar").show()
 	$('#uploadForm').submit();
+}
+
+function uploadService(){
+	launchSubmitUpload()
+	
+	var browser = detectWebBrowser()
+	
+	if(browser=="chrome" || browser=="ie"){
+		var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	}else if("firefox"){
+		var fn = $("input#id_docfile").val()
+	}else{
+		var fn = $("input#id_docfile").val()
+		console.log("1:"+fn)
+		fn = fn.split("fakepath")[1]
+		console.log("2:"+fn)
+		fn = fn.slice(1)
+		console.log("3:"+fn)
+		fn = fn.replace(" ", "_")
+		console.log("4:"+fn)
+//		var fn = $("input#id_docfile").val().split("fakepath")[1].slice(1).replace(" ", "_")
+	}
+	
+	$("input.upload2").val(fn)
+
+	file = $("#project_folder").val()+ "/Uploads/" + fn
+	$("input.upload1").val(file)
 }
 
 function updateListFiles(project_folder){

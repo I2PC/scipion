@@ -95,8 +95,9 @@ class TestImportMicrographs(TestImportBase):
         # Import some micrographs from EMX        
         emxFn = self.dsEmx.getFile('coordinatesT1')
         args['importFrom'] = ProtImportMicrographs.IMPORT_FROM_EMX
-        args['micrographsEMX'] = emxFn
+        args['emxFile'] = emxFn
         protEmxImport = self.newProtocol(ProtImportMicrographs, **args)
+        protEmxImport.setObjLabel('from emx (with coords)')
         self.launchProtocol(protEmxImport)
         _checkOutput(protEmxImport, [], size=1)
 
@@ -107,7 +108,7 @@ class TestImportMicrographs(TestImportBase):
         emxFn = self.dsEmx.getFile('emxMicrographCtf1')
         protEmxImport = self.newProtocol(ProtImportMicrographs,
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
-                                         micrographsEMX=emxFn,
+                                         emxFile=emxFn,
                                          magnification=10000,
                                          samplingRate=2.46
                                          )
@@ -125,9 +126,9 @@ class TestImportMicrographs(TestImportBase):
         micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
         prot1 = self.newProtocol(ProtImportMicrographs,
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
-                                         micrographsMd=micsMd,
+                                         mdFile=micsMd,
                                          magnification=10000,
-                                         samplingRate=1.
+                                         samplingRate=1.237
                                          )
         prot1.setObjLabel('from xmipp (no-ctf)')
         self.launchProtocol(prot1)
@@ -138,9 +139,9 @@ class TestImportMicrographs(TestImportBase):
         micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
         prot2 = self.newProtocol(ProtImportMicrographs,
                                          importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
-                                         micrographsMd=micsMd,
+                                         mdFile=micsMd,
                                          magnification=10000,
-                                         samplingRate=1.
+                                         samplingRate=1.237
                                          )
         prot2.setObjLabel('from xmipp (ctf)')
         self.launchProtocol(prot2)

@@ -147,7 +147,6 @@ class SqliteMapper(Mapper):
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
-                #path = obj._objName[:obj._objName.rfind('.')] # remove from last .
                 namePrefix = self.__getNamePrefix(obj)
                 attr._objName = joinExt(namePrefix, key)
                 self.__insert(attr, namePrefix)
@@ -661,7 +660,6 @@ class SqliteFlatMapper(Mapper):
         """
         return [self.selectById(rowId['id']) for rowId in objIds]
     
-
     def hasProperty(self, key):
         return self.db.hasProperty(key)
         
@@ -689,10 +687,21 @@ class SqliteFlatDb(SqliteDb):
 
     def __init__(self, dbName, tablePrefix='', timeout=1000):
         SqliteDb.__init__(self)
-        self._reuseConnections = True
         tablePrefix = tablePrefix.strip()
         if tablePrefix and not tablePrefix.endswith('_'): # Avoid having _ for empty prefix
             tablePrefix += '_'
+        #NOTE (Jose Miguel, 2014/01/02
+        # Reusing connections is a bit dangerous, since it have lead to
+        # unexpected and hard to trace errors due to using an out-of-date
+        # reused connection. That's why we are changing now the default to False
+        # and only setting to True when the tablePrefix is non-empty, which is the
+        # case for classes that are different tables in the same db and it logical
+        # to reuse the connection.
+        if tablePrefix:
+            self._reuseConnections = True
+        else:
+            self._reuseConnections = False#True
+        
         self.CHECK_TABLES = "SELECT name FROM sqlite_master WHERE type='table' AND name='%sObjects';" % tablePrefix
         self.SELECT = "SELECT * FROM %sObjects WHERE " % tablePrefix
         self.FROM   = "FROM %sObjects" % tablePrefix
@@ -854,26 +863,17 @@ class SqliteFlatDb(SqliteDb):
         return self._results(iterate)
 
     def aggregate(self, operations, operationLabel, groupByLabels=None):
-        print "aggregate3"
-
-        print "operations", operations
-        print "operationLabel", operationLabel
-        print "groupByLabels", groupByLabels
         #let us count for testing
         selectStr = 'SELECT '
         separator = ' '
         #This cannot be like the following line should be expresed in terms
         #of C1, C2 etc....
         for operation in operations:
-            print "operation", operation
-            print "operationLabel", operationLabel
-            print "hhhh", self._columnsMapping[operationLabel]
             selectStr += "%s %s(%s) AS %s"%(separator
                                             , operation
                                             , self._columnsMapping[operationLabel]
                                             , operation)
             separator = ', '
-        print "selectStr", selectStr
         if groupByLabels is not None:
             groupByStr = 'GROUP BY '
             separator = ' '
@@ -884,9 +884,7 @@ class SqliteFlatDb(SqliteDb):
                 separator = ', '
         else:
             groupByStr = ' '
-        print "groupByStr",groupByStr
         sqlCommand = selectStr +"\n" + self.FROM + "\n" + groupByStr
-        print "sqlCommand", sqlCommand
         self.executeCommand(sqlCommand)
         return self._results(iterate=False)
 

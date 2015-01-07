@@ -68,8 +68,7 @@ class BatchProtNMACluster(BatchProtocol):
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(inputSet, partSet)
         
-        writeSetOfParticles(partSet, imagesMd, 
-                            is2D=False, inverseTransform=True)
+        writeSetOfParticles(partSet, imagesMd)
 
     def reconstructStep(self, params):
         self.runJob('xmipp_reconstruct_fourier', params)

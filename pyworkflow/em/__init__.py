@@ -43,30 +43,62 @@ import transformations
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
-PACKAGES_DICT = getModules(PACKAGES_PATH)
+
+_emPackagesDict = None
+
+def getPackages():
+    global _emPackagesDict
+    if _emPackagesDict is None:
+        _emPackagesDict = getModules(PACKAGES_PATH)
+    return _emPackagesDict
 
 # Load all Protocol subclasses found in EM-packages
-emProtocolsDict = getSubclassesFromModules(Protocol, PACKAGES_DICT)
-emProtocolsDict.update(getSubclasses(Protocol, globals()))
+_emProtocolsDict = None
 
-# Load all EMObject subclasses found in EM-packages
-emObjectsDict = getSubclassesFromModules(EMObject, PACKAGES_DICT)
-emObjectsDict.update(getSubclasses(EMObject, globals()))
+def getProtocols():
+    """ Load all protocols subclasses defined in all em-packages. """
+    global _emProtocolsDict
+    if _emProtocolsDict is None:
+        _emProtocolsDict = getSubclassesFromModules(Protocol, getPackages())
+        _emProtocolsDict.update(getSubclasses(Protocol, globals()))
+    return _emProtocolsDict
 
-# Load all subclasses of Viewer of different packages
-emViewersDict = getSubclassesFromModules(Viewer, PACKAGES_DICT)
+_emObjectsDict = None 
 
-# Load all subclasses of Wizards
-emWizardsDict = getSubclassesFromModules(Wizard, PACKAGES_DICT)
+def getObjects():
+    """ Load all EMObject subclasses found in EM-packages. """
+    global _emObjectsDict
+    if _emObjectsDict is None:        
+        _emObjectsDict = getSubclassesFromModules(EMObject, getPackages())
+        _emObjectsDict.update(getSubclasses(EMObject, globals()))
+    return _emObjectsDict
+
+_emViewersDict = None
+
+def getViewers():
+    """ Load all subclasses of Viewer of different packages. """
+    global _emViewersDict
+    if _emViewersDict is None:
+        _emViewersDict = getSubclassesFromModules(Viewer, getPackages())
+    return _emViewersDict
+
+_emWizardsDict = None
+
+def getWizards():
+    """ Load all subclasses of Wizards. """
+    global _emWizardsDict
+    if _emWizardsDict is None:
+        _emWizardsDict = getSubclassesFromModules(Wizard, getPackages())
+    return _emWizardsDict
         
         
 def findClass(className):
     
-    if className in emProtocolsDict:
-        return emProtocolsDict[className]
+    if className in getProtocols():
+        return getProtocols()[className]
     
-    if className in emObjectsDict:
-        return emObjectsDict[className]
+    if className in getObjects():
+        return getObjects()[className]
     
     raise Exception("findClass: class '%s' not found." % className)
 
@@ -87,7 +119,7 @@ def findViewers(className, environment):
     viewers = []
     cls = findClass(className)
     baseClasses = cls.mro()
-    for viewer in emViewersDict.values():
+    for viewer in getViewers().values():
         if environment in viewer._environments:
             for t in viewer._targets:
                 if t in baseClasses:
@@ -115,10 +147,10 @@ def findWizards(protocol, environment):
     """ Find availables wizards for this class. 
     Returns:
         a dict with the paramName and wizards for this class."""
-    return findWizardsFromDict(protocol, environment, emWizardsDict)
+    return findWizardsFromDict(protocol, environment, getWizards())
 
 # Update global dictionary with variables found
-globals().update(emProtocolsDict)
-globals().update(emObjectsDict)
-globals().update(emViewersDict)
+#globals().update(emProtocolsDict)
+#globals().update(emObjectsDict)
+#globals().update(emViewersDict)
     

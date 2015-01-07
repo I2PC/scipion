@@ -28,6 +28,7 @@ This modules contains classes to store information about
 execution hosts.
 """
 
+import sys
 import os
 from ConfigParser import ConfigParser
 

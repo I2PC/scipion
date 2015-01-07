@@ -41,24 +41,19 @@ import SCons.Script
 import SCons.SConf
 
 
-# OS boolean vars
-MACOSX = (platform.system() == 'Darwin')
-WINDOWS = (platform.system() == 'Windows')
-LINUX = (platform.system() == 'Linux')
 
 # URL where we have most of our tgz files for libraries, modules and packages.
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
 # Define our builders.
-download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
+Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
+Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
                   tools=['Make', 'AutoConfig'],
                   toolpath=[join('software', 'install', 'scons-tools')])
-#Export('env')
 # TODO: BUILDERS var added from the tricky creation of a new environment.
 # If not, they lose default builders like "Program", which are needed later
 # (by CheckLib and so on). See http://www.scons.org/doc/2.0.1/HTML/scons-user/x3516.html
@@ -117,13 +112,17 @@ CheckConfigLib = Builder(action=checkConfigLib)
 
 
 # Add the path to dynamic libraries so the linker can find them.
-if LINUX:
+
+if platform.system() == 'Linux':
     env.AppendUnique(LIBPATH=os.environ.get('LD_LIBRARY_PATH', ''))
-elif MACOSX:
+elif platform.system() == 'Darwin':
     print "OS not tested yet"
     env.AppendUnique(LIBPATH=os.environ.get('DYLD_FALLBACK_LIBRARY_PATH', ''))
-elif WINDOWS:
+elif platform.system() == 'Windows':
     print "OS not tested yet"
+else:
+    print "Unknown system: %s\nPlease tell the developers." % platform.system()
+
 
 # Python and SCons versions are fixed
 env.EnsurePythonVersion(2,7)
@@ -871,7 +870,7 @@ Continue anyway? (y/n)""" % (p, name)
     return lastTarget
 
 
-def manualInstall(env, name, tar=None, buildDir=None, url=None,
+def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                   extraActions=[], deps=[], clean=[], default=True):
     """Just download and run extraActions.
 
@@ -898,6 +897,18 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None,
     if not default:
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Activate %s' % name)
+
+    # Check that all needed programs are there.
+    for p in neededProgs:
+        if not progInPath(env, p):
+            print """
+  ************************************************************************
+    Warning: Cannot find program "%s" needed by %s
+  ************************************************************************
+
+Continue anyway? (y/n)""" % (p, name)
+            if raw_input().upper() != 'Y':
+                Exit(2)
 
     # Donload, untar, and execute any extra actions.
     tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))

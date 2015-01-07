@@ -24,16 +24,18 @@
 # *
 # **************************************************************************
 
-from os.path import exists
+from os.path import exists, join, basename
 import json
 from views_base import base_grid, base_flex
 from views_util import loadProject, getResourceCss, getResourceIcon, getResourceJs
 from views_tree import loadProtTree
 
 from pyworkflow.manager import Manager
+from pyworkflow.utils.path import copyFile
 
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
+from pyworkflow.tests.tests import DataSet
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -213,14 +215,30 @@ def formatProvider(provider, mode):
         
     return objs
 
-def project_content(request):        
-    from pyworkflow.gui.tree import ProjectRunsTreeProvider
-    
+def project_content(request):
     projectName = request.GET.get('projectName', None)
-    mode = request.GET.get('mode', None)
-    
     if projectName is None:
         projectName = request.POST.get('projectName', None)
+    context = contentContext(request, projectName)
+    context.update({'mode': None})
+    return render_to_response('project_content/project_content.html', context)
+
+def service_content(request):
+    projectName = request.GET.get('p', None)
+    context = contentContext(request, projectName)
+    context.update({'importAverages': getResourceIcon('importAverages'),
+                    'useProtocols': getResourceIcon('useProtocols'),
+                    'protForm': getResourceIcon('protForm'),
+                    'summary': getResourceIcon('summary'),
+                    'showj': getResourceIcon('showj'),
+                    'alignVol': getResourceIcon('alignVol'),
+                    'download': getResourceIcon('download'),
+                    'mode':'service',
+                    })
+    return render_to_response('project_content/project_content.html', context)
+
+def contentContext(request, projectName):
+    from pyworkflow.gui.tree import ProjectRunsTreeProvider
         
     request.session['projectName'] = projectName
     manager = Manager()
@@ -252,7 +270,7 @@ def project_content(request):
     projectNameHeader = 'Project '+ str(projectName)
     
     context = {'projectName': projectName,
-               'mode': mode,
+               'view':'protocols',
                'editTool': getResourceIcon('edit_toolbar'),
                'copyTool': getResourceIcon('copy_toolbar'),
                'deleteTool': getResourceIcon('delete_toolbar'),
@@ -275,17 +293,15 @@ def project_content(request):
                'graphView': graphView,
                'selectedRuns': selectedRuns
                }
-    
+
     context = base_flex(request, context)
     
-    return render_to_response('project_content/project_content.html', context)
-
+    return context
+    
 def protocol_info(request):
     from pyworkflow.web.app.views_util import parseText
     from pyworkflow.em.data import EMObject  
     
-#    print "ENTER IN PROTOCOL INFO METHOD"
-
     if request.is_ajax():
         jsonStr = ''
         projectName = request.session['projectName']
@@ -300,7 +316,7 @@ def protocol_info(request):
             input_obj = [{'name':name, 
                           'nameId': attr.getNameId(), 
                           'id': attr.getObjId(), 
-                          'info': str(attr)} 
+                          'info': str(attr.get()) if attr.isPointer() else str(attr)} 
                          for name, attr in protocol.iterInputAttributes()]
             
             output_obj = [{'name':name, 
@@ -349,6 +365,7 @@ def service_projects(request):
 
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'hiddenTreeProt': True,
                }
     
     context = base_grid(request, context)
@@ -357,57 +374,128 @@ def service_projects(request):
 
 def writeCustomMenu(customMenu):
     if not exists(customMenu):
-        f = open(customMenu, 'w')
+        f = open(customMenu, 'w+')
         f.write('''
 [PROTOCOLS]
 
 Initial_Volume = [
-    {"tag": "section", "text": "1. Upload and Import", "children": [
-        {"tag": "url", "value": "/upload/", "text": "Upload files", "icon": "fa-upload.png"},
-        {"tag": "protocol", "value": "ProtImportParticles",     "text": "Import averages", "icon": "bookmark.png"}]},
+    {"tag": "section", "text": "1. Upload data", "children": [
+        {"tag": "protocol", "value": "ProtImportAverages",     "text": "Import averages", "icon": "bookmark.png"}]},
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
-        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - RANSAC"},
-        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"}]},
-    {"tag": "section", "text": "3. Download good volumes."}]
-''')
+        {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - ransac"},
+        {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
+        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
+    {"tag": "section", "text": "3. Align volumes.", "children": [
+        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"}]}]
+        ''')
+        f.close()
         
 def create_service_project(request):
     if request.is_ajax():
-        import sys
-        from pyworkflow.manager import Manager
-        from pyworkflow.gui.project import ProjectWindow
-        from pyworkflow.em.protocol import *
-        from pyworkflow.em.packages.xmipp3 import *
-        from pyworkflow.em.packages.eman2 import *
+        import os
+        from pyworkflow.object import Pointer
+        from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
+        from pyworkflow.em.packages.eman2 import EmanProtInitModel
+        from pyworkflow.em.packages.simple import ProtPrime
         
         # Create a new project
         manager = Manager()
         projectName = request.GET.get('projectName')
-        customMenu = join(dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        
+        # Filename to use as test data 
+        testDataKey = request.GET.get('testData')
+        
+        #customMenu = os.path.join(os.path.dirname(os.environ['SCIPION_MENU']), 'menu_initvolume.conf')
+        customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
-        #customMenu = '/home/scipionweb/.config/scipion/menu_initvolume.conf'
         confs = {'protocols': customMenu}
         project = manager.createProject(projectName, confs, graphView=True)   
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
                                          objLabel='import averages')
-        project.saveProtocol(protImport)
+        
+        # If using test data execute the import averages run
+        # options are set in 'project_utils.js'
+        dsMDA = DataSet.getDataSet('initial_volume')
+        
+        if testDataKey :
+            fn = dsMDA.getFile(testDataKey)
+            newFn = join(project.uploadPath, basename(fn))
+            copyFile(fn, newFn)
+            
+            protImport.filesPath.set(newFn)
+            protImport.samplingRate.set(1.)
+#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
+            
+            project.launchProtocol(protImport, wait=True)
+        else:
+            project.saveProtocol(protImport)
+            
         
         # 2a. Ransac 
         protRansac = project.newProtocol(XmippProtRansac)
+        protRansac.setObjLabel('xmipp - ransac')
         protRansac.inputSet.set(protImport)
         protRansac.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protRansac)
         
         # 2b. Eman 
         protEmanInitVol = project.newProtocol(EmanProtInitModel)
+        protEmanInitVol.setObjLabel('eman - initial vol')
         protEmanInitVol.inputSet.set(protImport)
         protEmanInitVol.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protEmanInitVol)
         
+        # 2c. Significant 
+        protSignificant = project.newProtocol(XmippProtReconstructSignificant)
+        protSignificant.setObjLabel('xmipp - significant')
+        protSignificant.inputSet.set(protImport)
+        protSignificant.inputSet.setExtendedAttribute('outputAverages')
+        project.saveProtocol(protSignificant)
+        
+#         # 2d. Prime 
+#         protPrime = project.newProtocol(ProtPrime)
+#         protPrime.setObjLabel('simple - prime')
+#         protPrime.inputClasses.set(protImport)
+#         protPrime.inputClasses.setExtendedAttribute('outputAverages')
+#         project.saveProtocol(protPrime)
+        
+        # 3. Join result volumes
+        p1 = Pointer()
+        p1.set(protRansac)
+        p1.setExtendedAttribute('outputVolumes')
+        
+        p2 = Pointer()
+        p2.set(protEmanInitVol)
+        p2.setExtendedAttribute('outputVolumes')
+        
+        p3 = Pointer()
+        p3.set(protSignificant)
+        p3.setExtendedAttribute('outputVolume')
+        
+#         p4 = Pointer()
+#         p4.set(protPrime)
+#         p4.setExtendedAttribute('outputVolume')
+        
+        protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
+        protJoin.setObjLabel('align volumes')
+        protJoin.inputVolumes.append(p1)
+        protJoin.inputVolumes.append(p2)
+        protJoin.inputVolumes.append(p3)
+#         protJoin.inputVolumes.append(p4)
+        project.saveProtocol(protJoin)
+        
         
     return HttpResponse(mimetype='application/javascript')
+
+def get_testdata(request):
+    # Filename to use as test data 
+    testDataKey = request.GET.get('testData')
+    dsMDA = DataSet.getDataSet('initial_volume')
+    fn = dsMDA.getFile(testDataKey)
+    return HttpResponse(fn, mimetype='application/javascript')
 
 def check_project_id(request):
     result = 0

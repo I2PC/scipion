@@ -58,3 +58,16 @@ def getMdSize(filename):
 def isMdEmpty(filename):
     """ Use getMdSize to check if metadata is empty. """
     return getMdSize(filename) == 0
+
+
+def iterMdRows(md):
+    """ Iterate over the rows of the given metadata. """
+    # If md is string, take as filename and create the metadata
+    if isinstance(md, basestring):
+        md = xmipp.MetaData(md)
+        
+    row = XmippMdRow()
+    
+    for objId in md:
+        row.readFromMd(md, objId)
+        yield row

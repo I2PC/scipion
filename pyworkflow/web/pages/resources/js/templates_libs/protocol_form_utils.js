@@ -131,12 +131,14 @@ $(document).ready(function() {
 	$("#protocolForm").submit(function() {
 		var mode = $("#protocolForm").attr('data-mode');
 
+// ---------- MODE EXECUTE PROTOCOL  -----------------------------------------------
 		if (mode == 'execute') {
 			/* Execute the protocol */
 			// console.log($("#protocolForm").serialize())
 			var action = $("#protocolForm").attr("action");
 			var URL = getSubDomainURL() + action
 			var serialize_form = fixInput($("#protocolForm").serialize());
+			
 			$.post(URL, serialize_form, function(json) {
 				if (json.errors.length > 0) {
 					// Show errors in the validation
@@ -146,6 +148,7 @@ $(document).ready(function() {
 				}
 			}, "json");
 
+// ---------- MODE SAVE PROTOCOL ------------------------------------------------
 		} else if (mode == 'save') {
 			/* Save the protocol */
 			var serialize_form = fixInput($("#protocolForm").serialize());
@@ -160,6 +163,8 @@ $(document).ready(function() {
 					infoPopup('Success', "The protocol was saved successfuly", 1, 'window.opener.popup(\'/form/?protocolId='+protId+'\')');
 				}
 			},"json");
+
+// ---------- MODE WIZARD -----------------------------------------------------
 		} else if (mode == 'wiz') {
 			
 			new Messi("<i class='fa fa-magic'/>  Loading Wizard...",{
@@ -184,6 +189,8 @@ $(document).ready(function() {
 					customPopupHTML(html,790,480);
 				}
 			});
+
+// ---------- MODE VIEWER -----------------------------------------------------
 		} else if (mode == 'viewerElement') {
 			
 			new Messi("<i class='fa fa-eye'/> Loading Viewer...",{
@@ -242,12 +249,20 @@ function evalElements() {
 		var type = $(this).attr('data-type');
 		
 		// DEBUG -----------------------------
-//		var debug_param = "PARAM:"+param;
-//		var debug_value = "VALUE:"+value;
-//		var debug_type = "TYPE:"+type;
+		var debug_param = "PARAM:"+param;
+		var debug_value = "VALUE:"+value;
+		var debug_type = "TYPE:"+type;
 //		console.log(debug_param + "," +debug_value + "," +debug_type);
 		
 		// Depending of the parameter is processed
+		
+		if (type == "Group"){
+			// Check expert level for the group content
+			var newLevel = $("select[name=expertLevel]").val();
+			var expLevel = $(this).attr('data-expert');
+			evalExpertLevel(expLevel, newLevel, $(this))
+		}
+		
 		switch (type){
 			
 			case "EnumParam":
@@ -321,17 +336,25 @@ function setParamValue(paramId, value) {
 	// Evaluate the expert level
 	if (params != undefined && params.length <= 0) {
 		var expLevel = row.attr('data-expert');
-	
-		if (expLevel > newLevel) {
-			row.hide();
-		} else {
-			row.show();			
-		}
+		evalExpertLevel(expLevel, newLevel, row)
 	}
 	
 	// To process the hidden elements into protocol form
 	// is necessary to be evaluated himself.
 	evalRow(row)
+}
+
+function evalExpertLevel(expLevel, newLevel, row){
+//	console.log('Evaluate the expert level')
+	var expLevel = row.attr('data-expert');
+
+	if (expLevel > newLevel) {
+//		console.log("hide")
+		row.hide();
+	} else {
+//		console.log("show")
+		row.show();			
+	}
 }
 
 function evalRow(row){
@@ -454,6 +477,7 @@ function normalizeConditions(cond){
 	return cond;
 }
 
+
 function browseObjects(paramName, type_param, value_param, pointerCondition, maxNumObjects) {
 	/*
 	 * Browse object in the database.
@@ -486,7 +510,6 @@ function browseObjects(paramName, type_param, value_param, pointerCondition, max
 				+ "&direction=" + res[3]
 				                      
     		break;
-		
     }
 	
 //	console.log("URL:", url_param)
@@ -568,19 +591,62 @@ function getTableFormatted(node, json, id, previsualize) {
 	$.each(json, function(key, value) {
 		// key is the param ObjId for the object
 		// value is the name of the object
-		if(previsualize){
-			var func = first + 'launchViewer("'+ key +'")' + second;
-		}
+		if (value["type"] == "obj"){
+			if(previsualize)
+				var func = first + 'launchViewer("'+ key +'")' + second;
+			res += "<tr id='"+ x + "' class='" + key + "' value='"
+			+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
+			+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
+			
+		} else if (value["type"] == "set"){
+			if(previsualize)
+				var func = first + 'launchViewer("'+ key +'")' + second;
+			
+			res += "<tr onclick='showHideChildsRow("+ key +")' class='" + key + "' value='" + value["nameId"] +"'>"
+			res += "<td><i id='folderIco-"+ key +"' class='fa fa-folder'></i>&nbsp;&nbsp;"+value["nameId"]+"</td><td>"+ value["info"]+"</td>";
+			res += "<td>"+ func +"</td>"
+			res += "</tr>"
+
+			for(i=0; i<value['objects'].length; i++){
 				
-		res += "<tr id='"+ x + "' class='" + key + "' value='"
-				+ value["nameId"]  + "' onclick=javascript:selTableMessi($(this)); ><td>" 
-				+ value["nameId"] + "</td><td>"  + value["info"]+"</td><td>"+ func +"</td></tr>";
+				var idText = value["nameId"] + " [item " + value['objects'][i]["objId"] +"]"
+				var idElm = key + "::" + value['objects'][i]["objId"]
+				var nameIdObj = value['objects'][i]["nameId"]
+				var objName = value['objects'][i]["objName"]
+				var infoObj = value['objects'][i]["info"]
+				var objId = value['objects'][i]["objId"]
+				
+//				if(previsualize)
+//					var func = first + 'launchViewer("'+ idElm +'")' + second;
+				
+				res += "<tr style='display:none;' data-row='"+ key +"' id='"+ x + "' class='" + idElm + "' value='"
+				+ idText  + "' onclick=javascript:selTableMessi($(this));><td> item " 
+				+ objId + "</td><td>"+ infoObj +"</td>";
+				
+//				res += "<td>"+ func +"</td>"
+				res += "</tr>"
+					
+				x++;
+			}
+		}
 		x++;
 	});
 	
 	res = res + "</table>";
 	return res;
 }
+
+function showHideChildsRow(key){
+	if($("i#folderIco-"+key).attr("class")== "fa fa-folder"){
+		$("tr[data-row="+ key +"]").show();
+		$("i#folderIco-"+key).attr("class", "fa fa-folder-open")
+	}
+	else {
+		$("tr[data-row="+ key +"]").hide();
+		$("i#folderIco-"+key).attr("class", "fa fa-folder")
+	}
+}
+
 
 function selectDialog(objClass, msg, funcName) {
 	/*
@@ -609,7 +675,7 @@ function getSelectedValue(elm){
 	var res = []
 	           
 	var selected = $("tr#" + elm.attr('value'));
-	res[0] = selected.attr('value')
+	res[0] = selected.attr('value');
 	res[1] = selected.attr('class');
 	
 	return res;
@@ -684,10 +750,16 @@ function selTableMessi(elm) {
 
 	if (row.attr('value') != undefined && row.attr('value') != id) {
 		var rowOld = $("tr#" + row.attr('value'));
-		rowOld.attr('style', '');
+//		rowOld.attr('style', '');
+		// Fixed
+		rowOld.css('background-color', '');
+		rowOld.css('font-weight', '');
 	}
 	row.attr('value', id);
 	elm.attr("selected","selected")
-	elm.attr('style', 'background-color: #F3CBCB;font-weight: bold;');
+//	elm.attr('style', 'background-color: #F3CBCB;font-weight: bold;');
+	// Fixed
+	elm.css('background-color', '#F3CBCB')
+	elm.css('font-weight', 'bold')
 }
 

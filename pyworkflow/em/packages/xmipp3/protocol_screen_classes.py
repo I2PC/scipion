@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Javier Vargas and Adrian Quintana (jvargas@cnb.csic.es aquintana@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,22 +23,25 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import createXmippInputClasses2D,\
-    createXmippInputVolumes
+from pyworkflow.em.constants import ALIGN_PROJ
 """
 This sub-package contains wrapper around Screen Classes Xmipp program
 """
 
-from pyworkflow.em import *  
-from pyworkflow.em.protocol import *
+from pyworkflow.object import Float
 from pyworkflow.protocol.constants import LEVEL_EXPERT
+from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam
+from pyworkflow.em.protocol import ProtAnalysis2D
+from pyworkflow.em.data import Class2D, SetOfClasses2D
+from pyworkflow.em.packages.xmipp3.utils import iterMdRows
+from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+
 import xmipp
 from xmipp3 import ProjMatcher
-from convert import readSetOfClasses2D   
 
         
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
-    """Compares a set of classes/images with the corresponding projections of a reference volume """
+    """Compares a set of classes or averages with the corresponding projections of a reference volume """
     _label = 'screen classes'
     
     def __init__(self, **args):
@@ -48,11 +51,11 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputClasses', PointerParam, label="Set of classes", important=True,
-                      pointerClass='SetOfClasses2D', pointerCondition='hasRepresentatives',
-                      help='Provide a set of classes object')
+        form.addParam('inputSet', PointerParam, label="Input averages", important=True, 
+                      pointerClass='SetOfClasses2D, SetOfAverages',
+                      help='Select the input set to compare.'
+                           'It should be a SetOfClasses2D or a SetOfAverages')
         form.addParam('inputVolume', PointerParam, label="Volume to compare classes to", important=True,
-#                      pointerClass='SetOfVolumes',
                       pointerClass='Volume',
                       help='Volume to be used for class comparison')
         form.addParam('symmetryGroup', StringParam, default="c1",
@@ -64,53 +67,122 @@ class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
                       help='In degrees.'
                       ' This sampling defines how fine the projection gallery from the volume is explored.')
         
-        form.addParallelSection(mpi=8)
+        form.addParallelSection(threads=0, mpi=1)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
         # Convert input images if necessary
-        self.Xdim = self.inputClasses.get().getDimensions()[0]
+        imgsFn = self._getPath('input_imgs.xmd')
+        outImgsFn = self._getExtraPath('output_imgs.xmd')
+        anglesFn = self._getExtraPath('angles.xmd')
+        vol = self.inputVolume.get()
         
-        #TODO: This should be deleted when inputVolume was set to Volume type
-        #self.volume = self.inputVolume.get().getFirstItem()
-        self.volume = self.inputVolume.get()
+        angSampling = self.angularSampling.get()
+        sym = self.symmetryGroup.get()
         
-        self.fn = createXmippInputClasses2D(self, self.inputClasses.get())
-        self.visualizeInfoOutput = String("classes_aligned@%s" % self.fn)  
+        self._insertFunctionStep("convertStep", imgsFn)
         
-        self.fnAngles = self._getExtraPath('angles.xmd')
-        self.images = "classes@%s" % self.fn
-        self._insertFunctionStep("projMatchStep",\
-                                 self.volume.getFileName(), self.angularSampling.get(),\
-                                 self.symmetryGroup.get(), self.images,\
-                                 self.fnAngles, self.Xdim)
+        self._insertFunctionStep("projMatchStep", vol.getFileName(), angSampling, sym, imgsFn, anglesFn, self._getDimensions())
         
-        # Reorganize output and produce difference images 
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (self.fn, self.fnAngles), numberOfMpi=1)
-        self._insertFunctionStep("produceAlignedImagesStep", False, self.fn, self.images)
-        self._insertRunJobStep("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (self.fn), numberOfMpi=1)  
+        # Reorganize output and produce difference images
+        self._insertFunctionStep("joinStep", imgsFn, anglesFn)
+        self._insertFunctionStep("produceAlignedImagesStep", False, outImgsFn, imgsFn)
+#         self._insertFunctionStep("sortStep", outImgsFn)
+        self._insertFunctionStep("createOutputStep", outImgsFn)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def convertStep(self, imgsFn):
+        from convert import writeSetOfClasses2D, writeSetOfParticles
+        imgSet = self.inputSet.get()
+        if isinstance(imgSet, SetOfClasses2D):
+            writeSetOfClasses2D(imgSet, imgsFn, writeParticles=False)
+        else:
+            writeSetOfParticles(imgSet, imgsFn)
+    
+    def joinStep(self, imgsFn, anglesFn):
+        imgSet = self.inputSet.get()
+        if isinstance(imgSet, SetOfClasses2D):
+            self.runJob("xmipp_metadata_utilities", "-i classes@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
+        else:
+            self.runJob("xmipp_metadata_utilities", "-i Particles@%s --set join %s --mode append" % (imgsFn, anglesFn), numberOfMpi=1)
+        
+    def sortStep(self, outImgsFn):
+        self.runJob("xmipp_metadata_utilities", "-i classes_aligned@%s --operate sort maxCC desc --mode append" % (outImgsFn), numberOfMpi=1)
+    
+    def createOutputStep(self, outImgsFn):
+        inputSet = self.inputSet.get()
+        if isinstance(inputSet, SetOfClasses2D):
+            outputSet = self._createSetOfClasses2D(inputSet.getImages())
+            outputName = 'outputClasses'
+        else: # SetOfAverages
+            inputSet.setAlignment3D()
+            outputSet = self._createSetOfAverages()
+            outputName = 'outputAverages'
+            
+        md = xmipp.MetaData(outImgsFn)
+        outputSet.copyInfo(inputSet)
+        outputSet.copyItems(inputSet, 
+                            updateItemCallback=self.updateItemMaxCC,
+                            itemDataIterator=iterMdRows(md))
+
+        self._defineOutputs(**{outputName: outputSet})
+        self._defineTransformRelation(inputSet, outputSet)
+            
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        vol = self.inputVolume.get()
+        xDim = self._getDimensions()
+        volDim = vol.getDim()[0]
+        
+        if volDim != xDim:
+            errors.append("Make sure that the volume and the images have the same size")
+        return errors    
+    
     def _summary(self):
         summary = []
-        summary.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
-        summary.append("Volume: [%s] " % self.inputVolume.getNameId())
-        summary.append("Symmetry: %s " % self.symmetryGroup.get())
+        summary.append("Images evaluated: %i" % self.inputSet.get().getSize())
+        summary.append("Volume: %s" % self.inputVolume.getNameId())
+        summary.append("symmetry: %s" % self.symmetryGroup.get())
         return summary
     
     def _methods(self):
-        
         methods = []
-        methods.append("Set of classes: [%s] " % self.inputClasses.get().getNameId())
-        methods.append("Volume: [%s] " % self.inputVolume.getNameId())
-        methods.append("Symmetry: %s " % self.symmetryGroup.get())       
-        methods.append("angularSampling: %s " % self.angularSampling.get())
-        
+        if hasattr(self, 'outputClasses') or hasattr(self, 'outputAverages'):
+            methods.append("We evaluated %i images regarding to volume %s"
+                           " using %s symmetry" %(self.inputSet.get().getSize(),\
+                                                  self.inputVolume.getNameId(), self.symmetryGroup.get()) )
         return methods
     
     #--------------------------- UTILS functions --------------------------------------------
-    def getVisualizeInfo(self):
-        return self.visualizeInfoOutput
+    def _getDimensions(self):
+        imgSet = self.inputSet.get()
+        if isinstance(imgSet, SetOfClasses2D):
+            xDim = imgSet.getImages().getDim()[0]
+        else:
+            xDim = imgSet.getDim()[0]
+        return xDim
     
-
+    def updateItemMaxCC(self, item, row):
+        from convert import locationToXmipp
+        # ToDo: uncomment this lines when the output metadata has ITEM_ID
+#         if item.getObjId() != row.getValue(xmipp.MDL_ITEM_ID):
+#             raise Exception("The objId is not equal to ITEM_ID. Please, sort the metadata.")
+        if isinstance(item, Class2D):
+            img = item.getRepresentative()
+            index, fn = img.getLocation()
+        else:
+            index, fn = item.getLocation()
+            
+        objLoc = locationToXmipp(index, fn)
+        mdLoc = row.getValue(xmipp.MDL_IMAGE)
+        if objLoc != mdLoc:
+            raise Exception("The the image isn't the same. Please, sort the metadata.")
+        
+        item._xmipp_maxCC = Float(row.getValue(xmipp.MDL_MAXCC))
+        if isinstance(item, Class2D):
+            particle = item.getRepresentative()
+        else:
+            particle = item
+        particle.setTransform(rowToAlignment(row, alignType=ALIGN_PROJ))

@@ -10,9 +10,44 @@
 
 		<tr {% if paramGroup.expertLevel.get > 0 %} class="advance" {% else %} class="element" {% endif %} id="{{paramGroupName}}" name="{{paramGroupName}}" data-type="{{paramGroup.getClassName}}" data-cond="{{paramGroup.condition.get}}" data-params="{{paramGroup.htmlCondParams}}" 
 		data-depen="{{paramGroup.htmlDepend}}" value="{{paramGroup.htmlValue}}" data-enum="{{paramGroup.display}}" data-expert="{{paramGroup.expertLevel.get}}">
+
+<!-- LINE PARAM -->
+		{% if paramGroup.getClassName == "Line" %}
+			<td id="inputName" 
+				{% if param.isImportant.get %} 
+					class="recommended" 
+				{% else %} 
+					class="normal" 
+				{% endif %}>
+				{{paramGroup.label.get}}
+			</td>
+<!-- 						<td style="1em;"> -->
+				<td>
+			{% for paramLineName, paramLine in paramGroup.iterParams %}
+				{{paramLine.label.get}}
+				<input type="text" style="width: 2em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
+			{% endfor %}
+				</td>
+				<td>
+				</td>
+			{% if paramGroup.hasWizard %}
+				<td class="ico">
+					<a class="fa fa-magic" href="javascript:putModeWiz('{{paramGroup.wizardClassName}}' );"></a>
+				</td>
+			{% elif paramGroup.hasViewer %}
+				<td class="ico">
+					<a id="analyzeTool" href="javascript:putModeViewElm('{{paramGroupName}}');" class="fa fa-eye"></a>
+				</td>
+			{% endif %}
+			{% if paramGroup.htmlHelp %}
+				<td class="ico">
+					<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{paramGroup.label.get}}','{{paramGroup.htmlHelp|escapejs}}');"></a>
+				</td>
+			{% endif %}
+		{% else %}
 			
 			
-			
+<!-- INPUT NAME  -->			
 			<td id="inputName" 
 				{% if paramGroup.isImportant.get %} 
 					class="recommended" 
@@ -46,6 +81,7 @@
 			{% endif %}				
 		{% else %}
 
+
 <!-- INPUTS ELEMENTS -->
 			{% if paramGroup.getClassName == "MultiPointerParam" %}
 				<select multiple id="{{paramGroupName}}_input" name={{paramGroupName}} class="multipleSelect" style="height:25px;min-width:230px;width:100%;">
@@ -58,7 +94,7 @@
 			{% endif %}	
 		{% endif %}
 		</td>
-		
+<!-- POINTER PARAM -->		
 		{% if paramGroup.getClassName == "PointerParam"%}
 		<td class="ico">
 			<a href="javascript:browseObjects('{{paramGroupName}}','{{projectName}}','objClass','{{paramGroup.pointerClass.get}}','{{paramGroup.pointerCondition.get}}');">
@@ -70,6 +106,7 @@
 				<i class="fa fa-eye" style="font-size:1.1em;"></i>
 			</a> 
 		</td>
+<!-- MULTI POINTER PARAM -->
 	{% elif paramGroup.getClassName == "MultiPointerParam" %}
 		<td class="ico">
 			<a href="javascript:browseObjects('{{paramGroupName}}','{{projectName}}','objClass','{{paramGroup.pointerClass.get}}','{{paramGroup.pointerCondition.get}}','{{paramGroup.maxNumObjects}}');">
@@ -80,7 +117,7 @@
 			</a>  
 		</td>
 		
-		<!-- PROTOCOL CLASS PARAM -->
+<!-- PROTOCOL CLASS PARAM -->
 		{% elif paramGroup.getClassName == "ProtocolClassParam" %}
 			<td class="ico">
 				<a class="fa fa-search" href="javascript:browseObjects('{{paramGroupName}}','{{projectName}}','protClassName' ,'{{paramGroup.protocolClassName.get}}');">
@@ -108,6 +145,9 @@
 				<a class="fa fa-question-circle" href="javascript:infoPopup('Help {{paramGroup.label.get}}','{{paramGroup.htmlHelp|escapejs}}');"></a>
 			</td>
 		{% endif %}	
+		
+		{% endif %}	
+	
 		</tr>	
 
 <!------------------END GROUP ------------------------->

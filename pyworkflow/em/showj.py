@@ -247,5 +247,5 @@ def runJavaIJapp(memory, appName, args, env={}):
     env.update(xmipp3.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print args
+    print 'java %s'%args
     subprocess.Popen('java ' + args, shell=True, env=env)

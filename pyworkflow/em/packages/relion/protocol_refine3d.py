@@ -26,12 +26,11 @@
 """
 This module contains the protocol for 3d refinement with Relion.
 """
-
+import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
 
-from protocol_base import *
-
+from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
@@ -43,8 +42,9 @@ leads to objective and high-quality results.
     """    
     _label = '3D refine'
     IS_CLASSIFY = False
-    CHANGE_LABELS = [xmipp.MDL_AVG_CHANGES_ORIENTATIONS, 
-                     xmipp.MDL_AVG_CHANGES_OFFSETS]
+    CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
+
     PREFIXES = ['half1_', 'half2_']
     
     def __init__(self, **args):        
@@ -56,8 +56,6 @@ leads to objective and high-quality results.
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.outputClasses = 'classes.xmd'
-        self.outputVols = ''
         self.numberOfClasses.set(1) # For refinement we only need just one "class"
     
     #--------------------------- INSERT steps functions --------------------------------------------  
@@ -81,18 +79,25 @@ leads to objective and high-quality results.
             else:
                 args['--sigma_ang'] = self.movieStdRot.get()
         
-        #TODO: check why only for C*???
-        # I have added by default for refine3d 
-        # as extra parameters
-        #if args['--sym'].startswith('C'):
-        #    args['--low_resol_join_halves'] = "40";
-        
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
+        
         imgSet = self.inputParticles.get()
+        
         vol = Volume()
         vol.setFileName(self._getExtraPath('relion_class001.mrc'))
         vol.setSamplingRate(imgSet.getSamplingRate())
+        
+        outImgSet = self._createSetOfParticles()
+        outImgsFn = self._getFileName('data', iter=self._lastIter())
+        
+        outImgSet.copyInfo(imgSet)
+        outImgSet.copyItems(imgSet,
+                            updateItemCallback=self._createItemMatrix,
+                            itemDataIterator=md.iterRows(outImgsFn))
+        
+        self._defineOutputs(outputParticles=outImgSet)
+        self._defineTransformRelation(imgSet, outImgSet)
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(imgSet, vol)
     
@@ -107,18 +112,45 @@ leads to objective and high-quality results.
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        errors = []
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        lastIter = continueRun._lastIter()
+        
+        if self.continueIter.get() == 'last':
+            continueIter = lastIter
+        else:
+            continueIter = int(self.continueIter.get())
+        
+        if continueIter > lastIter:
+            errors += ["The iteration from you want to continue must be %01d or less" % lastIter]
+        
+        return errors
     
     def _summaryNormal(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        it = self._lastIter()
+        if it >= 1:
+            row = md.getFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
+            resol = row.getValue("rlnCurrentResolution")
+            summary.append("Current resolution: *%0.2f*" % resol)
+        return summary
     
     def _summaryContinue(self):
         """ Should be overriden in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
-        return []
+        summary = []
+        summary.append("Continue from iteration %01d" % self._getContinueIter())
+        return summary
     
     #--------------------------- UTILS functions --------------------------------------------
+    def _createItemMatrix(self, item, row):
+        from pyworkflow.em.packages.relion.convert import createItemMatrix
+        from pyworkflow.em import ALIGN_PROJ
+        
+        createItemMatrix(item, row, align=ALIGN_PROJ)
+        

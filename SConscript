@@ -102,6 +102,22 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+pcre = env.AddLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=['bin/pcretest'],
+    default=False)
+
+swig = env.AddLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=['bin/swig'],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+# We have to add the "makeTargets" part because swig needs to call
+# "make" before "make install". Horrible.
+
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
@@ -114,6 +130,18 @@ boost_headers_only = env.ManualInstall(
     extraActions=[
         ('%s/software/include/boost' % env['SCIPION_HOME'],
          'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+    default=False)
+
+lapack = env.ManualInstall(
+    'lapack',
+    tar='lapack-3.5.0.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/lapack-3.5.0/Makefile' % env['SCIPION_HOME'],
+         'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
+         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % env['SCIPION_HOME']),
+        ('%s/software/lib/liblapack.so' % env['SCIPION_HOME'],
+         'make install')],
     default=False)
 
 
@@ -178,7 +206,7 @@ addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
-    deps=[numpy, matplotlib])
+    deps=[lapack, numpy, matplotlib])
 
 addModule(
     'bibtexparser',
@@ -203,6 +231,27 @@ addModule(
 addModule(
     'winpdb',
     tar='winpdb-1.4.8.tgz',
+    default=False)
+
+pyzmq = addModule(
+    'pyzmq',
+    tar='pyzmq-2.2.0.1.tar.gz',
+    default=False)
+
+jinja2 = addModule(
+    'jinja2',
+    tar='Jinja2-2.7.3.tar.gz',
+    default=False)
+
+tornado = addModule(
+    'tornado',
+    tar='tornado-4.0.2.tar.gz',
+    default=False)
+
+addModule(
+    'ipython',
+    tar='ipython-2.1.0.tar.gz',
+    deps=[pyzmq, jinja2, tornado],
     default=False)
 
 
@@ -241,7 +290,7 @@ env.AddPackage('ctffind',
                default=False)
 
 env.AddPackage('eman',
-               tar='eman2.1beta3.linux64.tgz',
+               tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
@@ -254,13 +303,12 @@ env.AddPackage('pytom',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
                               % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
-               deps=[boost_headers_only],
+               deps=[boost_headers_only, fftw, swig],
                default=False)
 
 env.AddPackage('relion',
-               tar='relion-1.2.tgz',
+               tar='relion-1.3.tgz',
                extraActions=[
-                   ('lib', 'ln -fs lib64 lib'),
                    ('relion_build.log', './INSTALL.sh -j %s'
                     % GetOption('num_jobs'))],
                default=False)
@@ -273,6 +321,12 @@ env.AddPackage('spider',
 env.AddPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
+
+
+env.AddPackage('simple',
+               tar='simple2.tgz',
+               default=False)
+
 # This last one already contains the binary.
 
 

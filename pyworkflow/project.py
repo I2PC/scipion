@@ -31,11 +31,11 @@ import os
 import re
 from os.path import abspath
 
-from pyworkflow.em import *
+import pyworkflow.em as em
 from pyworkflow.config import *
 from pyworkflow.protocol import *
 from pyworkflow.mapper import SqliteMapper
-from pyworkflow.utils import cleanPath, makePath, makeFilePath, join, exists, runJob, copyFile, timeit
+from pyworkflow.utils import makeFilePath
 from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
@@ -102,9 +102,19 @@ class Project(object):
     
     def saveSettings(self):
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
             self.settings.write()
             
+    def createMapper(self, sqliteFn):
+        """ Create a new SqliteMapper object and pass as classes dict
+        all globas and update with data and protocols from em.
+        """
+        #TODO: REMOVE THE USE OF globals() here
+        classesDict = dict(globals())
+        classesDict.update(em.getProtocols())
+        classesDict.update(em.getObjects())
+        return SqliteMapper(sqliteFn, classesDict)
+    
     def load(self):
         """Load project data and settings
         from the project dir.
@@ -114,10 +124,10 @@ class Project(object):
         os.chdir(self.path) #Before doing nothing go to project dir
         if not exists(self.dbPath):
             raise Exception("Project database not found in '%s'" % join(self.path, self.dbPath))
-        self.mapper = SqliteMapper(self.dbPath, globals())
+        self.mapper = self.createMapper(self.dbPath)
         self.settings = loadSettings(self.settingsPath)
         
-    def create(self, confs={}, graphView=False):
+    def create(self, confs={}, graphView=False, readOnly=False):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
@@ -130,12 +140,13 @@ class Project(object):
         self._cleanData()
         print abspath(self.dbPath)
         # Create db throught the mapper
-        self.mapper = SqliteMapper(self.dbPath, globals())
+        self.mapper = self.createMapper(self.dbPath)
         self.mapper.commit()
         # Load settings from .conf files and write .sqlite
         self.settings = ProjectSettings(confs)
         self.settings.loadConfig(confs)
         self.settings.setGraphView(graphView)
+        self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
         # Create other paths inside project
         for p in self.pathList:
@@ -186,22 +197,38 @@ class Project(object):
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
-        if not isReadOnly():
+        #if os.environ.get('SCIPION_DEBUG', False):
+        #    from rpdb2 import start_embedded_debugger
+        #    start_embedded_debugger('a')
+        
+        if not self.isReadOnly():
             try:
-                # FIXME: this will not work for a real remote host
-                jobId = protocol.getJobId() # Preserve the jobId before copy
+                # Backup the values of 'jobId', 'label' and 'comment'
+                # to be restored after the .copy
+                jobId = protocol.getJobId() 
+                label = protocol.getObjLabel()
+                comment = protocol.getObjComment()
+                
+                #TODO: when launching remote protocols, the db should be retrieved 
+                # in a different way.
                 dbPath = self.getPath(protocol.getDbPath())
+                if not exists(dbPath):
+                    return
                 #join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
                 prot2 = getProtocolFromDb(dbPath, protocol.getObjId())
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
                 protocol.copy(prot2, copyId=False)
-                # Restore jobId
+                # Restore backup values
                 protocol.setJobId(jobId)
+                protocol.setObjLabel(label)
+                protocol.setObjComment(comment)
+                
                 self.mapper.store(protocol)
+            
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
-                if tries == 2: # 3 tries have been failed
+                if tries == 0: # 3 tries have been failed
                     import traceback
                     traceback.print_exc()
                     # If any problem happens, the protocol will be marked wih a status fail
@@ -269,7 +296,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if isReadOnly():
+        if self.isReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
         
         self._checkProtocolsDependencies(protocols, msg)        
@@ -315,7 +342,10 @@ class Project(object):
     def newProtocol(self, protocolClass, **kwargs):
         """ Create a new protocol from a given class. """
         newProt = protocolClass(project=self, **kwargs)
-        self.__setProtocolLabel(newProt)
+        # Only set a default label to the protocol if is was not
+        # set throught the kwargs
+        if not newProt.getObjLabel():
+            self.__setProtocolLabel(newProt)
         
         newProt.setMapper(self.mapper)
         newProt.setProject(self)
@@ -328,7 +358,7 @@ class Project(object):
         Used from self.copyProtocol
         """
         matches = []
-        for oKey, oAttr in node.run.iterOutputAttributes(EMObject):
+        for oKey, oAttr in node.run.iterOutputAttributes(em.EMObject):
             for iKey, iAttr in childNode.run.iterInputAttributes():
                 if oAttr is iAttr.get():
                     matches.append((oKey, iKey))
@@ -393,6 +423,10 @@ class Project(object):
                 
     def getProtocol(self, protId):
         return self.mapper.selectById(protId)
+    
+    def getObject(self, objId):
+        """ Retrieve an object from the db given its id. """
+        return self.mapper.selectById(objId)
         
     def _setHostConfig(self, protocol):
         """ Set the appropiate host config to the protocol
@@ -400,6 +434,13 @@ class Project(object):
         """
         hostName = protocol.getHostName()
         hostConfig = self.settings.getHostByLabel(hostName)
+        if hostConfig is None:
+            print ">>>>>>> Unexpected error: hostConfig is None"
+            print "         hostName: ", hostName
+            print "        Using 'localhost' instead"
+            hostConfig = self.settings.getHostByLabel('localhost')
+            protocol.setHostName('localhost')
+            
         hostConfig.cleanObjId()
         # Add the project name to the hostPath in remote execution host
         hostRoot = hostConfig.getHostPath()
@@ -408,7 +449,7 @@ class Project(object):
     
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
     
@@ -416,7 +457,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
         
         # Read only mode
-        if not isReadOnly():
+        if not self.isReadOnly():
         
             self._storeProtocol(protocol) # Store first to get a proper id
             # Set important properties of the protocol
@@ -470,7 +511,7 @@ class Project(object):
                 n.run = r
                 n.label = r.getRunName()
                 outputDict[r.getObjId()] = n
-                for _, attr in r.iterOutputAttributes(EMObject):
+                for _, attr in r.iterOutputAttributes(em.EMObject):
                     outputDict[attr.getObjId()] = n # mark this output as produced by r
                 
             def _checkInputAttr(node, pointed):
@@ -515,7 +556,7 @@ class Project(object):
         runs = self.getRuns(refresh=refresh)
         
         for r in runs:
-            for _, attr in r.iterOutputAttributes(EMObject):
+            for _, attr in r.iterOutputAttributes(em.EMObject):
                 node = g.createNode(attr.strId(), attr.getNameId())
                 node.object = attr                
         
@@ -592,9 +633,15 @@ class Project(object):
             connection[node.object.strId()] = node.object
         
         return connection
+    
+    def isReadOnly(self):
+        return self.settings.getReadOnly()
+    
+    def setReadOnly(self, value):
+        self.settings.setReadOnly(value)
             
 
 def isReadOnly():
-    """ Auxiliar method to keep a read-only mode for the environment. """
-    return 'SCIPION_READONLY' in os.environ
+     """ Auxiliar method to keep a read-only mode for the environment. """
+     return 'SCIPION_READONLY' in os.environ
         

@@ -29,13 +29,13 @@ List all existing protocols within Scipion
 """
 
 import sys
-from pyworkflow.em import emProtocolsDict
+from pyworkflow.em import getProtocols
 
 
 if __name__ == '__main__':
     count = 0
     withDoc = '--with-doc' in sys.argv
-    
+    emProtocolsDict = getProtocols()
     for k, v in emProtocolsDict.iteritems():
         packageName = v.getClassPackageName()
         if packageName == 'xmipp3':

@@ -33,14 +33,13 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 from django.core.servers.basehttp import FileWrapper
 
-from pyworkflow.em import emProtocolsDict
+import pyworkflow.em as em
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from pyworkflow.project import Project
 from pyworkflow.utils import *
 from pyworkflow.gui import getImage, getPILImage
 from pyworkflow.dataset import COL_RENDER_IMAGE, COL_RENDER_VOLUME
-
 
 iconDict = {
             'logo_scipion': 'scipion_logo_small_web.png',
@@ -75,6 +74,16 @@ iconDict = {
             'file_sqlite':'file_sqlite.gif',
             'file_vol':'file_vol.gif',
             'file_stack':'file_stack.gif',
+            
+            #MyFirstMap
+            'importAverages': 'myfirstmap/importAverages.png',
+            'useProtocols': 'myfirstmap/useProtocols.png',
+            'protForm': 'myfirstmap/protForm.png',
+            'summary': 'myfirstmap/summary.png',
+            'showj': 'myfirstmap/showj.png',
+            'alignVol': 'myfirstmap/alignVol.png',
+            'download': 'myfirstmap/download.png',
+            
             }
 
 cssDict = {'project_content': 'project_content_style.css',
@@ -132,6 +141,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'jsplumb': 'jsPlumb.js',
           'messi': 'messi.js',
           'raphael': 'raphael.js',
+          'philogl': 'PhiloGL-1.3.0.js',
           
           #JSmol
           'jsmol': 'jsmol/JSmol.min.js',
@@ -179,7 +189,7 @@ def loadProtocolProject(request, requestType='POST'):
         # Remove this and create loadProtocol method in project class
         protocol.setProject(project) 
     else:
-        protocolClass = emProtocolsDict.get(protClass, None)
+        protocolClass = em.getProtocols().get(protClass, None)
         protocol = project.newProtocol(protocolClass)
         
     return (project, protocol)
@@ -218,23 +228,42 @@ def browse_objects(request):
     if request.is_ajax():
         objClassList = request.GET.get('objClass')
         projectName = request.session['projectName']
-        
-        objFilterParam = request.GET.get('objFilter', None)
-        filterObject = FilterObject(objFilterParam)
-        
-        project = loadProject(projectName)
 
+        objFilterParam = request.GET.get('objFilter', None)
+        filterObject = FilterObject(objFilterParam, objClassList)
+            
+        project = loadProject(projectName)
         objs = {}
-        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
-                objs[obj.getObjId()] = {"nameId":obj.getNameId(), "info": str(obj)} 
         
+        # Object Filter
+        for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+            objs[obj.getObjId()] = {"type":"obj", 
+                                    "nameId":obj.getNameId(), 
+                                    "info": str(obj)
+                                    } 
+        # Class Filter
+        for obj in project.iterSubclasses("Set", filterObject.classFilter):
+            context = {"type":"set", 
+                       "nameId":obj.getNameId(), 
+                       "info": str(obj),
+                       "objects": []}
+            
+            for child in obj._iterItems():
+                obj_context = {"nameId":child.getNameId(), 
+                               "setId": obj.getObjId(),
+                               "objId": child.getObjId(),
+                               "info": str(child)} 
+                context["objects"].append(obj_context)    
+            objs[obj.getObjId()] = context
+            
         jsonStr = json.dumps(objs, ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
-   
+
 
 class FilterObject():
-    def __init__(self, condition):
+    def __init__(self, condition, className):
         self.condition = None if condition == 'None' else condition
+        self.className = className
         
     def objFilter(self, obj):
         result = True
@@ -242,6 +271,11 @@ class FilterObject():
             result = obj.evalCondition(self.condition)
         return result
     
+    def classFilter(self, obj):
+        """ Filter Set with the specified class name. """
+        itemType = getattr(obj, 'ITEM_TYPE', None) 
+        return itemType.__name__ == self.className  
+        
 #===============================================================================
 # Browse protocols like objects
 #===============================================================================
@@ -249,8 +283,8 @@ class FilterObject():
 def browse_protocol_class(request):
     if request.is_ajax():
         protClassName = request.GET.get('protClassName')
-        from pyworkflow.em import findSubClasses, emProtocolsDict
-        objs = findSubClasses(emProtocolsDict, protClassName).keys()
+        from pyworkflow.em import findSubClasses, getProtocols
+        objs = findSubClasses(getProtocols(), protClassName).keys()
         
         jsonStr = json.dumps({'objects' : objs},ensure_ascii=False)
         return HttpResponse(jsonStr, mimetype='application/javascript')
@@ -341,6 +375,8 @@ def get_file(request):
     path = request.GET.get("path")
     filename = request.GET.get("filename", path)
     
+    print "path: ",path
+    print "filename: ",filename
 
     if not os.path.exists(path):
         return HttpResponseNotFound('Path not found: %s' % path)
@@ -500,6 +536,7 @@ def get_slice(request):
             
     if 'projectPath' in request.session:
         imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+        imagePath = imagePathTmp
 #         if not os.path.isfile(imagePathTmp):
 #             raise Exception('should not use getInputPath')
             #imagePath = getInputPath('showj', imagePath)
@@ -512,7 +549,11 @@ def get_slice(request):
     if sliceNo is None:
         imgXmipp.readPreview(imagePath, int(imageDim))
     else:
+        print "CURRENT DIR: ", os.getcwd()
+        print "Exist path? ", os.path.exists(imagePath)
+        
         imgXmipp.readPreview(imagePath, int(imageDim), sliceNo)
+        
         
 #        if applyTransformMatrix and transformMatrix != None: 
 #            imgXmipp.applyTransforMatScipion(transformMatrix, onlyApplyShifts, wrap)
@@ -549,8 +590,8 @@ def readDimensions(request, path, typeOfColumn):
     return (300,300,1,1) 
 
 def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
-    _newPath=path
-    _stats=None
+    _newPath = path
+    _stats = None
     
     img = xmipp.Image()
     imgFn = os.path.join(request.session['projectPath'], path)
@@ -559,6 +600,9 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         img.read(str(imgFn), xmipp.HEADER)
     else:
         img.read(str(imgFn))
+    
+    if getStats:
+        _stats = img.computeStats()
         
     if convert:
         img.convert2DataType(dataType, xmipp.CW_ADJUST)
@@ -567,13 +611,10 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
         if axis != xmipp.VIEW_Z_NEG:
             img.reslice(axis)    
     
-    if getStats:
-        _stats=img.computeStats()
-    
     if convert or reslice:
         fileName, _ = os.path.splitext(path)
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
-        img.write(str(_newPath))
+        img.write(os.path.join(request.session['projectPath'], _newPath))
     
     return _newPath, _stats
 
@@ -597,9 +638,9 @@ def replacePattern(m, mode):
     elif mode == HYPER_ITALIC:
         text = " <i>%s</i> " % g1
     elif mode == HYPER_LINK1:
-        text = " <a href='%s' target='_blank'>%s</a> " % (g1, g1)
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, g1)
     elif mode == HYPER_LINK2:
-        text = " <a href='%s' target='_blank'>%s</a> " % (g1, m.group('link2_label'))
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, m.group('link2_label'))
     else:
         raise Exception("Unrecognized pattern mode: " + mode)
     

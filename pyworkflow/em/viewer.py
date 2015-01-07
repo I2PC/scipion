@@ -30,7 +30,7 @@ This module implement viewers for some type of common objects.
 
 import os
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
-from pyworkflow.em.protocol import PdbFile
+from pyworkflow.em.data import PdbFile
 from pyworkflow.utils import Environ, runJob
 import pyworkflow as pw
 from showj import (runJavaIJapp, ZOOM, ORDER, VISIBLE, 
@@ -49,9 +49,6 @@ class DataView(View):
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
-        if self._path.endswith('.star'):
-            from pyworkflow.em.packages.relion import addRelionLabelsToEnviron
-            addRelionLabelsToEnviron(self._env)
             
     def _loadPath(self, path):
         # Check if there is a table name with @ in path

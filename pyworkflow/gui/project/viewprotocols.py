@@ -36,7 +36,8 @@ import ttk
 
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
-from pyworkflow.em import emProtocolsDict, findViewers, DESKTOP_TKINTER, EMObject
+from pyworkflow.viewer import DESKTOP_TKINTER
+import pyworkflow.em as em
 from pyworkflow.utils import prettyDelta
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -106,6 +107,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
             
         if obj.value.hasValue() and tag == 'protocol_base':
             protClassName = value.split('.')[-1] # Take last part
+            emProtocolsDict = em.getProtocols()
             prot = emProtocolsDict.get(protClassName, None)
             if prot is not None:
                 tree.item(item, image=self.getImage('class_obj.gif'))
@@ -285,7 +287,7 @@ class SearchProtocolWindow(gui.Window):
     def _onSearchClick(self, e=None):
         self._resultsTree.clear()
         keyword = self._searchVar.get()
-
+        emProtocolsDict = em.getProtocols()
         for key, prot in emProtocolsDict.iteritems():
             label = prot.getClassLabel()
             if keyword in label:
@@ -306,11 +308,35 @@ class RunIOTreeProvider(TreeProvider):
     def getObjects(self):
         objs = []
         if self.protocol:
-            inputs = [attr for n, attr in self.protocol.iterInputAttributes()]
-            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(EMObject)]
-            self.inputStr = String(Message.LABEL_INPUT)
+            # Store a dict with input parents (input, PointerList)
+            self.inputParentDict = OrderedDict()
+            inputs = []
+            
+            inputObj = String(Message.LABEL_INPUT)
+            inputObj._icon = Icon.ACTION_IN
+            self.inputParentDict['_input'] = inputObj
+            inputParents = [inputObj]
+            
+            for key, attr in self.protocol.iterInputAttributes():
+                attr._parentKey = key
+                # Repeated keys means there are inside a pointerList
+                # since the same key is yielded for all items inside
+                # so update the parent dict with a new object
+                if key in self.inputParentDict:
+                    if self.inputParentDict[key] == inputObj:
+                        parentObj = String(key)
+                        parentObj._icon = Icon.ACTION_IN
+                        parentObj._parentKey = '_input'
+                        inputParents.append(parentObj)
+                        self.inputParentDict[key] = parentObj
+                else:
+                    self.inputParentDict[key] = inputObj
+                inputs.append(attr) 
+                    
+            
+            outputs = [attr for n, attr in self.protocol.iterOutputAttributes(em.EMObject)]
             self.outputStr = String(Message.LABEL_OUTPUT)
-            objs = [self.inputStr, self.outputStr] + inputs + outputs                
+            objs = inputParents + inputs + [self.outputStr] + outputs                
         return objs
     
     def _visualizeObject(self, ViewerClass, obj):
@@ -333,7 +359,7 @@ class RunIOTreeProvider(TreeProvider):
             obj = obj.get()
         actions = []    
         
-        viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
         def yatevalejosemi(v):
             return lambda: self._visualizeObject(v, obj)
         for v in viewers:
@@ -369,32 +395,45 @@ class RunIOTreeProvider(TreeProvider):
         if isinstance(obj, String):
             value = obj.get()
             info = {'key': value, 'text': value, 'values': (''), 'open': True}
+            if hasattr(obj, '_parentKey'):
+                info['parent'] = self.inputParentDict[obj._parentKey]
         else:
+            # All attributes are considered output, unless they are pointers
             image = Icon.ACTION_OUT
             parent = self.outputStr
             
             if isinstance(obj, Pointer):
-                ptr = obj
                 name = obj.getLastName()
-                obj = obj.get()
-                if obj is None:
-                    return None
-                image = Icon.ACTION_IN
-                parent = self.inputStr
-                if ptr._extended:
-                    labelObj = ptr.getObjValue()
-                    suffix = '[Item %d]' % obj.getObjId() 
+                # Remove ugly item notations inside lists
+                name = name.replace('__item__000', '')
+                # Consider Pointer as inputs
+                image = getattr(obj, '_icon', '')
+                parent = self.inputParentDict[obj._parentKey]
+                
+                if obj.hasExtended():
+                    extendedValue = obj.getExtendedValue()
+                    if obj.hasExtendedAttribute():
+                        suffix = '[%s]' % extendedValue
+                    elif obj.hasExtendedItemId():
+                        suffix = '[Item %s]' % extendedValue
+                    if obj.get() is None:
+                        labelObj = obj.getObjValue()
+                    else:
+                        labelObj = obj.get()
                 else:
-                    labelObj = obj
+                    labelObj = obj.get()
                     suffix = ''
                     
+                objKey = obj._parentKey + str(labelObj.getObjId())
                 label = self.getObjectLabel(labelObj, self.mapper.getParent(labelObj))
                 name += '   (from %s %s)' % (label, suffix)
             else:
                 name = self.getObjectLabel(obj, self.protocol)
+                objKey = str(obj.getObjId())
+                labelObj = obj
                 
-            info = {'key': obj.getObjId(), 'parent': parent, 'image': image,
-                    'text': name, 'values': (str(obj),)}
+            info = {'key': objKey, 'parent': parent, 'image': image,
+                    'text': name, 'values': (str(labelObj),)}
         return info     
 
 
@@ -693,6 +732,7 @@ class ProtocolsView(tk.Frame):
         self.protTree.unbind('<<TreeviewClose>>')
         self.protTreeItems = {}
         subclassedDict = {} # Check which classes serve as base to not show them
+        emProtocolsDict = em.getProtocols()
         for k1, v1 in emProtocolsDict.iteritems():
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
@@ -787,7 +827,7 @@ class ProtocolsView(tk.Frame):
         # the search protocol dialog tree
         tree = e.widget
         protClassName = tree.getFirst().split('.')[-1]
-        protClass = emProtocolsDict.get(protClassName)
+        protClass = em.getProtocols().get(protClassName)
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
@@ -850,7 +890,7 @@ class ProtocolsView(tk.Frame):
         hosts = [host.getLabel() for host in self.settings.getHosts()]
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
-                       hostList=hosts)
+                       hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
         
@@ -892,6 +932,7 @@ class ProtocolsView(tk.Frame):
             
     def _fillSummary(self):
         self.summaryText.clear()
+        self.infoTree.clear()
         n = len(self._selection)
         
         if n == 1:
@@ -961,17 +1002,26 @@ class ProtocolsView(tk.Frame):
             msg = ""
             self.outputViewer.refreshOutput()
 
-        
         return msg
+    
+    def _updateProtocol(self, prot):
+        """ Callback to notify about the change of a protocol
+        label or comment. 
+        """
+        self._scheduleRunsUpdate()
         
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
-        if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
-            self.project.deleteProtocol(*self._getSelectedProtocols())
+        protocols = self._getSelectedProtocols()
+        if askYesNo(Message.TITLE_DELETE_FORM, 
+                    Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
+                    self.root):
+            self.project.deleteProtocol(*protocols)
             self._selection.clear()
+            self._updateSelection()
             self._scheduleRunsUpdate()
             
     def _copyProtocols(self):
@@ -981,6 +1031,7 @@ class ProtocolsView(tk.Frame):
             self._openProtocolForm(newProt)
         else:
             self.project.copyProtocol(protocols)
+            self.refreshRuns()
             
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
@@ -989,7 +1040,7 @@ class ProtocolsView(tk.Frame):
 
     def _analyzeResults(self, prot):        
 
-        viewers = findViewers(prot.getClassName(), DESKTOP_TKINTER)
+        viewers = em.findViewers(prot.getClassName(), DESKTOP_TKINTER)
         if len(viewers):
             #TODO: If there are more than one viewer we should display a selection menu
             firstViewer = viewers[0](project=self.project, protocol=prot) # Instanciate the first available viewer
@@ -999,8 +1050,8 @@ class ProtocolsView(tk.Frame):
             else:
                 firstViewer.visualize(prot)
         else:
-            for _, output in prot.iterOutputAttributes(EMObject):
-                viewers = findViewers(output.getClassName(), DESKTOP_TKINTER)
+            for _, output in prot.iterOutputAttributes(em.EMObject):
+                viewers = em.findViewers(output.getClassName(), DESKTOP_TKINTER)
                 if len(viewers):
                     #TODO: If there are more than one viewer we should display a selection menu
                     viewerclass = viewers[0]

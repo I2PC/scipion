@@ -29,7 +29,6 @@ This sub-package contains protocols for performing subtomogram averaging.
 """
 
 from pyworkflow.em import *  
-from constants import *
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z
 
 class XmippProtHelicalParameters(ProtPreprocessVolumes):
@@ -123,7 +122,8 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
     def createOutput(self):
         volume=Volume()
         volume.setFileName(self._getPath('volume_symmetrized.vol'))
-        volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
+        #volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
+        volume.copyInfo(self.inputVolume.get())
         self._defineOutputs(outputVolume=volume)
         self._defineTransformRelation(self.inputVolume, self.outputVolume)
         

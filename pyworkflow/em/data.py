@@ -113,11 +113,12 @@ class CTFModel(EMObject):
         self._micObj  = None
 
     def __str__(self):
-        str = "defocus(U,V,a) = (%f,%f,%f)"%(self._defocusU.get()
-              , self._defocusV.get(), self._defocusAngle.get())
+        ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
+                                                           self._defocusV.get(), 
+                                                           self._defocusAngle.get())
         if self._micObj:
-            str + " %s" % self._micObj
-        return str
+            ctfStr + " mic=%s" % self._micObj
+        return ctfStr
 
     def getDefocusU(self):
         return self._defocusU.get()
@@ -189,6 +190,15 @@ class CTFModel(EMObject):
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
         self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
+        
+    def equalAttributes(self, other, ignore=[], verbose=False):
+        """ Override default behaviour to compare two
+        CTF objects, now ignoring the psdFile.
+        """
+        return (self._defocusU == other._defocusU and
+                self._defocusV == other._defocusV and
+                self._defocusAngle == other._defocusAngle
+                )
 
 
 class DefocusGroup(EMObject):
@@ -266,11 +276,11 @@ class Image(EMObject):
         self._samplingRate = Float()
         self._ctfModel = None
         self._acquisition = None
-        # Both alignment and project are transformation matrices
-        # that are used in 2d and 3d, respectively
-        self._alignment = None
-        self._projection = None
-        
+        # _transform property will store the transformation matrix
+        # this matrix can be used for 2D/3D alignment or
+        # to represent projection directions
+        self._transform = None
+
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
         return self._samplingRate.get()
@@ -283,10 +293,18 @@ class Image(EMObject):
     
     def getDataType(self):
         pass
-    
+
+    def getDimensions(self):
+        """getDimensions is redundant here but not in setOfVolumes
+         create it makes easier to crete protocols for both images
+         and sets of images
+        """
+        self.getDim()
+
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        if exists(self.getFileName().replace(':mrc', '')):
+        fn = self.getFileName()
+        if fn is not None and exists(fn.replace(':mrc', '')):
             x, y, z, n = ImageHandler().getDimensions(self)
             return x, y, z
         return None
@@ -366,24 +384,15 @@ class Image(EMObject):
     def setAcquisition(self, acquisition):
         self._acquisition = acquisition
         
-    def hasAlignment(self):
-        return self._alignment is not None
+    def hasTransform(self):
+        return self._transform is not None
     
-    def getAlignment(self):
-        return self._alignment
+    def getTransform(self):
+        return self._transform
     
-    def setAlignment(self, newAlignment):
-        self._alignment = newAlignment
+    def setTransform(self, newTransform):
+        self._transform = newTransform
 
-    def hasProjection(self):
-        return self._projection is not None
-    
-    def getProjection(self):
-        return self._projection
-    
-    def setProjection(self, newProjection):
-        self._projection = newProjection
-        
     def __str__(self):
         """ String representation of an Image. """
         dim = self.getDim()
@@ -411,6 +420,7 @@ class Particle(Image):
         # object more indenpent for tracking coordinates
         self._coordinate = None
         self._micId = Integer()
+        self._classId = Integer()
         
     def hasCoordinate(self):
         return self._coordinate is not None
@@ -437,6 +447,15 @@ class Particle(Image):
         
     def hasMicId(self):
         return self.getMicId() is not None
+    
+    def getClassId(self):
+        return self._classId.get()
+    
+    def setClassId(self, classId):
+        self._classId.set(classId)
+        
+    def hasClassId(self):
+        return self._classId.hasValue()
 
 
 class Mask(Particle):
@@ -517,20 +536,48 @@ class EMSet(Set, EMObject):
         for some generic operations on sets.
         """
         pass
+    
+    def clone(self):
+        """ Override the clone defined in Object
+        to avoid copying _mapperPath property
+        """
+        pass
+    
+    def copyItems(self, otherSet, 
+                  updateItemCallback=None, 
+                  itemDataIterator=None,
+                  copyDisabled=False):
+        """ Copy items from another set.
+        If the updateItemCallback is passed, it will be 
+        called with each item (and optionally with a data row).
+        This is a place where items can be updated while copying.
+        This is useful to set new attributes or update values
+        for each item.
+        """
+        for item in otherSet:
+            # copy items if enabled or copyDisabled=True
+            if copyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                # If updateCallBack function returns attribute _appendItem to False do not append the item
+                if getattr(newItem, "_appendItem", True):
+                    self.append(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row
   
   
 class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
-
     
     def __init__(self, **args):
         EMSet.__init__(self, **args)
         self._samplingRate = Float()
         self._hasCtf = Boolean(args.get('ctf', False))
-        #self._hasAlignment = Boolean(args.get('alignmet', False))
-        #self._hasProjection = Boolean(False)
-        self._alignment = Integer(ALIGN_NONE)
+        self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
@@ -561,24 +608,26 @@ class SetOfImages(EMSet):
     def hasAlignment3D(self):
         return self._alignment == ALIGN_3D
 
+    def hasAlignmentProj(self):
+        return self._alignment == ALIGN_PROJ
+
+    def getAlignment(self):
+        return self._alignment.get()
+
     def setAlignment(self, value):
-        if value < ALIGN_NONE or value > ALIGN_3D:
-            raise Exception('Invalid alignment value')
+        if not value in ALIGNMENTS:
+            raise Exception('Invalid alignment value: "%s"' % value)
         self._alignment.set(value)
         
     def setAlignment2D(self):
         self.setAlignment(ALIGN_2D)
         
     def setAlignment3D(self):
-        self.setAlignment(ALIGN_3D)    
+        self.setAlignment(ALIGN_3D)
+
+    def setAlignmentProj(self):
+        self.setAlignment(ALIGN_PROJ)
     
-        
-#    def hasProjection(self):
-#        return self._hasProjection.get()
-    
-#    def setHasProjection(self, value):
-#        self._hasProjection.set(value)
-        
     def isPhaseFlipped(self):
         return self._isPhaseFlipped.get()
     
@@ -607,7 +656,7 @@ class SetOfImages(EMSet):
         EMSet.append(self, image)
     
     def copyInfo(self, other):
-        """ Copy basic information (sampling rate, scannedPixelSize and ctf)
+        """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
         self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)
@@ -634,7 +683,7 @@ class SetOfImages(EMSet):
         return self._samplingRate.get()
     
     def writeStack(self, fnStack):
-        # TODO creaty empty file to improve efficiency
+        # TODO create empty file to improve efficiency
         ih = ImageHandler()
         for i, img in enumerate(self):
             ih.convert(img, (i+1, fnStack))
@@ -786,7 +835,7 @@ class SetOfParticles(SetOfImages):
 
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
-    It is a SetOfParticles but it is useful to differenciate outputs."""    
+    It is a SetOfParticles but it is useful to differentiate outputs."""
     def __init__(self, **args):
         SetOfParticles.__init__(self, **args)
 
@@ -1016,6 +1065,13 @@ class Matrix(Scalar):
     def __str__(self):
         return np.array_str(self._matrix)
     
+    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
+        """ Override the default behaviour of copy
+        to also copy array data.
+        """
+        self.setMatrix(np.copy(other.getMatrix()))
+        self._objValue = other._objValue
+    
         
 class Transform(EMObject):
     """ This class will contain a transformation matrix
@@ -1043,59 +1099,11 @@ class Transform(EMObject):
         m = self.getMatrix()
         m *= factor
         m[3, 3] = 1.
-    
-class Alignment(Transform):
-    """ Transform used for 2D alignment against a reference. """
-    pass
-
-
-class SetOfAlignment(EMSet):
-    """ An Alignment is an particular type of Transform.
-    A set of transform is usually the result of alignment or multi-reference
-    alignment of a SetOfParticles. Each Transformation modifies the original
-    image to be the same of a given reference.
-    """
-    ITEM_TYPE = Alignment
-
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
-        self._particlesPointer = Pointer()
-        self._is2D = Boolean(True)
-
-    def getParticles(self):
-        """ Return the SetOfParticles from which the SetOfAligment was obtained. """
-        return self._particlesPointer.get()
-    
-    def setParticles(self, particles):
-        """ Set the SetOfParticles associated with this SetOfAlignment..
-         """
-        self._particlesPointer.set(particles)
-
-    def set2D(self):
-        """ Mark the alignment as 2D transform. """
-        self._is2D.set(True)
-
-    def set3D(self):
-        """ Mark the alignment as 3D transform. """
-        self._is2D.set(False)
-
-    def is2D(self):
-        return self._is2D.get()
-
-    def is3D(self):
-        return not self.is2D()
-
-
-class TransformParams(object):
-    """ Class to store transform parameters in the way
-    expected by Xmipp/Spider.
-    """
-    def __init__(self, **args):
-        defaults = {'shiftX': 0., 'shiftY': 0., 'shiftZ': 0.,
-                    'angleRot': 0., 'angleTilt': 0., 'anglePsi': 0.,
-                    'scale': 1., 'mirror': False}.update(args)
-        for k, v in defaults.iteritems():
-            setattr(self, k, v)
+        
+    def scaleShifts2D(self, factor):
+        m = self.getMatrix()
+        m[0, 3] *= factor
+        m[1, 3] *= factor
 
 
 class Class2D(SetOfParticles):
@@ -1110,6 +1118,11 @@ class Class2D(SetOfParticles):
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
+    def clone(self):
+        clone = self.getClass()()
+        clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
+        return clone
+        
     
 class Class3D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
@@ -1121,7 +1134,12 @@ class Class3D(SetOfParticles):
         from other set of micrographs to current one.
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
-
+        
+    def clone(self):
+        clone = self.getClass()()
+        clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
+        return clone
+        
 
 class ClassVol(SetOfVolumes):
     """ Represent a Class that groups Volume objects.
@@ -1206,15 +1224,94 @@ class SetOfClasses(EMSet):
                 for img in cls:
                     if img.isEnabled():                
                         newCls.append(img)
-                self.update(newCls)  
-                                      
+                self.update(newCls)
+                
+    def copyItems(self, otherSet, 
+                  updateItemCallback=None, 
+                  itemDataIterator=None,
+                  copyDisabled=False):
+        """ Copy items from another set.
+        If the updateItemCallback is passed, it will be 
+        called with each item (and optionally with a data row).
+        This is a place where items can be updated while copying.
+        This is useful to set new attributes or update values
+        for each item.
+        """
+        for item in otherSet:
+            # copy items if enabled or copyDisabled=True
+            if copyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                self.append(newItem)
+                # copy items inside the class
+                newItem.copyItems(item, copyDisabled=copyDisabled)
+                self.update(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row
+                
+    def classifyItems(self, 
+                      updateItemCallback=None,
+                      updateClassCallback=None,
+                      itemDataIterator=None,
+                      classifyDisabled=False):
+        """ Classify items from the self.getImages() and add the needed classes.
+        This function iterates over each item in the images and call
+        the updateItemCallback to register the information coming from
+        the iterator in itemDataIterator. The callback function should
+        set the classId of the image that will be used to classify it.
+        It is also possible to pass a callback to update the class properties.
+        """
+        clsDict = {} # Dictionary to store the (classId, classSet) pairs
+        inputSet = self.getImages()
+        
+        for item in inputSet:
+            # copy items if enabled or copyDisabled=True
+            if classifyDisabled or item.isEnabled():
+                newItem = item.clone()
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    updateItemCallback(newItem, row)
+                ref = newItem.getClassId()
+                if ref is None:
+                    raise Exception('Particle classId is None!!!')                    
+                
+                if not ref in clsDict: # Register a new class set if the ref was not found.
+                    classItem = self.ITEM_TYPE(objId=ref)
+                    rep = self.REP_TYPE()
+                    classItem.setRepresentative(rep)            
+                    clsDict[ref] = classItem
+                    classItem.copyInfo(inputSet)
+                    classItem.setAcquisition(inputSet.getAcquisition())
+                    if updateClassCallback is not None:
+                        updateClassCallback(classItem)
+                    self.append(classItem)
+                else:
+                    classItem = clsDict[ref]
+                classItem.append(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator) # just skip disabled data row                    
+                    
+        for classItem in clsDict.values():
+            self.update(classItem)                    
+                
 
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """
     ITEM_TYPE = Class2D
     REP_TYPE = Particle
 
-    pass
+    def writeStack(self, fnStack):
+        """ Write an stack with the classes averages. """
+        if not self.hasRepresentatives():
+            raise Exception('Could not write Averages stack if not hasRepresentatives!!!')
+        ih = ImageHandler()
+        for i, class2D in enumerate(self):
+            img = class2D.getRepresentative()
+            ih.convert(img, (i+1, fnStack))
 
 
 class SetOfClasses3D(SetOfClasses):

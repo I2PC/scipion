@@ -36,17 +36,18 @@ import xmipp
 from pyworkflow.em.constants import *
 from constants import *
 
-from pyworkflow.em import SetOfImages, SetOfMicrographs, Volume, ProtCTFMicrographs
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_projmatch import XmippProtProjMatch 
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_preprocess import XmippProtPreprocessParticles, XmippProtPreprocessVolumes
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
-from protocol_filter import XmippProtFilterParticles, XmippProtFilterVolumes
-from protocol_mask import XmippProtMaskParticles, XmippProtMaskVolumes
+from protocol_preprocess import (XmippProtFilterParticles, XmippProtFilterVolumes,
+                                 XmippProtMaskParticles, XmippProtMaskVolumes)
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
+from protocol_helical_parameters import XmippProtHelicalParameters
+from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
 
 from pyworkflow.em.wizard import *
 
@@ -135,14 +136,39 @@ class XmippBoxSizeWizard(Wizard):
 
     def _getBoxSize(self, protocol):
 
-        boxSize = 0
+        # Get input coordinates from protocol and if they have not value exit
+        inputCoords = protocol.getCoords()
+        if  inputCoords is None:
+            return 0
 
-        if issubclass(protocol.getClass(), XmippProtExtractParticles):
-            if protocol.inputCoordinates.hasValue():
-                boxSize = protocol.inputCoordinates.get().getBoxSize()
-        if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
-            if protocol.inputCoordinatesTiltedPairs.hasValue():
-                boxSize= protocol.inputCoordinatesTiltedPairs.get().getUntilted().getBoxSize()
+        # Get boxSize from coordinates and sampling input from associated micrographs
+        boxSize = inputCoords.getBoxSize()
+        samplingInput = inputCoords.getMicrographs().getSamplingRate()
+
+        # If downsampling type same as picking sampling does not change
+        if protocol.downsampleType.get() == SAME_AS_PICKING:
+            samplingFinal = samplingInput
+        else:
+            # In case is not same as picking get input micrographs and its sampling rate
+            if issubclass(protocol.getClass(), XmippProtExtractParticles):
+                inputMics = protocol.inputMicrographs.get()
+            if issubclass(protocol.getClass(), XmippProtExtractParticlesPairs):
+                inputMics = inputCoords.getMicrographs()
+
+            samplingMics = inputMics.getSamplingRate()
+
+            if protocol.downsampleType.get() == ORIGINAL:
+                # If 'original' get sampling rate from original micrographs
+                samplingFinal = samplingMics
+            else:
+                # IF 'other' multiply the original sampling rate by the factor provided
+                samplingFinal = samplingMics*protocol.downFactor.get()
+
+        downFactor = samplingFinal/samplingInput
+
+        return int(boxSize/downFactor)
+
+
 
         return boxSize
 
@@ -154,21 +180,21 @@ class XmippBoxSizeWizard(Wizard):
 # NUMBER OF CLASSES
 #===============================================================================
 class XmippCL2DNumberOfClassesWizard(Wizard):
-    _targets = [(XmippProtCL2D, ['numberOfReferences'])]
+    _targets = [(XmippProtCL2D, ['numberOfClasses'])]
 
-    def _getNumberOfReferences(self, protocol):
+    def _getNumberOfClasses(self, protocol):
 
-        numberOfReferences = 64
+        numberOfClasses = 64
 
         if protocol.inputParticles.hasValue():
             from protocol_cl2d import IMAGES_PER_CLASS
-            numberOfReferences = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
+            numberOfClasses = int(protocol.inputParticles.get().getSize()/IMAGES_PER_CLASS)
 
-        return numberOfReferences
+        return numberOfClasses
 
 
     def show(self, form):
-        form.setVar('numberOfReferences', self._getNumberOfReferences(form.protocol))
+        form.setVar('numberOfClasses', self._getNumberOfClasses(form.protocol))
 
 #===============================================================================
 # MASKS 
@@ -249,7 +275,17 @@ class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
         _label = params['label']
         VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
- 
+class XmippVolumeRadiusWizard(XmippVolumeMaskRadiusWizard):
+    _targets = [(XmippProtHelicalParameters, ['cylinderRadius'])]
+
+    def _getParameters(self, protocol):
+
+        protParams = {}
+        protParams['input']= protocol.inputVolume
+        protParams['label']= 'cylinderRadius'
+        protParams['value']= protocol.cylinderRadius.get()
+        return protParams
+
 
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]
@@ -278,20 +314,32 @@ class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
 #===============================================================================
 #  FILTERS
 #===============================================================================
-        
+
 class XmippFilterParticlesWizard(FilterParticlesWizard):   
-    _targets = [(XmippProtFilterParticles, ['lowFreq', 'highFreq', 'freqDecay'])]
+    _targets = [(XmippProtFilterParticles, ['lowFreqA','lowFreqDig',
+                                            'highFreqA','highFreqDig',
+                                            'freqDecayA','freqDecayDig'])]
     
     def _getParameters(self, protocol):
-        
-        label, value = self._getInputProtocol(self._targets, protocol)
-        
+
         protParams = {}
-        protParams['input']= protocol.inputParticles
-        protParams['label']= label
-        protParams['value']= value
-        protParams['mode'] = protocol.fourierMode.get()
-        return protParams  
+
+        if protocol.freqInAngstrom:
+            labels = ['lowFreqA', 'highFreqA', 'freqDecayA']
+            protParams['unit'] = UNIT_ANGSTROM
+        else:
+            labels = ['lowFreqDig', 'highFreqDig', 'freqDecayDig']
+            protParams['unit'] = UNIT_PIXEL
+
+        values = [protocol.getAttributeValue(l) for l in labels]
+
+        protParams['input'] = protocol.inputParticles
+        protParams['label'] = labels
+        protParams['value'] = values
+        protParams['mode'] = protocol.filterModeFourier.get()
+        #protParams['space'] = protocol.filterSpace.get()
+        #protParams['freqInAngstrom'] = protocol.freqInAngstrom.get()
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
@@ -302,23 +350,36 @@ class XmippFilterParticlesWizard(FilterParticlesWizard):
         _value = params['value']
         _label = params['label']
         _mode = params['mode']
-        FilterParticlesWizard.show(self, form, _value, _label, _mode, UNIT_PIXEL_FOURIER)
+        _unit = params['unit']
+        FilterParticlesWizard.show(self, form, _value, _label, _mode, _unit)
     
 
     
 class XmippFilterVolumesWizard(FilterVolumesWizard):   
-    _targets = [(XmippProtFilterVolumes, ['lowFreq', 'highFreq', 'freqDecay'])]
-    
+    _targets = [(XmippProtFilterVolumes, ['lowFreqA','lowFreqDig',
+                                          'highFreqA','highFreqDig',
+                                          'freqDecayA','freqDecayDig'])]
+
     def _getParameters(self, protocol):
         
-        label, value = self._getInputProtocol(self._targets, protocol)
-        
         protParams = {}
+
+        if protocol.freqInAngstrom:
+            labels = ['lowFreqA', 'highFreqA', 'freqDecayA']
+            protParams['unit'] = UNIT_ANGSTROM
+        else:
+            labels = ['lowFreqDig', 'highFreqDig', 'freqDecayDig']
+            protParams['unit'] = UNIT_PIXEL
+
+        values = [protocol.getAttributeValue(l) for l in labels]
+
         protParams['input']= protocol.inputVolumes
-        protParams['label']= label
-        protParams['value']= value
-        protParams['mode'] = protocol.fourierMode.get()
-        return protParams  
+        protParams['label']= labels
+        protParams['value']= values
+        protParams['mode'] = protocol.filterModeFourier.get()
+        #protParams['mode'] = protocol.filterSpace.get()
+        #protParams['freqInAngstrom'] = protocol.freqInAngstrom.get()
+        return protParams
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']

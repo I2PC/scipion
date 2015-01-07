@@ -24,11 +24,14 @@ urlpatterns = patterns('',
     #SERVICE PROJECT 
     url(r'^service_projects/', 'app.views_project.service_projects'),
     url(r'^check_project_id/$', 'app.views_project.check_project_id'),
+    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
+    url(r'^get_testdata/$', 'app.views_project.get_testdata'),
+    url(r'^service_content/$', 'app.views_project.service_content'),
 
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
-    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
+    
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^tree_prot_view/$', 'app.views_project.tree_prot_view'),
@@ -87,10 +90,13 @@ urlpatterns = patterns('',
     #SHOWJ 
     url(r'^showj/$', 'app.views_showj.showj'), #Load showj web
     url(r'^update_session_table/$', 'app.views_showj.updateSessionTable'),
+    url(r'^jsmol/$', 'app.views_showj.jsmol'),
+    url(r'^get_chimera_html/$', 'app.views_showj.get_chimera_html'),
     
     #BROWSER & UPLOAD FILES
     url(r'^upload/', 'app.views_management.upload', name='upload'),
     url(r'^doUpload/', 'app.views_management.doUpload'),
+    url(r'^upload_service/', 'app.views_management.upload_service'),
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
@@ -111,5 +117,5 @@ urlpatterns = patterns('',
 
 )
 
-handler404 = "app.views_util.error"
-handler500 = "app.views_util.error"
+# handler404 = "app.views_util.error"
+# handler500 = "app.views_util.error"

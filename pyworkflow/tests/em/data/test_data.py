@@ -87,6 +87,12 @@ class TestSetOfMicrographs(BaseTest):
         micSet.write()    
         
         self.checkSet(micSet)
+        
+        # Check copy info also copies the samplingRate
+        micSet2 = SetOfMicrographs(filename=':memory:')
+        micSet2.copyInfo(micSet)
+        self.assertAlmostEqual(micSet.getSamplingRate(), micSet2.getSamplingRate())
+         
         os.chdir(cwd)
         
     def testRead(self):
@@ -144,6 +150,10 @@ class TestSetOfParticles(BaseTest):
         
         print "writing particles to: ", outFn
         imgSet.write()
+        
+        imgSet2 = SetOfParticles(filename=':memory:')
+        imgSet2.copyInfo(imgSet)
+        self.assertAlmostEqual(imgSet.getSamplingRate(), imgSet2.getSamplingRate())
         
     def test_hugeSet(self):
         """ Create a set of a big number of particles to measure
@@ -234,13 +244,50 @@ class TestTransform(BaseTest):
         m = t.getMatrix()
         m[0, 3] = 2
         m[1, 3] = 4
+        m[2, 3] = 6
+        m[3, 3] = 5
         t.scale(0.5)
 
         self.assertAlmostEqual(m[0, 3], 1)
         self.assertAlmostEqual(m[1, 3], 2)
+        self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 1)
 
-        print t.getMatrix()
+    def test_scaleShifts2D(self):
+        """ Check Scale 2D shifts in transformation class
+        """
+        t = Transform()
+        m = t.getMatrix()
+        m[0, 3] = 2
+        m[1, 3] = 4
+        m[2, 3] = 6
+        m[3, 3] = 5
+        t.scaleShifts2D(0.5)
+
+        self.assertAlmostEqual(m[0, 3], 1)
+        self.assertAlmostEqual(m[1, 3], 2)
+        self.assertAlmostEqual(m[2, 3], 6)
+        self.assertAlmostEqual(m[3, 3], 5)
+
+    def test_clone(self):
+        """ Check that cloning the Transform will 
+        also copy the values of underlying numpy matrix.
+        """
+        t = Transform()
+        m = t.getMatrix()
+        m[0, 3] = 2
+        m[1, 3] = 4
+        
+        t2 = t.clone()
+        m2 = t2.getMatrix()
+        self.assertTrue(np.allclose(m, m2, rtol=1e-2)) 
+        
+        p = Particle()
+        p.setTransform(t)
+        
+        p2 = p.clone()
+        m3 = p2.getTransform().getMatrix()
+        self.assertTrue(np.allclose(m, m3, rtol=1e-2)) 
 
 
 if __name__ == '__main__':

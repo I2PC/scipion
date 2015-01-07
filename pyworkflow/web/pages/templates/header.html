@@ -23,25 +23,28 @@
 			{% else %}
 				{% if projectName != None and projectName != ''%}
 					{% if mode != 'service' %}
-					<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROJECTS}}</a>
-					<span id="tube">|</span>
-					
-					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
-					<span id="tube">|</span>
-					
-					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
-					<span id="tube">|</span>
-					
-					<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">{{msg.VIEW_HOSTS}}</a>
+					<a href="{{abs_url}}/projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}">
+					<i class="fa fa-home"></i> {{msg.VIEW_PROJECTS}}</a>
+<!-- 					<span id="tube">|</span> -->
+					&nbsp;
+					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">
+					<i class="fa fa-cog"></i> {{msg.VIEW_PROTOCOLS}}</a>
+<!-- 					<span id="tube">|</span> -->
+					&nbsp;
+					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">
+					<i class="fa fa-hdd-o"></i> {{msg.VIEW_DATA}}</a>
+<!-- 					<span id="tube">|</span> -->
+					&nbsp;
+					<a href="javascript:alert('Not implemented yet')" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">
+					<i class="fa fa-laptop"></i> {{msg.VIEW_HOSTS}}</a>
 					<!-- <span id="tube">|</span><a href="/view_hosts/" class="headerLink{% if view == 'hosts' %} headerLinkSelected {% endif %}">Hosts</a> -->
-					<span id="tube">|</span>
-					
-					<a href='javascript:popup("/upload/")' class="headerLink">{{msg.VIEW_UPLOAD}}</a>
+<!-- 					<span id="tube">|</span> -->
+					&nbsp;
+					<a href='javascript:popup("/upload/")' class="headerLink">
+					<i class="fa fa-cloud-upload"></i> {{msg.VIEW_UPLOAD}}</a>
 					{% else %}
-					<a href="{{abs_url}}/project_content/?projectName={{projectName}}" class="headerLink{% if view == 'protocols' %} headerLinkSelected {% endif %}">{{msg.VIEW_PROTOCOLS}}</a>
-					<span id="tube">|</span>
-					<a href="{{abs_url}}/data_content/?projectName={{projectName}}" class="headerLink{% if view == 'data' %} headerLinkSelected {% endif %}">{{msg.VIEW_DATA}}</a>
-				
+					<a href="{{abs_url}}/service_projects/" class="headerLink{% if view == 'projects' %} headerLinkSelected {% endif %}"><i class="fa fa-home"></i> Home</a>
+					
 					{% endif %}
 				{% endif %}
 			{% endif %}

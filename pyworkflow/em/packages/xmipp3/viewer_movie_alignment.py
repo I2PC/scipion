@@ -2,7 +2,7 @@
 # *
 # * Authors:     Vahid Abrishami (vabrishami@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *
+# *              Airen Zaldivar  (airenzp@gmail.com)
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify

@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import ALIGN_2D
 """
 This sub-package contains the XmippRCT protocol
 """
@@ -43,7 +44,7 @@ from xmipp3 import XmippMdRow
 
 
 class XmippProtRCT(ProtInitialVolume):
-    """ Computes from a set of projections/classes using RCT algorithm """
+    """Creates initial volumes by using a set of projections/classes from a tilted-pair picking process and using RCT algorithm"""
     _label = 'random conical tilt'
     
     def __init__(self, **args):
@@ -58,11 +59,11 @@ class XmippProtRCT(ProtInitialVolume):
         #TODO: Input can be either a SetOfParticles or a SetOfClasses2D
         form.addParam('inputParticlesTiltPair', PointerParam, label="Input particles tilt pair", important=True, 
                       pointerClass='ParticlesTiltPair',
-                      help='Select the input particles tilt pair from the project.')   
+                      help='Select the input particles tilt pair file that will be used.  file. This file is used to associate each micrograph with its tilted equivalent.')
         
         form.addParam('inputParticles', PointerParam, label="Input classes", important=True, 
                       pointerClass='SetOfParticles,SetOfClasses',
-                      help='Select the input images or classes from the project.')    
+                      help='Select the input images or classes from the project.')
         
         form.addSection(label='Alignment parameters')
 
@@ -91,8 +92,8 @@ class XmippProtRCT(ProtInitialVolume):
                       'contribute to the reconstruction.')
         
         form.addParam('resoLowPassFilter', FloatParam, default=0.2,
-                      label='Resolution of the low-pass fitler (dig.freq)',
-                      help='Resolution of the low-pass fitler (dig.freq)')        
+                      label='Resolution of the low-pass filter (dig.freq)',
+                      help='Resolution of the low-pass filter (dig.freq)')        
 
         form.addParallelSection(mpi=2)
             
@@ -160,7 +161,7 @@ class XmippProtRCT(ProtInitialVolume):
             pairRow.setValue(xmipp.MDL_ITEM_ID, long(imgId))
             pairRow.setValue(xmipp.MDL_REF, 1)
 
-            alignment = img.getAlignment()
+            alignment = img.getTransform()
             
 #             pairRow.setValue(xmipp.MDL_FLIP, False)
 #             pairRow.setValue(xmipp.MDL_SHIFT_X, alignment._xmipp_shiftX.get()*scaleFactor)
@@ -169,8 +170,7 @@ class XmippProtRCT(ProtInitialVolume):
 
             # Scale alignment by scaleFactor
             alignment.scale(scaleFactor)
-            alignmentToRow(alignment, pairRow, is2D=True, inverseTransform=False)
-                                                           #/////////////////////
+            alignmentToRow(alignment, pairRow, alignType=ALIGN_2D)
                                
             pairRow.setValue(xmipp.MDL_IMAGE_TILTED, getImageLocation(tImg))
             tMic = tMics[micId]
@@ -317,5 +317,19 @@ class XmippProtRCT(ProtInitialVolume):
         return summary
         
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
+        methods = []
+        if not hasattr(self, 'outputVolumes'):
+            methods.append("Output volumes not ready yet.")
+        else:
+            inputIsString = ''
+            if isinstance(self.inputParticles.get(), SetOfParticles):
+                methods.append('A set of %d particles was employed to create an initial volume using RCT method.' % len(self.inputParticles.get()))
+            else:
+                particlesArray = [len(s) for s in self.inputParticles.get()]
+                particlesArrayString = String(particlesArray)
+                methods.append('A set of %d classes was employed to create %d initial volumes using RCT method. ' % (len(self.inputParticles.get()), len(self.inputParticles.get())))
+                methods.append('For each initial volume were used respectively %s particles' % particlesArrayString)
+        return methods
             
+    def _citations(self):
+        return ['Radermacher1987']
