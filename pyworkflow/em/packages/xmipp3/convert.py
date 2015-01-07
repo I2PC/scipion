@@ -123,6 +123,7 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_ZSCORE_SHAPE2,
     xmipp.MDL_ZSCORE_SNR1,
     xmipp.MDL_ZSCORE_SNR2,
+    xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
     ]
