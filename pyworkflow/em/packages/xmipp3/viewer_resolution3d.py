@@ -81,14 +81,28 @@ class XmippResolution3DViewer(ProtocolViewer):
         return xplotter
 
     def _adjustPoints(self, data):
-        print "x: ", data.getXData(), "y: ", data.getYData()
+        x=data.getXData()
+        X=[]
+        Y=[]
+        for objId in self.md:
+            f=self.md.getValue(xmipp.MDL_RESOLUTION_FREQ2,objId)
+            if f>=x[0] and f<=x[1]:
+                X.append(f)
+                Y.append(self.md.getValue(xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR,objId))
+        X=np.array(X)
+        Y=np.array(Y)
+        A=np.array([np.ones(X.size), X.T])
+        beta=np.linalg.lstsq(A.T,Y)[0]
+        y=[beta[0]+beta[1]*xi for xi in x]
+        Bfactor=beta[1]
+        print "y: ",y
         
     def _viewStructureFactor(self, e=None):
         from pyworkflow.em.packages.xmipp3.nma.data import PathData
         strFactFn = self.protocol._defineStructFactorName()
-        md = MetaData(strFactFn)
+        self.md = MetaData(strFactFn)
         plotter = self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 'log(Structure Factor)', 
-                               md, xmipp.MDL_RESOLUTION_FREQ, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
+                               self.md, xmipp.MDL_RESOLUTION_FREQ2, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
         self.path = PointPath(plotter.getLastSubPlot(), PathData(dim=2), 
                               callback=self._adjustPoints,
                               tolerance=0.1)
