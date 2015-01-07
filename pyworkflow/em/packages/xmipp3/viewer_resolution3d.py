@@ -50,57 +50,38 @@ class XmippResolution3DViewer(ProtocolViewer):
                       label="Display Fourier Shell Correlation?")
         form.addParam('doShowDpr', BooleanParam, default=True, 
                       label="Display Differential Phase Residual?")
-        form.addParam('doShowEstructureFactor', BooleanParam, default=True, 
+        form.addParam('doShowStructureFactor', BooleanParam, default=True, 
                       label="Display Structure factor?")
-#         form.addParam('doShowGuinier', BooleanParam, label="Display Guinier plot?", condition='self.protocol.doStructureFactor', default=True)
-#         form.addParam('useMatlab', BooleanParam, label="Use Matlab for Guinier?", condition='self.protocol.doStructureFactor and doShowGuinier', default=True)
-        form.addParam('doShowSsnr', BooleanParam, default=True, 
-                      label="Display Spectral SNR?")
-        form.addParam('doShowVssnr', BooleanParam, default=True, 
-                      label="Display Volumetric Spectral SNR?")
 
     def _getVisualizeDict(self):
         return {'doShowFsc': self._viewFsc,
                 'doShowDpr': self._viewDpr,
-                'doShowEstructureFactor': self._viewEstructureFactor,
-#                 'doShowGuinier': self._viewGuinier,
-#                 'useMatlab': self._useMatlab,
-                'doShowSsnr': self._viewSsnr,
-                'doShowVssnr': self._viewVssnr
+                'doShowStructureFactor': self._viewStructureFactor,
                 }
     
     def _viewFsc(self, e=None):
         fscFn = self.protocol._defineFscName()
         md = MetaData(fscFn)
-        return [self._viewPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
+        return [self._createPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
                                md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r'),
                 DataView(fscFn)]
         
     def _viewDpr(self, e=None):
         fscFn = self.protocol._defineFscName()
         md = MetaData(fscFn)
-        return [self._viewPlot("Differential Phase Residual", FREQ_LABEL, 'DPR', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_DPR)]
+        return [self._createPlot("Differential Phase Residual", FREQ_LABEL, 'DPR', 
+                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_DPR),
+                DataView(fscFn)]
     
-    def _viewPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
+    def _createPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
         xplotter = XmippPlotter(1, 1, figsize=(4,4), windowTitle="Plot")
         xplotter.createSubPlot(title, xTitle, yTitle)
         xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
         return xplotter
 
     
-    def _viewEstructureFactor(self, e=None):
+    def _viewStructureFactor(self, e=None):
         strFactFn = self.protocol._defineStructFactorName()
         md = MetaData(strFactFn)
-        return [self._viewPlot("Structure Factor", FREQ_LABEL, 'Structure Factor', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_STRUCTURE_FACTOR),
-                self._viewPlot("Structure Factor", FREQ_LABEL, 'log(Structure Factor)', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_LOG_STRUCTURE_FACTOR),
-                DataView(strFactFn)]        
-    
-    def _viewSsnr(self, e=None):
-        pass
-    
-    def _viewVssnr(self, e=None):
-        pass
-    
+        return [self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 'log(Structure Factor)', 
+                               md, xmipp.MDL_RESOLUTION_FREQ2, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)]        

@@ -33,10 +33,10 @@ from pyworkflow.utils import *
 from math import floor
 from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
-
+from xmipp import MetaData, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, MDL_RESOLUTION_DPR
 
 class XmippProtResolution3D(ProtAnalysis3D):
-    """ Computes resolution by Fourier shell correlation """
+    """ Computes resolution by several methods """
     _label = 'resolution 3D'
       
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -47,7 +47,7 @@ class XmippProtResolution3D(ProtAnalysis3D):
                       pointerClass='Volume',
                       help='This volume will be compared to the reference volume.')  
         form.addParam('doFSC', BooleanParam, default=True,
-                      label="Calculate FSC?", 
+                      label="Calculate FSC and DPR?", 
                       help='If set True calculate FSC and DPR.')
         form.addParam('referenceVolume', PointerParam, label="Reference volume", condition='doFSC', 
                       pointerClass='Volume',
@@ -55,14 +55,6 @@ class XmippProtResolution3D(ProtAnalysis3D):
         form.addParam('doStructureFactor', BooleanParam, default=True,
                       label="Calculate Structure Factor?", 
                       help='If set True calculate Structure Factor')
-        form.addParam('doSSNR', BooleanParam, default=True,
-                      label="Calculate Spectral SNR?", 
-                      help='If set True calculate Structure Factor')
-        form.addParam('doVSSNR', BooleanParam, default=False,
-                      label="Calculate Volumetric Spectral SNR?", 
-                      help='If set True calculate Structure Factor')
-
-#        form.addParallelSection(threads=1, mpi=8)         
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -75,16 +67,13 @@ class XmippProtResolution3D(ProtAnalysis3D):
             self._insertFunctionStep('calculateFscStep')
         if self.doStructureFactor:
             self._insertFunctionStep('structureFactorcStep')
-        if self.doSSNR or self.doVSSNR:
-            # Implement when RECONSTRUCTOR method is implemented
-            pass
         
-#         self._insertFunctionStep('createOutput')
+        
+        self._insertFunctionStep('createSummaryStep')
 
     #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):
         """ Calculate the FSC between two volumes"""
-        
         samplingRate = self.inputVolume.get().getSamplingRate()
         fscFn = self._defineFscName()
         args="--ref %s -i %s -o %s --sampling_rate %f --do_dpr" % (self.refVol, self.inputVol, fscFn, samplingRate)
@@ -92,12 +81,73 @@ class XmippProtResolution3D(ProtAnalysis3D):
     
     def structureFactorcStep(self):
         """ Calculate the structure factors of the volume"""
-        
         samplingRate = self.inputVolume.get().getSamplingRate()
         structureFn = self._defineStructFactorName()
         args = "-i %s -o %s --sampling %f" % (self.inputVol, structureFn, samplingRate)
         self.runJob("xmipp_volume_structure_factor", args)
-        
+    
+    def calculateFSCResolution(self, md, threshold):
+        xl=-1
+        xr=-1
+        yl=-1
+        yr=-1
+        leftSet=False
+        rightSet=False
+        for objId in md:
+            freq=md.getValue(MDL_RESOLUTION_FREQ,objId)
+            FSC=md.getValue(MDL_RESOLUTION_FRC,objId)
+            if FSC>threshold:
+                xl=freq
+                yl=FSC
+                leftSet=True
+            else:
+                xr=freq
+                yr=FSC
+                rightSet=True
+                break
+        if leftSet and rightSet:
+            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
+            return 1.0/x
+        else:
+            return -1
+    
+    def calculateDPRResolution(self, md, threshold):
+        xl=-1
+        xr=-1
+        yl=-1
+        yr=-1
+        leftSet=False
+        rightSet=False
+        for objId in md:
+            freq=md.getValue(MDL_RESOLUTION_FREQ,objId)
+            DPR=md.getValue(MDL_RESOLUTION_DPR,objId)
+            if DPR<threshold:
+                xl=freq
+                yl=DPR
+                leftSet=True
+            else:
+                xr=freq
+                yr=DPR
+                rightSet=True
+                break
+        if leftSet and rightSet:
+            x=xl+(threshold-yl)/(yr-yl)*(xr-xl)
+            return 1.0/x
+        else:
+            return -1
+
+    def createSummaryStep(self):
+        summary=""
+        if self.doFSC.get():
+            summary+="FSC file: [%s]\n" % self._defineFscName()
+            md=MetaData(self._defineFscName())
+            summary+="   Resolution FSC=0.5: %3.2f Angstroms\n"%self.calculateFSCResolution(md,0.5)
+            summary+="   Resolution FSC=0.143: %3.2f Angstroms\n"%self.calculateFSCResolution(md,0.143)
+            summary+="   Resolution DPR=45: %3.2f Angstroms\n"%self.calculateDPRResolution(md,45)
+        if self.doStructureFactor:
+            summary+="Structure factor file: [%s]\n" % self._defineStructFactorName()
+        self.summaryVar.set(summary)
+    
     #--------------------------- INFO steps functions --------------------------------------------
     def _validate(self):
         validateMsgs = []
@@ -110,40 +160,17 @@ class XmippProtResolution3D(ProtAnalysis3D):
         return validateMsgs
     
     def _summary(self):
-        summary = []
-        summary.append("Input volume: %s" % self.inputVolume.get().getNameId())
-        if self.doFSC.get():
-            summary.append("Reference volume: %s" % self.referenceVolume.get().getNameId())
-            summary.append("FSC file: %s" % self._defineFscName())
-        if self.doStructureFactor:
-            summary.append("Structure factor file: %s" % self._defineStructFactorName())
-        return summary
+        return [self.summaryVar.get()]
     
     def _methods(self):
         messages = []
         if self.doFSC.get():
             messages.append('We obtained the FSC of the volume %s' % self.inputVolume.get().getNameId())
-            messages.append('taking volume %s' % self.referenceVolume.get().getNameId() + ' as reference')
+            messages.append('taking the volume %s' % self.referenceVolume.get().getNameId() + ' as reference')
         return messages
               
-    def _citations(self):
-        citations = []
-        if self.doSSNR.get() or self.doVSSNR.get():
-            citations = ['Unser2005']
-        return citations
-    
-    
-    def _defineMetadataRootName(self, mdrootname):
-        
-        if mdrootname=='fsc':
-            return self._getPath('fsc.xmd')
-        if mdrootname=='structureFactor':
-            return self._getPath('structureFactor.xmd')
-        
     def _defineStructFactorName(self):
-        structFactFn = self._defineMetadataRootName('structureFactor')
-        return structFactFn
+        return self._getPath('structureFactor.xmd')
     
     def _defineFscName(self):
-        fscFn = self._defineMetadataRootName('fsc')
-        return fscFn
+        return self._getPath('fsc.xmd')
