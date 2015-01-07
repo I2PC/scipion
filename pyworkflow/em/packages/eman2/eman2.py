@@ -27,28 +27,65 @@
 This sub-package will contains Eman3.0 specific protocols
 """
 
-import os, sys
+import os
+from os.path import join
+from pyworkflow.utils import Environ
 
-from pyworkflow.em import ProtPreprocessMicrographs   
 
-
-
-def loadEnvironment():
-    """ Load the environment variables needed for use EMAN2 tools. """
-    # TODO: Read EMAN2DIR from the host config.
+def getEnviron():
+    """ Setup the environment variables needed to launch Eman. """
+    environ = Environ(os.environ)
     EMAN2DIR = os.environ['EMAN2DIR']
-    if 'EMAN_LD_LIBRARY_PATH' in os.environ:
-        # Add this variable to $HOME/.config/scipion/scipion.conf
-        os.environ['LD_LIBRARY_PATH'] = os.environ['EMAN_LD_LIBRARY_PATH'] + os.pathsep + os.environ.get('LD_LIBRARY_PATH','')
-    os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ.get('PATH','')
     pathList = [os.path.join(EMAN2DIR, d) for d in ['lib', 'bin', 'extlib/site-packages']]
-    os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH','')
-    os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
-    # Undo the xmipp_python additions to LD_LIBRARY_PATH
-    if 'OLD_LD_LIBRARY_PATH' in os.environ:
-        print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
-        os.environ['LD_LIBRARY_PATH'] = os.environ['OLD_LD_LIBRARY_PATH']
-    #sys.path += pathList
+    
+    environ.update({
+            'PATH': join(EMAN2DIR, 'bin'),
+            'LD_LIBRARY_PATH': os.pathsep.join(pathList),
+            'PYTHONPATH': os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH',''),
+            'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')
+            }, position=Environ.BEGIN)
+    return environ
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+#     
+#     
+#     
+#     
+#     
+#     """ Load the environment variables needed for use EMAN2 tools. """
+#     # TODO: Read EMAN2DIR from the host config.
+#     
+#     if 'EMAN_LD_LIBRARY_PATH' in os.environ:
+#         
+#         # Add this variable to $HOME/.config/scipion/scipion.conf
+#         
+#         
+#         os.environ['LD_LIBRARY_PATH'] = os.environ['EMAN_LD_LIBRARY_PATH'] + os.pathsep + os.environ.get('LD_LIBRARY_PATH','')
+#     
+#     
+#     
+#     os.environ['PATH'] = "%(EMAN2DIR)s/bin" % locals() + os.pathsep + os.environ.get('PATH','')
+#     
+#     
+#     
+#     os.environ['PYTHONPATH'] = os.pathsep.join(pathList) + os.pathsep + os.environ.get('PYTHONPATH','')
+#     os.environ['EMAN_PYTHON'] = os.path.join(EMAN2DIR, 'Python/bin/python')
+#     
+#     
+#     
+#     # Undo the xmipp_python additions to LD_LIBRARY_PATH
+#     if 'OLD_LD_LIBRARY_PATH' in os.environ:
+#         print 'OLD_LD_LIBRARY_PATH', os.environ['OLD_LD_LIBRARY_PATH']
+#         os.environ['LD_LIBRARY_PATH'] = os.environ['OLD_LD_LIBRARY_PATH']
+#     #sys.path += pathList
     
     
 def getEmanProgram(program):

@@ -96,7 +96,7 @@ class EmanProtBoxing(ProtParticlePicking):
         # Redefine run to change to workingDir path
         # Change to protocol working directory
         self._enterWorkingDir()
-        eman2.loadEnvironment()
+#         eman2.loadEnvironment()
         ProtParticlePicking._runSteps(self, startIndex)
 
     
