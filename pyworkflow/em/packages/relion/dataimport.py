@@ -32,8 +32,9 @@ from pyworkflow.object import Float
 from pyworkflow.em.constants import ALIGN_PROJ, ALIGN_2D, ALIGN_NONE
 from pyworkflow.em.data import Micrograph
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.relion.convert import relionToLocation
+from pyworkflow.em.packages.relion.convert import relionToLocation, readCoordinates
 from pyworkflow.utils.path import findRootFrom
+from pyworkflow.em.packages.relion.convert import ( rowToCoordinate)
 
 # import xmipp
 
@@ -273,7 +274,10 @@ class RelionImport():
 
         return acquisitionDict
 
-    def importCoordinates(self, mic, fileName, coordSet):
+    def importCoordinates(self, fileName, addCoordinate):
         print 'importFromRelion'  + fileName
+        for row in md.iterRows(fileName):
+            coord = rowToCoordinate(row)
+            addCoordinate(coord)
 
             
