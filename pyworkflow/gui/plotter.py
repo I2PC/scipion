@@ -153,6 +153,9 @@ class Plotter(View):
         self.hist = a.hist
         return a
     
+    def getLastSubPlot(self):
+        return self.last_subplot
+    
     def createCanvas(self):
         a = self.figure.add_subplot(111, axisbg='g')
         a.set_axis_off()
