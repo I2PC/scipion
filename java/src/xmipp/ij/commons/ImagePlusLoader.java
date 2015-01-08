@@ -159,6 +159,11 @@ public class ImagePlusLoader {
     {
         impreader.setGeometry(geometry);
     }
+     
+      public boolean hasGeometry()
+    {
+        return impreader.geometry != null;
+    }
 
     
     public void setDimension(int width, int height)

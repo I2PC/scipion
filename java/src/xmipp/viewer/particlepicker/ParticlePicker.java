@@ -455,7 +455,10 @@ public abstract class ParticlePicker {
             default:
                 md.clear();
         }
-        
+        if (scale != 1.f) {
+            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
+            md.operate(command);
+        } 
         int width = (int) (m.getWidth() / scale);// original width
         int height = (int) (m.getHeigth() / scale);// original height
         if (invertx) {
@@ -464,10 +467,7 @@ public abstract class ParticlePicker {
         if (inverty) {
             md.operate(String.format("ycoor=%d-ycoor", height));
         }
-        if (scale != 1.f) {
-            String command = String.format(Locale.ENGLISH, "xcoor=xcoor*%f,ycoor=ycoor*%f", scale, scale);
-            md.operate(command);
-        }
+       
         
     }// function importParticlesFromFile
     
