@@ -138,14 +138,22 @@ class XmippProtResolution3D(ProtAnalysis3D):
 
     def createSummaryStep(self):
         summary=""
+        methodsStr=""
         if self.doFSC.get():
             summary+="FSC file: [%s]\n" % self._defineFscName()
             md=MetaData(self._defineFscName())
-            summary+="   Resolution FSC=0.5: %3.2f Angstroms\n"%self.calculateFSCResolution(md,0.5)
-            summary+="   Resolution FSC=0.143: %3.2f Angstroms\n"%self.calculateFSCResolution(md,0.143)
-            summary+="   Resolution DPR=45: %3.2f Angstroms\n"%self.calculateDPRResolution(md,45)
+            f=self.calculateFSCResolution(md,0.5)
+            summary+="   Resolution FSC=0.5: %3.2f Angstroms\n"%f
+            methodsStr+=" The resolution at FSC=0.5 was %3.2f Angstroms."%f
+            f=self.calculateFSCResolution(md,0.143)
+            summary+="   Resolution FSC=0.143: %3.2f Angstroms\n"%f
+            methodsStr+=" The resolution at FSC=0.143 was %3.2f Angstroms."%f
+            f=self.calculateDPRResolution(md,45)
+            summary+="   Resolution DPR=45: %3.2f Angstroms\n"%f
+            methodsStr+=" The resolution at DPR=45 was %3.2f Angstroms."%f
         if self.doStructureFactor:
             summary+="Structure factor file: [%s]\n" % self._defineStructFactorName()
+        self.methodsVar.set(methodsStr)
         self.summaryVar.set(summary)
     
     #--------------------------- INFO steps functions --------------------------------------------
@@ -160,14 +168,27 @@ class XmippProtResolution3D(ProtAnalysis3D):
         return validateMsgs
     
     def _summary(self):
-        return [self.summaryVar.get()]
+        retval=self.summaryVar.get()
+        fnBfactor= self._getPath('bfactor.txt')
+        if os.path.exists(fnBfactor):
+            f = open(fnBfactor)
+            values = map(float, f.readline().split())
+            retval+="   Bfactor: %4.3f"%values[4]
+        return [retval]
     
     def _methods(self):
-        messages = []
+        methodsStr=""
         if self.doFSC.get():
-            messages.append('We obtained the FSC of the volume %s' % self.inputVolume.get().getNameId())
-            messages.append('taking the volume %s' % self.referenceVolume.get().getNameId() + ' as reference')
-        return messages
+            methodsStr+='We obtained the FSC of the volume %s' % self.inputVolume.get().getNameId()
+            methodsStr+=' taking the volume %s' % self.referenceVolume.get().getNameId() + ' as reference.'
+            methodsStr+=self.methodsVar.get("")
+        if self.doStructureFactor.get():
+            fnBfactor= self._getPath('bfactor.txt')
+            if os.path.exists(fnBfactor):
+                f = open(fnBfactor)
+                values = map(float, f.readline().split())
+                methodsStr+=" The corresponding Bfactor was %4.3f."%values[4]
+        return [methodsStr]
               
     def _defineStructFactorName(self):
         return self._getPath('structureFactor.xmd')
