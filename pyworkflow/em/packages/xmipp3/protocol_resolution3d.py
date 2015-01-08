@@ -140,7 +140,7 @@ class XmippProtResolution3D(ProtAnalysis3D):
         summary=""
         methodsStr=""
         if self.doFSC.get():
-            summary+="FSC file: [%s]\n" % self._defineFscName()
+            summary+="FSC file: %s\n" % self.getFileTag(self._defineFscName())
             md=MetaData(self._defineFscName())
             f=self.calculateFSCResolution(md,0.5)
             summary+="   Resolution FSC=0.5: %3.2f Angstroms\n"%f
@@ -152,7 +152,7 @@ class XmippProtResolution3D(ProtAnalysis3D):
             summary+="   Resolution DPR=45: %3.2f Angstroms\n"%f
             methodsStr+=" The resolution at DPR=45 was %3.2f Angstroms."%f
         if self.doStructureFactor:
-            summary+="Structure factor file: [%s]\n" % self._defineStructFactorName()
+            summary+="Structure factor file: %s\n" % self.getFileTag(self._defineStructFactorName())
         self.methodsVar.set(methodsStr)
         self.summaryVar.set(summary)
     
@@ -179,8 +179,8 @@ class XmippProtResolution3D(ProtAnalysis3D):
     def _methods(self):
         methodsStr=""
         if self.doFSC.get():
-            methodsStr+='We obtained the FSC of the volume %s' % self.inputVolume.get().getNameId()
-            methodsStr+=' taking the volume %s' % self.referenceVolume.get().getNameId() + ' as reference.'
+            methodsStr+='We obtained the FSC of the volume %s' % self.getObjectTag(self.inputVolume.get())
+            methodsStr+=' taking the volume %s' % self.getObjectTag(self.referenceVolume.get()) + ' as reference.'
             methodsStr+=self.methodsVar.get("")
         if self.doStructureFactor.get():
             fnBfactor= self._getPath('bfactor.txt')
