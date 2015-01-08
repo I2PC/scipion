@@ -1195,7 +1195,7 @@ class SetOfClasses(EMSet):
                         
         self._setItemMapperPath(classItem)
         EMSet._insertItem(self, classItem)
-        classItem.write()#Set.write(self)
+        classItem.write(properties=False)#Set.write(self)
         
     def __getitem__(self, itemId):
         """ Setup the mapper classes before returning the item. """

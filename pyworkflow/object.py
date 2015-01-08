@@ -965,17 +965,20 @@ class Set(OrderedObject):
             return self._mapperPath[1]
         return None
     
-    def write(self):
-        """This method will be used to persist in a file the
-        list of images path contained in this Set
-        path: output file path
-        images: list with the images path to be stored
+    def write(self, properties=True):
         """
-        #TODO: If mapper is in memory, do commit and dump to disk
-        self._mapper.setProperty('self', self.getClassName())
-        objDict = self.getObjDict()
-        for key, value in objDict.iteritems():
-            self._mapper.setProperty(key, value)
+        Commit the changes made to the Set underlyin database.
+        Params:
+            properties: this flag controls when to write Set attributes to 
+                special table 'Properties' in the database. False value is 
+                use for example in SetOfClasses for not writing each Class2D 
+                properties.
+        """
+        if properties:
+            self._mapper.setProperty('self', self.getClassName())
+            objDict = self.getObjDict()
+            for key, value in objDict.iteritems():
+                self._mapper.setProperty(key, value)
         self._mapper.commit()
     
     def _loadClassesDict(self):
