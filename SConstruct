@@ -46,8 +46,8 @@ import SCons.SConf
 URL_BASE = 'http://scipionwiki.cnb.csic.es/files/scipion/software'
 
 # Define our builders.
-Download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
-Untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
+download = Builder(action='wget -nv $SOURCE -c -O $TARGET')
+untar = Builder(action='tar -C $cdir --recursive-unlink -xzf $SOURCE')
 
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
@@ -223,7 +223,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 
 
 def addLibrary(env, name, tar=None, buildDir=None, configDir=None, 
-               targets=None, libChecks=[], url=None, flags=[], addPath=True,
+               targets=None, makeTargets=None, libChecks=[], url=None, flags=[], addPath=True,
                autoConfigTargets='Makefile', deps=[], clean=[], default=True):
     """Add library <name> to the construction process.
 
@@ -296,7 +296,8 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
                    cdir=Dir('#software/tmp').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/tmp/%s' % buildDir).abspath)
-    tConfig = tMake = []
+    tConfig = []
+    tMake = []
     toReturn = []
     for x, folder in enumerate(buildDir):
         tConfig.append(*env.AutoConfig(
@@ -312,7 +313,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             target=targets[x],
             MakePath=Dir('#software/tmp/%s' % buildDir[x]).abspath,
             MakeEnv=os.environ,
-            MakeTargets='install',
+            MakeTargets='all install',
             MakeStdOut=File('#software/log/%s_make_%s.log' % (name, x)).abspath)
         if not isinstance(make, basestring):
             tMake+=make
