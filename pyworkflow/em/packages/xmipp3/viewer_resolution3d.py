@@ -82,6 +82,10 @@ class XmippResolution3DViewer(ProtocolViewer):
 
     def _adjustPoints(self, data):
         x=data.getXData()
+        if x[0]>x[1]:
+            aux=x[1]
+            x[1]=x[0]
+            x[0]=aux
         X=[]
         Y=[]
         for objId in self.md:
@@ -96,9 +100,12 @@ class XmippResolution3DViewer(ProtocolViewer):
         y = [beta[0]+beta[1]*xi for xi in x]
         Bfactor = -4*beta[1]
 
-        # Update new Y values
+        # Update data
+        data.getPoint(0).setX(x[0])
         data.getPoint(0).setY(y[0])
+        data.getPoint(1).setX(x[1])
         data.getPoint(1).setY(y[1])
+        data.bfactor=Bfactor
             
         f = open(self.protocol._getPath('bfactor.txt'), 'w')
         print >> f, x[0], y[0], x[1], y[1], Bfactor
@@ -119,6 +126,9 @@ class XmippResolution3DViewer(ProtocolViewer):
             p2.setX(values[2])
             p2.setY(values[3])
             data.addPoint(p2)
+            data.bfactor=values[4]
+        else:
+            data.bfactor=0
             
         return data
         
@@ -174,7 +184,7 @@ class PointPath():
         if state == STATE_DRAW_POINTS:
             self.ax.set_title('Click to add two points.')
         elif state == STATE_ADJUST_POINTS:
-            self.ax.set_title('Drag points to adjust line.')
+            self.ax.set_title('Drag points to adjust line, current Bfactor = %0.3f' % self.pathData.bfactor)
         else:
             raise Exception("Invalid PointPath state: %d" % state)
         
@@ -242,8 +252,8 @@ class PointPath():
         
     def onRelease(self, event):
         self.dragIndex = None
-        if self.drawing == STATE_ADJUST_POINTS and self.callback:
-            self.callback(self.pathData)
+        if self.drawing == STATE_ADJUST_POINTS:
+            self.setState(STATE_ADJUST_POINTS, notify=True)
         self.update()    
         
     def update(self):
