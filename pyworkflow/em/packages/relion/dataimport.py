@@ -275,7 +275,6 @@ class RelionImport():
         return acquisitionDict
 
     def importCoordinates(self, fileName, addCoordinate):
-        print 'importFromRelion'  + fileName
         for row in md.iterRows(fileName):
             coord = rowToCoordinate(row)
             addCoordinate(coord)

@@ -32,6 +32,7 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3.constants import OTHER 
 from pyworkflow.em.packages.xmipp3.protocol_projmatch import XmippProtProjMatch
 from test_workflow import TestWorkflow
+from pyworkflow.em.protocol import ProtImportCoordinates
    
        
 class TestXmippWorkflow(TestWorkflow):
@@ -227,13 +228,17 @@ class TestXmippWorkflow(TestWorkflow):
         # After CTF estimation, the output micrograph should have CTF info
         self.validateFiles('protCTF', protCTF)
         
-        print "Running fake particle picking..."   
-        protPP = self.newProtocol(XmippProtParticlePicking, importFolder=self.allCrdsDir)                
-        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)        
+
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                  filesPath=self.allCrdsDir,
+                                  filesPattern='*.pos', boxSize=110)
+
+        protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
         self.protDict['protPicking'] = protPP
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-            
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the import of coordinates")
+
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=True, downFactor=8, runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)

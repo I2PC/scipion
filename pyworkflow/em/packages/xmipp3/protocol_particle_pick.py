@@ -77,10 +77,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if not self.importFolder.hasValue():
             self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
         else: # This is only used for test purposes
-            self._insertFunctionStep('_importFromFolderStep')       
+            self._insertFunctionStep('_importFromFolderStep')
             # Insert step to create output objects
             self._insertFunctionStep('createOutputStep')
-        
+
     
     #--------------------------- STEPS functions --------------------------------------------
     def convertInputStep(self, micFn, inputId):
@@ -110,7 +110,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         """
         for f in getFiles(self.importFolder.get()):
             copyFile(f, self._getExtraPath())
-        
+
     def createOutputStep(self):
         posDir = self._getExtraPath()
         coordSet = self._createSetOfCoordinates(self.inputMics)
