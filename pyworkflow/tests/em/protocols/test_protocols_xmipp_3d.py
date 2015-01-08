@@ -696,12 +696,16 @@ class TestXmippProjMatching(TestXmippBase):
         # After CTF estimation, the output micrograph should have CTF info
 #         self.validateFiles('protCTF', protCTF)
 
-        print "Running fake particle picking..."
-        protPP = self.newProtocol(XmippProtParticlePicking, importFolder=self.allCrdsDir)
+        print "Running import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                  filesPath=self.allCrdsDir,
+                                  filesPattern='*.pos', boxSize=110)
+
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-#         self.protDict['protPicking'] = protPP
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the import of coordinates")
+
 
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=1, doFlip=True, downFactor=8, runMode=1, doInvert=True)

@@ -65,8 +65,7 @@ class Acquisition(EMObject):
         self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.copyAttributes(other, '_magnification', '_voltage', 
-                            '_sphericalAberration', '_amplitudeContrast')
+        self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
         
     def getMagnification(self):
         return self._magnification.get()

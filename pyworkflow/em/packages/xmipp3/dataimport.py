@@ -275,7 +275,6 @@ class XmippImport():
 
     def importCoordinates(self, fileName, addCoordinate):
 
-        print 'import from xmipp ' + fileName
         posMd = readPosCoordinates(fileName)
         for objId in posMd:
              coord = rowToCoordinate(rowFromMd(posMd, objId))

@@ -31,6 +31,9 @@ from pyworkflow.object import Float, Integer
 from pyworkflow.protocol.params import PathParam, IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.em.data import Coordinate
 from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.utils.path import join
+from os.path import exists
+
 
 
 
@@ -57,9 +60,7 @@ class ProtImportCoordinates(ProtImportFiles):
                           label='Input micrographs',
                           help='Select the particles that you want to import coordinates.')
 
-        form.addParam('boxSize', IntParam, 
-                      label='Box size',
-                      help='')
+        form.addParam('boxSize', IntParam, label='Box size')
         form.addParam('scale', FloatParam,
                       label='Scale', default=1,
                       help='factor to scale coordinates')
@@ -184,6 +185,29 @@ class ProtImportCoordinates(ProtImportFiles):
         files.
         """
         return True
+
+    def getDefaultBoxSize(self):
+        import xmipp
+        boxSize = 100
+        importFrom = self.getImportFrom()
+        scale = self.scale.get()
+
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_XMIPP:
+            configfile = join(self.filesPath.get(), 'config.xmd')
+            existsConfig = exists(configfile)
+            if existsConfig:
+                md = xmipp.MetaData('properties@' + configfile)
+                configobj = md.firstObject()
+                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
+            # Read the boxSize from the e2boxercache/base.json
+            jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')
+            from pyworkflow.em.packages.eman2 import loadJson
+            jsonBoxDict = loadJson(jsonFnbase)
+            boxSize = int(jsonBoxDict["box_size"])
+        boxSize = (int)(boxSize * scale)
+        return boxSize
+
 
     # def importCoordinatesStep(self, micsId, pattern):
     #     """ Copy movies matching the filename pattern
