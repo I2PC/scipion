@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
 
 
@@ -298,6 +298,21 @@ class ProtUserSubSet(BatchProtocol):
 
     def _summary(self):
         summary = []
+        input = ''
+
+
+        inputObj = self.inputObject.get()
+        input += inputObj.__class__.__name__
+        if isinstance(inputObj, EMSet):
+            input += ' of size %s'%inputObj.getSize()
+        output = ''
+        for key, attr in self.iterOutputAttributes(EMObject):
+            output += attr.__class__.__name__
+            if isinstance(attr, EMSet):
+                output += ' of size %s'%attr.getSize()
+
+        msg = 'From input %s created output %s '%(input, output)
+        summary.append(msg)
         return summary
 
     def _methods(self):

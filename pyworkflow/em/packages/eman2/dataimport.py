@@ -39,7 +39,6 @@ class EmanImport():
 
     def importCoordinates(self, fileName, addCoordinate):
 
-        print 'import from eman ' + fileName
         if exists(fileName):
             jsonPosDict = loadJson(fileName)
 

@@ -62,8 +62,7 @@ class TestImportCoordinates(TestImportBase):
         prot1 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                  filesPath=self.dsXmipp.getFile('posSupervisedDir'),
-                                 filesPattern='*.pos',
-                                 boxSize=500,
+                                 filesPattern='*.pos', boxSize=550,
                                  scale=5.,
                                  invertX=False,
                                  invertY=False
@@ -87,8 +86,7 @@ class TestImportCoordinates(TestImportBase):
         prot3 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.dsXmipp.getFile('boxingDir'),
-                                 filesPattern='info/*_info.json',
-                                 boxSize=500,
+                                 filesPattern='info/*_info.json', boxSize=550,
                                  scale=5.,
                                  invertX=False,
                                  invertY=False)

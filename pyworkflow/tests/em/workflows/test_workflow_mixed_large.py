@@ -50,13 +50,16 @@ class TestMixedRelionTutorial(TestWorkflow):
         protCTF.setObjLabel('CTF ctffind')
         self.launchProtocol(protCTF)
         
-        print "Running Eman fake particle picking..."
-        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsEmanDir, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
-        protPP.setObjLabel('Eman boxing')
+        print "Running Eman import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                 filesPath=self.crdsEmanDir,
+                                 filesPattern='info/*_info.json', boxSize=60)
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
-        
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+
         print "Run extract particles with <Same as picking> option"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
                                                 doFlip=False, backRadius=28, runMode=1)
@@ -82,12 +85,15 @@ class TestMixedRelionTutorial(TestWorkflow):
         protCTF2.setObjLabel('CTF xmipp')
         self.launchProtocol(protCTF2)
         
-        print "Running Xmipp fake particle picking..."
-        protPP2 = self.newProtocol(XmippProtParticlePicking, importFolder=self.crdsXmippDir, runMode=1)                
+        print "Running Xmipp Import Coordinates"
+        protPP2 = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                 filesPath=self.crdsXmippDir,
+                                 filesPattern='*.pos', boxSize=60)
         protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)  
-        protPP2.setObjLabel('Xmipp Picking') 
+        protPP2.setObjLabel('Xmipp Import Coords')
         self.launchProtocol(protPP2)
-        self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp faked picking")
+        self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp import coordinates")
         
         print "Run extract particles with <Same as picking> option"
         protExtract2 = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False, doInvert=True,
@@ -157,14 +163,16 @@ class TestMixedFrealignClassify(TestWorkflow):
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.launchProtocol(protCTF)
-        
-        print "Running Eman fake particle picking..."
-        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsEmanDir, runMode=1)                
-        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)  
-        protPP.boxSize.set(60)
-        protPP.setObjLabel('Eman boxing') 
+
+        print "Running Eman import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                 filesPath=self.crdsEmanDir,
+                                 filesPattern='info/*_info.json', boxSize=60)
+        protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman faked picking")
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
         
         print "Run extract particles with <Same as picking> option"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,

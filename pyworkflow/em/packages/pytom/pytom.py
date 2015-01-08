@@ -36,7 +36,12 @@ from pyworkflow.utils import Environ
 def getEnviron():
     """ Create the needed environment for Pytom programs. """
     environ = Environ(os.environ)
-    PYTOM_HOME = os.environ['PYTOM_HOME']
+    if 'PYTOM_HOME' in os.environ:
+        PYTOM_HOME = os.environ['PYTOM_HOME']
+    else:
+        print ('Warning: Cannot find environ variable PYTOM_HOME. Using '
+               '$SCIPION_HOME/software/em/pytom instead.')
+        PYTOM_HOME = '%s/software/em/pytom' % os.environ['SCIPION_HOME']
     environ.update({
                     'LD_LIBRARY_PATH': os.path.join(PYTOM_HOME,'pytomc/libs/libtomc/libs'),
                     'PATH': os.path.join(PYTOM_HOME, 'bin'),
