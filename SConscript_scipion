@@ -108,9 +108,10 @@ xmippData = env.AddPackageLibrary(
           'XmippData',
           dirs=['libraries/data'],
           patterns=['*.cpp'],
-          incs=[Dir('.').path, Dir('libraries').path],
+          incs=[Dir('.').path, 
+                Dir('libraries').path],
           libs=['XmippExternal'] + BASIC_LIBS,
-          deps=xmippExternal + xmippSqliteExt)
+          deps=tiff + hdf5 + xmippExternal + xmippSqliteExt)
 
 # Classification
 xmippClassif = env.AddPackageLibrary(
@@ -201,7 +202,7 @@ if int(env['gtest']):
 javaEnumDict = javaEnumDict = {
             'ImageWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
             'CastWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'CW_'],
-            'MDLabel': [File('libraries/data/metadata_label.h').abspath, 'MDL_'],
+            'MDLabel': [File('libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
             'XmippError': [File('libraries/data/xmipp_error.h').abspath, 'ERR_']
             }
 
@@ -212,26 +213,33 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
     f = open(header_file)
     fOut = open(java_file, 'w+')
     counter = 0;
-    last_label_pattern = pattern + 'LAST_LABEL'
-    fOut.write('package xmipp.jni; \n')
-    fOut.write('public class ' + class_name + ' {\n')
+    if isinstance(pattern, basestring):
+        patternList = [pattern]
+    elif isinstance(pattern, list):
+        patternList = pattern
+    else:
+        raise Exception("Invalid input pattern type: %s" % type(pattern))
+    last_label_pattern = patternList[0] + "LAST_LABEL"
+    fOut.write("package xmipp.jni; \n")
+    fOut.write("public class " + class_name + " {\n")
 
     for line in f:
         l = line.strip();
-        if l.startswith(pattern):
-            if '///' in l:
-                l, comment = l.split('///')
-            else:
-                comment = ''
-            if l.startswith(last_label_pattern):
-                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
-            if (l.find("=") == -1):
-                l = l.replace(",", " = %d;" % counter)
-                counter = counter + 1;
-            else:
-                l = l.replace(",", ";")
+        for p in patternList:
+            if l.startswith(p):
+                if '///' in l:
+                    l, comment = l.split('///')
+                else:
+                    comment = ''
+                if l.startswith(last_label_pattern):
+                    l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
+                if (l.find("=") == -1):
+                    l = l.replace(",", " = %d;" % counter)
+                    counter = counter + 1;
+                else:
+                    l = l.replace(",", ";")
 
-            fOut.write("   public static final int %s ///%s\n" % (l, comment))
+                fOut.write("   public static final int %s ///%s\n" % (l, comment))
     fOut.write("}\n")
     fOut.close()
     f.close()
