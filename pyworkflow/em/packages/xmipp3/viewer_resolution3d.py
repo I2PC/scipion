@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import pyworkflow.gui as gui
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from pyworkflow.gui.form import FormWindow
@@ -50,57 +51,204 @@ class XmippResolution3DViewer(ProtocolViewer):
                       label="Display Fourier Shell Correlation?")
         form.addParam('doShowDpr', BooleanParam, default=True, 
                       label="Display Differential Phase Residual?")
-        form.addParam('doShowEstructureFactor', BooleanParam, default=True, 
+        form.addParam('doShowStructureFactor', BooleanParam, default=True, 
                       label="Display Structure factor?")
-#         form.addParam('doShowGuinier', BooleanParam, label="Display Guinier plot?", condition='self.protocol.doStructureFactor', default=True)
-#         form.addParam('useMatlab', BooleanParam, label="Use Matlab for Guinier?", condition='self.protocol.doStructureFactor and doShowGuinier', default=True)
-        form.addParam('doShowSsnr', BooleanParam, default=True, 
-                      label="Display Spectral SNR?")
-        form.addParam('doShowVssnr', BooleanParam, default=True, 
-                      label="Display Volumetric Spectral SNR?")
 
     def _getVisualizeDict(self):
         return {'doShowFsc': self._viewFsc,
                 'doShowDpr': self._viewDpr,
-                'doShowEstructureFactor': self._viewEstructureFactor,
-#                 'doShowGuinier': self._viewGuinier,
-#                 'useMatlab': self._useMatlab,
-                'doShowSsnr': self._viewSsnr,
-                'doShowVssnr': self._viewVssnr
+                'doShowStructureFactor': self._viewStructureFactor,
                 }
     
     def _viewFsc(self, e=None):
         fscFn = self.protocol._defineFscName()
         md = MetaData(fscFn)
-        return [self._viewPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r'),
-                DataView(fscFn)]
+        plotter = self._createPlot("Fourier Shell Correlation", FREQ_LABEL, 'FSC', 
+                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FRC, color='r')
+        return [plotter, DataView(fscFn)]
         
     def _viewDpr(self, e=None):
         fscFn = self.protocol._defineFscName()
         md = MetaData(fscFn)
-        return [self._viewPlot("Differential Phase Residual", FREQ_LABEL, 'DPR', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_DPR)]
+        return [self._createPlot("Differential Phase Residual", FREQ_LABEL, 'DPR', 
+                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_DPR),
+                DataView(fscFn)]
     
-    def _viewPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
+    def _createPlot(self, title, xTitle, yTitle, md, mdLabelX, mdLabelY, color='g'):        
         xplotter = XmippPlotter(1, 1, figsize=(4,4), windowTitle="Plot")
         xplotter.createSubPlot(title, xTitle, yTitle)
         xplotter.plotMdFile(md, mdLabelX, mdLabelY, color)
         return xplotter
 
-    
-    def _viewEstructureFactor(self, e=None):
+    def _adjustPoints(self, data):
+        x=data.getXData()
+        X=[]
+        Y=[]
+        for objId in self.md:
+            f=self.md.getValue(xmipp.MDL_RESOLUTION_FREQ2,objId)
+            if f>=x[0] and f<=x[1]:
+                X.append(f)
+                Y.append(self.md.getValue(xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR,objId))
+        X=np.array(X)
+        Y=np.array(Y)
+        A=np.array([np.ones(X.size), X.T])
+        beta=np.linalg.lstsq(A.T,Y)[0]
+        y = [beta[0]+beta[1]*xi for xi in x]
+        Bfactor = -4*beta[1]
+
+        # Update new Y values
+        data.getPoint(0).setY(y[0])
+        data.getPoint(1).setY(y[1])
+            
+        f = open(self.protocol._getPath('bfactor.txt'), 'w')
+        print >> f, x[0], y[0], x[1], y[1], Bfactor
+        f.close()
+            
+    def _loadData(self):
+        from pyworkflow.em.packages.xmipp3.nma.data import PathData
+        data = PathData(dim=2)
+        bfactorFile = self.protocol._getPath('bfactor.txt')
+        if os.path.exists(bfactorFile):
+            f = open(bfactorFile)
+            values = map(float, f.readline().split())
+            p1 = data.createEmptyPoint()
+            p1.setX(values[0])
+            p1.setY(values[1])
+            data.addPoint(p1)
+            p2 = data.createEmptyPoint()
+            p2.setX(values[2])
+            p2.setY(values[3])
+            data.addPoint(p2)
+            
+        return data
+        
+    def _viewStructureFactor(self, e=None):
         strFactFn = self.protocol._defineStructFactorName()
-        md = MetaData(strFactFn)
-        return [self._viewPlot("Structure Factor", FREQ_LABEL, 'Structure Factor', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_STRUCTURE_FACTOR),
-                self._viewPlot("Structure Factor", FREQ_LABEL, 'log(Structure Factor)', 
-                               md, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_LOG_STRUCTURE_FACTOR),
-                DataView(strFactFn)]        
+        self.md = MetaData(strFactFn)
+        plotter = self._createPlot("Structure Factor", 'frequency^2 (1/A^2)', 'log(Structure Factor)', 
+                               self.md, xmipp.MDL_RESOLUTION_FREQ2, xmipp.MDL_RESOLUTION_LOG_STRUCTURE_FACTOR)
+        self.path = PointPath(plotter.getLastSubPlot(), self._loadData(), 
+                              callback=self._adjustPoints,
+                              tolerance=0.1)
+        return [plotter]        
+
+
+from math import sqrt
+
+
+STATE_NO_POINTS = 0 # on points have been selected, double-click will add first one
+STATE_DRAW_POINTS = 1 # still adding points, double-click will set the last one
+STATE_ADJUST_POINTS = 2 # no more points will be added, just adjust the current ones
+
+
+class PointPath():
+    """ Graphical manager based on Matplotlib to handle mouse
+    events to create a path of points. 
+    It also allow to modify the point positions on the path.
+    """
+    def __init__(self, ax, pathData, callback=None, tolerance=3, maxPoints=2):
+        self.ax = ax
+        self.callback = callback
+
+        self.dragIndex = None
+        self.tolerance = tolerance
+        self.maxPoints = maxPoints
+        
+        self.cidpress = ax.figure.canvas.mpl_connect('button_press_event', self.onClick)
+        self.cidrelease = ax.figure.canvas.mpl_connect('button_release_event', self.onRelease)
+        self.cidmotion = ax.figure.canvas.mpl_connect('motion_notify_event', self.onMotion)
     
-    def _viewSsnr(self, e=None):
-        pass
+        self.pathData = pathData
+        
+        if pathData.getSize() == maxPoints: # this means there is a path
+            self.setState(STATE_ADJUST_POINTS)
+            self.plotPath()
+        else:
+            self.setState(STATE_DRAW_POINTS)
+            self.path_line = None
+            self.path_points = None
+            
+    def setState(self, state, notify=False):
+        self.drawing = state
+        
+        if state == STATE_DRAW_POINTS:
+            self.ax.set_title('Click to add two points.')
+        elif state == STATE_ADJUST_POINTS:
+            self.ax.set_title('Drag points to adjust line.')
+        else:
+            raise Exception("Invalid PointPath state: %d" % state)
+        
+        if notify and self.callback:
+            self.callback(self.pathData)
+        
+    def onClick(self, event):
+        if event.inaxes!=self.ax: 
+            return
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        ex = event.xdata
+        ey = event.ydata
+        
+        if self.drawing == STATE_DRAW_POINTS:
+            point = self.pathData.createEmptyPoint()
+            point.setX(ex)
+            point.setY(ey)
+            self.pathData.addPoint(point)
+            
+            if self.pathData.getSize() == 1: # first point is added
+                self.plotPath()
+            else:
+                xs, ys = self.getXYData()
+                self.path_line.set_data(xs, ys)
+                self.path_points.set_data(xs, ys)
+            
+            if self.pathData.getSize() == self.maxPoints:
+                self.setState(STATE_ADJUST_POINTS)
+                
+            self.ax.figure.canvas.draw()
+        
+        elif self.drawing == STATE_ADJUST_POINTS: # Points moving state
+            self.dragIndex = None
+            for i, point in enumerate(self.pathData):
+                x = point.getX()
+                y = point.getY()
+                if sqrt((ex - x)**2 + (ey - y)**2) < self.tolerance:
+                    self.dragIndex = i
+                    break
+          
+    def getXYData(self):
+        xs = self.pathData.getXData()
+        ys = self.pathData.getYData()
+        return xs, ys
     
-    def _viewVssnr(self, e=None):
-        pass
-    
+    def plotPath(self):
+        xs, ys = self.getXYData()
+        self.path_line, = self.ax.plot(xs, ys, alpha=0.75, color='blue')
+        self.path_points, = self.ax.plot(xs, ys, 'o', color='red')  # 5 points tolerance, mark line points
+        
+    def onMotion(self, event):
+        if self.dragIndex is None or self.drawing < 2: 
+            return
+        # ignore click event if toolbar is active
+        if self.ax.figure.canvas.manager.toolbar._active is not None: 
+            return
+        
+        ex, ey = event.xdata, event.ydata
+        point = self.pathData.getPoint(self.dragIndex)
+        point.setX(ex)
+        point.setY(ey)
+        self.update()
+        
+    def onRelease(self, event):
+        self.dragIndex = None
+        if self.drawing == STATE_ADJUST_POINTS and self.callback:
+            self.callback(self.pathData)
+        self.update()    
+        
+    def update(self):
+        xs, ys = self.getXYData()
+        self.path_line.set_data(xs, ys)
+        self.path_points.set_data(xs, ys)
+        self.ax.figure.canvas.draw()
+        

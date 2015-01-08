@@ -51,7 +51,7 @@ class ProtRelionReconstruct(ProtReconstruct3D):
 #                       label='Normalize',
 #                       help='If set to True, particles will be normalized in the way RELION prefers it.')
         form.addParam('symmetryGroup', StringParam, default='c1',
-                      label="Symmetry group", 
+                      label="Symmetry group",
                       help='See [[Relion Symmetry][http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Relion') 
         form.addParam('maxRes', FloatParam, default=-1,
