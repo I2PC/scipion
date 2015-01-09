@@ -78,6 +78,7 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+
         return output
 
     def _createSubSetFromClasses(self, inputClasses):
@@ -148,7 +149,8 @@ class ProtUserSubSet(BatchProtocol):
         createFunc = getattr(self, '_create' + outputClassName)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
-        
+
+        count = 0
         output = createFunc()
         output.copyInfo(inputImages)
         for cls in modifiedSet:
@@ -156,8 +158,12 @@ class ProtUserSubSet(BatchProtocol):
                 img = cls.getRepresentative()
                 img.copyObjId(cls)
                 output.append(img)
+                count += 1
         # Register outputs
         self._defineOutput('Representatives', output)
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(), selectmsg, count, output.__class__.__name__)
+        self.summaryVar.set(msg)
         return output
 
     def _createImagesFromClasses(self, inputClasses):
@@ -179,6 +185,11 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        count = 0
+        count = len([cls for cls in modifiedSet if cls.isEnabled()])
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, count, output.__class__.__name__, output.getSize())
+        self.summaryVar.set(msg)
         return output
  
     def _createClassesFromClasses(self, inputClasses):
@@ -195,6 +206,10 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        count = len([cls for cls in modifiedSet if cls.isEnabled()])
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, output.__class__.__name__)
+        self.summaryVar.set(msg)
         return output
         
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
@@ -298,6 +313,13 @@ class ProtUserSubSet(BatchProtocol):
 
     def _summary(self):
         summary = []
+        msg = self.summaryVar.get()
+        if  msg is None:
+            msg = self.getDefaultSummary()
+        summary.append(msg)
+        return summary
+
+    def getDefaultSummary(self):
         input = ''
 
 
@@ -312,8 +334,7 @@ class ProtUserSubSet(BatchProtocol):
                 output += ' of size %s'%attr.getSize()
 
         msg = 'From input %s created output %s '%(input, output)
-        summary.append(msg)
-        return summary
+        return msg
 
     def _methods(self):
         return self._summary()
