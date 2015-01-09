@@ -29,6 +29,7 @@ This sub-package contains wrapper around EMAN initialmodel program
 
 import os
 
+from pyworkflow.utils.path import cleanPattern
 from pyworkflow.protocol.params import (PointerParam, TextParam, IntParam,
                                         LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtInitialVolume
@@ -115,6 +116,7 @@ class EmanProtInitModel(ProtInitialVolume):
     
     def createInitialModelStep(self, args):
         """ Run the EMAN program to create the initial model. """
+        cleanPattern(self._getExtraPath('initial_models'))
         program = eman2.getEmanProgram('e2initialmodel.py')
         self.runJob(program, args, cwd=self._getExtraPath())        
                      

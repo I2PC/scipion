@@ -146,12 +146,12 @@ class XmippProtHelicalParameters(ProtPreprocessVolumes):
 
     def _methods(self):
         messages = []      
-        messages.append('We looked for the helical symmetry parameters of the volume %s using Xmipp [delaRosaTrevin2013].'%self.inputVolume.get().getNameId())
+        messages.append('We looked for the helical symmetry parameters of the volume %s using Xmipp [delaRosaTrevin2013].' % self.getObjectTag(self.inputVolume.get()))
         if self.deltaZ.hasValue():
             messages.append('We found them to be %f Angstroms and %f degrees.'%(self.deltaZ.get()*self.inputVolume.get().getSamplingRate(),
                                                                                 self.deltaRot.get()))
-            messages.append('We symmetrized %s with these parameters and produced the volume %s.'%(self.inputVolume.get().getNameId(),
-                                                                                                  self.outputVolume.getNameId()))
+            messages.append('We symmetrized %s with these parameters and produced the volume %s.'%(self.getObjectTag(self.inputVolume.get()),
+                                                                                                  self.getObjectTag(self.outputVolume)))
             if self.dihedral.get():
                 messages.append('We applied dihedral symmetry.')
         return messages
