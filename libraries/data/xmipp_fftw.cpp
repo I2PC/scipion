@@ -562,10 +562,6 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
 
     //Init with zero
     MpmemFourier.initZeros();
-    mdaIn.printShape();
-    mdaOut.printShape();
-    MmemFourier.printShape();
-    MpmemFourier.printShape();
 
     for (size_t k = kp0; k<=kpF; ++k)
     {
