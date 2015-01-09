@@ -322,6 +322,7 @@ public class GalleryData {
         loadLabels();
         if (!containsGeometryInfo()) {
             useGeo = false;
+            wrap = false;
         }
         
         isClassification = checkifIsClassificationMd();
