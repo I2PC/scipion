@@ -140,7 +140,6 @@ def readCoordinates(mic, fileName, coordsSet):
                     coordsSet.append(coord)
 
 
-
 def writeSetOfCoordinates():
     pass
 
@@ -150,13 +149,6 @@ def writeSetOfParticles(partSet, filename, **kwargs):
     This function should be called from a current dir where
     the images in the set are available.
     """
-#     cwd = os.getcwd()
-#     workingdir = filename[0: filename.rfind(os.sep)]
-    
-#     # Change to test path
-#     os.chdir(workingdir)
-#     print workingdir
-#     loadEnvironment()
     program = pw.join('em', 'packages', 'eman2', 'e2converter.py')        
     cmd = getEmanCommand(program, filename)
     
@@ -167,24 +159,27 @@ def writeSetOfParticles(partSet, filename, **kwargs):
                             stdout=subprocess.PIPE)
     
     for part in partSet:
-        #tranformation matrix is procesed here because
-        #it uses routines available thrrough scipion python
-        matrix = part.getTransform().getMatrix()
-        shifts, angles = geometryFromMatrix(matrix, True)
         objDict = part.getObjDict()
+        alignType = kwargs.get('alignType') 
+    
+        if alignType != em.ALIGN_NONE:
+
+            #tranformation matrix is procesed here because
+            #it uses routines available thrrough scipion python
+            matrix = part.getTransform().getMatrix()
+            shifts, angles = geometryFromMatrix(matrix, True)
+            #json cannot encode arrays so I convert them to lists
+            objDict['_angles']=angles.tolist()
+            objDict['_shifts']=shifts.tolist()
+            
 #         fn = objDict['_filename']
         # check if the is a file mapping
 #         objDict['_filename'] = filesDict.get(fn, fn)
         objDict['_itemId']=part.getObjId()
-        #json cannot encode arrays so I convert them to lists
-        objDict['_angles']=angles.tolist()
-        objDict['_shifts']=shifts.tolist()
         # Write the e2converter.py process from where to read the image
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         response = proc.stdout.readline()
-    #proc.wait()
-#     os.chdir(cwd)
 
 
 def readSetOfParticles(filename, partSet, **kwargs):
