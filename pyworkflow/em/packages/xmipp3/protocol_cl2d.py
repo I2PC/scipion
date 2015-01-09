@@ -329,14 +329,14 @@ class XmippProtCL2D(ProtClassify2D):
     def _methods(self):
         strline=''
         if hasattr(self, 'outputClasses'):
-            strline+='We classified %d particles  into %d classes using CL2D [Sorzano2010a]. '%\
-                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+            strline+='We classified %d particles from %s into %d classes %s using CL2D [Sorzano2010a]. '%\
+                           (self.inputParticles.get().getSize(), self.getObjectTag(self.inputParticles.get()), self.numberOfClasses.get(), self.getObjectTag(self.outputClasses))
             strline+='%s method was used to compare images and %s clustering criterion. '%\
                            (self.getEnumText('comparisonMethod'),self.getEnumText('clusteringMethod'))
-            if self.doCore:
-                strline+='We calculated the class cores'
-                if self.doStableCore:
-                    strline+=' and the class stable cores'
+            if self.numberOfClasses > self.numberOfInitialClasses and self.doCore:
+                strline+='We also calculated the class cores %s' % self.getObjectTag(self.outputClasses_core)
+                if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
+                    strline+=' and the class stable cores %s' % self.getObjectTag(self.outputClasses_stable_core)
                 strline+=' [Sorzano2014].'
         return [strline]
     
