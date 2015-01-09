@@ -285,7 +285,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         return ProtCTFMicrographs._summary(self) + XmippCTFBase._summary(self)
     
     def _methods(self):
-        str="We calculated the CTF using Xmipp [Sorzano2007a]"
+        str="We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]"%self.getObjectTag(self.inputMicrographs.get())
         if self.doFastDefocus:
             str+=" with a fast defocus estimate [Vargas2013a]"
         str+="."
