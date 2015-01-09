@@ -32,6 +32,7 @@ import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
                                         StringParam, BooleanParam, LEVEL_EXPERT)
+from pyworkflow.utils.path import cleanPattern
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtReconstruct3D
 
@@ -176,7 +177,6 @@ class EmanProtReconstruct(ProtReconstruct3D):
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):        
-#         eman.loadEnvironment()
         self._createFilenameTemplates()
         self._insertFunctionStep('convertImagesStep')
         self._insertFunctionStep('reconstructVolumeStep', self._prepareParams())
@@ -191,7 +191,7 @@ class EmanProtReconstruct(ProtReconstruct3D):
     
     def reconstructVolumeStep(self, args):
         """ Run the EMAN program to reconstruct a volume. """
-        
+        cleanPattern(self._getFileName("volume"))
         program = getEmanProgram('e2make3d.py')
         self.runJob(program, args, cwd=self._getExtraPath())
     
@@ -225,7 +225,6 @@ class EmanProtReconstruct(ProtReconstruct3D):
         args = "--input %(imgsFn)s --output %(OutputVol)s --iter %(numberOfIterations)d --sym %(sym)s --recon %(reconsMethod)s"
         
         reconsMethod = self.getEnumText('reconstructionMethod')
-        print "Method: ", reconsMethod
         if reconsMethod == 'fourier' or reconsMethod == 'fourier_plane' or reconsMethod == 'fouriersimple2D' or reconsMethod == 'wiener_fourier':
             reconsMethod = reconsMethod + ':mode=' + self.getEnumText('fourierMode')
                 
