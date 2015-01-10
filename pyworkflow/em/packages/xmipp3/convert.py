@@ -123,6 +123,7 @@ IMAGE_EXTRA_LABELS = [
     xmipp.MDL_ZSCORE_SHAPE2,
     xmipp.MDL_ZSCORE_SNR1,
     xmipp.MDL_ZSCORE_SNR2,
+    xmipp.MDL_CUMULATIVE_SSNR,
     xmipp.MDL_PARTICLE_ID,
     xmipp.MDL_FRAME_ID,
     ]
@@ -652,19 +653,27 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
         coordSet.setBoxSize(boxSize)
     for mic in micSet:
         posFile = join(outputDir, replaceBaseExt(mic.getFileName(), 'pos'))
-        scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
-        posMd = readPosCoordinates(posFile)
-        posMd.addLabel(xmipp.MDL_ITEM_ID)
-        
+        readCoordinates(mic, posFile, coordSet, outputDir)
+
+    coordSet._xmippMd = String(outputDir)
+
+
+
+def readCoordinates(mic, fileName, coordsSet, outputDir):
+        posMd = readPosCoordinates(fileName)
+        posMd.addLabel(xmipp.MDL_ITEM_ID)#TODO: CHECK IF THIS LABEL IS STILL NECESSARY
+
         for objId in posMd:
             coord = rowToCoordinate(rowFromMd(posMd, objId))
             coord.setMicrograph(mic)
-            coordSet.append(coord)      
+            coord.setX(coord.getX())
+            coord.setY(coord.getY())
+            coordsSet.append(coord)
             # Add an unique ID that will be propagated to particles
             posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
         if not posMd.isEmpty():
+            scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
             posMd.write("particles@%s"  % scipionPosFile)
-    coordSet._xmippMd = String(outputDir)
     
 
 def readPosCoordinates(posFile):

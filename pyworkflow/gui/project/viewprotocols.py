@@ -890,7 +890,7 @@ class ProtocolsView(tk.Frame):
         hosts = [host.getLabel() for host in self.settings.getHosts()]
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
-                       hostList=hosts)
+                       hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
         
@@ -931,7 +931,9 @@ class ProtocolsView(tk.Frame):
         return None
             
     def _fillSummary(self):
+        self.methodText.setReadOnly(False)
         self.summaryText.clear()
+        self.infoTree.clear()
         n = len(self._selection)
         
         if n == 1:
@@ -954,8 +956,10 @@ class ProtocolsView(tk.Frame):
                 for line in prot.summary():
                     self.summaryText.addLine(line)
                 self.summaryText.addLine('')
+        self.methodText.setReadOnly(True)
         
     def _fillMethod(self):
+        self.methodText.setReadOnly(False)
         self.methodText.clear()
         self.methodText.addLine("*METHODS:*")
         cites = OrderedDict()
@@ -997,21 +1001,34 @@ class ProtocolsView(tk.Frame):
 #            msg = "Protocol successfully saved."
         else:
             self.project.launchProtocol(prot)
+            # Select the launched protocol to display its summary, methods..etc
+            self._selection.clear()
+            self._selection.append(prot.getObjId())
+            self._updateSelection()
             self._scheduleRunsUpdate()
             msg = ""
-            self.outputViewer.refreshOutput()
+            #self.outputViewer.refreshOutput()
 
-        
         return msg
+    
+    def _updateProtocol(self, prot):
+        """ Callback to notify about the change of a protocol
+        label or comment. 
+        """
+        self._scheduleRunsUpdate()
         
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
-        if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
-            self.project.deleteProtocol(*self._getSelectedProtocols())
+        protocols = self._getSelectedProtocols()
+        if askYesNo(Message.TITLE_DELETE_FORM, 
+                    Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
+                    self.root):
+            self.project.deleteProtocol(*protocols)
             self._selection.clear()
+            self._updateSelection()
             self._scheduleRunsUpdate()
             
     def _copyProtocols(self):

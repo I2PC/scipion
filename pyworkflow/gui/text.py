@@ -159,7 +159,6 @@ class Text(tk.Text, Scrollable):
         return self.scrollbar.get() == 1.0
         
     def clear(self):
-        self.config(state=tk.NORMAL)
         self.delete(0.0, tk.END)
 
     def getText(self):
@@ -172,14 +171,12 @@ class Text(tk.Text, Scrollable):
         
     def addText(self, text):
         """ Add some text to the current state. """
-        self.config(state=tk.NORMAL)
         if isinstance(text, list):
             for line in text:
                 self.addLine(line)
         else:
             for line in text.splitlines():
                 self.addLine(line)
-        self.config(state=tk.DISABLED)   
         
     def onClick(self, e=None): 
         self.selection = None

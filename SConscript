@@ -97,25 +97,61 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+pcre = env.AddLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=['bin/pcretest'],
+    default=False)
+
+swig = env.AddLibrary(
+    'swig',
+    tar='swig-3.0.2.tgz',
+    targets=['bin/swig'],
+    makeTargets=['Source/Swig/tree.o'],
+    deps=[pcre],
+    default=False)
+# We have to add the "makeTargets" part because swig needs to call
+# "make" before "make install". Horrible.
+
 env.AddLibrary(
     'parallel',
     tar='parallel-20140922.tgz',
     targets=['bin/parallel'],
     deps=[zlib])
 
+shome = env['SCIPION_HOME']  # short notation, we use it quite a lot
 boost_headers_only = env.ManualInstall(
     'boost_headers_only',
     tar='boost_1_56_0.tgz',
     extraActions=[
-        ('%s/software/include/boost' % env['SCIPION_HOME'],
-         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+        ('%s/software/include/boost' % shome,
+         'cp -rf boost %s/software/include' % shome)],
     default=False)
 
-swig = env.AddLibrary(
-    'swig',
-    tar='swig-3.0.2.tgz',
-    flags=['--without-pcre'],
+lapack = env.ManualInstall(
+    'lapack',
+    tar='lapack-3.5.0.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/lapack-3.5.0/Makefile' % shome,
+         'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
+         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/liblapack.so' % shome,
+         'make install')],
     default=False)
+
+opencv = env.ManualInstall(
+    'opencv',
+    tar='opencv-2.4.9.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/opencv-2.4.9/Makefile' % shome,
+         'cmake -DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/libopencv_core.so' % shome,
+         'make install')],
+    default=False)
+
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -177,7 +213,7 @@ addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
-    deps=[numpy, matplotlib])
+    deps=[lapack, numpy, matplotlib])
 
 addModule(
     'bibtexparser',
@@ -250,7 +286,7 @@ env.AddPackage('ctffind',
                default=False)
 
 env.AddPackage('eman',
-               tar='eman2.1beta3.linux64.tgz',
+               tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
@@ -262,7 +298,7 @@ env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
-                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
+                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
                deps=[boost_headers_only, fftw, swig],
                default=False)
 

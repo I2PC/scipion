@@ -13,6 +13,7 @@ body {
 input {
 	background: #F2F2F2;
 }
+
 input.hide2 {
 	position: relative;
 	filter: alpha(opacity :     0);

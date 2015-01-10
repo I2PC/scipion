@@ -172,7 +172,11 @@ Define the number of processors to be used in the execution.
     
     
     LABEL_PATTERN = 'Pattern'
-    TEXT_PATTERN = "The pattern (with wildcard expansion) of the files to import\n"+"For example: \n*data/particles/***.spi* \n or \n*~/Micrographs/mic/***.mrc*"
+    TEXT_PATTERN = """\
+Pattern (that can include wildcards) of the files to import.
+For example:
+  *data/particles/***.spi*
+  *~/Micrographs/mic/***.mrc*"""
     ERROR_PATTERN_EMPTY = 'The *pattern* cannot be empty.'
     ERROR_PATTERN_FILES = 'There are no files matching the *pattern*'
     LABEL_CHECKSTACK = 'Check stack files?'
@@ -180,27 +184,41 @@ Define the number of processors to be used in the execution.
     LABEL_VOLTAGE = 'Microscope voltage (kV)'
     TEXT_VOLTAGE = "Microscope voltage"
     LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
-    TEXT_SPH_ABERRATION = "Optical effect due to the increased refraction of light rays when they strike lens near its edge, in comparison with those that strike nearer the centre."
+    TEXT_SPH_ABERRATION = """\
+Optical effect due to the increased refraction of light rays when they
+strike the lens near its edge, in comparison with those that strike near
+the center."""
     LABEL_AMPLITUDE = 'Amplitude Contrast'
-    TEXT_AMPLITUDE = 'Is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
-    'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined. '\
-                     'It should be a positive number, typically between 0.05 and 0.3.'
+    TEXT_AMPLITUDE = """\
+Produced by the loss of amplitude (i.e. electrons) from the beam.
+
+For a weak phase and weak amplitude object, the amplitude contrast ratio Qo
+is automatically computed. It should be a positive number, typically between
+0.05 and 0.3."""
     LABEL_PATTERNU = 'Pattern untilted'
     LABEL_PATTERNT = 'Pattern tilted'
 
     
     LABEL_SAMP_MODE = 'Sampling rate mode'
-    TEXT_SAMP_MODE = "You can specify the sampling rate directly from the image (A/pixel, Ts)\n or by specifying the magnification rate (M) "\
-                     "and the scanner\n pixel size (microns/pixel, Tm). The relationship between\n the two is Ts=Tm/M." 
+    TEXT_SAMP_MODE = """\
+You can specify the sampling rate (pixel size) directly from the image
+(A/pixel, Ts) or by specifying the magnification rate (M) and the scanner
+pixel size (microns/pixel, Tm).
+
+They are related by  Ts = Tm / M"""
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
-    LABEL_SAMP_RATE = 'Sampling rate (A/px)'
-    TEXT_SAMP_RATE = "Sampling rate"
+    LABEL_SAMP_RATE = 'Pixel size ("sampling rate") (A/px)'
+    TEXT_SAMP_RATE = "Pixel size"
     LABEL_MAGNI_RATE = 'Magnification rate'
-    TEXT_MAGNI_RATE = "Electron optical magnification(M). It can be used to calculate Sampling Rate(Ts) using Scanner Pixel Size(Tm), Ts = Tm/M. Otherwise it is used by few programs like Ctffind or Frealign"
+    TEXT_MAGNI_RATE = """\
+Electron optical magnification (M). It can be used to compute the Image Pixel
+Size ("Sampling Rate") (Ts) using the Scanner Pixel Size (Tm), Ts = Tm / M.
+
+It is used by a few programs like Ctffind or Frealign."""
     LABEL_SCANNED = 'Scanned pixel size (microns/px)'
 
-    
+
     ERROR_IMPORT_VOL = 'importVolumes:There is not filePaths matching pattern'
     
     LABEL_CTF_ESTI = 'CTF Estimation'
@@ -224,12 +242,25 @@ Define the number of processors to be used in the execution.
     TITLE_SAVED_FORM = 'Success'
     LABEL_SAVED_FORM = 'The protocol was saved successfuly.'
     TITLE_DELETE_FORM = 'Confirm DELETE'
-    TITLE_RESTART_FORM = 'Confirm DELETE'
-    LABEL_DELETE_FORM = '*ALL DATA* related to this _protocol run_ will be *DELETED*.\nDo you really want to continue?'    
+    TITLE_RESTART_FORM = 'Confirm RESTART'
+    LABEL_DELETE_FORM = """
+You are going to *DELETE* the run(s): 
+  - %s
+*ALL DATA* related will be permanently removed.
+
+Do you really want to continue?'
+"""
+    LABEL_RESTART_FORM = """
+You are going to *RESTART* the run: 
+  - %s
+*ALL DATA* related will be permanently removed.
+
+Do you really want to continue?'
+"""    
     TITLE_STOP_FORM = 'Confirm STOP'
     LABEL_STOP_FORM = 'Do you really want to *STOP* this run?'
     
-    NO_VIEWER_FOUND = 'There is not viewer for protocol:'
+    NO_VIEWER_FOUND = 'There is not viewer for protocol:' 
     
     TITLE_SAVE_OUTPUT = 'Save protocol output'
     LABEL_SAVE_OUTPUT = 'Do you wish to save protocol output?'

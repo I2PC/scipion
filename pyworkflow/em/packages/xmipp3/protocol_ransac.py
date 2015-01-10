@@ -42,7 +42,18 @@ from utils import isMdEmpty
 
 
 class XmippProtRansac(ProtInitialVolume):
-    """ Computes from a set of projections/classes using RANSAC algorithm """
+    """ 
+    Computes an initial 3d model from a set of projections/classes 
+    using RANSAC algorithm.
+    
+    This method is based on an initial non-lineal dimensionality
+    reduction approach which allows to select representative small 
+    sets of class average images capturing the most of the structural 
+    information of the particle under study. These reduced sets are 
+    then used to generate volumes from random orientation assignments. 
+    The best volume is determined from these guesses using a random 
+    sample consensus (RANSAC) approach.    
+     """
     _label = 'ransac'
     
     def __init__(self, **args):

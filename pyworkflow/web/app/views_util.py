@@ -237,20 +237,28 @@ def browse_objects(request):
         
         # Object Filter
         for obj in project.iterSubclasses(objClassList, filterObject.objFilter):
+            objParent = project.mapper.selectById(obj.getObjParentId())
+            
             objs[obj.getObjId()] = {"type":"obj", 
-                                    "nameId":obj.getNameId(), 
+                                    "nameId":obj.getNameId(),
+                                    "objParentName": objParent.getRunName(),
+                                    "objId": obj.getObjId(),
                                     "info": str(obj)
                                     } 
         # Class Filter
         for obj in project.iterSubclasses("Set", filterObject.classFilter):
+            objParent = project.mapper.selectById(obj.getObjParentId())
+            
             context = {"type":"set", 
-                       "nameId":obj.getNameId(), 
+                       "nameId":obj.getNameId(),
+                       "objParentName": objParent.getRunName(),
+                       "objId": obj.getObjId(),
                        "info": str(obj),
                        "objects": []}
             
             for child in obj._iterItems():
                 obj_context = {"nameId":child.getNameId(), 
-                               "objId":child.getObjId(), 
+                               "objId": child.getObjId(),
                                "info": str(child)} 
                 context["objects"].append(obj_context)    
             objs[obj.getObjId()] = context
@@ -535,6 +543,7 @@ def get_slice(request):
             
     if 'projectPath' in request.session:
         imagePathTmp = os.path.join(request.session['projectPath'], imagePath)
+        imagePath = imagePathTmp
 #         if not os.path.isfile(imagePathTmp):
 #             raise Exception('should not use getInputPath')
             #imagePath = getInputPath('showj', imagePath)
@@ -612,7 +621,7 @@ def readImageVolume(request, path, convert, dataType, reslice, axis, getStats):
     if convert or reslice:
         fileName, _ = os.path.splitext(path)
         _newPath = '%s_tmp%s' % (fileName, '.mrc')
-        img.write(str(_newPath))
+        img.write(os.path.join(request.session['projectPath'], _newPath))
     
     return _newPath, _stats
 

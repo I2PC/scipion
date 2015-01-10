@@ -49,11 +49,12 @@ class XmippProtScreenParticles(ProtProcessParticles):
     REJ_NONE = 0
     REJ_MAXZSCORE = 1
     REJ_PERCENTAGE =2
+    REJ_PERCENTAGE_SSNR =1
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         
         form.addParam('autoParRejection', EnumParam, choices=['None', 'MaxZscore', 'Percentage'],
-                      label="Automatic particle rejection", default=self.REJ_NONE,
+                      label="Automatic particle rejection based on Zscore", default=self.REJ_NONE,
                       display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
                       help='How to automatically reject particles. It can be none (no rejection), '
                       'maxZscore (reject a particle if its Zscore [a similarity index] is larger than this value), '
@@ -64,8 +65,17 @@ class XmippProtScreenParticles(ProtProcessParticles):
         form.addParam('percentage', IntParam, default=5, condition='autoParRejection==2',
                       label='Percentage (%)', expertLevel=LEVEL_EXPERT,
                       help='The worse percentage of particles according to metadata labels: ZScoreShape1, ZScoreShape2, ZScoreSNR1, ZScoreSNR2, ZScoreHistogram are automatically disabled. Therefore, the total number of disabled particles belongs to [percetage, 5*percentage]', validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
+
+        form.addParam('autoParRejectionSSNR', EnumParam, choices=['None', 'Percentage'],
+                      label="Automatic particle rejection based on SSNR", default=self.REJ_NONE,
+                      display=EnumParam.DISPLAY_COMBO, expertLevel=LEVEL_EXPERT,
+                      help='How to automatically reject particles. It can be none (no rejection), '
+                      'Percentage (reject a given percentage of the lowest SSNRs). ')
+        form.addParam('percentageSSNR', IntParam, default=5, condition='autoParRejectionSSNR==1',
+                      label='Percentage (%)', expertLevel=LEVEL_EXPERT,
+                      help='The worse percentage of particles according to SSNR are automatically disabled.', 
+                      validators=[Range(0, 100, error="Percentage must be between 0 and 100.")])
         form.addParallelSection(threads=0, mpi=0)
-        
         
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
@@ -76,6 +86,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
         """ Mainly prepare the command line for call cl2d program"""
         # Convert input images if necessary
         self._insertFunctionStep('sortImages', self.inputParticles.getObjId()) 
+        self._insertFunctionStep('sortImagesSSNR', self.inputParticles.getObjId()) 
         
         self._insertFunctionStep('createOutputStep')
 
@@ -95,6 +106,15 @@ class XmippProtScreenParticles(ProtProcessParticles):
         
         self.outputMd = String(imagesMd)
 
+    def sortImagesSSNR(self, inputId):
+        imagesMd = self._getPath('images.xmd')
+        args = "-i Particles@%s " % imagesMd
+        
+        if self.autoParRejectionSSNR == self.REJ_PERCENTAGE_SSNR:
+            args += "--ssnrpercent " + str(self.percentageSSNR.get())
+
+        self.runJob("xmipp_image_ssnr", args)
+        
     def createOutputStep(self):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())

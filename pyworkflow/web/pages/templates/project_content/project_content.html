@@ -57,6 +57,7 @@
 	
 	$(document).ready(function() {
     	refreshRuns(1);
+//     	window.location.reload(true)
 	});	
 	
 </script>
@@ -90,8 +91,8 @@
 			<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{msg.LABEL_LIST}}</a>
 		</span>
 		<span id="refreshTool" style="display:both;">
-			<a href="javascript:refreshRuns(1);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
-	<!-- 		<a href="javascript:refreshRuns(0);"><i class="fa fa-refresh fa-spin" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a> -->
+<!-- 			<a href="javascript:refreshRuns(1);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a> -->
+			<a href="javascript:window.location.reload(true);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
 		</span>
 	</span>
 	<div id="toolbar" style="display:none;">

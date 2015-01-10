@@ -32,8 +32,7 @@ some code was taken from tkSimpleDialog
 import Tkinter as tk
 
 import gui
-from widgets import Button
-from tree import BoundTree, TreeProvider
+from tree import BoundTree
 from text import Text, TaggedText
 from pyworkflow.utils.properties import Message, Icon
 
@@ -351,8 +350,8 @@ class EditObjectDialog(Dialog):
         # Comment box
         self.textComment = Text(bodyFrame, height=self.commentHeight, 
                          width=self.commentWidth)
-        self.textComment.addText(self.valueComment)
         self.textComment.setReadOnly(False)
+        self.textComment.addText(self.valueComment)
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
         self.initial_focus = self.textComment
         
@@ -401,18 +400,22 @@ def askString(title, label, parent, entryWidth=20, defaultValue='', headerLabel=
 
                 
 class ListDialog(Dialog):
-    """Dialog to select an element from a list.
-    It is implemented using a Tree widget"""
+    """
+    Dialog to select an element from a list.
+    It is implemented using a Tree widget.
+    """
     def __init__(self, parent, title, provider, 
-                 message=None, validateItem=None, **args):
-        """ From args:
+                 message=None, validateSelectionCallback=None, **kwargs):
+        """ From kwargs:
                 message: message tooltip to show when browsing.
                 selected: the item that should be selected.
+                validateSelectionCallback: a callback function to validate selected items.
         """
-        self.value = None
+        self.values = []
         self.provider = provider
         self.message = message
-        self.validateItem = validateItem
+        self.validateSelectionCallback = kwargs.get('validateSelectionCallback', None)
+        self._selectmode = kwargs.get('selectmode', 'extended')
         
         Dialog.__init__(self, parent, title,
                         buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
@@ -428,23 +431,21 @@ class ListDialog(Dialog):
         self.initial_focus = self.tree
         
     def _createTree(self, parent):
-        self.tree = BoundTree(parent, self.provider)
+        self.tree = BoundTree(parent, self.provider, selectmode=self._selectmode)
         
-    def _getSelectedObject(self):
-        return self.tree.getObjectFromId(self.tree.getFirst())
-    
     def apply(self):
-        self.value = self._getSelectedObject()
+        self.values = self.tree.getSelectedObjects()
     
     def validate(self):
-        selectedItem = self.tree.getFirst() 
+        self.apply() # load self.values with selected items
         err = ''
         
-        if selectedItem is None:
+        if self.values:
+            if self.validateSelectionCallback:
+                err = self.validateSelectionCallback(self.values)
+        else:
             err = "Please select an element"
-        elif self.validateItem:
-            err = self.validateItem(self._getSelectedObject())
-        
+            
         if err:
             showError("Validation error", err, self)
             return False
@@ -516,15 +517,3 @@ class FileBrowseDialog(Dialog):
             return False
         return True                
         
-if __name__ == '__main__':
-    import sys
-    root = tk.Tk()
-    root.withdraw()
-    gui.setCommonFonts()
-    #result = askYesNo("Confirm DELETE", "Are you sure to delete this?", root)
-    #print result
-    #showInfo('Testing Info', "this is a [really] important infor", root)
-    
-    #showError('Testing error', "Fatal Error due to <problems>", root)
-    print askString("Enter project name", "Project name:", root)
-    #root.mainloop() 

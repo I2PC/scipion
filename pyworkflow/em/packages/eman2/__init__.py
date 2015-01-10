@@ -37,4 +37,8 @@ from eman2 import *
 from data import *
 from protocol_boxing import EmanProtBoxing
 from protocol_initialmodel import EmanProtInitModel
+from protocol_reconstruct import EmanProtReconstruct
+from protocol_refineasy import EmanProtRefine
 from viewer import EmanViewer
+
+_environ = getEnviron()

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='es'>
 	<head>
-	<title>{{projectName}}{{msg.TITLE_NAME_RUN}}{{protocol}}</title>
+	<title>{{protocol}}</title>
 	<meta charset='utf-8'>
 	<link rel="icon" type="image/png" href={{favicon}} />
 	<!-- CSS -->
@@ -83,6 +83,12 @@
 	<script>
 	  $(function() {
 	    $("#tabs").tabs();
+	    
+	    // to short the file path
+	    var path = $("input#inputPath").val()
+	    var pathSplitted = path.split("/")
+
+	    $("input#inputPath").val(pathSplitted[pathSplitted.length-1])
 	  });
   	</script>
 	</head>

@@ -39,6 +39,8 @@ from constants import *
 
 class FormElement(OrderedObject):
     """Base for any element on the form"""
+    ATTRIBUTES = ['label', 'expertLevel', 'condition', 'important', 'help',
+                  'default', 'paramClass']
     
     def __init__(self, **args):
         OrderedObject.__init__(self, **args)
@@ -55,14 +57,29 @@ class FormElement(OrderedObject):
     def isExpert(self):
         return self.expertLevel > LEVEL_NORMAL
     
+    def setExpert(self):
+        self.expertLevel.set(LEVEL_EXPERT)
+        
     def isImportant(self):
         return self._isImportant.get()
+    
+    def setImportant(self, value):
+        self._isImportant.set(value)
     
     def hasCondition(self):
         return self.condition.hasValue()
     
     def getLabel(self):
         return self.label.get()
+    
+    def config(self, **kwargs):
+        """ Configure the object and set attributes
+        comming in the keyword-arguments, the 
+        same as in the __init__
+        """
+        for key in self.ATTRIBUTES:
+            if key in kwargs:
+                self.setAttributeValue(key, kwargs.get(key)) 
     
         
 class Param(FormElement):
@@ -362,7 +379,7 @@ class LabelParam(StringParam):
 class IntParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Integer, **args)
-        self.addValidator(Format(int, error="should have a integer format"))
+        self.addValidator(Format(int, error="should be an integer"))
         
         
 class EnumParam(IntParam):
@@ -380,7 +397,7 @@ class EnumParam(IntParam):
 class FloatParam(Param):
     def __init__(self, **args):
         Param.__init__(self, paramClass=Float, **args)
-        self.addValidator(Format(float, error="should have a float format", 
+        self.addValidator(Format(float, error="should be a float",
                                  allowsNull=args.get('allowsNull', False)))
 
         

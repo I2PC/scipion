@@ -33,7 +33,7 @@ import os
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes
+from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
 
 
@@ -78,6 +78,7 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+
         return output
 
     def _createSubSetFromClasses(self, inputClasses):
@@ -96,8 +97,7 @@ class ProtUserSubSet(BatchProtocol):
                 if outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
                 else:
-                    return self._createRepresentativesFromClasses(inputClasses,
-                                                           outputClassName.split(',')[0])
+                    return self._createRepresentativesFromClasses(inputClasses, outputClassName.split(',')[0])
             else:
                 return self._createSubSetFromImages(inputClasses.getImages())
         elif outputClassName.startswith('SetOfClasses'):
@@ -109,6 +109,9 @@ class ProtUserSubSet(BatchProtocol):
         """ Create a subset of Micrographs analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
+        if setOfMics is None:
+            raise Exception('Could not create SetOfMicrographs subset from'
+                            'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
         
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
@@ -146,7 +149,8 @@ class ProtUserSubSet(BatchProtocol):
         createFunc = getattr(self, '_create' + outputClassName)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
-        
+
+        count = 0
         output = createFunc()
         output.copyInfo(inputImages)
         for cls in modifiedSet:
@@ -154,8 +158,12 @@ class ProtUserSubSet(BatchProtocol):
                 img = cls.getRepresentative()
                 img.copyObjId(cls)
                 output.append(img)
+                count += 1
         # Register outputs
         self._defineOutput('Representatives', output)
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(), selectmsg, count, output.__class__.__name__)
+        self.summaryVar.set(msg)
         return output
 
     def _createImagesFromClasses(self, inputClasses):
@@ -177,6 +185,11 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        count = 0
+        count = len([cls for cls in modifiedSet if cls.isEnabled()])
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, count, output.__class__.__name__, output.getSize())
+        self.summaryVar.set(msg)
         return output
  
     def _createClassesFromClasses(self, inputClasses):
@@ -193,6 +206,10 @@ class ProtUserSubSet(BatchProtocol):
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+        count = len([cls for cls in modifiedSet if cls.isEnabled()])
+        selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, output.__class__.__name__)
+        self.summaryVar.set(msg)
         return output
         
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
@@ -296,7 +313,28 @@ class ProtUserSubSet(BatchProtocol):
 
     def _summary(self):
         summary = []
+        msg = self.summaryVar.get()
+        if  msg is None:
+            msg = self.getDefaultSummary()
+        summary.append(msg)
         return summary
+
+    def getDefaultSummary(self):
+        input = ''
+
+
+        inputObj = self.inputObject.get()
+        input += inputObj.__class__.__name__
+        if isinstance(inputObj, EMSet):
+            input += ' of size %s'%inputObj.getSize()
+        output = ''
+        for key, attr in self.iterOutputAttributes(EMObject):
+            output += attr.__class__.__name__
+            if isinstance(attr, EMSet):
+                output += ' of size %s'%attr.getSize()
+
+        msg = 'From input %s created output %s '%(input, output)
+        return msg
 
     def _methods(self):
         return self._summary()

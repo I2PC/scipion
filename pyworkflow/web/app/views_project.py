@@ -384,11 +384,10 @@ Initial_Volume = [
     {"tag": "section", "text": "2. Create a 3D volume", "children": [
         {"tag": "protocol", "value": "XmippProtRansac", "text": "xmipp3 - ransac"},
         {"tag": "protocol", "value": "EmanProtInitModel", "text": "eman2 - Initial volume"},
-        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"},
-        {"tag": "protocol", "value": "ProtPrime", "text": "simple - prime"}]},
+        {"tag": "protocol", "value": "XmippProtReconstructSignificant", "text": "xmipp3 - significant"}]},
     {"tag": "section", "text": "3. Align volumes.", "children": [
-        {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "xmipp3 - align volumes"}]}]
-            ''')
+        {"tag": "protocol", "value": "XmippProtAlignVolumeForWeb", "text": "xmipp3 - align volumes"}]}]
+        ''')
         f.close()
         
 def create_service_project(request):
@@ -396,7 +395,7 @@ def create_service_project(request):
         import os
         from pyworkflow.object import Pointer
         from pyworkflow.em.protocol import ProtUnionSet, ProtImportAverages
-        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolume
+        from pyworkflow.em.packages.xmipp3 import XmippProtRansac, XmippProtReconstructSignificant, XmippProtAlignVolumeForWeb
         from pyworkflow.em.packages.eman2 import EmanProtInitModel
         from pyworkflow.em.packages.simple import ProtPrime
         
@@ -428,6 +427,7 @@ def create_service_project(request):
             
             protImport.filesPath.set(newFn)
             protImport.samplingRate.set(1.)
+#             protImport.setObjectLabel('import averages (%s)' % testDataKey)
             
             project.launchProtocol(protImport, wait=True)
         else:
@@ -451,16 +451,16 @@ def create_service_project(request):
         # 2c. Significant 
         protSignificant = project.newProtocol(XmippProtReconstructSignificant)
         protSignificant.setObjLabel('xmipp - significant')
-        protSignificant.inputClasses.set(protImport)
-        protSignificant.inputClasses.setExtendedAttribute('outputAverages')
+        protSignificant.inputSet.set(protImport)
+        protSignificant.inputSet.setExtendedAttribute('outputAverages')
         project.saveProtocol(protSignificant)
         
-        # 2d. Prime 
-        protPrime = project.newProtocol(ProtPrime)
-        protPrime.setObjLabel('simple - prime')
-        protPrime.inputClasses.set(protImport)
-        protPrime.inputClasses.setExtendedAttribute('outputAverages')
-        project.saveProtocol(protPrime)
+#         # 2d. Prime 
+#         protPrime = project.newProtocol(ProtPrime)
+#         protPrime.setObjLabel('simple - prime')
+#         protPrime.inputClasses.set(protImport)
+#         protPrime.inputClasses.setExtendedAttribute('outputAverages')
+#         project.saveProtocol(protPrime)
         
         # 3. Join result volumes
         p1 = Pointer()
@@ -475,16 +475,16 @@ def create_service_project(request):
         p3.set(protSignificant)
         p3.setExtendedAttribute('outputVolume')
         
-        p4 = Pointer()
-        p4.set(protPrime)
-        p4.setExtendedAttribute('outputVolume')
+#         p4 = Pointer()
+#         p4.set(protPrime)
+#         p4.setExtendedAttribute('outputVolume')
         
-        protJoin = project.newProtocol(XmippProtAlignVolume)
+        protJoin = project.newProtocol(XmippProtAlignVolumeForWeb)
         protJoin.setObjLabel('align volumes')
         protJoin.inputVolumes.append(p1)
         protJoin.inputVolumes.append(p2)
         protJoin.inputVolumes.append(p3)
-        protJoin.inputVolumes.append(p4)
+#         protJoin.inputVolumes.append(p4)
         project.saveProtocol(protJoin)
         
         

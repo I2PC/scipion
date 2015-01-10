@@ -29,6 +29,7 @@ This sub-package contains wrapper around EMAN initialmodel program
 
 import os
 
+from pyworkflow.utils.path import cleanPattern
 from pyworkflow.protocol.params import (PointerParam, TextParam, IntParam,
                                         LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtInitialVolume
@@ -45,6 +46,9 @@ class EmanProtInitModel(ProtInitialVolume):
     particle reconstruction. The output set is theoretically sorted 
     in order of quality (best one is numbered 1), though it's best 
     to look at the other answers as well. 
+    
+    See more details in:
+    http://blake.bcm.edu/emanwiki/EMAN2/Programs/e2initialmodel
     """
     
     _label = 'initial model'
@@ -80,7 +84,7 @@ class EmanProtInitModel(ProtInitialVolume):
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self):        
-        eman2.loadEnvironment()
+#         eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertFunctionStep('createStackImgsStep')
         self._insertInitialModelStep()
@@ -112,6 +116,7 @@ class EmanProtInitModel(ProtInitialVolume):
     
     def createInitialModelStep(self, args):
         """ Run the EMAN program to create the initial model. """
+        cleanPattern(self._getExtraPath('initial_models'))
         program = eman2.getEmanProgram('e2initialmodel.py')
         self.runJob(program, args, cwd=self._getExtraPath())        
                      
