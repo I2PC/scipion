@@ -1123,7 +1123,7 @@ eot
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('input_par_block', block=1, iter=iter, prevIter=prevIter)
+            file2 = self._getFileName('input_par_block', block=1, iter=iterN, prevIter=prevIter)
             copyFile(file1, file2)
     
     def _setLastIter(self, iterN):
