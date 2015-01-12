@@ -196,10 +196,13 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         """ Get the output particles of the input NMA protocol. """
         return self.inputNMA.get().outputParticles
     
+    def getInputPdb(self):
+        return self.inputNMA.get().getInputPdb()
+    
     def getOutputMatrixFile(self):
         return self._getExtraPath('output_matrix.txt')
     
-    def getMappingFile(self):
+    def getProjectorFile(self):
         return self.mappingFile.get()
     
     def getMethodName(self):
