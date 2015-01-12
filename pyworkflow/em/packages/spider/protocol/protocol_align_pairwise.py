@@ -106,7 +106,7 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
     def _methods(self):
         methods = []
         
-        msg  = '\nParticles were subjected to a pariwise reference-free alignment using the "pyramidal system for '
+        msg  = '\nInput particles %s were subjected to a pairwise reference-free alignment using the "pyramidal system for '%(self.getObjectTag(self.inputParticles.get()))
         msg += 'prealignment construction" (Marco et al., 1996), using radii %s to %s pixels. ' % \
                 (self.innerRadius.get(), self.outerRadius.get())
         msg += 'Particles were then aligned to this initial reference-free average using SPIDER command \'AP SH\' '
@@ -114,4 +114,5 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
                 (self.searchRange.get(), self.stepSize.get() )
         
         methods.append(msg)
+        methods.append('Output particles: %s'%self.getObjectTag(self.outputParticles))
         return methods

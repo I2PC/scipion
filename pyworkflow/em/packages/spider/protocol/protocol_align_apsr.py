@@ -77,9 +77,9 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
     
     def _methods(self):
         methods = []
-        
-        msg  = '\nParticles were initially subjected to reference-free alignment using SPIDER\'s \'AP SR\' '
-        msg += 'command, using radii %s to %s pixels. ' % (self.innerRadius.get(), self.outerRadius.get() )
+        if hasattr(self, 'outputParticles'):
+            msg  = '\nInput particles %s were initially subjected to reference-free alignment using SPIDER\'s \'AP SR\' '%self.getObjectTag(self.inputParticles.get())
+            msg += 'command, using radii %s to %s pixels. Output particles: %s' % (self.innerRadius.get(), self.outerRadius.get(), self.getObjectTag(self.outputParticles) )
         
         methods.append(msg)
         return methods

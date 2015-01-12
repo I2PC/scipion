@@ -854,8 +854,15 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd("id=?"), (objId,))
         return self.cursor.fetchone()
 
-    def selectAll(self, iterate=True, orderBy=id,direction='ASC'):
-        cmd = self.selectCmd('1', orderByStr=' ORDER BY '+ orderBy + ' ' + direction)
+    def selectAll(self, iterate=True, orderBy='id', direction='ASC'):
+        # Handle the specials orderBy values of 'id' and 'RANDOM()'
+        # other columns names should be mapped to table column
+        # such as: _micId -> c04
+        if orderBy in ['id', 'RANDOM()']:
+            orderByCol = orderBy
+        else:
+            orderByCol = self._columnsMapping[orderBy]
+        cmd = self.selectCmd('1', orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
         self.executeCommand(cmd)
         return self._results(iterate)
 

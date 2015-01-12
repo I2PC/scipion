@@ -183,7 +183,7 @@ class ProtSplitSet(ProtSets):
             orderBy = 'RANDOM()'
         else:
             orderBy = 'id'
-        for elem in elements.__iter__(orderBy=orderBy, direction='ASC'):
+        for elem in elements.iterItems(orderBy=orderBy, direction='ASC'):
             if i >= ns[pos]:
                 pos += 1
                 i = 0

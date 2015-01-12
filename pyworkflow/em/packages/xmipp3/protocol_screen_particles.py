@@ -152,8 +152,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
                              ' and removing those not reaching %s%s' % (str(self.maxZscore.get()), particlesRejectedText),# REJ_MAXZSCORE
                              ' and removing worst %s percent%s' % (str(self.percentage.get()), particlesRejectedText)# REJ_PERCENTAGE
                              ]
-            methods.append('An input dataset of %s particles was sorted by'
+            methods.append('Input dataset %s of %s particles was sorted by'
                            ' its ZScore using xmipp_image_sort_by_statistics'
-                           ' program%s. ' % (len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
+                           ' program%s. ' % (self.getObjectTag(self.inputParticles.get()), len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
+            methods.append('Output set is %s.'%self.getObjectTag(self.outputParticles))
         return methods
     

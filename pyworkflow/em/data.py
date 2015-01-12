@@ -732,12 +732,12 @@ class SetOfImages(EMSet):
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
-    def __iter__(self, orderBy='id',direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC'):
         """ Redefine iteration to set the acquisition to images. """
-        for img in self._iterItems(orderBy=orderBy,direction=direction):
+        for img in Set.iterItems(self, orderBy=orderBy, direction=direction):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
-            # dont want to override with the set acquistion for this case
+            # don't want to override with the set acquisition for this case
             if not img.hasAcquisition():
                 img.setAcquisition(self.getAcquisition())
             yield img
@@ -1202,7 +1202,7 @@ class SetOfClasses(EMSet):
         self._setItemMapperPath(classItem)
         return classItem
 
-    def _iterItems(self):    
+    def iterItems(self):
         for classItem in self._mapper.selectAll():
             self._setItemMapperPath(classItem)
             yield classItem

@@ -166,7 +166,7 @@ class ProtImportImages(ProtImportFiles):
         outputSet = self._getOutputSet()
         if outputSet is not None:
             methods.append("*%d* %s were imported" % (outputSet.getSize(), self._getOutputItemName())+\
-                           " with a sampling rate of *%0.2f* A/px (microscope voltage %d kV, magnification %dx). The resulting set is %s"%
+                           " with a sampling rate of *%0.2f* A/px (microscope voltage %d kV, magnification %dx). Output set is %s."%
                             (outputSet.getSamplingRate(),round(self.voltage.get()),round(self.magnification.get()), self.getObjectTag(outputSet)))
             
         return methods

@@ -132,6 +132,33 @@ class TestSetOfParticles(BaseTest):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         
+    def test_orderBy(self):
+        #create setofProjections sorted
+
+        imgSet1 = SetOfParticles(filename=':memory:',prefix='set1')
+        imgSet2 = SetOfParticles(filename=':memory:',prefix='set2')
+        imgSet1.setSamplingRate(1.5)
+        imgSet2.setSamplingRate(1.5)
+        img = Particle()
+
+        for i in range(1, 10):
+            img.setLocation(i, 'mystack.stk')
+            img.setMicId(10-i)
+            img.setClassId(i%5)
+            imgSet1.append(img)
+            img.setMicId(i)
+            imgSet2.append(img)
+            img.cleanObjId()
+        #orderby
+        for item1, item2 in izip(imgSet1.iterItems(orderBy='_micId',
+                                                   direction='ASC'),
+                                 imgSet2.iterItems(orderBy='_micId',
+                                                   direction='ASC')):
+            self.assertEquals(item1.getMicId(), item2.getMicId())
+
+        imgSet1.printAll()
+        imgSet2.printAll()
+        #assert
     def test_readStack(self):
         """ Read an stack of 29 particles from .hdf file.
         Particles should be of 500x500 pixels.
