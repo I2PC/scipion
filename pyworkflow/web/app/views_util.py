@@ -256,7 +256,7 @@ def browse_objects(request):
                        "info": str(obj),
                        "objects": []}
             
-            for child in obj._iterItems():
+            for child in obj.iterItems():
                 obj_context = {"nameId":child.getNameId(), 
                                "objId": child.getObjId(),
                                "info": str(child)} 

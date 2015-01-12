@@ -54,6 +54,7 @@ class TestSetsBase(tests.BaseTest):
             img.setClassId(i%5)
             imgSet.append(img)
             img.cleanObjId()
+
         imgSet.write()
         #now import the dataset
         prot1 = self.newProtocol(ProtImportParticles,
