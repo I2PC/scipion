@@ -937,7 +937,7 @@ class Set(OrderedObject):
         """ element in Set """
         return self._mapper.selectById(itemId) != None
 
-    def _iterItems(self, orderBy=id,direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC'):
         return self._mapper.selectAll(orderBy=orderBy,direction=direction)#has flat mapper, iterate is true
 
     def getFirstItem(self):
@@ -946,7 +946,7 @@ class Set(OrderedObject):
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        return self._iterItems()
+        return self.iterItems()
        
     def __len__(self):
         return self._size.get()
