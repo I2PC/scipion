@@ -136,38 +136,39 @@ class ProtUnionSet(ProtSets):
         return self._summary()
 
 
+import sys
 class ProtSplitSet(ProtSets):
-    """ Protocol to split a set in two or more subsets. 
+    """ Protocol to split a set in two or more subsets.
     """
     _label = 'split sets'
 
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):    
+    def _defineParams(self, form):
         form.addSection(label='Input')
-        
+
         form.addParam('inputSet', PointerParam, pointerClass='EMSet',
                       label="Input set", important=True,
                       help='Select the set of elements (images, etc) that you want to split.'
-                      )
+        )
         form.addParam('numberOfSets', IntParam, default=2,
                       label="Number of subsets",
                       help='Select how many subsets do you want to create.'
-                      )
+        )
         form.addParam('randomize', BooleanParam, default=False,
                       label="Randomize elements",
                       help='Put the elements at random in the different subsets.'
-                      )
-    #--------------------------- INSERT steps functions --------------------------------------------   
+        )
+    #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
-    
+
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
         n = self.numberOfSets.get()
-        
+
         # Create as many subsets as requested by the user
         subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
 
@@ -178,7 +179,11 @@ class ProtSplitSet(ProtSets):
         ns = [len(elements) // n + (1 if i < len(elements) % n else 0)
               for i in range(n)]  # number of elements in each subset
         pos, i = 0, 0  # index of current subset and index of position inside it
-        for elem in elements.__iter__(random=self.randomize):
+        if self.randomize.get():
+            orderBy = 'RANDOM()'
+        else:
+            orderBy = 'id'
+        for elem in elements.__iter__(orderBy=orderBy, direction='ASC'):
             if i >= ns[pos]:
                 pos += 1
                 i = 0
@@ -191,14 +196,14 @@ class ProtSplitSet(ProtSets):
             subset.copyInfo(inputSet)
             self._defineOutputs(**{key % i: subset})
             self._defineTransformRelation(inputSet, subset)
-        
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         if self.inputSet.get().getSize() < self.numberOfSets:
             errors.append("The number of subsets requested is greater than")
             errors.append("the number of elements in the input set.")
-        return errors   
+        return errors
 
     def _summary(self):
         if not any(x.startswith('output') for x in dir(self)):
