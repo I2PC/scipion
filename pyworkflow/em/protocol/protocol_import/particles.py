@@ -187,7 +187,7 @@ class ProtImportAverages(ProtImportParticles):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        choices = ProtImportImages._getImportChoices()
+        choices = ProtImportImages._getImportChoices(self)
         return choices
             
     def _defineAcquisitionParams(self, form):

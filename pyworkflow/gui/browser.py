@@ -130,8 +130,10 @@ class ObjectBrowser(tk.Frame):
             self.label.config(image=img)
         # Update text preview
         if desc is not None:
+            self.text.setReadOnly(False)
             self.text.clear()
             self.text.addText(desc)
+            self.text.setReadOnly(True)
             
     def getSelected(self):
         """ Return the selected object. """

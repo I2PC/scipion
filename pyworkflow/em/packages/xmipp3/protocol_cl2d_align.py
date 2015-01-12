@@ -137,8 +137,14 @@ class XmippProtCL2DAlign(ProtAlign2D):
         return ['Sorzano2010a']
     
     def _methods(self):
-        if self.useReferenceImage:
-            return ["We aligned all images with respect to the reference image using CL2D [Sorzano2010a]"]
+        methods = []
+        if not hasattr(self, 'outputParticles'):
+            methods.append("Output alignment not ready yet.")
         else:
-            return ["We aligned all images with no reference using CL2D [Sorzano2010a]"]
-        
+            if self.useReferenceImage:
+                methods.append("We aligned images %s with respect to the reference image %s using CL2D [Sorzano2010a]"
+                        % (self.getObjectTag(self.inputParticles.get()), self.getObjectTag(self.referenceImage.get())))
+            else:
+                methods.append("We aligned images %s with no reference using CL2D [Sorzano2010a]" % self.getObjectTag(self.inputParticles.get()))
+            methods.append (" and produced %s images." % self.getObjectTag(self.outputParticles))
+        return methods

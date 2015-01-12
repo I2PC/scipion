@@ -418,10 +418,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(), self.boxSize.get())
 
             if self.downsampleType == ORIGINAL:
-                msg += " from original micrographs."
+                msg += " from micrographs %s."%self.getObjectTag(self.getInputMicrographs())
 
             if self.downsampleType == OTHER:
-                msg += " from original micrographs with downsampling factor of %.2f." % self.downFactor.get()
+                msg += " from micrographs %s with downsampling factor of %.2f." %(self.getObjectTag(self.getInputMicrographs()), self.downFactor.get())
 
             if self.downsampleType == SAME_AS_PICKING:
                 msg += "."
@@ -438,6 +438,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
             if self.doRemoveDust.get():
                 methodsMsgs.append("Removed dust over a threshold of %s." % (self.thresholdDust.get()))
+            methodsMsgs.append("Output set: %s"%(self.getObjectTag(self.outputParticles)))
 
         return methodsMsgs
 

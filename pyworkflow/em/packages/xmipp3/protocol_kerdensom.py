@@ -126,7 +126,7 @@ class KendersomBaseClassify(ProtClassify2D):
         as result of the protocol.
         """
         imgSet = self.inputImages.get()
-        classes2DSet = self._createSetOfClasses2D(self.inputImages.get())
+        classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self._params['kclasses'])
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
@@ -158,7 +158,10 @@ class KendersomBaseClassify(ProtClassify2D):
             messages.append("Output classification not ready yet.")
         else:    
             messages.append("*Kendersom classification*")
-            messages.append('%s particles were classified to obtain %s classes ' % (self.inputImages.get().getSize(), self.outputClasses.getSize()))
+            messages.append('%s particles from %s were classified to obtain %s classes %s.'
+                            % (self.inputImages.get().getSize(), self.getObjectTag(self.inputImages.get()), self.outputClasses.getSize(), self.getObjectTag(self.outputClasses)))
+            if self.useMask:
+                messages.append('Mask %s was used in classification.' % self.getObjectTag(self.Mask.get()))
         return messages
 
 

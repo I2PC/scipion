@@ -28,9 +28,12 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 from pyworkflow.object import Float, Integer
-from pyworkflow.protocol.params import PathParam, IntParam, PointerParam, FloatParam
+from pyworkflow.protocol.params import PathParam, IntParam, PointerParam, FloatParam, BooleanParam
 from pyworkflow.em.data import Coordinate
 from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.utils.path import join
+from os.path import exists
+
 
 
 
@@ -57,12 +60,14 @@ class ProtImportCoordinates(ProtImportFiles):
                           label='Input micrographs',
                           help='Select the particles that you want to import coordinates.')
 
-        form.addParam('boxSize', IntParam, 
-                      label='Box size',
-                      help='')
+        form.addParam('boxSize', IntParam, label='Box size')
         form.addParam('scale', FloatParam,
                       label='Scale', default=1,
                       help='factor to scale coordinates')
+        form.addParam('invertX', BooleanParam,
+                      label='Invert X')
+        form.addParam('invertY', BooleanParam,
+                      label='Invert Y')
 
 
     def _getImportChoices(self):
@@ -86,9 +91,7 @@ class ProtImportCoordinates(ProtImportFiles):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         filesPath = self.filesPath.get()
-        importFrom = self.importFrom
-        if importFrom == self.IMPORT_FROM_AUTO:
-            importFrom = self.getFormat()
+        importFrom = self.getImportFrom()
         if importFrom == self.IMPORT_FROM_XMIPP:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
@@ -113,18 +116,46 @@ class ProtImportCoordinates(ProtImportFiles):
                                  self.getPattern())
 
 
+    def getImportFrom(self):
+        importFrom = self.importFrom.get()
+        if importFrom == self.IMPORT_FROM_AUTO:
+            importFrom = self.getFormat()
+        return importFrom
+
 
     def importCoordinatesStep(self, importFrom, *args):
          inputMics = self.inputMicrographs.get()
          coordsSet = self._createSetOfCoordinates(inputMics)
          coordsSet.setBoxSize(self.boxSize.get())
-
+         scaleFactor = self.scale.get()
+         invertX = self.invertX.get()
+         invertY = self.invertY.get()
          ci = self.getImportClass()
          for i, (fileName, fileId) in enumerate(self.iterFiles()):
             for mic in inputMics:
                 if removeBaseExt(mic.getFileName()) in removeBaseExt(fileName):#temporal use of in
-                    ci.importCoordinates(mic, fileName, coordsSet)
+                    def addCoordinate(coord):
+                        coord.setMicrograph(mic)
+                        x = coord.getX()
+                        y = coord.getY()
+                        if scaleFactor != 1.:
+                            x = coord.getX() * scaleFactor
+                            y = coord.getY() * scaleFactor
+                        if invertX:
+                            width = mic.getDim()[0]
+                            x = width - x
+                        if invertY:
+                            height = mic.getDim()[1]
+                            y = height - y
+                        coord.setX(x)
+                        coord.setY(y)
+                        coordsSet.append(coord)
+                    ci.importCoordinates(fileName, addCoordinate=addCoordinate)
                     break
+
+
+
+
 
          self._defineOutputs(outputCoordinates=coordsSet)
          self._defineSourceRelation(inputMics, coordsSet)
@@ -154,6 +185,49 @@ class ProtImportCoordinates(ProtImportFiles):
         files.
         """
         return True
+
+    def getDefaultBoxSize(self):
+        import xmipp
+        boxSize = 100
+        importFrom = self.getImportFrom()
+        scale = self.scale.get()
+
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_XMIPP:
+            configfile = join(self.filesPath.get(), 'config.xmd')
+            existsConfig = exists(configfile)
+            if existsConfig:
+                md = xmipp.MetaData('properties@' + configfile)
+                configobj = md.firstObject()
+                boxSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+        if importFrom == ProtImportCoordinates.IMPORT_FROM_EMAN:
+            # Read the boxSize from the e2boxercache/base.json
+            jsonFnbase = join(self.filesPath.get(), 'e2boxercache', 'base.json')
+            from pyworkflow.em.packages.eman2 import loadJson
+            jsonBoxDict = loadJson(jsonFnbase)
+            boxSize = int(jsonBoxDict["box_size"])
+        boxSize = (int)(boxSize * scale)
+        return boxSize
+
+
+    def _summary(self):
+        summary = []
+
+        if not hasattr(self, 'outputCoordinates'):
+            msg = 'Output coordinates not ready yet'
+        else:
+            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag(self.inputMicrographs.get()), self._getImportChoices()[self.getImportFrom()])
+            if self.scale.get() != 1.:
+                msg += " Scale factor %d was applied."%self.scale.get()
+            if self.invertX.get():
+                msg += " X coordinate was inverted."
+            if self.invertY.get():
+                msg += " Y coordinate was inverted."
+            summary.append(msg)
+        return summary
+
+    def _methods(self):
+        return self._summary()
+
 
     # def importCoordinatesStep(self, micsId, pattern):
     #     """ Copy movies matching the filename pattern

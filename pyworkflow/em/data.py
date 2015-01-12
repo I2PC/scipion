@@ -65,8 +65,7 @@ class Acquisition(EMObject):
         self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.copyAttributes(other, '_magnification', '_voltage', 
-                            '_sphericalAberration', '_amplitudeContrast')
+        self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
         
     def getMagnification(self):
         return self._magnification.get()
@@ -1195,7 +1194,7 @@ class SetOfClasses(EMSet):
                         
         self._setItemMapperPath(classItem)
         EMSet._insertItem(self, classItem)
-        classItem.write()#Set.write(self)
+        classItem.write(properties=False)#Set.write(self)
         
     def __getitem__(self, itemId):
         """ Setup the mapper classes before returning the item. """

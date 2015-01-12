@@ -99,19 +99,19 @@ class ProtImportVolumes(ProtImportImages):
     
     def _getVolMessage(self):
         if self.hasAttribute('outputVolume'):
-            return "*one* volume"
+            return "Volume %s"% self.getObjectTag(self.outputVolume)
         else:
-            return "*%d* volumes" % self.outputVolumes.getSize()
+            return "*%d* volumes" % self.getObjectTag(self.outputVolumes)
         
     def _summary(self):
         summary = []
-        summary.append("Imported %s from:\n%s" % (self._getVolMessage(), self.getPattern()))
+        summary.append("%s imported from:\n%s" % (self._getVolMessage(), self.getPattern()))
         summary.append("Sampling rate: *%0.2f* (A/px)" % self.samplingRate.get())
         return summary
     
     def _methods(self):
         methods = []
-        methods.append("Used %s with a sampling rate *%0.2f*." % (self._getVolMessage(), self.samplingRate.get()))
+        methods.append(" %s imported with a sampling rate *%0.2f*" % (self._getVolMessage(), self.samplingRate.get()),)
         return methods
     
     

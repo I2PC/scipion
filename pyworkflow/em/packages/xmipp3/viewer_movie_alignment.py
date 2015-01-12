@@ -37,11 +37,6 @@ from pyworkflow.em.viewer import ObjectView
 from pyworkflow.em.showj import OBJCMDS, OBJCMD_MOVIE_ALIGNPOLAR
 from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots
 
-PLOT_CART = 0
-PLOT_POLAR = 1
-PLOT_POLARCART = 2
-PLOT_CHOICES = ['cartesian', 'polar', 'both']
-
 class XmippMovieAlignViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
