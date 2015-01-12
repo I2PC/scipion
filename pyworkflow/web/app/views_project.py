@@ -358,7 +358,6 @@ def protocol_info(request):
 
 def service_projects(request):
     #Example Projects to be showed
-    exProjects = {'TestXmippWorkflow'}
     
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""

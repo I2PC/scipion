@@ -38,7 +38,7 @@ def getPointerHtml(protVar):
         #    raise Exception("protVar.hasValue...and .get() is None")
         #TODO: CHECK THIS LATER to display better when _extended attribute
         return protVar.getObjValue().getNameId(), '%s::%s' % (protVar.getObjValue().getObjId(), protVar._extended.get())
-    return '',''
+    return '','' 
 
         
 def findWizardsWeb(protocol):   
