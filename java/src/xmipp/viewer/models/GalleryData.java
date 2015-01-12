@@ -320,6 +320,7 @@ public class GalleryData {
         readMdParameters();
         ids = md.findObjects();
         loadLabels();
+        
         if (!containsGeometryInfo()) {
             useGeo = false;
             wrap = false;
