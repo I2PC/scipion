@@ -81,7 +81,7 @@ class ScipionImport():
         self._imgPath = findRootFrom(self._sqliteFile, particle.getFileName())
         
         if warnings and self._imgPath is None:
-            self.protocol.warning("Binary data was not found from metadata: %s" % self._mdFile)
+            self.protocol.warning("Binary data was not found from metadata: %s" % self._sqliteFile)
 
         return inputSet
     
