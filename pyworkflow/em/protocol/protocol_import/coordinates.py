@@ -109,13 +109,6 @@ class ProtImportCoordinates(ProtImportFiles):
             self.importFilePath = ''
             return None
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-
-        self._insertFunctionStep('importCoordinatesStep',
-                                 self.inputMicrographs.get().getObjId(),
-                                 self.getPattern())
-
-
     def getImportFrom(self):
         importFrom = self.importFrom.get()
         if importFrom == self.IMPORT_FROM_AUTO:

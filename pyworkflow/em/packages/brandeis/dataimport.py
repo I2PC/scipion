@@ -25,6 +25,8 @@
 # **************************************************************************
 
 from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
+from pyworkflow.utils.path import removeExt
+from pyworkflow.em.data import CTFModel
 
 
 class BrandeisImport():
@@ -36,8 +38,14 @@ class BrandeisImport():
         self.copyOrLink = self.protocol.getCopyOrLink()
 
 
-    def getCTFParams(self, micId):
-        return parseCtffindOutput(micId)
+    def importCTF(self, mic, fileName):
+        defocusU, defocusV, defocusAngle = parseCtffindOutput(fileName)
+        ctf = CTFModel()
+        ctf.copyObjId(mic)
+        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
+        ctf.setMicrograph(mic)
+        ctf.setPsdFile(removeExt(fileName) + "_psd.mrc")
+        return ctf
 
 
     
