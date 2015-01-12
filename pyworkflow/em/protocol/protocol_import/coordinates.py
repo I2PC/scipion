@@ -217,7 +217,7 @@ class ProtImportCoordinates(ProtImportFiles):
                 msg += " Y coordinate was inverted."
 
             summary.append(msg)
-            summary.append("Output set is %s."%self.getObjectTag(self.outputCoordinates))
+            summary.append("Output coordinates: %s."%self.getObjectTag(self.outputCoordinates))
         return summary
 
     def _methods(self):
