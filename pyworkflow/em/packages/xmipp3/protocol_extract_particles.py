@@ -415,13 +415,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         methodsMsgs = []
 
         if self.getStatus() == STATUS_FINISHED:
-            msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(), self.boxSize.get())
+            msg = "A total of %d particles of size %d were extracted %s" \
+                  % (self.getOutput().getSize(), self.boxSize.get(), self.getObjectTag(self.getOutput()))
 
             if self.downsampleType == ORIGINAL:
-                msg += " from original micrographs."
+                msg += " from original micrographs %s." % self.getObjectTag(self.getInputMicrographs())
 
             if self.downsampleType == OTHER:
-                msg += " from original micrographs with downsampling factor of %.2f." % self.downFactor.get()
+                msg += " from original micrographs %s with downsampling factor of %.2f." \
+                       % (self.getObjectTag(self.getInputMicrographs()), self.downFactor.get())
 
             if self.downsampleType == SAME_AS_PICKING:
                 msg += "."

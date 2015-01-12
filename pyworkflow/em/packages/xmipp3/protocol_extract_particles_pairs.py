@@ -335,4 +335,13 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
         self.methodsInfo.set("")
+
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates"""
+        return self.inputCoordinatesTiltedPairs.get().getMicsPair()
     
+    def getOutput(self):
+        if self.outputParticlesTiltPair.hasValue():
+            return self.outputParticlesTiltPair
+        else:
+            return None
