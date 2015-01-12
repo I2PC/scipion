@@ -179,7 +179,9 @@ $(document).ready(function() {
 				$('.messi').remove();
 				$('.messi-modal').remove();
 				
-				if(html=="errorInput"){
+				if(html=="errorInput"){		// Important. Stop the normal POST
+					return false;
+
 					errorPopup("Error", "Input was not selected, please choose one.");
 				} else if (html=="errorEmpty"){
 					errorPopup("Error", "Input particles selected are None");

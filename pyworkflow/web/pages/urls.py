@@ -101,6 +101,11 @@ urlpatterns = patterns('',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     
+    # DESKTOP
+#     url(r'^desktop/', 'app.views_desktop.desktop'),
+    url(r'^download_form/', 'app.views_desktop.download_form'),
+    url(r'^doDownload/', 'app.views_desktop.doDownload'),
+    
 
 #===============================================================================
 # OLD     

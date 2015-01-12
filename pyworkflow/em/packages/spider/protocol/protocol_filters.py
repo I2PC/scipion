@@ -205,12 +205,12 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
     
     def _methods(self):
         methods = []
-        msg = '\nParticles were %s filtered using a %s filter' % (self.getEnumText('filterMode'),self.getEnumText('filterType'))
+        msg = '\nIput particles %s were %s filtered using a %s filter' % (self.getObjectTag(self.inputParticles.get()) ,self.getEnumText('filterMode'),self.getEnumText('filterType'))
 
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
-            msg += ' using a radius of %s px^-1' % self.filterRadius.get()
+            msg += ', using a radius of %s px^-1' % self.filterRadius.get()
         else:
-            msg += ' using a frequency range of %s to %s px^-1' % (self.lowFreq.get(), self.highFreq.get())
+            msg += ', using a frequency range of %s to %s px^-1' % (self.lowFreq.get(), self.highFreq.get())
 
         if self.filterType == FILTER_FERMI: 
             msg += ' and a temperature factor of of %s px^-1' % self.temperature.get()
@@ -219,6 +219,8 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
             msg += ', padding the images by a factor of two.'
         else:
             msg += ' with no padding.'
-            
-        methods.append(msg)            
+
+        methods.append(msg)
+        methods.append('Output particles: %s'%self.getObjectTag(self.outputParticles))
+
         return methods
