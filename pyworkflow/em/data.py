@@ -732,9 +732,9 @@ class SetOfImages(EMSet):
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
-    def __iter__(self, random=False):
+    def __iter__(self, orderBy='id',direction='ASC'):
         """ Redefine iteration to set the acquisition to images. """
-        for img in self._iterItems(random=random):
+        for img in self._iterItems(orderBy=orderBy,direction=direction):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
             # dont want to override with the set acquistion for this case
