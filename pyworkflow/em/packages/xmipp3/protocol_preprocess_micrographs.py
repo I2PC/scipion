@@ -216,8 +216,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             if self.doRemoveBadPix:
                 methods += " removed pixels with standard deviation beyond %d times" % self.mulStddev
             if self.doDownsample:
-                methods += " downsampled with a factor of %0.2f" % self.downFactor
-            methods += ' The resulting micrographs set is %s' % self.getObjectTag(self.outputMicrographs)
+                methods += " downsampled with a factor of %0.2f." % self.downFactor
+            methods += ' Output set is %s.' % self.getObjectTag(self.outputMicrographs)
         return [methods]
     
     #--------------------------- UTILS functions --------------------------------------------
