@@ -116,6 +116,6 @@ class XmippProtCreateMask2D(ProtCreateMask2D, XmippGeometricalMask2D):
         messages+=XmippGeometricalMask2D.methods(self)
 
         if self.hasAttribute('outputMask'):
-            messages.append('We refer to the output mask as %s.' % self.outputMask.getNameId())
+            messages.append('Output mask: %s.' % self.getObjectTag(self.outputMask))
         return messages
     
