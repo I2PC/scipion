@@ -208,7 +208,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         methods = '*Output micrographs* not ready yet.'
         
         if self._hasOutput():
-            methods = "The micrographs set %s have been" % self.getObjectTag(self.inputMicrographs.get())
+            methods = "The micrographs set %s has been" % self.getObjectTag(self.inputMicrographs.get())
             if self.doCrop:
                 methods += " cropped %d pixels" % self.cropPixels
             if self.doLog:
@@ -216,8 +216,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             if self.doRemoveBadPix:
                 methods += " removed pixels with standard deviation beyond %d times" % self.mulStddev
             if self.doDownsample:
-                methods += "downsampled with a factor of %0.2f" % self.downFactor
-            methods += ' The resulting micrographs set was %s' % self.getObjectTag(self.outputMicrographs)
+                methods += " downsampled with a factor of %0.2f" % self.downFactor
+            methods += ' The resulting micrographs set is %s' % self.getObjectTag(self.outputMicrographs)
         return [methods]
     
     #--------------------------- UTILS functions --------------------------------------------

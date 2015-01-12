@@ -23,20 +23,24 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.nma.data import PathData
 """
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
 
-from os.path import basename
+from os.path import basename, join, exists
 import numpy as np
 
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
 from pyworkflow.protocol.params import StringParam, BooleanParam
 from pyworkflow.em.data import SetOfParticles
+from pyworkflow.utils.process import runJob
+from pyworkflow.em.viewer import VmdView
+from pyworkflow.gui.browser import FileBrowserWindow
 
-from protocol_nma_dimred import XmippProtDimredNMA
+from protocol_nma_dimred import XmippProtDimredNMA, DIMRED_MAPPINGS
 from data import Point, Data
 from plotter import XmippNmaPlotter
 from gui import ClusteringWindow, TrajectoriesWindow
@@ -128,12 +132,13 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
     
     def _displayTrajectories(self, paramName):
-        if self.protocol.getMappingFile():
+        if self.protocol.getProjectorFile():
             self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
                                   title='Trajectories Tool',
                                   dim=self.protocol.reducedDim.get(),
                                   data=self.data,
-                                  callback=self._generateAnimations,
+                                  callback=self._generateAnimation,
+                                  loadCallback=self._loadAnimation,
                                   numberOfPoints=10
                                   )
             return [self.trajectoriesWindow]
@@ -172,8 +177,109 @@ class XmippDimredNMAViewer(ProtocolViewer):
         
         project.launchProtocol(newProt)
         
-    def _generateAnimations(self):
-        pass
+    def _loadAnimationData(self, obj):
+        prot = self.protocol
+        animationName = obj.getFileName() # assumes that obj.getFileName is the folder of animation
+        animationPath = prot._getExtraPath(animationName)
+        #animationName = animationPath.split('animation_')[-1]
+        animationRoot = join(animationPath, animationName + '_')
+        
+        animationSuffixes = ['.vmd', '.pdb', 'trajectory.txt']
+        for s in animationSuffixes:
+            f = animationRoot + s
+            if not exists(f):
+                self.errorMessage('Animation file "%s" not found. ' % f)
+                return
+        
+        # Load animation trajectory points
+        trajectoryPoints = np.loadtxt(animationRoot + 'trajectory.txt')
+        data = PathData(dim=trajectoryPoints.shape[1])
+        
+        for i, row in enumerate(trajectoryPoints):
+            data.addPoint(Point(pointId=i+1, data=list(row), weight=1))
+            
+        self.trajectoriesWindow.setPathData(data)
+        self.trajectoriesWindow.setAnimationName(animationName)
+        self.trajectoriesWindow._onUpdateClick()
+        
+        def _showVmd():
+            vmdFn = animationRoot + '.vmd'
+            VmdView(' -e %s' % vmdFn).show()        
+            
+        self.getTkRoot().after(500, _showVmd)
+        
+        
+    def _loadAnimation(self):
+        prot = self.protocol
+        browser = FileBrowserWindow("Select the animation folder (animation_NAME)", 
+                                    self.getWindow(), prot._getExtraPath(), 
+                                    onSelect=self._loadAnimationData)
+        browser.show()
+        
+    def _generateAnimation(self):
+        prot = self.protocol
+        projectorFile = prot.getProjectorFile()
+        animation = self.trajectoriesWindow.getAnimationName()
+        animationPath = prot._getExtraPath('animation_%s' % animation)
+        
+        cleanPath(animationPath)
+        makePath(animationPath)
+        animationRoot = join(animationPath, 'animation_%s_' % animation)
+        
+        if projectorFile:
+            M = np.loadtxt(projectorFile)
+            trajectoryPoints = np.array([p.getData() for p in self.trajectoriesWindow.pathData])
+            deformations = np.dot(trajectoryPoints, np.linalg.pinv(M))
+            np.savetxt(animationRoot + 'trajectory.txt', trajectoryPoints)
+            
+        pdb = prot.getInputPdb()
+        pdbFile = pdb.getFileName()
+        
+        modesFn = prot.inputNMA.get()._getExtraPath('modes.xmd')
+        
+        for i, d in enumerate(deformations):
+            atomsFn = animationRoot + 'atomsDeformed_%02d.pdb' % (i+1)
+            cmd = '-o %s --pdb %s --nma %s --deformations %s' % (atomsFn, pdbFile, modesFn, str(d)[1:-1])
+            runJob(None, 'xmipp_pdb_nma_deform', cmd, env=prot._getEnviron())
+            
+        # Join all deformations in a single pdb
+        # iterating going up and down through all points
+        # 1 2 3 ... n-2 n-1 n n-1 n-2 ... 3, 2
+        n = len(deformations)
+        r1 = range(1, n+1)
+        r2 = range(2, n) # Skip 1 at the end
+        r2.reverse()
+        loop = r1 + r2
+        
+        trajFn = animationRoot + '.pdb'
+        trajFile = open(trajFn, 'w')
+        
+        for i in loop:
+            atomsFn = animationRoot + 'atomsDeformed_%02d.pdb' % i
+            atomsFile = open(atomsFn)
+            for line in atomsFile:
+                trajFile.write(line)
+            trajFile.write('TER\nENDMDL\n')
+            atomsFile.close()
+            
+        trajFile.close()    
+        
+        # Generate the vmd script
+        vmdFn = animationRoot + '.vmd'
+        vmdFile = open(vmdFn, 'w')
+        vmdFile.write("""
+        mol new %s
+        animate style Loop
+        display projection Orthographic
+        mol modcolor 0 0 Index
+        mol modstyle 0 0 Beads 1.000000 8.000000
+        animate speed 0.5
+        animate forward
+        """ % trajFn)
+        vmdFile.close() 
+        
+        VmdView(' -e ' + vmdFn).show()
+            
         
     def loadData(self):
         """ Iterate over the images and the output matrix txt file
