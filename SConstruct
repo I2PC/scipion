@@ -837,11 +837,11 @@ Continue anyway? (y/n)""" % (p, name)
     opts.Save(confPath + "_tmp", env)
     Help(opts.GenerateHelpText(env, sort=cmp))
 #    print opts.keys()
-    scriptPath = env.get('PACKAGE_SCRIPT')
-    altScriptPath = join(packageHome, 'SConscript')
+    scriptPath = env.get('PACKAGE_SCRIPT', '')
+    altScriptPath = join(packageHome, 'SConscript_scipion')
     # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
     env.Replace(packageDeps=lastTarget)
-    if scriptPath and os.path.exists(scriptPath):
+    if scriptPath!='' and os.path.exists(scriptPath):
         print "Reading SCons script file at %s" % scriptPath
         lastTarget = env.SConscript(scriptPath, exports='env')
     elif os.path.exists(altScriptPath):
