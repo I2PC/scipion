@@ -784,6 +784,9 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     if not (default or packageHome):
         return ''
     
+    import pdb
+    pdb.set_trace()
+    
     lastTarget = tLink = None
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
@@ -816,6 +819,8 @@ Continue anyway? (y/n)""" % (p, name)
                    cdir='software/em')
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, 'software/em/%s' % buildDir)
+    if packageHome != 'unset':
+        symLink(env, 'software/em/%s' % name, Dir(packageHome).abspath)
     if buildDir != name:
         # Yep, some packages untar to the same directory as the package
         # name (hello Xmipp), and that is not so great. No link to it.
@@ -829,6 +834,10 @@ Continue anyway? (y/n)""" % (p, name)
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
+    
+    if packageHome == 'unset':
+        Default(lastTarget)
+        return lastTarget
     
     # Load Package vars
     # First we search this in cfg folder and otherwise in package home
