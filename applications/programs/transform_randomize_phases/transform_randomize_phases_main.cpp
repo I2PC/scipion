@@ -48,6 +48,7 @@ public:
 
     void readParams()
     {
+    	randomize_random_generator();
         XmippMetadataProgram::readParams();
         freqMode=getParam("--freq");
         w=getDoubleParam("--freq",1);
