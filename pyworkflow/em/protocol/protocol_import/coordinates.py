@@ -86,7 +86,7 @@ class ProtImportCoordinates(ProtImportFiles):
 
         ci = self.getImportClass()
         self._insertFunctionStep('importCoordinatesStep', importFrom,
-                                     self.importFilePath)
+                                     self.filesPath.get())
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
