@@ -55,7 +55,7 @@ estimate CTF on a set of micrographs using ctffind """
         str="We calculated the CTF of %s using CtfFind [Midell2003]."%self.getObjectTag(self.inputMicrographs.get())
         if self.methodsInfo.hasValue():
             str+=" "+self.methodsInfo.get()
-        str += 'Output CTFs: %s'%(self.getObjectTag(self.outputCTF))
+            str += 'Output CTFs: %s'%(self.getObjectTag(self.outputCTF))
         return [str]
     
     #--------------------------- UTILS functions ---------------------------------------------------
