@@ -86,7 +86,7 @@ class ProtImportCoordinates(ProtImportFiles):
 
         ci = self.getImportClass()
         self._insertFunctionStep('importCoordinatesStep', importFrom,
-                                     self.importFilePath)
+                                     self.filesPath.get())
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
@@ -109,13 +109,6 @@ class ProtImportCoordinates(ProtImportFiles):
             self.importFilePath = ''
             return None
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-
-        self._insertFunctionStep('importCoordinatesStep',
-                                 self.inputMicrographs.get().getObjId(),
-                                 self.getPattern())
-
-
     def getImportFrom(self):
         importFrom = self.importFrom.get()
         if importFrom == self.IMPORT_FROM_AUTO:
@@ -222,7 +215,9 @@ class ProtImportCoordinates(ProtImportFiles):
                 msg += " X coordinate was inverted."
             if self.invertY.get():
                 msg += " Y coordinate was inverted."
+
             summary.append(msg)
+            summary.append("Output coordinates: %s."%self.getObjectTag(self.outputCoordinates))
         return summary
 
     def _methods(self):

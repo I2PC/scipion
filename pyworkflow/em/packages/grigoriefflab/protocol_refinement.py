@@ -30,10 +30,10 @@ import os
 from pyworkflow.utils import *
 from pyworkflow.em import *
 from data import *
-from brandeis import *
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 from constants import *
 from protocol_frealign_base import ProtFrealignBase
-from pyworkflow.em.packages.brandeis.convert import readSetOfParticles
+from pyworkflow.em.packages.grigoriefflab.convert import readSetOfParticles
 
 class ProtFrealign(ProtFrealignBase, ProtRefine3D):
     """ Protocol to refine a 3D map using Frealign. The algorithms implemented

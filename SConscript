@@ -102,6 +102,20 @@ python = env.AddLibrary(
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
+libxml2 = env.AddLibrary(
+    'libxml2',
+    tar='libxml2-2.9.2.tgz',
+    targets=['lib/libxml2.so'],
+    deps=[python],
+    default=False)
+
+libxslt = env.AddLibrary(
+    'libxslt',
+    tar='libxslt-1.1.28.tgz',
+    targets=['lib/libxslt.so'],
+    deps=[libxml2],
+    default=False)
+
 pcre = env.AddLibrary(
     'pcre',
     tar='pcre-8.36.tgz',
@@ -260,6 +274,12 @@ tornado = addModule(
     tar='tornado-4.0.2.tar.gz',
     default=False)
 
+lxml = addModule(
+    'lxml',
+    tar='lxml-3.4.1.tgz',
+    deps=[libxml2], #, libxslt],
+    default=False)
+
 addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
@@ -315,7 +335,7 @@ env.AddPackage('pytom',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
                               % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
-               deps=[boost_headers_only, fftw, swig],
+               deps=[boost_headers_only, fftw, swig, lxml],
                default=False)
 
 env.AddPackage('relion',

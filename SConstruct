@@ -275,6 +275,12 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         pathAppend('LD_LIBRARY_PATH', Dir('#software/lib').abspath)
         pathAppend('PATH', Dir('#software/bin').abspath)
 
+    # We would like to add CFLAGS and LDFLAGS so the libraries find
+    # any dependencies in the right place.
+    # flags += ['CFLAGS=-I%s' % abspath('software/include'),
+    #           'LDFLAGS=-L%s' %  abspath('software/lib')]
+    # but then libraries like zlib will not compile.
+
     # Install everything in the appropriate place.
     for flag in flags:
         flag += ['--prefix=%s' % Dir('#software').abspath,
@@ -652,6 +658,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
+               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
                                                    'PATH': os.environ['PATH'],

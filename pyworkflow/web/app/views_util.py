@@ -124,6 +124,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
           'upload_utils': 'templates_libs/upload_utils.js',
+          'download_utils': 'templates_libs/download_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'showj_libs/colReorder.js',
@@ -256,7 +257,7 @@ def browse_objects(request):
                        "info": str(obj),
                        "objects": []}
             
-            for child in obj._iterItems():
+            for child in obj.iterItems():
                 obj_context = {"nameId":child.getNameId(), 
                                "objId": child.getObjId(),
                                "info": str(child)} 

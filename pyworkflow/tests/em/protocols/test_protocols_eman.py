@@ -42,6 +42,8 @@ class TestEmanBase(BaseTest):
         cls.dataset = DataSet.getDataSet(projectData)
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
+        cls.particlesFn = cls.dataset.getFile('particles')
+        cls.vol = cls.dataset.getFile('volumes')
     
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
@@ -76,6 +78,14 @@ class TestEmanBase(BaseTest):
         if cls.protImport.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
         return cls.protImport
+
+    @classmethod
+    def runImportVolumes(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        protImport = cls.newProtocol(ProtImportVolumes, 
+                                     filesPath=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(protImport)
+        return protImport
 
 #     @classmethod
 #     def runClassify(cls, particles):
@@ -158,6 +168,23 @@ class TestEmanReconstruct(TestEmanBase):
         protReconstruct.inputParticles.set(prot1.outputParticles)
         self.launchProtocol(protReconstruct)
         self.assertIsNotNone(protReconstruct.outputVolume, "There was a problem with eman reconstruction protocol")
+
+
+class TestEmanRefine(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestEmanBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
+        
+    def test_RefineEman(self):
+        print "Run Eman Refine Easy"
+        protRefine = self.newProtocol(EmanProtRefine, symmetry="d6")
+        protRefine.inputParticles.set(self.protImport.outputParticles)
+        protRefine.input3DReference.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protRefine)
+        self.assertIsNotNone(protRefine.outputVolume, "There was a problem with eman refine protocol")
 
 
 if __name__ == "__main__":

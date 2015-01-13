@@ -74,7 +74,7 @@ class ProtImportCTF(ProtImportFiles, ProtCTFMicrographs):
             ctfId = int(match.group(1))
             ctfDict[ctfId] = fn
             
-        from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
+        from pyworkflow.em.packages.grigoriefflab.convert import parseCtffindOutput
 
         for mic in inputMics:
             if mic.getObjId() in ctfDict:

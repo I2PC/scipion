@@ -1152,7 +1152,7 @@ class Protocol(Step):
         return "[[%s]]" % fn
     
     def getObjectTag(self, obj):
-        return "[[%s]]" % obj.getNameId()
+        return "[[%s][%s]]" % (obj.getClassName(), obj.getNameId())
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

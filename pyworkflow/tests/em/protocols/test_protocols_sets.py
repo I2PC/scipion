@@ -21,15 +21,13 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************/
 
+from itertools import izip
+
 import pyworkflow.tests as tests
 from pyworkflow.em.data import Particle, SetOfParticles
 from pyworkflow.em.protocol import ProtSplitSet
-from pyworkflow.tests import envVarOn
-from pyworkflow.protocol import MODE_RESTART
 from pyworkflow.em.protocol import ProtImportParticles
-from os import remove
-from os.path import exists
-import xmipp
+
 
 
 class TestSetsBase(tests.BaseTest):
@@ -44,7 +42,7 @@ class TestSetsBase(tests.BaseTest):
         #create set of particles
 
         inFileNameMetadata = self.proj.getTmpPath('particlesOrderBy.sqlite')
-        inFileNameData = '/tmp/images.stk'
+        inFileNameData = self.proj.getTmpPath('particlesOrderBy.stk')
 
         imgSet = SetOfParticles(filename=inFileNameMetadata)
         imgSet.setSamplingRate(1.5)
@@ -56,10 +54,9 @@ class TestSetsBase(tests.BaseTest):
             img.setClassId(i%5)
             imgSet.append(img)
             img.cleanObjId()
+
         imgSet.write()
-        imgSet.close()
         #now import the dataset
-        #this newProtocols should be a class method?
         prot1 = self.newProtocol(ProtImportParticles,
                                  importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
                                  sqliteFile=inFileNameMetadata,
@@ -72,14 +69,17 @@ class TestSetsBase(tests.BaseTest):
         if prot1.outputParticles is None:
             raise Exception('Import of images: %s, failed. outputParticles is None.' % inFileNameMetadata)
         
-        #save it
         protSplitSet   = self.newProtocol(ProtSplitSet,
                                           inputSet=prot1.outputParticles,
                                           numberOfSets=2,
                                           randomize=True)
         self.launchProtocol(protSplitSet)
-        protSplitSet.outputParticles01.printAll()
-        #assert
-        #delete file
-        ##remove(inFileNameMetadata)
-        ##remove(inFileNameData)
+
+        inputSets = [protSplitSet.outputParticles01,protSplitSet.outputParticles02]
+        outputSet = SetOfParticles(filename=self.proj.getTmpPath('gold.sqlite'))
+        for itemSet in inputSets:
+            for obj in itemSet:
+                outputSet.append(obj)
+
+        for item1, item2 in izip(imgSet, outputSet):
+            self.assertTrue(item1.equalAttributes(item2))

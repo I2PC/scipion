@@ -32,7 +32,7 @@ from pyworkflow.em.wizard import EmWizard
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 
-from pyworkflow.em.packages.brandeis.wizard import * 
+from pyworkflow.em.packages.grigoriefflab.wizard import * 
 from pyworkflow.web.app.em_wizard import *
 from tools import *
 from pyworkflow.web.app.views_base import base_wiz

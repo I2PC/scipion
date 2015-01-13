@@ -291,6 +291,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         str+="."
         if self.methodsInfo.hasValue():
             str+=" "+self.methodsInfo.get()
+        str += '\nOutput set is %s.'%self.getObjectTag(self.outputCTF)
         return [str]
         
     def _citations(self):

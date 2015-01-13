@@ -162,7 +162,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         self._defineOutput('Representatives', output)
         selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(), selectmsg, count, output.__class__.__name__)
+        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.__class__.__name__, inputClasses.getSize(), selectmsg, output.__class__.__name__)
         self.summaryVar.set(msg)
         return output
 
@@ -188,7 +188,7 @@ class ProtUserSubSet(BatchProtocol):
         count = 0
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'were selected %s items' if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, count, output.__class__.__name__, output.getSize())
+        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.__class__.__name__, inputClasses.getSize(),  selectmsg, output.__class__.__name__, output.getSize())
         self.summaryVar.set(msg)
         return output
  

@@ -101,7 +101,7 @@ class ProtImportVolumes(ProtImportImages):
         if self.hasAttribute('outputVolume'):
             return "Volume %s"% self.getObjectTag(self.outputVolume)
         else:
-            return "*%d* volumes" % self.getObjectTag(self.outputVolumes)
+            return "Volumes %s" % self.getObjectTag(self.outputVolumes)
         
     def _summary(self):
         summary = []

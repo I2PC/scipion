@@ -46,7 +46,7 @@ from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
                             
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
-    _label = 'extract particles pairs'
+    _label = 'extract particle pairs'
     
     def __init__(self, **args):
         XmippProtExtractParticles.__init__(self, **args)
@@ -335,4 +335,13 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
         self.methodsInfo.set("")
+
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates"""
+        return self.inputCoordinatesTiltedPairs.get().getMicsPair()
     
+    def getOutput(self):
+        if self.outputParticlesTiltPair.hasValue():
+            return self.outputParticlesTiltPair
+        else:
+            return None
