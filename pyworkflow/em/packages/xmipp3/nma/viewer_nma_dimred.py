@@ -32,7 +32,7 @@ visualization program.
 from os.path import basename, join, exists
 import numpy as np
 
-from pyworkflow.utils.path import cleanPath, makePath
+from pyworkflow.utils.path import cleanPath, makePath, cleanPattern
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO)
 from pyworkflow.protocol.params import StringParam, BooleanParam
 from pyworkflow.em.data import SetOfParticles
@@ -132,20 +132,15 @@ class XmippDimredNMAViewer(ProtocolViewer):
     
     
     def _displayTrajectories(self, paramName):
-        if self.protocol.getProjectorFile():
-            self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
-                                  title='Trajectories Tool',
-                                  dim=self.protocol.reducedDim.get(),
-                                  data=self.data,
-                                  callback=self._generateAnimation,
-                                  loadCallback=self._loadAnimation,
-                                  numberOfPoints=10
-                                  )
-            return [self.trajectoriesWindow]
-        else:
-            methodName = self.protocol.getMethodName()
-            return [self.infoMessage("The method *%s* does not allow to generate trajectories." % methodName, 
-                                     title="Info message")]
+        self.trajectoriesWindow = self.tkWindow(TrajectoriesWindow, 
+                              title='Trajectories Tool',
+                              dim=self.protocol.reducedDim.get(),
+                              data=self.data,
+                              callback=self._generateAnimation,
+                              loadCallback=self._loadAnimation,
+                              numberOfPoints=10
+                              )
+        return [self.trajectoriesWindow]
         
     def _createCluster(self):
         """ Create the cluster with the selected particles
@@ -182,7 +177,7 @@ class XmippDimredNMAViewer(ProtocolViewer):
         animationName = obj.getFileName() # assumes that obj.getFileName is the folder of animation
         animationPath = prot._getExtraPath(animationName)
         #animationName = animationPath.split('animation_')[-1]
-        animationRoot = join(animationPath, animationName + '_')
+        animationRoot = join(animationPath, animationName)
         
         animationSuffixes = ['.vmd', '.pdb', 'trajectory.txt']
         for s in animationSuffixes:
@@ -219,18 +214,25 @@ class XmippDimredNMAViewer(ProtocolViewer):
     def _generateAnimation(self):
         prot = self.protocol
         projectorFile = prot.getProjectorFile()
+        
         animation = self.trajectoriesWindow.getAnimationName()
         animationPath = prot._getExtraPath('animation_%s' % animation)
         
         cleanPath(animationPath)
         makePath(animationPath)
-        animationRoot = join(animationPath, 'animation_%s_' % animation)
+        animationRoot = join(animationPath, 'animation_%s' % animation)
+        
+        trajectoryPoints = np.array([p.getData() for p in self.trajectoriesWindow.pathData])
         
         if projectorFile:
             M = np.loadtxt(projectorFile)
-            trajectoryPoints = np.array([p.getData() for p in self.trajectoriesWindow.pathData])
             deformations = np.dot(trajectoryPoints, np.linalg.pinv(M))
             np.savetxt(animationRoot + 'trajectory.txt', trajectoryPoints)
+        else:
+            Y = np.loadtxt(prot.getOutputMatrixFile())
+            X = np.loadtxt(prot.getDeformationFile())
+            # Find closest points in deformations
+            deformations = [X[np.argmin(np.sum((Y - p)**2, axis=1))] for p in trajectoryPoints]
             
         pdb = prot.getInputPdb()
         pdbFile = pdb.getFileName()
@@ -261,8 +263,10 @@ class XmippDimredNMAViewer(ProtocolViewer):
                 trajFile.write(line)
             trajFile.write('TER\nENDMDL\n')
             atomsFile.close()
-            
-        trajFile.close()    
+
+        trajFile.close()
+        # Delete temporary atom files
+        cleanPattern(animationRoot + 'atomsDeformed_??.pdb')    
         
         # Generate the vmd script
         vmdFn = animationRoot + '.vmd'

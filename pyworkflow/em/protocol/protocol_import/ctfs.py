@@ -28,7 +28,8 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 """
 
 from pyworkflow.protocol.params import PointerParam
-from pyworkflow.em.data import CTFModel
+from pyworkflow.em.data import SetOfMicrographs
+from pyworkflow.utils.path import removeBaseExt
 
 from base import ProtImportFiles
 
@@ -44,7 +45,6 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_AUTO = 0
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_BRANDEIS = 2
-    IMPORT_FROM_EMX = 3
 
     #--------------------------- DEFINE param functions --------------------------------------------
 
@@ -60,7 +60,7 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp','brandeis', 'emx']
+        return ['auto', 'xmipp','brandeis']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -74,30 +74,29 @@ class ProtImportCTF(ProtImportFiles):
 
     #--------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
-        ci = self.getImportClass()
-        self._insertFunctionStep('importCTFStep', self.getPattern())
+        importFrom = self.importFrom.get()
+        self._insertFunctionStep('importCTFStep', importFrom)
 
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
+        filesPath = self.filesPath.get()
+        importFrom = self.importFrom.get()
+        if importFrom == self.IMPORT_FROM_AUTO:
+            importFrom = self.getFormat()
 
-        if self.importFrom == self.IMPORT_FROM_EMX:
-            from pyworkflow.em.packages.emxlib import EmxImport
-            self.importFilePath = self.filesPath.get().strip()
-            return EmxImport(self, self.importFilePath)
-        elif self.importFrom == self.IMPORT_FROM_XMIPP3:
+        if importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
-            self.importFilePath = self.mdFile.get('').strip()
-            return XmippImport(self, self.filesPath.get())
-        elif self.importFrom == self.IMPORT_FROM_BRANDEIS:
+            return XmippImport(self, filesPath)
+        elif importFrom == self.IMPORT_FROM_BRANDEIS:
             from pyworkflow.em.packages.brandeis.dataimport import BrandeisImport
             return BrandeisImport(self)
         else:
-            self.importFilePath = ''
             return None
         
     #--------------------------- STEPS functions ---------------------------------------------------
-    def importCTFStep(self, pattern):
+    def importCTFStep(self, importFrom):
+
         """ Copy ctfs matching the filename pattern.
         """
         ci = self.getImportClass()
@@ -106,41 +105,32 @@ class ProtImportCTF(ProtImportFiles):
         ctfSet = self._createSetOfCTF()
         ctfSet.setMicrographs(inputMics)
 
-        ctfFiles = self.getMatchFiles(self.getPattern())
+        outputMics = self._createSetOfMicrographs()
+        SetOfMicrographs.copyInfo(outputMics, inputMics)
 
-        ctfDict = {}
+        createOutputMics = False
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             for mic in inputMics:
-                if removeBaseExt(mic.getFileName()) == removeBaseExt(fileName):
-                    ci.importCoordinates(mic, fileName, coordSet)
+                #TODO: Define how to match mics and ctf files (temporary solution is to expect micname inside ctf file name)
+                if removeBaseExt(mic.getFileName()) in removeBaseExt(fileName):
+                    ctf = ci.importCTF(mic, fileName)
+                    ctfSet.append(ctf)
+                    outputMics.append(mic)
 
-        for fn in ctfFiles:
-            # Try to match the micrograph id from filename
-            # this is set by the user by using #### format in the pattern
-            match = self._idRegex.match(fn)
-            if match is None:
-                raise Exception("File '%s' doesn't match the pattern '%s'" % (fn, self.pattern.get()))
-            ctfId = int(match.group(1))
-            ctfDict[ctfId] = fn
-
-        for mic in inputMics:
-            if mic.getObjId() in ctfDict:
-                defocusU, defocusV, defocusAngle = ci.getCTFParams(ctfDict[mic.getObjId()])
-
-            else:
-                self.warning("CTF for micrograph id %d was not found." % mic.getObjId())
-                defocusU, defocusV, defocusAngle = -999, -1, -999
-
-            # save the values of defocus for each micrograph in a list
-            ctf = CTFModel()
-            ctf.copyObjId(mic)
-            ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
-            ctf.setMicrograph(mic)
-            ctfSet.append(ctf)
+                #TODO: Define what to do if ctf is not found for a micrograph (the below does not work)
+                else:
+                    # If not CTF is found for a micrograph remove it from output mics
+                    self.warning("CTF for micrograph id %d was not found. Removed from set of micrographs." % mic.getObjId())
+                    createOutputMics = True
 
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineCtfRelation(inputMics, ctfSet)
+        # If some of the micrographs had not ctf a subset of micrographs have been produced
+        if createOutputMics:
+            self._defineOutputs(outputMicrographs=outputMics)
+            self._defineCtfRelation(outputMics, ctfSet)
+        else:
+            self._defineCtfRelation(inputMics, ctfSet)
 
     
     #--------------------------- INFO functions ----------------------------------------------------
@@ -164,6 +154,13 @@ class ProtImportCTF(ProtImportFiles):
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def getFormat(self):
+        for i, (fileName, fileId) in enumerate(self.iterFiles()):
+            if fileName.endswith('.out'):
+                return self.IMPORT_FROM_BRANDEIS
+            if fileName.endswith('.ctfparam'):
+                return self.IMPORT_FROM_XMIPP3
+        return -1
 
 
 

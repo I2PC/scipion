@@ -129,7 +129,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         method = self.dimredMethod.get()
         extraParams = self.extraParams.get('')
         
-        deformationsFile = self._getExtraPath('deformations.txt')
+        deformationsFile = self.getDeformationFile()
         
         self._insertFunctionStep('convertInputStep', 
                                  deformationsFile, inputSet.getObjId())
@@ -201,6 +201,9 @@ class XmippProtDimredNMA(ProtAnalysis3D):
     
     def getOutputMatrixFile(self):
         return self._getExtraPath('output_matrix.txt')
+    
+    def getDeformationFile(self):
+        return self._getExtraPath('deformations.txt')
     
     def getProjectorFile(self):
         return self.mappingFile.get()

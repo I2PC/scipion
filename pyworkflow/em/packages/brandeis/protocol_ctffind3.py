@@ -52,15 +52,15 @@ estimate CTF on a set of micrographs using ctffind """
         return ['Mindell2003']
 
     def _methods(self):
-        str="We calculated the CTF using CtfFind [Midell2003]."
+        str="We calculated the CTF of %s using CtfFind [Midell2003]."%self.getObjectTag(self.inputMicrographs.get())
         if self.methodsInfo.hasValue():
             str+=" "+self.methodsInfo.get()
+        str += 'Output CTFs: %s'%(self.getObjectTag(self.outputCTF))
         return [str]
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getPsdPath(self, micDir):
         return join(micDir, 'ctffind_psd.mrc')
-    
     def _getCtfOutPath(self, micDir):
         return join(micDir, 'ctffind.out')
     
