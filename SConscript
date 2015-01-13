@@ -105,14 +105,14 @@ python = env.AddLibrary(
 pcre = env.AddLibrary(
     'pcre',
     tar='pcre-8.36.tgz',
-    targets=['bin/pcretest'],
+    targets=[File('#software/bin/pcretest').abspath],
     default=False)
 
 swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
-    targets=['bin/swig'],
-    makeTargets=['Source/Swig/tree.o'],
+    targets=[File('#software/bin/swig').abspath],
+    makeTargets='swig install',
     deps=[pcre],
     default=False)
 # We have to add the "makeTargets" part because swig needs to call

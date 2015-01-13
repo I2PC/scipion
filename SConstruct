@@ -248,12 +248,14 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     buildDir = buildDir or tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0]
     configDir = configDir or buildDir
     targets = targets or [File('#software/lib/lib%s.so' % name).abspath]
+    makeTargets = makeTargets or 'all install'
     if isinstance(buildDir, basestring):
         buildDir = [buildDir]
         configDir = [configDir]
         flags = [flags]
         autoConfigTargets = [autoConfigTargets]
         targets = [targets]
+        makeTargets = [makeTargets]
     if len(buildDir) != len(configDir) != len(flags):
         print >> sys.stderr, 'ERROR: buildDir, configDir and flags length must be equal. Exiting...'
         Exit(1)
@@ -301,20 +303,27 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     toReturn = []
     for x, folder in enumerate(buildDir):
         tConfig.append(*env.AutoConfig(
+            target=Dir('#software/tmp/%s' % configDir[x]),
             source=Dir('#software/tmp/%s' % configDir[x]),
             AutoConfigTarget=autoConfigTargets[x],
             AutoConfigSource='configure',
             AutoConfigParams=flags[x],
             AutoConfigStdOut=File('#software/log/%s_config_%s.log' % (name, x)).abspath))
-        SideEffect('dummy', tConfig[x])  # so it works fine in parallel builds
+        SideEffect('dummy', Dir('#software/tmp/%s' % configDir[x]))
         env.Depends(tConfig[x], tUntar)
+
+        lastTarget = tConfig[x]
+
         make = env.Make(
-            source=tConfig[x],
+            source=lastTarget,
             target=targets[x],
             MakePath=Dir('#software/tmp/%s' % buildDir[x]).abspath,
             MakeEnv=os.environ,
-            MakeTargets='all install',
+            MakeTargets=makeTargets[x],
             MakeStdOut=File('#software/log/%s_make_%s.log' % (name, x)).abspath)
+        SideEffect('dummy', make)
+        lastTarget = make
+        
         if not isinstance(make, basestring):
             tMake+=make
         else:
