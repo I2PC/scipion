@@ -187,8 +187,11 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
         pathAppend('PATH', abspath('software/bin'))
 
-    flags += ['CFLAGS=-I%s' % abspath('software/include'),
-              'LDFLAGS=-L%s' %  abspath('software/lib')]
+    # We would like to add CFLAGS and LDFLAGS so the libraries find
+    # any dependencies in the right place.
+    # flags += ['CFLAGS=-I%s' % abspath('software/include'),
+    #           'LDFLAGS=-L%s' %  abspath('software/lib')]
+    # but then libraries like zlib will not compile.
 
     # Install everything in the appropriate place.
     flags += ['--prefix=%s' % abspath('software'),
