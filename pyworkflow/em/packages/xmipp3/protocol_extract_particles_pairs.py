@@ -46,7 +46,7 @@ from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
                             
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
-    _label = 'extract particles pairs'
+    _label = 'extract particle pairs'
     
     def __init__(self, **args):
         XmippProtExtractParticles.__init__(self, **args)
