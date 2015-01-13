@@ -612,8 +612,13 @@ class ProtocolsView(tk.Frame):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
         for protId in list(self._selection):
-            if not self.project.getProtocol(protId):
+            try:
+                self.project.getProtocol(protId)
+            except Exception, ex:
                 self._selection.remove(protId)
+
+
+
         
     def refreshRuns(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed runs.
