@@ -3,7 +3,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING 
-from pyworkflow.em.packages.brandeis import *
+from pyworkflow.em.packages.grigoriefflab import *
 from pyworkflow.em.packages.eman2 import *
 from pyworkflow.em.packages.relion import *
 from test_workflow import TestWorkflow

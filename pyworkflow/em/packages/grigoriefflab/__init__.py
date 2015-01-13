@@ -23,31 +23,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This sub-package contains data and protocol classes
+wrapping Grigrorieff Lab programs at Brandeis
+"""
+from bibtex import _bibtex # Load bibtex dict with references
 
-from pyworkflow.em.packages.brandeis.convert import parseCtffindOutput
-from pyworkflow.utils.path import removeExt
-from pyworkflow.em.data import CTFModel
+_logo = "brandeis_logo.png"
 
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 
-class BrandeisImport():
-    """ Class used to import different kind of objects
-    from Brandeis projects into Scipion.
-    """
-    def __init__(self, protocol):
-        self.protocol = protocol
-        self.copyOrLink = self.protocol.getCopyOrLink()
+from viewer import *
+from protocol_ctffind3 import ProtCTFFind, ProtRecalculateCTFFind
+from protocol_refinement import ProtFrealign
+from protocol_ml_classification import ProtFrealignClassify
 
-
-    def importCTF(self, mic, fileName):
-        defocusU, defocusV, defocusAngle = parseCtffindOutput(fileName)
-        ctf = CTFModel()
-        ctf.copyObjId(mic)
-        ctf.setStandardDefocus(defocusU, defocusV, defocusAngle)
-        ctf.setMicrograph(mic)
-        ctf.setPsdFile(removeExt(fileName) + "_psd.mrc")
-        return ctf
-
-
-    
-
-                
+# Wizards
+from wizard import *

@@ -89,7 +89,7 @@ class ProtImportCTF(ProtImportFiles):
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_BRANDEIS:
-            from pyworkflow.em.packages.brandeis.dataimport import BrandeisImport
+            from pyworkflow.em.packages.grigoriefflab.dataimport import BrandeisImport
             return BrandeisImport(self)
         else:
             return None

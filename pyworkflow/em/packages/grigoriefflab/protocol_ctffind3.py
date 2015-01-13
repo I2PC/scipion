@@ -31,7 +31,7 @@ This module contains the protocol for CTF estimation with ctffind3
 
 from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath, getExt, cleanPattern
 from pyworkflow.em import *
-from brandeis import *
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 from convert import parseCtffindOutput
 # from pyworkflow.utils.which import which
 
