@@ -187,6 +187,9 @@ def addLibrary(env, name, tar=None, buildDir=None, targets=None,
         pathAppend('LD_LIBRARY_PATH', abspath('software/lib'))
         pathAppend('PATH', abspath('software/bin'))
 
+    flags += ['CFLAGS=-I%s' % abspath('software/include'),
+              'LDFLAGS=-L%s' %  abspath('software/lib')]
+
     # Install everything in the appropriate place.
     flags += ['--prefix=%s' % abspath('software'),
               '--libdir=%s' % abspath('software/lib')]  # not lib64
@@ -296,6 +299,7 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
+               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': abspath('software'),
                                                    'PATH': os.environ['PATH'],
