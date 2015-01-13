@@ -152,7 +152,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
 
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
-
+        msg = ""
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         if existsConfig:
