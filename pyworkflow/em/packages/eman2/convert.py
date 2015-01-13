@@ -42,7 +42,7 @@ import pyworkflow as pw
 import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
-from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt
+from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, dirname
 
 
 # LABEL_TYPES = { 
@@ -165,26 +165,30 @@ def writeSetOfParticles(partSet, filename, **kwargs):
     This function should be called from a current dir where
     the images in the set are available.
     """
+    from math import fabs
+    isMrcs, fnDict = convertBinaryFiles(partSet, dirname(filename))
+    
     proc = createEmanProcess(args='write %s' % filename)
     
+    partSet.getFirstItem().getFileName()
     for part in partSet:
         objDict = part.getObjDict()
         alignType = kwargs.get('alignType') 
     
         if alignType != em.ALIGN_NONE:
-
-            #tranformation matrix is procesed here because
-            #it uses routines available thrrough scipion python
-            matrix = part.getTransform().getMatrix()
-            shifts, angles = geometryFromMatrix(matrix, True)
+            shift, angles = alignmentToRow(part.getTransform(), alignType)
+            
             #json cannot encode arrays so I convert them to lists
-            objDict['_angles']=angles.tolist()
-            objDict['_shifts']=shifts.tolist()
+            #json fail if has -0 as value
+            objDict['_shifts'] = shift.tolist()
+            objDict['_angles'] = angles.tolist()
             
 #         fn = objDict['_filename']
         # check if the is a file mapping
 #         objDict['_filename'] = filesDict.get(fn, fn)
         objDict['_itemId'] = part.getObjId()
+        if isMrcs:
+            objDict['_filename'] = fnDict[objDict['_filename']]
         # Write the e2converter.py process from where to read the image
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
@@ -225,6 +229,22 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
         M[:3, 3] = shifts[:3]
 
     return M
+
+
+def alignmentToRow(alignment, alignType):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+                          -> for xmipp implies alignment
+    """
+#     is2D = alignType == em.ALIGN_2D
+#     inverseTransform = alignType == em.ALIGN_PROJ
+    
+    #tranformation matrix is procesed here because
+    #it uses routines available thrrough scipion python
+    matrix = alignment.getMatrix()
+    return geometryFromMatrix(matrix, True)
 
 
 def rowToAlignment(alignmentList, alignType):
@@ -280,11 +300,11 @@ def convertBinaryFiles(imgSet, outputDir):
     # This approach can be extended when
     # converting from a binary file format that
     # is not read from Relion
-    def linkMrcsToMrc(fn):
+    def linkMrcToMrcs(fn):
         """ Just create a link named .mrc to Eman understand 
         that it is a mrc binary stack.
         """
-        newFn = join(outputDir, replaceBaseExt(fn, 'mrc'))
+        newFn = join(outputDir, replaceBaseExt(fn, 'mrcs'))
         createLink(fn, newFn)
         return newFn
         
@@ -297,17 +317,19 @@ def convertBinaryFiles(imgSet, outputDir):
         return newFn
         
     ext = imgSet.getFirstItem().getFileName()
-    if ext.endswith('.mrcs'):
-        mapFunc = linkMrcsToMrc
-    elif ext.endswith('.hdf'): # assume eman .hdf format
-        mapFunc = convertStack
+    if ext.endswith('.mrc'):
+        mapFunc = linkMrcToMrcs
+        ismrcs = True
+#     elif ext.endswith('.hdf'): # assume eman .hdf format
+#         mapFunc = convertStack
     else:
         mapFunc = None
+        ismrcs = False
         
     if mapFunc is not None:
         for fn in imgSet.getFiles():
             filesDict[fn] = mapFunc(fn) # convert and map new filename
 
-    return filesDict
+    return ismrcs, filesDict
 
 
