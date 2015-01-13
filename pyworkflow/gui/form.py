@@ -913,9 +913,10 @@ class ParamWidget():
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
         tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp)
-        if dlg.value is not None:
-            self.set(dlg.value)
+        dlg = ListDialog(self.parent, "Select object", tp, 
+                         selectmoded=self._selectmode)
+        if dlg.values is not None:
+            self.set(dlg.values[0])
             
     def _removeRelation(self, e=None):
         self.var.remove()
