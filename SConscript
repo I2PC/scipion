@@ -255,6 +255,11 @@ tornado = addModule(
     tar='tornado-4.0.2.tar.gz',
     default=False)
 
+lxml = addModule(
+    'lxml',
+    tar='lxml-3.4.1.tgz',
+    default=False)
+
 addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
@@ -299,7 +304,7 @@ env.AddPackage('pytom',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
                               % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
-               deps=[boost_headers_only, fftw, swig],
+               deps=[boost_headers_only, fftw, swig, lxml],
                default=False)
 
 env.AddPackage('relion',
