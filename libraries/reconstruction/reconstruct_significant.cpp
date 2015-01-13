@@ -444,7 +444,8 @@ void ProgReconstructSignificant::run()
 
 				// Remove zero-weight images
 				mdAux.clear();
-				mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
+				if (mdReconstruction.size()>0)
+					mdAux.importObjects(mdReconstruction,MDValueGT(MDL_WEIGHT,0.0));
 
 				String fnAngles=formatString("%s/angles_iter%03d_%02d.xmd",fnDir.c_str(),iter,nVolume);
 				if (mdAux.size()>0)
