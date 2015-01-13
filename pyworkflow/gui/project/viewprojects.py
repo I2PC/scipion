@@ -77,7 +77,7 @@ class ProjectsView(tk.Frame):
             r += 1
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
-        text.setReadOnly(False)
+        text.setReadOnly(True)
       
     def createProjectLabel(self, parent, projInfo, color):
         frame = tk.Frame(parent, bg=color)
