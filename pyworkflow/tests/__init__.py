@@ -68,6 +68,7 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'volumes': 'volumes/*.mrc',
                'mask2d': 'masks/mask2d.xmp',
                'mask3d': 'masks/mask.vol',
+               'ctfsDir': 'ctfs'
                })
 
 
@@ -204,6 +205,7 @@ DataSet(name='movies',  folder='movies',
 DataSet(name='grigorieff',  folder='grigorieff',
         files={'particles_rot_shift':'particles.sqlite',
                'ref_volume':'ref_volume.vol',
+               'ctfsDir': 'ctfs'
                 })
                
 DataSet(name='initial_volume',  folder='initial_volume',
