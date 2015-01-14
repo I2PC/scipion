@@ -936,7 +936,7 @@ class ProtocolsView(tk.Frame):
         return None
             
     def _fillSummary(self):
-        self.methodText.setReadOnly(False)
+        self.summaryText.setReadOnly(False)
         self.summaryText.clear()
         self.infoTree.clear()
         n = len(self._selection)
@@ -961,7 +961,7 @@ class ProtocolsView(tk.Frame):
                 for line in prot.summary():
                     self.summaryText.addLine(line)
                 self.summaryText.addLine('')
-        self.methodText.setReadOnly(True)
+        self.summaryText.setReadOnly(True)
         
     def _fillMethod(self):
         self.methodText.setReadOnly(False)

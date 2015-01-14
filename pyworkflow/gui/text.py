@@ -383,24 +383,23 @@ class OutputText(Text):
             self.insert(tk.END, txt)
 
     def readFile(self, clear=False):
+        self.setReadOnly(False)
+        
         if clear:
             self.offset = 0
             self.lineNo = 0
             self.clear()
 
-        self.config(state=tk.NORMAL)
-        #self.clear()
         if os.path.exists(self.filename):
-            self.offset, self.lineNo = \
-                renderTextFile(self.filename, self._addChunk,
-                               offset=self.offset, lineNo=self.lineNo)
+            self.offset, self.lineNo = renderTextFile(self.filename, 
+                                                      self._addChunk,
+                                                      offset=self.offset, 
+                                                      lineNo=self.lineNo)
         else:
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
-        self.config(state=tk.DISABLED)
-        #if self.isAtEnd():
+        
+        self.setReadOnly(True)
         self.goEnd()
-        #if goEnd:
-        #    self.goEnd()
       
     def doRefresh(self):
         # First stop pending refreshes
