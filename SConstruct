@@ -784,9 +784,6 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     if not (default or packageHome):
         return ''
     
-    import pdb
-    pdb.set_trace()
-    
     lastTarget = tLink = None
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
