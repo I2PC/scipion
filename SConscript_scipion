@@ -35,7 +35,9 @@ from os.path import join, exists
 import os
 import sys
 
-packageDeps = env.get('packageDeps')
+packageDeps = env.get('packageDeps', '')
+if isinstance(packageDeps, basestring):
+    packageDeps = [packageDeps]
 
 # Read some flags
 CYGWIN = env['PLATFORM'] == 'cygwin'

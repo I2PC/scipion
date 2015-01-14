@@ -34,7 +34,6 @@ from glob import glob
 import os
 from os.path import join, exists
 from types import *
-import os
 import sys
 
 # Read some flags
