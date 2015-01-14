@@ -33,12 +33,12 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em import CoordinatesTiltPair, PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
+from pyworkflow.em import PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
 from pyworkflow.protocol.params import Positive
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import removeBaseExt, exists
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.object import Boolean
+
 from itertools import izip
 import xmipp
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
