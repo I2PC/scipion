@@ -117,12 +117,12 @@ class ProtImportCTF(ProtImportFiles):
                     ctf = ci.importCTF(mic, fileName)
                     ctfSet.append(ctf)
                     outputMics.append(mic)
-
+                    break
                 #TODO: Define what to do if ctf is not found for a micrograph (the below does not work)
-                else:
-                    # If not CTF is found for a micrograph remove it from output mics
-                    self.warning("CTF for micrograph id %d was not found. Removed from set of micrographs." % mic.getObjId())
-                    createOutputMics = True
+            else:
+                # If not CTF is found for a micrograph remove it from output mics
+                self.warning("CTF for micrograph id %d was not found. Removed from set of micrographs." % mic.getObjId())
+                createOutputMics = True
 
         self._defineOutputs(outputCTF=ctfSet)
         # If some of the micrographs had not ctf a subset of micrographs have been produced
