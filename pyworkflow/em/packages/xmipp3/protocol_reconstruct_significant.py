@@ -203,6 +203,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         lastIter=self.getLastIteration(Nvolumes)
         if Nvolumes==1:
             vol = Volume()
+            vol.setObjComment('significant volume 1')
             vol.setLocation(self._getExtraPath('volume_iter%03d_00.vol'%lastIter))
             vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             self._defineOutputs(outputVolume=vol)
@@ -211,9 +212,10 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
             vol.setSamplingRate(self.inputSet.get().getSamplingRate())
             fnVolumes=glob(self._getExtraPath('volume_iter%03d_*.vol')%lastIter)
             fnVolumes.sort()
-            for fnVolume in fnVolumes:
-                aux=Volume()
-                aux.setLocation(fnVolume)
+            for i, fnVolume in enumerate(fnVolumes):
+                vol = Volume()
+                vol.setObjComment('significant volume %02d' % (i+1))
+                vol.setLocation(fnVolume)
                 vol.append(aux)
             self._defineOutputs(outputVolumes=vol)
 
