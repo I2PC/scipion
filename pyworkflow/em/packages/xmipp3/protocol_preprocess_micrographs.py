@@ -189,19 +189,19 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 self.outputMicrographs.hasValue())
                 
     def _summary(self):
-        summary = []
         if not self._hasOutput():
-            summary.append("*Output Micrographs* not ready yet.")
-        else:
-            summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
-            if self.doCrop:
-                summary.append("Number of pixels cropped: %d" % self.cropPixels)
-            if self.doLog:
-                summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
-            if self.doRemoveBadPix:
-                summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev)
-            if self.doDownsample:
-                summary.append("Downsampling factor: %0.2f" % self.downFactor)
+            return ["*Output Micrographs* not ready yet."]
+
+        summary = []
+        summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
+        if self.doCrop:
+            summary.append("Number of pixels cropped: %d" % self.cropPixels)
+        if self.doLog:
+            summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
+        if self.doRemoveBadPix:
+            summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev)
+        if self.doDownsample:
+            summary.append("Downsampling factor: %0.2f" % self.downFactor)
         return summary
     
     def _methods(self):
