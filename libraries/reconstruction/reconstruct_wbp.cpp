@@ -217,7 +217,7 @@ void ProgRecWbp::produceSideInfo()
 }
 
 void ProgRecWbp::getAnglesForImage(size_t id, double &rot, double &tilt,
-                                   double &psi, double &xoff, double &yoff, double &flip, double &weight)
+                                   double &psi, double &xoff, double &yoff, bool &flip, double &weight)
 {
     if (id != BAD_OBJID)
     {
@@ -239,6 +239,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
     double newrot, newtilt, newpsi, rot, tilt, dum, weight, totimgs = 0.;
+    bool dumB;
     std::vector<double> count_imgs;
 
     if (verbose > 0)
@@ -254,7 +255,7 @@ void ProgRecWbp::getSampledMatrices(MetaData &SF)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         SF.getValue(MDL_IMAGE, fn_img, __iter.objId);
-        getAnglesForImage(__iter.objId, rot, tilt, dum, dum, dum, dum, weight);
+        getAnglesForImage(__iter.objId, rot, tilt, dum, dum, dum, dumB, weight);
         int idx = find_nearest_direction(rot, tilt, rotList, tiltList, SL, L,
                                          R);
         if (do_weights)
@@ -312,6 +313,7 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
     double rot, tilt, psi, weight, dum, newrot, newtilt, newpsi, totimgs = 0.;
+    bool dumB;
     int NN;
 
     no_mats = 0;
@@ -324,7 +326,7 @@ void ProgRecWbp::getAllMatrices(MetaData &SF)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         SF.getValue(MDL_IMAGE, fn_img, __iter.objId);
-        getAnglesForImage(__iter.objId, rot, tilt, psi, dum, dum, dum, weight);
+        getAnglesForImage(__iter.objId, rot, tilt, psi, dum, dum, dumB, weight);
         Euler_angles2matrix(rot, -tilt, psi, A);
         mat_g[no_mats].x = MAT_ELEM(A, 2, 0);
         mat_g[no_mats].y = MAT_ELEM(A, 2, 1);
@@ -513,7 +515,8 @@ void ProgRecWbp::showProgress()
 // Calculate the filter in 2D and apply ======================================
 void ProgRecWbp::apply2DFilterArbitraryGeometry()
 {
-    double rot, tilt, psi, xoff, yoff, flip, weight;
+    double rot, tilt, psi, xoff, yoff, weight;
+    bool flip;
     Projection proj;
     Matrix2D<double> L(4, 4), R(4, 4), A;
     FileName fn_img;
