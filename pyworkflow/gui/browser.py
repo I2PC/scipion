@@ -534,7 +534,7 @@ class FileBrowserWindow(BrowserWindow):
         
     def registerHandlers(self):
         FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), 
-                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx')
+                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx', '.xml')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
         FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam')
