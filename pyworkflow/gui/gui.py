@@ -240,7 +240,7 @@ class Window():
     setup functions. """
     
     def __init__(self, title='', masterWindow=None, weight=True, minsize=(500, 300),
-                 icon=None, **args):
+                 icon=None, **kwargs):
         """Create a Tk window.
         title: string to use as title for the windows.
         master: if not provided, the windows create will be the principal one
@@ -345,9 +345,12 @@ class Window():
         (using add_cascade or add_command for sub-menus and final options)."""
         # Helper function to create the main menu.
         for sub in menuConfig:
-            if len(sub) > 0:  # sub-menu
+            menuLabel = sub.text.get()
+            if not menuLabel: # empty or None label means a separator
+                menu.add_separator()
+            elif len(sub) > 0:  # sub-menu
                 submenu = tk.Menu(self.root, tearoff=0)
-                menu.add_cascade(label=sub.text.get(), menu=submenu)
+                menu.add_cascade(label=menuLabel, menu=submenu)
                 self._addMenuChilds(submenu, sub)  # recursive filling
             else:  # menu option
                 # If there is an entry called "Browse files", when clicked it
@@ -356,7 +359,7 @@ class Window():
                     """Return a callback function named "on<Name>"."""
                     f = "on%s" % "".join(x.capitalize() for x in name.split())
                     return lambda: getattr(self, f)()
-                menu.add_command(label=sub.text.get(), compound=tk.LEFT,
+                menu.add_command(label=menuLabel, compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))
 

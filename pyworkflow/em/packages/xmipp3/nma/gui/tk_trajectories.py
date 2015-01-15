@@ -23,8 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.properties import Icon
-from pyworkflow.gui.browser import FileBrowserWindow
 """
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
@@ -34,6 +32,7 @@ from os.path import basename
 import Tkinter as tk
 
 import pyworkflow.gui as gui
+from pyworkflow.utils.properties import Icon
 from pyworkflow.gui.widgets import Button, HotButton
 
 from pyworkflow.em.packages.xmipp3.nma.data import Point, PathData
