@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
 """
 Main project window application
 """
@@ -66,6 +67,7 @@ ACTION_STOP = Message.LABEL_STOP
 ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
+ACTION_EXPORT = Message.LABEL_EXPORT
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -83,6 +85,7 @@ ActionIcons = {
     ACTION_STOP: Icon.ACTION_STOP,
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
+    ACTION_EXPORT: Icon.ACTION_EXPORT
                }
 
 
@@ -151,6 +154,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_BROWSE, single and status != STATUS_SAVED),
                    (ACTION_DB, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
+                   (ACTION_EXPORT, not single)
                    #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
                    ]
         
@@ -655,7 +659,8 @@ class ProtocolsView(tk.Frame):
        
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
-                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS]
+                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
+                           ACTION_EXPORT]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
@@ -1045,6 +1050,25 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
             
+    def _exportProtocols(self):
+        protocols = self._getSelectedProtocols()
+        
+        def _export(obj):
+            filename = os.path.join(browser.getCurrentDir(), 
+                                    browser.getEntryValue())
+            try:
+                self.project.exportProtocols(protocols, filename)
+                self.windows.showInfo("Workflow sucessfully saved to '%s' " % filename)
+            except Exception, ex:
+                self.windows.showError(str(ex))
+            
+        browser = FileBrowserWindow("Choose .json file to save workflow", 
+                                    master=self.windows, 
+                                    path=self.project.getPath(''), 
+                                    onSelect=_export,
+                                    entryLabel='File', entryValue='workflow.json')
+        browser.show()
+            
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
@@ -1103,6 +1127,9 @@ class ProtocolsView(tk.Frame):
                     self._continueProtocol(prot)
                 elif action == ACTION_RESULTS:
                     self._analyzeResults(prot)
+                elif action == ACTION_EXPORT: 
+                    self._exportProtocols()
+                        
             except Exception, ex:
                 self.windows.showError(str(ex))
                 import traceback
