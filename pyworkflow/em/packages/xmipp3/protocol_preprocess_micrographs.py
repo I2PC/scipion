@@ -208,7 +208,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         if not self._hasOutput():
             return ['*Output micrographs* not ready yet.']
 
-        txt = "Input micrographs %s have " % self.getObjectTag(self.inputMicrographs.get())
+        txt = "The micrographs in set %s have " % self.getObjectTag(self.inputMicrographs.get())
+
         if self.doCrop:
             txt += "been cropped by %d pixels " % self.cropPixels
         if self.doLog:
@@ -219,10 +220,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         if self.doDownsample:
             txt += "been downsampled with a factor of %0.2f " % self.downFactor
 
-        return [txt, "Output set: %s" %
+        return [txt, "The resulting set of micrographs is %s" %
                 self.getObjectTag(self.outputMicrographs)]
 
-    
     #--------------------------- UTILS functions --------------------------------------------
     def _getOutputMicrograph(self, mic):
         """ Return the name of the output micrograph, given
