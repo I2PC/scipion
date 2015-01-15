@@ -44,7 +44,7 @@ class ProtImportCTF(ProtImportFiles):
 
     IMPORT_FROM_AUTO = 0
     IMPORT_FROM_XMIPP3 = 1
-    IMPORT_FROM_BRANDEIS = 2
+    IMPORT_FROM_GRIGORIEFF = 2
 
     #--------------------------- DEFINE param functions --------------------------------------------
 
@@ -60,7 +60,7 @@ class ProtImportCTF(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp','brandeis']
+        return ['auto', 'xmipp','grigorieff']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -88,7 +88,7 @@ class ProtImportCTF(ProtImportFiles):
         if importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             return XmippImport(self, filesPath)
-        elif importFrom == self.IMPORT_FROM_BRANDEIS:
+        elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
             from pyworkflow.em.packages.grigoriefflab.dataimport import BrandeisImport
             return BrandeisImport(self)
         else:
@@ -110,15 +110,14 @@ class ProtImportCTF(ProtImportFiles):
 
         createOutputMics = False
 
-        for i, (fileName, fileId) in enumerate(self.iterFiles()):
-            for mic in inputMics:
+        for mic in inputMics:
+            for i, (fileName, fileId) in enumerate(self.iterFiles()):
                 #TODO: Define how to match mics and ctf files (temporary solution is to expect micname inside ctf file name)
                 if removeBaseExt(mic.getFileName()) in removeBaseExt(fileName):
                     ctf = ci.importCTF(mic, fileName)
                     ctfSet.append(ctf)
                     outputMics.append(mic)
                     break
-                #TODO: Define what to do if ctf is not found for a micrograph (the below does not work)
             else:
                 # If not CTF is found for a micrograph remove it from output mics
                 self.warning("CTF for micrograph id %d was not found. Removed from set of micrographs." % mic.getObjId())
@@ -132,12 +131,12 @@ class ProtImportCTF(ProtImportFiles):
         else:
             self._defineCtfRelation(inputMics, ctfSet)
 
-    
+
     #--------------------------- INFO functions ----------------------------------------------------
     
     def _summary(self):
         summary = []
-        if self.ctfSet is None:
+        if not hasattr(self, 'outputCTF'):
             summary.append("Output " + self._outputClassName + " not ready yet.")
             if self.copyFiles:
                 summary.append("*Warning*: You select to copy files into your project.\n"

@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
+from pprint import PrettyPrinter
 """
 This modules handles the Project management
 """
@@ -411,6 +413,93 @@ class Project(object):
             raise Exception("Project.copyProtocol: invalid input protocol type '%s'." % type(protocol))
     
         return result
+    
+    def exportProtocols(self, protocols, filename):
+        """ Create a text json file with the info
+        to import the workflow into another project.
+        This methods is very similar to copyProtocol
+        Params:
+            protocols: a list of protocols to export.
+            filename: the filename where to write the workflow.
+        
+        """
+        # Handle the copy of a list of protocols
+        # for this case we need to update the references of input/outputs
+        newDict = OrderedDict()
+                    
+        for prot in protocols:
+            newDict[prot.getObjId()] = prot.getDefinitionDict()
+                     
+        g = self.getRunsGraph(refresh=False)
+        
+        for prot in protocols:
+            protId = prot.getObjId()
+            node = g.getNode(prot.strId())
+            
+            for childNode in node.getChilds():
+                childId = childNode.run.getObjId()
+                if childId in newDict:
+                    childDict = newDict[childId]
+                    # Get the matches between outputs/inputs of node and childNode
+                    matches = self.__getIOMatches(node, childNode)
+                    for oKey, iKey in matches:
+                        childDict[iKey] = '%s.%s%s' % (protId, Pointer.EXTENDED_ATTR, oKey)
+                      
+        f = open(filename, 'w')  
+        
+        f.write(json.dumps(list(newDict.values()), 
+                           indent=4, separators=(',', ': ')) + '\n')
+        f.close()
+        
+    def loadProtocols(self, filename=None, jsonStr=None):
+        """ Load protocols generated in the same format as self.exportProtocols.
+        Params:
+            filename: the path of the file where to read the workflow.
+            jsonStr: read the protocols from a string instead of file.
+        Note: either filename or jsonStr should be not None.
+        """
+        f = open(filename)
+        protocolsList = json.load(f)
+        
+        emProtocols = em.getProtocols()
+        newDict = {}
+        
+        # First iteration: create all protocols and setup parameters
+        for protDict in protocolsList:
+            protClassName = protDict['object.className']
+            protId = protDict['object.id']
+            protClass = emProtocols.get(protClassName, None)
+            
+            if protClass is None:
+                print "ERROR: protocol class name '%s' not found" % protClassName
+            else:
+                prot = protClass()
+                newDict[protId] = prot
+                for paramName, attr in prot.iterDefinitionAttributes():
+                    if not attr.isPointer():
+                        if paramName in protDict:
+                            attr.set(protDict[paramName])
+                self.saveProtocol(prot)
+        # Second iteration: update pointers values
+        for protDict in protocolsList:
+            protId = protDict['object.id']
+            
+            if protId in newDict:
+                prot = newDict[protId]
+                for paramName, attr in prot.iterDefinitionAttributes():
+                        if attr.isPointer() and paramName in protDict:
+                            parts = protDict[paramName].split('.')
+                            if parts[0] in newDict:
+                                attr.set(newDict[parts[0]]) # set pointer to correct created protocol
+                                if len(parts) > 1: # set extended attribute part
+                                    attr._extended.set(parts[1])
+                            else:
+                                attr.set(None)
+                self.mapper.store(prot)
+            
+        f.close()
+        self.mapper.commit()
+            
     
     def saveProtocol(self, protocol):
         self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
