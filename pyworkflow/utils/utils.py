@@ -160,9 +160,10 @@ def trace(nlevels, separator=' --> ', stream=sys.stdout):
 
     
 def prettyDict(d):
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(d)
+    print "{"
+    for k, v in d.iteritems():
+        print "    %s: %s" % (k, v)
+    print "}"
 
 
 def prettyXml(elem, level=0):
