@@ -607,9 +607,17 @@ void ProgCtfGroup::writeOutputToDisc()
     }
     else
     {
-    	//ImagesMD.write("/tmp/ImagesMD");
-    	//sortedCtfMD.write("/tmp/sortedCtfMD");
-        ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
+    	ctfImagesGroup.join1(ImagesMD,
+    			             sortedCtfMD,
+    			             MDL_MICROGRAPH_ID,LEFT);
+        //ctfImagesGroup.joinNatural(ImagesMD, sortedCtfMD);
+//#define DEBUG
+#ifdef DEBUG
+    ImagesMD.write("/tmp/ImagesMD.xmd");
+    sortedCtfMD.write("/tmp/sortedCtfMD.xmd");
+    ctfImagesGroup.write("/tmp/ctfImagesGroup.xmd");
+
+#endif
     }
 
     //
