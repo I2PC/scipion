@@ -62,15 +62,15 @@ def writeParticles(outputFile):
             #TODO: convert to vector not matrix
             angles = objDict['_angles']
             shifts = objDict['_shifts']
-            transformation = eman.Transform({"type":"spider",
-                                             "phi":angles[0],
-                                             "theta":angles[1],
-                                             "psi":angles[2],
-                                             "tx":shifts[0],
-                                             "ty":shifts[1],
-                                             "tz":shifts[2],
-                                             "mirror":0,  ####TODO: test flip
-                                             "scale":1.0})
+            transformation = eman.Transform({"type": "spider",
+                                             "phi": angles[0],
+                                             "theta": angles[1],
+                                             "psi": angles[2],
+                                             "tx": shifts[0],
+                                             "ty": shifts[1],
+                                             "tz": shifts[2],
+                                             "mirror": 0,  ####TODO: test flip
+                                             "scale": 1.0})
         imageData.read_image(filename, index)
         if transformation is not None:
             imageData.set_attr('xform.projection', transformation)
