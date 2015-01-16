@@ -129,11 +129,11 @@ class ObjectBrowser(tk.Frame):
                 img = self.noImage
             self.label.config(image=img)
         # Update text preview
+        self.text.setReadOnly(False)
+        self.text.clear()
         if desc is not None:
-            self.text.setReadOnly(False)
-            self.text.clear()
             self.text.addText(desc)
-            self.text.setReadOnly(True)
+        self.text.setReadOnly(True)
             
     def getSelected(self):
         """ Return the selected object. """
@@ -411,18 +411,33 @@ class FileBrowser(ObjectBrowser):
     where the "objects" are just files and directories.
     """
     def __init__(self, parent, initialDir='.', 
-                 selectionType=SELECT_FILE, selectionSingle=True, 
-                 allowFilter=True, filterFunction=None, previewDim=144,
-                 showHidden=False):
+                 selectionType=SELECT_FILE, 
+                 selectionSingle=True, 
+                 allowFilter=True, 
+                 filterFunction=None, 
+                 previewDim=144,
+                 showHidden=False, # Show hidden files or not?
+                 selectButton='Select', # this option allows to change the Select button text
+                 entryLabel=None, # Display an entry for some input
+                 entryValue='' # Display a value in the entry field
+                 ):
         """ 
         """
         self._provider = FileTreeProvider(initialDir, showHidden)
+        self.selectButton = selectButton
+        self.entryLabel = entryLabel
+        self.entryVar = tk.StringVar()
+        self.entryVar.set(entryValue)
+        
         ObjectBrowser.__init__(self, parent, self._provider)
         
-        if selectionType != SELECT_NONE:
-            buttonsFrame = tk.Frame(self)
-            self._fillButtonsFrame(buttonsFrame)
-            buttonsFrame.grid(row=1, column=0)
+        if selectionType == SELECT_NONE:
+            selectButton = None
+            
+    
+        buttonsFrame = tk.Frame(self)
+        self._fillButtonsFrame(buttonsFrame)
+        buttonsFrame.grid(row=1, column=0)
 
     def _fillLeftPanel(self, frame):
         """ Redefine this method to include a buttons toolbar and
@@ -440,8 +455,16 @@ class FileBrowser(ObjectBrowser):
         toolbarFrame = tk.Frame(frame)
         self._fillToolbar(toolbarFrame)
         toolbarFrame.grid(row=0, column=0, sticky='new')
-        # Filter frame
-        tk.Label(frame, text="Filter").grid(row=2, column=0)
+        
+        # Entry frame, could be used for filter
+        if self.entryLabel:  
+            entryFrame = tk.Frame(frame)
+            entryFrame.grid(row=2, column=0, sticky='new') 
+            tk.Label(entryFrame, text=self.entryLabel).grid(row=0, column=0, sticky='nw')
+            tk.Entry(entryFrame, 
+                     textvariable=self.entryVar, 
+                     bg='white',
+                     width=50).grid(row=0, column=1, sticky='nw')
         
         frame.rowconfigure(1, weight=1)
 
@@ -467,9 +490,10 @@ class FileBrowser(ObjectBrowser):
         is distinct from SELECT_NONE.
         """
         Button(frame, "Close", Icon.BUTTON_CLOSE, 
-               command=self._close).grid(row=0, column=0, padx=(0,5))                        
-        HotButton(frame, "Select", Icon.BUTTON_SELECT,
-                  command=self._select).grid(row=0, column=1)
+               command=self._close).grid(row=0, column=0, padx=(0,5))   
+        if self.selectButton:                     
+            HotButton(frame, self.selectButton, Icon.BUTTON_SELECT,
+                      command=self._select).grid(row=0, column=1)
                 
     def _actionRefresh(self, e=None):
         self.tree.update()
@@ -504,15 +528,22 @@ class FileBrowser(ObjectBrowser):
     def _select(self, e=None):
         self.onSelect(self.getSelected())
         
+    def getEntryValue(self):
+        return self.entryVar.get()
+    
+    def getCurrentDir(self):
+        return self.treeProvider.getDir()
+        
         
 class BrowserWindow(gui.Window):
     """ Windows to hold a browser frame inside. """
-    def __init__(self, title, master=None, **args):
-        if 'minsize' not in args:
-            args['minsize'] = (800, 400)
-        gui.Window.__init__(self, title, master, **args)
+    def __init__(self, title, master=None, **kwargs):
+        if 'minsize' not in kwargs:
+            kwargs['minsize'] = (800, 400)
+        gui.Window.__init__(self, title, master, **kwargs)
         
     def setBrowser(self, browser, row=0, column=0):
+        self.browser = browser
         browser.grid(row=row, column=column, sticky='news')
         self.itemConfig = browser.tree.itemConfig
         
@@ -520,10 +551,10 @@ class BrowserWindow(gui.Window):
 class FileBrowserWindow(BrowserWindow):
     """ Windows to hold a file browser frame inside. """
     def __init__(self, title, master=None, path=None, 
-                 onSelect=None, **args):
-        BrowserWindow.__init__(self, title, master, **args)
+                 onSelect=None, **kwargs):
+        BrowserWindow.__init__(self, title, master, **kwargs)
         self.registerHandlers()
-        browser = FileBrowser(self.root, path)
+        browser = FileBrowser(self.root, path, **kwargs)
         if onSelect:
             def selected(obj):
                 onSelect(obj)
@@ -532,9 +563,15 @@ class FileBrowserWindow(BrowserWindow):
         browser.onClose = self.close
         self.setBrowser(browser) 
         
+    def getEntryValue(self):
+        return self.browser.getEntryValue()
+        
+    def getCurrentDir(self):
+        return self.browser.getCurrentDir()
+        
     def registerHandlers(self):
         FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), 
-                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx')
+                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx', '.json', '.xml')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
         FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
         FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam')

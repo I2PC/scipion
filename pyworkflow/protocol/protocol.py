@@ -412,6 +412,23 @@ class Protocol(Step):
         for paramName, _ in self._definition.iterParams():
             yield paramName, getattr(self, paramName)
             
+    def getDefinitionDict(self):
+        """ Similar to getObjDict, but only for those 
+        params that are in the form.
+        This function is used for export protocols as json text file.
+        """
+        d = OrderedDict()
+        d['object.className'] = self.getClassName()
+        d['object.id'] = self.strId()
+         
+        od = self.getObjDict()
+        
+        for attrName in od:
+            if self.getDefinitionParam(attrName) is not None:
+                d[attrName] = od[attrName]
+                
+        return d
+        
     def iterDefinitionSections(self):
         """ Iterate over all the section of the definition. """
         for section in self._definition.iterSections():

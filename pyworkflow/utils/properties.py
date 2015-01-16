@@ -80,6 +80,8 @@ class Message():
     LABEL_DEFAULT = 'Default'
     LABEL_CONTINUE = 'Continue'
     LABEL_CONTINUE_ACTION = 'Approve continue'
+    LABEL_EXPORT = 'Export'
+    
     #-- Tabs --
     LABEL_DATA = 'Data'
     LABEL_SUMMARY = 'Summary'
@@ -350,6 +352,7 @@ class Icon():
     ACTION_WIZ = 'fa-magic.png'
     ACTION_HELP = 'fa-question-circle.png'
     ACTION_REFERENCES = 'fa-external-link.png'
+    ACTION_EXPORT = 'fa-external-link.png'
     
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'

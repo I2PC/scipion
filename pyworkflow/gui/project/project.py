@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui.browser import FileBrowserWindow
 """
 Main Project window implementation.
 It is composed by three panels:
@@ -97,13 +98,10 @@ class ProjectWindow(ProjectBaseWindow):
     #
     def onBrowseFiles(self):
         # Project -> Browse files
-        subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                          'browser', 'dir', self.project.path])
-        # I'd like to do something like
-        #   from pyworkflow.gui.browser import FileBrowserWindow
-        #   FileBrowserWindow("Browsing: " + path, path=path).show()
-        # but it doesn't work because the images are not shared by the
-        # Tk() instance or something like that.
+        FileBrowserWindow("Browse Project files",
+                          self, self.project.getPath(''), 
+                          selectButton=None  # we are not going to select nothing
+                          ).show()
 
     def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
@@ -119,6 +117,19 @@ class ProjectWindow(ProjectBaseWindow):
             self.showInfo("Deleted content of %s -- %d file(s)." % (tmpPath, n))
         except Exception as e:
             self.showError(str(e))
+        
+    def _loadWorkflow(self, obj):
+        try:
+            self.project.loadProtocols(obj.getPath())
+        except Exception, ex:
+            self.showError(str(ex))
+            
+    def onImportWorkflow(self):
+        FileBrowserWindow("Select workflow .json file",
+                          self, self.project.getPath(''),
+                          onSelect=self._loadWorkflow,
+                          selectButton='Import'
+                          ).show()
 
 
 class ProjectManagerWindow(ProjectBaseWindow):
