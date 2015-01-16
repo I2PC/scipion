@@ -50,7 +50,8 @@ def writeParticles(outputFile):
         objDict=json.loads(line)
         ###imgId, index, filename = line.split()
         if '_index' in objDict.keys():
-            index = int(objDict['_index'] - 1)
+            index = int(objDict['_index'])
+            
         if '_filename' in objDict.keys():
             filename = str(objDict['_filename'])
         else:
