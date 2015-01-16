@@ -48,6 +48,7 @@ from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
 from protocol_helical_parameters import XmippProtHelicalParameters
 from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
+from protocol_particle_pick_consensus import XmippProtConsensusPicking
 
 from pyworkflow.em.wizard import *
 
@@ -168,17 +169,25 @@ class XmippBoxSizeWizard(Wizard):
 
         return int(boxSize/downFactor)
 
-
-
-        return boxSize
-
-
     def show(self, form):
         form.setVar('boxSize', self._getBoxSize(form.protocol))
 
 
+#===============================================================================
+# BOXSIZE
+#===============================================================================
+class XmippParticleConsensusRadiusWizard(Wizard):
+    _targets = [(XmippProtConsensusPicking, ['consensusRadius'])]
 
-
+    def show(self, form):
+        if not form.protocol.inputCoordinates is None:
+            boxSize=form.protocol.inputCoordinates[0].get().getBoxSize()
+            radius = int(boxSize*0.1)
+            if radius<10:
+                radius=10
+        else:
+            radius = 10
+        form.setVar('consensusRadius', radius)
 
 #===============================================================================
 # NUMBER OF CLASSES
