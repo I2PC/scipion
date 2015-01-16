@@ -171,6 +171,8 @@ def writeSetOfParticles(partSet, filename, **kwargs):
     proc = createEmanProcess(args='write %s' % filename)
     
     partSet.getFirstItem().getFileName()
+    fileName = ""
+    a = 0
     for part in partSet:
         objDict = part.getObjDict()
         alignType = kwargs.get('alignType') 
@@ -182,13 +184,21 @@ def writeSetOfParticles(partSet, filename, **kwargs):
             #json fail if has -0 as value
             objDict['_shifts'] = shift.tolist()
             objDict['_angles'] = angles.tolist()
-            
 #         fn = objDict['_filename']
         # check if the is a file mapping
 #         objDict['_filename'] = filesDict.get(fn, fn)
         objDict['_itemId'] = part.getObjId()
         if isMrcs:
             objDict['_filename'] = fnDict[objDict['_filename']]
+        
+        # the index in EMAN begin in 0.
+        if fileName != objDict['_filename']:
+            fileName = objDict['_filename']
+            if objDict['_index'] == 0:
+                a = 0
+            else:
+                a = 1
+        objDict['_index'] = int(objDict['_index'] - a)
         # Write the e2converter.py process from where to read the image
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
