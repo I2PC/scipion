@@ -251,12 +251,48 @@ class TestXmippPythonInterface(unittest.TestCase):
         img1 = Image("1@" + stackPath)
         img2 = Image("2@" + stackPath)
         sum = img1 + img2
+        sum2 = Image("1@" + stackPath)
+        sum2.inplaceAdd(img2)
+        
         sumRef = Image(testFile("sum.spi"))
         self.assertEqual(sum, sumRef)
+        self.assertEqual(sum2, sumRef)
+        
         img1 += img2     
         self.assertEqual(sum, img1)
         img1 += img2
-        self.assertNotEqual(sum, img1)   
+        self.assertNotEqual(sum, img1)
+        
+    def test_Image_multiplyDivide(self):
+        imgPath = testFile("singleImage.spi")
+        img1 = Image(imgPath)
+        img2 = Image(imgPath)
+        imgSum = Image(imgPath)
+        imgSum2 = Image(imgPath)
+        
+        for i in range(2):
+            imgSum += img1
+            imgSum2.inplaceAdd(img1)
+            
+        imgMult = img1 * 3
+        imgMult2 = Image(imgPath)
+        imgMult2.inplaceMultiply(3)
+        
+        self.assertEqual(imgSum, imgMult)
+        self.assertEqual(imgSum, imgSum2)
+        self.assertEqual(imgSum, imgMult2)
+        
+        img1 *= 3
+        self.assertEqual(imgSum, img1)        
+        
+        imgSum /= 3
+        imgSum2.inplaceDivide(3)
+        
+        self.assertEqual(imgSum, imgSum2)
+        self.assertNotEqual(imgSum, img1)
+        self.assertEqual(imgSum, img2)
+        
+            
     
     def test_Image_compare(self):
         imgPath = testFile("singleImage.spi")
@@ -477,7 +513,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertFalse(existsBlockInMetaDataFile(mdPath))
         mdPath = "gggg@"+testFile("testBlock.xmd")
         self.assertRaises(Exception,existsBlockInMetaDataFile(mdPath))
-        print "test_Metadata_existsBlockInMetaDataFile"
          
     def test_Metadata_operate(self):
         md = MetaData()
@@ -566,7 +601,6 @@ _rlnDefocusU #2
         self.assertEqual(md, md2)
         os.remove(tmpFileNameRe)
         os.remove(tmpFileNameXm)
-        #print tmpFileNameRe,tmpFileNameXm
         
     def test_Metadata_renameColumn(self):
         '''test_Metadata_renameColumn'''
@@ -765,14 +799,12 @@ _rlnDefocusU #2
         md2 = MetaData()
         md2.read(tmpFileName)
         os.remove(tmpFileName)
-        print md, md2
         self.assertEqual(md, md2)
 
     def test_Metadata_read_write_bsoft(self):
         '''MetaData_setValues'''
         '''check bsoft metadata access extension
         '''
-        print "test_Metadata_read_write_bsoft"
         mdPath = testFile("Bsoft/symop.star")
         mdTmpPath = "/tmp/xmipp.star"
         ##create reference metadata

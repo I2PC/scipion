@@ -107,6 +107,7 @@ TEST_F( ImageGenericTest, add)
     EXPECT_TRUE(auxImageGeneric1==auxImageGeneric2);
     auxImageGeneric1.add(auxImageGeneric2);
     EXPECT_FALSE(auxImageGeneric1==auxImageGeneric2);
+
     XMIPP_CATCH
 }
 
@@ -121,6 +122,28 @@ TEST_F( ImageGenericTest, subtract)
     ImageGeneric img2(fn2);
 
     EXPECT_TRUE(sumImg == fn2);
+}
+
+
+TEST_F( ImageGenericTest, multiplyDivide)
+{
+    FileName fn1((String)"1@"+stackName);
+    ImageGeneric img1(fn1);
+
+    ImageGeneric sumImg(img1), multImg(img1);
+
+    for (int i = 0; i < 2; ++i)
+      sumImg.add(img1);
+
+    multImg.multiply(3);
+
+    EXPECT_EQ(sumImg, multImg);
+
+    // Test also divide
+    sumImg.divide(3);
+
+    EXPECT_EQ(sumImg, img1);
+
 }
 
 // check if an empty file is correctly created

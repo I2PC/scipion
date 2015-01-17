@@ -168,9 +168,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
     public void updateSize(int size) {
         try {
-            ppicker.resetParticleImages();
+            
             super.updateSize(size);
-            ppicker.updateTemplatesStack();
+            ppicker.updateTemplatesStack(true);
             
 
         } catch (Exception e) {
@@ -185,11 +185,12 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (new File(dir).isDirectory()) {
             //System.err.println("JM_DEBUG: ============= import from Folder ============");
             result = ppicker.importParticlesFromFolder(dir, format, preffix, suffix, scale, invertx, inverty);
+            boolean resize = ((Integer)sizetf.getValue()).intValue() != ppicker.getSize();
             sizetf.setValue(ppicker.getSize());
             getCanvas().repaint();
             updateMicrographsModel(true);
             getCanvas().refreshActive(null);
-            ppicker.updateTemplatesStack();
+            ppicker.updateTemplatesStack(resize);
             
 
         } else // only can choose file if TrainingPickerJFrame instance
@@ -250,7 +251,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     public void updateMicrographsModel(boolean all) {
 
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
         int index = ppicker.getMicrographIndex();
@@ -573,7 +574,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         updateMicrographsModel();
         canvas.repaint();
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
     }
@@ -669,20 +670,26 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         current.releaseImage();
         ppicker.setMicrograph(next);
         ppicker.saveConfig();
-        initializeCanvas();
+        
         if (ppicker.getMode() == Mode.Supervised) {
             resetbt.setEnabled(next.getState() != MicrographState.Manual);
-            thresholdsl.setValue((int) (next.getThreshold() * 100));
-            thresholdtf.setValue(next.getThreshold());
+            double threshold = next.getThreshold();
+            if(threshold == 0)
+            {
+                threshold = current.getThreshold();
+                next.setThreshold(threshold);
+            }
+            thresholdsl.setValue((int) (threshold * 100));
+            thresholdtf.setValue(threshold);
         }
-
+        initializeCanvas();
         if(ppicker.containsPSD())
             iconbt.setIcon(next.getCTFIcon());
 
         pack();
 
         if (particlesdialog != null) {
-            loadParticles();
+            loadParticles(false);
         }
 
     }
@@ -714,7 +721,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         ppicker.resetMicrograph(getMicrograph());
         canvas.refreshActive(null);
         updateMicrographsModel();
-        ppicker.updateTemplatesStack();
+        ppicker.updateTemplatesStack(false);
         
         if (ppicker.getMode() == Mode.Supervised) {
             ppicker.autopick(this, getMicrograph());
@@ -773,7 +780,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if(index < 0 || index == ppicker.getMicrographs().size())
         {
             canvas.repaint();
-            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Particles might be too close or too few.");
+            XmippDialog.showError(this, "No valid training rectangle could be found in micrographs picked. Particles might be too few.");
             rectmic.resetParticlesRectangle();
             canvas.repaint();
             return false;

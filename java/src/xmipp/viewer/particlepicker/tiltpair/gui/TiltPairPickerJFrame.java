@@ -204,7 +204,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 	public void updateMicrographsModel(boolean all) {
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 		int index = tppicker.getMicrographIndex();
 		if (all)
 			micrographsmd.fireTableRowsUpdated(0,
@@ -221,13 +221,10 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 			canvas = new UntiltedMicrographCanvas(this);
 			tiltedcanvas = new TiltedMicrographCanvas(this);
 			List<UntiltedParticle> particles = getMicrograph().getParticles();
+                        
+                        // needs both canvas to be initialized
 			if (!particles.isEmpty())
-				canvas.refreshActive(particles.get(particles.size() - 1));// needs
-																			// both
-																			// canvas
-																			// to
-																			// be
-																			// initialized
+				canvas.refreshActive(particles.get(particles.size() - 1));
 		} else {
 			canvas.updateMicrograph();
 			tiltedcanvas.updateMicrograph();
@@ -330,7 +327,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 
 		pack();
 		if (particlesdialog != null)
-			loadParticles();
+			loadParticles(false);
 	}
 
 	@Override

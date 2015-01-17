@@ -81,8 +81,5 @@ public class ScipionParams extends Params {
         return scripts + File.separator + "pw_run_obj_cmd.py";
     }
     
-    public String getSqliteToMdScript() {
-        return scripts + File.separator + "pw_sqlite_to_md.py";
-    }
    
 }

@@ -29,8 +29,20 @@ public class IJCommand
 		this.options = options;
 	}
 	
+        public String getMdCommand()
+        {
+            return command.replace('_', '&').replace(' ', '_');
+        }
+        
+        public String getMdOptions()
+        {
+            return (options == null || options.equals("")) ? "NULL" :options.replace('_', '&').replace(' ', '_');
+        }
 	
-	
+        public static String getString(String mdstring)
+        {
+            return mdstring.replace('_', ' ').replace('&', '_');
+        }
 	
 	
 }

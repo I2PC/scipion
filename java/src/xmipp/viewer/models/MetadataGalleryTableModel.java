@@ -28,9 +28,9 @@ package xmipp.viewer.models;
 import ij.ImagePlus;
 import java.util.ArrayList;
 import java.util.List;
+import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.ImagePlusLoader;
 import xmipp.ij.commons.XmippImageConverter;
-import xmipp.ij.commons.XmippMenuBar;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
@@ -45,7 +45,6 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	private static final long serialVersionUID = 1L;
 	// Label to be rendered
 	protected ColumnInfo renderLabel;
-	protected ImageGeneric image;
 	// Also store the visible ones to fast access
 	public ArrayList<ColumnInfo> visibleLabels;
 
@@ -142,17 +141,20 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			// data.globalRender = true;
 		}
 		ImageDimension dim = null;
-
-		if (data.hasRenderLabel())
+                int width = 30, height = 30;
+		if (data.hasRenderLabel()) 
 		{
+                        
 			renderLabel = data.ciFirstRender;
 			// if (renderLabels) {
 			String imageFn = data.getSampleImage(renderLabel);
                         if(imageFn != null)
                             try
                             {
-                                    image = new ImageGeneric(imageFn);
-                                    dim = new ImageDimension(image);
+                                    ImagePlus image = new ImagePlusFromFile(imageFn).getImagePlus();
+                                    width = image.getWidth(); 
+                                    height = image.getHeight();
+                                    dim = new ImageDimension(width, height);
                             }
                             catch (Exception e)
                             {
@@ -162,8 +164,10 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		}
 
 		if (dim == null)
-			dim = new ImageDimension(30);
+			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
+                if(data.zoom == 0)
+                    data.zoom = GalleryData.getDefaultZoom(width);
 		return dim;
 	}
 
@@ -327,6 +331,11 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 	}// function handleRightClick
 
 	// Extension of the ImagePlusLoader, read an image from a Metadata row
+
+    @Override
+    public boolean showLabels() {
+        return true;
+    }
 	
         
 

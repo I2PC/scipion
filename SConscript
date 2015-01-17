@@ -34,7 +34,6 @@ from glob import glob
 import os
 from os.path import join, exists
 from types import *
-import os
 import sys
 
 # Read some flags
@@ -50,36 +49,46 @@ DIR = 3 # base dir
 DEPS = 4
 
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
+BASIC_INCS = ['external',
+              'libraries',
+              join('external','fftw-3.3.3'), 
+              join('external','tiff-3.9.4'), 
+              join('external','tiff-3.9.4','libtiff'), 
+              join('external','jpeg-8c'), 
+              join('external','sqlite-3.6.23'), 
+              join('external','hdf5-1.8.10','src'), 
+              join('external','hdf5-1.8.10','c++'), 
+              join('external','hdf5-1.8.10','c++','src')]
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
-Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
+Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                       LIBS: ['fftw3', 'fftw3_threads']
                       },
-             'tiff': {INCS: [join('external','tiff-3.9.4')],
+             'tiff': {INCS: [join('external','tiff-3.9.4'), join('external','tiff-3.9.4','libtiff')],
                       LIBS: ['tiff']
-                     },
+                      },
              'jpeg': {INCS: [join('external','jpeg-8c')],
                       LIBS: ['jpeg']
-                     },        
+                      },        
              'sqlite': {INCS: [join('external','sqlite-3.6.23')],
                         LIBS: ['sqlite3']
-                     },
+                        },
              'hdf5': {INCS: [join('external','hdf5-1.8.10','src')],
-                        LIBS: ['hdf5']
-                     },
-             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++')],
-                        LIBS: ['hdf5_cpp']
-                     },
+                      LIBS: ['hdf5']
+                      },
+             'hdf5_cpp': {INCS: [join('external','hdf5-1.8.10','c++'), join('external','hdf5-1.8.10','c++','src')],
+                          LIBS: ['hdf5_cpp']
+                          },
              'opencv': {INCS: [],
                         LIBS: ['opencv_core', 'opencv_legacy', 'opencv_imgproc', 'opencv_video']
-                     },
+                        },
 #             'python': {INCS: [PYTHON_DIR],
 #                        LIBS: ['']
 #                     },
              'cuda': {INCS: [CUDA_PATH + s for s in ['/CUDALibraries/common/inc', '/shared/inc']],
                       LIBS: ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu' ]
-                     },
+                      },
              'XmippExternal': {INCS: [join('external','bilib') + s for s in ['', '/headers', '/types']],
                                LIBS: ['XmippExternal'],
                                SRC: [join('external','bilib','sources','*.cc'), 
@@ -88,66 +97,69 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.1')],
                                      join('external','alglib-3.8.0.cpp','src','*.cpp')
                                      ],
                                DIR: 'external'
+                               },
+             'XmippSqliteExt': {INCS: BASIC_INCS,
+                                LIBS: ['XmippSqliteExt'],
+                                SRC: [join('external','sqliteExt','*.c')],
+                                DIR: 'external',
+                                DEPS: ['m']
                                 },
-             'XmippSqliteExt': {INCS: [],
-                               LIBS: ['XmippSqliteExt'],
-                               SRC: [join('external','sqliteExt','*.c')],
-                               DIR: 'external',
-                               DEPS: ['m']
-                                },
-             'XmippData': {INCS: [],
-                               LIBS: ['XmippData'],
-                               SRC: [join('libraries','data','*.cpp')],
-                               DIR: join('libraries','data'),
-                               DEPS: ['XmippExternal'] + BASIC_DEPS
+             'XmippData': {INCS: BASIC_INCS,
+                           LIBS: ['XmippData'],
+                           SRC: [join('libraries','data','*.cpp')],
+                           DIR: join('libraries','data'),
+                           DEPS: ['XmippExternal'] + BASIC_DEPS
+                           }, 
+             'XmippClassif': {INCS: BASIC_INCS,
+                              LIBS: ['XmippClassif'],
+                              SRC: [join('libraries','classification','*.cpp')],
+                              DIR: join('libraries','classification'),
+                              DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
+                              }, 
+             'XmippDimred': {INCS: BASIC_INCS,
+                             LIBS: ['XmippDimred'],
+                             SRC: [join('libraries','dimred','*.cpp')],
+                             DIR: join('libraries','dimred'),
+                             DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
+                             }, 
+             'XmippInterface': {INCS: [PYTHON_DIR, 
+                                       join(PYTHON_DIR,"Include"), 
+                                       join("lib","python2.7","site-packages","numpy","core","include")] + BASIC_INCS,
+                                LIBS: ['XmippInterface'],
+                                SRC: [join('libraries','interface','*.cpp')],
+                                DIR: join('libraries','interface'),
+                                DEPS: ['XmippExternal', 'XmippData', 'pthread']
                                 }, 
-             'XmippClassif': {INCS: [],
-                               LIBS: ['XmippClassif'],
-                               SRC: [join('libraries','classification','*.cpp')],
-                               DIR: join('libraries','classification'),
-                               DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
-                                }, 
-             'XmippDimred': {INCS: [],
-                               LIBS: ['XmippDimred'],
-                               SRC: [join('libraries','dimred','*.cpp')],
-                               DIR: join('libraries','dimred'),
-                               DEPS: ['XmippExternal', 'XmippData'] + BASIC_DEPS
-                                }, 
-             'XmippInterface': {INCS: ['external', PYTHON_DIR, join(PYTHON_DIR,"Include"), join("lib","python2.7","site-packages","numpy","core","include")],
-                               LIBS: ['XmippInterface'],
-                               SRC: [join('libraries','interface','*.cpp')],
-                               DIR: join('libraries','interface'),
-                               DEPS: ['XmippExternal', 'XmippData', 'pthread']
-                                }, 
-             'XmippRecons': {INCS: ['external'],
-                               LIBS: ['XmippRecons'],
-                               SRC: [join('libraries','reconstruction','*.cpp')],
-                               DIR: join('libraries','reconstruction'),
-                               DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'pthread'] + BASIC_DEPS
-                                },              
+             'XmippRecons': {INCS: BASIC_INCS,
+                             LIBS: ['XmippRecons'],
+                             SRC: [join('libraries','reconstruction','*.cpp')],
+                             DIR: join('libraries','reconstruction'),
+                             DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'pthread'] + BASIC_DEPS
+                             },              
               # Python binding named: xmipp.so
-              'xmipp': {INCS: [PYTHON_DIR, join(PYTHON_DIR, 'Include'),
-                                       join('lib','python2.7','site-packages','numpy','core','include'),
-                                       join('libraries','bindings','python'),
-                                       'libraries',
-                                       'external'],
-                               LIBS: ['xmipp'],
-                               SRC: [join('libraries','bindings','python','*.cpp')],
-                               DIR: join('libraries','bindings','python'),
-                               DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
-                                }, 
-             'XmippParallel': {INCS: ['external', env['MPI_INCLUDE']],
+              'xmipp': {INCS: [PYTHON_DIR, 
+                               join(PYTHON_DIR, 'Include'),
+                               join('lib','python2.7','site-packages','numpy','core','include'),
+                               join('libraries','bindings','python'),
+                               'libraries',
+                               'external'] + BASIC_INCS,
+                        LIBS: ['xmipp'],
+                        SRC: [join('libraries','bindings','python','*.cpp')],
+                        DIR: join('libraries','bindings','python'),
+                        DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
+                        }, 
+             'XmippParallel': {INCS: [env['MPI_INCLUDE']] + BASIC_INCS,
                                LIBS: ['XmippParallel'],
                                SRC: [join('libraries','parallel','*.cpp')],
                                DIR: join('libraries','parallel'),
                                DEPS: ['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', env['MPI_LIB']] + BASIC_DEPS
-                                },                                                   
-              'XmippJNI': {INCS: ['libraries', 'external', join('libraries','bindings','java'), env['JNI_CPPPATH']],
-                               LIBS: ['XmippJNI'],
-                               SRC: [join('libraries','bindings','java','*.cpp')],
-                               DIR: join('libraries','bindings','java'),
-                               DEPS: ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_DEPS
-                                },                                                   
+                               },                                                   
+              'XmippJNI': {INCS: [join('libraries','bindings','java'), env['JNI_CPPPATH']] + BASIC_INCS,
+                           LIBS: ['XmippJNI'],
+                           SRC: [join('libraries','bindings','java','*.cpp')],
+                           DIR: join('libraries','bindings','java'),
+                           DEPS: ['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_DEPS
+                           },                                                   
             
             }
 
@@ -155,7 +167,7 @@ def getLibraryDict(name):
     return Libraries.get(name, None)
 
 #For backward compatibility
-FFTWDir = join("external", "fftw-3.3.1")
+FFTWDir = join("external", "fftw-3.3.3")
 TIFFDir = join("external", "tiff-3.9.4")
 JPEGDir = join("external", "jpeg-8c")
 HDF5Dir = join("external", "hdf5-1.8.10", "src")
@@ -183,7 +195,7 @@ PluginLibs = {}
 PluginResources = {}
 javaEnumDict = {'ImageWriteMode': [join('libraries','data','xmipp_image_base.h'), 'WRITE_'],
             'CastWriteMode': [join('libraries','data','xmipp_image_base.h'), 'CW_'],
-            'MDLabel': [join('libraries','data','metadata_label.h'), 'MDL_'],
+            'MDLabel': [join('libraries','data','metadata_label.h'), ['MDL_', 'RLN_', 'BSOFT']],
             'XmippError': [join('libraries','data','xmipp_error.h'), 'ERR_']}
 
 copyJar = None
@@ -282,7 +294,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     program = env.Program(
         join(basedir, fullname),
         sources,
-        CPPPATH=includes + [env['CPPPATH']],
+        CPPPATH=includes + [env['CPPPATH']] + BASIC_INCS,
         LIBPATH=libpath + [env['LIBPATH']],
         LIBS=libs + [env['LIBS']],
         CXXFLAGS=cxxflags + [env['CXXFLAGS']],
@@ -304,6 +316,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     fullname = env['prepend'] + name
     sources = Glob(basedir, sources_pattern, skip_list)
     binprefix = join(env['prefix'], 'bin')
+    
 
     # FIXME fix for static executables
     if env['static']:
@@ -316,7 +329,7 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
         sources,
         CC=env['MPI_CC'],
         CXX=env['MPI_CXX'],
-        CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+        CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']] + BASIC_INCS,
         LIBPATH=libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
         LIBS=libs + [env['LIBS']] + [env['MPI_LIB']],
         CXXFLAGS=cxxflags + [env['CXXFLAGS']],
@@ -446,7 +459,7 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
         library = env.SharedLibrary(
             basedir + name,
             sources,
-            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']] + BASIC_INCS,
             CC=env['MPI_CC'],
             CXX=env['MPI_CXX'],
             LIBPATH=[env['MPI_LIBDIR']] + libpath,
@@ -883,26 +896,33 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
     f = open(header_file)
     fOut = open(java_file, 'w+')
     counter = 0;
-    last_label_pattern = pattern + "LAST_LABEL"
+    if isinstance(pattern, basestring):
+        patternList = [pattern]
+    elif isinstance(pattern, list):
+        patternList = pattern
+    else:
+        raise Exception("Invalid input pattern type: %s" % type(pattern))
+    last_label_pattern = patternList[0] + "LAST_LABEL"
     fOut.write("package xmipp.jni; \n")
     fOut.write("public class " + class_name + " {\n")
 
     for line in f:
         l = line.strip();
-        if l.startswith(pattern):
-            if '///' in l:
-                l, comment = l.split('///')
-            else:
-                comment = ''
-            if l.startswith(last_label_pattern):
-                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
-            if (l.find("=") == -1):
-                l = l.replace(",", " = %d;" % counter)
-                counter = counter + 1;
-            else:
-                l = l.replace(",", ";")
-
-            fOut.write("   public static final int %s ///%s\n" % (l, comment))
+        for p in patternList:
+            if l.startswith(p):
+                if '///' in l:
+                    l, comment = l.split('///')
+                else:
+                    comment = ''
+                if l.startswith(last_label_pattern):
+                    l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")
+                if (l.find("=") == -1):
+                    l = l.replace(",", " = %d;" % counter)
+                    counter = counter + 1;
+                else:
+                    l = l.replace(",", ";")
+    
+                fOut.write("   public static final int %s ///%s\n" % (l, comment))
     fOut.write("}\n")
     fOut.close()
     f.close()
@@ -1019,8 +1039,9 @@ AddXmippProgram('image_rotational_pca', ['XmippRecons'])
 AddXmippProgram('image_residuals', ['XmippRecons'])
 AddXmippProgram('image_resize', ['XmippRecons'])
 AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
-AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
 AddXmippProgram('image_separate_objects')
+AddXmippProgram('image_sort_by_statistics', ['XmippRecons'])
+AddXmippProgram('image_ssnr', ['XmippRecons'])
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
 AddXmippProgram('matrix_dimred', ['XmippDimred'])

@@ -562,10 +562,6 @@ void scaleToSizeFourier(int Zdim, int Ydim, int Xdim, MultidimArray<double> &mda
 
     //Init with zero
     MpmemFourier.initZeros();
-    mdaIn.printShape();
-    mdaOut.printShape();
-    MmemFourier.printShape();
-    MpmemFourier.printShape();
 
     for (size_t k = kp0; k<=kpF; ++k)
     {
@@ -626,8 +622,6 @@ void getSpectrum(MultidimArray<double> &Min,
                  MultidimArray<double> &spectrum,
                  int spectrum_type)
 {
-    Min.checkDimension(3);
-
     MultidimArray<std::complex<double> > Faux;
     int xsize = XSIZE(Min);
     Matrix1D<double> f(3);
@@ -637,11 +631,14 @@ void getSpectrum(MultidimArray<double> &Min,
     spectrum.initZeros(xsize);
     count.initZeros();
     transformer.FourierTransform(Min, Faux, false);
+    if (ZSIZE(Faux)==1)
+    	ZZ(f)=0;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Faux)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(Faux),YY(f));
-        FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
+        if (ZSIZE(Faux)>1)
+        	FFT_IDX2DIGFREQ(k,ZSIZE(Faux),ZZ(f));
         double R=f.module();
         //if (R>0.5) continue;
         int idx = round(R*xsize);

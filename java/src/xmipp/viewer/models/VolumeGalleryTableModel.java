@@ -47,8 +47,7 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 		super(data);
 		data.normalize = true; // volumes are displayed with global
 								// normalization by default
-                data.clearSelection();
-		data.selection = new boolean[n];
+		selection = new boolean[n];
 		calculateMinAndMax();
 	}
 
@@ -152,6 +151,11 @@ public class VolumeGalleryTableModel extends ImageGalleryTableModel {
 			XmippPopupMenuCreator xpopup) {
 		return false;
 	}
+
+    @Override
+    public boolean showLabels() {
+        return false;
+    }
 
 	
 

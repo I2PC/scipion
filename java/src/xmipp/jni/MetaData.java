@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,6 +92,8 @@ public class MetaData {
 
 	// keep labels for avoid read all the time
 	int[] activeLabels;
+        
+        protected HashMap<Long, EllipseCTF> ctfs = new HashMap<Long, EllipseCTF>();
         
 
 	static {
@@ -208,10 +211,9 @@ public class MetaData {
 	public native int[] getActiveLabels();
 
 	public static native int getLabelType(int label);
-
-	public static Class getLabelClass(int label) {
-		int type = getLabelType(label);
-		switch (type) {
+        
+        public static Class getClassForType(int type) {
+            switch (type) {
 		case LABEL_INT:
 			return Integer.class;
 		case LABEL_BOOL:
@@ -227,6 +229,11 @@ public class MetaData {
 
 		}
 		return null;
+        }
+
+	public static Class getLabelClass(int label) {
+		int type = getLabelType(label);
+		return getClassForType(type);
 	}
 
 	/** Return an String representing the label type */
@@ -402,6 +409,7 @@ public class MetaData {
 
 	public native boolean setValueDouble(int label, double value, long objId);
 
+        //NOTE: if value contains spaces it should be quoted, otherwise string will be cut!!!
 	public native boolean setValueString(int label, String value, long objId);
 
 	public native boolean setValueBoolean(int label, boolean value, long objId);
@@ -616,9 +624,23 @@ public class MetaData {
         return true;
     }
 
-    public boolean isCellEditable(int label) {
-        return true;
+   
+    public boolean hasRecalculateCTF() {
+        return !ctfs.isEmpty();
     }
+
+    public void removeCTF(long id) {
+        ctfs.remove(id);
+    }
+
+    public boolean containsCTF(long id) {
+        return ctfs.containsKey(id);
+    }
+
+    public void putCTF(long id, EllipseCTF ellipseCTF) {
+        ctfs.put(id, ellipseCTF);
+    }
+    
 
     
        

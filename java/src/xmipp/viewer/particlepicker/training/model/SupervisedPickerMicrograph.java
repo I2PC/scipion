@@ -3,12 +3,10 @@ package xmipp.viewer.particlepicker.training.model;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.PickerParticle;
-
 import java.awt.Rectangle;
 
 public class SupervisedPickerMicrograph extends Micrograph
@@ -70,7 +68,6 @@ public class SupervisedPickerMicrograph extends Micrograph
 		for (ManualParticle p : getManualParticles())
 			if (p.contains(x, y))
 				return p;
-
 		return null;
 	}
 
@@ -324,9 +321,7 @@ public class SupervisedPickerMicrograph extends Micrograph
                 int count = getParticles().size();
                 if(count <= 3)
                     return false;
-                double particlesArea = Math.pow(picker.getSize(), 2) * count;
-                boolean isvalid = rectangle.width * rectangle.height - particlesArea > particlesArea/2;
-                return isvalid;
+                return true;
         
         }
 	

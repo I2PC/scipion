@@ -5,19 +5,16 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Locale;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
 import xmipp.jni.Filename;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -39,10 +36,9 @@ public class ImportParticlesJDialog extends XmippDialog {
 	protected JCheckBox invertxcb;
 	protected JCheckBox invertycb;
 
-	protected static String[] FormatStrings = { "Automatic", "Xmipp 2.4",
-			"Xmipp 3.0", "Xmipp 3.01", "Eman" };
-	protected static Format[] FormatList = { Format.Auto, Format.Xmipp24,
-			Format.Xmipp30, Format.Xmipp301, Format.Eman };
+	public static final String[] formatsString = new String[]{Format.Auto.toString(), Format.Xmipp24.toString(), Format.Xmipp30.toString(), Format.Xmipp301.toString(), Format.Eman.toString(), Format.Relion.toString()};
+	public static final Format[] formatsList = { Format.Auto, Format.Xmipp24,
+			Format.Xmipp30, Format.Xmipp301, Format.Eman, Format.Relion };
     private JTextField preffixtf;
     private JTextField suffixtf;
 
@@ -78,12 +74,14 @@ public class ImportParticlesJDialog extends XmippDialog {
 
 		
 		/** Create a combobox with possible formats */
-		jcbFormat = new JComboBox(FormatStrings);
+		jcbFormat = new JComboBox(formatsString);
 		jcbFormat.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				format = FormatList[jcbFormat.getSelectedIndex()];
+                                int index = jcbFormat.getSelectedIndex();
+				format = formatsList[index];
+                                suffixtf.setText(parent.getParticlePicker().emextensions.get(formatsList[index]));
 				
 			}
 		});
@@ -111,7 +109,6 @@ public class ImportParticlesJDialog extends XmippDialog {
                 suffixtf.setText(".pos");
                 suffixtf.setToolTipText(tooltip);
 		panel.add(suffixtf, XmippWindowUtil.getConstraints(gbc, 1, 3));
-                
                 
 		panel.add(new JLabel("Scale To:"),	XmippWindowUtil.getConstraints(gbc, 0, 4));
 		scaletf = new JFormattedTextField(NumberFormat.getNumberInstance(Locale.ENGLISH));
@@ -148,6 +145,7 @@ public class ImportParticlesJDialog extends XmippDialog {
                                 
                                 preffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
                                 suffixtf.setEnabled(xfc.getSelectedFile().isDirectory());
+                                
                                 
 			}
 		} catch (Exception ex) {

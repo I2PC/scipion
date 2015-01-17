@@ -56,12 +56,12 @@ public class ImportParticlesFromFilesTiltPairJDialog extends ImportParticlesJDia
 
 		gbc.anchor = GridBagConstraints.WEST;
 		/** Create a combobox with possible formats */
-		jcbFormat = new JComboBox(FormatStrings);
+		jcbFormat = new JComboBox(formatsString);
 		jcbFormat.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				format = FormatList[jcbFormat.getSelectedIndex()];
+				format = formatsList[jcbFormat.getSelectedIndex()];
 				
 			}
 		});

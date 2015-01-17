@@ -760,7 +760,7 @@ public:
     }
 
     /// Lock file
-    void lock(int fileno = NULL);
+    void lock(int fileno = 0);
     void lock(FILE* file);
 
     ///Unlock

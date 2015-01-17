@@ -371,8 +371,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     {
                         localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
                         localPaddedImg.setXmippOrigin();
-                        FOR_ALL_ELEMENTS_IN_ARRAY2D(proj())
-                        A2D_ELEM(localPaddedImg,i,j)=weight*proj(i,j);
+                        const MultidimArray<double> &mProj=proj();
+                        FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+                        A2D_ELEM(localPaddedImg,i,j)=A2D_ELEM(mProj,i,j);
+                        // COSS A2D_ELEM(localPaddedImg,i,j)=weight*A2D_ELEM(mProj,i,j);
                         CenterFFT(localPaddedImg,true);
 
                         // Fourier transformer for the images
@@ -450,6 +452,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             {
 
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+                if (threadParams->weight==0.0)
+                	break;
                 bool reprocessFlag = threadParams->reprocessFlag;
                 int * statusArray = parent->statusArray;
 
@@ -583,9 +587,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 << "   Corner2=" << corner2.transpose() << std::endl;
 #endif
                                 // Loop within the box
-                                double *ptrIn;
-
-                                ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
+                                double *ptrIn=(double *)&(A2D_ELEM(*paddedFourier, i,j));
 
                                 // Some precalculations
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); ++intz)
@@ -655,8 +657,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             if (d2 > blobRadiusSquared)
                                                 continue;
                                             int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
-                                            //double w = blobTableSqrt((int)aux);
-                                            double w = VEC_ELEM(blobTableSqrt, aux);
+                                            double w = VEC_ELEM(blobTableSqrt, aux)*threadParams->weight;
                                             // Look for the location of this logical index
                                             // in the physical layout
 #ifdef DEBUG
@@ -859,7 +860,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                     // Compute the coordinate axes of the symmetrized projection
                     Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
 
-                    // Poner lo necesario en la estructura de cada hilo.
+                    // Fill the thread arguments for each thread
                     for ( int th = 0 ; th < numThreads ; th ++ )
                     {
                         // Passing parameters to each thread

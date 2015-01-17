@@ -63,16 +63,17 @@ void MpiProgReconstructSignificant::gatherAlignment()
 		cc=aux;
 
 	// Write all metadatas
-	for (size_t n=0; n<mdReconstructionPartial.size(); ++n)
-	{
-		FileName fnPartial=formatString("%s/partial_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
-		FileName fnProjectionMatching=formatString("%s/projmatch_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
+	if (rank!=0)
+		for (size_t n=0; n<mdReconstructionPartial.size(); ++n)
+		{
+			FileName fnPartial=formatString("%s/partial_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
+			FileName fnProjectionMatching=formatString("%s/projmatch_node%03d_%03d.xmd",fnDir.c_str(),(int)rank,(int)n);
 
-		if (mdReconstructionPartial[n].size()>0)
-			mdReconstructionPartial[n].write(fnPartial);
-		if (mdReconstructionProjectionMatching[n].size()>0)
-			mdReconstructionProjectionMatching[n].write(fnProjectionMatching);
-	}
+			if (mdReconstructionPartial[n].size()>0)
+				mdReconstructionPartial[n].write(fnPartial);
+			if (mdReconstructionProjectionMatching[n].size()>0)
+				mdReconstructionProjectionMatching[n].write(fnProjectionMatching);
+		}
 	synchronize();
 
 	// Now the master takes all of them
@@ -102,6 +103,7 @@ void MpiProgReconstructSignificant::gatherAlignment()
 		}
 	}
 
-	std::cout << "synchronize" << std::endl;
+	// std::cout << "synchronize" << std::endl;
 	synchronize();
+
 }

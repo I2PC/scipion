@@ -38,7 +38,7 @@ import xmipp.jni.MetaData;
  */
 public class FSCJFrame extends JFrame {
 
-    public FSCJFrame(GalleryData data, MetaData imagesmd) {
+    public FSCJFrame(GalleryData data, MetaData imagesmd, int label) {
         super(XmippLabel.TITLE_FSC + data.getFileName());
 
         try {
@@ -47,7 +47,7 @@ public class FSCJFrame extends JFrame {
 
             MetaData mdout = new MetaData();
           
-            mdout.computeFourierStatistics(imagesmd, data.getRenderLabel());
+            mdout.computeFourierStatistics(imagesmd, label);
 
             double xValues[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FREQ);
             double y1s[] = mdout.getColumnValues(MDLabel.MDL_RESOLUTION_FRC);

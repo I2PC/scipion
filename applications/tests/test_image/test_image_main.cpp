@@ -81,20 +81,49 @@ TEST_F( ImageTest, readApplyGeo)
 {
     XMIPP_TRY
     FileName auxFn = "image/test2.spi";
-    MetaData MD;
-    size_t id = MD.addObject();
-    MD.setValue(MDL_IMAGE, auxFn, id);
-    MD.setValue(MDL_ANGLE_PSI, 45., id);
+    MetaData md;
+    size_t id = md.addObject();
+    md.setValue(MDL_IMAGE, auxFn, id);
+    md.setValue(MDL_ANGLE_PSI, 45., id);
+
     Image<double> auxImage, auxImage2;
     ApplyGeoParams params;
     params.wrap = false;
-    auxImage.readApplyGeo(MD,id, params);
+    auxImage.readApplyGeo(md, id, params);
     auxImage2.read(auxFn.insertBeforeExtension("_wrap_false"));
     EXPECT_TRUE(auxImage == auxImage2);
     params.wrap = true;
-    auxImage.readApplyGeo(MD,id, params);
+    auxImage.readApplyGeo(md, id, params);
     auxImage2.read(auxFn.insertBeforeExtension("_wrap_true"));
     EXPECT_TRUE(auxImage == auxImage2);
+    XMIPP_CATCH
+}
+
+TEST_F( ImageTest, readApplyGeoFromMatrix)
+{
+  // Same as readApplyGeo, but using the transformation matrix
+    XMIPP_TRY
+    FileName auxFn = "image/test2.spi";
+    MetaData md;
+    size_t id = md.addObject();
+    md.setValue(MDL_IMAGE, auxFn, id);
+    // Equivalent matrix to a 45 in-plane rotation
+    String matrixStr = "[[ 0.7071067811865475 0.7071067811865475  0 0],"
+                       " [-0.7071067811865475 0.7071067811865475 0 0],"
+                       " [ 0          0          1 0],"
+                       " [ 0          0          0 1]]";
+    md.setValue(MDL_TRANSFORM_MATRIX, matrixStr, id);
+
+    Image<double> auxImage, auxImage2;
+    ApplyGeoParams params;
+    params.wrap = false;
+    auxImage.readApplyGeo(md, id, params);
+    auxImage2.read(auxFn.insertBeforeExtension("_wrap_false"));
+    EXPECT_EQ(auxImage, auxImage2);
+    params.wrap = true;
+    auxImage.readApplyGeo(md, id, params);
+    auxImage2.read(auxFn.insertBeforeExtension("_wrap_true"));
+    EXPECT_EQ(auxImage, auxImage2);
     XMIPP_CATCH
 }
 

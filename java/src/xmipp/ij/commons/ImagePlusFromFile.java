@@ -34,8 +34,6 @@ public class ImagePlusFromFile extends ImagePlusReader{
             this(fileName);
             this.imp = imp;
             this.ig = ig;
-            
-            
         }
         
        
@@ -48,12 +46,19 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		{
 			if (ig == null || hasChanged())
                         {
-                            ig = new ImageGeneric(fileName);//to read again file
-                            if(!hasIndex())
+                            try
+                            {
+                                ig = new ImageGeneric(fileName);//to read again file
+                            }
+                            catch(Exception e)
+                            {
+                                imp = new ImagePlus(fileName);
+                            }
+                            if(ig != null && !hasIndex())
                             {
                                 imp = XmippImageConverter.readToImagePlus(ig);
                             }
-                            else 
+                            else if(ig != null)
                             {
                                 if(ig.isStack())
                                     imp = XmippImageConverter.readToImagePlus(ig, index, ImageGeneric.ALL_SLICES);//read image or volume on indexn

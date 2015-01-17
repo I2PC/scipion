@@ -26,6 +26,7 @@
 package xmipp.viewer.models;
 
 import java.awt.Component;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.regex.Matcher;
@@ -35,11 +36,15 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import xmipp.ij.commons.XmippUtil;
+import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippPopupMenuCreator;
 import xmipp.viewer.FloatRenderer;
+import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
@@ -69,7 +74,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		else if (ci.isEnable())
 			return Boolean.class;//This way a JCheckBox is rendered
 		try {
-			return MetaData.getLabelClass(ci.type);
+                        Class c = MetaData.getClassForType(ci.type);
+			return c;
+                        
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -78,15 +85,15 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
 	@Override
 	public int getIndex(int row, int col) {
-		return row;
+                return row;
 	}
 
 	@Override
-	public int[] getCoords(int index) {
-		int[] coords = new int[2];
-		coords[0] = index;
-		coords[1] = 0;
-		return coords;
+	public Point getCoords(int index) {
+		Point p = new Point();
+		p.x = index;
+		p.y = 0;
+		return p;
 	}
 
 	/**
@@ -134,8 +141,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 				return md.getValueLong(label, id);
 			case MetaData.LABEL_STRING:
                                 String str = md.getValueString(label, data.ids[row]);
-                                if(ci.labelName.equals("_alignment._matrix"))
-                                    return String.format("<html>%s</html>", formatNumbers(str).replace("],", "]<br>"));
+                                if (ci.labelName.contains("_transform._matrix"))
+                                    return String.format("<html>%s</html>", XmippUtil.formatNumbers(str).replace("],", "]<br>"));
                                 
 				return str;
 			case MetaData.LABEL_VECTOR_DOUBLE:
@@ -152,19 +159,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 return null;
 	}// function getValueAt
         
-        public String formatNumbers(String str)
-        {
-            Pattern p = Pattern.compile("(-?(\\d)+(\\.)?(\\d)*)");
-            Matcher m = p.matcher(str);
-            StringBuffer sb = new StringBuffer(str.length());
-            while(m.find())
-            {
-                String number = m.group(1);
-                m.appendReplacement(sb, String.format("%.2f", Double.parseDouble(number)));
-            }
-            m.appendTail(sb);
-            return sb.toString();
-        }
+       
 
 	@Override
 	public void setValueAt(Object value, int row, int column) {
@@ -240,9 +235,14 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	public boolean handleDoubleClick(int row, int col) {
 		try {
 			ColumnInfo ci = visibleLabels.get(col);
+                        
 			if (ci.allowRender && data.isImageFile(ci)) {
                                 int index = getIndex(row, col);
-                                openXmippImageWindow(index, ci.label);
+                                String file = getImageFilename(index, renderLabel.label);
+                                if(Filename.isVolume(file))
+                                    ImagesWindowFactory.openMetadata(file, new Params(), Params.OPENING_MODE_GALLERY);
+                                else
+                                    openXmippImageWindow(index, ci.label);
 				return true;
 			}
 		} catch (Exception e) {
@@ -280,15 +280,17 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 	}
 
-	
+	@Override
+        public boolean showLabels() {
+            return data.renderImages;
+        }
 
 	@Override
 	protected void calculateCellSize() {
 		// DEBUG.printMessage(String.format("MetadataTable:calculateSize"));
 		if (data.renderImages) {
 			super.calculateCellSize();
-			// DEBUG.printMessage(String.format(
-			// "MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
+			// DEBUG.printMessage(String.format("MetadataTable:calculateSize w:%d, h:%d", cellDim.width,
 			// cellDim.height));
 
 		} else {
@@ -324,8 +326,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	@Override
 	public void updateTableSelection(JTable table) {
 		table.clearSelection();
-		for (int i = 0; i < n; ++i)
-			if (data.selection[i]) {
+		for (int i = 0; i < selection.length; ++i)
+			if (selection[i]) {
 				table.addRowSelectionInterval(i, i);
 			}
 	}
@@ -336,8 +338,9 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
              if (isBusy(row, col))
                     return false;
 		xpopup.initItems();
-               
+                
 		if (data.isFile(visibleLabels.get(col))) {
+                        
 			xpopup.setItemVisible(XmippPopupMenuCreator.OPEN, true);
 			if (!data.isImageFile(visibleLabels.get(col)))
 				xpopup.setItemVisible(XmippPopupMenuCreator.OPEN_ASTEXT, true);
@@ -432,6 +435,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		}
 
 		public void mouseClicked(MouseEvent e) {
+                        
 			TableColumnModel colModel = table.getColumnModel();
 			// Get the clicked column index
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());

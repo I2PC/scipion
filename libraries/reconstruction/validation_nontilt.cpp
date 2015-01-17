@@ -59,9 +59,9 @@ void ProgValidationNonTilt::run()
 
     MetaData md,mdOut,mdOut2,tempMd2,mdProjMatch;
     FileName fnMd,fnMdProj,fnMdProj2,fnOut,fnFSC,fnOut2;
-    fnMd = fnDir+"/angles_iter01_00.xmd";
-    fnMdProj = fnDir+"/images_iter01_00.xmd";
-    fnMdProj2 = fnDir+"/images_iter01_filtered.xmd";
+    fnMd = fnDir+"/angles_iter001_00.xmd";
+    fnMdProj = fnDir+"/images_iter001_00.xmd";
+    fnMdProj2 = fnDir+"/images_iter001_filtered.xmd";
     fnOut = fnDir+"/clusteringTendency.xmd";
     fnOut2 = fnDir+"/validation.xmd";
     fnFSC = fnDir+"/fsc.xmd";

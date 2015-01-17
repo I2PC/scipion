@@ -5,28 +5,24 @@
  */
 package xmipp.viewer.scipion;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import xmipp.ij.commons.Geometry;
+import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.EllipseCTF;
 import xmipp.jni.Filename;
+import xmipp.jni.ImageGeneric;
+import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.utils.Params;
-import xmipp.utils.XmippDialog;
-import xmipp.utils.XmippStringUtils;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.models.ClassInfo;
 import xmipp.viewer.models.ColumnInfo;
 import xmipp.viewer.models.GalleryData;
+import xmipp.viewer.scipion.ScipionMetaData.EMObject;
 
 /**
  *
@@ -40,9 +36,6 @@ public class ScipionGalleryData extends GalleryData {
 
     public ScipionGalleryData(ScipionGalleryJFrame window, Params parameters, ScipionMetaData md) {
         super(window, parameters, md);
-
-        
-
     }
 
     public void setFileName(String file) {
@@ -77,7 +70,7 @@ public class ScipionGalleryData extends GalleryData {
      * Create a metadata just with selected items
      */
     @Override
-    public ScipionMetaData getSelectionMd() {
+    public ScipionMetaData getSelectionMd(boolean[] selection) {
         return null;//metadata operations are not used in scipion
     }
 
@@ -225,22 +218,6 @@ public class ScipionGalleryData extends GalleryData {
         return ci.allowRender;
     }
 
-    public MetaData getMd(List<Long> ids) {
-        MetaData selmd = null;
-        try {
-            long[] ids2 = new long[ids.size()];
-            for (int i = 0; i < ids.size(); i++) {
-                ids2[i] = ids.get(i);
-            }
-            selmd = ((ScipionMetaData) md).getStructure("");
-            selmd.importObjects(md, ids2);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return selmd;
-    }
-
-    
 
     public void overwrite(String path) throws SQLException {
         ((ScipionMetaData) md).overwrite(filename, path);
@@ -263,34 +240,12 @@ public class ScipionGalleryData extends GalleryData {
     public String getPreffix() {
         return ((ScipionMetaData) md).getPreffix();
     }
-
-    public void exportCTFRecalculate(String path) {
-
-        try {
-            FileWriter fstream = new FileWriter(path);
-            BufferedWriter out = new BufferedWriter(fstream);
-
-            String format = "%10s%10.2f%10.2f%10.2f%10.2f%10.2f\n", line;
-            EllipseCTF ctf;
-            for (Map.Entry<Long,EllipseCTF> entry : ctfs.entrySet()) 
-            {
-                
-                ctf = entry.getValue();
-                line = String.format(Locale.ENGLISH, format, entry.getKey(), ctf.getDefocusU(), ctf.getDefocusV(), ctf.getEllipseFitter().angle, ctf.getLowFreq(), ctf.getHighFreq());
-                out.write(line);
-            }
-
-            out.close();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            XmippDialog.showError(window, ex.getMessage());
-        }
-    }
     
+        
     @Override
     public void removeCTF(int row) {
         ScipionMetaData.EMObject emo = ((ScipionMetaData) md).getEMObjects().get(row);
+        emo.setLabel("");
         emo.setComment("");
         super.removeCTF(row);
         window.fireTableRowsUpdated(row, row);
@@ -306,33 +261,37 @@ public class ScipionGalleryData extends GalleryData {
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) {
         if(isEnabled(row))
         {
-            if (ctfs == null) {
-                ctfs = new HashMap<Long, EllipseCTF>();
-            }
-
+            
             ScipionMetaData.EMObject emo;
-            for(int i = selfrom; i <= selto; i ++)
-                if(selection[i] && isEnabled(i))
+            
+                if(isEnabled(row))
                 {
-                    emo = ((ScipionMetaData) md).getEMObjects().get(i);
-                    emo.setComment("(recalculate ctf)");
-                    ctfs.put(ids[i], ellipseCTF);
+                    emo = ((ScipionMetaData) md).getEMObjects().get(row);
+                    md.putCTF(ids[row], ellipseCTF);
+                    emo.setLabel("(recalculate ctf)");
+                    emo.setComment(ellipseCTF.toString());
                 }
-            window.fireTableRowsUpdated(selfrom, selto);
+            window.fireTableRowsUpdated(row, row);
         }
+    }
+    
+    public ColumnInfo getGeoMatrixColumn()
+    {
+        String column = isClassificationMd()? "_representative._transform._matrix" : "_transform._matrix";
+        return getColumnInfo(column);
     }
     
     
     public Geometry getGeometry(long id)
-        {
-            if (!containsGeometryInfo()) 
-                return null;
-            ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
-
-            String column = isClassificationMd()? "_representative._alignment._matrix" : "_alignment._matrix";
-            String matrix = (String)emo.getValue(column);
-            return new Geometry(matrix);
-        }
+    {
+        if (!containsGeometryInfo()) 
+            return null;
+        ScipionMetaData.EMObject emo = ((ScipionMetaData)md).getEMObject(id);
+        ColumnInfo column = getGeoMatrixColumn();
+        
+        String matrix = (String)emo.getValue(column);
+        return new Geometry(matrix);
+    }
 
     public int getEnabledCount() {
         return ((ScipionMetaData)md).getEnabledCount();
@@ -396,6 +355,7 @@ public class ScipionGalleryData extends GalleryData {
 
     public void loadSelection(String selectedPath) {
         ((ScipionMetaData)md).loadSelection(selectedPath);
+            
     }
     
      /**
@@ -454,25 +414,39 @@ public class ScipionGalleryData extends GalleryData {
         } 
     }
     
-    public MetaData getMd()
-    {
-        
-        try {
-            ScipionParams params = (ScipionParams)parameters;
-            String pathToMd = filename.replace(XmippStringUtils.getFileExtension(filename), ".xmd");
-            String[] cmd = new String[]{params.python, params.getSqliteToMdScript() , filename, ((ScipionMetaData)md).getPreffix(), pathToMd};
-            String output = XmippWindowUtil.executeCommand(cmd, true);
-            System.out.println(output);
-            MetaData xmippmd = new MetaData(pathToMd);
-            return xmippmd;
-        } catch (Exception ex) {
-            Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        } 
+    
+    
+    public MetaData getImagesMd(boolean[] selection, boolean selected) {
+                    
+            MetaData imagesmd = new MetaData();
+            int index = 0;
+            String imagepath;
+            EMObject emo;
+            long imageid;
+            String matrix;
+            
+            for (long id : md.findObjects()) {
+                if (isEnabled(index) && (!selected ||selection[index])) {
+                        
+                    imagepath = md.getValueString(getRenderLabel(), id, true);
+                    if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                        imageid = imagesmd.addObject();
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
+                        if (useGeo()) 
+                        {
+                            emo = ((ScipionMetaData)md).getEMObject(id);
+                            matrix = String.format("'%s'", emo.getValueString(getGeoMatrixColumn()));
+                            imagesmd.setValueString(MDLabel.MDL_TRANSFORM_MATRIX, matrix, imageid);//copy geo info in mdRow
+                        }
+                        
+                    }
+                }
+                index++;
+            }
+            return imagesmd;
         
     }
     
     
-
     
 }

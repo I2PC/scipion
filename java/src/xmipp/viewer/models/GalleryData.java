@@ -72,8 +72,7 @@ public class GalleryData {
     protected String selectedBlock;
     // The following is only used in VolumeGallery mode
     protected String selectedVolFn = "";
-    protected String commonVolPrefix = "";
-    protected String[] volumes = null;
+    //protected String commonVolPrefix = "";
 
     protected List<ColumnInfo> labels = null;
     // First label that can be rendered
@@ -85,7 +84,7 @@ public class GalleryData {
     protected boolean showLabel = false;
     protected boolean renderImages;
     public final Params parameters;
-    protected int numberOfVols = 0;
+
 
     // flag to perform global normalization
     protected boolean normalize = false;
@@ -97,7 +96,7 @@ public class GalleryData {
     protected boolean isClassification = false;
     protected int refLabel;
     // Store the selection state for each item
-    protected boolean[] selection;
+    
 
     // Array with all ClassInfo
     protected ArrayList<ClassInfo> classesArray;
@@ -106,15 +105,14 @@ public class GalleryData {
     // Flags to check if md or classes has changed
     protected boolean hasMdChanges, hasClassesChanges;
     protected GalleryJFrame window;
-    protected HashMap<Long, EllipseCTF> ctfs;
+    
     protected String[] displayLabels;
     protected String[] sortby;
-    protected int selfrom = -1, selto = -1;
+    
+    protected boolean isVolumeMd;
     
 
-    public boolean hasRecalulateCTF() {
-        return ctfs != null && !ctfs.isEmpty();
-    }
+    
     
     protected String[] renderLabels;
     protected String renderLabel = "first";
@@ -146,6 +144,12 @@ public class GalleryData {
         return tmpfile;
     }
 
+    public void selectVolumeAt(int selectedIndex) {
+        selectedVolFn = getVolumeAt(selectedIndex);
+    }
+
+   
+
       
 
     public enum Mode {
@@ -175,11 +179,9 @@ public class GalleryData {
         try {
             selectedBlock = "";
             this.md = md;
-            setFileName(md.getFilename());
+            setFileName(md.getPath());
             zoom = parameters.zoom;
             resliceView = parameters.resliceView;
-            
-            readMdParameters();
             loadMd();
 
         } catch (Exception e) {
@@ -199,17 +201,18 @@ public class GalleryData {
         useGeo = wrap = false;
         displayLabels = null;
         mode = Mode.GALLERY_MD;
-        
+        this.renderImages = true;
         displaycis = new HashMap<String, ColumnInfo>();
         
         if(parameters.getBlock() == null)
-            parameters.setBlock(selectedBlock);
+            parameters.setBlock(selectedBlock);//Identifies parameters with first block loaded
+        
         if(parameters.getBlock().equals(selectedBlock))
         {
         
             setRenderLabels(parameters.renderLabels);
             setRenderLabel(parameters.getRenderLabel());
-            this.renderImages = (getRenderLabels() != null && !renderLabel.equals("first"));
+            
             sortby = parameters.sortby;
             setVisibleLabels(parameters.visibleLabels);
             setOrderLabels(parameters.orderLabels);
@@ -217,7 +220,11 @@ public class GalleryData {
             wrap = parameters.wrap;
             displayLabels = parameters.getDisplayLabels();
             if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_METADATA)) 
+            {
                 mode = Mode.TABLE_MD;
+                if(renderLabel.equals("first"))
+                    renderImages = false;
+            }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
                 mode = Mode.GALLERY_ROTSPECTRA;
         }
@@ -233,6 +240,7 @@ public class GalleryData {
             for(ColumnInfo ci: labels)
                 if(ci.labelName.equals(key))
                     ciFirstRender = ci;
+            renderLabel = ciFirstRender.labelName;
 	}
 
     public ColumnInfo getRenderColumn() {
@@ -274,15 +282,11 @@ public class GalleryData {
 
     public void setFileName(String file) {
         filename = file;
-
         if (file != null) {
             if (Filename.hasPrefix(file)) {
                 if (Filename.isMetadata(file)) {
-                    selectedBlock = Filename.getPrefix(file); // FIXME:
-                    // validate
-                    // block exists
+                    selectedBlock = Filename.getPrefix(file); 
                     filename = Filename.getFilename(file);
-
                 }
             }
             if (Filename.exists(filename)) {
@@ -292,7 +296,6 @@ public class GalleryData {
                 }
             }
         }
-
     }
 
     public void setDisplayLabel(String key, boolean selected) {
@@ -317,12 +320,12 @@ public class GalleryData {
         readMdParameters();
         ids = md.findObjects();
         loadLabels();
-        numberOfVols = 0;
-        volumes = null;
+        
         if (!containsGeometryInfo()) {
             useGeo = false;
+            wrap = false;
         }
-        selection = new boolean[ids.length];
+        
         isClassification = checkifIsClassificationMd();
 
         if (isClassification) {
@@ -348,7 +351,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.GALLERY_MD;
         }
-
+        isVolumeMd = false;
         if (hasRenderLabel()) {
             int renderLabel = ciFirstRender.label;
             ImageGeneric image = null;
@@ -377,10 +380,8 @@ public class GalleryData {
                     if (md.containsMicrographsInfo()) {
                         MAX_SIZE /= 2;
                     }
-                    int xdim = image.getXDim();
-                    int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
-                    float scale = (float) x / xdim;
-                    zoom = (int) Math.ceil(scale * 100);
+                    zoom = getDefaultZoom(image.getXDim());
+                    
                 }
 
                 if (image.isVolume()) { // We are assuming all are volumes
@@ -388,18 +389,10 @@ public class GalleryData {
                     if (isGalleryMode()) {
                         mode = Mode.GALLERY_VOL;
                     }
-                    numberOfVols = md.size();
-                    volumes = new String[numberOfVols];
-
-                    for (int i = 0; i < numberOfVols; ++i) {
-                        volumes[i] = md.getValueString(
-                                ciFirstRender.label, ids[i]);
-                    }
-                    commonVolPrefix = XmippStringUtils
-                            .commonPathPrefix(volumes);
+                    isVolumeMd = true;
 
                     if (selectedVolFn.isEmpty()) {
-                        selectVolume(volumes[0]);
+                        selectedVolFn = getVolumeAt(0);
                     }
 
                 }
@@ -420,8 +413,15 @@ public class GalleryData {
                 sortMd(sortci.label, asc);
         }
     }// function loadMd
-
     
+ 
+    public static int getDefaultZoom(int xdim)
+    {
+        int x = Math.min(Math.max(xdim, MIN_SIZE), MAX_SIZE);
+        float scale = (float) x / xdim;
+        int zoom = (int) Math.ceil(scale * 100);
+        return zoom;
+    }
 
     public ColumnInfo getColumnInfo(String labelName) {
         for (ColumnInfo ci : labels) {
@@ -578,7 +578,6 @@ public class GalleryData {
     public void sortMd(int label, boolean ascending) {
         try {
             md.sort(label, ascending);
-            clearSelection();
             hasMdChanges = true;
             ids = md.findObjects();
         } catch (Exception e) {
@@ -588,13 +587,7 @@ public class GalleryData {
     
     
 
-    public void clearSelection() {
-        for (int i = 0; i < selection.length; ++i) {
-            selection[i] = false;
-        }
-        selfrom = selto = -1;
-
-    }
+   
 
     /**
      * Reload current metadata from file
@@ -650,9 +643,7 @@ public class GalleryData {
         return mdBlocks != null ? mdBlocks.length : 0;
     }
 
-    public int getNumberOfVols() {
-        return numberOfVols;
-    }
+   
 
     /**
      * Return the mode of the gallery
@@ -715,17 +706,14 @@ public class GalleryData {
     public void changeMode() {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
-            if (selection.length < ids.length) //This can happen when in volume mode, that changes the selection array
-            {
-                selection = new boolean[ids.length];
-            }
-        } else if (isRotSpectraMd()) {
+           
+        } else if (isRotSpectraMd())
             mode = Mode.GALLERY_ROTSPECTRA;
-        } else if (numberOfVols > 0) {
+        else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;
-        } else {
+        else
             mode = Mode.GALLERY_MD;
-        }
+        
 
     }
 
@@ -733,12 +721,10 @@ public class GalleryData {
      * following function only should be used in VolumeGallery mode
      */
     public String getVolumeAt(int index) {
-        return volumes[index];
+            return md.getValueString(ciFirstRender.label, ids[index]);
     }
 
-    public void selectVolume(String vol) {
-        selectedVolFn = vol; // FIXME: Check it is valid
-    }
+    
 
     // Check if the underlying data has geometrical information
     public boolean containsGeometryInfo() {
@@ -968,31 +954,17 @@ public class GalleryData {
         }
     }// function loadClassesInfo
 
-    /**
-     * Return the number of selected elements
-     */
-    public int getSelectionCount() {
-        int count = 0;
-
-        if (!isVolumeMode() && hasSelection()) {
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    ++count;
-                }
-            }
-        }
-        return count;
-    }
+    
 
     /**
      * Create a metadata just with selected items
      */
-    public MetaData getSelectionMd() {
+    public MetaData getSelectionMd(boolean[] selection) {
         MetaData selectionMd = null;
-        if (!isVolumeMode() && hasSelection()) {
-            long[] selectedIds = new long[getSelectionCount()];
+        if (!isVolumeMode()) {
+            long[] selectedIds = new long[selection.length];
             int count = 0;
-            for (int i = selfrom; i <= selto; ++i) {
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     selectedIds[count++] = ids[i];
                 }
@@ -1074,19 +1046,18 @@ public class GalleryData {
     /**
      * Get all the images assigned to all selected classes
      */
-    public MetaData getClassesImages() {
+    public MetaData getClassesImages(boolean[] selection) {
         MetaData mdImages = new MetaData();
         MetaData md;
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
-                if (selection[i]) {
-                    md = getClassImages(i);
-                    if (md != null) {
-                        mdImages.unionAll(md);
-                        md.destroy();
-                    }
+        for (int i = 0; i < selection.length; i++) {
+            if (selection[i]) {
+                md = getClassImages(i);
+                if (md != null) {
+                    mdImages.unionAll(md);
+                    md.destroy();
                 }
             }
+        }
         return mdImages;
     }
 
@@ -1222,9 +1193,9 @@ public class GalleryData {
     /**
      * Delete from metadata selected items
      */
-    public void removeSelection() throws Exception {
-        if(hasSelection())
-            for (int i = selfrom; i <= selto; ++i) {
+    public void removeSelection(boolean[] selection) throws Exception {
+
+            for (int i = 0; i < selection.length; i++) {
                 if (selection[i]) {
                     md.removeObject(ids[i]);
                     hasMdChanges = true;
@@ -1335,13 +1306,12 @@ public class GalleryData {
         return fileInfo;
     }
 
-    public void saveClassSelection(String path) {
+    public void saveClassSelection(boolean[]selection, String path) {
         try {
-            saveSelection("classes" + Filename.SEPARATOR + path, true);
+            saveSelection(selection, "classes" + Filename.SEPARATOR + path, true);
             MetaData imagesmd;
             // Fill the classX_images blocks
-            if(hasSelection())
-                for (int i = selfrom; i <= selto; ++i) {
+                for (int i = 0; i < selection.length; i++) {
                     if (selection[i]) {
                         long id = ids[i];
                         int ref = md.getValueInt(MDLabel.MDL_REF, id);
@@ -1366,14 +1336,14 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection() throws Exception {
+    public void saveSelection(boolean[] selection) throws Exception {
 
         SaveJDialog dlg = new SaveJDialog(window, "selection" + getFileExtension(), true);
         boolean save = dlg.showDialog();
         if (save) {
             boolean overwrite = dlg.isOverwrite();
             String path = dlg.getMdFilename();
-            saveSelection(path, overwrite);
+            saveSelection(selection, path, overwrite);
         }
 
     }
@@ -1381,8 +1351,8 @@ public class GalleryData {
     /**
      * Save selected items as a metadata
      */
-    public void saveSelection(String path, boolean overwrite) throws Exception {
-        MetaData md = getSelectionMd();
+    public void saveSelection(boolean[] selection, String path, boolean overwrite) throws Exception {
+        MetaData md = getSelectionMd(selection);
 
         String file = path.substring(path.lastIndexOf("@") + 1, path.length());
         if (!new File(file).exists())// overwrite or append, save selection
@@ -1400,42 +1370,9 @@ public class GalleryData {
         md.destroy();
     }
 
-    public boolean isSelected(int index) {
-        return selection[index];
-    }
+    
 
-    public void setSelected(int index, boolean isselected) {
-        if(isselected && (selfrom > index || selfrom == -1))
-            selfrom = index;
-        if(isselected && selto < index)
-            selto = index;
-        
-        if(!isselected && selfrom == index && selto != selfrom)
-        {
-            selfrom = -1;
-            for(int i = index; i <= selto; i ++)
-                if(selection[i])
-                {
-                    selfrom = i;
-                    break;
-                }
-        }       
-        
-        if(!isselected && selto == index && selfrom != selto)
-        {
-            selto = -1;
-            for(int i = index; i >= selfrom; i --)
-                if(selection[i])
-                {
-                    selto = i;
-                    break;
-                }
-        }      
-        selection[index] = isselected;
-        if (numberOfVols > 0)
-            selectedVolFn = isselected? volumes[index]: volumes[0];
-            
-    }
+   
     public int size() {
         return ids.length;
     }
@@ -1488,9 +1425,7 @@ public class GalleryData {
         return selectedBlock;
     }
 
-    public String getCommonVolPrefix() {
-        return commonVolPrefix;
-    }
+    
 
     public String getSelVolumeFile() {
         return selectedVolFn;
@@ -1703,19 +1638,22 @@ public class GalleryData {
         md.write(path);
     }
 
-    public boolean hasSelection() {
-        if(selfrom == -1)
-            return false;
-        return true;
-    }
+  
 
     public MetaData getMd() {
         return md;
     }
 
     public boolean isRenderLabel(ColumnInfo ci) {
-        if (renderLabel.equals("first") && !(md instanceof ScipionMetaData))
-                return MetaData.isImage(ci.label);
+        if(!renderImages)
+            return false;
+        if (renderLabel.equals("first") )
+        {
+            if(md instanceof ScipionMetaData)
+                return ci.render && ci.visible;
+            else
+                return MetaData.isImage(ci.label) && ci.visible;
+        }
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {
@@ -1759,31 +1697,31 @@ public class GalleryData {
     }
 
     public void removeCTF(int row) {
-        if(ctfs == null)
-            return;
-        ctfs.remove(ids[row]);
+        md.removeCTF(ids[row]);
         
         
     }
 
     public boolean isRecalculateCTF(int row) {
-        if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
+        if(!isCTFMd())
+            return false;
         long id = ids[row];
-        if(ctfs.containsKey(id))
+        if(md.containsCTF(id))
             return true;
         return false;
     }
     
+    public boolean hasRecalculateCTF()
+    {
+        return md.hasRecalculateCTF();
+    }
+    
     public void recalculateCTF(int row, EllipseCTF ellipseCTF, String sortFn) 
     {
-         if (ctfs == null) {
-            ctfs = new HashMap<Long, EllipseCTF>();
-        }
-        ctfs.put(ids[row], ellipseCTF);
+        
+        md.putCTF(ids[row], ellipseCTF);
         EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, 90 - ellipseCTF.getEllipseFitter().angle, 
+                ellipseCTF, 90 - ellipseCTF.getDefocusAngle(), 
                 md.getPSDFile(ids[row]), ellipseCTF.getD(), window.getTasksEngine(), row, sortFn);
         window.getTasksEngine().add(estimateFromCTFTask);
     }
@@ -1834,15 +1772,7 @@ public class GalleryData {
             return new Geometry(shiftx, shifty, psiangle, flip);
         }
         
-        public int getSelFrom()
-        {
-            return selfrom;
-        }
         
-        public int getSelTo()
-        {
-            return selto;
-        }
         
             
 	public void setRenderLabels(String[] renderLabels) {
@@ -1892,5 +1822,40 @@ public class GalleryData {
            }
            return null;
        }
+       
+       public MetaData getImagesMd(boolean[] selection, boolean selected) {
+            int idlabel = getRenderLabel();
+            MDRow mdRow;
+            MetaData imagesmd = new MetaData();
+            int index = 0;
+            String imagepath;
+            long imageid;
+            for (long id : md.findObjects()) {
+                if (isEnabled(index) && (!selected || selection[index])) {
+                    imagepath = md.getValueString(idlabel, id, true);
+                    if (imagepath != null && ImageGeneric.exists(imagepath)) {
+                        imageid = imagesmd.addObject();
+                        if (useGeo()) 
+                        {
+                            mdRow = new MDRow();
+                            md.getRow(mdRow, id);//copy geo info in mdRow
+                            imagesmd.setRow(mdRow, imageid);
+                        }
+                        imagesmd.setValueString(MDLabel.MDL_IMAGE, imagepath, imageid);
+                    }
+                }
+                index++;
+            }
+            return imagesmd;
+       }
+       
+        public ColumnInfo getColumn(int row, int col)
+        {
+            if(isGalleryMode())
+                return ciFirstRender;
+            if(isColumnFormat())
+                return getColumnInfo(col);
+            return getColumnInfo(row); 
+        }
         
 }// class GalleryDaa

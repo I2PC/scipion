@@ -1,6 +1,5 @@
 /***************************************************************************
- * Authors:     Joaquin Oton    (joton@cnb.csic.es)
- *              J.M. De la Rosa (jmdelarosa@cnb.csic.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -24,39 +23,30 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef TRANSFORMGEOMETRY_H
-#define TRANSFORMGEOMETRY_H
+#include <data/xmipp_program.h>
 
-#include "transformations.h"
-#include "xmipp_image_generic.h"
-#include "metadata_extension.h"
-#include "xmipp_fftw.h"
-#include "xmipp_program.h"
-#include "matrix2d.h"
-
-
-class ProgTransformGeometry: public XmippMetadataProgram
+/** Estimate the SSNR on images, or selfiles */
+class ProgImageSSNR: public XmippMetadataProgram
 {
 public:
-    /** Constructor and destructor, just to avoid vtable undefined references errors */
-    ProgTransformGeometry();
-    ~ProgTransformGeometry();
+	double R, Rwidth;
+	double fmin, fmax;
+	double sampling;
+	double ssnrcut, ssnrpercent;
 
-protected:
-    int             splineDegree, dim;
-    bool            applyTransform, inverse, wrap, isVol, flip, mdVol;
-    Matrix2D<double> R, A, B, T;
-    ImageGeneric img, imgOut;
-    String matrixStr; // To read directly the matrix
-
+public:
     void defineParams();
     void readParams();
-
-    /** Calculate the rotation matrix according to the parameters
-     */
-    void calculateRotationMatrix();
     void preProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut);
+    void postProcess();
+public:
+    Image<double> img, imgS, imgN;
+    MultidimArray<double> maskS, maskN, spectrumS, spectrumN;
+    size_t imin, imax;
+}
+;//end of class ProgFilter
 
-};
-#endif //TRANSFORMGEOMETRY_H
+
+
+

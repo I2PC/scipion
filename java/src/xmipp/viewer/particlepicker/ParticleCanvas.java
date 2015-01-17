@@ -8,9 +8,7 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-
 import javax.swing.SwingUtilities;
-
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
 import xmipp.viewer.particlepicker.tiltpair.model.TiltedMicrograph;
@@ -39,7 +37,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		this.canvas = (pickerParticle instanceof TiltedParticle) ? ((TiltPairPickerJFrame) frame).getTiltedCanvas() : frame.getCanvas();
 
 		this.size = (int) (frame.getParticlePicker().getSize());
-		side = frame.getSide(size);
+		side = frame.getSide();
 		setMagnification((float) side / size);
 		setDrawingSize(side, side);
 		addMouseMotionListener(this);
@@ -48,7 +46,6 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 
 	public void paint(Graphics g)
 	{
-		
 		Rectangle source = new Rectangle(particle.getX0(size), particle.getY0(size), size, size);
 		setSourceRect(source);
 		super.paint(g);
@@ -116,7 +113,7 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 				}
 				canvas.repaint();
 				frame.updateMicrographsModel();
-				frame.loadParticles();
+				frame.loadParticles(false);
 			}
 			else
 			{
