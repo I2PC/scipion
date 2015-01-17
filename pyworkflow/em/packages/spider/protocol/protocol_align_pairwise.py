@@ -114,5 +114,6 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
                 (self.searchRange.get(), self.stepSize.get() )
         
         methods.append(msg)
-        methods.append('Output particles: %s'%self.getObjectTag(self.outputParticles))
+        if self.hasAttribute('outputParticles'):
+            methods.append('Output particles: %s'%self.getObjectTag(self.outputParticles))
         return methods
