@@ -757,7 +757,7 @@ class SetOfImages(EMSet):
         for cls in classesSet:
             if cls.isEnabled():
                 for img in cls:
-                    if img.isEnabled():                
+                    if img.isEnabled():               
                         self.append(img)
 
 
@@ -1122,6 +1122,10 @@ class Class2D(SetOfParticles):
         clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
         return clone
         
+    def close(self):
+        # Do nothing on close, since the db will be closed by SetOfClasses
+        pass
+    
     
 class Class3D(SetOfParticles):
     """ Represent a Class that groups Particles objects.
@@ -1139,12 +1143,18 @@ class Class3D(SetOfParticles):
         clone.copy(self, ignoreAttrs=['_mapperPath', '_size'])
         return clone
         
+    def close(self):
+        # Do nothing on close, since the db will be closed by SetOfClasses
+        pass
+            
 
 class ClassVol(SetOfVolumes):
     """ Represent a Class that groups Volume objects.
     Usually the representative of the class is another Volume. 
     """
-    pass
+    def close(self):
+        # Do nothing on close, since the db will be closed by SetOfClasses
+        pass
 
 
 class SetOfClasses(EMSet):
@@ -1152,8 +1162,8 @@ class SetOfClasses(EMSet):
     ITEM_TYPE = None # type of classes stored in the set
     REP_TYPE = None # type of the representatives of each class
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
@@ -1184,6 +1194,7 @@ class SetOfClasses(EMSet):
         classPrefix = 'Class%03d' % classItem.getObjId()
         classItem._mapperPath.set('%s,%s' % (self.getFileName(), classPrefix))
         classItem._mapperPath.setStore(False)
+        classItem.load()
         
     def _insertItem(self, classItem):
         """ Create the SetOfImages assigned to a class.
@@ -1199,6 +1210,11 @@ class SetOfClasses(EMSet):
     def __getitem__(self, itemId):
         """ Setup the mapper classes before returning the item. """
         classItem = self._mapper.selectById(itemId)
+        self._setItemMapperPath(classItem)
+        return classItem
+    
+    def getFirstItem(self):
+        classItem = EMSet.getFirstItem(self)
         self._setItemMapperPath(classItem)
         return classItem
 

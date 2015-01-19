@@ -571,21 +571,12 @@ class Project(object):
             self._setHostConfig(protocol)
             # Update with changes
             self._storeProtocol(protocol)
-        
-    def _closeMappers(self, runs):
-        if runs is not None:
-            for r in runs:
-                # Iter all output attributes of run that are Set
-                # and close the underlying db
-                for _, attr in r.iterOutputAttributes(Set):
-                    attr.close()
             
     def getRuns(self, iterate=False, refresh=True):
         """ Return the existing protocol runs in the project. 
         """
         if self.runs is None or refresh:
             # Close db open connections to db files
-            self._closeMappers(self.runs)
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
                 self._setProtocolMapper(r)
