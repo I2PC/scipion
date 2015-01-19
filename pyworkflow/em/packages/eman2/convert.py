@@ -175,11 +175,12 @@ def writeSetOfParticles(partSet, filename, **kwargs):
     a = 0
     for part in partSet:
         objDict = part.getObjDict()
-        alignType = kwargs.get('alignType') 
+        alignType = kwargs.get('alignType')
+#         print "objDict, ", objDict
     
         if alignType != em.ALIGN_NONE:
             shift, angles = alignmentToRow(part.getTransform(), alignType)
-            
+        
             #json cannot encode arrays so I convert them to lists
             #json fail if has -0 as value
             objDict['_shifts'] = shift.tolist()
