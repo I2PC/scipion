@@ -24,7 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict
+from pyworkflow.utils.utils import prettyDict, prettySize
 """
 Main project window application
 """
@@ -621,9 +621,6 @@ class ProtocolsView(tk.Frame):
             except Exception, ex:
                 self._selection.remove(protId)
 
-
-
-        
     def refreshRuns(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed runs.
          Params:
@@ -632,6 +629,13 @@ class ProtocolsView(tk.Frame):
              then only case when False is from _automaticRefreshRuns where the
              refresh time is doubled each time to avoid refreshing too often.
         """
+        if os.environ.get('SCIPION_DEBUG', None) == '1':
+            import psutil
+            proc = psutil.Process(os.getpid())
+            mem = psutil.virtual_memory()
+            print "------------- refreshing ---------- "
+            print "  open files: ", len(proc.get_open_files())
+            print "  used memory: ", prettySize(mem.used)
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
@@ -898,6 +902,7 @@ class ProtocolsView(tk.Frame):
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
         hosts = [host.getLabel() for host in self.settings.getHosts()]
+        
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
