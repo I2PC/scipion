@@ -50,29 +50,49 @@ def writeParticles(outputFile):
         objDict=json.loads(line)
         ###imgId, index, filename = line.split()
         if '_index' in objDict.keys():
-            index = int(objDict['_index'] - 1)
+            index = int(objDict['_index'])
+            
         if '_filename' in objDict.keys():
             filename = str(objDict['_filename'])
         else:
             raise Exception('ERROR (e2converter): Cannot process a particle without filename')
         imageData = eman.EMData()
+        
+        ctf = None
+        if '_ctfModel._defocusU' in objDict.keys():
+            ctf = eman.EMAN2Ctf()
+            
+            defU = objDict['_ctfModel._defocusU']
+            defV = objDict['_ctfModel._defocusV']
+            
+            ctf.from_dict({"defocus": (defU + defV)/20000.0,
+                           "dfang": objDict['_ctfModel._defocusAngle'],
+                           "dfdiff": (defU - defV)/10000.0,
+                           "voltage": objDict['_acquisition._voltage'],
+                           "cs": objDict['_acquisition._sphericalAberration'],
+                           "ampcont": objDict['_acquisition._amplitudeContrast'] * 100.0,
+                           "apix": objDict['_samplingRate']})
+            imageData.set_attr('ctf', ctf)
+        
         transformation = None
         if '_angles' in objDict.keys():
             #TODO: convert to vector not matrix
             angles = objDict['_angles']
             shifts = objDict['_shifts']
-            transformation = eman.Transform({"type":"spider",
-                                             "phi":angles[0],
-                                             "theta":angles[1],
-                                             "psi":angles[2],
-                                             "tx":shifts[0],
-                                             "ty":shifts[1],
-                                             "tz":shifts[2],
-                                             "mirror":0,  ####TODO: test flip
-                                             "scale":1.0})
-        imageData.read_image(filename, index)
+            transformation = eman.Transform({"type": "spider",
+                                             "phi": angles[0],
+                                             "theta": angles[1],
+                                             "psi": angles[2],
+                                             "tx": shifts[0],
+                                             "ty": shifts[1],
+                                             "tz": shifts[2],
+                                             "mirror": 0,  ####TODO: test flip
+                                             "scale": 1.0})
         if transformation is not None:
             imageData.set_attr('xform.projection', transformation)
+        
+        imageData.read_image(filename, index)
+        
     
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1

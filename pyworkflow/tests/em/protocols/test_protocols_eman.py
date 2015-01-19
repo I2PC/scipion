@@ -180,7 +180,7 @@ class TestEmanRefine(TestEmanBase):
         
     def test_RefineEman(self):
         print "Run Eman Refine Easy"
-        protRefine = self.newProtocol(EmanProtRefine, symmetry="d6")
+        protRefine = self.newProtocol(EmanProtRefine, symmetry="d6", speed=6, numberOfIterations=1)
         protRefine.inputParticles.set(self.protImport.outputParticles)
         protRefine.input3DReference.set(self.protImportVol.outputVolume)
         self.launchProtocol(protRefine)

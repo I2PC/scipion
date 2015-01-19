@@ -682,7 +682,7 @@ def convertBinaryFiles(imgSet, outputDir):
     return filesDict
 
 
-def createItemMatrix(self, item, row, align):
+def createItemMatrix(item, row, align):
     from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
     
     item.setTransform(rowToAlignment(row, alignType=align))

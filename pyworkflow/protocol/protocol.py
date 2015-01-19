@@ -513,10 +513,13 @@ class Protocol(Step):
         If stored previously, _store should be used.
         The child will be set as self.key attribute
         """
-       
-        setattr(self, key, child)
-        if self.hasObjId():
-            self.mapper.insertChild(self, key, child)
+        try:
+            setattr(self, key, child)
+            if self.hasObjId():
+                self.mapper.insertChild(self, key, child)
+        except Exception, ex:
+            print "Error with child '%s', value=%s, type=%s" % (key, child, type(child))
+            raise ex
         
     def _deleteChild(self, key, child):
         """ Delete a child from the mapper. """

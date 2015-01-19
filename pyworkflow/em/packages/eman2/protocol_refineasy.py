@@ -241,6 +241,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         proc.wait()
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
+        newPartSet.setAlignment(em.ALIGN_PROJ)
         newPartSet.copyItems(partSet,
                              updateItemCallback=self._createItemMatrix,
                              itemDataIterator=self._iterTextFile())

@@ -5,7 +5,7 @@
 		<div id="modeContainer" class="sectionMenu">
 			
 			<!-- TABLE -->
-			<input type="button" id="table" name="select_mode"
+			<input type="button" id="table" name="select_mode" title="Change to mode Table"
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
@@ -24,7 +24,7 @@
 			  />
 			
 			<!-- GALLERY -->
-			<input type="button" id="gallery" name="select_mode" 
+			<input type="button" id="gallery" name="select_mode" title="Change to mode Gallery"
 			 {% if form.typeVolume.value == 'pdb'%}
 			 onclick="return false;"
 			 {% else %}
@@ -61,7 +61,7 @@
 			<!-- VOLUME VISUALIZE WITH CHIMERA HEADLESS -->
  
 			 {% if dataset.getNumberSlices > 1 or form.typeVolume.value == 'pdb' %} 
-			<input type="button" id="volume_chimera" name="select_mode" 
+			<input type="button" id="volume_chimera" name="select_mode" title="Change to mode 3D Visualization"
 			onclick="changeMode('volume_chimera');" 
 			class="submitButton
  			 {% if form.mode.value != 'volume_chimera' %} 
@@ -122,7 +122,7 @@
 		{% endif %}	
 		
 		{% if form.mode.value == 'gallery' %}
-		<div id="colRowContainer" class="sectionMenu">
+		<div id="colRowContainer" class="sectionMenu" title="Modify the number of cols and rows">
 			<button id="colRowMode"> 
 				<img src="/resources/showj/colRowMode{{form.colRowMode.value}}.png" id="colRowModeImage" />
 			</button>
@@ -157,7 +157,7 @@
 			{{ form.blockComboBox }} 
 		</div>
 		
-		<div id="metadataSelectorContainer" class="sectionMenu">
+		<div id="metadataSelectorContainer" class="sectionMenu" title="Select the label to render">
 			<span class="textMenu">
 			{% if not form.labelsToRenderComboBox.is_hidden %}
 				{{ form.labelsToRenderComboBox.label_tag }}
@@ -166,7 +166,7 @@
 			{{ form.labelsToRenderComboBox }}
 		</div>
 		
-		<div id="volumeSelectorContainer" class="sectionMenu">
+		<div id="volumeSelectorContainer" class="sectionMenu" title="Select the volume to render">
 			<span class="textMenu">
 			{% if not form.volumesToRenderComboBox.is_hidden %}
 				{{ form.volumesToRenderComboBox.label_tag }}
@@ -191,14 +191,12 @@
 		{% endif %}
 		
 		{% if not form.mirrorY.is_hidden or not form.applyTransformMatrix.is_hidden or not form.onlyShifts.is_hidden or not form.wrap.is_hidden %}
-			<div id="optionsContainer" class="sectionMenu">
-				<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;"><i class="fa fa-wrench"></i></a>
-				<ul id="optionsList" style="position:initial;">
-					<li>{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
-					<li>{{ form.applyTransformMatrix }} {{ form.applyTransformMatrix.label_tag }}</li>
-					<li>{{ form.onlyShifts }} {{ form.onlyShifts.label_tag }}</li>
-					<li>{{ form.wrap }} {{ form.wrap.label_tag }}</li>
-				</ul>
+			
+			<div id="optionsContainer" class="sectionMenu" title="Modify the images properties">
+			<a id="optionsButton" href="javascript:showHideOptionMenu();" class="btn buttonGrey" style="padding: 5px 10px;">
+				<i class="fa fa-wrench"></i>
+			</a>
+				{% include "showj/showj_tool_menu.html" %}
 			</div>
 		{% endif %}  
 		{% block content_menu %}{% endblock %}
