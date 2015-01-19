@@ -57,6 +57,23 @@ def writeParticles(outputFile):
         else:
             raise Exception('ERROR (e2converter): Cannot process a particle without filename')
         imageData = eman.EMData()
+        
+        ctf = None
+        if '_ctfModel._defocusU' in objDict.keys():
+            ctf = eman.EMAN2Ctf()
+            
+            defU = objDict['_ctfModel._defocusU']
+            defV = objDict['_ctfModel._defocusV']
+            
+            ctf.from_dict({"defocus": (defU + defV)/20000.0,
+                           "dfang": objDict['_ctfModel._defocusAngle'],
+                           "dfdiff": (defU - defV)/10000.0,
+                           "voltage": objDict['_acquisition._voltage'],
+                           "cs": objDict['_acquisition._sphericalAberration'],
+                           "ampcont": objDict['_acquisition._amplitudeContrast'] * 100.0,
+                           "apix": objDict['_samplingRate']})
+            imageData.set_attr('ctf', ctf)
+        
         transformation = None
         if '_angles' in objDict.keys():
             #TODO: convert to vector not matrix
@@ -71,9 +88,11 @@ def writeParticles(outputFile):
                                              "tz": shifts[2],
                                              "mirror": 0,  ####TODO: test flip
                                              "scale": 1.0})
-        imageData.read_image(filename, index)
         if transformation is not None:
             imageData.set_attr('xform.projection', transformation)
+        
+        imageData.read_image(filename, index)
+        
     
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1
