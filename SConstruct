@@ -798,16 +798,21 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                        chdir='software/em'))
 
     # Check that all needed programs are there.
-    for p in neededProgs:
-        if not progInPath(env, p):
-            print """
-  ************************************************************************
-    Warning: Cannot find program "%s" needed by %s
-  ************************************************************************
+    if default or GetOption(name):
+        for p in neededProgs:
+            if not progInPath(env, p):
+                print """
+      ************************************************************************
+        Warning: Cannot find program "%s" needed by %s
+      ************************************************************************
 
-Continue anyway? (y/n)""" % (p, name)
-            if raw_input().upper() != 'Y':
-                Exit(2)
+    Continue anyway? (y/n)""" % (p, name)
+                if raw_input().upper() != 'Y':
+                    Exit(2)
+    # This is not very satisfactory, because if something depends on
+    # this library later on, and the library was not explicitely set
+    # as default or --with-<library>, then the check will not be
+    # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, link to it and execute any extra actions.
     tDownload = download(env, 'software/tmp/%s' % tar, Value(url))
@@ -922,16 +927,21 @@ def manualInstall(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                   help='Activate %s' % name)
 
     # Check that all needed programs are there.
-    for p in neededProgs:
-        if not progInPath(env, p):
-            print """
-  ************************************************************************
-    Warning: Cannot find program "%s" needed by %s
-  ************************************************************************
+    if default or GetOption(name):
+        for p in neededProgs:
+            if not progInPath(env, p):
+                print """
+      ************************************************************************
+        Warning: Cannot find program "%s" needed by %s
+      ************************************************************************
 
-Continue anyway? (y/n)""" % (p, name)
-            if raw_input().upper() != 'Y':
-                Exit(2)
+    Continue anyway? (y/n)""" % (p, name)
+                if raw_input().upper() != 'Y':
+                    Exit(2)
+    # This is not very satisfactory, because if something depends on
+    # this library later on, and the library was not explicitely set
+    # as default or --with-<library>, then the check will not be
+    # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, and execute any extra actions.
     tDownload = download(env, File('#software/tmp/%s' % tar).abspath, Value(url))

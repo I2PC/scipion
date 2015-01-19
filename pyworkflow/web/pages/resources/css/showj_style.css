@@ -363,6 +363,13 @@ section .imageTitle{
 	
 }
 
+.optionListTitle{
+	background-color:Firebrick;
+	color:white;
+	display:block;
+	text-align: center;
+	
+}
 
 .multipleSelectionTitle{
 	background-color:Firebrick;
