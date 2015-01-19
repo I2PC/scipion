@@ -84,7 +84,8 @@ class ProtImportMicrographs(ProtImportMicBase):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return ['emx', 'xmipp3']
+        choices = ProtImportImages._getImportChoices(self)
+        return choices + ['emx', 'xmipp3']
     
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
@@ -169,7 +170,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         if self.importFrom == self.IMPORT_FROM_FILES:
             return ProtImportMicBase._summary(self)
         else:
-            return [self.summaryVar.get()]
+            return [self.summaryVar.get('No summary information.')]
         
 
 class ProtImportMovies(ProtImportMicBase):

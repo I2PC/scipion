@@ -52,7 +52,8 @@ class ProtImportParticles(ProtImportImages):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return ['emx', 'xmipp3', 'relion', 'scipion']
+        choices = ProtImportImages._getImportChoices(self)
+        return choices + ['emx', 'xmipp3', 'relion', 'scipion']#the order of this list is related to the constants defined
     
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3, relion, scipion  formats. """
@@ -186,7 +187,8 @@ class ProtImportAverages(ProtImportParticles):
         from which the import can be done.
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
-        return []
+        choices = ProtImportImages._getImportChoices(self)
+        return choices
             
     def _defineAcquisitionParams(self, form):
         form.addParam('samplingRate', FloatParam, default=1.,

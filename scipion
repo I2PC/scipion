@@ -79,6 +79,7 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_MENU = os.path.abspath(os.path.expanduser(value))
     elif arg == '--overwrite':
         overwriteConfs = True
+        sys.argv.insert(1, value)  # hack, there is no "value" to read here
     else:
         sys.exit('Unknown argument: %s' % arg)
 
@@ -225,6 +226,7 @@ MODE_HELP = 'help'
 MODE_DBBROWSE = 'browser'
 MODE_VIEWER = 'viewer'
 MODE_INSTALL = 'install'
+MODE_UNINSTALL = 'uninstall'
 MODE_CONFIG = 'config'
 MODE_APACHE_VARS = 'apache_vars'
 MODE_VERSION = 'version'
@@ -300,7 +302,7 @@ def main():
         viewerArgs = ' '.join(sys.argv[2:])
         runApp('pw_viewer.py', args=viewerArgs, chdir=False)
 
-    elif mode == MODE_INSTALL:
+    elif mode == MODE_INSTALL or mode == MODE_UNINSTALL:
         # We do not os.environ.update(VARS) here. SCons needs to use
         # the python installed in the system by default.
 
@@ -314,6 +316,9 @@ def main():
                 os.makedirs(path)
 
         args = sys.argv[2:]
+        # Uninstall is equals to install -c
+        if mode == MODE_UNINSTALL:
+            args = ['-c']
         from scripts.install import build
         ret = build(args=args)
         if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args

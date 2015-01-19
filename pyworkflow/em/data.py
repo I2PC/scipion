@@ -65,8 +65,7 @@ class Acquisition(EMObject):
         self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
         
     def copyInfo(self, other):
-        self.copyAttributes(other, '_magnification', '_voltage', 
-                            '_sphericalAberration', '_amplitudeContrast')
+        self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
         
     def getMagnification(self):
         return self._magnification.get()
@@ -733,12 +732,12 @@ class SetOfImages(EMSet):
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
 
-    def __iter__(self, random=False):
+    def iterItems(self, orderBy='id', direction='ASC'):
         """ Redefine iteration to set the acquisition to images. """
-        for img in self._iterItems(random=random):
+        for img in Set.iterItems(self, orderBy=orderBy, direction=direction):
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
-            # dont want to override with the set acquistion for this case
+            # don't want to override with the set acquisition for this case
             if not img.hasAcquisition():
                 img.setAcquisition(self.getAcquisition())
             yield img
@@ -1195,7 +1194,7 @@ class SetOfClasses(EMSet):
                         
         self._setItemMapperPath(classItem)
         EMSet._insertItem(self, classItem)
-        classItem.write()#Set.write(self)
+        classItem.write(properties=False)#Set.write(self)
         
     def __getitem__(self, itemId):
         """ Setup the mapper classes before returning the item. """
@@ -1203,7 +1202,7 @@ class SetOfClasses(EMSet):
         self._setItemMapperPath(classItem)
         return classItem
 
-    def _iterItems(self):    
+    def iterItems(self):
         for classItem in self._mapper.selectAll():
             self._setItemMapperPath(classItem)
             yield classItem

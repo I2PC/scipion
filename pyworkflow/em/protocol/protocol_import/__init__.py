@@ -34,5 +34,6 @@ from images import ProtImportImages
 from micrographs import ProtImportMicrographs, ProtImportMovies
 from particles import ProtImportParticles, ProtImportAverages
 from coordinates import ProtImportCoordinates
+from ctfs import ProtImportCTF
 from volumes import ProtImportVolumes, ProtImportPdb
 from masks import ProtImportMask

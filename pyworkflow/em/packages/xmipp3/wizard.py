@@ -46,6 +46,9 @@ from protocol_preprocess import (XmippProtFilterParticles, XmippProtFilterVolume
                                  XmippProtMaskParticles, XmippProtMaskVolumes)
 from protocol_align_volume import XmippProtAlignVolume
 from protocol_cl2d import XmippProtCL2D
+from protocol_helical_parameters import XmippProtHelicalParameters
+from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
+from protocol_particle_pick_consensus import XmippProtConsensusPicking
 
 from pyworkflow.em.wizard import *
 
@@ -166,13 +169,25 @@ class XmippBoxSizeWizard(Wizard):
 
         return int(boxSize/downFactor)
 
-
-
-        return boxSize
-
-
     def show(self, form):
         form.setVar('boxSize', self._getBoxSize(form.protocol))
+
+
+#===============================================================================
+# BOXSIZE
+#===============================================================================
+class XmippParticleConsensusRadiusWizard(Wizard):
+    _targets = [(XmippProtConsensusPicking, ['consensusRadius'])]
+
+    def show(self, form):
+        if not form.protocol.inputCoordinates is None:
+            boxSize=form.protocol.inputCoordinates[0].get().getBoxSize()
+            radius = int(boxSize*0.1)
+            if radius<10:
+                radius=10
+        else:
+            radius = 10
+        form.setVar('consensusRadius', radius)
 
 #===============================================================================
 # NUMBER OF CLASSES
@@ -273,7 +288,17 @@ class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
         _label = params['label']
         VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
- 
+class XmippVolumeRadiusWizard(XmippVolumeMaskRadiusWizard):
+    _targets = [(XmippProtHelicalParameters, ['cylinderRadius'])]
+
+    def _getParameters(self, protocol):
+
+        protParams = {}
+        protParams['input']= protocol.inputVolume
+        protParams['label']= 'cylinderRadius'
+        protParams['value']= protocol.cylinderRadius.get()
+        return protParams
+
 
 class XmippVolumeRadiiWizard(VolumeMaskRadiiWizard):
     _targets = [(XmippProtMaskVolumes, ['innerRadius', 'outerRadius'])]

@@ -37,7 +37,7 @@ from numpy import rad2deg
 from numpy.linalg import inv
 #from itertools import izip
 
-from brandeis import *
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 
 HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',

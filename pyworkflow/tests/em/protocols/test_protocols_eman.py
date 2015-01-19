@@ -28,14 +28,22 @@ import unittest, sys
 from pyworkflow.tests import *
 from pyworkflow.em import *
 from pyworkflow.em.packages.eman2 import *
+from pyworkflow.em.protocol import ProtImportParticles
 
 
 class TestEmanBase(BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+    
     @classmethod
     def setData(cls, projectData='xmipp_tutorial'):
         cls.dataset = DataSet.getDataSet(projectData)
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
+        cls.particlesFn = cls.dataset.getFile('particles')
+        cls.vol = cls.dataset.getFile('volumes')
     
     @classmethod
     def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
@@ -72,13 +80,21 @@ class TestEmanBase(BaseTest):
         return cls.protImport
 
     @classmethod
-    def runClassify(cls, particles):
-        cls.ProtClassify = cls.newProtocol(XmippProtML2D,
-                                           numberOfClasses=8, maxIters=4, doMlf=False,
-                                           numberOfMpi=2, numberOfThreads=2)
-        cls.ProtClassify.inputParticles.set(particles)
-        cls.launchProtocol(cls.ProtClassify)
-        return cls.ProtClassify
+    def runImportVolumes(cls, pattern, samplingRate):
+        """ Run an Import particles protocol. """
+        protImport = cls.newProtocol(ProtImportVolumes, 
+                                     filesPath=pattern, samplingRate=samplingRate)
+        cls.launchProtocol(protImport)
+        return protImport
+
+#     @classmethod
+#     def runClassify(cls, particles):
+#         cls.ProtClassify = cls.newProtocol(XmippProtML2D,
+#                                            numberOfClasses=8, maxIters=4, doMlf=False,
+#                                            numberOfMpi=2, numberOfThreads=2)
+#         cls.ProtClassify.inputParticles.set(particles)
+#         cls.launchProtocol(cls.ProtClassify)
+#         return cls.ProtClassify
     
 
 class TestEmanBoxing(TestEmanBase):
@@ -95,6 +111,7 @@ class TestEmanBoxing(TestEmanBase):
         #protPP.boxSize.set(550)
         self.proj.launchProtocol(protPP, wait=True)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+
 
 class TestEmanInitialModelMda(TestEmanBase):
     @classmethod
@@ -121,6 +138,7 @@ class TestEmanInitialModelMda(TestEmanBase):
         self.launchProtocol(protIniModel)
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with eman initial model protocol")
 
+
 class TestEmanInitialModelGroel(TestEmanInitialModelMda):
     @classmethod
     def setUpClass(cls):
@@ -131,6 +149,43 @@ class TestEmanInitialModelGroel(TestEmanInitialModelMda):
         cls.symmetry = 'd7'
         cls.numberOfIterations = 10
         cls.numberOfModels = 10
+
+
+class TestEmanReconstruct(TestEmanBase):
+    def test_ReconstructEman(self):
+        print "Import Set of particles with angles"
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 objLabel='from scipion (to-reconstruct)',
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=self.dsRelion.getFile('import/case2/particles.sqlite'),
+                                 magnification=10000,
+                                 samplingRate=7.08
+                                 )
+        self.launchProtocol(prot1)
+        
+        print "Run Eman Reconstruct"
+        protReconstruct = self.newProtocol(EmanProtReconstruct)
+        protReconstruct.inputParticles.set(prot1.outputParticles)
+        self.launchProtocol(protReconstruct)
+        self.assertIsNotNone(protReconstruct.outputVolume, "There was a problem with eman reconstruction protocol")
+
+
+class TestEmanRefine(TestEmanBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestEmanBase.setData('mda')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
+        cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
+        
+    def test_RefineEman(self):
+        print "Run Eman Refine Easy"
+        protRefine = self.newProtocol(EmanProtRefine, symmetry="d6", speed=6, numberOfIterations=1)
+        protRefine.inputParticles.set(self.protImport.outputParticles)
+        protRefine.input3DReference.set(self.protImportVol.outputVolume)
+        self.launchProtocol(protRefine)
+        self.assertIsNotNone(protRefine.outputVolume, "There was a problem with eman refine protocol")
+
 
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestEmanBoxing)

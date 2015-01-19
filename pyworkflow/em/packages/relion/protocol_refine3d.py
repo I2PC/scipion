@@ -92,6 +92,7 @@ leads to objective and high-quality results.
         outImgsFn = self._getFileName('data', iter=self._lastIter())
         
         outImgSet.copyInfo(imgSet)
+        outImgSet.setAlignmentProj()
         outImgSet.copyItems(imgSet,
                             updateItemCallback=self._createItemMatrix,
                             itemDataIterator=md.iterRows(outImgsFn))

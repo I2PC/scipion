@@ -51,6 +51,8 @@ from pyworkflow.em.constants import (UNIT_PIXEL,
 from pyworkflow.em.data import (Volume, 
                                 SetOfMicrographs, SetOfParticles, SetOfVolumes)
 from pyworkflow.em.protocol import ProtImportImages
+from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+
 
 import xmipp
 
@@ -776,3 +778,13 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
     
+class ImportCoordinatesBoxSizeWizard(Wizard):
+    _targets = [(ProtImportCoordinates, ['boxSize'])]
+
+    def _getBoxSize(self, protocol):
+
+        return protocol.getDefaultBoxSize()
+
+
+    def show(self, form):
+        form.setVar('boxSize', self._getBoxSize(form.protocol))

@@ -329,7 +329,8 @@ class Protocol(Step):
         self.allowHeader = Boolean(True)    
         # Create an String variable to allow some protocol to precompute
         # the summary message
-        self.summaryVar = String()    
+        self.summaryVar = String()
+        self.methodsVar = String()    
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -411,6 +412,23 @@ class Protocol(Step):
         for paramName, _ in self._definition.iterParams():
             yield paramName, getattr(self, paramName)
             
+    def getDefinitionDict(self):
+        """ Similar to getObjDict, but only for those 
+        params that are in the form.
+        This function is used for export protocols as json text file.
+        """
+        d = OrderedDict()
+        d['object.className'] = self.getClassName()
+        d['object.id'] = self.strId()
+         
+        od = self.getObjDict()
+        
+        for attrName in od:
+            if self.getDefinitionParam(attrName) is not None:
+                d[attrName] = od[attrName]
+                
+        return d
+        
     def iterDefinitionSections(self):
         """ Iterate over all the section of the definition. """
         for section in self._definition.iterSections():
@@ -495,10 +513,13 @@ class Protocol(Step):
         If stored previously, _store should be used.
         The child will be set as self.key attribute
         """
-       
-        setattr(self, key, child)
-        if self.hasObjId():
-            self.mapper.insertChild(self, key, child)
+        try:
+            setattr(self, key, child)
+            if self.hasObjId():
+                self.mapper.insertChild(self, key, child)
+        except Exception, ex:
+            print "Error with child '%s', value=%s, type=%s" % (key, child, type(child))
+            raise ex
         
     def _deleteChild(self, key, child):
         """ Delete a child from the mapper. """
@@ -1134,7 +1155,7 @@ class Protocol(Step):
     def summary(self):
         """ Return a summary message to provide some information to users. """
         try:
-            baseSummary = self._summary() or []
+            baseSummary = self._summary() or ['No summary information.']
         except Exception as ex:
             baseSummary = [str(ex)]        
             
@@ -1147,6 +1168,12 @@ class Protocol(Step):
             
         return baseSummary
     
+    def getFileTag(self, fn):
+        return "[[%s]]" % fn
+    
+    def getObjectTag(self, obj):
+        return "[[%s][%s]]" % (obj.getClassName(), obj.getNameId())
+    
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """
         return getattr(self, "_references", [])
@@ -1154,7 +1181,7 @@ class Protocol(Step):
     def __getPackageBibTex(self):
         """ Return the _bibtex from the package . """
         return getattr(self.getClassPackage(), "_bibtex", {})
-     
+    
     def _getCite(self, citeStr):
         bibtex = self.__getPackageBibTex()
         if citeStr in bibtex:

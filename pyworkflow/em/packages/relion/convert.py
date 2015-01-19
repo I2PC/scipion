@@ -682,8 +682,16 @@ def convertBinaryFiles(imgSet, outputDir):
     return filesDict
 
 
-def createItemMatrix(self, item, row, align):
+def createItemMatrix(item, row, align):
     from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
     
     item.setTransform(rowToAlignment(row, alignType=align))
+
+def readCoordinates(mic, fileName, coordsSet):
+        for row in md.iterRows(fileName):
+            coord = rowToCoordinate(row)
+            coord.setX(coord.getX())
+            coord.setY(coord.getY())
+            coord.setMicrograph(mic)
+            coordsSet.append(coord)
 

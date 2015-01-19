@@ -3,10 +3,11 @@ from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
                                            XmippProtExtractParticles,
                                            XmippProtCropResizeParticles, XmippProtML2D)
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em.packages.brandeis import ProtCTFFind, ProtFrealign
-from pyworkflow.em.packages.eman2 import EmanProtBoxing, EmanProtInitModel
+from pyworkflow.em.packages.grigoriefflab import ProtCTFFind, ProtFrealign
+from pyworkflow.em.packages.eman2 import EmanProtInitModel
 from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
 from test_workflow import TestWorkflow
+from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
 
 
 class TestMixedBPV(TestWorkflow):
@@ -57,13 +58,17 @@ class TestMixedBPV(TestWorkflow):
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 6.185, delta=0.001)
 
 #         self.validateFiles('protCTF', protCTF)
-        print "Running Eman fake particle picking..."
-        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir, runMode=1) 
+
+        print "Running Eman import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                 filesPath=self.crdsDir,
+                                 filesPattern='info/*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-#         self.protDict['protPP'] = protPP
-        
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+
+
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=5, runMode=1, doInvert=False)
@@ -255,15 +260,17 @@ class TestMixedBPV2(TestWorkflow):
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
 #         self.validateFiles('protCTF', protCTF)
-        
-        print "Running Eman fake particle picking..."
-        protPP = self.newProtocol(EmanProtBoxing, importFolder=self.crdsDir,
-                                  runMode=1)
+
+        print "Running Eman import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                 filesPath=self.crdsDir,
+                                 filesPattern='info/*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-#         self.protDict['protPP'] = protPP
-        
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+
+
         print "<Run extract particles with Same as picking>"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, downsampleType=SAME_AS_PICKING, doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)

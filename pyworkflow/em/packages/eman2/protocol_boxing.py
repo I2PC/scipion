@@ -56,10 +56,8 @@ class EmanProtBoxing(ProtParticlePicking):
 
         self._params = {'inputMics': ' '.join(micList)}
         # Launch Boxing GUI
-        if not self.importFolder.hasValue():
-            self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
-        else: # This is only used for test purposes
-            self._insertFunctionStep('_importFromFolderStep')  
+        self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
+
 
 
     #--------------------------- STEPS functions ---------------------------------------------------
@@ -79,24 +77,14 @@ class EmanProtBoxing(ProtParticlePicking):
             self._createOutput(self.getWorkingDir())
         
 
-    
-    def _importFromFolderStep(self):
-        """ This function will copy Xmipp .pos files for
-        simulating an particle picking run...this is only
-        for testing purposes.
-        """
-        cwd = os.getcwd()
-        print "COPYTREE from %s TO %s" % (self.importFolder.get(), cwd)
-        copyTree(self.importFolder.get(), os.getcwd())
-        self._leaveDir()# going back to project dir
-        self._createOutput(cwd)
+
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path
         # Change to protocol working directory
         self._enterWorkingDir()
-        eman2.loadEnvironment()
+#         eman2.loadEnvironment()
         ProtParticlePicking._runSteps(self, startIndex)
 
     

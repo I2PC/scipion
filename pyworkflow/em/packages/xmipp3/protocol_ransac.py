@@ -29,7 +29,7 @@ from math import floor
 
 import xmipp
 from pyworkflow.object import String
-from pyworkflow.utils.path import cleanPath, moveFile, copyFile
+from pyworkflow.utils.path import cleanPath, moveFile, copyFile, cleanPattern
 from pyworkflow.protocol.params import (PointerParam, FloatParam, BooleanParam,
                                         IntParam, StringParam, 
                                         STEPS_PARALLEL, LEVEL_EXPERT)
@@ -148,10 +148,6 @@ class XmippProtRansac(ProtInitialVolume):
             deps.append(stepId)
         
         # Look for threshold, evaluate volumes and get the best
-        if self.initialVolume.hasValue():
-            #ToDo: remove rm command and check what to clean
-            self._insertRunJobStep("rm", params=self._getTmpPath("gallery_InitialVolume*"), NumberOfMpi=1)
-            
         self._insertFunctionStep("getCorrThreshStep", prerequisites=deps) # Make estimation steps indepent between them)
         self._insertFunctionStep("evaluateVolumesStep")
         bestVolumesStepId = self._insertFunctionStep("getBestVolumesStep")        
@@ -285,6 +281,8 @@ class XmippProtRansac(ProtInitialVolume):
         cleanPath(self._getTmpPath('gallery_'+fnBase+'.doc'))
         cleanPath(fnVol)
         cleanPath(self._getTmpPath(fnBase+'.xmd'))
+        if self.initialVolume.hasValue():
+            cleanPattern(self._getTmpPath("gallery_InitialVolume*"))
     
     def reconstructStep(self, fnRoot):
         self.runJob("xmipp_reconstruct_fourier","-i %s.xmd -o %s.vol --sym %s " %(fnRoot,fnRoot,self.symmetryGroup.get()))

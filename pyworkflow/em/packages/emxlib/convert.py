@@ -362,6 +362,7 @@ def _micrographsFromEmx(protocol, emxData, emxFile, outputDir,
 
         if ctfSet is not None:
             protocol._defineOutputs(outputCTF=ctfSet)
+            ctfSet.setMicrographs(micSet)
             protocol._defineCtfRelation(micSet, ctfSet)
 
 

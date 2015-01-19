@@ -3,7 +3,7 @@ from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3.constants import OTHER 
-from pyworkflow.em.packages.brandeis import *
+from pyworkflow.em.packages.grigoriefflab import *
 from pyworkflow.em.packages.eman2 import *
 from test_workflow import TestWorkflow
 
@@ -46,14 +46,18 @@ class HighThroughputTest(TestWorkflow):
         protCTF.setObjLabel('ctf - Day1')
         self.proj.launchProtocol(protCTF, wait=True)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
-        
-        print "Running Xmipp supervised fake particle picking..."
-        protPP = XmippProtParticlePicking(importFolder=self.crdsDir, runMode=1)                
+
+        print "Running Xmipp Import Coordinates"
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                 filesPath=self.crdsDir,
+                                 filesPattern='*.pos', boxSize=110)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('Picking - Day1')
-        self.proj.launchProtocol(protPP, wait=True)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
-        
+        self.launchProtocol(protPP)
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
+
+
         print "Run extract particles with <Other> option"
         protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True,
                                                 downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)

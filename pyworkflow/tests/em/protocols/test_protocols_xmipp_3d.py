@@ -49,6 +49,7 @@ class TestXmippBase(BaseTest):
         cls.vol1 = cls.dataset.getFile('vol1')
         cls.vol2 = cls.dataset.getFile('vol2')
         cls.vol3 = cls.dataset.getFile('vol3')
+        cls.vol4 = cls.dataset.getFile('vol4')
 
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate):
@@ -592,16 +593,19 @@ class TestXmippProtHelicalParameters(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestXmippBase.setData()
-        cls.protImport = cls.runImportVolumes(cls.vol1, 9.896)
+        cls.ds = DataSet.getDataSet('general')
+        cls.vol = cls.ds.getFile('vol_helix')
+        cls.protImport = cls.runImportVolumes(cls.vol, 1.0)
 
     def testHelicalParameters(self):
         print "Run symmetrize helical"
-        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=False,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
+        protHelical = XmippProtHelicalParameters(cylinderRadius=20,dihedral=True,rot0=50,rotF=70,rotStep=5,z0=5,zF=10,zStep=0.5)
         protHelical.inputVolume.set(self.protImport.outputVolume)
         self.proj.launchProtocol(protHelical, wait=True)
 
         self.assertIsNotNone(protHelical.outputVolume, "There was a problem with Helical output volume")
+        self.assertAlmostEqual(protHelical.deltaRot.get(), 59.4, places=1, msg="Output delta rot is wrong")
+        self.assertAlmostEqual(protHelical.deltaZ.get(), 6.7, places=1, msg="Output delta Z is wrong")
 
 
 class TestXmippRansacMda(TestXmippBase):
@@ -692,12 +696,16 @@ class TestXmippProjMatching(TestXmippBase):
         # After CTF estimation, the output micrograph should have CTF info
 #         self.validateFiles('protCTF', protCTF)
 
-        print "Running fake particle picking..."
-        protPP = self.newProtocol(XmippProtParticlePicking, importFolder=self.allCrdsDir)
+        print "Running import coordinates..."
+        protPP = self.newProtocol(ProtImportCoordinates,
+                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                  filesPath=self.allCrdsDir,
+                                  filesPattern='*.pos', boxSize=110)
+
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-#         self.protDict['protPicking'] = protPP
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the faked picking")
+        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the import of coordinates")
+
 
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=1, doFlip=True, downFactor=8, runMode=1, doInvert=True)

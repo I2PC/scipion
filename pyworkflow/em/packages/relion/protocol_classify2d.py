@@ -122,8 +122,9 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
-        summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
+        summary.append("Input Particles: *%s*\nClassified into *%d* classes." % (self.getObjectTag(self.inputParticles.get()),
                                                                               self.numberOfClasses.get()))
+        summary.append('Output set: %s'%self.getObjectTag(self.outputClasses))
         return summary
     
     def _summaryContinue(self):
@@ -137,8 +138,9 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
     def _methods(self):
         strline=''
         if hasattr(self, 'outputClasses'):
-            strline += 'We classified %d particles into %d classes using Relion Classify2d. '%\
-                           (self.inputParticles.get().getSize(), self.numberOfClasses.get())
+            strline += 'We classified input particles %s(%d items) into %d classes using Relion Classify2d. '%\
+                           ((self.getObjectTag(self.inputParticles.get()), self.inputParticles.get().getSize(), self.numberOfClasses.get()))
+            strline += 'Output classes: %s'%(self.getObjectTag(self.outputClasses))
         return [strline]
     
     #--------------------------- UTILS functions --------------------------------------------

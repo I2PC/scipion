@@ -253,11 +253,11 @@ class XmippGeometricalMask2D:
         elif geo == MASK2D_CROWN:
             messages.append("The mask represented a crown between %d and %d. "%(self.innerRadius.get(),self.outerRadius.get()))
         elif geo == MASK2D_GAUSSIAN:
-            messages.append("The mask represented a Gaussian of sigma %f. "%(self.sigma.get()))
+            messages.append("The mask represented a Gaussian of sigma %.2f. "%(self.sigma.get()))
         elif geo == MASK2D_RAISED_COSINE:
-            messages.append("The mask represented a raised cosine between %f and %f. "%(self.innerRadius.get(),self.outerRadius.get()))
+            messages.append("The mask represented a raised cosine between %.2f and %.2f. "%(self.innerRadius.get(),self.outerRadius.get()))
         elif geo == MASK2D_RAISED_CROWN:
-            messages.append("The mask represented a raised crown between %f and %f (decay=%f)"%(self.innerRadius.get(),self.outerRadius.get(),
+            messages.append("The mask represented a raised crown between %.2f and %.2f (decay=%.2f)"%(self.innerRadius.get(),self.outerRadius.get(),
                                                                             self.borderDecay.get()))
         return messages
     

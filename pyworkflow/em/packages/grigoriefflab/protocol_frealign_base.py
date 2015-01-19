@@ -40,7 +40,7 @@ from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT, EWA_DISABL
                        INTERPOLATION_1, REF_ALL, MOD_RECONSTRUCTION, MOD_RANDOM_SEARCH_REFINEMENT,
                        MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE, EWA_SIMPLE_HAND, EWA_SIMPLE,
                        FSC_3DR_ODD, FSC_3DR_EVEN, FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0, REF_ANGLES, REF_SHIFTS)
-from brandeis import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
 
 
 class ProtFrealignBase(EMProtocol):
@@ -1123,7 +1123,7 @@ eot
                 f2.close()
                 f1.close()
         else:
-            file2 = self._getFileName('input_par_block', block=1, iter=iter, prevIter=prevIter)
+            file2 = self._getFileName('input_par_block', block=1, iter=iterN, prevIter=prevIter)
             copyFile(file1, file2)
     
     def _setLastIter(self, iterN):

@@ -2,7 +2,7 @@
 # *
 # * Authors:     Vahid Abrishami (vabrishami@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *
+# *              Airen Zaldivar  (airenzp@gmail.com)
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -36,11 +36,6 @@ from protocol_movie_alignment import ProtMovieAlignment
 from pyworkflow.em.viewer import ObjectView
 from pyworkflow.em.showj import OBJCMDS, OBJCMD_MOVIE_ALIGNPOLAR
 from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots
-
-PLOT_CART = 0
-PLOT_POLAR = 1
-PLOT_POLARCART = 2
-PLOT_CHOICES = ['cartesian', 'polar', 'both']
 
 class XmippMovieAlignViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects

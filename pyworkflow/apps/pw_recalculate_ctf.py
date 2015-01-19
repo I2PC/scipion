@@ -31,7 +31,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.em import ProtUserSubSet
 from pyworkflow.utils import timeit
 from pyworkflow.em.packages.xmipp3 import XmippProtRecalculateCTF
-from pyworkflow.em.packages.brandeis import ProtRecalculateCTFFind
+from pyworkflow.em.packages.grigoriefflab import ProtRecalculateCTFFind
 
 @timeit
 def runRecalcCftProtocol(projectId, inputObjId, sqliteFile):

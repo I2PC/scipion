@@ -226,34 +226,39 @@ class XmippProtML2D(ProtClassify2D):
     
     def _summary(self):
         summary = []
-        summary.append('Input Particles: *%d*' % self.inputParticles.get().getSize())
-        summary.append('Classified into *%d* classes' % self.numberOfClasses.get())
-        
-        if self.doMlf:
-            summary.append('- Used a ML in _Fourier-space_')
-        elif self.doFast:
-            summary.append('- Used _fast_, reduced search-space approach')
+        if hasattr(self, 'outputClasses'):
+            summary.append('Input Particles: *%d*' % self.inputParticles.get().getSize())
+            summary.append('Classified into *%d* classes' % self.numberOfClasses.get())
 
-        if self.doNorm:
-            summary.append('- Refined _normalization_ for each experimental image')
+            if self.doMlf:
+                summary.append('- Used a ML in _Fourier-space_')
+            elif self.doFast:
+                summary.append('- Used _fast_, reduced search-space approach')
+
+            if self.doNorm:
+                summary.append('- Refined _normalization_ for each experimental image')
             
         return summary
     
     def _methods(self):
         methods = []
-        methods.append('An input dataset of *%d* images was classified' % self.inputParticles.get().getSize())
-        methods.append('into *%d* 2D classes using Maximum Likelihood (ML) inside Xmipp.' % self.numberOfClasses.get())
-        
-        if self.doMlf:
-            methods.append('ML was used in _Fourier-space_.')
-        elif self.doFast:
-            methods.append('Used _fast_, reduced search-space approach.')
+        if hasattr(self, 'outputClasses'):
+            methods.append('Input dataset %s of *%d* images was classified' % (self.getObjectTag(self.inputParticles.get()), self.inputParticles.get().getSize()))
+            numberOfClasses = self.numberOfClasses.get()
+            classesTxt =  'class' if numberOfClasses == 1 else 'classes'
+            methods.append('into *%d* 2D %s using Maximum Likelihood (ML) inside Xmipp.' % (numberOfClasses, classesTxt))
 
-        if self.doNorm:
-            methods.append('The _normalization_ was refined for each experimental image.')
-            
+            if self.doMlf:
+                methods.append('ML was used in _Fourier-space_.')
+            elif self.doFast:
+                methods.append('Used _fast_, reduced search-space approach.')
+
+            if self.doNorm:
+                methods.append('The _normalization_ was refined for each experimental image.')
+            methods.append('Output set is %s.'%(self.getObjectTag(self.outputClasses)))
+
         return methods
-    
+
     #--------------------------- UTILS functions --------------------------------------------
     
     def _getIterClasses(self, it=None, block=None):

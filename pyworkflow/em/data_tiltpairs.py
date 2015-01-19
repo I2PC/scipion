@@ -83,16 +83,22 @@ class MicrographsTiltPair(EMSet):
         return filePaths 
     
     def _loadClassesDict(self):
-        return globals() 
+        return globals()
+
+    def close(self):
+        self._tilted.close()
+        self._untilted.close()
+        EMSet.close(self)
+
     
-    
-class CoordinatesTiltPair(EMObject):
+class CoordinatesTiltPair(EMSet):
     """Represents a Coordinates Tilt Pair"""
+    ITEM_TYPE = TiltPair
     
     def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._tilted = None#SetOfMicrographs()
-        self._untilted = None#SetOfMicrographs()
+        EMSet.__init__(self, **args)
+        self._tilted = None#SetOfCoordinates()
+        self._untilted = None#SetOfCoordinates()
         self._angles = SetOfAngles()
         self._micsPair = Pointer()
         
@@ -126,6 +132,14 @@ class CoordinatesTiltPair(EMObject):
         filePaths.add(self.getUntilted().getFiles)
         
         return filePaths
+
+    def _loadClassesDict(self):
+        return globals()
+
+    def close(self):
+        self._tilted.close()
+        self._untilted.close()
+        EMSet.close(self)
          
 class Angles(EMObject):
     """Represents a triplet of angles"""
@@ -192,4 +206,9 @@ class ParticlesTiltPair(EMSet):
         return filePaths    
     
     def _loadClassesDict(self):
-        return globals() 
+        return globals()
+
+    def close(self):
+        self._tilted.close()
+        self._untilted.close()
+        EMSet.close(self)

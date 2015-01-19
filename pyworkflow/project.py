@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
+from pprint import PrettyPrinter
 """
 This modules handles the Project management
 """
@@ -197,10 +199,20 @@ class Project(object):
         
     def _updateProtocol(self, protocol, tries=0):
         # Read only mode
+        #if os.environ.get('SCIPION_DEBUG', False):
+        #    from rpdb2 import start_embedded_debugger
+        #    start_embedded_debugger('a')
+        
         if not self.isReadOnly():
             try:
-                # FIXME: this will not work for a real remote host
-                jobId = protocol.getJobId() # Preserve the jobId before copy
+                # Backup the values of 'jobId', 'label' and 'comment'
+                # to be restored after the .copy
+                jobId = protocol.getJobId() 
+                label = protocol.getObjLabel()
+                comment = protocol.getObjComment()
+                
+                #TODO: when launching remote protocols, the db should be retrieved 
+                # in a different way.
                 dbPath = self.getPath(protocol.getDbPath())
                 if not exists(dbPath):
                     return
@@ -209,9 +221,13 @@ class Project(object):
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
                 protocol.copy(prot2, copyId=False)
-                # Restore jobId
+                # Restore backup values
                 protocol.setJobId(jobId)
+                protocol.setObjLabel(label)
+                protocol.setObjComment(comment)
+                
                 self.mapper.store(protocol)
+            
             except Exception, ex:
                 print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (protocol.getObjName(), jobId, ex, tries)
                 if tries == 0: # 3 tries have been failed
@@ -398,6 +414,93 @@ class Project(object):
     
         return result
     
+    def exportProtocols(self, protocols, filename):
+        """ Create a text json file with the info
+        to import the workflow into another project.
+        This methods is very similar to copyProtocol
+        Params:
+            protocols: a list of protocols to export.
+            filename: the filename where to write the workflow.
+        
+        """
+        # Handle the copy of a list of protocols
+        # for this case we need to update the references of input/outputs
+        newDict = OrderedDict()
+                    
+        for prot in protocols:
+            newDict[prot.getObjId()] = prot.getDefinitionDict()
+                     
+        g = self.getRunsGraph(refresh=False)
+        
+        for prot in protocols:
+            protId = prot.getObjId()
+            node = g.getNode(prot.strId())
+            
+            for childNode in node.getChilds():
+                childId = childNode.run.getObjId()
+                if childId in newDict:
+                    childDict = newDict[childId]
+                    # Get the matches between outputs/inputs of node and childNode
+                    matches = self.__getIOMatches(node, childNode)
+                    for oKey, iKey in matches:
+                        childDict[iKey] = '%s.%s%s' % (protId, Pointer.EXTENDED_ATTR, oKey)
+                      
+        f = open(filename, 'w')  
+        
+        f.write(json.dumps(list(newDict.values()), 
+                           indent=4, separators=(',', ': ')) + '\n')
+        f.close()
+        
+    def loadProtocols(self, filename=None, jsonStr=None):
+        """ Load protocols generated in the same format as self.exportProtocols.
+        Params:
+            filename: the path of the file where to read the workflow.
+            jsonStr: read the protocols from a string instead of file.
+        Note: either filename or jsonStr should be not None.
+        """
+        f = open(filename)
+        protocolsList = json.load(f)
+        
+        emProtocols = em.getProtocols()
+        newDict = {}
+        
+        # First iteration: create all protocols and setup parameters
+        for protDict in protocolsList:
+            protClassName = protDict['object.className']
+            protId = protDict['object.id']
+            protClass = emProtocols.get(protClassName, None)
+            
+            if protClass is None:
+                print "ERROR: protocol class name '%s' not found" % protClassName
+            else:
+                prot = protClass()
+                newDict[protId] = prot
+                for paramName, attr in prot.iterDefinitionAttributes():
+                    if not attr.isPointer():
+                        if paramName in protDict:
+                            attr.set(protDict[paramName])
+                self.saveProtocol(prot)
+        # Second iteration: update pointers values
+        for protDict in protocolsList:
+            protId = protDict['object.id']
+            
+            if protId in newDict:
+                prot = newDict[protId]
+                for paramName, attr in prot.iterDefinitionAttributes():
+                        if attr.isPointer() and paramName in protDict:
+                            parts = protDict[paramName].split('.')
+                            if parts[0] in newDict:
+                                attr.set(newDict[parts[0]]) # set pointer to correct created protocol
+                                if len(parts) > 1: # set extended attribute part
+                                    attr._extended.set(parts[1])
+                            else:
+                                attr.set(None)
+                self.mapper.store(prot)
+            
+        f.close()
+        self.mapper.commit()
+            
+    
     def saveProtocol(self, protocol):
         self._checkModificationAllowed([protocol], 'Cannot SAVE protocol')
         
@@ -408,7 +511,15 @@ class Project(object):
             self._setupProtocol(protocol)
                 
     def getProtocol(self, protId):
-        return self.mapper.selectById(protId)
+        protocol = self.mapper.selectById(protId)
+        
+        if not isinstance(protocol, Protocol):
+            raise Exception('>>> ERROR: Invalid protocol id: %d' % protId)
+        
+        self._setProtocolMapper(protocol)
+        
+        return protocol
+            
     
     def getObject(self, objId):
         """ Retrieve an object from the db given its id. """
@@ -439,6 +550,11 @@ class Project(object):
             self.mapper.store(protocol)
             self.mapper.commit()
     
+    def _setProtocolMapper(self, protocol):
+        """ Set the project and mapper to the protocol. """
+        protocol.setProject(self)
+        protocol.setMapper(self.mapper)
+        
     def _setupProtocol(self, protocol):
         """Insert a new protocol instance in the database"""
         
@@ -448,23 +564,31 @@ class Project(object):
             self._storeProtocol(protocol) # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (protocol.getObjId(), protocol.getClassName())
-            protocol.setProject(self)
+            self._setProtocolMapper(protocol)
             #print protocol.strId(), protocol.getProject().getName()
             #protocol.setName(name)
             protocol.setWorkingDir(self.getPath(PROJECT_RUNS, workingDir))
-            protocol.setMapper(self.mapper)
             self._setHostConfig(protocol)
             # Update with changes
             self._storeProtocol(protocol)
         
+    def _closeMappers(self, runs):
+        if runs is not None:
+            for r in runs:
+                # Iter all output attributes of run that are Set
+                # and close the underlying db
+                for _, attr in r.iterOutputAttributes(Set):
+                    attr.close()
+            
     def getRuns(self, iterate=False, refresh=True):
         """ Return the existing protocol runs in the project. 
         """
         if self.runs is None or refresh:
+            # Close db open connections to db files
+            self._closeMappers(self.runs)
             self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             for r in self.runs:
-                r.setProject(self)
-                r.setMapper(self.mapper)
+                self._setProtocolMapper(r)
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():

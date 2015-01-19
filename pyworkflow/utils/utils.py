@@ -160,9 +160,10 @@ def trace(nlevels, separator=' --> ', stream=sys.stdout):
 
     
 def prettyDict(d):
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(d)
+    print "{"
+    for k, v in d.iteritems():
+        print "    %s: %s" % (k, v)
+    print "}"
 
 
 def prettyXml(elem, level=0):
@@ -346,7 +347,7 @@ PATTERN_ITALIC = "(^|[\s])[_](?P<italic>[^\s_][^_]*[^\s_]|[^\s_])[_]"
 #PATTERN_ITALIC = r"[\s]+[_]([^\s][^_]+[^\s])[_][\s]+"
 PATTERN_LINK1 = '(?P<link1>http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)'
 PATTERN_LINK2 = "[\[]{2}(?P<link2>[^\s][^\]]+[^\s])[\]][\[](?P<link2_label>[^\s][^\]]+[^\s])[\]]{2}"
-# __PATTERN_LINK2 should be first since could contains __PATTERN_LINK1
+# __PATTERN_LINK2 should be first since it could contain __PATTERN_LINK1
 PATTERN_ALL = '|'.join([PATTERN_BOLD, PATTERN_ITALIC, PATTERN_LINK2, PATTERN_LINK1])
 
 # Compiled regex
@@ -549,3 +550,12 @@ def getMemoryAvailable():
     """ Return the total memory of the system in MB """
     from psutil import virtual_memory
     return virtual_memory().total // 1024**2
+
+
+def startDebugger(mode='SCIPION_DEBUG', password='a'):
+    if mode != 'SCIPION_DEBUG' or envVarOn('SCIPION_DEBUG'):
+        try:
+            from rpdb2 import start_embedded_debugger
+            start_embedded_debugger(password)
+        except Exception:
+            print "Error importing rpdb2 debugging module, consider installing winpdb."

@@ -255,8 +255,8 @@ class HostWindow(gui.Window):
         tag = self.tags.get(key, '')
         if  tag == 'text':
             entry = Text(parent, height=15)
-            entry.addText(value)
             entry.setReadOnly(False)
+            entry.addText(value)
             entry.tag_configure("red", foreground="#ff0000")
             entry.highlight("%\(\w+\)\w", "red", '1.0', 'end', regexp=True)
             self.queueText = entry

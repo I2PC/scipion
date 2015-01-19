@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict
 """
 Main project window application
 """
@@ -66,6 +67,7 @@ ACTION_STOP = Message.LABEL_STOP
 ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
+ACTION_EXPORT = Message.LABEL_EXPORT
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -83,6 +85,7 @@ ActionIcons = {
     ACTION_STOP: Icon.ACTION_STOP,
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
+    ACTION_EXPORT: Icon.ACTION_EXPORT
                }
 
 
@@ -151,6 +154,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_BROWSE, single and status != STATUS_SAVED),
                    (ACTION_DB, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
+                   (ACTION_EXPORT, not single)
                    #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
                    ]
         
@@ -612,8 +616,13 @@ class ProtocolsView(tk.Frame):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
         for protId in list(self._selection):
-            if not self.project.getProtocol(protId):
+            try:
+                self.project.getProtocol(protId)
+            except Exception, ex:
                 self._selection.remove(protId)
+
+
+
         
     def refreshRuns(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed runs.
@@ -650,7 +659,8 @@ class ProtocolsView(tk.Frame):
        
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
-                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS]
+                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
+                           ACTION_EXPORT]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
@@ -890,7 +900,7 @@ class ProtocolsView(tk.Frame):
         hosts = [host.getLabel() for host in self.settings.getHosts()]
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
-                       hostList=hosts)
+                       hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
         
@@ -931,7 +941,9 @@ class ProtocolsView(tk.Frame):
         return None
             
     def _fillSummary(self):
+        self.summaryText.setReadOnly(False)
         self.summaryText.clear()
+        self.infoTree.clear()
         n = len(self._selection)
         
         if n == 1:
@@ -954,8 +966,10 @@ class ProtocolsView(tk.Frame):
                 for line in prot.summary():
                     self.summaryText.addLine(line)
                 self.summaryText.addLine('')
+        self.summaryText.setReadOnly(True)
         
     def _fillMethod(self):
+        self.methodText.setReadOnly(False)
         self.methodText.clear()
         self.methodText.addLine("*METHODS:*")
         cites = OrderedDict()
@@ -997,21 +1011,34 @@ class ProtocolsView(tk.Frame):
 #            msg = "Protocol successfully saved."
         else:
             self.project.launchProtocol(prot)
+            # Select the launched protocol to display its summary, methods..etc
+            self._selection.clear()
+            self._selection.append(prot.getObjId())
+            self._updateSelection()
             self._scheduleRunsUpdate()
             msg = ""
-            self.outputViewer.refreshOutput()
+            #self.outputViewer.refreshOutput()
 
-        
         return msg
+    
+    def _updateProtocol(self, prot):
+        """ Callback to notify about the change of a protocol
+        label or comment. 
+        """
+        self._scheduleRunsUpdate()
         
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
-        if askYesNo(Message.TITLE_DELETE_FORM, Message.LABEL_DELETE_FORM, self.root):
-            self.project.deleteProtocol(*self._getSelectedProtocols())
+        protocols = self._getSelectedProtocols()
+        if askYesNo(Message.TITLE_DELETE_FORM, 
+                    Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
+                    self.root):
+            self.project.deleteProtocol(*protocols)
             self._selection.clear()
+            self._updateSelection()
             self._scheduleRunsUpdate()
             
     def _copyProtocols(self):
@@ -1022,6 +1049,25 @@ class ProtocolsView(tk.Frame):
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()
+            
+    def _exportProtocols(self):
+        protocols = self._getSelectedProtocols()
+        
+        def _export(obj):
+            filename = os.path.join(browser.getCurrentDir(), 
+                                    browser.getEntryValue())
+            try:
+                self.project.exportProtocols(protocols, filename)
+                self.windows.showInfo("Workflow sucessfully saved to '%s' " % filename)
+            except Exception, ex:
+                self.windows.showError(str(ex))
+            
+        browser = FileBrowserWindow("Choose .json file to save workflow", 
+                                    master=self.windows, 
+                                    path=self.project.getPath(''), 
+                                    onSelect=_export,
+                                    entryLabel='File', entryValue='workflow.json')
+        browser.show()
             
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
@@ -1081,6 +1127,9 @@ class ProtocolsView(tk.Frame):
                     self._continueProtocol(prot)
                 elif action == ACTION_RESULTS:
                     self._analyzeResults(prot)
+                elif action == ACTION_EXPORT: 
+                    self._exportProtocols()
+                        
             except Exception, ex:
                 self.windows.showError(str(ex))
                 import traceback

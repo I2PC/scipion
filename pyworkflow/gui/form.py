@@ -35,6 +35,7 @@ import ttk
 from collections import OrderedDict
 from datetime import datetime
 
+from pyworkflow.utils import startDebugger
 from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
@@ -71,13 +72,22 @@ class PointerVar():
     """Wrapper around tk.StringVar to hold object pointers"""
     def __init__(self, protocol):
         self.tkVar = tk.StringVar()
-        self.value = None
+        self._pointer = Pointer()
         self.trace = self.tkVar.trace
         self._protocol = protocol
         
     def set(self, value):
-        self.value = value
-        self.tkVar.set(self.getObjectLabel())   
+        if isinstance(value, Pointer):
+            self._pointer.copy(value)
+        else:
+            self._pointer.set(value)
+            
+        if value is None:
+            label = ''
+        else:
+            label, _ = getPointerLabelAndInfo(self._pointer,
+                                              self._protocol.getMapper())
+        self.tkVar.set(label)   
      
     def getObjectLabel(self):
         """ We will try to show in the list the string representation
@@ -101,11 +111,22 @@ class PointerVar():
         return label + suffix
            
     def get(self):
-        return self.value
+        return self._pointer.get()
+    
+    def getPointer(self):
+        return self._pointer
+    
+    def remove(self):
+        self.set(None)
     
     
 class MultiPointerVar():
-    """Wrapper around tk.StringVar to hold object pointers"""
+    """
+    Wrapper around tk.StringVar to hold object pointers.
+    This class is related with MultiPointerTreeProvider, which
+    stores the list of pointed objects and have the logic to
+    add and remove from the list.
+    """
     def __init__(self, provider, tree):
         self.provider = provider # keep a reference to tree provider to add or remove objects
         self.tree = tree
@@ -117,24 +138,100 @@ class MultiPointerVar():
         self.tree.update() # Update the tkinter tree gui
         
     def set(self, value):
-        if isinstance(value, PointerList):
-            for pointer in value:
-                self.provider.addObject(pointer.get())
-            self._updateObjectsList()
-        elif isinstance(value, Object):
+        
+        if isinstance(value, Object) or isinstance(value, list):
             self.provider.addObject(value)
             self._updateObjectsList()
           
     def remove(self):
         """ Remove first element selected. """
-        value = self.tree.getFirst()
-        if value:
-            self.provider.removeObject(value)
-            self._updateObjectsList()
+        values = self.getSelectedObjects()
+        for v in values:
+            self.provider.removeObject(v)
+        self._updateObjectsList()
+        
+    def getSelectedObjects(self):
+        return self.tree.getSelectedObjects()
         
     def get(self):
         return self.provider.getObjects()
     
+    
+class MultiPointerTreeProvider(TreeProvider):
+    """
+    Store several pointers to objects to be used in a BoundTree and as
+    storage from MultiPointerVar. 
+    """
+    def __init__(self, mapper):
+        self._objectDict = OrderedDict()
+        self._mapper = mapper
+        
+    def _getObjKey(self, obj):
+        """ 
+        This method will create an unique key to 
+        identify the pointed object. The objId is not
+        enough because of pointers and extended values
+        to items inside a set or properties.
+        """
+        strId = None
+        
+        if isinstance(obj, Pointer):
+            
+            if obj.hasValue():
+                strId = obj.getObjValue().strId()
+            
+                if obj.hasExtended():
+                    strId += obj.getExtended()
+                
+        else:
+            strId = obj.strId()
+            
+        if strId is None:
+            raise Exception('ERROR: strId is None for MultiPointerTreeProvider!!!')
+        
+        return strId
+        
+    def _getObjPointer(self, obj):
+        """ If obj is a pointer return obj. If not
+        create a pointer and return it.
+        """
+        if isinstance(obj, Pointer):
+            ptr = obj
+        else:
+            ptr = Pointer(value=obj)
+            
+        return ptr
+
+    def _addObject(self, obj):
+        strId = self._getObjKey(obj)
+        ptr = self._getObjPointer(obj)
+        ptr._strId = strId
+        
+        self._objectDict[strId] = ptr
+           
+    def addObject(self, obj):
+        if isinstance(obj, list):
+            for o in obj:
+                self._addObject(o)
+        else:
+            self._addObject(obj) 
+        
+    def removeObject(self, obj):
+        strId = self._getObjKey(obj)
+        if strId in self._objectDict:
+            del self._objectDict[strId]
+     
+    def getObjects(self):
+        return self._objectDict.values()
+        
+    def getColumns(self):
+        return [('Object', 250), ('Info', 150)]
+    
+    def getObjectInfo(self, obj):
+        label, info = getPointerLabelAndInfo(obj, self._mapper)
+        
+        return {'key': obj._strId, 'text': label, 'values': ('  ' + info,)}  
+   
    
 class ComboVar():
     """ Create a variable that display strings (for combobox)
@@ -201,7 +298,29 @@ def _getObjectLabel(obj, mapper):
         labelList.insert(0, parent.getObjLabel())
         label = '->'.join(labelList)
         
-    return label    
+    return label   
+
+def getPointerLabelAndInfo(ptr, mapper):
+    """ 
+    Return a string to represent selected objects
+    that are stored by pointesr.
+    This function will be used from PointerVar and MultiPointerVar.
+    """
+    label = None
+    info = None
+    
+    if ptr.hasValue():
+        obj = ptr.getObjValue()
+        label = _getObjectLabel(obj, mapper)
+        
+        if ptr.hasExtendedItemId():
+            label += ' [Item %d]' % ptr.getExtendedValue()
+        elif ptr.hasExtendedAttribute():
+            label += ' [Attr %s]' % ptr.getExtendedValue()
+        
+        info = str(ptr.get()) # get string info of pointed object
+
+    return label, info
     
     
 def getObjectLabel(obj, mapper):
@@ -332,30 +451,6 @@ class RelationsTreeProvider(SubclassesTreeProvider):
             self.getObjects = lambda: [] 
             
 
-class MultiPointerTreeProvider(TreeProvider):
-    """Store several objects to be used for Multipointer"""
-    def __init__(self, mapper):
-        self._objectDict = OrderedDict()
-        self._mapper = mapper
-        
-    def addObject(self, obj):
-        self._objectDict[obj.getObjId()] = obj 
-        
-    def removeObject(self, objId):
-        objId = int(objId)
-        if objId in self._objectDict:
-            del self._objectDict[objId]
-     
-    def getObjects(self):
-        return self._objectDict.values()
-        
-    def getColumns(self):
-        return [('Object', 250)]
-    
-    def getObjectInfo(self, obj):
-        return {'key': obj.getObjId(), 'text': getObjectLabel(obj, self._mapper)}  
-            
-   
 #---------------------- Other widgets ----------------------------------------
 # http://tkinter.unpythonic.net/wiki/VerticalScrolledFrame
 
@@ -545,7 +640,8 @@ class ParamWidget():
         self.window = window
         self._protocol = self.window.protocol
         if self._protocol.getProject() is None:
-            raise Exception("Project is None for protocol: %s" % self._protocol)
+            print ">>> ERROR: Project is None for protocol: %s, start winpdb to debug it" % self._protocol
+            startDebugger()
         self.row = row
         self.column = column
         self.paramName = paramName
@@ -585,13 +681,16 @@ class ParamWidget():
             self._labelFont = self.window.fontItalic
             self._entryWidth = 8
         
+    def _getParamLabel(self):
+        return self.param.label.get()
+        
     def _createLabel(self):
         bgColor = 'white'
         
         if self.param.isExpert():
             bgColor = 'grey'
         
-        self.label = tk.Label(self.parent, text=self.param.label.get(), 
+        self.label = tk.Label(self.parent, text=self._getParamLabel(), 
                               bg=bgColor, font=self._labelFont, wraplength=300)
                
     def _createContent(self):
@@ -680,15 +779,26 @@ class ParamWidget():
             tree.grid(row=0, column=0, sticky='w')
             self._addButton("Select", Icon.ACTION_SEARCH, self._browseObject)
             self._addButton("Remove", Icon.ACTION_DELETE, self._removeObject)
+            self._selectmode = 'extended' # allows multiple object selection
+            self.visualizeCallback = self._visualizeMultiPointerParam
         
         elif t is PointerParam or t is RelationParam:
             var = PointerVar(self._protocol)
             entry = tk.Entry(content, width=entryWidth, textvariable=var.tkVar, state="readonly")
             entry.grid(row=0, column=0, sticky='w')
-            btnFunc = self._browseObject
+            
             if t is RelationParam:
                 btnFunc = self._browseRelation
+                removeFunc = self._removeRelation
+            else:
+                btnFunc = self._browseObject
+                removeFunc = self._removeObject
+                
+                self.visualizeCallback = self._visualizePointerParam
+            self._selectmode = 'browse' # single object selection
+                
             self._addButton("Select", Icon.ACTION_SEARCH, btnFunc)
+            self._addButton("Remove", Icon.ACTION_DELETE, removeFunc)
         
         elif t is ProtocolClassParam:
             var = tk.StringVar()
@@ -744,6 +854,32 @@ class ParamWidget():
         """ Visualize specific variable. """
         self.visualizeCallback(self.paramName)
         
+    def _visualizePointer(self, pointer):
+        obj = pointer.get()
+        if obj is None:
+            label, _ = getPointerLabelAndInfo(pointer, self._protocol.getMapper())
+            self._showInfo('*%s* points to *None*' % label)
+        else:
+            from pyworkflow.em import findViewers
+            viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+            if len(viewers):
+                v = viewers[0] # Use the first viewer registered
+                v(project=self._protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
+            else:
+                self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
+    
+    def _visualizePointerParam(self, paramName):
+        pointer = self.var.getPointer()
+        if pointer.hasValue():
+            self._visualizePointer(pointer)
+        else:
+            self._showInfo("Select input first.")
+    
+    def _visualizeMultiPointerParam(self, paramName):
+        selection = self.var.getSelectedObjects()
+        for pointer in selection:
+            self._visualizePointer(pointer)
+        
     def _browseObject(self, e=None):
         """Select an object from DB
         This function is suppose to be used only for PointerParam"""
@@ -761,11 +897,13 @@ class ParamWidget():
 
         dlg = ListDialog(self.parent, "Select object", tp, 
                          "Double click an item to preview the object",
-                         validateSelected)
-        dlg.validateItem = validateSelected
+                         selectmode=self._selectmode)
         
-        if dlg.value is not None:
-            self.set(dlg.value)
+        if dlg.values:
+            if isinstance(self.param, PointerParam):
+                self.set(dlg.values[0]) # only a single value for Poin
+            else: # MulitiPointerParam
+                self.set(dlg.values)
         
     def _removeObject(self, e=None):
         """ Remove an object from a MultiPointer param. """
@@ -775,13 +913,18 @@ class ParamWidget():
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
         tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
-        dlg = ListDialog(self.parent, "Select object", tp)
-        if dlg.value is not None:
-            self.set(dlg.value)
+        dlg = ListDialog(self.parent, "Select object", tp, 
+                         selectmoded=self._selectmode)
+        if dlg.values is not None:
+            self.set(dlg.values[0])
+            
+    def _removeRelation(self, e=None):
+        self.var.remove()
             
     def _browseProtocolClass(self, e=None):
         tp = ProtocolClassTreeProvider(self.param.protocolClassName.get())
-        dlg = ListDialog(self.parent, "Select protocol", tp)
+        dlg = ListDialog(self.parent, "Select protocol", tp,
+                         selectmode=self._selectmode)
         if dlg.value is not None:
             self.set(dlg.value)
             self._openProtocolForm()
@@ -921,7 +1064,7 @@ class FormWindow(Window):
         3. Params: the expert level and tabs with the Protocol parameters.
         4. Buttons: buttons at bottom for close, save and execute.
     """
-    def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **args):
+    def __init__(self, title, protocol, callback, master=None, hostList=['localhost'], **kwargs):
         """ Constructor of the Form window. 
         Params:
          title: title string of the windows.
@@ -929,21 +1072,21 @@ class FormWindow(Window):
          callback: callback function to call when Save or Excecute are press.
         """
         Window.__init__(self, title, master, icon='scipion_bn.xbm', 
-                        weight=False, minsize=(600, 450), **args)
+                        weight=False, minsize=(600, 450), **kwargs)
 
         # Some initialization
         self.callback = callback
         self.widgetDict = {} # Store tkVars associated with params
-        self.visualizeDict = args.get('visualizeDict', {})
+        self.visualizeDict = kwargs.get('visualizeDict', {})
         self.bindings = []
         self.hostList = hostList
         self.protocol = protocol
-        self.visualizeMode = args.get('visualizeMode', False)  # This control when to close or not after execute
+        self.visualizeMode = kwargs.get('visualizeMode', False)  # This control when to close or not after execute
         self.headerBgColor = Color.RED_COLOR
         if self.visualizeMode:
             self.headerBgColor = Color.DARK_GREY_COLOR
-        self.childMode = args.get('childMode', False) # Allow to open child protocols form (for workflows)
-        
+        self.childMode = kwargs.get('childMode', False) # Allow to open child protocols form (for workflows)
+        self.updateProtocolCallback = kwargs.get('updateProtocolCallback', None)
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
         
@@ -1081,7 +1224,8 @@ class FormWindow(Window):
             procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
         # Queue
-        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', column=c, padx=(15,5), pady=0)
+        self._createHeaderLabel(runFrame, Message.LABEL_QUEUE, row=r, sticky='ne', 
+                                column=c, padx=(15,5), pady=0)
         var, frame = ParamWidget.createBoolWidget(runFrame, bg='white')
         self._addVarBinding(Message.VAR_QUEUE, var)
         frame.grid(row=2, column=c+1, pady=5, sticky='nw')
@@ -1106,10 +1250,13 @@ class FormWindow(Window):
     def _editObjParams(self, e=None):
         """ Show a Text area to edit the protocol label and comment. """
         self.setProtocolLabel()        
-        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, self.protocol, self.protocol.mapper)
+        d = EditObjectDialog(self.root, Message.TITLE_EDIT_OBJECT, 
+                             self.protocol, self.protocol.mapper)
         
         if d.resultYes():
             self.updateLabelAndComment()
+            if self.updateProtocolCallback:
+                self.updateProtocolCallback(self.protocol)
         
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
@@ -1118,7 +1265,8 @@ class FormWindow(Window):
         expFrame = tk.Frame(paramsFrame)
         expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, self._onExpertLevelChanged) 
+        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, 
+                                          self._onExpertLevelChanged) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
@@ -1241,7 +1389,9 @@ class FormWindow(Window):
         
     def execute(self, e=None):
         if (self.protocol.getRunMode() == MODE_RESTART and 
-            not askYesNo(Message.TITLE_RESTART_FORM, Message.LABEL_DELETE_FORM, self.root)):
+            not askYesNo(Message.TITLE_RESTART_FORM, 
+                         Message.LABEL_RESTART_FORM % ('*%s*' % self.protocol.getRunName()), 
+                         self.root)):
             return
             
         errors = self.protocol.validate()
@@ -1287,9 +1437,6 @@ class FormWindow(Window):
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
                 v = viewers[0] # Use the first viewer registered
-                proj = self.protocol.getProject()
-                if proj is None:
-                    raise Exception("none project")
                 v(project=self.protocol.getProject()).visualize(obj) # Instanciate the viewer and visualize object
             else:
                 self.showInfo("There is not viewer registered for this object")

@@ -66,6 +66,7 @@ class ProjectsView(tk.Frame):
     def createProjectList(self, text):
         """Load the list of projects"""
         r = 0
+        text.setReadOnly(False)
         text.clear()
         parent = tk.Frame(text, bg='white')    
         parent.columnconfigure(0, weight=1)
@@ -76,16 +77,17 @@ class ProjectsView(tk.Frame):
             r += 1
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
+        text.setReadOnly(True)
       
     def createProjectLabel(self, parent, projInfo, color):
         frame = tk.Frame(parent, bg=color)
         label = tk.Label(frame, text=projInfo.projName, anchor='nw', bg=color, 
-                         justify=tk.LEFT, font=self.projNameFont, cursor='hand1')
-        label.grid(row=0, column=0, padx=2, pady=2, sticky='nw')
+                         justify=tk.LEFT, font=self.projNameFont, cursor='hand1', width=50)
+        label.grid(row=0, column=0,  padx=2, pady=2, sticky='nw')
         label.bind('<Button-1>', lambda e: self.openProject(projInfo.projName))
-        dateLabel = tk.Label(frame, text='   ' + Message.LABEL_MODIFIED + ' ' + prettyDate(projInfo.mTime), 
+        dateLabel = tk.Label(frame, text= Message.LABEL_MODIFIED + ' ' + prettyDate(projInfo.mTime),
                              font=self.projDateFont, bg=color)
-        dateLabel.grid(row=1, column=0)
+        dateLabel.grid(row=1, column=0, sticky='nw')
         delLabel = tk.Label(frame, text=Message.LABEL_DELETE_PROJECT, font=self.projDelFont, bg=color, cursor='hand1')
         delLabel.grid(row=1, column=1, padx=10)
         delLabel.bind('<Button-1>', lambda e: self.deleteProject(projInfo.projName))

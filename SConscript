@@ -38,6 +38,10 @@ Import('env')
 #  *                                                                      *
 #  ************************************************************************
 
+# First, we check the compilers
+if not env.GetOption('clean'):
+    env = env.CompilerConfig()
+
 # We might want to add freetype and make tcl depend on it. That would be:
 # freetype = env.AddLibrary(
 #     'freetype',
@@ -49,34 +53,34 @@ Import('env')
 fftw = env.AddLibrary(
     'fftw',
     tar='fftw-3.3.4.tgz',
-    targets=['lib/libfftw3.so'],
+    targets=[File('#software/lib/libfftw3.so').abspath],
     flags=['--enable-threads', '--enable-shared'],
-    default=False)
+    clean=[Dir('#software/tmp/fftw-3.3.4')])
 
 tcl = env.AddLibrary(
     'tcl',
     tar='tcl8.6.1-src.tgz',
     buildDir='tcl8.6.1/unix',
-    targets=['lib/libtcl8.6.so'],
+    targets=[File('#software/lib/libtcl8.6.so').abspath],
     flags=['--enable-threads'],
-    clean=['software/tmp/tcl8.6.1'])
+    clean=[Dir('#software/tmp/tcl8.6.1').abspath])
 
 tk = env.AddLibrary(
     'tk',
     tar='tk8.6.1-src.tgz',
     buildDir='tk8.6.1/unix',
-    targets=['lib/libtk8.6.so'],
+    targets=[File('#software/lib/libtk8.6.so').abspath],
     libChecks=['xft'],
     flags=['--enable-threads'],
     deps=[tcl],
-    clean=['software/tmp/tk8.6.1'])
+    clean=[Dir('#software/tmp/tk8.6.1').abspath])
 
 zlib = env.AddLibrary(
     'zlib',
     tar='zlib-1.2.8.tgz',
-    targets=['lib/libz.so'],
+    targets=[File('#software/lib/libz.so').abspath],
     addPath=False,
-    autoConfigTarget='zlib.pc')
+    autoConfigTargets='zlib.pc')
 
 jpeg = env.AddLibrary(
     'jpeg',
@@ -86,36 +90,87 @@ jpeg = env.AddLibrary(
 sqlite = env.AddLibrary(
     'sqlite',
     tar='sqlite-3.6.23.tgz',
-    targets=['lib/libsqlite3.so'],
+    targets=[File('#software/lib/libsqlite3.so').abspath],
     flags=['CPPFLAGS=-w',
            'CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1'])
 
 python = env.AddLibrary(
     'python',
     tar='Python-2.7.8.tgz',
-    targets=['lib/libpython2.7.so', 'bin/python'],
+    targets=[File('#software/lib/libpython2.7.so').abspath,
+             File('#software/bin/python').abspath],
     flags=['--enable-shared'],
     deps=[sqlite, tk, zlib])
 
-env.AddLibrary(
-    'parallel',
-    tar='parallel-20140922.tgz',
-    targets=['bin/parallel'],
-    deps=[zlib])
+libxml2 = env.AddLibrary(
+    'libxml2',
+    tar='libxml2-2.9.2.tgz',
+    targets=['lib/libxml2.so'],
+    deps=[python],
+    default=False)
 
-boost_headers_only = env.ManualInstall(
-    'boost_headers_only',
-    tar='boost_1_56_0.tgz',
-    extraActions=[
-        ('%s/software/include/boost' % env['SCIPION_HOME'],
-         'cp -rf boost %s/software/include' % env['SCIPION_HOME'])],
+libxslt = env.AddLibrary(
+    'libxslt',
+    tar='libxslt-1.1.28.tgz',
+    targets=['lib/libxslt.so'],
+    deps=[libxml2],
+    default=False)
+
+pcre = env.AddLibrary(
+    'pcre',
+    tar='pcre-8.36.tgz',
+    targets=[File('#software/bin/pcretest').abspath],
     default=False)
 
 swig = env.AddLibrary(
     'swig',
     tar='swig-3.0.2.tgz',
-    flags=['--without-pcre'],
+    targets=[File('#software/bin/swig').abspath],
+    makeTargets='swig install',
+    deps=[pcre],
     default=False)
+# We have to add the "makeTargets" part because swig needs to call
+# "make" before "make install". Horrible.
+
+env.AddLibrary(
+    'parallel',
+    tar='parallel-20140922.tgz',
+    targets=[File('#software/bin/parallel').abspath],
+    deps=[zlib])
+
+shome = env['SCIPION_HOME']  # short notation, we use it quite a lot
+boost_headers_only = env.ManualInstall(
+    'boost_headers_only',
+    tar='boost_1_56_0.tgz',
+    extraActions=[
+        ('%s/software/include/boost' % shome,
+         'cp -rf boost %s/software/include' % shome)],
+    default=False)
+
+lapack = env.ManualInstall(
+    'lapack',
+    tar='lapack-3.5.0.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/lapack-3.5.0/Makefile' % shome,
+         'cmake -DBUILD_SHARED_LIBS:BOOL=ON -DLAPACKE:BOOL=ON '
+         '-DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/liblapack.so' % shome,
+         'make install')],
+    default=False)
+
+opencv = env.ManualInstall(
+    'opencv',
+    tar='opencv-2.4.9.tgz',
+    neededProgs=['cmake'],
+    extraActions=[
+        ('%s/software/tmp/opencv-2.4.9/Makefile' % shome,
+         'cmake -DCMAKE_INSTALL_PREFIX:PATH=%s/software .' % shome),
+        ('%s/software/lib/libopencv_core.so' % shome,
+         'make install')],
+    default=False)
+
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -177,7 +232,7 @@ addModule(
     'scipy',
     tar='scipy-0.14.0.tgz',
     default=False,
-    deps=[numpy, matplotlib])
+    deps=[lapack, numpy, matplotlib])
 
 addModule(
     'bibtexparser',
@@ -219,6 +274,12 @@ tornado = addModule(
     tar='tornado-4.0.2.tar.gz',
     default=False)
 
+lxml = addModule(
+    'lxml',
+    tar='lxml-3.4.1.tgz',
+    deps=[libxml2], #, libxslt],
+    default=False)
+
 addModule(
     'ipython',
     tar='ipython-2.1.0.tar.gz',
@@ -235,11 +296,22 @@ addModule(
 # extraActions is a list of (target, command) to run after installation.
 
 env.AddPackage('xmipp',
-               tar='xmipp_scipion.tgz',
-               extraActions=[('xmipp.bashrc',
-                             './install.sh --unattended=true --gui=false -j %s'
-                              % GetOption('num_jobs'))],
+               tar='xmipp_master.tgz',
+               buildDir='xmipp',
+               reqs={'mpi': 'cxx',
+                     'freetype': 'cxx',
+                     'X11': 'cxx',
+                     'png': 'cxx',
+                     'ncurses': 'cxx',
+                     'ssl': 'cxx',
+                     'readline': 'cxx'},
                default=False)
+# In case you want to install an older version of Xmipp, you can use
+# the extraActions parameter instead of using its own SConscript, like this:
+# 
+#               extraActions=[('xmipp.bashrc',
+#                             './install.sh --unattended=true --gui=false -j %s'
+#                              % GetOption('num_jobs'))],
 
 env.AddPackage('bsoft',
                tar='bsoft1_8_8_Fedora_12.tgz',
@@ -250,7 +322,7 @@ env.AddPackage('ctffind',
                default=False)
 
 env.AddPackage('eman',
-               tar='eman2.1beta3.linux64.tgz',
+               tar='eman2.1.linux64.tgz',
                extraActions=[('eman2.bashrc', './eman2-installer')],
                default=False)
 
@@ -262,8 +334,8 @@ env.AddPackage('pytom',
                tar='pytom_develop0.962.tgz',
                extraActions=[('pytomc/libs/libtomc/libs/libtomc.so',
                              'MPILIBDIR=%s MPIINCLUDEDIR=%s SCIPION_HOME=%s ./scipion_installer'
-                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],env['SCIPION_HOME']))],
-               deps=[boost_headers_only, fftw, swig],
+                              % (env['MPI_LIBDIR'],env['MPI_INCLUDE'],shome))],
+               deps=[boost_headers_only, fftw, swig, lxml],
                default=False)
 
 env.AddPackage('relion',

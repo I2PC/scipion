@@ -64,7 +64,11 @@ DataSet(name='xmipp_tutorial', folder='xmipp_tutorial',
                'vol1': 'volumes/BPV_scale_filtered_windowed_64.vol',
                'vol2': 'volumes/volume_1_iter_002.mrc',
                'vol3': 'volumes/volume_2_iter_002.mrc',
+               'vol4': 'volumes/helix_59_4__6_7.vol',
                'volumes': 'volumes/*.mrc',
+               'mask2d': 'masks/mask2d.xmp',
+               'mask3d': 'masks/mask.vol',
+               'ctfsDir': 'ctfs'
                })
 
 
@@ -178,6 +182,9 @@ DataSet(name='emx',  folder='emx',
                
                'reconstRotandShift': 'reconstruction/reconstRotandShift.mrcs',
                'reconstRotandShiftGold': 'reconstruction/gold/reconstRotandShift_output.vol',
+
+               'reconstRotandShiftFlip': 'reconstruction/reconstRotandShiftFlip.mrcs',
+               'reconstRotandShiftFlipGold': 'reconstruction/gold/reconstRotandShiftFlip_output.vol',
               })
                
                
@@ -198,6 +205,7 @@ DataSet(name='movies',  folder='movies',
 DataSet(name='grigorieff',  folder='grigorieff',
         files={'particles_rot_shift':'particles.sqlite',
                'ref_volume':'ref_volume.vol',
+               'ctfsDir': 'ctfs'
                 })
                
 DataSet(name='initial_volume',  folder='initial_volume',
@@ -206,3 +214,6 @@ DataSet(name='initial_volume',  folder='initial_volume',
                'bpv': 'bpv_100.stk'
                 })
 
+DataSet(name='general',  folder='general',
+        files={'vol_helix': 'volumes/helix_59_4__6_7.vol'
+                })
