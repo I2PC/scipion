@@ -188,7 +188,6 @@
 				<p>{{msg.NO_INFO_METHODS}}</p>
 			</div>
 			<div id="tab-logs">
-			
 				<div class="header-logs">
 					<span id="buttonAnalyzeResult">
 						<a id="externalTool" class="fa fa-external-link" href="javascript:errorPopup('Log was not selected','Please select a log before.');"></a>
@@ -198,7 +197,7 @@
 					<a id="scipion_log" class="elm-header-log" href="javascript:showLog('scipion_log');">{{msg.LABEL_LOGS_SCIPION}}</a>
 				</div>
 				
-				<div id="tab-logs-content">
+				<div id="tab-logs-content" style="height:75%;position:absolute;overflow-y:auto;">
 					<div id="tab-logs-output" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
 					<div id="tab-logs-error" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
 					<div id="tab-logs-scipion" class="tabContents" style="display:none;"><p>{{msg.NO_INFO_LOGS}}</p></div>
