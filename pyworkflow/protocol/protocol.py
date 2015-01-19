@@ -951,6 +951,10 @@ class Protocol(Step):
         Add text txt to self._buffer, with format fmt.
         fmt can be a color (like 'red') or a link that looks like 'link:url'.
         """
+        # Make the text html-safe first.
+        for x,y in [('&', 'amp'), ('<', 'lt'), ('>', 'gt')]:
+            txt = txt.replace(x, '&%s;' % y)
+
         if fmt is None:
             self._buffer += txt
         elif fmt.startswith('link:'):

@@ -6,6 +6,11 @@
 	padding: 0px;
 	font-family: Helvetica;
 } /* Reset default margin and padding for all element */
+
+font {
+	font-family: Monospace;
+}
+
 header,section,footer,aside,nav,article,hgroup {
 	display: block;
 } /* For html5 unsupported browsers */
