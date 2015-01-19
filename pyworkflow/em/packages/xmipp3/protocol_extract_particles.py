@@ -59,7 +59,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def __init__(self, **args):
         ProtExtractParticles.__init__(self, **args)
-        self.methodsInfo = String()
         self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -426,7 +425,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.downsampleType == SAME_AS_PICKING:
                 msg += "."
 
-            msg += self.methodsInfo.get()
+            msg += self.methodsVar.get()
 
             methodsMsgs.append(msg)
 
@@ -476,7 +475,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.doFlip:
             msg += "\nPhase flipping was performed."
 
-        self.methodsInfo.set(msg)
+        self.methodsVar.set(msg)
 
     def getCoords(self):
         if self.inputCoordinates.hasValue():

@@ -166,8 +166,8 @@ class XmippProtProjectionOutliers(ProtAnalysis2D, ProjMatcher):
         methods = []
         if hasattr(self, 'outputClasses') or hasattr(self, 'outputAverages'):
             methods.append("We evaluated %i input images %s regarding to volume %s"
-                           " using %s symmetry" %(self.inputSet.get().getSize(), self.getObjectTag(self.inputSet.get()), \
-                                                  self.getObjectTag(self.inputVolume), self.symmetryGroup.get()) )
+                           " using %s symmetry" %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), \
+                                                  self.getObjectTag('inputVolume'), self.symmetryGroup.get()) )
         return methods
     
     #--------------------------- UTILS functions --------------------------------------------

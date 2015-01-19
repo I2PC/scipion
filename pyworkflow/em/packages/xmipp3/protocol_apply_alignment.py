@@ -144,6 +144,6 @@ class XmippProtApplyAlignment(ProtAlign2D):
             return ["Output particles not ready yet."]
         else:
             return ["We applied alignment to %s particles from %s and produced %s."
-                    % (self.inputParticles.get().getSize(), self.getObjectTag(self.inputParticles.get()), self.getObjectTag(self.outputParticles))]
+                    % (self.inputParticles.get().getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles'))]
 
     

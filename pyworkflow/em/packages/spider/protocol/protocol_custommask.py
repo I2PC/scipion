@@ -132,12 +132,12 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
             filter1Angstroms = pixelSize/self.filterRadius1.get()
             filter2Angstroms = pixelSize/self.filterRadius2.get()
             
-            summary.append('Radius for initial Fourier filter: *%s px^-1*' % self.filterRadius1.get() )
+            summary.append('Radius for initial Fourier filter: *%s px^-1*' % self.filterRadius1)
             summary.append('              On the object scale: *%s Angstroms*' % filter1Angstroms )
-            summary.append('Threshold for filtered image: *avg + %s s.d.*' % self.sdFactor.get() )
-            summary.append('Radius for Fourier filter for intermediate mask: *%s px^-1*' % self.filterRadius2.get() )
+            summary.append('Threshold for filtered image: *avg + %s s.d.*' % self.sdFactor)
+            summary.append('Radius for Fourier filter for intermediate mask: *%s px^-1*' % self.filterRadius2)
             summary.append('                            On the object scale: *%s Angstroms*' % filter2Angstroms )
-            summary.append('Threshold for filtered mask: *%s*' % self.maskThreshold.get() )
+            summary.append('Threshold for filtered mask: *%s*' % self.maskThreshold)
         else:
             summary.append('Input image not selected yet.')
         
@@ -145,24 +145,19 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
     
     
     def _methods(self):
-        methods = []
-
         if self.inputImage.hasValue():        
             pixelSize = self.inputImage.get().getSamplingRate()
             filter1Angstroms = pixelSize/self.filterRadius1.get()
             filter2Angstroms = pixelSize/self.filterRadius2.get()
-            
-            msg  = '\n We low-pass filtered the average image %s'%(self.getObjectTag(self.inputImage.get()))
-            msg += 'to 1/%s Angstroms^-1, thresholded it at its average plus %s * s.d., low-pass filtered this intermediate mask ' % \
-                    (filter1Angstroms, self.sdFactor.get() )
-            msg += 'to 1/%s Angstroms^-1, and finally thresholded this filtered mask at a value of %s.' % \
-                    (filter2Angstroms, self.maskThreshold.get() )
-
-            msg += 'For multivariate data analysis, a custom mask was generated: %s.'%self.getObjectTag(self.outputMask)
-            methods.append(msg)
-
+            msg  = "We low-pass filtered the average image %s" % self.getObjectTag('inputImage')
+            msg += "to 1/%s Angstroms^-1, " % filter1Angstroms
+            msg += "thresholded it at its average plus %s * s.d., " % self.sdFactor
+            msg += "low-pass filtered this intermediate mask "
+            msg += "to 1/%s Angstroms^-1, " % filter2Angstroms
+            msg += "and finally thresholded this filtered mask at a value of %s." % self.maskThreshold
+            msg += 'For multivariate data analysis, a custom mask was generated: %s.' % self.getObjectTag('outputMask')
         else:
-            methods.append('Input image not selected yet.')
+            msg = 'Input image not selected yet.'
             
-        return methods
+        return [msg]
 

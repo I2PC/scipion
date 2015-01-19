@@ -330,7 +330,7 @@ class XmippProtCL2D(ProtClassify2D):
         strline=''
         if hasattr(self, 'outputClasses'):
             strline+='We classified %d particles from %s into %d classes %s using CL2D [Sorzano2010a]. '%\
-                           (self.inputParticles.get().getSize(), self.getObjectTag(self.inputParticles.get()), self.numberOfClasses.get(), self.getObjectTag(self.outputClasses))
+                           (self.inputParticles.get().getSize(), self.getObjectTag('inputParticles'), self.numberOfClasses.get(), self.getObjectTag('outputClasses'))
             strline+='%s method was used to compare images and %s clustering criterion. '%\
                            (self.getEnumText('comparisonMethod'),self.getEnumText('clusteringMethod'))
             if self.numberOfClasses > self.numberOfInitialClasses and self.doCore:

@@ -59,7 +59,6 @@ class XmippProtRansac(ProtInitialVolume):
     def __init__(self, **args):
         ProtInitialVolume.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        self.summaryInfo = String()
 
     #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
@@ -483,9 +482,9 @@ class XmippProtRansac(ProtInitialVolume):
         if not hasattr(self, 'outputVolumes'):
             summary.append("Output volumes not ready yet.")
         else:
-            summary.append("RANSAC iterations: %d" % self.nRansac.get())
-            if self.summaryInfo.hasValue():
-                summary.append(self.summaryInfo.get())
+            summary.append("RANSAC iterations: %d" % self.nRansac)
+            if self.summaryVar.hasValue():
+                summary.append(self.summaryVar.get())
             if self.useSA:
                 summary.append("Simulated annealing used")
             return summary
@@ -525,7 +524,7 @@ class XmippProtRansac(ProtInitialVolume):
                 msg2 += "If the option Dimensionality reduction is off, increase the number of random samples.\n"
                 
         msg = msg1 + msg2
-        self.summaryInfo.set(msg)
+        self.summaryVar.set(msg)
 
     def _citations(self):
         return ['Vargas2014']

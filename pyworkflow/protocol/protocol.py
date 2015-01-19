@@ -1175,7 +1175,15 @@ class Protocol(Step):
     def getFileTag(self, fn):
         return "[[%s]]" % fn
     
-    def getObjectTag(self, obj):
+    def getObjectTag(self, objName):
+        obj = getattr(self, objName, None)
+        
+        if obj is None:
+            return '*None*'
+        
+        if obj.isPointer():
+            obj = obj.get() # get the pointed object
+        
         return "[[%s][%s]]" % (obj.getClassName(), obj.getNameId())
     
     def _citations(self):

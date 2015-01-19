@@ -50,7 +50,6 @@ class XmippProtRCT(ProtInitialVolume):
     def __init__(self, **args):
         ProtInitialVolume.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        self.summaryInfo = String()
 
     #--------------------------- DEFINE param functions --------------------------------------------        
     def _defineParams(self, form):
@@ -319,16 +318,16 @@ class XmippProtRCT(ProtInitialVolume):
             inputIsString = ''
             if isinstance(self.inputParticles.get(), SetOfParticles):
                 methods.append('Set of %d particles %s was employed to create an initial volume using RCT method.'
-                               % (len(self.inputParticles.get()), self.getObjectTag(self.inputParticles.get())))
+                               % (len(self.inputParticles.get()), self.getObjectTag('inputParticles')))
             else:
                 particlesArray = [len(s) for s in self.inputParticles.get()]
                 particlesArrayString = String(particlesArray)
                 methods.append('Set of %d classes %s was employed to create %d initial volumes using RCT method. '
-                               % (len(self.inputParticles.get()), self.getObjectTag(self.inputParticles.get()), len(self.inputParticles.get())))
+                               % (len(self.inputParticles.get()), self.getObjectTag('inputParticles'), len(self.inputParticles.get())))
                 methods.append('For each initial volume were used respectively %s particles' % particlesArrayString)
-            methods.append("Output volumes: %s" % self.getObjectTag(self.outputVolumes))
+            methods.append("Output volumes: %s" % self.getObjectTag('outputVolumes'))
             if self.doFilter.get():
-                methods.append("Output filtered volumes: %s" % self.getObjectTag(self.outputFilteredVolumes))
+                methods.append("Output filtered volumes: %s" % self.getObjectTag('outputFilteredVolumes'))
         return methods
             
     def _citations(self):

@@ -29,7 +29,6 @@ This sub-package contains protocol for particles filters operations
 """
 
 from pyworkflow.utils.path import getLastFile
-
 from protocol_align_base import SpiderProtAlign
 
 
@@ -71,18 +70,21 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
     
     def _summary(self):
         summary = []
-        summary.append('Radius range: *%s - %s*' % (self.innerRadius.get(), self.outerRadius.get() ) )
+        summary.append('Radius range: *%s - %s*' % (self.innerRadius, self.outerRadius))
         
         return summary
     
     def _methods(self):
-        methods = []
         if hasattr(self, 'outputParticles'):
-            msg  = '\nInput particles %s were initially subjected to reference-free alignment using SPIDER\'s \'AP SR\' '%self.getObjectTag(self.inputParticles.get())
-            msg += 'command, using radii %s to %s pixels. Output particles: %s' % (self.innerRadius.get(), self.outerRadius.get(), self.getObjectTag(self.outputParticles) )
+            msg  = "Input particles %s were " % self.getObjectTag('inputParticles')
+            msg += "initially subjected to reference-free alignment using SPIDER's "
+            msg += "_AP SR_ command, using radii %s to %s pixels. " % (self.innerRadius, 
+                                                                       self.outerRadius)
+            msg += "Output particles: %s" % self.getObjectTag('outputParticles') 
+        else:
+            msg = "Output not ready yet."
         
-        methods.append(msg)
-        return methods
+        return [msg]
 
     def _citations(self):
         return ['Penczek1992']

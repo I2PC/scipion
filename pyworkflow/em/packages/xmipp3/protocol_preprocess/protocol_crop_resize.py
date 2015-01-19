@@ -268,7 +268,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
-        methods = ["We took input particles %s of size %d " % (self.getObjectTag(self.inputParticles.get()), len(self.inputParticles.get()))]
+        methods = ["We took input particles %s of size %d " % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()))]
         if self.doWindow.get():
             if self.getEnumText('windowOperation') == "crop":
                 methods += ["cropped them"]
@@ -281,7 +281,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
                          " in Fourier space" if self.doFourier else "")]
         if not self.doResize and not self.doWindow.get():
             methods += ["did nothing to them"]
-        str = "%s and %s. Output particles: %s" % (", ".join(methods[:-1]), methods[-1], self.getObjectTag(self.outputParticles))
+        str = "%s and %s. Output particles: %s" % (", ".join(methods[:-1]), methods[-1], self.getObjectTag('outputParticles'))
         return [str]
 
     def _validate(self):

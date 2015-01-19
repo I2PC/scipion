@@ -97,23 +97,22 @@ class SpiderProtAlignPairwise(SpiderProtAlign):
     
     def _summary(self):
         summary = []
-        summary.append('Radius range: *%s - %s*' % (self.innerRadius.get(), self.outerRadius.get() ) )
-        summary.append('Search range (px): *%s*' % self.searchRange.get() )
-        summary.append('Step size (px): *%s*' % self.stepSize.get() )
+        summary.append('Radius range: *%s - %s*' % (self.innerRadius, self.outerRadius))
+        summary.append('Search range (px): *%s*' % self.searchRange)
+        summary.append('Step size (px): *%s*' % self.stepSize)
         
         return summary
     
     def _methods(self):
-        methods = []
-        
-        msg  = '\nInput particles %s were subjected to a pairwise reference-free alignment using the "pyramidal system for '%(self.getObjectTag(self.inputParticles.get()))
-        msg += 'prealignment construction" (Marco et al., 1996), using radii %s to %s pixels. ' % \
-                (self.innerRadius.get(), self.outerRadius.get())
-        msg += 'Particles were then aligned to this initial reference-free average using SPIDER command \'AP SH\' '
-        msg += 'using a search range of %s pixels and a step size of %s pixels.' % \
-                (self.searchRange.get(), self.stepSize.get() )
-        
-        methods.append(msg)
+        msg  = "Input particles %s " % self.getObjectTag('inputParticles')
+        msg += "were subjected to a pairwise reference-free alignment using the "
+        msg += "'pyramidal system for prealignment construction' [Marco1996], "
+        msg += "using radii %s to %s pixels. " % (self.innerRadius, self.outerRadius)
+        msg += "Particles were then aligned to this initial reference-free average "
+        msg += "using SPIDER command _AP SH_ using a "
+        msg += "search range of %s pixels and a step size of %s pixels. " % (self.searchRange, 
+                                                                            self.stepSize)
         if self.hasAttribute('outputParticles'):
-            methods.append('Output particles: %s'%self.getObjectTag(self.outputParticles))
-        return methods
+            msg += "Output particles: %s" % self.getObjectTag('outputParticles')
+        
+        return [msg]
