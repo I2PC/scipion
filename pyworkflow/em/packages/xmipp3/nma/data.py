@@ -91,7 +91,10 @@ class Point():
         self.setState(Point.DISCARDED)
            
     def isDiscarded(self):
-        return self.getState()==Point.DISCARDED    
+        return self.getState()==Point.DISCARDED
+    
+    def getData(self):
+        return self._data 
 
     
 class Data():

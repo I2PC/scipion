@@ -118,8 +118,6 @@ class TestSetOfMicrographs(BaseTest):
         counter=0
         for mic in micSet:
             mic2.setFileName(fileNames[counter])
-            #mic.printAll(acquisition)
-            #mic2.printAll(acquisition)
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 
@@ -132,6 +130,29 @@ class TestSetOfParticles(BaseTest):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
         
+    def test_orderBy(self):
+        #create setofProjections sorted
+        imgSet1 = SetOfParticles(filename=':memory:',prefix='set1')
+        imgSet2 = SetOfParticles(filename=':memory:',prefix='set2')
+        imgSet1.setSamplingRate(1.5)
+        imgSet2.setSamplingRate(1.5)
+        img = Particle()
+
+        for i in range(1, 10):
+            img.setLocation(i, 'mystack.stk')
+            img.setMicId(10-i)
+            img.setClassId(i%5)
+            imgSet1.append(img)
+            img.setMicId(i)
+            imgSet2.append(img)
+            img.cleanObjId()
+        #orderby
+        for item1, item2 in izip(imgSet1.iterItems(orderBy='_micId',
+                                                   direction='ASC'),
+                                 imgSet2.iterItems(orderBy='_micId',
+                                                   direction='ASC')):
+            self.assertEquals(item1.getMicId(), item2.getMicId())
+
     def test_readStack(self):
         """ Read an stack of 29 particles from .hdf file.
         Particles should be of 500x500 pixels.
@@ -171,6 +192,9 @@ class TestSetOfParticles(BaseTest):
         imgSet.setSamplingRate(1.0)
         
         for i in range(1, n+1):
+            # Creating object inside the loop significantly
+            # decrease performance
+            #img = Particle()
             img.setLocation(i, "images.stk")
             
             imgSet.append(img)
@@ -198,6 +222,13 @@ class TestSetOfParticles(BaseTest):
                 img.cleanObjId()
 
         self.assertEquals(goldStacks, imgSet.getFiles())
+        
+        imgSet.close()
+
+        # It should automatically call load
+        # before accessing items db        
+        imgSet.getFirstItem()
+
 
 class TestSetOfClasses2D(BaseTest):
     
@@ -207,12 +238,39 @@ class TestSetOfClasses2D(BaseTest):
         cls.dataset = DataSet.getDataSet('model')  
         cls.selectionFn = cls.dataset.getFile('classesSelection')
         
+    def test_basics(self):
+        """ Load an existing SetOfClasses and test basic properties 
+        such us: _mapperPath, iteration and others.
+        """
+        classes2DSet = SetOfClasses2D(filename=self.selectionFn)
+        # Check the _mapperPath was properly set
+        self.assertEqual(classes2DSet._mapperPath.get(), '%s, ' % self.selectionFn)
+        
+        cls1 = classes2DSet.getFirstItem()
+        self.assertEqual(cls1._mapperPath.get(), '%s,Class001' % self.selectionFn)
+        
+        img1 = cls1.getFirstItem()
+        self.assertEqual(img1.getObjId(), 1) # First image of first class is 1 in this test
+        
+        images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30, 35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74], 
+                  [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63, 64, 68, 72, 73, 75, 76], 
+                  [18, 31, 32], 
+                  [6, 36, 66]]
+        
+        classes2DSet.close()
+        # Check iteration is working properly even after 
+        # a close operation, it should open automatically
+        for i, cls in enumerate(classes2DSet):   
+            l = images[i]         
+            for j, img in enumerate(cls):
+                self.assertEquals(img.getObjId(), l[j])
+                        
+
     def test_subsetsFromSelection(self):
         """ From a sqlite file of a SetOfClasses2D, with some
         classes and element disabled, we want to create a 
         subset of images and classes.
         """
-        print ">>> Reading selection from sqlite: ", self.selectionFn
         classes2DSet = SetOfClasses2D(filename=self.selectionFn)
         
         imgSet = SetOfParticles(filename=':memory:')

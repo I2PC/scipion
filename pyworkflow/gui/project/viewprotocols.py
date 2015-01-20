@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import prettyDict, prettySize
 """
 Main project window application
 """
@@ -66,6 +67,7 @@ ACTION_STOP = Message.LABEL_STOP
 ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
+ACTION_EXPORT = Message.LABEL_EXPORT
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -83,6 +85,7 @@ ActionIcons = {
     ACTION_STOP: Icon.ACTION_STOP,
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
+    ACTION_EXPORT: Icon.ACTION_EXPORT
                }
 
 
@@ -151,6 +154,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_BROWSE, single and status != STATUS_SAVED),
                    (ACTION_DB, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
+                   (ACTION_EXPORT, not single)
                    #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
                    ]
         
@@ -556,14 +560,17 @@ class ProtocolsView(tk.Frame):
         self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
-        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))  
-        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0)
+        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
+
+        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0,
+                                      handlers={'sci-open': self._viewObject})
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
         
         # Method tab
         mframe = tk.Frame(tab)
         gui.configureWeigths(mframe)
-        self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
+        self.methodText = TaggedText(mframe, width=40, height=15, bg='white',
+                                     handlers={'sci-open': self._viewObject})
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
@@ -607,14 +614,25 @@ class ProtocolsView(tk.Frame):
         p.paneconfig(rightFrame, minsize=400)        
         
         return p
-        
+
+    def _viewObject(self, objId):
+        """ Call appropriate viewer for objId. """
+        obj = self.project.getObject(int(objId))
+        viewerClasses = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        if not viewerClasses:
+            return  # TODO: protest nicely
+        viewer = viewerClasses[0](project=self.project, parent=self.windows)
+        viewer.visualize(obj)
+
     def _loadSelection(self):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
         for protId in list(self._selection):
-            if not self.project.getProtocol(protId):
+            try:
+                self.project.getProtocol(protId)
+            except Exception, ex:
                 self._selection.remove(protId)
-        
+
     def refreshRuns(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed runs.
          Params:
@@ -623,6 +641,13 @@ class ProtocolsView(tk.Frame):
              then only case when False is from _automaticRefreshRuns where the
              refresh time is doubled each time to avoid refreshing too often.
         """
+        if os.environ.get('SCIPION_DEBUG', None) == '1':
+            import psutil
+            proc = psutil.Process(os.getpid())
+            mem = psutil.virtual_memory()
+            print "------------- refreshing ---------- "
+            print "  open files: ", len(proc.get_open_files())
+            print "  used memory: ", prettySize(mem.used)
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
@@ -650,7 +675,8 @@ class ProtocolsView(tk.Frame):
        
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
-                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS]
+                           ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
+                           ACTION_EXPORT]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
@@ -888,6 +914,7 @@ class ProtocolsView(tk.Frame):
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
         hosts = [host.getLabel() for host in self.settings.getHosts()]
+        
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
@@ -931,7 +958,7 @@ class ProtocolsView(tk.Frame):
         return None
             
     def _fillSummary(self):
-        self.methodText.setReadOnly(False)
+        self.summaryText.setReadOnly(False)
         self.summaryText.clear()
         self.infoTree.clear()
         n = len(self._selection)
@@ -956,7 +983,7 @@ class ProtocolsView(tk.Frame):
                 for line in prot.summary():
                     self.summaryText.addLine(line)
                 self.summaryText.addLine('')
-        self.methodText.setReadOnly(True)
+        self.summaryText.setReadOnly(True)
         
     def _fillMethod(self):
         self.methodText.setReadOnly(False)
@@ -1040,6 +1067,25 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
             
+    def _exportProtocols(self):
+        protocols = self._getSelectedProtocols()
+        
+        def _export(obj):
+            filename = os.path.join(browser.getCurrentDir(), 
+                                    browser.getEntryValue())
+            try:
+                self.project.exportProtocols(protocols, filename)
+                self.windows.showInfo("Workflow sucessfully saved to '%s' " % filename)
+            except Exception, ex:
+                self.windows.showError(str(ex))
+            
+        browser = FileBrowserWindow("Choose .json file to save workflow", 
+                                    master=self.windows, 
+                                    path=self.project.getPath(''), 
+                                    onSelect=_export,
+                                    entryLabel='File', entryValue='workflow.json')
+        browser.show()
+            
     def _stopProtocol(self, prot):
         if askYesNo(Message.TITLE_STOP_FORM, Message.LABEL_STOP_FORM, self.root):
             self.project.stopProtocol(prot)
@@ -1098,6 +1144,9 @@ class ProtocolsView(tk.Frame):
                     self._continueProtocol(prot)
                 elif action == ACTION_RESULTS:
                     self._analyzeResults(prot)
+                elif action == ACTION_EXPORT: 
+                    self._exportProtocols()
+                        
             except Exception, ex:
                 self.windows.showError(str(ex))
                 import traceback

@@ -116,7 +116,11 @@ class Text(tk.Text, Scrollable):
     """ Base Text widget with some functionalities 
     that will be used for other extensions.
     """
-    def __init__(self, master, **opts):  
+    def __init__(self, master, **opts):
+        if 'handlers' in opts:
+            self.handlers = opts.pop('handlers')
+        else:
+            self.handlers = {}
         defaults = self.getDefaults()
         defaults.update(opts)
         Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
@@ -195,25 +199,38 @@ class Text(tk.Text, Scrollable):
         self.clipboard_append(self.selection)
 
     def openFile(self):
-        if os.path.isdir(self.selection):
-            dpath = (self.selection if os.path.isabs(self.selection)
-                     else os.path.join(os.getcwd(), self.selection))
+        # What happens when you right-click and select "Open path"
+        self.openPath(self.selection)
+
+    def openPath(self, path):
+        "Try to open the selected path"
+        # If the path is a dir, open it with   scipion browser dir <path>
+        if os.path.isdir(path):
+            dpath = (path if os.path.isabs(path)
+                     else os.path.join(os.getcwd(), path))
             subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
                               'browser', 'dir', dpath])
             return
 
-        dirname = os.path.dirname(self.selection)
-        fname = os.path.basename(self.selection)
+        # If it is a file, interpret it correctly and open it with DataView
+        dirname = os.path.dirname(path)
+        fname = os.path.basename(path)
         if '@' in fname:
             path = os.path.join(dirname, fname.split('@', 1)[-1])
         else:
             path = os.path.join(dirname, fname)
 
-        if not os.path.exists(path):
-            print "Can't find %s" % path
-        else:
+        if os.path.exists(path):
             from pyworkflow.em.viewer import DataView
             DataView(path).show()
+        else:
+            # This is probably one special reference, like sci-open:... that
+            # can be interpreted with our handlers.
+            tag = path.split(':', 1)[0] if ':' in path else None
+            if tag in self.handlers:
+                self.handlers[tag](path.split(':', 1)[-1])
+            else:
+                print "Can't find %s" % path
 
     def updateMenu(self, e=None):
         state = 'normal'
@@ -288,7 +305,7 @@ class TaggedText(Text):
         
     def openLink(self, link):
         webbrowser.open_new_tab(link)  # Open in the same browser, new tab
-        
+
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
         #print "match found at: ", match.start(), match.end(), "mode: ", mode
@@ -299,8 +316,12 @@ class TaggedText(Text):
             self.insert(tk.END, ' ' + g1, tag)
         elif tag == HYPER_LINK1:
             self.insert(tk.END, g1, self.hm.add(lambda: self.openLink(g1)))
-        elif tag == HYPER_LINK2:            
-            self.insert(tk.END, match.group('link2_label'), self.hm.add(lambda: self.openLink(g1)))
+        elif tag == HYPER_LINK2:
+            label = match.group('link2_label')
+            if g1.startswith('http:'):
+                self.insert(tk.END, label, self.hm.add(lambda: self.openLink(g1)))
+            else:
+                self.insert(tk.END, label, self.hm.add(lambda: self.openPath(g1)))
         self.lastIndex = match.end()
         
         return g1
@@ -360,24 +381,23 @@ class OutputText(Text):
             self.insert(tk.END, txt)
 
     def readFile(self, clear=False):
+        self.setReadOnly(False)
+        
         if clear:
             self.offset = 0
             self.lineNo = 0
             self.clear()
 
-        self.config(state=tk.NORMAL)
-        #self.clear()
         if os.path.exists(self.filename):
-            self.offset, self.lineNo = \
-                renderTextFile(self.filename, self._addChunk,
-                               offset=self.offset, lineNo=self.lineNo)
+            self.offset, self.lineNo = renderTextFile(self.filename, 
+                                                      self._addChunk,
+                                                      offset=self.offset, 
+                                                      lineNo=self.lineNo)
         else:
             self.insert(tk.END, "File '%s' doesn't exist" % self.filename)
-        self.config(state=tk.DISABLED)
-        #if self.isAtEnd():
+        
+        self.setReadOnly(True)
         self.goEnd()
-        #if goEnd:
-        #    self.goEnd()
       
     def doRefresh(self):
         # First stop pending refreshes

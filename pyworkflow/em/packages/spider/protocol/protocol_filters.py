@@ -138,7 +138,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         if filterType <= FILTER_SPACE_REAL:
             args.append(self.filterRadius.get())
         else:
-            args.append('%f %f' % (self.lowFreq.get(), self.highFreq.get()))
+            args.append('%f %f' % (self.lowFreq, self.highFreq))
             
         if filterType == FILTER_FERMI:
             args.append(self.temperature.get())
@@ -191,34 +191,38 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
  
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
-            summary.append('Filter radius: *%s px^-1*' % self.filterRadius.get())
-            radiusAngstroms = pixelSize/self.filterRadius.get()
+            summary.append('Filter radius: *%s px^-1*' % self.filterRadius)
+            radiusAngstroms = pixelSize/self.filterRadius
             summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
         else:
-            summary.append('Frequency range: *%s - %s*' % (self.lowFreq.get(), self.highFreq.get()))
+            summary.append('Frequency range: *%s - %s*' % (self.lowFreq, self.highFreq))
 
         if self.filterType == FILTER_FERMI:
-            summary.append('Temperature factor: *%s*' % self.temperature.get())
+            summary.append('Temperature factor: *%s*' % self.temperature)
 
         summary.append('Padding set to: *%s*' % self.usePadding)
         return summary
     
     def _methods(self):
         methods = []
-        msg = '\nParticles were %s filtered using a %s filter' % (self.getEnumText('filterMode'),self.getEnumText('filterType'))
+        msg = '\nIput particles %s were %s filtered using a %s filter' % (self.getObjectTag('inputParticles') ,
+                                                                          self.getEnumText('filterMode'),
+                                                                          self.getEnumText('filterType'))
 
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
-            msg += ' using a radius of %s px^-1' % self.filterRadius.get()
+            msg += ', using a radius of %s px^-1' % self.filterRadius
         else:
-            msg += ' using a frequency range of %s to %s px^-1' % (self.lowFreq.get(), self.highFreq.get())
+            msg += ', using a frequency range of %s to %s px^-1' % (self.lowFreq, self.highFreq)
 
         if self.filterType == FILTER_FERMI: 
-            msg += ' and a temperature factor of of %s px^-1' % self.temperature.get()
+            msg += ' and a temperature factor of of %s px^-1' % self.temperature
             
         if self.usePadding:
             msg += ', padding the images by a factor of two.'
         else:
             msg += ' with no padding.'
-            
-        methods.append(msg)            
+
+        methods.append(msg)
+        methods.append('Output particles: %s' % self.getObjectTag('outputParticles'))
+
         return methods

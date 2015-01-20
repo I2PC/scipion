@@ -33,12 +33,12 @@ This sub-package contains the XmippProtExtractParticlesPairs protocol
 
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em import CoordinatesTiltPair, PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
+from pyworkflow.em import PointerParam, IntParam, EnumParam, BooleanParam, FloatParam
 from pyworkflow.protocol.params import Positive
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.utils.path import removeBaseExt, exists
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.object import Boolean
+
 from itertools import izip
 import xmipp
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
@@ -46,7 +46,7 @@ from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
                             
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
-    _label = 'extract particles pairs'
+    _label = 'extract particle pairs'
     
     def __init__(self, **args):
         XmippProtExtractParticles.__init__(self, **args)
@@ -334,5 +334,14 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
-        self.methodsInfo.set("")
+        self.methodsVar.set("")
+
+    def getInputMicrographs(self):
+        """ Return the micrographs associated to the SetOfCoordinates"""
+        return self.inputCoordinatesTiltedPairs.get().getMicsPair()
     
+    def getOutput(self):
+        if self.outputParticlesTiltPair.hasValue():
+            return self.outputParticlesTiltPair
+        else:
+            return None

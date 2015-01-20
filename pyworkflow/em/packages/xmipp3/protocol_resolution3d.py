@@ -179,8 +179,8 @@ class XmippProtResolution3D(ProtAnalysis3D):
     def _methods(self):
         methodsStr=""
         if self.doFSC.get():
-            methodsStr+='We obtained the FSC of the volume %s' % self.getObjectTag(self.inputVolume.get())
-            methodsStr+=' taking the volume %s' % self.getObjectTag(self.referenceVolume.get()) + ' as reference.'
+            methodsStr+='We obtained the FSC of the volume %s' % self.getObjectTag('inputVolume')
+            methodsStr+=' taking the volume %s' % self.getObjectTag('referenceVolume') + ' as reference.'
             methodsStr+=self.methodsVar.get("")
         if self.doStructureFactor.get():
             fnBfactor= self._getPath('bfactor.txt')

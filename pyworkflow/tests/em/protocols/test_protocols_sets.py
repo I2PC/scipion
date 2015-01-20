@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# **************************************************************************
-# *
-# * Authors: Jordi Burguet Castell (jburguet@cnb.csic.es)
+# ***************************************************************************
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# *              Jordi Burguet Castell (jburguet@cnb.csic.es)
 # *
 # * Unidad de Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import random
+from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
@@ -40,6 +41,8 @@ from pyworkflow.em.protocol.protocol_import import (
 from pyworkflow.em.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet)
 
+# Used by Roberto's test, where he creates the particles "by hand"
+from pyworkflow.em.data import Particle, SetOfParticles
 
 
 class TestSets(BaseTest):
@@ -105,9 +108,9 @@ class TestSets(BaseTest):
     def split(self, em_set, n, randomize):
         """Return a run split protocol over input set em_set."""
 
-        p_split = self.proj.newProtocol(ProtSplitSet)
+        p_split = self.proj.newProtocol(ProtSplitSet, numberOfSets=n)
         p_split.inputSet.set(em_set)
-        p_split.numberOfSets.set(n)
+###        p_split.numberOfSets.set(n)
         p_split.randomize.set(randomize)
         self.proj.launchProtocol(p_split, wait=True)
         return p_split
@@ -206,6 +209,57 @@ class TestSets(BaseTest):
         check(self.vols)
         check(self.movies)
         check(self.particles)
+
+    def testOrderBy(self):
+        """ create set of particles and orderby a given attribute
+        """
+        # This function was written by Roberto. It does things
+        # differently, so let's keep it as refernce.
+
+        #create set of particles
+
+        inFileNameMetadata = self.proj.getTmpPath('particlesOrderBy.sqlite')
+        inFileNameData = self.proj.getTmpPath('particlesOrderBy.stk')
+
+        imgSet = SetOfParticles(filename=inFileNameMetadata)
+        imgSet.setSamplingRate(1.5)
+        img = Particle()
+
+        for i in range(1, 10):
+            img.setLocation(i, inFileNameData)
+            img.setMicId(i%3)
+            img.setClassId(i%5)
+            imgSet.append(img)
+            img.cleanObjId()
+
+        imgSet.write()
+        #now import the dataset
+        prot1 = self.newProtocol(ProtImportParticles,
+                                 importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                 sqliteFile=inFileNameMetadata,
+                                 magnification=10000,
+                                 samplingRate=1.5
+                                 )
+        prot1.setObjLabel('from sqlite (test-sets)')
+        self.launchProtocol(prot1)
+
+        if prot1.outputParticles is None:
+            raise Exception('Import of images: %s, failed. outputParticles is None.' % inFileNameMetadata)
+        
+        protSplitSet   = self.newProtocol(ProtSplitSet,
+                                          inputSet=prot1.outputParticles,
+                                          numberOfSets=2,
+                                          randomize=True)
+        self.launchProtocol(protSplitSet)
+
+        inputSets = [protSplitSet.outputParticles01,protSplitSet.outputParticles02]
+        outputSet = SetOfParticles(filename=self.proj.getTmpPath('gold.sqlite'))
+        for itemSet in inputSets:
+            for obj in itemSet:
+                outputSet.append(obj)
+
+        for item1, item2 in izip(imgSet, outputSet):
+            self.assertTrue(item1.equalAttributes(item2))
 
 
 

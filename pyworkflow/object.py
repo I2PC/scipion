@@ -104,9 +104,13 @@ class Object(object):
         """Return the list of attributes than are
         subclasses of Object and will be stored"""
         for key, attr in self.getAttributes():
-            if attr is not None and attr._objDoStore:
-                yield (key, attr)
-                
+            try:
+                if attr is not None and attr._objDoStore:
+                    yield (key, attr)
+            except Exception, ex:
+                print "object.getAttributesToStore: key: %s, attr: %s" % (key, attr)
+                raise ex
+            
     def isPointer(self):
         """If this is true, the value field is a pointer 
         to another object"""
@@ -908,19 +912,27 @@ class Set(OrderedObject):
         #self._idMap = {}#FIXME, remove this after id is the one in mapper
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
-        self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
+        #self._mapperPath.trace(self.load) # Load the mapper whenever the filename is changed
         self._representative = None
         self._classesDict = classesDict 
         # If filename is passed in the constructor, it means that
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) # This will cause the creation of the mapper
-
-    def aggregate(self, operations
-                      , operationLabel
-                      , groupByLabels=None):
-        return self._mapper.aggregate(operations, operationLabel, groupByLabels)
+            self._mapperPath.set('%s, %s' % (filename, prefix)) 
+            self.load()
+            
+    def _getMapper(self):
+        """ This method will open the connection to the items
+        database on demand. That's why this method should 
+        be used instead of accessing directly _mapper.
+        """
+        if self._mapper is None:
+            self.load()
+        return self._mapper
+            
+    def aggregate(self, operations, operationLabel, groupByLabels=None):
+        return self._getMapper().aggregate(operations, operationLabel, groupByLabels)
 
     def setMapperClass(self, MapperClass):
         """ Set the mapper to be used for storage. """
@@ -931,22 +943,22 @@ class Set(OrderedObject):
         
     def __getitem__(self, itemId):
         """ Get the image with the given id. """
-        return self._mapper.selectById(itemId)
+        return self._getMapper().selectById(itemId)
 
     def __contains__(self, itemId):
         """ element in Set """
-        return self._mapper.selectById(itemId) != None
+        return self._getMapper().selectById(itemId) != None
 
-    def _iterItems(self, random=False):
-        return self._mapper.selectAll(random=random)#has flat mapper, iterate is true
+    def iterItems(self, orderBy='id', direction='ASC'):
+        return self._getMapper().selectAll(orderBy=orderBy,direction=direction)#has flat mapper, iterate is true
 
     def getFirstItem(self):
         """ Return the first item in the Set. """
-        return self._mapper.selectFirst()
+        return self._getMapper().selectFirst()
     
     def __iter__(self):
         """ Iterate over the set of images. """
-        return self._iterItems()
+        return self.iterItems()
        
     def __len__(self):
         return self._size.get()
@@ -975,11 +987,11 @@ class Set(OrderedObject):
                 properties.
         """
         if properties:
-            self._mapper.setProperty('self', self.getClassName())
+            self._getMapper().setProperty('self', self.getClassName())
             objDict = self.getObjDict()
             for key, value in objDict.iteritems():
-                self._mapper.setProperty(key, value)
-        self._mapper.commit()
+                self._getMapper().setProperty(key, value)
+        self._getMapper().commit()
     
     def _loadClassesDict(self):
         return self._classesDict or globals()
@@ -996,8 +1008,14 @@ class Set(OrderedObject):
         self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
         self._size.set(self._mapper.count())
            
+    def __del__(self):
+        # Close connections to db when destroy this object
+        if self._mapper is not None:
+            self.close()
+        
     def close(self):
         self._mapper.close()
+        self._mapper = None
         
     def clear(self):
         self._mapper.clear()
@@ -1027,11 +1045,11 @@ class Set(OrderedObject):
 #        self._idMap[item.getObjId()] = item
         
     def _insertItem(self, item):
-        self._mapper.insert(item)
+        self._getMapper().insert(item)
         
     def update(self, item):
         """ Update an existing item. """
-        self._mapper.update(item)
+        self._getMapper().update(item)
                 
     def __str__(self):
         return "%-20s (%d items)" % (self.getClassName(), self.getSize())
@@ -1064,10 +1082,10 @@ class Set(OrderedObject):
                    for x, y in izip(self, other))
         
     def hasProperty(self, key):
-        return self._mapper.hasProperty(key)
+        return self._getMapper().hasProperty(key)
         
     def getProperty(self, key, defaultValue=None):
-        return self._mapper.getProperty(key, defaultValue)
+        return self._getMapper().getProperty(key, defaultValue)
     
     def loadProperty(self, propertyName, defaultValue=None):
         """ Get the value of a property and

@@ -86,7 +86,7 @@ class ProtImportCoordinates(ProtImportFiles):
 
         ci = self.getImportClass()
         self._insertFunctionStep('importCoordinatesStep', importFrom,
-                                     self.importFilePath)
+                                     self.filesPath.get())
 
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
@@ -109,13 +109,6 @@ class ProtImportCoordinates(ProtImportFiles):
             self.importFilePath = ''
             return None
     #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-
-        self._insertFunctionStep('importCoordinatesStep',
-                                 self.inputMicrographs.get().getObjId(),
-                                 self.getPattern())
-
-
     def getImportFrom(self):
         importFrom = self.importFrom.get()
         if importFrom == self.IMPORT_FROM_AUTO:
@@ -215,14 +208,16 @@ class ProtImportCoordinates(ProtImportFiles):
         if not hasattr(self, 'outputCoordinates'):
             msg = 'Output coordinates not ready yet'
         else:
-            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag(self.inputMicrographs.get()), self._getImportChoices()[self.getImportFrom()])
+            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
                 msg += " Scale factor %d was applied."%self.scale.get()
             if self.invertX.get():
                 msg += " X coordinate was inverted."
             if self.invertY.get():
                 msg += " Y coordinate was inverted."
+
             summary.append(msg)
+            summary.append("Output coordinates: %s."%self.getObjectTag('outputCoordinates'))
         return summary
 
     def _methods(self):

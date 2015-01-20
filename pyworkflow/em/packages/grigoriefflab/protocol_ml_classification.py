@@ -30,7 +30,7 @@ import os
 from pyworkflow.utils import copyFile
 from pyworkflow.em import ProtClassify3D, ImageHandler
 from data import Volume
-from brandeis import FREALIGNMP_PATH, RSAMPLE_PATH, CALC_OCC_PATH
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import FREALIGNMP_PATH, RSAMPLE_PATH, CALC_OCC_PATH
 # from constants import *
 from protocol_frealign_base import ProtFrealignBase
 

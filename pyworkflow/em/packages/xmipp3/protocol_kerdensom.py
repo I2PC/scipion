@@ -159,9 +159,9 @@ class KendersomBaseClassify(ProtClassify2D):
         else:    
             messages.append("*Kendersom classification*")
             messages.append('%s particles from %s were classified to obtain %s classes %s.'
-                            % (self.inputImages.get().getSize(), self.getObjectTag(self.inputImages.get()), self.outputClasses.getSize(), self.getObjectTag(self.outputClasses)))
+                            % (self.inputImages.get().getSize(), self.getObjectTag('inputImages'), self.outputClasses.getSize(), self.getObjectTag('outputClasses')))
             if self.useMask:
-                messages.append('Mask %s was used in classification.' % self.getObjectTag(self.Mask.get()))
+                messages.append('Mask %s was used in classification.' % self.getObjectTag('Mask'))
         return messages
 
 

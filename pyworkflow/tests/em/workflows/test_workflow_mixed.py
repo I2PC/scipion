@@ -3,7 +3,7 @@ from pyworkflow.em.packages.xmipp3 import (XmippProtPreprocessMicrographs,
                                            XmippProtExtractParticles,
                                            XmippProtCropResizeParticles, XmippProtML2D)
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
-from pyworkflow.em.packages.brandeis import ProtCTFFind, ProtFrealign
+from pyworkflow.em.packages.grigoriefflab import ProtCTFFind, ProtFrealign
 from pyworkflow.em.packages.eman2 import EmanProtInitModel
 from pyworkflow.em.packages.relion import ProtImportMicrographs, ProtImportVolumes
 from test_workflow import TestWorkflow

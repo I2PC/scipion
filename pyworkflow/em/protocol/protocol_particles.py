@@ -105,15 +105,15 @@ class ProtParticlePicking(ProtParticles):
     
     def _methods(self):
         methodsMsgs = []
-        methodsMsgs.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
         if(self.getOutputsSize() > 1):
             for key, output in self.iterOutputAttributes(EMObject):
-                label = output.getObjLabel() if output.getObjLabel() != "" else key
                 msg = self.getMethods(output)
-                methodsMsgs.append("*%s:*\n%s"%(key, msg))
+                methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
         elif(self.getOutputsSize() == 1):
             output = self.getCoords()
-            methodsMsgs.append(self.getMethods(output))
+            msg = self.getMethods(output)
+            methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 

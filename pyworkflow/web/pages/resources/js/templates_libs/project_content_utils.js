@@ -1,4 +1,4 @@
- /*****************************************************************************
+/*****************************************************************************
  *
  * Authors:    Jose Gutierrez (jose.gutierrez@cnb.csic.es)
  *
@@ -184,30 +184,29 @@
  * 
  ******************************************************************************/
 
- /** METHODS ******************************************************************/
+/** METHODS ***************************************************************** */
 
 function isCtrlPress(event) {
 	return event.ctrlKey;
 }
 
-function preloadToolbar(list){
+function preloadToolbar(list) {
 	/*
 	 * Function to preload the nodes/rows selected
 	 */
-	if (list.length > 1){
+	if (list.length > 1) {
 		refreshToolbarMultipleMark(list)
 	} else {
 		refreshToolbarSingleMark(list)
 	}
 }
 
-
 function launchToolbarList(id, elm, multi) {
 	/*
 	 * Toolbar used in the project content template for list view
 	 */
-	
-	if (multi){
+
+	if (multi) {
 		enableMultipleMarkList(elm);
 	} else {
 		disableMultipleMarkList(id);
@@ -219,8 +218,8 @@ function launchToolbarTree(id, elm, multi) {
 	/*
 	 * Toolbar used in the project content template for graph view
 	 */
-	
-	if (multi){
+
+	if (multi) {
 		enableMultipleMarkGraph(elm);
 	} else {
 		disableMultipleMarkGraph(id);
@@ -228,84 +227,80 @@ function launchToolbarTree(id, elm, multi) {
 	}
 }
 
-	
-function launchToolbarProject(id, elm, type){
+function launchToolbarProject(id, elm, type) {
 	/*
-	 * Method used to update an element in the template depending on 
-	 * view mode (list or graph)
+	 * Method used to update an element in the template depending on view mode
+	 * (list or graph)
 	 */
 	var row = $("div#toolbar");
-	
+
 	switch (type) {
-		case "list":
-			updateRow(id, elm, row);
-		    break;
-		case "graph":
-			updateTree(id, elm, row);
-		    break;
+	case "list":
+		updateRow(id, elm, row);
+		break;
+	case "graph":
+		updateTree(id, elm, row);
+		break;
 	}
-	    
+
 	// Update the buttons functionalities into the toolbar
 	// and update the content for the tabs
 	refreshToolbarSingleMark(id)
-	
+
 }
 
-function refreshToolbarSingleMark(id){
+function refreshToolbarSingleMark(id) {
 	/*
-	 * Update the buttons functionalities into the toolbar
-	 * for single marks.
+	 * Update the buttons functionalities into the toolbar for single marks.
 	 */
 	updateButtons(id, "single");
-	
+
 	// Update the content for the tabs
 	updateTabs(id);
 }
 
-function refreshToolbarMultipleMark(list_id){
+function refreshToolbarMultipleMark(list_id) {
 	/*
-	 * Update the buttons functionalities into the toolbar
-	 * for multiple marks.
+	 * Update the buttons functionalities into the toolbar for multiple marks.
 	 */
 	updateButtons(list_id, "multiple");
 }
 
-function getElmMarkedList(){
+function getElmMarkedList() {
 	/*
 	 * Return a list of elements marked in the list view mode.
 	 */
 	var list_marked = [];
 
-	$.each($("tr"), function(){
+	$.each($("tr"), function() {
 		var elm = $(this);
 		var id = elm.attr("id");
-		
-		if(elm.hasClass("selected")){
+
+		if (elm.hasClass("selected")) {
 			list_marked.push(id);
 		}
 	});
 	return list_marked;
 }
 
-function getElmMarkedGraph(){
+function getElmMarkedGraph() {
 	/*
 	 * Return a list of elements marked in the graph view mode.
 	 */
 	var list_marked = [];
 
-	$.each($(".window"), function(){
+	$.each($(".window"), function() {
 		var elm = $(this);
 		var id = elm.attr("id").split("_").pop();
-		
-		if(elm.attr("selected") == "selected"){
+
+		if (elm.attr("selected") == "selected") {
 			list_marked.push(id);
-		} 
+		}
 	});
 	return list_marked;
 }
 
-
-function transposeElmMarked(status){
+function transposeElmMarked(status) {
 	/*
 	 * Switch the elements marked between graph and list view.
 	 */
@@ -313,71 +308,72 @@ function transposeElmMarked(status){
 
 	if (status == 'inactive') {
 		// Transpose elements in the list marked to the graph
-		
-		$.each($("tr"), function(){
+
+		$.each($("tr"), function() {
 			var elm = $(this);
 			var id = elm.attr("id");
-			var elmToMark = $("#graph_"+id);
-			var selected = elmToMark.attr("selected"); 
-			
-			if(elm.hasClass("selected")){
-//				console.log("adding "+ id)
-				if (selected != "selected" || selected == undefined){
+			var elmToMark = $("#graph_" + id);
+			var selected = elmToMark.attr("selected");
+
+			if (elm.hasClass("selected")) {
+				// console.log("adding "+ id)
+				if (selected != "selected" || selected == undefined) {
 					markSingleNodeGraph(elmToMark);
 				}
 				list_marked.push(id);
-			} else if(!elm.hasClass("selected") && elmToMark.attr("selected")=="selected"){
+			} else if (!elm.hasClass("selected")
+					&& elmToMark.attr("selected") == "selected") {
 				dismarkSingleNodeGraph(elmToMark);
-			} 
-			
+			}
+
 		});
-	}
-	else if (status == 'active') {
+	} else if (status == 'active') {
 		// Transpose elements in the graph marked to the list
-		
-		$.each($(".window"), function(){
+
+		$.each($(".window"), function() {
 			var elm = $(this);
 			var id = elm.attr("id").split("_").pop();
-			var elmToMark = $("tr#"+id);
-			
-			if(elm.attr("selected") == "selected"){
-//				console.log("adding "+ id)
-				if(!elmToMark.hasClass("selected")){
+			var elmToMark = $("tr#" + id);
+
+			if (elm.attr("selected") == "selected") {
+				// console.log("adding "+ id)
+				if (!elmToMark.hasClass("selected")) {
 					markSingleNodeList(elmToMark);
 				}
 				list_marked.push(id);
-			} else if (elm.attr("selected") != "selected" && elmToMark.hasClass("selected")){
+			} else if (elm.attr("selected") != "selected"
+					&& elmToMark.hasClass("selected")) {
 				dismarkSingleNodeList(elmToMark);
 			}
 		});
 	}
-	
-//	console.log(list_marked)
-	
-	if (list_marked.length > 0){
+
+	// console.log(list_marked)
+
+	if (list_marked.length > 0) {
 		// Update the runs selected in the DB
 		refreshSelectedRuns(list_marked);
 	}
-	
+
 }
 
-function refreshSelectedRuns(list_marked){
+function refreshSelectedRuns(list_marked) {
 	/*
 	 * Refresh the elements contained into the list.
 	 */
-	var URL = getSubDomainURL() + '/save_selection/?mark=' + listToString(list_marked)
-	
+	var URL = getSubDomainURL() + '/save_selection/?mark='
+			+ listToString(list_marked)
+
 	$.ajax({
-		type : "GET", 
+		type : "GET",
 		url : URL,
-		async: false
+		async : false
 	});
 }
 
-	
-/** Graph Methods ***********************************************/
+/** Graph Methods ********************************************** */
 
-function markSingleNodeGraph(elm){
+function markSingleNodeGraph(elm) {
 	/*
 	 * Method to mark a node selected in the graph.
 	 */
@@ -386,21 +382,21 @@ function markSingleNodeGraph(elm){
 	elm.attr("selected", "selected");
 }
 
-function dismarkSingleNodeGraph(elm){
+function dismarkSingleNodeGraph(elm) {
 	/*
 	 * Method to dismark a node selected in the graph.
 	 */
-	
+
 	// Clear the node
 	elm.css("border", "");
 	elm.removeAttr("selected")
 }
 
-function enableMultipleMarkGraph(elm){
+function enableMultipleMarkGraph(elm) {
 	/*
 	 * Method to activate the multiple selection.
 	 */
-	if (elm.attr("selected") == "selected"){
+	if (elm.attr("selected") == "selected") {
 		dismarkSingleNodeGraph(elm);
 		$("div#graphActiv").removeAttr("data-option");
 	} else {
@@ -409,45 +405,46 @@ function enableMultipleMarkGraph(elm){
 	}
 	var list_marked = getElmMarkedGraph()
 	refreshToolbarMultipleMark(list_marked);
-} 	
+}
 
-function disableMultipleMarkGraph(id){
+function disableMultipleMarkGraph(id) {
 	/*
 	 * Method to disactivate the multiple selection.
 	 */
-	$.each($(".window"), function(){
+	$.each($(".window"), function() {
 		var elm = $(this)
-		if (elm.attr("id") != "graph_"+id && elm.attr("selected") != undefined){
+		if (elm.attr("id") != "graph_" + id
+				&& elm.attr("selected") != undefined) {
 			dismarkSingleNodeGraph(elm)
 		}
-	}) 
+	})
 }
 
-/** List Methods ***********************************************/
+/** List Methods ********************************************** */
 
-function markSingleNodeList(elm){
+function markSingleNodeList(elm) {
 	/*
 	 * Method to mark a row selected in the list.
 	 */
-	
+
 	// Highlight the node
 	elm.addClass("selected");
 }
 
-function dismarkSingleNodeList(elm){
+function dismarkSingleNodeList(elm) {
 	/*
 	 * Method to dismark a row selected in the list.
 	 */
-	
+
 	// Clear the node
 	elm.removeClass("selected");
 }
 
-function enableMultipleMarkList(elm){
+function enableMultipleMarkList(elm) {
 	/*
 	 * Method to activate the multiple selection.
 	 */
-	if (elm.hasClass("selected")){
+	if (elm.hasClass("selected")) {
 		dismarkSingleNodeList(elm);
 	} else {
 		markSingleNodeList(elm);
@@ -456,25 +453,24 @@ function enableMultipleMarkList(elm){
 	refreshToolbarMultipleMark(list_marked);
 }
 
-function disableMultipleMarkList(id){
+function disableMultipleMarkList(id) {
 	/*
 	 * Method to disactivate the multiple selection.
 	 */
-	$.each($("tr"), function(){
+	$.each($("tr"), function() {
 		var elm = $(this)
-		if(elm.hasClass("selected")){
+		if (elm.hasClass("selected")) {
 			dismarkSingleNodeList(elm);
 		}
-	}) 
+	})
 }
-	
-/******************************************************************************/
 
+/** *************************************************************************** */
 
 function updateTabs(id) {
 	/*
-	 * Fill the content of the summary tab for a protocol run selected 
-	 * (Data / Summary / Methods / Status)
+	 * Fill the content of the summary tab for a protocol run selected (Data /
+	 * Summary / Methods / Status)
 	 */
 	var URL = getSubDomainURL() + '/protocol_info/?protocolId=' + id
 	$.ajax({
@@ -482,240 +478,242 @@ function updateTabs(id) {
 		url : URL,
 		dataType : "json",
 		success : function(json) {
-			
+
 			// DATA SUMMARY
 			fillUL("input", json.inputs, "protocol_input", "fa-sign-in");
 			fillUL("output", json.outputs, "protocol_output", "fa-sign-out");
-			
+
 			var summary = $("#protocol_summary");
-			
+
 			summary.empty();
 			summary.append(json.summary);
 
 			// METHODS
 			$("#tab-methods").empty();
 			$("#tab-methods").append(json.methods);
-			
+
 			// STATUS
-			if(json.status=="running"){
+			if (json.status == "running") {
 				// Action Stop Button
-//				$("span#analyzeTool").hide();
+				// $("span#analyzeTool").hide();
 				$("span#buttonAnalyzeResult").hide();
 				$("span#stopTool").show();
 				$("a#stopTool").attr('href',
-				'javascript:stopProtocolForm("' + id + '")');
+						'javascript:stopProtocolForm("' + id + '")');
 			} else {
 				// Action Analyze Result Button
 				$("span#stopTool").hide();
-//				$("span#analyzeTool").show();
+				// $("span#analyzeTool").show();
 				$("span#buttonAnalyzeResult").show();
-				$("a#analyzeTool").attr('href', 'javascript:launchViewer("'+id +'")');
-//				$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+id +'")');
+				$("a#analyzeTool").attr('href',
+						'javascript:launchViewer("' + id + '")');
+				$("a#downloadTool").attr('href',
+						'javascript:downloadOutput("' + id + '")');
 			}
-			
-			//LOGS
+
+			// LOGS
 			$("#tab-logs-output").empty();
 			$("#tab-logs-output").append(json.logs_out);
-			
 			$("#tab-logs-error").empty();
 			$("#tab-logs-error").append(json.logs_error);
-			
+
 			$("#tab-logs-scipion").empty();
 			$("#tab-logs-scipion").append(json.logs_scipion);
-		}, 
-		error: function(){
+		},
+		error : function() {
 			console.log("ERROR IN PROTOCOL_INFO REQUEST")
 		}
 	});
 }
 
-function showLog(log_type){
+function showLog(log_type) {
 	/*
-	 * This function is used to show or hide differents logs about a protocol selected.
+	 * This function is used to show or hide differents logs about a protocol
+	 * selected.
 	 */
-	
+
 	switch (log_type) {
-		case "output_log":
-			
-			$("div#tab-logs-output").css("display","")
-			$("a#output_log").attr("class", "elm-header-log_selected")
-			html = $("div#tab-logs-output").html()
-			
-			$("div#tab-logs-error").css("display","none")
-			$("a#error_log").attr("class", "elm-header-log")
-			
-			$("div#tab-logs-scipion").css("display","none")
-			$("a#scipion_log").attr("class", "elm-header-log")
-			
-		    break;
-		    
-		case "error_log":
-			
-			$("div#tab-logs-output").css("display","none")
-			$("a#output_log").attr("class", "elm-header-log")
-			
-			$("div#tab-logs-error").css("display","")
-			$("a#error_log").attr("class", "elm-header-log_selected")
-			html = $("div#tab-logs-error").html()
-			
-			$("div#tab-logs-scipion").css("display","none")
-			$("a#scipion_log").attr("class", "elm-header-log")
-		
-		    break;
-		    
-		case "scipion_log":
-			
-			$("div#tab-logs-output").css("display","none")
-			$("a#output_log").attr("class", "elm-header-log")
-				
-			$("div#tab-logs-error").css("display","none")
-			$("a#error_log").attr("class", "elm-header-log")
-			
-			$("div#tab-logs-scipion").css("display","")
-			$("a#scipion_log").attr("class", "elm-header-log_selected")
-			html = $("div#tab-logs-scipion").html()
-		
-		    break;
+	case "output_log":
+
+		$("div#tab-logs-output").css("display", "")
+		$("a#output_log").attr("class", "elm-header-log_selected")
+		html = $("div#tab-logs-output").html()
+
+		$("div#tab-logs-error").css("display", "none")
+		$("a#error_log").attr("class", "elm-header-log")
+
+		$("div#tab-logs-scipion").css("display", "none")
+		$("a#scipion_log").attr("class", "elm-header-log")
+
+		break;
+
+	case "error_log":
+
+		$("div#tab-logs-output").css("display", "none")
+		$("a#output_log").attr("class", "elm-header-log")
+
+		$("div#tab-logs-error").css("display", "")
+		$("a#error_log").attr("class", "elm-header-log_selected")
+		html = $("div#tab-logs-error").html()
+
+		$("div#tab-logs-scipion").css("display", "none")
+		$("a#scipion_log").attr("class", "elm-header-log")
+
+		break;
+
+	case "scipion_log":
+
+		$("div#tab-logs-output").css("display", "none")
+		$("a#output_log").attr("class", "elm-header-log")
+
+		$("div#tab-logs-error").css("display", "none")
+		$("a#error_log").attr("class", "elm-header-log")
+
+		$("div#tab-logs-scipion").css("display", "")
+		$("a#scipion_log").attr("class", "elm-header-log_selected")
+		html = $("div#tab-logs-scipion").html()
+
+		break;
 	}
-	
+
 	// Fill the button to show the button in an external window
-	var log_func = "javascript:showExternalLog('"+ log_type +"');"
-	$("a#externalTool").attr("href",log_func)
+	var log_func = "javascript:showExternalLog('" + log_type + "');"
+	$("a#externalTool").attr("href", log_func)
 
 }
 
-function showExternalLog(log_id){
+function showExternalLog(log_id) {
 	/*
 	 * This function is used to show in an external popup the log.
 	 */
 	var html = "";
 
 	switch (log_id) {
-	
-		case "output_log":
-			html = $("div#tab-logs-output").html()
-			break;
-		case "error_log":
-			html = $("div#tab-logs-error").html()
-			break;
-		case "scipion_log":
-			html = $("div#tab-logs-scipion").html()
-			break;
+
+	case "output_log":
+		html = $("div#tab-logs-output").html()
+		break;
+	case "error_log":
+		html = $("div#tab-logs-error").html()
+		break;
+	case "scipion_log":
+		html = $("div#tab-logs-scipion").html()
+		break;
 	}
-	customPopupFileHTML(html ,log_id,1024,768);
+	customPopupFileHTML(html, log_id, 1024, 768);
 
 }
-
 
 function fillUL(type, list, ulId, icon) {
 	/*
-	 * Fill an UL element with items from a list items should contains id and name
-	 * properties
+	 * Fill an UL element with items from a list items should contains id and
+	 * name properties
 	 */
 	var ul = $("#" + ulId);
 	ul.empty();
-	
-	for ( var i = 0; i < list.length; i++) {
-		
+
+	for (var i = 0; i < list.length; i++) {
+
 		// Visualize Object
 		var visualize_html = '<a href="javascript:launchViewer(' + list[i].id
-		+ ');"><i class="fa ' + icon + '" style="margin-right:10px;"></i>'+ list[i].name
-		
+				+ ');"><i class="fa ' + icon
+				+ '" style="margin-right:10px;"></i>' + list[i].name
+
 		var download_html = "";
-		
-		if(type=="input"){
-			visualize_html += ' (from ' + list[i].nameId +')</a>'
-		}
-		else if(type=="output"){
+
+		if (type == "input") {
+			visualize_html += ' (from ' + list[i].nameId + ')</a>'
+		} else if (type == "output") {
 			visualize_html += '</a>'
 
-			//Download File Object
-//			download_html = '<a href="javascript:downloadOutput('+ list[i].id + ');"> '+
-//			'<i class="fa fa-save" style="margin-left:0px;"> Download</i></a>'
-			
+			// Download File Object
+			// download_html = '<a href="javascript:downloadOutput('+ list[i].id
+			// + ');"> '+
+			// '<i class="fa fa-save" style="margin-left:0px;">
+			// Download</i></a>'
+
 			// Update Tab Download Button
-			$("a#downloadTool").attr('href', 'javascript:downloadOutput("'+list[i].id +'")');
-			
+			// $("a#downloadTool").attr('href',
+			// 'javascript:downloadOutput("'+list[i].id +'")');
+
 		}
-		
+
 		// Edit Object
-		var edit_html = '<a href="javascript:editObject('+ list[i].id + ');"> '+
-		'<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
-		
-		ul.append('<li>' + 
-				visualize_html + 
-				edit_html +
-				"&nbsp;&nbsp;&nbsp;" +
-				list[i].info + 
-				download_html + 
-				'</li>');
-		
+		var edit_html = '<a href="javascript:editObject(' + list[i].id
+				+ ');"> '
+				+ '<i class="fa fa-pencil" style="margin-left:0px;"></i></a>'
+
+		ul.append('<li>' + visualize_html + edit_html + "&nbsp;&nbsp;&nbsp;"
+				+ list[i].info + download_html + '</li>');
+
 	}
 }
 
-function updateButtons(id, mode){
+function updateButtons(id, mode) {
 	/*
-	 * Function to update the buttons in the toolbar after choose a new protocol run.
+	 * Function to update the buttons in the toolbar after choose a new protocol
+	 * run.
 	 */
-	
-	 if(mode == undefined){
-		 mode="single";
-	 }
-	
-	 switch (mode){
-	 
-	 	case "single":
-	 		
-			// Action Edit Button
-			$("a#editTool").attr('href',
-			'javascript:popup("/form/?protocolId=' + id + '")');
-			$("span#editTool").show();
-			
-			// Action Copy Button
-			$("a#copyTool").attr('href',
-			'javascript:popup("/form/?protocolId=' + id + '&action=copy' + '")');
-			$("span#copyTool").show();
-		
-			// Action Delete Button
-			$("a#deleteTool").attr('href',
-				'javascript:deleteProtocolForm("' + id + '","single")');
-			$("span#deleteTool").show();
-			
-			// Action Browse Button
-			var aux = "javascript:alert('Not implemented yet')";
-			$("a#browseTool").attr('href', aux);
-			$("span#browseTool").show();
-	 		
-			break;
-			
-	 	case "multiple":
-	 		
-			// Action Edit Button
-			$("a#editTool").attr('href','#');
-			$("span#editTool").hide();
-	 		
-	 		// Action Copy Button
-			$("a#copyTool").attr('href',
-				'javascript:copyProtocol("' + id + '")');
-			$("span#copyTool").show();
-		
-			// Action Delete Button
-			$("a#deleteTool").attr('href',
-				'javascript:deleteProtocolForm("' + id + '","multiple")');
-			$("span#deleteTool").show();
-			
-			// Action Browse Button
-			$("a#browseTool").attr('href', '#');
-			$("span#browseTool").hide();
 
-	 		break;
-	
-	 }
-	 // Show toolbar
-	 $("div#toolbar").show(); 
+	if (mode == undefined) {
+		mode = "single";
+	}
+
+	switch (mode) {
+
+	case "single":
+
+		// Action Edit Button
+		$("a#editTool").attr('href',
+				'javascript:popup("/form/?protocolId=' + id + '")');
+		$("span#editTool").show();
+
+		// Action Copy Button
+		$("a#copyTool").attr(
+				'href',
+				'javascript:popup("/form/?protocolId=' + id + '&action=copy'
+						+ '")');
+		$("span#copyTool").show();
+
+		// Action Delete Button
+		$("a#deleteTool").attr('href',
+				'javascript:deleteProtocolForm("' + id + '","single")');
+		$("span#deleteTool").show();
+
+		// Action Browse Button
+		var aux = "javascript:alert('Not implemented yet')";
+		$("a#browseTool").attr('href', aux);
+		$("span#browseTool").show();
+
+		break;
+
+	case "multiple":
+
+		// Action Edit Button
+		$("a#editTool").attr('href', '#');
+		$("span#editTool").hide();
+
+		// Action Copy Button
+		$("a#copyTool").attr('href', 'javascript:copyProtocol("' + id + '")');
+		$("span#copyTool").show();
+
+		// Action Delete Button
+		$("a#deleteTool").attr('href',
+				'javascript:deleteProtocolForm("' + id + '","multiple")');
+		$("span#deleteTool").show();
+
+		// Action Browse Button
+		$("a#browseTool").attr('href', '#');
+		$("span#browseTool").hide();
+
+		break;
+
+	}
+	// Show toolbar
+	$("div#toolbar").show();
 }
 
-function updateRow(id, elm, row){	
+function updateRow(id, elm, row) {
 	/*
 	 * Function to update the row in the protocol run list when an element is
 	 * selected.
@@ -730,7 +728,7 @@ function updateRow(id, elm, row){
 	row.attr('value', id);
 }
 
-function updateTree(id, elm, row){
+function updateTree(id, elm, row) {
 	/*
 	 * Function to update the node in the protocol run tree when an element is
 	 * selected.
@@ -749,17 +747,16 @@ function updateTree(id, elm, row){
 	}
 }
 
-
-function graphON(graph, icon_graph, list, icon_list){
+function graphON(graph, icon_graph, list, icon_list) {
 	/*
 	 * Function to disable the list view and enable the tree graph view.
 	 */
-	
+
 	// Graph ON
 	graph.attr("data-mode", "active");
 	graph.show();
 	icon_graph.hide();
-	
+
 	// Table OFF
 	list.attr("data-mode", "inactive");
 	list.hide();
@@ -769,64 +766,63 @@ function graphON(graph, icon_graph, list, icon_list){
 	updateGraphView("True");
 }
 
-function graphOFF(graph, icon_graph, list, icon_list){
+function graphOFF(graph, icon_graph, list, icon_list) {
 	/*
 	 * Function to disable the tree graph view and enable the list view.
 	 */
-	
-	// Table ON	
+
+	// Table ON
 	list.attr("data-mode", "active");
 	list.show();
 	icon_list.hide();
-	
+
 	// Graph OFF
 	graph.attr("data-mode", "inactive");
 	graph.hide();
 	icon_graph.show();
-	
+
 	// Update Graph View
 	updateGraphView("False")
 }
 
-function changeStatusGraph(status, graph, graphTool, list, listTool){
-	/*	
+function changeStatusGraph(status, graph, graphTool, list, listTool) {
+	/*
 	 * Function to switch between the graph/list view depending on the status.
 	 */
 	if (status == 'inactive') {
 		// Graph ON & Table OFF
 		graphON(graph, graphTool, list, listTool);
 	} else if (status == 'active') {
-		// Table ON	& Graph OFF
+		// Table ON & Graph OFF
 		graphOFF(graph, graphTool, list, listTool);
 	}
 }
-
 
 function switchGraph() {
 	/*
 	 * Main function called to change between graph tree/list views.
 	 */
-	
-	// graph status (active or inactive) 
+
+	// graph status (active or inactive)
 	var status = $("div#graphActiv").attr("data-mode");
 
 	// element marked obtained from value in the toolbar
 	var id = $("div#toolbar").attr("value");
-	
-	//get row elements 
+
+	// get row elements
 	var graph = $("div#graphActiv");
 	var graphTool = $("span#treeTool");
 	var list = $("div#runTable");
 	var listTool = $("span#listTool");
-	
+
 	changeStatusGraph(status, graph, graphTool, list, listTool);
-		
+
 	// Graph will be painted once
 	if (graph.attr("data-time") == 'first') {
 		callPaintGraph();
 		graph.attr("data-time", "not");
-	} 
-	
+	}
+
 	// Keep the consistency about the selected elements between
 	// the list and graph views.
 	transposeElmMarked(status);
@@ -836,41 +832,43 @@ function switchGraph() {
 function updateGraphView(status) {
 	/*
 	 * Method to update the graph view in the internal settings of the project
-	 * passing like argument a boolean.
-	 * If the graph view was active when you closed the project last time will
-	 * be available directly, in the another case, will be inactive.
+	 * passing like argument a boolean. If the graph view was active when you
+	 * closed the project last time will be available directly, in the another
+	 * case, will be inactive.
 	 */
 	var URL = getSubDomainURL() + "/update_graph_view/?status=" + status
 	$.ajax({
-		type : "GET", 
+		type : "GET",
 		url : URL,
-		async: false
+		async : false
 	});
 }
 
-function editObject(objId){
-	var URL = getSubDomainURL() + '/get_attributes/?objId='+ objId
+function editObject(objId) {
+	var URL = getSubDomainURL() + '/get_attributes/?objId=' + objId
 	$.ajax({
 		type : "GET",
 		url : URL,
-		dataType: "text",
+		dataType : "text",
 		success : function(text) {
 			var res = text.split("_-_")
 			label = res[0]
 			comment = res[1]
-			editObjParam(objId, "Label", label, "Comment", comment, "Describe your run here...","object")
+			editObjParam(objId, "Label", label, "Comment", comment,
+					"Describe your run here...", "object")
 		}
 	});
 }
 
-function downloadOutput(objId){
-	var URL = getSubDomainURL() + '/download_output/?objId='+ objId
+function downloadOutput(objId) {
+	var URL = getSubDomainURL() + '/download_output/?objId=' + objId
 	$.ajax({
 		type : "GET",
 		url : URL,
-		dataType: "text",
+		dataType : "text",
 		success : function(text) {
-			var URL = getSubDomainURL() + '/get_file/?path='+ text+'&filename=output.zip'
+			var URL = getSubDomainURL() + '/get_file/?path=' + text
+					+ '&filename=output.zip'
 			window.location.href = URL;
 		}
 	});
@@ -880,22 +878,21 @@ function deleteProtocolForm(id, mode) {
 	/*
 	 * Dialog web form based in messi.js to verify the option to delete.
 	 */
-	
-	 var msg = "</td><td class='content' value='"+ id
-	 
-	 switch(mode){
-	 	case "single":
-			msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
-			break;
-	 	case "multiple":
-			msg += "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
-	 		break;
-	 }
-	 msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
-	 
-	warningPopup('Confirm DELETE',msg, 'deleteProtocol')
-}
 
+	var msg = "</td><td class='content' value='" + id
+
+	switch (mode) {
+	case "single":
+		msg += "'><strong>ALL DATA</strong> related to this <strong>protocol run</strong>"
+		break;
+	case "multiple":
+		msg += "'><strong>ALL DATA</strong> related to the <strong>selected protocols run</strong>"
+		break;
+	}
+	msg += " will be <strong>DELETED</strong>. Do you really want to continue?</td></tr></table>";
+
+	warningPopup('Confirm DELETE', msg, 'deleteProtocol')
+}
 
 function deleteProtocol(elm) {
 	/*
@@ -907,24 +904,24 @@ function deleteProtocol(elm) {
 		type : "GET",
 		url : URL,
 		dataType : "json",
-		async :false,
+		async : false,
 		success : function(json) {
-			if(json.errors != undefined){
+			if (json.errors != undefined) {
 				// Show errors in the validation
-				errorPopup('Errors found',json.errors);
-			} else if(json.success!= undefined){
-	//				launchMessiSimple("Successful", messiInfo(json.success));
-	//				window.location.reload()
+				errorPopup('Errors found', json.errors);
+			} else if (json.success != undefined) {
+				// launchMessiSimple("Successful", messiInfo(json.success));
+				// window.location.reload()
 			}
 		},
-		error: function(){
+		error : function() {
 			alert("error")
 		}
 	});
-	
+
 }
 
-function copyProtocol(id){
+function copyProtocol(id) {
 	/*
 	 * Method to copy protocol.
 	 */
@@ -933,17 +930,17 @@ function copyProtocol(id){
 		type : "GET",
 		url : URL,
 		dataType : "json",
-		async :false,
+		async : false,
 		success : function(json) {
-			if(json.errors != undefined){
+			if (json.errors != undefined) {
 				// Show errors in the validation
-				errorPopup('Errors found',json.errors);
-			} else if(json.success!= undefined){
-//				launchMessiSimple("Successful", messiInfo(json.success));
-//				window.location.reload()
+				errorPopup('Errors found', json.errors);
+			} else if (json.success != undefined) {
+				// launchMessiSimple("Successful", messiInfo(json.success));
+				// window.location.reload()
 			}
 		},
-		error: function(){
+		error : function() {
 			alert("error")
 		}
 	});
@@ -951,21 +948,22 @@ function copyProtocol(id){
 
 function stopProtocolForm(protocolId) {
 	/*
-	 * Dialog web form based in messi.js to verify the option to stop a protocol.
+	 * Dialog web form based in messi.js to verify the option to stop a
+	 * protocol.
 	 */
-		
+
 	var msg = "<td class='content' value='"
 			+ protocolId
 			+ "'>This <strong>protocol run</strong>"
 			+ " will be <strong>STOPPED</strong>. Do you really want to continue?</td>";
-			
-	warningPopup('Confirm STOP',msg, 'stopProtocol');
+
+	warningPopup('Confirm STOP', msg, 'stopProtocol');
 }
 
 function stopProtocol(elm) {
-/*
- * Method to stop the run for a protocol
- */
+	/*
+	 * Method to stop the run for a protocol
+	 */
 	var protId = elm.attr('value');
 	var URL = getSubDomainURL() + "/stop_protocol/?protocolId=" + protId
 	$.ajax({
@@ -974,25 +972,25 @@ function stopProtocol(elm) {
 	});
 }
 
-function changeTreeView(){
+function changeTreeView() {
 	/*
 	 * Method to update the protocol tree to run in the web left side.
 	 */
 	protIndex = $('#viewsTree').val();
-	var URL = getSubDomainURL() + '/update_prot_tree/?index='+ protIndex
-	
+	var URL = getSubDomainURL() + '/update_prot_tree/?index=' + protIndex
+
 	$.ajax({
 		type : "GET",
 		url : URL,
-		dataType:"text",
+		dataType : "text",
 		success : function() {
 			var URL2 = getSubDomainURL() + '/tree_prot_view/'
 			$.ajax({
 				type : "GET",
-				url: URL2,
-				dataType: "html",
-				async: false,
-				success: function(data) {
+				url : URL2,
+				dataType : "html",
+				async : false,
+				success : function(data) {
 					$('div.protFieldsetTree').html(data);
 				}
 			});
@@ -1000,87 +998,84 @@ function changeTreeView(){
 	});
 }
 
-//** REFRESHING FUNCTIONALITIES *****************************************************/
+// ** REFRESHING FUNCTIONALITIES
+// *****************************************************/
 
-function refreshRuns(mode){
+function refreshRuns(mode) {
 	/*
 	 * Method to update the run list/graph
 	 */
-	
+
 	var URL = getSubDomainURL() + '/run_table_graph/'
-	
+
 	$(function() {
 		$.ajax({
-			async: true,
+			async : true,
 			url : URL,
-//			datatype: "text",
+			// datatype: "text",
 			success : function(data) {
-				
-				console.log("data: "+data)
-				
-				if (typeof data == 'string' || data instanceof String){
-					
-					if (data == 'stop'){
+
+				console.log("data: " + data)
+
+				if (typeof data == 'string' || data instanceof String) {
+
+					if (data == 'stop') {
 						window.clearTimeout(updatetimer);
 						// stop the script
-					}
-					else if(data == 'ok'){
+					} else if (data == 'ok') {
 						// no changes
-					}
-					else {
+					} else {
 						$('div#runsInfo').html(data);
 						// refresh the data keeping the element marked
 					}
-				}
-				else {
-					for (var x=0;x< data.length;x++){
+				} else {
+					for (var x = 0; x < data.length; x++) {
 						var id = data[x][0];
 						var status = data[x][2];
 						var time = data[x][3];
 
 						checkStatusNode(id, status)
 						checkStatusRow(id, status, time)
-						
+
 						console.log(status)
-						
-						if (status == "finished"){
+
+						if (status == "finished") {
 							console.log("protocol finished!")
-	//						updateTabs(id)
+							// updateTabs(id)
 						}
 					}
 				}
 			},
-		error: function (){
-			console.log("Error in the refresh")
-		}
+			error : function() {
+				console.log("Error in the refresh")
+			}
 		});
-  	});
-	
-	if(mode){
-		var updatetimer = setTimeout(function(){ 
+	});
+
+	if (mode) {
+		var updatetimer = setTimeout(function() {
 			refreshRuns(1);
-	  	}, 3000);
+		}, 3000);
 	}
 }
 
-function checkStatusNode(id, status){
-	node = $("#graph_"+ id);
-	
-	if(status.indexOf('running')==0){
+function checkStatusNode(id, status) {
+	node = $("#graph_" + id);
+
+	if (status.indexOf('running') == 0) {
 		node.css("background-color", "#FCCE62");
 	}
-	if(status.indexOf('failed')==0){
+	if (status.indexOf('failed') == 0) {
 		node.css("background-color", "#F5CCCB");
 	}
-	if(status.indexOf('finished')==0){
+	if (status.indexOf('finished') == 0) {
 		node.css("background-color", "#D2F5CB");
 	}
 	node.find("#nodeStatus").html(status);
 }
 
-function checkStatusRow(id, status, time){
-	row = $("tr#"+ id);
+function checkStatusRow(id, status, time) {
+	row = $("tr#" + id);
 	row.find(".status").html(status);
 	row.find(".time").html(time);
-}	 
-
+}

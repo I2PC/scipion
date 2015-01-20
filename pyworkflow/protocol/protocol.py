@@ -412,6 +412,23 @@ class Protocol(Step):
         for paramName, _ in self._definition.iterParams():
             yield paramName, getattr(self, paramName)
             
+    def getDefinitionDict(self):
+        """ Similar to getObjDict, but only for those 
+        params that are in the form.
+        This function is used for export protocols as json text file.
+        """
+        d = OrderedDict()
+        d['object.className'] = self.getClassName()
+        d['object.id'] = self.strId()
+         
+        od = self.getObjDict()
+        
+        for attrName in od:
+            if self.getDefinitionParam(attrName) is not None:
+                d[attrName] = od[attrName]
+                
+        return d
+        
     def iterDefinitionSections(self):
         """ Iterate over all the section of the definition. """
         for section in self._definition.iterSections():
@@ -496,10 +513,13 @@ class Protocol(Step):
         If stored previously, _store should be used.
         The child will be set as self.key attribute
         """
-       
-        setattr(self, key, child)
-        if self.hasObjId():
-            self.mapper.insertChild(self, key, child)
+        try:
+            setattr(self, key, child)
+            if self.hasObjId():
+                self.mapper.insertChild(self, key, child)
+        except Exception, ex:
+            print "Error with child '%s', value=%s, type=%s" % (key, child, type(child))
+            raise ex
         
     def _deleteChild(self, key, child):
         """ Delete a child from the mapper. """
@@ -931,6 +951,10 @@ class Protocol(Step):
         Add text txt to self._buffer, with format fmt.
         fmt can be a color (like 'red') or a link that looks like 'link:url'.
         """
+        # Make the text html-safe first.
+        for x,y in [('&', 'amp'), ('<', 'lt'), ('>', 'gt')]:
+            txt = txt.replace(x, '&%s;' % y)
+
         if fmt is None:
             self._buffer += txt
         elif fmt.startswith('link:'):
@@ -939,7 +963,9 @@ class Protocol(Step):
             if url.startswith('http://'):
                 self._buffer += '[[%s][%s]]' % (url, txt)
             else:
-                self._buffer += '[[/get_log/?path=%s][%s]]' % (url, txt)
+                from pyworkflow.web.pages import settings as django_settings
+                absolute_url = django_settings.ABSOLUTE_URL
+                self._buffer += '[[%s/get_log/?path=%s][%s]]' % (absolute_url, url, txt)
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
@@ -1151,8 +1177,20 @@ class Protocol(Step):
     def getFileTag(self, fn):
         return "[[%s]]" % fn
     
-    def getObjectTag(self, obj):
-        return "[[%s]]" % obj.getNameId()
+    def getObjectTag(self, objName):
+        if isinstance(objName, basestring):
+            obj = getattr(self, objName, None)
+        else:
+            obj = objName
+        
+        if obj is None:
+            return '*None*'
+        
+        if obj.isPointer():
+            obj = obj.get() # get the pointed object
+        
+        return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
+    #    return "[[javascript:launchViewer(%s)][%s]]" % (obj.getObjId(), obj.getNameId())
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

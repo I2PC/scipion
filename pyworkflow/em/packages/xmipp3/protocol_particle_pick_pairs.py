@@ -28,12 +28,13 @@
 This sub-package contains the XmippParticlePicking protocol
 """
 
-from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, EMObject
+from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
 from xmipp3 import XmippProtocol
 from pyworkflow.em.showj import runJavaIJapp
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 from convert import writeSetOfMicrographsPairs
+from itertools import izip
 
 import xmipp
 
@@ -123,12 +124,14 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         readAnglesFromMicrographs(micsFn, setAngles)
         setAngles.write()
         # Create CoordinatesTiltPair object
-        outputset = CoordinatesTiltPair()
+        outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs.sqlite'))
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
-        outputset.setObjComment(self.getSummary())
+        outputset.setObjComment(self.getSummary(outputset))
+        for coordU, coordT in izip(uCoordSet, tCoordSet):
+            outputset.append(TiltPair(coordU, coordT))
         
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
         self._defineSourceRelation(inputset, outputset)
@@ -152,7 +155,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
 
     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
-
+        msg = ""
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         if existsConfig:
@@ -168,7 +171,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return [self.getSummary(self.getCoords())]
+            return [self.getSummary(None)]
 
     def _methods(self):
         if self.getOutputsSize() > 0:
@@ -185,7 +188,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputName = 'outputCoordinatesTiltPair' + suffix
         return getattr(self, outputName)
     
-    def getSummary(self):
+    def getSummary(self, coordsSet):
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         if exists(configfile):

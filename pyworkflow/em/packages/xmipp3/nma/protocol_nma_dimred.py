@@ -129,7 +129,7 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         method = self.dimredMethod.get()
         extraParams = self.extraParams.get('')
         
-        deformationsFile = self._getExtraPath('deformations.txt')
+        deformationsFile = self.getDeformationFile()
         
         self._insertFunctionStep('convertInputStep', 
                                  deformationsFile, inputSet.getObjId())
@@ -196,10 +196,16 @@ class XmippProtDimredNMA(ProtAnalysis3D):
         """ Get the output particles of the input NMA protocol. """
         return self.inputNMA.get().outputParticles
     
+    def getInputPdb(self):
+        return self.inputNMA.get().getInputPdb()
+    
     def getOutputMatrixFile(self):
         return self._getExtraPath('output_matrix.txt')
     
-    def getMappingFile(self):
+    def getDeformationFile(self):
+        return self._getExtraPath('deformations.txt')
+    
+    def getProjectorFile(self):
         return self.mappingFile.get()
     
     def getMethodName(self):

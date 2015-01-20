@@ -29,9 +29,9 @@ This module contains the protocol for CTF estimation with ctffind3
 """
 
 
-from pyworkflow.utils.path import makePath, replaceBaseExt, join, basename, cleanPath, getExt, cleanPattern
+from pyworkflow.utils.path import replaceBaseExt, cleanPattern
 from pyworkflow.em import *
-from brandeis import *
+from pyworkflow.em.packages.grigoriefflab.grigoriefflab import *
 from convert import parseCtffindOutput
 # from pyworkflow.utils.which import which
 
@@ -52,10 +52,11 @@ estimate CTF on a set of micrographs using ctffind """
         return ['Mindell2003']
 
     def _methods(self):
-        str="We calculated the CTF using CtfFind [Midell2003]."
-        if self.methodsInfo.hasValue():
-            str+=" "+self.methodsInfo.get()
-        return [str]
+        methods = "We calculated the CTF of %s using CtfFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
+        methods += self.methodsVar.get('')
+        methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
+        
+        return [methods]
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getPsdPath(self, micDir):
@@ -76,6 +77,7 @@ estimate CTF on a set of micrographs using ctffind """
         ctf.setPsdFile(psdFile)
         
         return ctf
+    
 
 class ProtCTFFind(ProtBaseCTFFind, ProtCTFMicrographs):
     """Estimates CTF on a set of micrographs

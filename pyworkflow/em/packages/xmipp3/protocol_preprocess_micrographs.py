@@ -189,37 +189,40 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                 self.outputMicrographs.hasValue())
                 
     def _summary(self):
-        summary = []
         if not self._hasOutput():
-            summary.append("*Output Micrographs* not ready yet.")
-        else:
-            summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
-            if self.doCrop:
-                summary.append("Number of pixels cropped: %d" % self.cropPixels)
-            if self.doLog:
-                summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
-            if self.doRemoveBadPix:
-                summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev)
-            if self.doDownsample:
-                summary.append("Downsampling factor: %0.2f" % self.downFactor)
+            return ["*Output Micrographs* not ready yet."]
+
+        summary = []
+        summary.append("Micrographs preprocessed: %d" % self.inputMicrographs.get().getSize())
+        if self.doCrop:
+            summary.append("Number of pixels cropped: %d" % self.cropPixels)
+        if self.doLog:
+            summary.append("Formula applied: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC,))
+        if self.doRemoveBadPix:
+            summary.append("Multiple of standard deviation to remove pixels: %d" % self.mulStddev)
+        if self.doDownsample:
+            summary.append("Downsampling factor: %0.2f" % self.downFactor)
         return summary
     
     def _methods(self):
-        methods = '*Output micrographs* not ready yet.'
-        
-        if self._hasOutput():
-            methods = "The micrographs set %s has been" % self.getObjectTag(self.inputMicrographs.get())
-            if self.doCrop:
-                methods += " cropped %d pixels" % self.cropPixels
-            if self.doLog:
-                methods += " changed from trasmisivity to density with the formula: %f - %f ln(x + %f)" % (self.logA, self.logB, self.logC)
-            if self.doRemoveBadPix:
-                methods += " removed pixels with standard deviation beyond %d times" % self.mulStddev
-            if self.doDownsample:
-                methods += " downsampled with a factor of %0.2f" % self.downFactor
-            methods += ' The resulting micrographs set is %s' % self.getObjectTag(self.outputMicrographs)
-        return [methods]
-    
+        if not self._hasOutput():
+            return ['*Output micrographs* not ready yet.']
+
+        txt = "The micrographs in set %s have " % self.getObjectTag('inputMicrographs')
+
+        if self.doCrop:
+            txt += "been cropped by %d pixels " % self.cropPixels
+        if self.doLog:
+            txt += ("changed from transmisivity to density with the formula: "
+                    "%f - %f * ln(x + %f) " % (self.logA, self.logB, self.logC))
+        if self.doRemoveBadPix:
+            txt += "had pixels removed, the ones with standard deviation beyond %d " % self.mulStddev
+        if self.doDownsample:
+            txt += "been downsampled with a factor of %0.2f " % self.downFactor
+
+        return [txt, "The resulting set of micrographs is %s" %
+                self.getObjectTag('outputMicrographs')]
+
     #--------------------------- UTILS functions --------------------------------------------
     def _getOutputMicrograph(self, mic):
         """ Return the name of the output micrograph, given

@@ -66,6 +66,7 @@ class ProjectsView(tk.Frame):
     def createProjectList(self, text):
         """Load the list of projects"""
         r = 0
+        text.setReadOnly(False)
         text.clear()
         parent = tk.Frame(text, bg='white')    
         parent.columnconfigure(0, weight=1)
@@ -76,6 +77,7 @@ class ProjectsView(tk.Frame):
             r += 1
         text.window_create(tk.INSERT, window=parent)
         text.bindWidget(parent)
+        text.setReadOnly(True)
       
     def createProjectLabel(self, parent, projInfo, color):
         frame = tk.Frame(parent, bg=color)

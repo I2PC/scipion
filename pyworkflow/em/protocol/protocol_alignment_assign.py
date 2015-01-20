@@ -107,7 +107,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         else:
             scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
             methods.append("We assigned alignment to %s particles from %s and produced %s."
-                           % (self.outputParticles.getSize(), self.getObjectTag(self.inputParticles.get()), self.getObjectTag(self.outputParticles)))
+                           % (self.outputParticles.getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles')))
             if scale != 1:
                 methods.append("Applied scale factor of %s." % scale)
         return methods

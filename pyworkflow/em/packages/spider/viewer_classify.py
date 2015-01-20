@@ -271,6 +271,7 @@ class SpiderViewerDiday(SpiderViewerClassify):
         prot.runScript('mda/classavg.msa', prot.getExt(), params)
 
         particles = prot.inputParticles.get()
+        particles.load()
         sampling = particles.getSamplingRate()
         
         setFn = self._getPath('classes2D.sqlite')

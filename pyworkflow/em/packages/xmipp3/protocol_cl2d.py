@@ -327,16 +327,18 @@ class XmippProtCL2D(ProtClassify2D):
         return summary
 
     def _methods(self):
-        strline=''
+        strline = ''
         if hasattr(self, 'outputClasses'):
-            strline+='We classified %d particles from %s into %d classes %s using CL2D [Sorzano2010a]. '%\
-                           (self.inputParticles.get().getSize(), self.getObjectTag(self.inputParticles.get()), self.numberOfClasses.get(), self.getObjectTag(self.outputClasses))
-            strline+='%s method was used to compare images and %s clustering criterion. '%\
-                           (self.getEnumText('comparisonMethod'),self.getEnumText('clusteringMethod'))
+            strline += 'We classified %d particles from %s ' % (self.inputParticles.get().getSize(), 
+                                                                self.getObjectTag('inputParticles'))
+            strline += 'into %d classes %s using CL2D [Sorzano2010a]. ' % (self.numberOfClasses, 
+                                                                           self.getObjectTag('outputClasses'))
+            strline += '%s method was used to compare images and %s clustering criterion. '%\
+                           (self.getEnumText('comparisonMethod'), self.getEnumText('clusteringMethod'))
             if self.numberOfClasses > self.numberOfInitialClasses and self.doCore:
-                strline+='We also calculated the class cores %s' % self.getObjectTag(self.outputClasses_core)
+                strline+='We also calculated the class cores %s' % self.getObjectTag('outputClasses_core')
                 if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
-                    strline+=' and the class stable cores %s' % self.getObjectTag(self.outputClasses_stable_core)
+                    strline += ' and the class stable cores %s' % self.getObjectTag('outputClasses_stable_core')
                 strline+=' [Sorzano2014].'
         return [strline]
     

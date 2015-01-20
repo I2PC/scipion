@@ -27,12 +27,13 @@
 from os.path import join, basename, dirname, exists
 from collections import OrderedDict
 
-from pyworkflow.utils.path import findRootFrom, copyTree, createLink
+from pyworkflow.utils.path import findRootFrom, copyTree, createLink, replaceExt
 from pyworkflow.em.data import Micrograph
 import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.xmipp3.convert import (readSetOfMicrographs, readSetOfParticles,
                                                    xmippToLocation, locationToXmipp, 
-                                                   CTF_PSD_DICT, fillClasses, readPosCoordinates, rowFromMd, rowToCoordinate)
+                                                   CTF_PSD_DICT, fillClasses, readPosCoordinates, rowFromMd, rowToCoordinate,
+                                                    readCTFModel)
 
 
 
@@ -279,4 +280,9 @@ class XmippImport():
         for objId in posMd:
              coord = rowToCoordinate(rowFromMd(posMd, objId))
              addCoordinate(coord)
+
+    def importCTF(self, mic, fileName):
+        ctf = readCTFModel(fileName, mic)
+        ctf.setPsdFile(replaceExt(fileName, 'psd'))
+        return ctf
 

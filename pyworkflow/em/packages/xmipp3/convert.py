@@ -702,7 +702,7 @@ def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):
         filename: The metadata filename where the image are.
         imgSet: the SetOfParticles that will be populated.
         rowToFunc: this function will be used to convert the row to Object
-    """    
+    """
     imgMd = xmipp.MetaData(filename)
     # By default remove disabled items from metadata
     # be careful if you need to preserve the original number of items

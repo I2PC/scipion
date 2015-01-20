@@ -42,7 +42,7 @@ import pyworkflow as pw
 import pyworkflow.em as em
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.packages.eman2 import getEmanCommand, loadJson, getEnviron
-from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt
+from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, dirname
 
 
 # LABEL_TYPES = { 
@@ -144,13 +144,12 @@ def writeSetOfCoordinates():
     pass
 
 
-def writeSetOfParticles(partSet, filename, **kwargs):
-    """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
-    This function should be called from a current dir where
-    the images in the set are available.
+def createEmanProcess(script='e2converter.py', args=None):
+    """ Open a new Process with all EMAN environment (python...etc)
+    that will server as an adaptor to use EMAN library
     """
-    program = pw.join('em', 'packages', 'eman2', 'e2converter.py')        
-    cmd = getEmanCommand(program, filename)
+    program = pw.join('em', 'packages', 'eman2', script)        
+    cmd = getEmanCommand(program, args)
     
 #    gcmd = greenStr(cmd)
     print "** Running: '%s'" % cmd
@@ -158,28 +157,53 @@ def writeSetOfParticles(partSet, filename, **kwargs):
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE)
     
+    return proc
+    
+    
+def writeSetOfParticles(partSet, filename, **kwargs):
+    """ Convert the imgSet particles to a single .hdf file as expected by Eman. 
+    This function should be called from a current dir where
+    the images in the set are available.
+    """
+    from math import fabs
+    isMrcs, fnDict = convertBinaryFiles(partSet, dirname(filename))
+    
+    proc = createEmanProcess(args='write %s' % filename)
+    
+    partSet.getFirstItem().getFileName()
+    fileName = ""
+    a = 0
     for part in partSet:
         objDict = part.getObjDict()
-        alignType = kwargs.get('alignType') 
+        alignType = kwargs.get('alignType')
+#         print "objDict, ", objDict
     
         if alignType != em.ALIGN_NONE:
-
-            #tranformation matrix is procesed here because
-            #it uses routines available thrrough scipion python
-            matrix = part.getTransform().getMatrix()
-            shifts, angles = geometryFromMatrix(matrix, True)
+            shift, angles = alignmentToRow(part.getTransform(), alignType)
+        
             #json cannot encode arrays so I convert them to lists
-            objDict['_angles']=angles.tolist()
-            objDict['_shifts']=shifts.tolist()
-            
+            #json fail if has -0 as value
+            objDict['_shifts'] = shift.tolist()
+            objDict['_angles'] = angles.tolist()
 #         fn = objDict['_filename']
         # check if the is a file mapping
 #         objDict['_filename'] = filesDict.get(fn, fn)
-        objDict['_itemId']=part.getObjId()
+        objDict['_itemId'] = part.getObjId()
+        if isMrcs:
+            objDict['_filename'] = fnDict[objDict['_filename']]
+        
+        # the index in EMAN begin in 0.
+        if fileName != objDict['_filename']:
+            fileName = objDict['_filename']
+            if objDict['_index'] == 0:
+                a = 0
+            else:
+                a = 1
+        objDict['_index'] = int(objDict['_index'] - a)
         # Write the e2converter.py process from where to read the image
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
-        response = proc.stdout.readline()
+        proc.stdout.readline()
 
 
 def readSetOfParticles(filename, partSet, **kwargs):
@@ -199,6 +223,80 @@ def geometryFromMatrix(matrix, inverseTransform):
     return shifts, angles
 
 
+def matrixFromGeometry(shifts, angles, inverseTransform):
+    """ Create the transformation matrix from a given
+    2D shifts in X and Y...and the 3 euler angles.
+    """
+    from pyworkflow.em.transformations import euler_matrix
+    from numpy import deg2rad
+    radAngles = -deg2rad(angles)
+
+    M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
+    if inverseTransform:
+        from numpy.linalg import inv
+        M[:3, 3] = -shifts[:3]
+        M = inv(M)
+    else:
+        M[:3, 3] = shifts[:3]
+
+    return M
+
+
+def alignmentToRow(alignment, alignType):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+                          -> for xmipp implies alignment
+    """
+#     is2D = alignType == em.ALIGN_2D
+#     inverseTransform = alignType == em.ALIGN_PROJ
+    
+    #tranformation matrix is procesed here because
+    #it uses routines available thrrough scipion python
+    matrix = alignment.getMatrix()
+    return geometryFromMatrix(matrix, True)
+
+
+def rowToAlignment(alignmentList, alignType):
+    """
+    is2D == True-> matrix is 2D (2D images alignment)
+            otherwise matrix is 3D (3D volume alignment or projection)
+    invTransform == True  -> for xmipp implies projection
+        """
+    is2D = alignType == em.ALIGN_2D
+    inverseTransform = alignType == em.ALIGN_PROJ
+     
+    alignment = em.Transform()
+    angles = numpy.zeros(3)
+    shifts = numpy.zeros(3)
+    shifts[0] = alignmentList[3]
+    shifts[1] = alignmentList[4]
+    if not is2D:
+        angles[0] = alignmentList[0]
+        angles[1] = alignmentList[1]
+        shifts[2] = 0
+        angles[2] = alignmentList[2]
+    else:
+        psi = alignmentList[0]
+        rot = alignmentList[1]
+        if rot !=0. and psi !=0:
+            print "HORROR rot and psi are different from zero"
+        angles[0] = alignmentList[0] + alignmentList[1]
+    #if alignment
+    matrix = matrixFromGeometry(shifts, angles, inverseTransform)
+    alignment.setMatrix(matrix)
+     
+    #FIXME: now are also storing the alignment parameters since
+    # the conversions to the Transform matrix have not been extensively tested.
+    # After this, we should only keep the matrix 
+    #for paramName, label in ALIGNMENT_DICT.iteritems():
+    #    if alignmentRow.hasLabel(label):
+    #        setattr(alignment, paramName, alignmentRow.getValueAsObject(label))    
+     
+    return alignment
+
+
 def convertBinaryFiles(imgSet, outputDir):
     """ Convert binary images files to a format read by Relion.
     Params:
@@ -213,11 +311,11 @@ def convertBinaryFiles(imgSet, outputDir):
     # This approach can be extended when
     # converting from a binary file format that
     # is not read from Relion
-    def linkMrcsToMrc(fn):
+    def linkMrcToMrcs(fn):
         """ Just create a link named .mrc to Eman understand 
         that it is a mrc binary stack.
         """
-        newFn = join(outputDir, replaceBaseExt(fn, 'mrc'))
+        newFn = join(outputDir, replaceBaseExt(fn, 'mrcs'))
         createLink(fn, newFn)
         return newFn
         
@@ -230,15 +328,19 @@ def convertBinaryFiles(imgSet, outputDir):
         return newFn
         
     ext = imgSet.getFirstItem().getFileName()
-    if ext.endswith('.mrcs'):
-        mapFunc = linkMrcsToMrc
-    elif ext.endswith('.hdf'): # assume eman .hdf format
-        mapFunc = convertStack
+    if ext.endswith('.mrc'):
+        mapFunc = linkMrcToMrcs
+        ismrcs = True
+#     elif ext.endswith('.hdf'): # assume eman .hdf format
+#         mapFunc = convertStack
     else:
         mapFunc = None
+        ismrcs = False
         
     if mapFunc is not None:
         for fn in imgSet.getFiles():
             filesDict[fn] = mapFunc(fn) # convert and map new filename
 
-    return filesDict
+    return ismrcs, filesDict
+
+

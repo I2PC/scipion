@@ -240,14 +240,16 @@ class ProjectSettings(OrderedObject):
         #TODO: read this from a .conf file
         menu = MenuConfig()
         projMenu = menu.addSubMenu('Project')
-        projMenu.addSubMenu('Browse files', 'browse', icon='folderopen.gif')
-        projMenu.addSubMenu('Remove temporary files', 'delete', icon='delete.gif')
-        projMenu.addSubMenu('Clean project', 'clean')
-        projMenu.addSubMenu('Exit', 'exit')
+        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
     
         helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Online help', 'online_help', icon='online_help.gif')
-        helpMenu.addSubMenu('About', 'about')
+        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
     
         #writeConfig(menu, 'menu_default.xml')
         self.addMenu(menu)

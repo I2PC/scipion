@@ -32,6 +32,7 @@ from os.path import basename
 import Tkinter as tk
 
 import pyworkflow.gui as gui
+from pyworkflow.utils.properties import Icon
 from pyworkflow.gui.widgets import Button, HotButton
 
 from pyworkflow.em.packages.xmipp3.nma.data import Point, PathData
@@ -52,6 +53,7 @@ class TrajectoriesWindow(gui.Window):
         self.data = kwargs.get('data')
         self.pathData = PathData(dim=self.dim)
         self.callback = kwargs.get('callback', None)
+        self.loadCallback = kwargs.get('loadCallback', None)
         self.numberOfPoints = kwargs.get('numberOfPoints', 10)
         
         self.plotter = None
@@ -121,14 +123,14 @@ class TrajectoriesWindow(gui.Window):
         frame.columnconfigure(0, minsize=50)
         frame.columnconfigure(1, weight=1)#, minsize=30)
 
-        # Cluster line
-#         self._addLabel(frame, 'Cluster name', 0, 0)
-#         self.clusterVar = tk.StringVar()
-#         clusterEntry = tk.Entry(frame, textvariable=self.clusterVar, 
-#                                    width=30, bg='white')
-#         clusterEntry.grid(row=0, column=1, sticky='nw', pady=5)
+        # Animation name
+        self._addLabel(frame, 'Name', 0, 0)
+        self.animationVar = tk.StringVar()
+        clusterEntry = tk.Entry(frame, textvariable=self.animationVar, 
+                                   width=30, bg='white')
+        clusterEntry.grid(row=0, column=1, sticky='nw', pady=5)
         
-        buttonsFrame = tk.Frame(frame, bg='green')
+        buttonsFrame = tk.Frame(frame)
         buttonsFrame.grid(row=1, column=1, 
                           sticky='se', padx=5, pady=5)
         buttonsFrame.columnconfigure(0, weight=1)
@@ -136,8 +138,16 @@ class TrajectoriesWindow(gui.Window):
         self.generateBtn = HotButton(buttonsFrame, text='Generate Animation', state=tk.DISABLED,
                               tooltip='Select trajectory points to generate the animations',
                               imagePath='fa-plus-circle.png', command=self._onCreateClick)
-        self.generateBtn.grid(row=0, column=1)       
-       
+        self.generateBtn.grid(row=0, column=1, padx=5)  
+        
+        self.loadBtn = Button(buttonsFrame, text='Load', imagePath='fa-folder-open.png',
+                              tooltip='Load a generated animation.',command=self._onLoadClick)
+        self.loadBtn.grid(row=0, column=2, padx=5)   
+                  
+        self.closeBtn = Button(buttonsFrame, text='Close', imagePath=Icon.ACTION_CLOSE,
+                              tooltip='Close window', command=self.close)
+        self.closeBtn.grid(row=0, column=3, padx=(5, 10)) 
+               
         frame.grid(row=1, column=0, sticky='new', padx=5, pady=(5, 10))
         
     def _onResetClick(self, e=None):
@@ -152,6 +162,13 @@ class TrajectoriesWindow(gui.Window):
     def _onCreateClick(self, e=None):
         if self.callback:
             self.callback()
+        
+    def _onLoadClick(self, e=None):
+        if self.loadCallback:
+            self.loadCallback()
+        
+    def setPathData(self, data):
+        self.pathData = data
         
     def _evalExpression(self):
         """ Evaluate the input expression and add 
@@ -227,8 +244,11 @@ class TrajectoriesWindow(gui.Window):
         self._onUpdateClick()
         self.generateBtn.config(state=tk.NORMAL)
         
-    def getClusterName(self):
-        return self.clusterVar.get().strip()
+    def getAnimationName(self):
+        return self.animationVar.get().strip()
+    
+    def setAnimationName(self, value):
+        self.animationVar.set(value)
         
     def _onClosing(self):
         if self.plotter:

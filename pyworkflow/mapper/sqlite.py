@@ -339,9 +339,11 @@ class SqliteObjectsDb(SqliteDb):
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
+    DELETE_SEQUENCE = "DELETE FROM SQLITE_SEQUENCE WHERE name='Objects'"
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
     SELECT_RELATIONS = "SELECT * FROM Relations WHERE "
+    
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -453,6 +455,7 @@ class SqliteObjectsDb(SqliteDb):
     def deleteAll(self):
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")
+        self.executeCommand(self.DELETE_SEQUENCE) # restart the count of ids
         
     def selectRelationChilds(self, relName, object_parent_id):
         self.executeCommand(self.SELECT_RELATION % ('child', 'parent'), 
@@ -628,10 +631,10 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None, random=False):
+    def selectAll(self, iterate=True, objectFilter=None, orderBy='id', direction='ASC'):
         if self._objTemplate is None:
             self.__loadObjDict()
-        objRows = self.db.selectAll(random=random)
+        objRows = self.db.selectAll(orderBy=orderBy, direction=direction)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -854,11 +857,15 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd("id=?"), (objId,))
         return self.cursor.fetchone()
 
-    def selectAll(self, iterate=True, random=False):
-        if not random:
-            cmd = self.selectCmd('1')
+    def selectAll(self, iterate=True, orderBy='id', direction='ASC'):
+        # Handle the specials orderBy values of 'id' and 'RANDOM()'
+        # other columns names should be mapped to table column
+        # such as: _micId -> c04
+        if orderBy in ['id', 'RANDOM()']:
+            orderByCol = orderBy
         else:
-            cmd = self.selectCmd('1', orderByStr=' ORDER BY RANDOM()')
+            orderByCol = self._columnsMapping[orderBy]
+        cmd = self.selectCmd('1', orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
         self.executeCommand(cmd)
         return self._results(iterate)
 

@@ -46,7 +46,7 @@ iconDict = {
             'logo_scipion_small': 'scipion_logo.png',
             'logo_scipion_normal': 'scipion_logo_normal.png',
             'logo_scipion_transparent': 'scipion_logo_transparent.png',
-            'favicon': 'favicon.png',
+            'favicon': 'favicon.ico',
             'help': 'system_help24.png',
             'browse': 'zoom.png',
             'wizard': 'tools_wizard.png',
@@ -124,6 +124,7 @@ jsDict = {'jquery': 'jquery/jquery.js',
           'protocol_form_utils': 'templates_libs/protocol_form_utils.js',
           'wizard_utils': 'templates_libs/wizard_utils.js',
           'upload_utils': 'templates_libs/upload_utils.js',
+          'download_utils': 'templates_libs/download_utils.js',
 
 #          'tabs_config': 'tabs_config.js',
           'jquery_colreorder': 'showj_libs/colReorder.js',
@@ -256,7 +257,7 @@ def browse_objects(request):
                        "info": str(obj),
                        "objects": []}
             
-            for child in obj._iterItems():
+            for child in obj.iterItems():
                 obj_context = {"nameId":child.getNameId(), 
                                "objId": child.getObjId(),
                                "info": str(child)} 
@@ -399,19 +400,28 @@ def download_output(request):
     if request.is_ajax():
         projectName = request.session['projectName']
         project = loadProject(projectName)
+        # This objId is a protocol
         objId = request.GET.get('objId', None)
         
-        obj = project.getProtocol(int(objId))
-        if obj is None:
-            obj = project.getProtocol(int(objId)).get()
+        protocol = project.getProtocol(int(objId))
+        if protocol is None:
+            protocol = project.getProtocol(int(objId)).get()
             
-        files = obj.getFiles()
-        
         import zipfile
         z = zipfile.ZipFile("output.zip", "w")
         
-        for f in files:
-            z.write(f, arcname=os.path.basename(f))
+        from pyworkflow.em.data import EMObject 
+        for name, attr in protocol.iterOutputAttributes(EMObject):
+            id = attr.getObjId()
+            obj = project.getObject(int(id))
+            files = obj.getFiles()
+            
+            if files is not None:
+                for f in files:
+                    z.write(f, arcname=os.path.basename(f))
+            else:
+                print "Problem getting files for the object: ", obj
+                
         z.close()
         
         pathFile = os.path.join(request.session['projectPath'], "output.zip")
@@ -647,7 +657,11 @@ def replacePattern(m, mode):
     elif mode == HYPER_LINK1:
         text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, g1)
     elif mode == HYPER_LINK2:
-        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, m.group('link2_label'))
+        if g1.startswith("sci-open:"):
+            url = 'javascript:launchViewer(%s)' % g1[len("sci-open:"):]
+        else:
+            url = g1
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (url, m.group('link2_label'))
     else:
         raise Exception("Unrecognized pattern mode: " + mode)
     

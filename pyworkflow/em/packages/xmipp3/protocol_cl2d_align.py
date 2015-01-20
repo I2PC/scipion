@@ -143,8 +143,8 @@ class XmippProtCL2DAlign(ProtAlign2D):
         else:
             if self.useReferenceImage:
                 methods.append("We aligned images %s with respect to the reference image %s using CL2D [Sorzano2010a]"
-                        % (self.getObjectTag(self.inputParticles.get()), self.getObjectTag(self.referenceImage.get())))
+                        % (self.getObjectTag('inputParticles'), self.getObjectTag('referenceImage')))
             else:
-                methods.append("We aligned images %s with no reference using CL2D [Sorzano2010a]" % self.getObjectTag(self.inputParticles.get()))
-            methods.append (" and produced %s images." % self.getObjectTag(self.outputParticles))
+                methods.append("We aligned images %s with no reference using CL2D [Sorzano2010a]" % self.getObjectTag('inputParticles'))
+            methods.append (" and produced %s images." % self.getObjectTag('outputParticles'))
         return methods

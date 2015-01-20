@@ -23,6 +23,7 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.eman2.convert import createEmanProcess
 """
 This sub-package contains wrapper around EMAN initialmodel program
 """
@@ -35,6 +36,8 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, Enum
 from pyworkflow.utils.path import cleanPattern
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D
+
+from convert import rowToAlignment
 
 # speed
 SPEED_1 = 0
@@ -81,10 +84,15 @@ at each refinement step. The resolution you specify is a target, not the filter 
         myDict = {
                   'particles': self._getTmpPath('input_particles.hdf'),
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
+                  'classes': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d'),
+                  'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),
+                  'classesOdd': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_odd.hdf'),
+                  'cls': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d'),
+                  'clsEven': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_even.hdf'),
+                  'clsOdd': self._getExtraPath('refine_%(run)02d/cls_result_%(iter)02d_odd.hdf')
                   }
         
         self._updateFilenamesDict(myDict)
-
 
 
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -218,17 +226,30 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self.runJob(program, args, cwd=self._getExtraPath())
     
     def createOutputStep(self):
+        iterN = self.numberOfIterations.get()
         partSet = self.inputParticles.get()
+        numRun = self._getRun()
         
         vol = Volume()
-        if not self.doContinue:
-            vol.setFileName(self._getFileName("volume",run=1, iter=self.numberOfIterations.get()))
-        else:
-            vol.setFileName(self._getFileName("volume",run=2, iter=self.numberOfIterations.get()))
-        
+        vol.setFileName(self._getFileName("volume",run=numRun, iter=iterN))
         vol.copyInfo(partSet)
+        
+        clsFn = self._getFileName("cls", run=numRun, iter=iterN)
+        classesFn = self._getFileName("classes", run=numRun, iter=iterN)
+        
+        proc = createEmanProcess(args='read %s %s %s %s' % (self._getFileName("particles"), clsFn, classesFn, self._getExtraPath('output.txt')))
+        proc.wait()
+        newPartSet = self._createSetOfParticles()
+        newPartSet.copyInfo(partSet)
+        newPartSet.setAlignment(em.ALIGN_PROJ)
+        newPartSet.copyItems(partSet,
+                             updateItemCallback=self._createItemMatrix,
+                             itemDataIterator=self._iterTextFile())
+        
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(partSet, vol)
+        self._defineOutputs(outputParticles=newPartSet)
+        self._defineSourceRelation(partSet, newPartSet)
         
     
     #--------------------------- INFO functions -------------------------------------------- 
@@ -287,11 +308,28 @@ at each refinement step. The resolution you specify is a target, not the filter 
             args += " --m3dpostprocess=%s" % self.getEnumText('m3dPostProcess')
         return args
     
-    def _getBaseName(self, key):
+    def _getRun(self):
+        if not self.doContinue:
+            return 1
+        else:
+            return 2
+    def _getBaseName(self, key, **args):
         """ Remove the folders and return the file from the filename. """
-        return os.path.basename(self._getFileName(key))
-
-    def _getRelativeName(self, key):
-        """ Remove the folders and return the file from the filename. """
-        return os.path.relpath(self._getFileName(key), self._getExtraPath())
+        return os.path.basename(self._getFileName(key, **args))
     
+    def _getRelativeName(self, key, **args):
+        """ Remove the folders and return the file from the filename. """
+        return os.path.relpath(self._getFileName(key,  **args), self._getExtraPath())
+    
+    def _iterTextFile(self):
+        f = open(self._getExtraPath('output.txt'))
+        
+        for line in f:
+            yield map(float, line.split())
+            
+        f.close()
+            
+    def _createItemMatrix(self, item, rowList):
+        item.setTransform(rowToAlignment(rowList[1:], alignType=em.ALIGN_PROJ))
+        
+        

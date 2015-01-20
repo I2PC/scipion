@@ -137,7 +137,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return [self.getSummary()]
+            return [self.getSummary(None)]
 
     def _methods(self):
         if self.getOutputsSize() > 0:
@@ -166,7 +166,7 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
                 msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
         return msg
 
-    def getSummary(self):
+    def getSummary(self, coordSet):
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
