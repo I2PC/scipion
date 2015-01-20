@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JToggleButton;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.ij.plugins.maskstoolbar.ICONS;
 import xmipp.ij.plugins.maskstoolbar.LABELS;
 
@@ -171,7 +172,9 @@ public class MasksToolBar extends PlugInFrame implements ActionListener {
                 mask.getProcessor().setColor(Color.WHITE);
                 mask.getProcessor().fill(roi);
                 mask.updateAndDraw();
-                mask.show();
+                new XmippImageWindow(mask);
+                System.out.println("creating image window");
+                //mask.show();
             } else {
                 IJ.error("Area selection required.");
             }

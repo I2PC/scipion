@@ -2,7 +2,6 @@ package xmipp.viewer.particlepicker;
 
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,6 +18,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import xmipp.ij.commons.XmippImageCanvas;
+import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
@@ -34,7 +34,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	public final static BasicStroke activecst = new BasicStroke(3.0f);
         
 	
-	protected ImageWindow iw;
+	protected XmippImageWindow iw;
 	
 	public void display()
 	{
@@ -44,8 +44,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			iw.updateImage(getImage());
 		}
 		else
-			this.iw = new ImageWindow(getImage(), this);
-		// iw.maximize();
+                {
+			this.iw = new XmippImageWindow(getImage(), this);
+                        iw.maximize();
+                }
+                
 		iw.setTitle(getMicrograph().getName());
 		
 	}
