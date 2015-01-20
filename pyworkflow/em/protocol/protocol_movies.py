@@ -34,7 +34,7 @@ from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_EXPERT
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.utils.path import copyFile, removeBaseExt, makePath, cleanPath, moveFile, getExt
+from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath, moveFile, getExt
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import Micrograph
 
@@ -92,7 +92,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         
         if self._filterMovie(movieId, movieFn):
             makePath(movieFolder)
-            copyFile(movieFn, join(movieFolder, movieName))
+            createLink(movieFn, join(movieFolder, movieName))
             toDelete = [movieName]
     
             if movieName.endswith('bz2'):
