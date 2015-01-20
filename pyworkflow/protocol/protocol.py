@@ -1189,7 +1189,7 @@ class Protocol(Step):
         if obj.isPointer():
             obj = obj.get() # get the pointed object
         
-        return "[[%s][%s]]" % (obj.getClassName(), obj.getNameId())
+        return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

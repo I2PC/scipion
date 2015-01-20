@@ -560,14 +560,17 @@ class ProtocolsView(tk.Frame):
         self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
-        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))  
-        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0)
+        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
+
+        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0,
+                                      handlers={'sci-open': self._viewObject})
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
         
         # Method tab
         mframe = tk.Frame(tab)
         gui.configureWeigths(mframe)
-        self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
+        self.methodText = TaggedText(mframe, width=40, height=15, bg='white',
+                                     handlers={'sci-open': self._viewObject})
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
@@ -611,7 +614,16 @@ class ProtocolsView(tk.Frame):
         p.paneconfig(rightFrame, minsize=400)        
         
         return p
-        
+
+    def _viewObject(self, objId):
+        """ Call appropriate viewer for objId. """
+        obj = self.project.getObject(int(objId))
+        viewerClasses = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        if not viewerClasses:
+            return  # TODO: protest nicely
+        viewer = viewerClasses[0](project=self.project, parent=self.windows)
+        viewer.visualize(obj)
+
     def _loadSelection(self):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
