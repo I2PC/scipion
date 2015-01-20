@@ -1192,6 +1192,7 @@ class Protocol(Step):
             obj = obj.get() # get the pointed object
         
         return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
+    #    return "[[javascript:launchViewer(%s)][%s]]" % (obj.getObjId(), obj.getNameId())
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

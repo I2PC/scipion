@@ -129,7 +129,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
-        outputset.setObjComment(self.getSummary())
+        outputset.setObjComment(self.getSummary(outputset))
         for coordU, coordT in izip(uCoordSet, tCoordSet):
             outputset.append(TiltPair(coordU, coordT))
         
@@ -171,7 +171,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._summary(self)
         else:
-            return [self.getSummary(self.getCoords())]
+            return [self.getSummary(None)]
 
     def _methods(self):
         if self.getOutputsSize() > 0:
@@ -188,7 +188,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputName = 'outputCoordinatesTiltPair' + suffix
         return getattr(self, outputName)
     
-    def getSummary(self):
+    def getSummary(self, coordsSet):
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         if exists(configfile):

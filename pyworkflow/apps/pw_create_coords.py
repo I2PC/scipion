@@ -65,7 +65,7 @@ if __name__ == '__main__':
         readAnglesFromMicrographs(micsFn, setAngles)
         setAngles.write()
         # Create CoordinatesTiltPair object
-        outputset = CoordinatesTiltPair(filename=prot._getPath('coordinates_pairs.sqlite'))
+        outputset = CoordinatesTiltPair(filename=prot._getPath('coordinates_pairs%s.sqlite' % suffix))
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
         outputset.setAngles(setAngles)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         outputset = prot._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
         readSetOfCoordinates(extradir, outputset.getMicrographs(), outputset)
 
-    summary = prot.getSummary()
+    summary = prot.getSummary(outputset)
     outputset.setObjComment(summary)
 
     outputs = {outputName: outputset}
