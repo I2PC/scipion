@@ -400,8 +400,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         summary = []
         summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
         if self.downsampleType == OTHER:
-            summary.append("Downsampling factor: %d" % self.downFactor.get())
-        summary.append("Particle box size: %d" % self.boxSize.get())
+            summary.append("Downsampling factor: %d" % self.downFactor)
+        summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):
             summary.append("Output images not ready yet.") 
@@ -414,18 +414,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         methodsMsgs = []
 
         if self.getStatus() == STATUS_FINISHED:
-            msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(), self.boxSize.get())
+            msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(), self.boxSize)
 
             if self.downsampleType == ORIGINAL:
                 msg += " from original micrographs."
 
             if self.downsampleType == OTHER:
-                msg += " from original micrographs with downsampling factor of %.2f." % self.downFactor.get()
+                msg += " from original micrographs with downsampling factor of %.2f." % self.downFactor
 
             if self.downsampleType == SAME_AS_PICKING:
                 msg += "."
 
-            msg += self.methodsVar.get()
+            msg += self.methodsVar.get('')
 
             methodsMsgs.append(msg)
 
@@ -436,7 +436,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 methodsMsgs.append("Normalization performed of type %s." % (self.getEnumText('normType')))
 
             if self.doRemoveDust.get():
-                methodsMsgs.append("Removed dust over a threshold of %s." % (self.thresholdDust.get()))
+                methodsMsgs.append("Removed dust over a threshold of %s." % (self.thresholdDust))
 
         return methodsMsgs
 
@@ -469,7 +469,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         msg = ""
 
         if self.doSort:
-            if self.rejectionMethod.get() != REJECT_NONE:
+            if self.rejectionMethod != REJECT_NONE:
                 msg = " %d of them were rejected with Zscore greater than %.2f." % (numRejected, zScoreMax)
 
         if self.doFlip:
