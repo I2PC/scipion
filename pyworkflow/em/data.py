@@ -1209,7 +1209,7 @@ class SetOfClasses(EMSet):
         
     def __getitem__(self, itemId):
         """ Setup the mapper classes before returning the item. """
-        classItem = self._mapper.selectById(itemId)
+        classItem = EMSet.__getitem__(itemId)
         self._setItemMapperPath(classItem)
         return classItem
     
@@ -1218,8 +1218,8 @@ class SetOfClasses(EMSet):
         self._setItemMapperPath(classItem)
         return classItem
 
-    def iterItems(self):
-        for classItem in self._mapper.selectAll():
+    def iterItems(self, orderBy='id', direction='ASC'):
+        for classItem in EMSet.iterItems(orderBy=orderBy, direction=direction):
             self._setItemMapperPath(classItem)
             yield classItem
             
