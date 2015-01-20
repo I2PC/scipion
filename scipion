@@ -320,7 +320,15 @@ def main():
         if mode == MODE_UNINSTALL:
             args = ['-c']
         from scripts.install import build
-        ret = build(args=args)
+        if args and args[0] == '--binary':
+            assert 'LDFLAGS' not in os.environ, "LDFLAGS already set. Refusing."
+            os.environ['LDFLAGS'] = '-Wl,-rpath,REPLACE_ME_WITH_FUNNY_'
+            ret = build(args=args[1:])
+            if ret == 0:
+                ret = os.system('scripts/change_rpath.py %s/bin %s/lib'
+                                % (SCIPION_SOFTWARE, SCIPION_SOFTWARE))
+        else:
+            ret = build(args=args)
         if ret == 0 and not ('--help' in args or '-h' in args or '-H' in args
                              or'-c' in args):
             open(join(VARS['SCIPION_SOFTWARE'], 'log',
