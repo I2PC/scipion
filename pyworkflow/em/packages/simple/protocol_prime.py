@@ -182,8 +182,8 @@ class ProtPrime(em.ProtInitialVolume):
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []
-        summary.append("Input classes: %s" % self.inputClasses.get().getNameId())
-        summary.append("Starting from: %d random volumes"%self.Nvolumes.get())
+        summary.append("Input classes: %s" % self.getObjectTag('inputClasses'))
+        summary.append("Starting from: %d random volumes" % self.Nvolumes )
         return summary
     
     def _citations(self):
@@ -192,6 +192,6 @@ class ProtPrime(em.ProtInitialVolume):
     def _methods(self):
         if self.inputClasses.get() is not None:
             retval="We used *simple_prime* program [Elmlund2013] to produce an initial volume from the set of classes %s."
-            return [retval % self.inputClasses.get().getNameId()]
+            return [retval % self.getObjectTag('inputClasses')]
         else:
             return []
