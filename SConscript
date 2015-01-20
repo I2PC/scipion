@@ -1241,7 +1241,7 @@ if int(env['matlab']):
         ''' name parameter is expected without .java extension '''
         source = 'libraries/bindings/matlab/'+name+".cpp"
         target = 'libraries/bindings/matlab/'+name+".mexa64"
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -I%s -I%s/libtiff -I%s -Llib -lXmippRecons -lXmippData -lXmippExternal '%(SQliteDir,TIFFDir,HDF5Dir)+source
         compileCmd = env.Command(target, source, command)
         env.Default(compileCmd)
         return compileCmd
