@@ -118,8 +118,6 @@ class TestSetOfMicrographs(BaseTest):
         counter=0
         for mic in micSet:
             mic2.setFileName(fileNames[counter])
-            #mic.printAll(acquisition)
-            #mic2.printAll(acquisition)
             self.assertTrue(mic.equalAttributes( mic2))
             counter += 1
 
@@ -134,7 +132,6 @@ class TestSetOfParticles(BaseTest):
         
     def test_orderBy(self):
         #create setofProjections sorted
-
         imgSet1 = SetOfParticles(filename=':memory:',prefix='set1')
         imgSet2 = SetOfParticles(filename=':memory:',prefix='set2')
         imgSet1.setSamplingRate(1.5)
@@ -156,9 +153,6 @@ class TestSetOfParticles(BaseTest):
                                                    direction='ASC')):
             self.assertEquals(item1.getMicId(), item2.getMicId())
 
-        imgSet1.printAll()
-        imgSet2.printAll()
-        #assert
     def test_readStack(self):
         """ Read an stack of 29 particles from .hdf file.
         Particles should be of 500x500 pixels.
@@ -198,7 +192,9 @@ class TestSetOfParticles(BaseTest):
         imgSet.setSamplingRate(1.0)
         
         for i in range(1, n+1):
-            img = Particle()
+            # Creating object inside the loop significantly
+            # decrease performance
+            #img = Particle()
             img.setLocation(i, "images.stk")
             
             imgSet.append(img)
@@ -261,7 +257,9 @@ class TestSetOfClasses2D(BaseTest):
                   [18, 31, 32], 
                   [6, 36, 66]]
         
-        # Check iteration is working properly
+        classes2DSet.close()
+        # Check iteration is working properly even after 
+        # a close operation, it should open automatically
         for i, cls in enumerate(classes2DSet):   
             l = images[i]         
             for j, img in enumerate(cls):
