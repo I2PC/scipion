@@ -65,8 +65,8 @@ estimate CTF on a set of micrographs using Xmipp 3.1 """
     
     def _summary(self):
         summary=[]
-        if self.methodsInfo.hasValue():
-            summary.append(self.methodsInfo.get())
+        if self.methodsVar.hasValue():
+            summary.append(self.methodsVar.get())
         return summary
     
     #--------------------------- UTILS functions ---------------------------------------------------
@@ -285,14 +285,14 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs, XmippCTFBase):
         return ProtCTFMicrographs._summary(self) + XmippCTFBase._summary(self)
     
     def _methods(self):
-        str="We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]"%self.getObjectTag(self.inputMicrographs.get())
+        str="We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]"%self.getObjectTag('inputMicrographs')
         if self.doFastDefocus:
             str+=" with a fast defocus estimate [Vargas2013a]"
         str+="."
-        if self.methodsInfo.hasValue():
-            str+=" "+self.methodsInfo.get()
+        if self.methodsVar.hasValue():
+            str+=" "+self.methodsVar.get()
         if self.hasAttribute('outputCTF'):
-            str += '\nOutput set is %s.'%self.getObjectTag(self.outputCTF)
+            str += '\nOutput set is %s.'%self.getObjectTag('outputCTF')
         return [str]
         
     def _citations(self):
@@ -406,8 +406,8 @@ class XmippProtRecalculateCTF(ProtRecalculateCTF, XmippCTFBase):
 
     def _methods(self):
         methodStr = "We calculated the CTF using Xmipp [Sorzano2007a]."
-        if self.methodsInfo.hasValue():
-            methodStr += " " + self.methodsInfo.get()
+        if self.methodsVar.hasValue():
+            methodStr += " " + self.methodsVar.get()
         return [methodStr]
     
     #--------------------------- UTILS functions ---------------------------------------------------

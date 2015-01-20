@@ -339,9 +339,11 @@ class SqliteObjectsDb(SqliteDb):
     
     SELECT = "SELECT id, parent_id, name, classname, value, label, comment, datetime(creation, 'localtime') as creation FROM Objects WHERE "
     DELETE = "DELETE FROM Objects WHERE "
+    DELETE_SEQUENCE = "DELETE FROM SQLITE_SEQUENCE WHERE name='Objects'"
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
     SELECT_RELATIONS = "SELECT * FROM Relations WHERE "
+    
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
         return self.SELECT + whereStr + orderByStr
@@ -453,6 +455,7 @@ class SqliteObjectsDb(SqliteDb):
     def deleteAll(self):
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")
+        self.executeCommand(self.DELETE_SEQUENCE) # restart the count of ids
         
     def selectRelationChilds(self, relName, object_parent_id):
         self.executeCommand(self.SELECT_RELATION % ('child', 'parent'), 

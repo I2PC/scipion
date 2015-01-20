@@ -215,14 +215,14 @@ class XmippProtPreprocessParticles(XmippProcessParticles):
 
         
         if hasattr(self, 'outputParticles'):
-            methods.append("Input particles %s of %s elements" % (self.getObjectTag(self.inputParticles.get()), self.inputParticles.get().getSize()))
+            methods.append("Input particles %s of %s elements" % (self.getObjectTag('inputParticles'), self.inputParticles.get().getSize()))
             if self.doNormalize:
                 methods.append("The background was normalized with %s method." % self.getEnumText('normType'))
             if self.doInvert:
                 methods.append("The contrast was inverted")
             if self.doThreshold:
                 methods.append("Pixels with values below %f was removed" % self.threshold.get())
-            methods.append('Output set: %s'%self.getObjectTag(self.outputParticles))
+            methods.append('Output set: %s'%self.getObjectTag('outputParticles'))
         return methods
     
     #--------------------------- UTILS functions ---------------------------------------------------

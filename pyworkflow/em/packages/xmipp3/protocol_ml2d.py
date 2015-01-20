@@ -243,7 +243,7 @@ class XmippProtML2D(ProtClassify2D):
     def _methods(self):
         methods = []
         if hasattr(self, 'outputClasses'):
-            methods.append('Input dataset %s of *%d* images was classified' % (self.getObjectTag(self.inputParticles.get()), self.inputParticles.get().getSize()))
+            methods.append('Input dataset %s of *%d* images was classified' % (self.getObjectTag('inputParticles'), self.inputParticles.get().getSize()))
             numberOfClasses = self.numberOfClasses.get()
             classesTxt =  'class' if numberOfClasses == 1 else 'classes'
             methods.append('into *%d* 2D %s using Maximum Likelihood (ML) inside Xmipp.' % (numberOfClasses, classesTxt))
@@ -255,7 +255,7 @@ class XmippProtML2D(ProtClassify2D):
 
             if self.doNorm:
                 methods.append('The _normalization_ was refined for each experimental image.')
-            methods.append('Output set is %s.'%(self.getObjectTag(self.outputClasses)))
+            methods.append('Output set is %s.'%(self.getObjectTag('outputClasses')))
 
         return methods
 

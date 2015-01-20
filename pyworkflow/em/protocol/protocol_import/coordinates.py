@@ -208,7 +208,7 @@ class ProtImportCoordinates(ProtImportFiles):
         if not hasattr(self, 'outputCoordinates'):
             msg = 'Output coordinates not ready yet'
         else:
-            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag(self.inputMicrographs.get()), self._getImportChoices()[self.getImportFrom()])
+            msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
                 msg += " Scale factor %d was applied."%self.scale.get()
             if self.invertX.get():
@@ -217,7 +217,7 @@ class ProtImportCoordinates(ProtImportFiles):
                 msg += " Y coordinate was inverted."
 
             summary.append(msg)
-            summary.append("Output coordinates: %s."%self.getObjectTag(self.outputCoordinates))
+            summary.append("Output coordinates: %s."%self.getObjectTag('outputCoordinates'))
         return summary
 
     def _methods(self):

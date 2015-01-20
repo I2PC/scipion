@@ -205,7 +205,9 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
     
     def _methods(self):
         methods = []
-        msg = '\nIput particles %s were %s filtered using a %s filter' % (self.getObjectTag(self.inputParticles) ,self.getEnumText('filterMode'),self.getEnumText('filterType'))
+        msg = '\nIput particles %s were %s filtered using a %s filter' % (self.getObjectTag('inputParticles') ,
+                                                                          self.getEnumText('filterMode'),
+                                                                          self.getEnumText('filterType'))
 
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
             msg += ', using a radius of %s px^-1' % self.filterRadius
@@ -221,7 +223,6 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
             msg += ' with no padding.'
 
         methods.append(msg)
-        if self.hasAttribute('outputParticles'):
-            methods.append('Output particles: %s' % self.getObjectTag(self.outputParticles))
+        methods.append('Output particles: %s' % self.getObjectTag('outputParticles'))
 
         return methods

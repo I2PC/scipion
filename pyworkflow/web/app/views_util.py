@@ -657,7 +657,11 @@ def replacePattern(m, mode):
     elif mode == HYPER_LINK1:
         text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, g1)
     elif mode == HYPER_LINK2:
-        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (g1, m.group('link2_label'))
+        if g1.startswith("sci-open:"):
+            url = 'javascript:launchViewer(%s)' % g1[len("sci-open:"):]
+        else:
+            url = g1
+        text = " <a href='%s' target='_blank' style='color:firebrick;'>%s</a> " % (url, m.group('link2_label'))
     else:
         raise Exception("Unrecognized pattern mode: " + mode)
     

@@ -337,6 +337,7 @@ In particular:
 HYPER_BOLD = 'bold'
 HYPER_ITALIC = 'italic'
 HYPER_LINK1 = 'link1'
+HYPER_SCIOPEN = 'sciopen'
 HYPER_LINK2 = 'link2'
 HYPER_ALL = 'all'
 
@@ -371,7 +372,6 @@ def parseHyperText(text, matchCallback):
     def _match(match):
         """ Call the proper matchCallback with some extra info. """
         m = match.group().strip()
-        
         if m.startswith('*'):
             tag = HYPER_BOLD
         elif m.startswith('_'):

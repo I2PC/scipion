@@ -51,9 +51,6 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
-        #uncomment if you do not inherit from ProtCTFMicrographs
-        #self.methodsInfo = String()
-        #self.stepsExecutionMode = STEPS_PARALLEL
         self._freqResol = {}
 
     def _defineParams(self, form):

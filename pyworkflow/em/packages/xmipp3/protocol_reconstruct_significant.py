@@ -237,12 +237,12 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
         
     def _summary(self):
         summary = []
-        summary.append("Input classes: %s" % self.inputSet.get().getNameId())
+        summary.append("Input classes: %s" % self.getObjectTag('inputSet'))
         if self.thereisRefVolume:
-            summary.append("Starting from: %s" % self.refVolume.get().getNameId())
+            summary.append("Starting from: %s" % self.getObjectTag('refVolume'))
         else:
-            summary.append("Starting from: %d random volumes"%self.Nvolumes.get())
-        summary.append("Significance from %f%% to %f%% in %d iterations"%(self.alpha0.get(),self.alphaF.get(),self.iter.get()))
+            summary.append("Starting from: %d random volumes" % self.Nvolumes)
+        summary.append("Significance from %f%% to %f%% in %d iterations" % (self.alpha0, self.alphaF, self.iter))
         if self.useImed:
             summary.append("IMED used")
         if self.strictDir:
@@ -255,22 +255,24 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
     def _methods(self):
         retval = ""
         if self.inputSet.get() is not None:
-            retval="We used reconstruct significant to produce an initial volume from the set of classes %s."%\
-               self.inputSet.get().getNameId()
+            retval = "We used reconstruct significant to produce an initial volume "
+            retval += "from the set of classes %s." % self.getObjectTag('inputSet')
             if self.thereisRefVolume:
-                retval+=" We used "+self.refVolume.get().getNameId()+" as a starting point of the reconstruction iterations."
+                retval += " We used %s volume " % self.getObjectTag('refVolume')
+                retval += "as a starting point of the reconstruction iterations."
             else:
-                retval+=" We started the iterations with %d random volumes."%self.Nvolumes.get()
-            retval+=" %d iterations were run going from a starting significance of %f%% to a final one of %f%%."%\
-               (self.iter.get(),self.alpha0.get(),self.alphaF.get())
+                retval += " We started the iterations with %d random volumes." % self.Nvolumes
+            retval += " %d iterations were run going from a " % self.iter
+            retval += "starting significance of %f%% to a final one of %f%%." % (self.alpha0, self.alphaF)
             if self.useImed:
-                retval+=" IMED weighting was used."
+                retval += " IMED weighting was used."
             if self.strictDir:
-                retval+=" The strict direction criterion was employed." 
-        if self.getNumberOfVolumes()>1:
+                retval += " The strict direction criterion was employed." 
+        
+        if self.getNumberOfVolumes() > 1:
             if self.hasAttribute('outputVolumes'):
-                retval+=" The set of reconstructed volumes was %s."%self.outputVolumes.get().getNameId()
+                retval += " The set of reconstructed volumes was %s." % self.getObjectTag('outputVolumes')
         else:
             if self.hasAttribute('outputVolume'):
-                retval+=" The reconstructed volume was %s."%self.outputVolume.get().getNameId()
+                retval+=" The reconstructed volume was %s." % self.getObjectTag('outputVolume')
         return [retval]

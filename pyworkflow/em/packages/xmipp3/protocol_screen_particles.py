@@ -154,7 +154,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                              ]
             methods.append('Input dataset %s of %s particles was sorted by'
                            ' its ZScore using xmipp_image_sort_by_statistics'
-                           ' program%s. ' % (self.getObjectTag(self.inputParticles.get()), len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
-            methods.append('Output set is %s.'%self.getObjectTag(self.outputParticles))
+                           ' program%s. ' % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()), rejectionText[self.autoParRejection.get()]))
+            methods.append('Output set is %s.'%self.getObjectTag('outputParticles'))
         return methods
     

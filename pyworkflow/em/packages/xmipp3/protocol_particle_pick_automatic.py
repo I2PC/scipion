@@ -163,14 +163,9 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         return validateMsgs
     
     
-    # def getSummary(self, coordSet):
-    #     summary = []
-    #     summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
-    #     summary.append("Particles picked: %d" % coordSet.getSize())
-    #     summary.append("Particle size:%d" % coordSet.getBoxSize())
-
-    def getSummary(self):
+    def getSummary(self, coordSet):
         summary = []
+        summary.append("Previous run: " + self.xmippParticlePicking.get().getNameId())
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         if existsConfig:
@@ -192,8 +187,6 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
 
-        return "\n".join(summary)
-    
     def getMethods(self, output):
         msg = 'Program picked %d particles of size %d using training from %s. For more detail see [Abrishami2013]' % (output.getSize(), output.getBoxSize(), self.xmippParticlePicking.get().getNameId())
 

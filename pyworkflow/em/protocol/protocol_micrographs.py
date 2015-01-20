@@ -50,7 +50,6 @@ class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self.methodsInfo = String()
         self.stepsExecutionMode = STEPS_PARALLEL
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -150,7 +149,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if not hasattr(self, 'outputCTF'):
             methods.append(Message.TEXT_NO_CTF_READY)
         else:
-            methods.append(self.methodsInfo.get())
+            methods.append(self.methodsVar.get())
             
         return methods
     
@@ -202,15 +201,13 @@ class ProtCTFMicrographs(ProtMicrographs):
         minimum = float(min(defocusList))/10000
         maximum = float(max(defocusList))/10000
         msg = "The range of micrograph's experimental defocus was %(minimum)0.3f - %(maximum)0.3f microns. " % locals()
-        self.methodsInfo.set(msg)
+        self.methodsVar.set(msg)
 
 
 class ProtRecalculateCTF(ProtMicrographs):
     """ Base class for all protocols that re-calculate the CTF"""
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self.methodsInfo = String()
-        self.summaryInfo = String()
         self.stepsExecutionMode = STEPS_PARALLEL
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -316,7 +313,7 @@ class ProtRecalculateCTF(ProtMicrographs):
         if not (hasattr(self, 'outputCTF') ):
             summary.append(Message.TEXT_NO_CTF_READY)
         else:
-            summary.append(self.summaryInfo.get())
+            summary.append(self.summaryVar.get())
         return summary
     
     def _methods(self):
@@ -325,7 +322,7 @@ class ProtRecalculateCTF(ProtMicrographs):
         if not (hasattr(self, 'outputCTF') ):
             methods.append(Message.TEXT_NO_CTF_READY)
         else:
-            methods.append(self.methodsInfo.get())
+            methods.append(self.methodsVar.get())
             
         return methods
     
@@ -369,14 +366,14 @@ class ProtRecalculateCTF(ProtMicrographs):
         minimum = float(min(values))/10000
         maximum = float(max(values))/10000
         msg = "The range of micrograph's experimental defocus was %(minimum)0.3f - %(maximum)0.3f microns. " % locals()
-        self.methodsInfo.set(msg)
+        self.methodsVar.set(msg)
     
     def _ctfCounter(self, values):
         """ This function return the number of CTFs that was recalculated.
         """
         numberOfCTF = len(values)/2
         msg = "CTF Re-estimation of %(numberOfCTF)d micrographs" % locals()
-        self.summaryInfo.set(msg)
+        self.summaryVar.set(msg)
 
 
 class ProtPreprocessMicrographs(ProtMicrographs):

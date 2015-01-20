@@ -204,12 +204,6 @@ class TextFileHandler(FileHandler):
          
     def getFileIcon(self, objFile):
         return self._icon
-
-    def getFileActions(self, objFile):
-        fn = objFile.getPath()
-        return [("Open external Editor", lambda: openTextFileEditor(fn), Icon.ACTION_REFERENCES)]
-                # Not working
-                #("Open with Scipion", lambda: showTextFileViewer(fn, [fn]), Icon.ACTION_VISUALIZE)]
     
     
 class SqlFileHandler(FileHandler):
@@ -383,7 +377,14 @@ class FileTreeProvider(TreeProvider):
     
     def getObjectActions(self, obj):
         fileHandler = self.getFileHandler(obj)
-        return fileHandler.getFileActions(obj)
+        actions = fileHandler.getFileActions(obj)
+        # Always allow the option to open as text
+        # specially usefull for unknown formats
+        fn = obj.getPath()
+        actions.append(("Open external Editor", 
+                        lambda: openTextFileEditor(fn), Icon.ACTION_REFERENCES))
+        
+        return actions
     
     def getObjects(self):
         files = os.listdir(self._currentDir)

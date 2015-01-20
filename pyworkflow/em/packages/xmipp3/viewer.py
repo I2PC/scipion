@@ -295,7 +295,8 @@ class XmippViewer(Viewer):
             self._visualize(obj.outputClasses, viewParams={'mode': 'rotspectra', 'columns': obj.SomXdim.get()})
         
         elif issubclass(cls, XmippProtKerdensom):
-            self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get()})
+            self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),
+                                                           'sortby': 'id'})
         
         elif issubclass(cls, XmippProtScreenClasses):
             if isinstance(obj.inputSet.get(), SetOfClasses2D):

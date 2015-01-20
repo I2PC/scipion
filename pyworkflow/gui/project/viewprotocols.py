@@ -24,7 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict
+from pyworkflow.utils.utils import prettyDict, prettySize
 """
 Main project window application
 """
@@ -560,14 +560,17 @@ class ProtocolsView(tk.Frame):
         self.infoTree = BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
         self.infoTree.grid(row=0, column=0, sticky='news')
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
-        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))  
-        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0)
+        label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
+
+        self.summaryText = TaggedText(dframe, width=40, height=5, bg='white', bd=0,
+                                      handlers={'sci-open': self._viewObject})
         self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
         
         # Method tab
         mframe = tk.Frame(tab)
         gui.configureWeigths(mframe)
-        self.methodText = TaggedText(mframe, width=40, height=15, bg='white')
+        self.methodText = TaggedText(mframe, width=40, height=15, bg='white',
+                                     handlers={'sci-open': self._viewObject})
         self.methodText.grid(row=0, column=0, sticky='news')   
         
         #Logs 
@@ -611,7 +614,16 @@ class ProtocolsView(tk.Frame):
         p.paneconfig(rightFrame, minsize=400)        
         
         return p
-        
+
+    def _viewObject(self, objId):
+        """ Call appropriate viewer for objId. """
+        obj = self.project.getObject(int(objId))
+        viewerClasses = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        if not viewerClasses:
+            return  # TODO: protest nicely
+        viewer = viewerClasses[0](project=self.project, parent=self.windows)
+        viewer.visualize(obj)
+
     def _loadSelection(self):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
@@ -621,9 +633,6 @@ class ProtocolsView(tk.Frame):
             except Exception, ex:
                 self._selection.remove(protId)
 
-
-
-        
     def refreshRuns(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed runs.
          Params:
@@ -632,6 +641,13 @@ class ProtocolsView(tk.Frame):
              then only case when False is from _automaticRefreshRuns where the
              refresh time is doubled each time to avoid refreshing too often.
         """
+        if os.environ.get('SCIPION_DEBUG', None) == '1':
+            import psutil
+            proc = psutil.Process(os.getpid())
+            mem = psutil.virtual_memory()
+            print "------------- refreshing ---------- "
+            print "  open files: ", len(proc.get_open_files())
+            print "  used memory: ", prettySize(mem.used)
         self.updateRunsTree(True)
         self.updateRunsGraph(True)
 
@@ -898,6 +914,7 @@ class ProtocolsView(tk.Frame):
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
         hosts = [host.getLabel() for host in self.settings.getHosts()]
+        
         w = FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot, 
                        self._executeSaveProtocol, self.windows,
                        hostList=hosts, updateProtocolCallback=self._updateProtocol(prot))
