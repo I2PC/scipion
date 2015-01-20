@@ -5,10 +5,12 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+import java.awt.Button;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Label;
+import java.awt.Panel;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
@@ -24,17 +26,18 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
 		this(ipl, ipl.getName());
 	}
+        
         public XmippImageWindow(ImagePlus imp)
         {
             this(imp, new XmippImageCanvas(imp));
         }
+        
         public XmippImageWindow(ImagePlus imp, ImageCanvas canvas)
 	{
 		super(imp, canvas);
+                this.ipl = new ImagePlusLoader(imp);
                 XmippApplication.addInstance(true);
-                pixelslb = new Label("                                                   ");
-		add(pixelslb);
-                
+                initComponents();
 	}
 
 
@@ -43,15 +46,20 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.ipl = ipl;
 		imp.setTitle(title);
-		menu = new XmippMenuBar(this);
-		setMenuBar(menu);
-		XmippApplication.addInstance(true);
 		
-		pixelslb = new Label("                                                   ");
-		add(pixelslb);
-                
+		XmippApplication.addInstance(true);
+		initComponents();
                 
 	}
+        
+        protected void initComponents()
+        {
+            menu = new XmippMenuBar(this);
+            setMenuBar(menu);
+            pixelslb = new Label("                                          ");
+            add(pixelslb);
+            
+        }
 
 	public void openMaskToolbar()
 	{
@@ -125,24 +133,25 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 				value = String.valueOf(pixels[0]);
 			else
 				value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
-                        text = String.format("x=%s, y=%s, value=%s", x, y, value);
+                        text = String.format("x=%s, y=%s, value=%-5s", x, y, value);
                         pixelslb.setText(text);
 			break;
 		case ImagePlus.GRAY32:
-			value = String.valueOf(Float.intBitsToFloat(pixels[0]));
-                        text = String.format("x=%s, y=%s, value=%.2f", x, y, value);
+                        text = String.format("x=%s, y=%s, value=%.2f", x, y, Float.intBitsToFloat(pixels[0]));
                         pixelslb.setText(text);
 			break;
 		case ImagePlus.COLOR_256:
 		case ImagePlus.COLOR_RGB:
-			value = pixels[0] + "," + pixels[1] + "," + pixels[2];
-                        text = String.format("x=%s, y=%s, value=%s", x, y, value);
+                        value =  pixels[0] + "," + pixels[1] + "," + pixels[2];
+                        text = String.format("x=%s, y=%s, value=%-15s", x, y, value);
                         pixelslb.setText(text);
 			break;
 		
 		}
 		
 	}
+        
+        
         
         @Override
 	public void windowClosing(WindowEvent e) {

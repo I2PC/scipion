@@ -137,7 +137,8 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		if(getParent() instanceof XmippImageWindow)
 		{
 			int[] pixels = imp.getPixel(x, y);
-			((XmippImageWindow)getParent()).showPixels(x, y, pixels);
+                        if(pixels != null)
+                            ((XmippImageWindow)getParent()).showPixels(x, y, pixels);
 		}
 		if (getTool() == Tool.IMAGEJ)
 			super.mouseMoved(e);

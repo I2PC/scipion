@@ -6,11 +6,14 @@ package xmipp.ij.commons;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.Roi;
+import ij.process.ByteProcessor;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
 
 import java.awt.CheckboxMenuItem;
+import java.awt.Color;
 import java.awt.Frame;
 import java.awt.Menu;
 import java.awt.MenuBar;
@@ -67,6 +70,8 @@ public class XmippMenuBar extends MenuBar
 	private Menu helpmn;
 	private MenuItem keyassistmi;
 	private QuickHelpJDialog keyassistdlg;
+        private final Menu maskmn;
+        private ImagePlus mask = null;
 
 	enum IJRequirement
 	{
@@ -81,11 +86,13 @@ public class XmippMenuBar extends MenuBar
 		filemn = new Menu("File");
 		imagemn = new Menu("Image");
 		advancedmn = new Menu("Advanced");
+                maskmn = new Menu("Mask");
 		helpmn = new Menu("Help");
 
 		add(filemn);
 		add(imagemn);
 		add(advancedmn);
+                add(maskmn);
 		add(helpmn);
 
 		// menubar file menu
@@ -283,6 +290,37 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
 		
+                MenuItem createMaskmi = new MenuItem("Generate Mask");
+                
+                createMaskmi.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        
+                        createMask();
+                    }
+                });
+                maskmn.add(createMaskmi);
+                
+                MenuItem invertMaskmi = new MenuItem("Invert Mask");
+                invertMaskmi.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        invertMask();
+                    }
+                });
+                maskmn.add(invertMaskmi);
+                
+                 MenuItem invertSelmi = new MenuItem("Invert Selection");
+                invertSelmi.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        invertSelection();
+                    }
+                });
+                maskmn.add(invertSelmi);
 		
 		keyassistmi = new MenuItem("Key Assist");
 		keyassistmi.addActionListener(new ActionListener()
@@ -520,5 +558,60 @@ public class XmippMenuBar extends MenuBar
 		map.put("Right click + Mouse move", "Moves image previously expanded");
 		return map;
 	}
+        
+        private void createMask() {
+            ImagePlus ip = IJ.getImage();
+
+            if (ip != null) {
+                Roi roi = ip.getRoi();
+
+                if (roi != null) {
+                    if (mask == null || !mask.isVisible()) {
+                        ByteProcessor processor = new ByteProcessor(ip.getWidth(), ip.getHeight());
+                        mask = new ImagePlus("Mask", processor);
+                    }
+
+                    mask.getProcessor().setColor(Color.WHITE);
+                    mask.getProcessor().fill(roi);
+                    mask.updateAndDraw();
+                    mask.show();
+                } else {
+                    XmippUtil.showImageJ(Tool.VIEWER);
+                    IJ.error("Area selection required.");
+                    
+                }
+            } else {
+                IJ.error("There are no images open.");
+            }
+    }
+        
+    protected    void invertSelection() {
+        ImagePlus ip = IJ.getImage();
+
+        if (ip != null) {
+            Roi roi = ip.getRoi();
+
+            if (roi != null) {
+                IJ.run("Make Inverse");
+            } else {
+                XmippUtil.showImageJ(Tool.VIEWER);
+                IJ.error("Area selection required.");
+            }
+        } else {
+            IJ.error("There are no images open.");
+        }
+    }
+
+    protected void invertMask() {
+        if (mask != null) {
+            Roi roi = mask.getRoi();    // Stores current roi and...
+            mask.setRoi((Roi) null); // ...clears selection...
+            mask.getProcessor().invert();
+            mask.setRoi(roi);   // ...to restore it later.
+            mask.updateAndDraw();
+        } else {
+            IJ.error("Mask has not been defined.");
+        }
+    }
 
 }
