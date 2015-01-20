@@ -963,7 +963,9 @@ class Protocol(Step):
             if url.startswith('http://'):
                 self._buffer += '[[%s][%s]]' % (url, txt)
             else:
-                self._buffer += '[[/get_log/?path=%s][%s]]' % (url, txt)
+                from pyworkflow.web.pages import settings as django_settings
+                absolute_url = django_settings.ABSOLUTE_URL
+                self._buffer += '[[%s/get_log/?path=%s][%s]]' % (absolute_url, url, txt)
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
@@ -1187,7 +1189,7 @@ class Protocol(Step):
         if obj.isPointer():
             obj = obj.get() # get the pointed object
         
-        return "[[%s][%s]]" % (obj.getClassName(), obj.getNameId())
+        return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
     
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """

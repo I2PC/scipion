@@ -116,7 +116,11 @@ class Text(tk.Text, Scrollable):
     """ Base Text widget with some functionalities 
     that will be used for other extensions.
     """
-    def __init__(self, master, **opts):  
+    def __init__(self, master, **opts):
+        if 'handlers' in opts:
+            self.handlers = opts.pop('handlers')
+        else:
+            self.handlers = {}
         defaults = self.getDefaults()
         defaults.update(opts)
         Scrollable.__init__(self, master, tk.Text, wrap=tk.WORD, **opts)
@@ -220,19 +224,13 @@ class Text(tk.Text, Scrollable):
             from pyworkflow.em.viewer import DataView
             DataView(path).show()
         else:
-#            try:
-            projName, protId, viewerClass = path.split('_', 2)
-            proj = loadProject(projName)
-            prot = proj.getProtocol(int(protId))
-            from pyworkflow.em import findViewers
-            ViewerClass = findViewers(viewerClass, 'tkinter')
-            viewer = ViewerClass(project=proj,
-                                 protocol=prot,
-                                 parent=self.parent.windows)
-            # TODO: get obj somehow, and check this whole crazy thing
-            viewer.visualize(obj)
-#            except Exception as e:
-#                print "Can't find %s" % path
+            # This is probably one special reference, like sci-open:... that
+            # can be interpreted with our handlers.
+            tag = path.split(':', 1)[0] if ':' in path else None
+            if tag in self.handlers:
+                self.handlers[tag](path.split(':', 1)[-1])
+            else:
+                print "Can't find %s" % path
 
     def updateMenu(self, e=None):
         state = 'normal'
