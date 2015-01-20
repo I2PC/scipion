@@ -39,7 +39,7 @@ import simple
 
 
 class ProtPrime(em.ProtInitialVolume):
-    """ Produces one or several initial volumes using reconstruct_significant """
+    """ Produces one or several initial volumes using simple prime """
     _label = 'prime'
 
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -98,7 +98,7 @@ class ProtPrime(em.ProtInitialVolume):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        """ Mainly prepare the command line for calling reconstruct_significant program"""
+        """ Mainly prepare the command line for calling simple prime program"""
         
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('runPrime')
