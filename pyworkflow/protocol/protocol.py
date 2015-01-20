@@ -1176,7 +1176,10 @@ class Protocol(Step):
         return "[[%s]]" % fn
     
     def getObjectTag(self, objName):
-        obj = getattr(self, objName, None)
+        if isinstance(objName, basestring):
+            obj = getattr(self, objName, None)
+        else:
+            obj = objName
         
         if obj is None:
             return '*None*'
