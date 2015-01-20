@@ -420,6 +420,8 @@ class Protocol(Step):
         d = OrderedDict()
         d['object.className'] = self.getClassName()
         d['object.id'] = self.strId()
+        d['object.label'] = self.getObjLabel()
+        d['object.comment'] = self.getObjComment()
          
         od = self.getObjDict()
         

@@ -473,7 +473,9 @@ class Project(object):
             if protClass is None:
                 print "ERROR: protocol class name '%s' not found" % protClassName
             else:
-                prot = protClass()
+                prot = self.newProtocol(protClass, 
+                                        objLabel=protDict.get('object.label', None),
+                                        objComment=protDict.get('object.comment', None))
                 newDict[protId] = prot
                 for paramName, attr in prot.iterDefinitionAttributes():
                     if not attr.isPointer():
@@ -519,8 +521,10 @@ class Project(object):
         self._setProtocolMapper(protocol)
         
         return protocol
-            
     
+    def getProtocolsByClass(self, className):
+        return self.mapper.selectByClass(className)
+            
     def getObject(self, objId):
         """ Retrieve an object from the db given its id. """
         return self.mapper.selectById(objId)
