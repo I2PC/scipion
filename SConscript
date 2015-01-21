@@ -85,6 +85,7 @@ zlib = env.AddLibrary(
 jpeg = env.AddLibrary(
     'jpeg',
     tar='libjpeg-turbo-1.3.1.tgz',
+    targets=[File('#software/lib/libjpeg.so')],
     flags=([] if env.ProgInPath('nasm') else ['--without-simd']))
 
 sqlite = env.AddLibrary(
@@ -297,7 +298,7 @@ addModule(
 
 env.AddPackage('xmipp',
                tar='xmipp_master.tgz',
-               buildDir='xmipp',
+               buildDir='xmipp_master',
                reqs={'mpi': 'cxx',
                      'freetype': 'cxx',
                      'X11': 'cxx',
