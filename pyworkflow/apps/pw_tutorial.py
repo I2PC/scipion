@@ -39,25 +39,35 @@ from pyworkflow.gui.project import ProjectWindow
 class TutorialIntro(tests.BaseTest):
     
     def __init__(self):
-        # Create a new project
-        tests.setupTestProject(self.__class__)
-        self.ds = tests.DataSet.getDataSet('xmipp_tutorial')
-        
-    def getProjectName(self):
-        return self.proj.getName()
+        projName = self.__class__.__name__
+        manager = Manager()
+        if manager.hasProject(projName):
+            project = manager.loadProject(projName)
+        else:
+            project = manager.createProject(projName)
+            
+            # Create a new project
+            self.outputPath = project.path
+            self.ds = tests.DataSet.getDataSet('xmipp_tutorial')
+            
+            project.loadProtocols(self.ds.getFile('workflow.json'))
+            
+            # Use graph view as default
+            settings = project.getSettings()
+            settings.setGraphView(True)
+            settings.write()
+            
+            # Update the path of imports
+            protImportMics = project.getProtocolsByClass('ProtImportMicrographs')[0]
+            protImportMics.filesPath.set(self.ds.getFile('allMics'))
+            project.saveProtocol(protImportMics)
+            
+            protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
+            protImportVol.filesPath.set(self.ds.getFile('vol1'))
+            project.saveProtocol(protImportVol)
+
+        self.project = project
     
-    def setup(self):
-        """ Run an Import particles protocol. """
-        self.proj.loadProtocols(self.ds.getFile('workflow.json'))
-        settings = self.proj.getSettings()
-        settings.setGraphView(True)
-        settings.write()
-        
-        # Update the path of imports
-        protImportMics = self.proj.getProtocolsByClass('ProtImportMicrographs')[0]
-        protImportMics.filesPath.set('kkk.mrc')
-        self.proj.saveProtocol(protImportMics)
-        
     
 if __name__ == '__main__':
 
@@ -74,10 +84,8 @@ if __name__ == '__main__':
         tutorialName = sys.argv[1]
         
         tutorial = TutorialIntro()
-        tutorial.setup()
         
-        projPath = manager.getProjectPath(tutorial.getProjectName())
-        projWindow = ProjectWindow(projPath)
+        projWindow = ProjectWindow(tutorial.project.getName())
         projWindow.show()
     else:
         pass #TODO: print list of all tutorials
