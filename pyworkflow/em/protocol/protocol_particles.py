@@ -105,8 +105,11 @@ class ProtParticlePicking(ProtParticles):
     
     def _methods(self):
         methodsMsgs = []
+        if self.getInputMicrographs() is None:
+            return ['Input micrographs not available yet.']
         methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
-        if(self.getOutputsSize() > 1):
+        
+        if self.getOutputsSize() > 1:
             for key, output in self.iterOutputAttributes(EMObject):
                 msg = self.getMethods(output)
                 methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
