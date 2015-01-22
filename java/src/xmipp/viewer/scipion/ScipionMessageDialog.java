@@ -37,8 +37,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     private JButton cancelbt;
     private JButton okbt;
     public int action;
-    public static final Color firebrick = Color.decode("#B22222");
-    public static final Color lightgrey = Color.decode("#EAEBEC");
+   
     public static final int OK_OPTION = 1;
     public static final int CANCEL_OPTION = 0;
     private Map<String, String> fields;
@@ -110,7 +109,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     public static JButton getScipionButton(String text, boolean isenabled)
     {
         JButton button = new JButton(text);
-        Color color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
+        Color color = isenabled? XmippWindowUtil.firebrick: XmippWindowUtil.lightgrey; 
         Color forecolor = isenabled? Color.WHITE: Color.GRAY;
         button.setBackground(color);
         button.setForeground(forecolor);

@@ -455,7 +455,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         saveandexitbt.setEnabled(isenable);
          if(ppicker.isScipionSave())
         {
-            Color color = isenable? ScipionMessageDialog.firebrick: XmippWindowUtil.LIGHT_BLUE; 
+            Color color = isenable? XmippWindowUtil.firebrick: XmippWindowUtil.LIGHT_BLUE; 
             Color forecolor = isenable? Color.WHITE: Color.GRAY;
             saveandexitbt.setBackground(color);
             saveandexitbt.setForeground(forecolor);

@@ -14,7 +14,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public class SupervisedPickerRunner implements Runnable {
-    private final ParticlePickerParams params;
+    public static ParticlePickerParams params;
 
    
 
@@ -35,7 +35,7 @@ public class SupervisedPickerRunner implements Runnable {
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.threads, params.fast, params.incore);
             else 
                 ppicker = new SupervisedParticlePicker(params.inputfile, params.outputdir, params.mode);
-            if(XmippWindowUtil.isScipionCmd())
+            if(params.isScipion())
             {
                 ppicker.setPython(params.python);
                 ppicker.setScipionScript(params.script);

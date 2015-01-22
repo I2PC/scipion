@@ -211,7 +211,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     Image img = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
                     saveandexitbt.setIcon(new ImageIcon(img));
                     saveandexitbt.setToolTipText("Create Coordinates");
-                    Color color = ScipionMessageDialog.firebrick; 
+                    Color color = XmippWindowUtil.firebrick; 
                     saveandexitbt.setBackground(color);
                     saveandexitbt.setForeground(Color.WHITE);
                     

@@ -86,7 +86,7 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            XmippWindowUtil.setIsScipion(true);
+            
             
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
@@ -101,5 +101,9 @@ public class ParticlePickerParams {
     }
     
     
+    public boolean isScipion()
+    {
+        return cmdLine.hasOption(SCIPIONOPT);
+    }
     
 }

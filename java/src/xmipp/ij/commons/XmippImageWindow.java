@@ -10,10 +10,14 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Label;
+import java.awt.MenuItem;
 import java.awt.Panel;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+import xmipp.viewer.scipion.ScipionViewer;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -21,6 +25,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	protected XmippMenuBar menu;
 	protected ImagePlusLoader ipl;
 	protected Label pixelslb;
+        private MaskJFrame maskfr;
 
 	public XmippImageWindow(ImagePlusLoader ipl)
 	{
@@ -56,6 +61,20 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
         {
             menu = new XmippMenuBar(this);
             setMenuBar(menu);
+            if(ScipionViewer.isScipion())
+            {
+                MenuItem createMaskmi = new MenuItem("Mask Manager");
+                
+                createMaskmi.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        
+                        maskfr = new MaskJFrame();
+                    }
+                });
+                menu.advancedmn.add(createMaskmi);
+            }
             pixelslb = new Label("                                          ");
             add(pixelslb);
             
@@ -161,6 +180,9 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		
 	}
         
-        
+        public void openMaskManager()
+        {
+            maskfr = new MaskJFrame();
+        }
 
 }// class XmippImageWindow

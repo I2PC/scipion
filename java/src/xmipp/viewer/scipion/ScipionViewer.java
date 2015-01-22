@@ -24,6 +24,17 @@ import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
  * @author airen
  */
 public class ScipionViewer extends Viewer {
+    
+    public static ScipionParams parameters;
+    
+    
+    public static boolean isScipion()
+    {
+        if(parameters == null)
+            return false;
+        return parameters.isScipion();
+                
+    }
 
     public static void main(String args[]) {
         StopWatch stopWatch = StopWatch.getInstance();
@@ -32,7 +43,7 @@ public class ScipionViewer extends Viewer {
         // creating and showing this application's GUI.
         final String[] myargs = args;
 
-        ScipionParams parameters = new ScipionParams(myargs);
+        parameters = new ScipionParams(myargs);
         try {
             if (parameters.debug) {
                 DEBUG.enableDebug(true);

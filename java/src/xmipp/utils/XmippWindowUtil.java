@@ -35,27 +35,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRootPane;
+import xmipp.viewer.scipion.ScipionMessageDialog;
+import xmipp.viewer.scipion.ScipionViewer;
 
 public class XmippWindowUtil
 {
-        private static boolean isScipion;
+        public static final Color firebrick = Color.decode("#B22222");
+        public static final Color lightgrey = Color.decode("#EAEBEC");
 
 	/** Some colors contants */
 	public static final Color LIGHT_BLUE = new Color(173, 216, 230);
         
-        public static void setIsScipion(boolean value)
-        {
-            isScipion = value;
-        }
         
-        public static boolean isScipionCmd()
-        {
-            return isScipion;
-        }
 
 	/**
 	 * This function will be used to place the location of a windows relative to
@@ -123,8 +119,8 @@ public class XmippWindowUtil
 	public static JButton getTextButton(String text, ActionListener listener)
 	{
 		JButton btn = new JButton(text);
-                if(!isScipionCmd())
-                    btn.setBackground(LIGHT_BLUE);
+                //if(!isScipion)
+                //    btn.setBackground(LIGHT_BLUE);
 		btn.addActionListener(listener);
 		return btn;
 	}
@@ -135,6 +131,15 @@ public class XmippWindowUtil
 		label.setIcon(XmippResource.getIcon(icon));
 		return label;
 	}
+        
+        public static JButton getScipionButton(String text) {
+            Icon icon = XmippResource.getIcon("fa-plus-circle.png");
+            JButton button = new JButton(text.replace("Create ", ""), icon);
+            button.setToolTipText(text);
+            button.setBackground(firebrick);
+            button.setForeground(Color.WHITE);
+            return button;
+        }
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y, int columns, int rows)
 	{
