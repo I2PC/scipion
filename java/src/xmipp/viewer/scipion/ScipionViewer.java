@@ -5,8 +5,10 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.utils.ScipionParams;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.jni.MetaData;
@@ -25,16 +27,9 @@ import static xmipp.viewer.windows.ImagesWindowFactory.openFileAsImage;
  */
 public class ScipionViewer extends Viewer {
     
-    public static ScipionParams parameters;
     
     
-    public static boolean isScipion()
-    {
-        if(parameters == null)
-            return false;
-        return parameters.isScipion();
-                
-    }
+    
 
     public static void main(String args[]) {
         StopWatch stopWatch = StopWatch.getInstance();
@@ -43,7 +38,9 @@ public class ScipionViewer extends Viewer {
         // creating and showing this application's GUI.
         final String[] myargs = args;
 
-        parameters = new ScipionParams(myargs);
+        ScipionParams parameters = new ScipionParams(myargs);
+        if(parameters.isScipion())
+            XmippApplication.setIsScipion(true);
         try {
             if (parameters.debug) {
                 DEBUG.enableDebug(true);

@@ -29,17 +29,17 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.Params;
 import xmipp.utils.XmippMessage;
 
 public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
     private boolean existsfile;
+    private Params params;
     
 
-    public ImagePlusLoader() {
-
-    }
+    
 
     public ImagePlusLoader(ImagePlus imp) {
         this(getFile(imp), imp, null, false, false, -2);
@@ -169,6 +169,16 @@ public class ImagePlusLoader {
     public void setDimension(int width, int height)
     {
         impreader.setDimension(width, height);
+    }
+    
+    public Params getParams()
+    {
+        return params;
+    }
+    
+    public void setParams(Params params)
+    {
+        this.params = params;
     }
 
 }

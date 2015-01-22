@@ -96,6 +96,7 @@ public class ImagesWindowFactory {
 			Params parameters) {
 		try {
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
+                        ipl.setParams(parameters);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
 					parameters.poll);
 			if (parameters.mask_toolbar)

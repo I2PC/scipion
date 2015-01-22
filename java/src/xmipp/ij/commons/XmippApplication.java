@@ -7,6 +7,7 @@ public class XmippApplication
 	
 	private static short instances = 0;
         private static short ijwindows = 0;
+        private static boolean isscipion = false;
         
 	
 	public static short getInstances()
@@ -39,6 +40,15 @@ public class XmippApplication
 		
 	}
         
+        public static boolean isScipion()
+        {
+            return isscipion;
+        }
+        
+        public static void setIsScipion(boolean isscipion)
+        {
+            XmippApplication.isscipion = isscipion;
+        }
         
 
 }

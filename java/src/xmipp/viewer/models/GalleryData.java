@@ -707,7 +707,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
            
-        } else if (isRotSpectraMd())
+        } else if (isRotSpectraMd() && parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
             mode = Mode.GALLERY_ROTSPECTRA;
         else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;

@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.utils.ScipionParams;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -22,6 +23,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.Filename;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
@@ -115,7 +117,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         
         buttonspn.add(closebt);
-        if(!ScipionViewer.parameters.isScipion())
+        if(!XmippApplication.isScipion())
             return;
             
         if (type != null) {

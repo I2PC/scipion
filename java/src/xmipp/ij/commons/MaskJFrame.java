@@ -9,7 +9,6 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -18,24 +17,16 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import xmipp.ij.commons.Tool;
-import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
-import xmipp.viewer.scipion.ScipionParams;
-import xmipp.viewer.scipion.ScipionViewer;
+import xmipp.utils.ScipionParams;
 
 /**
  *
@@ -50,9 +41,11 @@ public class MaskJFrame extends JFrame{
     private ImagePlus imp;
     private JToggleButton invertbt;
     private JToggleButton addbt;
+    private final XmippImageWindow iw;
     
-    public MaskJFrame()
+    public MaskJFrame(XmippImageWindow iw)
     {
+        this.iw = iw;
         createMask();
         initComponents();
     }
@@ -113,7 +106,7 @@ public class MaskJFrame extends JFrame{
         });
         
         commandspn.add(registerbt);
-        registerbt.setVisible(ScipionViewer.parameters.isScipion());
+        registerbt.setVisible(XmippApplication.isScipion());
         pack();
         XmippWindowUtil.setLocation(0.5, 0.5, this);
         setVisible(true);
@@ -125,7 +118,7 @@ public class MaskJFrame extends JFrame{
         String path = "mask.spi";
         ImageGeneric ig = XmippImageConverter.convertToImageGeneric(mask);
         ig.write(path);
-        ScipionParams params = ScipionViewer.parameters;
+        ScipionParams params = (ScipionParams)iw.getImagePlusLoader().getParams();
     
         String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path};
         

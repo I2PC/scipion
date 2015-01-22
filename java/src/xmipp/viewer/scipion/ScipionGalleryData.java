@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.utils.ScipionParams;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
