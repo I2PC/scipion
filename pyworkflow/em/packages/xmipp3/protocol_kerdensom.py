@@ -23,6 +23,7 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
 """
 This sub-package contains wrapper around kendersom Xmipp program
 """
@@ -102,6 +103,7 @@ class KendersomBaseClassify(ProtClassify2D):
                         'extraParams': self.extraParams.get(),
                         'vectors': self._getExtraPath("vectors.xmd"),
                         'classes': self._getExtraPath("classes.stk"),
+                        'averages': self._getExtraPath("averages.stk"),
                         'kvectors': self._getExtraPath("kerdensom_vectors.xmd"),
                         'kclasses': self._getExtraPath("kerdensom_classes.xmd")
                        }
@@ -127,9 +129,13 @@ class KendersomBaseClassify(ProtClassify2D):
         """
         imgSet = self.inputImages.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
-        readSetOfClasses2D(classes2DSet, self._params['kclasses'])
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'], 
+                           preprocessClass=self._preprocessClass)
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
+        
+    def _preprocessClass(self, classItem, classRow):
+        pass
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
@@ -193,7 +199,7 @@ class XmippProtKerdensom(KendersomBaseClassify):
         self._insertImgToVectorStep()
         self._insertKerdensomStep()
         self._insertVectorToImgStep()
-        self._insertFunctionStep('rewriteClassBlockStep')
+        self._insertFunctionStep('rewriteClassBlockStep', 6)
     
     def _insertImgToVectorStep(self):
         """ Insert runJob for convert into a vector Md """
@@ -211,16 +217,46 @@ class XmippProtKerdensom(KendersomBaseClassify):
 #        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
     
     #--------------------------- INFO functions ----------------------------------------------------
-    def rewriteClassBlockStep(self):
-        fnClass = "classes@%(kclasses)s" % self._params
+    def rewriteClassBlockStep(self, r):
+        fnClasses = self._params['kclasses']
+        mdClasses = "classes@%s" % fnClasses
         fnClassStack = self._params['classes']
-        md = xmipp.MetaData(fnClass)
-        # TODO: Check if following is necessary
+        fnAverageStack = self._params['averages']      
+        
+        md = xmipp.MetaData(mdClasses)
+        image = ImageHandler().createImage()
+        
         counter = 1
+        
         for objId in md:
-            md.setValue(xmipp.MDL_IMAGE,"%06d@%s"%(counter,fnClassStack), objId)
+            imageName =  "%06d@%s" % (counter, fnClassStack)
+            averageName = "%06d@%s" % (counter, fnAverageStack)
+            
+            if md.getValue(xmipp.MDL_CLASS_COUNT, objId) > 0:
+                # compute the average of images assigned to this class
+                classPrefix = 'class%06d' % counter
+                classMd = '%s_images@%s' % (classPrefix, fnClasses)
+                classRoot = self._getTmpPath(classPrefix)
+                self.runJob('xmipp_image_statistics', 
+                            '-i %s --save_image_stats %s -v 0' % (classMd, classRoot))
+                image.read(classRoot + 'average.xmp')
+            else:
+                # Create emtpy image as average
+                image.read(imageName)
+                image.initConstant(0.)
+                
+            image.write(averageName)
+            md.setValue(xmipp.MDL_IMAGE, imageName, objId)
+            md.setValue(xmipp.MDL_IMAGE2, averageName, objId)
+            
             counter += 1
-        md.write(fnClass, xmipp.MD_APPEND)
+            
+        md.write(mdClasses, xmipp.MD_APPEND)
+        
+    def _preprocessClass(self, classItem, classRow):
+        classItem.average = Particle()
+        classItem.average.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE2)))
+        
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

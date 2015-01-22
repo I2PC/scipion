@@ -115,6 +115,9 @@ class ImageHandler(object):
         
         return self._imgClass(location)
     
+    def createImage(self):
+        return self._imgClass()
+    
     def write(self, image, outputObj):
         """ Write to disk an image from outputObj 
         (outputObj can be tuple, str or Image subclass). """

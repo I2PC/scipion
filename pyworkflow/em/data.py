@@ -1000,11 +1000,22 @@ class SetOfCoordinates(EMSet):
         """ Iterate over the coordinates associated with a micrograph.
         If micrograph=None, the iteration is performed over the whole set of coordinates.
         """
+        if micrograph is None:
+            micId = None
+        elif isinstance(micrograph, int):
+            micId = micrograph
+        elif isinstance(micrograph, Micrograph):
+            micId = micrograph.getObjId()
+        else:
+            raise Exception('Invalid input micrograph of type %s' % type(micrograph))
+        
+        #TODO: Improve the iteration of micrograph coordinates
+        # by using a where and not iteration over all coordinates
         for coord in self:
-            if micrograph is None:
+            if micId is None:
                 yield coord 
             else:
-                if coord.getMicId() == micrograph.getObjId():
+                if coord.getMicId() == micId:
                     yield coord
     
     def getMicrographs(self):

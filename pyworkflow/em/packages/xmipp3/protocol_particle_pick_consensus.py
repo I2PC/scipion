@@ -67,73 +67,76 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
 #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
-        deps=[]
+        deps = []
         for micrograph in self.inputCoordinates[0].get().getMicrographs():
-            stepId=self._insertFunctionStep("calculateConsensus", micrograph.getObjId(),prerequisites=[])
+            stepId = self._insertFunctionStep("calculateConsensusStep", 
+                                              micrograph.getObjId(), prerequisites=[])
             deps.append(stepId)
-        self._insertFunctionStep("_createOutput", prerequisites=deps)
+        self._insertFunctionStep("createOutputStep", prerequisites=deps)
     
     def _summary(self):
         message = []
         for i, coordinates in enumerate(self.inputCoordinates):
             protocol = self.getMapper().getParent(coordinates.get())
             message.append("Method %d %s" % (i+1, protocol.getClassLabel()))
-        message.append("Radius=%d"%self.consensusRadius.get())
-        message.append("Consensus=%d"%self.consensus.get())
+        message.append("Radius = %d" % self.consensusRadius)
+        message.append("Consensus = %d" % self.consensus)
         return message
     
     def _methods(self):
         return []    
     
-    def calculateConsensus(self, micrographId):
+    def calculateConsensusStep(self, micId):
         # Get all coordinates for this micrograph
-        micrograph = self.inputCoordinates[0].get().getMicrographs()[micrographId]
+        coords = []
+        Ncoords = 0
+        for coordinates in self.inputCoordinates:
+            coordArray = np.asarray([x.getPosition() 
+                                     for x in coordinates.get().iterCoordinates(micId)])
+            coords.append(coordArray)
+            Ncoords += coordArray.shape[0]
         
-        coords=[]
-        Ncoords=0
-        for n in range(len(self.inputCoordinates)):
-            coords.append(np.asarray([x.getPosition() for x in self.inputCoordinates[n].get().iterCoordinates(micrograph)]))
-            Ncoords+=coords[n].shape[0]
-        
-        allCoordinates=np.zeros([Ncoords,2])
-        votes=np.zeros(Ncoords)
+        allCoords = np.zeros([Ncoords,2])
+        votes = np.zeros(Ncoords)
         
         # Add all coordinates in the first method
-        N0=coords[0].shape[0]
-        allCoordinates[0:N0,:]=coords[0]
-        votes[0:N0]=1
+        N0 = coords[0].shape[0]
+        allCoords[0:N0,:] = coords[0]
+        votes[0:N0] = 1
         
         # Add the rest of coordinates
-        Ncurrent=N0
-        for n in range(1,len(self.inputCoordinates)):
+        Ncurrent = N0
+        for n in range(1, len(self.inputCoordinates)):
             for coord in coords[n]:
-                dist=np.sum((coord - allCoordinates[0:(Ncurrent-1)])**2, axis=1)
-                imin=np.argmin(dist)
-                if sqrt(dist[imin])<self.consensusRadius:
-                    newCoord=(votes[imin]*allCoordinates[imin,]+coord)/(votes[imin]+1)
-                    allCoordinates[imin,]=newCoord
-                    votes[imin]+=1
+                dist = np.sum((coord - allCoords[0:(Ncurrent-1)])**2, axis=1)
+                imin = np.argmin(dist)
+                if sqrt(dist[imin]) < self.consensusRadius:
+                    newCoord = (votes[imin]*allCoords[imin,]+coord)/(votes[imin]+1)
+                    allCoords[imin,] = newCoord
+                    votes[imin] += 1
                 else:
-                    allCoordinates[Ncurrent,:]=coord
-                    votes[Ncurrent]=1
-                    Ncurrent+=1
+                    allCoords[Ncurrent,:] = coord
+                    votes[Ncurrent] = 1
+                    Ncurrent += 1
         
         # Select those in the consensus
-        if self.consensus<=0:
-            consensus=len(self.inputCoordinates)
+        if self.consensus <= 0:
+            consensus = len(self.inputCoordinates)
         else:
-            consensus=self.consensus.get()
-        consensusCoordinates=allCoordinates[votes>=consensus,:]
-        np.savetxt(self._getTmpPath('consensus_%06d.txt'%micrographId),consensusCoordinates)
+            consensus = self.consensus.get()
+        consensusCoords = allCoords[votes>=consensus,:]
+        np.savetxt(self._getTmpPath('consensus_%06d.txt' % micId), consensusCoords)
     
-    def _createOutput(self):
-        setOfCoordinates = self._createSetOfCoordinates(self.inputCoordinates[0].get().getMicrographs())
-        setOfCoordinates.setBoxSize(self.inputCoordinates[0].get().getBoxSize())
+    def createOutputStep(self):
+        firstCoords = self.inputCoordinates[0].get()
+        inputMics = firstCoords.getMicrographs()
+        setOfCoordinates = self._createSetOfCoordinates(inputMics)
+        setOfCoordinates.setBoxSize(firstCoords.getBoxSize())
         
         # Read all consensus particles
-        for micrograph in self.inputCoordinates[0].get().getMicrographs():
-            fnTmp=self._getTmpPath('consensus_%06d.txt'%micrograph.getObjId())
-            coords=np.loadtxt(fnTmp)
+        for micrograph in inputMics:
+            fnTmp = self._getTmpPath('consensus_%06d.txt' % micrograph.getObjId())
+            coords = np.loadtxt(fnTmp)
             for coord in coords:
                 aux = Coordinate()
                 aux.setMicrograph(micrograph)
@@ -144,5 +147,6 @@ class XmippProtConsensusPicking(ProtParticlePicking):
 
         # Set output
         self._defineOutputs(outputCoordinates=setOfCoordinates)
-        for n in range(len(self.inputCoordinates)):
-            self._defineSourceRelation(self.inputCoordinates[n].get(), self.outputCoordinates)
+        
+        for coordinates in self.inputCoordinates:
+            self._defineSourceRelation(coordinates.get(), self.outputCoordinates)

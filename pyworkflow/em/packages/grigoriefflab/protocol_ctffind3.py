@@ -52,6 +52,8 @@ estimate CTF on a set of micrographs using ctffind """
         return ['Mindell2003']
 
     def _methods(self):
+        if self.inputMicrographs.get() is None:
+            return ['Input micrographs not available yet.']
         methods = "We calculated the CTF of %s using CtfFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
         methods += self.methodsVar.get('')
         methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')

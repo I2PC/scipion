@@ -450,11 +450,18 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
 def symLink(env, target, source):
     #As the link will be in bin/ directory we need to move up
     sources = source
-    if isinstance(target, list):
-        link = str(target[0])
-        sources = str(source[0])
+    current = Dir('.').path+'/'
+    import SCons
+    if isinstance(target, SCons.Node.NodeList) or isinstance(target, list):
+        link = target[0].path
     else:
         link = target
+    if isinstance(link, basestring) and link.startswith(current):
+        link = link.split(current)[1]
+    if isinstance(sources, SCons.Node.NodeList) or isinstance(sources, list):
+        sources = source[0].path
+    if isinstance(sources, basestring) and sources.startswith(current):
+        sources = sources.split(current)[1]
     sources = os.path.relpath(sources, os.path.split(link)[0])
     if os.path.lexists(link):
         os.remove(link)
@@ -508,11 +515,10 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
     jarCreation = env2.Jar(target=join(buildDir, jar), source=sources)
     SideEffect('dummy', jarCreation)
     lastTarget = jarCreation
-    env.Default(jarCreation)
     for dep in deps:
         env.Depends(jarCreation, File(dep).abspath)
     
-    install = env.Install(installDir, jarCreation)
+    install = env.Install(Dir(installDir), jarCreation)
     SideEffect('dummy', install)
     lastTarget = install
 
@@ -784,7 +790,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     if not (default or packageHome):
         return ''
     
-    lastTarget = tLink = None
+    lastTarget = None
+    tLink = None
     # If we do have a local installation, link to it and exit.
     if packageHome != 'unset':  # default value when calling only --with-package
         #FIXME: only for operating while programming
@@ -815,31 +822,22 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     # done. I don't know how to fix this easily in scons... :(
 
     # Donload, untar, link to it and execute any extra actions.
-    tDownload = download(env, 'software/tmp/%s' % tar, Value(url))
+    tDownload = download(env, File('#software/tmp/%s' % tar), Value(url))
     SideEffect('dummy', tDownload)  # so it works fine in parallel builds
-    tUntar = untar(env, Dir('software/em/%s/bin' % buildDir), tDownload,
-                   cdir='software/em')
+    tUntar = untar(env, Dir('#software/em/%s/bin' % buildDir), tDownload,
+                   cdir=Dir('#software/em').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
-    Clean(tUntar, 'software/em/%s' % buildDir)
+    Clean(tUntar, Dir('#software/em/%s' % buildDir))
     if packageHome != 'unset':
-        symLink(env, 'software/em/%s' % name, Dir(packageHome).abspath)
-    if buildDir != name:
-        # Yep, some packages untar to the same directory as the package
-        # name (hello Xmipp), and that is not so great. No link to it.
-        tLink = env.Command(
-            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-            Dir('#software/em/%s' % buildDir),
-            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
-                   'Linking package %s to software/em/%s' % (name, name),
-                   chdir='software/em'))
+        symLink(env, '#software/em/%s' % name, Dir(packageHome).abspath)
+    if buildDir != name and packageHome == 'unset':
+        tLink = symLink(env, Entry('#software/em/%s' % name).abspath, Entry('#software/em/%s' % buildDir).abspath)
+        tLink = [Dir(tLink).abspath]
+        env.Depends(tLink, tUntar)
     else:
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
-    
-    if packageHome == 'unset':
-        Default(lastTarget)
-        return lastTarget
     
     # Load Package vars
     # First we search this in cfg folder and otherwise in package home
@@ -847,6 +845,18 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         confPath = join(packageHome, '%s.cfg' % name)
     if not os.path.exists(confPath):
         confPath = 'unset'
+    
+    if confPath == 'unset' and packageHome == 'unset': 
+        Default(lastTarget)
+        return lastTarget
+    elif confPath != 'unset' and packageHome == 'unset':
+        print '''### 
+### Caution: you\'re using %s 
+### as configuration file, and you may have not noticed. Please move this file
+### if you don\'t want to use it out from software/cfg and package home folders
+### or change its name to something different of <package_name>.cfg
+###''' % confPath
+    
     opts = Variables(confPath)
     opts.Add('PACKAGE_SCRIPT')
     opts.Add('PRIVATE_KEYS')
@@ -870,6 +880,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     env.Replace(packageDeps=lastTarget)
     if scriptPath!='' and os.path.exists(scriptPath):
         print "Reading SCons script file at %s" % scriptPath
+        #lastTarget = env.SConscript(scriptPath, exports='env')
         lastTarget = env.SConscript(scriptPath, exports='env')
     elif os.path.exists(altScriptPath):
         print "Config file not present. Trying SConscript in package home %s" % altScriptPath
@@ -1020,7 +1031,7 @@ Help('\n')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-env.SConscript('SConscript', exports='env')
+env.SConscript(File('#/SConscript').path, exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).

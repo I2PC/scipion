@@ -420,6 +420,8 @@ class Protocol(Step):
         d = OrderedDict()
         d['object.className'] = self.getClassName()
         d['object.id'] = self.strId()
+        d['object.label'] = self.getObjLabel()
+        d['object.comment'] = self.getObjComment()
          
         od = self.getObjDict()
         
@@ -1188,6 +1190,8 @@ class Protocol(Step):
         
         if obj.isPointer():
             obj = obj.get() # get the pointed object
+            if obj is None:
+                return '*None*'
         
         return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
     #    return "[[javascript:launchViewer(%s)][%s]]" % (obj.getObjId(), obj.getNameId())
