@@ -829,16 +829,33 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/em/%s' % buildDir))
     if packageHome != 'unset':
-        symLink(env, '#software/em/%s' % name, Dir(packageHome).abspath)
+        symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
     if buildDir != name and packageHome == 'unset':
-        tLink = symLink(env, Entry('#software/em/%s' % name).abspath, Entry('#software/em/%s' % buildDir).abspath)
-        tLink = [Dir(tLink).abspath]
-        env.Depends(tLink, tUntar)
+        tLink = env.Command(
+            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
     else:
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
-    
+
+    if extraActions:
+        for target, command in extraActions:
+            lastTarget = env.Command(
+                Entry('#software/em/%s/%s' % (name, target)).abspath,
+                lastTarget,
+                Action(command, chdir=Entry('#software/em/%s' % name).abspath))
+            SideEffect('dummy', lastTarget)
+        # Add the dependencies. Do it to the "link target" (tLink), so any
+        # extra actions (like setup scripts) have everything in place.
+        for dep in deps:
+            env.Depends(lastTarget, dep)
+        Default(lastTarget)
+        return lastTarget
+
     # Load Package vars
     # First we search this in cfg folder and otherwise in package home
     if not os.path.exists(confPath):
@@ -850,13 +867,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         Default(lastTarget)
         return lastTarget
     elif confPath != 'unset' and packageHome == 'unset':
-        print '''### 
-### Caution: you\'re using %s 
+        print >>sys.stderr, '''### 
+### Caution: you're using %s 
 ### as configuration file, and you may have not noticed. Please move this file
-### if you don\'t want to use it out from software/cfg and package home folders
-### or change its name to something different of <package_name>.cfg
+### if you don't want to use it out from software/cfg and package home folders
+### or change its name to something different than <package_name>.cfg
 ###''' % confPath
-    
+
     opts = Variables(confPath)
     opts.Add('PACKAGE_SCRIPT')
     opts.Add('PRIVATE_KEYS')
@@ -878,6 +895,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     altScriptPath = join(packageHome, 'SConscript_scipion')
     # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
     env.Replace(packageDeps=lastTarget)
+
     if scriptPath!='' and os.path.exists(scriptPath):
         print "Reading SCons script file at %s" % scriptPath
         #lastTarget = env.SConscript(scriptPath, exports='env')
@@ -886,12 +904,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         print "Config file not present. Trying SConscript in package home %s" % altScriptPath
         lastTarget = env.SConscript(altScriptPath, exports='env')
     else:
-        # If we can't find the SConscript, then only extra actions can be done
-        for target, command in extraActions:
-            lastTarget = env.Command('software/em/%s/%s' % (name, target),
-                                     lastTarget,
-                                     Action(command, chdir='software/em/%s' % name))
-            SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+        print "Package installed by just downloading. Nothing special to do."
 
     # Clean the special generated files
     for cFile in clean:
