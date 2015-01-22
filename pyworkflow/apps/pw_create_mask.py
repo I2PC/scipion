@@ -44,5 +44,5 @@ if __name__ == '__main__':
     inputObject = project.mapper.selectById(int(inputId))
 
     prot = project.newProtocol(ProtImportMask, maskPath=file, samplingRate=inputObject.getSamplingRate())
-    prot.setObjLabel('import mask')
+    prot.setObjLabel('register mask')
     project.launchProtocol(prot)
