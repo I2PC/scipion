@@ -49,6 +49,7 @@ class ProtImportCoordinates(ProtImportFiles):
     IMPORT_FROM_XMIPP = 1
     IMPORT_FROM_RELION = 2
     IMPORT_FROM_EMAN = 3
+    IMPORT_FROM_DOGPICKER = 4
 
 
 
@@ -75,7 +76,7 @@ class ProtImportCoordinates(ProtImportFiles):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp','relion', 'eman']
+        return ['auto', 'xmipp','relion', 'eman', 'dogpicker']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -102,6 +103,9 @@ class ProtImportCoordinates(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_EMAN:
             from pyworkflow.em.packages.eman2.dataimport import EmanImport
             return EmanImport(self)
+        elif importFrom == self.IMPORT_FROM_DOGPICKER:
+            from pyworkflow.em.packages.appion.dataimport import DogpickerImport
+            return DogpickerImport(self)
         #elif self.importFrom == self.IMPORT_FROM_EMAN:
         #    self.importFilePath = self.sqliteFile.get('').strip()
         #    return EmanImport(self, self.importFilePath)
