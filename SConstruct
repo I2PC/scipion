@@ -664,7 +664,10 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
-               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+#               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+# The CFLAGS line is commented out because even if it is needed for modules
+# like libxml2, it causes problems for others like numpy and scipy (see for
+# (example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
                                                    'PATH': os.environ['PATH'],
