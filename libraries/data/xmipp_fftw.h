@@ -28,7 +28,7 @@
 #define __XmippFFTW_H
 
 #include <complex>
-#include "api/fftw3.h"
+#include "fftw3.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "xmipp_fft.h"
