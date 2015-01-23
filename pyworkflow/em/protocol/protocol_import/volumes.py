@@ -107,6 +107,7 @@ class ProtImportVolumes(ProtImportImages):
         summary = []
         if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
             summary.append("%s imported from:\n%s" % (self._getVolMessage(), self.getPattern()))
+
             summary.append("Sampling rate: *%0.2f* (A/px)" % self.samplingRate.get())
         return summary
     

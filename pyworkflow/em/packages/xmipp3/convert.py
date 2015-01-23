@@ -912,14 +912,25 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
     
     classesMd = xmipp.MetaData('%s@%s' % (classesBlock, filename))
     
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting row to class
+    preprocessClass = kwargs.get('preprocessClass', None)
+    postprocessClass = kwargs.get('postprocessClass', None)
+    
     for objId in classesMd:
         classItem = classesSet.ITEM_TYPE()
         classItem.setObjId(objId)
-        classItem = rowToClass(rowFromMd(classesMd, objId), classItem)
+        classRow = rowFromMd(classesMd, objId)
+        classItem = rowToClass(classRow, classItem)
         # FIXME: the following is only valid for SetOfParticles
         SetOfParticles.copyInfo(classItem, classesSet.getImages())
         #classItem.copyInfo(classesSet.getImages())
+        
+        if preprocessClass:
+            preprocessClass(classItem, classRow)
+        
         classesSet.append(classItem)
+        
         ref = classItem.getObjId()
         b = 'class%06d_images' % ref
         
@@ -927,6 +938,10 @@ def readSetOfClasses(classesSet, filename, classesBlock='classes', **kwargs):
             #FIXME: we need to adapt the following line
             # when we face classes of volumes and not just particles
             readSetOfParticles('%s@%s' % (b, filename), classItem, **kwargs) 
+
+        if postprocessClass:
+            postprocessClass(classItem, classRow)
+            
         # Update with new properties of classItem such as _size
         classesSet.update(classItem)
         

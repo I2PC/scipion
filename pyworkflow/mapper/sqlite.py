@@ -861,10 +861,24 @@ class SqliteFlatDb(SqliteDb):
         # Handle the specials orderBy values of 'id' and 'RANDOM()'
         # other columns names should be mapped to table column
         # such as: _micId -> c04
-        if orderBy in ['id', 'RANDOM()']:
-            orderByCol = orderBy
+
+        def _getRealCol(colName):
+            """ Transform the column name taking into account
+             special columns such as: id or RANDOM(), and
+             getting the mapping translation otherwise.
+            """
+            if colName in ['id', 'RANDOM()']:
+                return colName
+            else:
+                return self._columnsMapping[colName]
+
+        if isinstance(orderBy, basestring):
+            orderByCol = _getRealCol(orderBy)
+        elif isinstance(orderBy, list):
+            orderByCol = ','.join([_getRealCol(c) for c in orderBy])
         else:
-            orderByCol = self._columnsMapping[orderBy]
+            raise Exception('Invalid type for orderBy: %s' % type(orderBy))
+
         cmd = self.selectCmd('1', orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
         self.executeCommand(cmd)
         return self._results(iterate)

@@ -86,9 +86,10 @@
 	    
 	    // to short the file path
 	    var path = $("input#inputPath").val()
-	    var pathSplitted = path.split("/")
-
-	    $("input#inputPath").val(pathSplitted[pathSplitted.length-1])
+	    if (path != undefined){
+		    var pathSplitted = path.split("/")
+		    $("input#inputPath").val(pathSplitted[pathSplitted.length-1])
+	    }
 	  });
   	</script>
 	</head>
