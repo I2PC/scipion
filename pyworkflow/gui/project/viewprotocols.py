@@ -24,7 +24,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict, prettySize
+from pyworkflow.utils.utils import prettyDict, prettySize, startDebugger
+from pyworkflow.gui.graph_layout import LevelTreeLayout
 """
 Main project window application
 """
@@ -801,22 +802,31 @@ class ProtocolsView(tk.Frame):
         
         self.updateRunsGraph()        
 
-    def updateRunsGraph(self, refresh=False):      
+    def updateRunsGraph(self, refresh=False):  
+        print "\n\nDEBUG: ============ UPDATING GRAPH....."    
         self.runsGraph = self.project.getRunsGraph(refresh=refresh)
-        self.lt = LevelTree(self.runsGraph)
+        
+        self.runsGraph.printDot()
+        
+        startDebugger()
+        
+        layout = LevelTreeLayout()
         self.runsGraphCanvas.clear()
-        self.lt.setCanvas(self.runsGraphCanvas)
-        nodeList = self.settings.getNodes()
-        nodeList.updateDict()
+        self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
+        
+        
+        #self.lt.setCanvas(self.runsGraphCanvas)
+        #nodeList = self.settings.getNodes()
+        #nodeList.updateDict()
 
-        if nodeList.getNode(0) is None:
-            self.lt.paint(self.createRunItem, usePositions=False)
-        else:
-            self.lt.paint(self.createRunItem, usePositions=True)
+        #self.lt.paint(self.createRunItem, usePositions=False)
+        #if nodeList.getNode(0) is None:
+        #else:
+        #    self.lt.paint(self.createRunItem, usePositions=True)
         #self.updateRunsGraphSelection()
-        self.runsGraphCanvas.updateScrollRegion()
+        #self.runsGraphCanvas.updateScrollRegion()
 
-    def createRunItem(self, canvas, node, y):
+    def createRunItem(self, canvas, node):
         nodeText = node.label
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
@@ -831,34 +841,39 @@ class ProtocolsView(tk.Frame):
         
         nodeInfo = self.settings.getNodeById(nodeId)
         
-        if nodeInfo is None:
-            #TODO: This logic should not be in other part
-            # for example in the place where is in care of the positioning 
-            # of the nodes. Now it is a bit mixed between here and LevelTree
-            parent = node.parent # should be set in LevelTree._paintNodeWithPosition
-            if parent is None:
-                nx = 100
-                ny = y
-            else:                
-                # Search for the node sibling more to the left
-                # If only child, take x from parent and y to next level
-                nx = parent.item.x
-                ny = parent.item.y + self.lt.DY
-                
-                for child in parent.getChilds():
-                    if child.getName() != node.getName():
-                        if child.item.x > nx:
-                            nx = child.item.x + child.width + self.lt.DX
-                            ny = child.item.y  
-            nodeInfo = self.settings.addNode(nodeId, x=nx, y=ny)
-        else:
-            nx, ny = nodeInfo.getPosition() 
+        #nx = 100
+        #ny = y
         
+#         if nodeInfo is None:
+#             #TODO: This logic should not be in other part
+#             # for example in the place where is in care of the positioning 
+#             # of the nodes. Now it is a bit mixed between here and LevelTree
+#             parent = node.parent # should be set in LevelTree._paintNodeWithPosition
+#             if parent is None:
+#                 nx = 100
+#                 ny = y
+#             else:                
+#                 # Search for the node sibling more to the left
+#                 # If only child, take x from parent and y to next level
+#                 nx = parent.item.x
+#                 ny = parent.item.y + self.lt.DY
+#                 
+#                 for child in parent.getChilds():
+#                     if child.getName() != node.getName():
+#                         if child.item.x > nx:
+#                             nx = child.item.x + child.width + self.lt.DX
+#                             ny = child.item.y  
+#             nodeInfo = self.settings.addNode(nodeId, x=nx, y=ny)
+#         else:
+#             nx, ny = nodeInfo.getPosition() 
+        
+        node.x = 0
+        node.y = 0
         item = RunBox(nodeInfo, self.runsGraphCanvas,
-                      nodeText, nx, ny, bgColor=color, textColor=textColor)
+                      nodeText, node.x, node.y, bgColor=color, textColor=textColor)
         
-        item.run = node.run
         node.item = item
+        item.node = node
         
         if nodeId in self._selection:
             item.setSelected(True)
@@ -1206,4 +1221,4 @@ class RunBox(TextBox):
         
     def move(self, dx, dy):
         TextBox.move(self, dx,dy)
-        self.nodeInfo.setPosition(self.x, self.y)
+        #self.nodeInfo.setPosition(self.x, self.y)

@@ -178,12 +178,55 @@ class Canvas(tk.Canvas, Scrollable):
         return Cable(self,src,srcSocket,dst,dstSocket)
 
     def clear(self):
-        """Clear all items from the canvas"""
+        """ Clear all items from the canvas """
         self.delete(tk.ALL)
 
     def updateScrollRegion(self):
         self.update_idletasks()
-        self.config(scrollregion=self.bbox("all")) 
+        self.config(scrollregion=self.bbox("all"))
+        
+    def drawGraph(self, graph, layout=None, drawNode=None):
+        """ Draw a graph in the canvas.
+        nodes in the graph should have x and y.
+        If layout is not None, it will be used to 
+        reorganize the node positions.
+        Provide drawNode if you want to customize how
+        to create the boxes for each graph node.
+        """
+        
+        itemsNodeDict = {}
+        
+        for node in graph.getNodes():
+            item = drawNode(self, node)
+            node.width, node.height = item.getDimensions()
+            self.addItem(item)
+            itemsNodeDict[node.getName()] = item
+            
+        if layout is not None:
+            layout.draw(graph)
+            
+        # Update node positions
+        self._updatePositions(graph.getRoot(), itemsNodeDict, {})
+        self.updateScrollRegion()
+        
+    def _updatePositions(self, node, itemsNodeDict, 
+                         visitedDict={}):
+        """ Update position of nodes and create the edges. """
+        nodeName = node.getName()
+        
+        print "DEBUG: Canvas._updatePositions, visitedDict", visitedDict
+        
+        if nodeName not in visitedDict:
+            visitedDict[nodeName] = True
+            item = itemsNodeDict[nodeName]
+            print "DEBUG: Canvas._updatePositions, moveTo", (node.x, node.y)
+            item.moveTo(node.x, node.y)
+            
+            for child in node.getChilds():
+                self.createEdge(item, itemsNodeDict[child.getName()])
+                self._updatePositions(child, itemsNodeDict, visitedDict)
+            
+        
         
 
 def findClosestPoints(list1, list2):
@@ -296,7 +339,6 @@ class Item(object):
     def paintSockets(self):
         for name in self.sockets.keys():
             self.paintSocket(self.getSocket(name))
-
 
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)

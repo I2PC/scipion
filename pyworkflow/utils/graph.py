@@ -78,14 +78,16 @@ class Node(object):
         return self._parents
     
     def iterChilds(self):
-        """ Iterate over all childs and subchilds. """
+        """ Iterate over all childs and subchilds. 
+        Nodes can be visited more than once if have
+        more than one parent.
+        """
         for child in self._childs:
             for c in child.iterChilds():
                 yield c
         
         yield self
         
-    
     def __str__(self):
         return "Node (id=%s, label=%s, root=%s)" % (self._name, self.getLabel(), self.isRoot())
     
