@@ -9,8 +9,11 @@ import java.awt.Label;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
+import xmipp.utils.Params;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -19,32 +22,35 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	protected ImagePlusLoader ipl;
 	protected Label pixelslb;
         private MaskJFrame maskfr;
+        protected Params params;
+    
 
-	public XmippImageWindow(ImagePlusLoader ipl)
+	public XmippImageWindow(ImagePlusLoader ipl, Params params)
 	{
-		this(ipl, ipl.getName());
+		this(ipl, ipl.getName(), params);
 	}
         
-        public XmippImageWindow(ImagePlus imp)
+        public XmippImageWindow(ImagePlus imp, Params params)
         {
-            this(imp, new XmippImageCanvas(imp));
+            this(imp, new XmippImageCanvas(imp), params);
         }
         
-        public XmippImageWindow(ImagePlus imp, ImageCanvas canvas)
+        public XmippImageWindow(ImagePlus imp, ImageCanvas canvas, Params params)
 	{
 		super(imp, canvas);
                 this.ipl = new ImagePlusLoader(imp);
+                this.params = params;
                 XmippApplication.addInstance(true);
                 initComponents();
 	}
 
 
-	public XmippImageWindow(ImagePlusLoader ipl, String title)
+	public XmippImageWindow(ImagePlusLoader ipl, String title, Params params)
 	{
 		super(ipl.getImagePlus(), new XmippImageCanvas(ipl.getImagePlus()));
 		this.ipl = ipl;
 		imp.setTitle(title);
-		
+		this.params = params;
 		XmippApplication.addInstance(true);
 		initComponents();
                 
@@ -62,8 +68,33 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        
-                        maskfr = new MaskJFrame(XmippImageWindow.this);
+                        if(maskfr == null || !maskfr.isVisible())
+                        {
+                            maskfr = new MaskJFrame(XmippImageWindow.this);
+                            imp.getCanvas().addMouseListener(new MouseListener() {
+
+                                @Override
+                                public void mouseClicked(MouseEvent me) {
+                                }
+
+                                @Override
+                                public void mousePressed(MouseEvent me) {
+                                }
+
+                                @Override
+                                public void mouseReleased(MouseEvent me) {
+                                    maskfr.refreshMask();
+                                }
+
+                                @Override
+                                public void mouseEntered(MouseEvent me) {
+                                }
+
+                                @Override
+                                public void mouseExited(MouseEvent me) {
+                                }
+                            });
+                        }
                     }
                 });
                 menu.advancedmn.add(createMaskmi);
@@ -170,12 +201,26 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
             
             super.windowClosing(e);
             XmippApplication.removeInstance(true);
+            if(maskfr != null)
+            {
+                maskfr.setVisible(false);
+                maskfr.dispose();
+                
+            }
 		
 	}
         
-        public void openMaskManager()
+       
+        public Params getParams()
         {
-            maskfr = new MaskJFrame(this);
+            return params;
         }
+
+        public void setParams(Params params)
+        {
+            this.params = params;
+        }
+
+    
 
 }// class XmippImageWindow

@@ -96,9 +96,8 @@ public class ImagesWindowFactory {
 			Params parameters) {
 		try {
 			ImagePlusLoader ipl = new ImagePlusLoader(filename);
-                        ipl.setParams(parameters);
 			XmippIJWindow xiw = openXmippImageWindow(pframe, ipl,
-					parameters.poll);
+					parameters);
 			if (parameters.mask_toolbar)
 				xiw.openMaskToolbar();
 		} catch (Exception e) {
@@ -125,24 +124,24 @@ public class ImagesWindowFactory {
 	}
 
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlus imp, boolean poll) {
-		return openXmippImageWindow(window, new ImagePlusLoader(imp), poll);
+			ImagePlus imp, Params params) {
+		return openXmippImageWindow(window, new ImagePlusLoader(imp), params);
 	}
 
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlusLoader impLoader, boolean poll) {
-		return openXmippImageWindow(window, impLoader, impLoader.getName(), poll);
+			ImagePlusLoader impLoader, Params parameters) {
+		return openXmippImageWindow(window, impLoader, impLoader.getName(), parameters);
 		
 	}
 	public static XmippIJWindow openXmippImageWindow(Window window,
-			ImagePlusLoader impLoader, String title, boolean poll) {
+			ImagePlusLoader impLoader, String title, Params parameters) {
                 
 		XmippIJWindow iw;
 		
 		if (impLoader.isStackOrVolume())
 			iw = (title != null)? new XmippStackWindow(window, impLoader, title): new XmippStackWindow(window, impLoader);
 		else
-			iw = (title != null )? new XmippImageWindow(impLoader, title): new XmippImageWindow(impLoader);
+			iw = (title != null )? new XmippImageWindow(impLoader, title, parameters): new XmippImageWindow(impLoader, parameters);
                 
 		SwingUtilities.invokeLater(new Worker(iw));
 		return iw;

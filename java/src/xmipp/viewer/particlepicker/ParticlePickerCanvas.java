@@ -45,7 +45,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		}
 		else
                 {
-			this.iw = new XmippImageWindow(getImage(), this);
+			this.iw = new XmippImageWindow(getImage(), this, null);
                         iw.maximize();
                 }
                 

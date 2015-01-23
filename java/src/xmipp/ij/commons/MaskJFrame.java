@@ -9,6 +9,7 @@ package xmipp.ij.commons;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -47,13 +48,15 @@ public class MaskJFrame extends JFrame{
     {
         this.iw = iw;
         createMask();
+        XmippUtil.showImageJ(Tool.VIEWER);
+        IJ.setTool(Toolbar.OVAL);
         initComponents();
     }
     
     protected void initComponents()
     {
         setTitle("Mask Manager");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
        
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(0, 5, 0, 5);
@@ -78,22 +81,7 @@ public class MaskJFrame extends JFrame{
         JPanel commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2));
         
-       
-        previewbt = new JButton("Preview");
-        previewbt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                createMask();
-                imagepn.setMask(mask, width, height);
-            }
-
-            
-        });
-        
-        commandspn.add(previewbt);
-        
-        
+              
         registerbt = XmippWindowUtil.getScipionButton("Create Mask");
         registerbt.addActionListener(new ActionListener() {
 
@@ -118,12 +106,11 @@ public class MaskJFrame extends JFrame{
         String path = "mask.spi";
         ImageGeneric ig = XmippImageConverter.convertToImageGeneric(mask);
         ig.write(path);
-        ScipionParams params = (ScipionParams)iw.getImagePlusLoader().getParams();
-    
+        ScipionParams params = (ScipionParams)iw.getParams();
         String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path};
         
-            String output = XmippWindowUtil.executeCommand(command, true);
-            System.out.println(output);
+        String output = XmippWindowUtil.executeCommand(command, true);
+        System.out.println(output);
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.getLogger(MaskJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -156,11 +143,9 @@ public class MaskJFrame extends JFrame{
                         mask.updateAndDraw();
                     }
                     
-                } else {
+                } else 
                     createDefaultMask();
-                    XmippUtil.showImageJ(Tool.VIEWER);
                     
-                }
                 
             } else {
                 IJ.error("There are no images open.");
@@ -184,12 +169,19 @@ public class MaskJFrame extends JFrame{
     
     protected void createDefaultMask()
     {
-            ByteProcessor processor = new ByteProcessor(imp.getWidth(), imp.getHeight());
-            mask = new ImagePlus("Mask", processor);
-            mask.updateAndDraw();
+        ByteProcessor processor = new ByteProcessor(imp.getWidth(), imp.getHeight());
+        mask = new ImagePlus("Mask", processor);
+        mask.updateAndDraw();
             
 
     }
+    
+    public void refreshMask()
+    {
+        createMask();
+        imagepn.setMask(mask, width, height);
+    }
+    
         
    
    

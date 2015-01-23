@@ -96,10 +96,10 @@ public class Worker implements Runnable
                         imgAvg.destroy();
                         imgStd.destroy();
 
-                        XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + frame.data.getFileName());
+                        XmippImageWindow winAvg = new XmippImageWindow(new ImagePlusLoader(impAvg), "AVG: " + frame.data.getFileName(), frame.data.parameters);
                         XmippWindowUtil.setLocation(0.2f, 0.5f, winAvg, frame);
                         winAvg.setVisible(true);
-                        XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + frame.data.getFileName());
+                        XmippImageWindow winStd = new XmippImageWindow(new ImagePlusLoader(impStd), "STD: " + frame.data.getFileName(), frame.data.parameters);
 
                         XmippWindowUtil.setLocation(0.8f, 0.5f, winStd, frame);
                         winStd.setVisible(true);
@@ -111,7 +111,7 @@ public class Worker implements Runnable
                         imagesmd.getPCAbasis(image, MDLabel.MDL_IMAGE);
                         ImagePlus imp = XmippImageConverter.convertToImagePlus(image);
                         imp.setTitle("PCA: " + frame.data.getFileName());
-                        ImagesWindowFactory.openXmippImageWindow(frame, imp, false);
+                        ImagesWindowFactory.openXmippImageWindow(frame, imp, frame.data.parameters);
 
                 }
 

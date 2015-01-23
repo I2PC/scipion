@@ -36,7 +36,6 @@ public class ImagePlusLoader {
 
     protected ImagePlusReader impreader;
     private boolean existsfile;
-    private Params params;
     
 
     
@@ -171,14 +170,6 @@ public class ImagePlusLoader {
         impreader.setDimension(width, height);
     }
     
-    public Params getParams()
-    {
-        return params;
-    }
     
-    public void setParams(Params params)
-    {
-        this.params = params;
-    }
 
 }
