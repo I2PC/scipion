@@ -29,7 +29,8 @@ import sys, unittest
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
-from pyworkflow.em.packages.xmipp3 import ProtMovieAlignment, XmippProtPreprocessMicrographs
+from pyworkflow.em.packages.xmipp3 import (ProtMovieAlignment, XmippProtPreprocessMicrographs,
+                                           XmippProtExtractParticles)
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 
 
@@ -197,6 +198,8 @@ class TestPolishParticles(TestRelionBase):
         cls.dataset = DataSet.getDataSet('ribo_movies')
         cls.movies = cls.dataset.getFile('movies')
         cls.crdsDir = cls.dataset.getFile('posAllDir')
+        cls.vol = cls.dataset.getFile('volume')
+        cls.protImportVol = cls.runImportVolumes(cls.vol, 4.74)
     
     def test_polish(self):
         #First, import a set of movies
@@ -237,20 +240,29 @@ class TestPolishParticles(TestRelionBase):
         protPP = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                  filesPath=self.crdsDir,
-                                 filesPattern='*.pos', boxSize=120)
+                                 filesPattern='*.pos', boxSize=120, scale=0.5)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('Picking')
         self.launchProtocol(protPP)
         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
-# 
-# 
-#         print "Run extract particles with <Other> option"
-#         protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True,
-#                                                 downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)
-#         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-#         protExtract.ctfRelations.set(protCTF.outputCTF)
-#         protExtract.inputMicrographs.set(protPreprocess.outputMicrographs)
-#         protExtract.setObjLabel('extract particles')
-#         self.proj.launchProtocol(protExtract, wait=True)
-#         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-
+ 
+        print "Run extract particles with <Other> option"
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=110, doInvert=True,
+                                                 doFlip=False, numberOfThreads=4)
+        protExtract.inputCoordinates.set(protPP.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.setObjLabel('extract particles')
+        self.proj.launchProtocol(protExtract, wait=True)
+        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        
+        print "Run Relion Refine"
+        proRef = self.newProtocol(ProtRelionRefine3D,
+                                  initialLowPassFilterA=40, maskRadiusA=250,
+                                  numberOfMpi=3, numberOfThreads=2)
+        proRef.inputParticles.set(protExtract.outputParticles)
+        proRef.referenceVolume.set(self.protImportVol.outputVolume)
+        proRef.setObjLabel('relion Refine')
+        self.launchProtocol(proRef)
+        self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+        self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))

@@ -116,6 +116,7 @@ DataSet(name='ribo_movies', folder='ribo_movies',
         files={
                'movies': 'movies/1??_*.mrcs',
                'posAllDir': 'pickingXmipp',
+               'volume': 'volumes/reference.mrc',
         })
 
 
