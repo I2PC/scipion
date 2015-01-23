@@ -116,6 +116,9 @@ libxslt = env.AddLibrary(
     targets=['lib/libxslt.so'],
     deps=[libxml2],
     default=False)
+# This library is pretty complicated to compile right. For the moment,
+# we will require it to be in the system (with development headers)
+# for anyone that wants to use it, instead of compiling it automatically.
 
 pcre = env.AddLibrary(
     'pcre',
