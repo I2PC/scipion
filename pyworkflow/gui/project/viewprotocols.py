@@ -48,7 +48,7 @@ from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvide
 from pyworkflow.gui.form import FormWindow
 from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, showInfo
 from pyworkflow.gui.text import TaggedText, TextFileViewer
-from pyworkflow.gui import Canvas
+from pyworkflow.gui import Canvas, TextBox
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.widgets import ComboBox, HotButton, IconButton
 
@@ -533,7 +533,7 @@ class ProtocolsView(tk.Frame):
         self.createRunsGraph(runsFrame)
         
         if self.showGraph:
-            treeWidget = self.runsGraph
+            treeWidget = self.runsGraphCanvas
         else:
             treeWidget = self.runsTree
             
@@ -791,24 +791,30 @@ class ProtocolsView(tk.Frame):
             self.runsTree.selection_add(treeId)
     
     def createRunsGraph(self, parent):
-        self.runsGraph = Canvas(parent, width=400, height=400)
-        self.runsGraph.onClickCallback = self._runItemClick
-        self.runsGraph.onDoubleClickCallback = self._runItemDoubleClick
-        self.runsGraph.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
-        self.runsGraph.onControlClickCallback = self._runItemControlClick
+        self.runsGraphCanvas = Canvas(parent, width=400, height=400)
+        self.runsGraphCanvas.onClickCallback = self._runItemClick
+        self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
+        self.runsGraphCanvas.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
+        self.runsGraphCanvas.onControlClickCallback = self._runItemControlClick
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
         self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False):      
-        g = self.project.getRunsGraph(refresh=refresh)
-        lt = LevelTree(g)
-        self.runsGraph.clear()
-        lt.setCanvas(self.runsGraph)
-        lt.paint(self.createRunItem)
+        self.runsGraph = self.project.getRunsGraph(refresh=refresh)
+        self.lt = LevelTree(self.runsGraph)
+        self.runsGraphCanvas.clear()
+        self.lt.setCanvas(self.runsGraphCanvas)
+        nodeList = self.settings.getNodes()
+        nodeList.updateDict()
+
+        if nodeList.getNode(0) is None:
+            self.lt.paint(self.createRunItem, usePositions=False)
+        else:
+            self.lt.paint(self.createRunItem, usePositions=True)
         #self.updateRunsGraphSelection()
-        self.runsGraph.updateScrollRegion()
+        self.runsGraphCanvas.updateScrollRegion()
 
     def createRunItem(self, canvas, node, y):
         nodeText = node.label
@@ -819,12 +825,42 @@ class ProtocolsView(tk.Frame):
             status = node.run.status.get(STATUS_FAILED)
             nodeText = nodeText + '\n' + node.run.getStatusMessage()
             color = STATUS_COLORS[status]
+            nodeId = node.run.getObjId()
+        else:
+            nodeId = 0 # special node Project, that does not have associated run
         
-        item = self.runsGraph.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
+        nodeInfo = self.settings.getNodeById(nodeId)
+        
+        if nodeInfo is None:
+            #TODO: This logic should not be in other part
+            # for example in the place where is in care of the positioning 
+            # of the nodes. Now it is a bit mixed between here and LevelTree
+            parent = node.parent # should be set in LevelTree._paintNodeWithPosition
+            if parent is None:
+                nx = 100
+                ny = y
+            else:                
+                # Search for the node sibling more to the left
+                # If only child, take x from parent and y to next level
+                nx = parent.item.x
+                ny = parent.item.y + self.lt.DY
+                
+                for child in parent.getChilds():
+                    if child.getName() != node.getName():
+                        if child.item.x > nx:
+                            nx = child.item.x + child.width + self.lt.DX
+                            ny = child.item.y  
+            nodeInfo = self.settings.addNode(nodeId, x=nx, y=ny)
+        else:
+            nx, ny = nodeInfo.getPosition() 
+        
+        item = RunBox(nodeInfo, self.runsGraphCanvas,
+                      nodeText, nx, ny, bgColor=color, textColor=textColor)
+        
         item.run = node.run
         node.item = item
         
-        if node.run and node.run.getObjId() in self._selection:
+        if nodeId in self._selection:
             item.setSelected(True)
         return item
         
@@ -833,13 +869,13 @@ class ProtocolsView(tk.Frame):
         
         if self.showGraph:
             ActionIcons[ACTION_TREE] = RUNS_LIST
-            show = self.runsGraph.frame
+            show = self.runsGraphCanvas.frame
             hide = self.runsTree
             #self.updateRunsGraphSelection()
         else:
             ActionIcons[ACTION_TREE] = RUNS_TREE
             show = self.runsTree
-            hide = self.runsGraph.frame
+            hide = self.runsGraphCanvas.frame
             self.updateRunsTreeSelection()
             
         self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
@@ -890,7 +926,7 @@ class ProtocolsView(tk.Frame):
         self._selection.clear()
         self._selection.append(prot.getObjId())
         self._updateSelection()
-        self.runsGraph.update_idletasks()
+        self.runsGraphCanvas.update_idletasks()
         
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
@@ -1158,3 +1194,16 @@ class ProtocolsView(tk.Frame):
         elif action == ACTION_REFRESH:
             self.refreshRuns()
     
+
+class RunBox(TextBox):
+    """ Just override TextBox move method to keep track of 
+    position changes in the graph.
+    """
+    def __init__(self, nodeInfo, canvas, text, x, y, bgColor, textColor):
+        TextBox.__init__(self, canvas, text, x, y, bgColor, textColor)
+        self.nodeInfo = nodeInfo
+        canvas.addItem(self)
+        
+    def move(self, dx, dy):
+        TextBox.move(self, dx,dy)
+        self.nodeInfo.setPosition(self.x, self.y)

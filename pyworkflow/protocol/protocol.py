@@ -1335,6 +1335,16 @@ class Protocol(Step):
                 for p in s._prerequisites:
                     stepsDict[p].addChild(n)
         return g
+    
+    def closeMappers(self):
+        """ Close the mappers of all output Sets. """
+        for _, attr in self.iterOutputAttributes(Set):
+            attr.close()
+            
+    def loadMappers(self):
+        """ Open mapper connections from previous closed outputs. """
+        for _, attr in self.iterOutputAttributes(Set):
+            attr.load()
 
                 
 #---------- Helper functions related to Protocols --------------------

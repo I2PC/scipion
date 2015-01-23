@@ -226,7 +226,6 @@ class Item(object):
         self.sockets={}
         self.listeners = []
 
-
     def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
         yc=(y2+y1)/2.0
@@ -260,19 +259,15 @@ class Item(object):
         self.sockets[name]={"object": socketClass(self.canvas,x,y,name,fillColor=fillColor,outline=outline), "verticalLocation": verticalLocation, "position":position}
         self.paintSocket(self.getSocket(name))
 
-
     def getSocket(self,name):
         return self.sockets[name]["object"]
-
 
     def getSocketsAt(self,verticalLocation):
         return filter(lambda s: s["verticalLocation"] == verticalLocation, self.sockets.values())
 
-
     def getSocketCoords(self,name):
         socket=self.sockets[name]
         return self.getSocketCoordsAt(socket["verticalLocation"], socket["position"], self.countSockets(socket["verticalLocation"]))
-
 
     def getSocketCoordsAt(self,verticalLocation,position=1,socketsCount=1):
         x1,y1,x2,y2=self.getCorners()
@@ -285,7 +280,6 @@ class Item(object):
         else:
             y=y2
         return (x,y)
-
 
     def relocateSockets(self,verticalLocation,count):
         sockets=self.getSocketsAt(verticalLocation)
@@ -332,7 +326,6 @@ class Item(object):
             bw = 2
         self.canvas.itemconfig(self.id, width=bw)
 
-
         
 class TextItem(Item):
     """This class will serve to paint and store rectange boxes with some text.
@@ -344,7 +337,6 @@ class TextItem(Item):
         self.text = text
         self.margin = 8
         self.paint()
-
         
     def _paintBounds(self, x, y, w, h, fillColor):
         """ Subclasses should implement this method 
@@ -370,7 +362,7 @@ class TextItem(Item):
         self.canvas.tag_raise(self.id_text)
 
     def move(self, dx, dy):
-        super(TextItem,self).move(dx,dy)
+        super(TextItem, self).move(dx,dy)
         self.canvas.move(self.id_text, dx, dy)
     
    
@@ -461,7 +453,7 @@ class Connector(Item):
         """Should be implemented by the subclasses"""
         pass
 
-    def paintPlug(cls,canvas,x,y):
+    def paintPlug(self, canvas, x, y):
         """Should be implemented by the subclasses"""
         pass
 
