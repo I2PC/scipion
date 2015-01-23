@@ -51,11 +51,13 @@ DEPS = 4
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
 BASIC_INCS = ['external',
               'libraries',
+	      join('libraries', 'data'),
               join('external','fftw-3.3.3'), 
               join('external','tiff-3.9.4'), 
               join('external','tiff-3.9.4','libtiff'), 
               join('external','jpeg-8c'), 
-              join('external','sqlite-3.6.23'), 
+              join('external','sqlite-3.6.23'),
+	      join('external','sqliteExt'),
               join('external','hdf5-1.8.10','src'), 
               join('external','hdf5-1.8.10','c++'), 
               join('external','hdf5-1.8.10','c++','src')]

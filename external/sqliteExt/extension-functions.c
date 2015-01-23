@@ -121,10 +121,10 @@ Original code 2006 June 05 by relicoder.
 #define HAVE_TRIM 1		/* LMH 2007-03-25 if sqlite has trim functions */
 
 #ifdef COMPILE_SQLITE_EXTENSIONS_AS_LOADABLE_MODULE
-#include "../sqlite-3.6.23/sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 #else
-#include "../sqlite-3.6.23/sqlite3.h"
+#include "sqlite3.h"
 #endif
 
 #include <ctype.h>
