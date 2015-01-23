@@ -281,8 +281,10 @@ tornado = addModule(
 lxml = addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
-    deps=[libxml2], #, libxslt],
+    deps=[], # libxml2], #, libxslt],
     default=False)
+# Commented out libxml2 and libxslt because they are so hard to
+# compile right.
 
 addModule(
     'ipython',
