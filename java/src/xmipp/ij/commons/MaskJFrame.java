@@ -180,6 +180,7 @@ public class MaskJFrame extends JFrame{
     {
         createMask();
         imagepn.setMask(mask, width, height);
+        pack();
     }
     
         

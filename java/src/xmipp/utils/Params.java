@@ -42,7 +42,7 @@ public class Params {
     public final static String W1 = "w1";
     public final static String W2 = "w2";
     public final static String RAISED_W = "raised_w";
-    public final static String MASKFILENAME = "mask";
+    public final static String MASK = "mask";
     public final static String DEBUG = "debug";
     public final static String MASKTOOLBAR = "mask_toolbar";
     public final static String VIEW = "view";
@@ -142,7 +142,7 @@ public class Params {
 
         options.addOption(DOWNSAMPLING, true, "");
 
-        options.addOption(MASKFILENAME, true, "");
+        options.addOption(MASK, false, "");
 
         options.addOption(INPUT_VECTORSFILE, true, "");
         options.addOption(INPUT_CLASSESFILE, true, "");
@@ -153,7 +153,6 @@ public class Params {
         opt = new Option(OBJECT_CMDS, "");
         opt.setArgs(Integer.MAX_VALUE);
         options.addOption(opt);
-        
 
     }
     
@@ -243,9 +242,7 @@ public class Params {
                 downsampling = Double.parseDouble(cmdLine.getOptionValue(DOWNSAMPLING));
             }
 
-            if (cmdLine.hasOption(MASKFILENAME)) {
-                maskFilename = cmdLine.getOptionValue(MASKFILENAME);
-            }
+            
 
             if (cmdLine.hasOption(INPUT_VECTORSFILE)) {
                 vectorsFilename = cmdLine.getOptionValue(INPUT_VECTORSFILE);
@@ -306,6 +303,10 @@ public class Params {
     public String getBlock()
     {
         return block;
+    }
+
+    public boolean isMask() {
+        return cmdLine.hasOption("mask");
     }
     
     

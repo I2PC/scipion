@@ -25,7 +25,12 @@ public class ImageJPanel extends JPanel{
        this.imp = image;
        this.width = width;
        this.height = height;
-        setPreferredSize(new Dimension(width, height));
+    }
+    
+    @Override
+    public Dimension getPreferredSize()
+    {
+        return new Dimension(width, height);
     }
 
     @Override
@@ -40,7 +45,9 @@ public class ImageJPanel extends JPanel{
         this.imp = mask;
         this.width = width;
         this.height = height;
+        setPreferredSize(new Dimension(width, height));
         repaint();
+        
     }
 
 }
