@@ -35,7 +35,7 @@
 #include "mask.h"
 
 #include "xmipp_image.h"
-#include "wavelet.h"
+#include <wavelet.h>
 #include "xmipp_fftw.h"
 
 
