@@ -26,7 +26,7 @@
 #include "xmipp_fft.h"
 #include "args.h"
 #include "histogram.h"
-#include "external/bilib/headers/dft.h"
+#include "dft.h"
 
 /* Format conversions ------------------------------------------------------ */
 /** Convert whole -> half of (centro-symmetric) Fourier transforms 1D. -- */

@@ -28,7 +28,7 @@
 
 #include "multidim_array.h"
 #include "matrix2d.h"
-#include "../../external/alglib-3.8.0.cpp/src/specialfunctions.h"
+#include "specialfunctions.h"
 //#include "../../../kk/gsl-1.16/gsl/gsl_sf_gegenbauer.h"
 
 # define pi           3.14159265358979323846  /* pi */

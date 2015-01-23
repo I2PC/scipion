@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "xmipp_image_base.h"
-#include "../../external/jpeg-8c/jpeglib.h"
+#include "jpeglib.h"
 
 
 //#include <jpeglib.h>
