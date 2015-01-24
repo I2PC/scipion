@@ -75,16 +75,12 @@ class LevelTreeLayout(GraphLayout):
         if not hasattr(node, '_layout'):
             node._layout = {}
             
-        # Calculate the y-position depending on the level
-        # and the deltha-Y (DY)
-        node.y = level * self.DY
-        
-        #print "DEBUG: setLayoutLevel: node: ", node.getName()
-        #print "DEBUG: setLayoutLevel: parent: ", parent.getName() if parent else "None"
-        
-        
         layout = node._layout
+        
         if level > layout.get('level', 0):
+            # Calculate the y-position depending on the level
+            # and the deltha-Y (DY)
+            node.y = level * self.DY
             #print "DEBUG: setLayoutLevel:   updating level to: ", level
             layout['level'] = level
             layout['parent'] = parent
@@ -135,7 +131,7 @@ class LevelTreeLayout(GraphLayout):
                     self.__setNodeOffset(c, offset)
                 
                 half0 = self.__getNodeHalf(childs[0])
-                total = half0 + offset + self.__getNodeHalf(childs[1])
+                total = half0 + offset + self.__getNodeHalf(childs[-1])
                 half = total / 2
                 for c in childs:
                     self.__setNodeOffset(c, c._layout['offset'] - half + half0)
