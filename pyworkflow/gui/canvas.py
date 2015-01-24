@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pprint import PrettyPrinter
+from pyworkflow.utils.utils import prettyDict
 """
 This module extends the functionalities of a normal Tkinter Canvas.
 The new Canvas class allows to easily display Texboxes and Edges
@@ -78,7 +80,7 @@ class Canvas(tk.Canvas, Scrollable):
         
         if tooltipCallback:
             self.bind('<Motion>', self.onMotion)
-            self.bind('<Leave>', self.onLeave)
+            #self.bind('<Leave>', self.onLeave)
             self._createTooltip() # This should set
         
         self._menu = tk.Menu(self, tearoff=0)
@@ -270,12 +272,12 @@ class Canvas(tk.Canvas, Scrollable):
         """ Update position of nodes and create the edges. """
         nodeName = node.getName()
         
-        print "DEBUG: Canvas._updatePositions, visitedDict", visitedDict
+        #print "DEBUG: Canvas._updatePositions, visitedDict", visitedDict
         
         if nodeName not in visitedDict:
             visitedDict[nodeName] = True
             item = itemsNodeDict[nodeName]
-            print "DEBUG: Canvas._updatePositions, moveTo", (node.x, node.y)
+            #print "DEBUG: Canvas._updatePositions, moveTo", (node.x, node.y)
             item.moveTo(node.x, node.y)
             
             for child in node.getChilds():
