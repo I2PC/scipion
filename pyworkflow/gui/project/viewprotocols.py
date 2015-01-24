@@ -708,13 +708,15 @@ class ProtocolsView(tk.Frame):
         
         # Add refresh Tree button
         btn = addButton(ACTION_TREE, "  ", self.allToolbar)
-        btn.grid(row=0, column=1)
-        self.viewButtons[action] = btn       
+        ToolTip(btn, "Re-organize the node positions.", 1500)
+        self.viewButtons[ACTION_TREE] = btn       
+        if self.runsView != VIEW_LIST:
+            btn.grid(row=0, column=1)
         
         # Add refresh button
         btn = addButton(ACTION_REFRESH, ACTION_REFRESH, self.allToolbar)
         btn.grid(row=0, column=2)
-        self.viewButtons[action] = btn
+        self.viewButtons[ACTION_REFRESH] = btn
             
     def _createViewCombo(self, parent):
         """ Create the select-view combobox. """
@@ -758,7 +760,7 @@ class ProtocolsView(tk.Frame):
         comboFrame = tk.Frame(parent, bg=bgColor)
         tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
         choices = [pm.text.get() for pm in self.settings.protMenuList]
-        initialChoice = self.settings.protMenuList.getIndex()
+        initialChoice = choices[self.settings.protMenuList.getIndex()]
         combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
         combo.setChangeCallback(self._onSelectProtocols)
         combo.grid(row=0, column=1)
@@ -880,7 +882,6 @@ class ProtocolsView(tk.Frame):
         return item
         
     def switchRunsView(self):
-        
         viewValue = self.switchCombo.getValue()
         
         if viewValue == VIEW_LIST:
@@ -888,11 +889,13 @@ class ProtocolsView(tk.Frame):
             show = self.runsTree
             hide = self.runsGraphCanvas.frame
             self.updateRunsTreeSelection()
+            self.viewButtons[ACTION_TREE].grid_remove()
         else:
             #ActionIcons[ACTION_TREE] = RUNS_LIST
             show = self.runsGraphCanvas.frame
             hide = self.runsTree
             self.updateRunsGraph()
+            self.viewButtons[ACTION_TREE].grid(row=0, column=1)
             #self.updateRunsGraphSelection()
         
         #self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
