@@ -24,8 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import prettyDict, prettySize, startDebugger
-from pyworkflow.gui.graph_layout import LevelTreeLayout
 """
 Main project window application
 """
@@ -36,6 +34,9 @@ import Tkinter as tk
 import ttk
 
 
+from pyworkflow.utils.utils import prettyDict, prettySize, startDebugger
+from pyworkflow.gui.graph_layout import LevelTreeLayout
+from pyworkflow.utils.utils import envVarOn
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
 from pyworkflow.viewer import DESKTOP_TKINTER
@@ -47,11 +48,13 @@ import pyworkflow.gui as gui
 from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow, TreeProvider, BoundTree
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, showInfo
+from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, showInfo,\
+    createMessageBody, fillMessageText
 from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas, TextBox
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.widgets import ComboBox, HotButton, IconButton
+from pyworkflow.gui.tooltip import ToolTip
 
 from constants import STATUS_COLORS
 
@@ -69,9 +72,14 @@ ACTION_DEFAULT = Message.LABEL_DEFAULT
 ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
 ACTION_EXPORT = Message.LABEL_EXPORT
+ACTION_SWITCH_VIEW = 'Switch_View'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
+
+VIEW_LIST = 0
+VIEW_TREE = 1
+VIEW_TREE_SMALL = 2
  
 ActionIcons = {
     ACTION_EDIT: Icon.ACTION_EDIT , 
@@ -249,7 +257,7 @@ class StepsWindow(BrowserWindow):
         lt = LevelTree(g)
         lt.setCanvas(canvas)
         lt.paint()
-        canvas.updateScrollRegion()
+        canvas.updateScrollRegion()        
         w.show()
     
 
@@ -460,7 +468,7 @@ class ProtocolsView(tk.Frame):
         self.protCfg = windows.protCfg
         self.icon = windows.icon
         self.settings = windows.getSettings()
-        self.showGraph = self.settings.getGraphView()
+        self.runsView = self.settings.getRunsView()
         
         self._loadSelection()        
         self._items = {}
@@ -533,10 +541,10 @@ class ProtocolsView(tk.Frame):
         
         self.createRunsGraph(runsFrame)
         
-        if self.showGraph:
-            treeWidget = self.runsGraphCanvas
-        else:
+        if self.runsView == VIEW_LIST:
             treeWidget = self.runsTree
+        else:
+            treeWidget = self.runsGraphCanvas
             
         treeWidget.grid(row=0, column=0, sticky='news')
         
@@ -689,18 +697,34 @@ class ProtocolsView(tk.Frame):
         for action in self.actionList:
             self.actionButtons[action] = addButton(action, action, self.runsToolbar)
             
-        if self.showGraph:
-            ActionIcons[ACTION_TREE] = RUNS_LIST
-        else:
-            ActionIcons[ACTION_TREE] = RUNS_TREE
+        ActionIcons[ACTION_TREE] = RUNS_TREE
             
         self.viewButtons = {}
         
-        for i, action in enumerate([ACTION_TREE, ACTION_REFRESH]):
-            btn = addButton(action, action, self.allToolbar)
-            btn.grid(row=0, column=i)
-            self.viewButtons[action] = btn
+        # Add combo for switch between views
+        viewFrame = tk.Frame(self.allToolbar)
+        viewFrame.grid(row=0, column=0)
+        self._createViewCombo(viewFrame)
         
+        # Add refresh Tree button
+        btn = addButton(ACTION_TREE, "  ", self.allToolbar)
+        btn.grid(row=0, column=1)
+        self.viewButtons[action] = btn       
+        
+        # Add refresh button
+        btn = addButton(ACTION_REFRESH, ACTION_REFRESH, self.allToolbar)
+        btn.grid(row=0, column=2)
+        self.viewButtons[action] = btn
+            
+    def _createViewCombo(self, parent):
+        """ Create the select-view combobox. """
+        label = tk.Label(parent, text='View:', bg='white')
+        label.grid(row=0, column=0)
+        self.switchCombo = ComboBox(parent, width=10, 
+                                    choices=['List', 'Tree', 'Tree - small'], 
+                                    values=[VIEW_LIST, VIEW_TREE, VIEW_TREE_SMALL],
+                         onChange=lambda e: self._runActionClicked(ACTION_SWITCH_VIEW))
+        self.switchCombo.grid(row=0, column=1)
             
     def _updateActionToolbar(self):
         """ Update which action buttons should be visible. """
@@ -792,7 +816,9 @@ class ProtocolsView(tk.Frame):
             self.runsTree.selection_add(treeId)
     
     def createRunsGraph(self, parent):
-        self.runsGraphCanvas = Canvas(parent, width=400, height=400)
+        self.runsGraphCanvas = Canvas(parent, width=400, height=400, 
+                                tooltipCallback=self._runItemTooltip,
+                                tooltipDelay=1000)
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
         self.runsGraphCanvas.onRightClickCallback = lambda e: self.provider.getObjectActions(e.node.run)
@@ -803,17 +829,11 @@ class ProtocolsView(tk.Frame):
         self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False):  
-        print "\n\nDEBUG: ============ UPDATING GRAPH....."    
         self.runsGraph = self.project.getRunsGraph(refresh=refresh)
-        
-        self.runsGraph.printDot()
-        
-        startDebugger()
         
         layout = LevelTreeLayout()
         self.runsGraphCanvas.clear()
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
-        
         
         #self.lt.setCanvas(self.runsGraphCanvas)
         #nodeList = self.settings.getNodes()
@@ -833,7 +853,10 @@ class ProtocolsView(tk.Frame):
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
-            nodeText = nodeText + '\n' + node.run.getStatusMessage()
+            if self.runsView == VIEW_TREE_SMALL:
+                nodeText = node.getName()
+            else:                
+                nodeText = nodeText + '\n' + node.run.getStatusMessage()
             color = STATUS_COLORS[status]
             nodeId = node.run.getObjId()
         else:
@@ -880,23 +903,27 @@ class ProtocolsView(tk.Frame):
         return item
         
     def switchRunsView(self):
-        self.showGraph = not self.showGraph
         
-        if self.showGraph:
-            ActionIcons[ACTION_TREE] = RUNS_LIST
-            show = self.runsGraphCanvas.frame
-            hide = self.runsTree
-            #self.updateRunsGraphSelection()
-        else:
-            ActionIcons[ACTION_TREE] = RUNS_TREE
+        viewValue = self.switchCombo.getValue()
+        
+        if viewValue == VIEW_LIST:
+            #ActionIcons[ACTION_TREE] = RUNS_TREE
             show = self.runsTree
             hide = self.runsGraphCanvas.frame
             self.updateRunsTreeSelection()
-            
-        self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
+        else:
+            #ActionIcons[ACTION_TREE] = RUNS_LIST
+            show = self.runsGraphCanvas.frame
+            hide = self.runsTree
+            #self.updateRunsGraph()
+            #self.updateRunsGraphSelection()
+        
+        #self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
-        self.settings.setGraphView(self.showGraph)
+        
+        self.runsView = viewValue
+        self.settings.setRunsView(viewValue)
     
     def _protocolItemClick(self, e=None):
         # Get the tree widget that originated the event
@@ -926,7 +953,9 @@ class ProtocolsView(tk.Frame):
                          
     def _runItemClick(self, item=None):
         # Get last selected item for tree or graph
-        if self.showGraph:
+        if self.runsView == VIEW_LIST:
+            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
+        else:
             prot = item.node.run
             if prot is None:  # in case it is the main "Project" node
                 return
@@ -935,8 +964,6 @@ class ProtocolsView(tk.Frame):
                 if node.run and node.run.getObjId() in self._selection:
                     node.item.setSelected(False)
             item.setSelected(True)
-        else:
-            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         
         self._selection.clear()
         self._selection.append(prot.getObjId())
@@ -948,7 +975,9 @@ class ProtocolsView(tk.Frame):
         
     def _runItemControlClick(self, item=None):
         # Get last selected item for tree or graph
-        if self.showGraph:
+        if self.runsView == VIEW_LIST:
+            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))        
+        else:
             prot = item.node.run
             protId = prot.getObjId()
             if protId in self._selection:
@@ -957,10 +986,29 @@ class ProtocolsView(tk.Frame):
             else:
                 item.setSelected(True)
                 self._selection.append(prot.getObjId())
-        else:
-            prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))        
         
         self._updateSelection()
+        
+    def _runItemTooltip(self, tw, item):
+        """ Create the contents of the tooltip to be displayed
+        for the given item.
+        Params:
+            tw: a tk.TopLevel instance (ToolTipWindow)
+            item: the selected item.
+        """
+        prot = item.node.run
+        tm = '*%s*\n' % prot.getRunName()
+        tm += 'State: %s\n' % prot.getStatusMessage()
+        tm += ' Time: %s\n' % prot.getElapsedTime() 
+        if not hasattr(tw, 'tooltipText'):
+            frame = tk.Frame(tw)
+            frame.grid(row=0, column=0)
+            tw.tooltipText = createMessageBody(frame, tm, None, textPad=0,
+                                               textBg=Color.LIGHT_GREY_COLOR_2)
+            tw.tooltipText.config(bd=1, relief=tk.RAISED)
+        else:
+            fillMessageText(tw.tooltipText, tm)
+            
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -1205,9 +1253,11 @@ class ProtocolsView(tk.Frame):
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
-            self.switchRunsView()
+            print "update the tree layout"
         elif action == ACTION_REFRESH:
             self.refreshRuns()
+        elif action == ACTION_SWITCH_VIEW:
+            self.switchRunsView()
     
 
 class RunBox(TextBox):

@@ -45,9 +45,9 @@ class Canvas(tk.Canvas, Scrollable):
     It will really contains a Frame, a Canvas and scrollbars"""
     _images = {}
     
-    def __init__(self, parent, **args):
+    def __init__(self, parent, tooltipCallback=None, tooltipDelay=1500, **kwargs):
         defaults = {'bg': 'white'}
-        defaults.update(args)
+        defaults.update(kwargs)
         Scrollable.__init__(self, parent, tk.Canvas, **defaults)
         
         self.lastItem = None # Track last item selected
@@ -70,7 +70,42 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Key>", self._unpostMenu)
         self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
+        
+        self._tooltipId = None
+        self._tooltipOn = False # True if the tooltip is displayed
+        self._tooltipCallback = tooltipCallback
+        self._tooltipDelay = tooltipDelay
+        
+        if tooltipCallback:
+            self.bind('<Motion>', self.onMotion)
+            self.bind('<Leave>', self.onLeave)
+            self._createTooltip() # This should set
+        
         self._menu = tk.Menu(self, tearoff=0)
+        
+    def _createTooltip(self):
+        """ Create a Tooltip window to display tooltips in 
+        the canvas.
+        """
+        tw = tk.Toplevel(self)
+        tw.withdraw() # hidden by default
+        tw.wm_overrideredirect(1) # Remove window decorations
+        
+        self._tooltip = tw
+        
+    def _showTooltip(self, x, y, item):
+        self._tooltipOn = True
+        tw = self._tooltip # short notation
+        self._tooltipCallback(tw, item)
+        tw.update_idletasks()
+        tw.wm_geometry("+%d+%d" % (x, y))
+        tw.deiconify()
+        
+    def _hideTooltip(self):
+        if self._tooltipOn:
+            self._tooltipOn = False
+            tw = self._tooltip # short notation
+            tw.withdraw()
         
     def getImage(self, img):
         return gui.getImage(img, self._images)
@@ -90,23 +125,28 @@ class Canvas(tk.Canvas, Scrollable):
             self.lastItem.setSelected(False)
         self.lastItem = item
         item.setSelected(True)
-                    
-    def _handleMouseEvent(self, event, callback):
-        xc, yc = self.getCoordinates(event)
+               
+    def _findItem(self, xc, yc):
+        """ Find if there is any item in the canvas
+        in the mouse event coordinates.
+        Return None if not Found
+        """
         items = self.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
-        if self.lastItem:
-            self.lastItem = None
-        self.callbackResults = None
-        self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
-                self.lastItem = self.items[i]
-                #self.lastItem.setSelected(True)
-                if callback:
-                    self.callbackResults = callback(self.lastItem)
-                self.lastPos = (xc, yc)
-                break
-        
+                return self.items[i]
+        return None
+             
+    def _handleMouseEvent(self, event, callback):
+        xc, yc = self.getCoordinates(event)
+        self.lastItem = self._findItem(xc, yc)
+        self.callbackResults = None
+        self.lastPos = (0, 0)
+        if self.lastItem is not None:
+            if callback:
+                self.callbackResults = callback(self.lastItem)
+            self.lastPos = (xc, yc)
+            
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
@@ -150,6 +190,22 @@ class Canvas(tk.Canvas, Scrollable):
             xc, yc = self.getCoordinates(event)
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
             self.lastPos = (xc, yc)  
+            
+    def onMotion(self, event):
+        self.onLeave(event) # Hide tooltip and cancel schedule
+            
+        xc, yc = self.getCoordinates(event)
+        item = self._findItem(xc, yc)
+        if item is not None:
+            self._tooltipId = self.after(self._tooltipDelay, 
+                                         lambda: self._showTooltip(event.x_root,
+                                                                   event.y_root,
+                                                                   item))  
+        
+    def onLeave(self, event):
+        if self._tooltipId:
+            self.after_cancel(self._tooltipId)
+            self._hideTooltip()
             
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
         tb = TextBox(self, text, x, y, bgColor, textColor)
