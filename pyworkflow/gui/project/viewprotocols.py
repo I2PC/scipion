@@ -720,10 +720,12 @@ class ProtocolsView(tk.Frame):
         """ Create the select-view combobox. """
         label = tk.Label(parent, text='View:', bg='white')
         label.grid(row=0, column=0)
+        viewChoices = ['List', 'Tree', 'Tree - small']
         self.switchCombo = ComboBox(parent, width=10, 
-                                    choices=['List', 'Tree', 'Tree - small'], 
+                                    choices=viewChoices, 
                                     values=[VIEW_LIST, VIEW_TREE, VIEW_TREE_SMALL],
-                         onChange=lambda e: self._runActionClicked(ACTION_SWITCH_VIEW))
+                                    initial=viewChoices[self.runsView],
+                                    onChange=lambda e: self._runActionClicked(ACTION_SWITCH_VIEW))
         self.switchCombo.grid(row=0, column=1)
             
     def _updateActionToolbar(self):
@@ -756,7 +758,7 @@ class ProtocolsView(tk.Frame):
         comboFrame = tk.Frame(parent, bg=bgColor)
         tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
         choices = [pm.text.get() for pm in self.settings.protMenuList]
-        initialChoice = choices[self.settings.protMenuList.getIndex()]
+        initialChoice = self.settings.protMenuList.getIndex()
         combo = ComboBox(comboFrame, choices=choices, initial=initialChoice)
         combo.setChangeCallback(self._onSelectProtocols)
         combo.grid(row=0, column=1)
@@ -826,26 +828,22 @@ class ProtocolsView(tk.Frame):
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
+        self.settings.getNodes().updateDict()
+        
         self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False):  
         self.runsGraph = self.project.getRunsGraph(refresh=refresh)
-        
-        layout = LevelTreeLayout()
         self.runsGraphCanvas.clear()
+        
+        # Check if there are positions stored
+        if len(self.settings.getNodes()) == 0:
+            layout = LevelTreeLayout() # create layout to arrange nodes as a level tree
+        else:
+            layout = None # use the stored node positions
+            
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
-        #self.lt.setCanvas(self.runsGraphCanvas)
-        #nodeList = self.settings.getNodes()
-        #nodeList.updateDict()
-
-        #self.lt.paint(self.createRunItem, usePositions=False)
-        #if nodeList.getNode(0) is None:
-        #else:
-        #    self.lt.paint(self.createRunItem, usePositions=True)
-        #self.updateRunsGraphSelection()
-        #self.runsGraphCanvas.updateScrollRegion()
-
     def createRunItem(self, canvas, node):
         nodeText = node.label
         textColor = 'black'
@@ -864,34 +862,13 @@ class ProtocolsView(tk.Frame):
         
         nodeInfo = self.settings.getNodeById(nodeId)
         
-        #nx = 100
-        #ny = y
+        if nodeInfo is None:
+            node.x = 0
+            node.y = 0
+            nodeInfo = self.settings.addNode(nodeId)
+        else:
+            node.x, node.y = nodeInfo.getPosition()
         
-#         if nodeInfo is None:
-#             #TODO: This logic should not be in other part
-#             # for example in the place where is in care of the positioning 
-#             # of the nodes. Now it is a bit mixed between here and LevelTree
-#             parent = node.parent # should be set in LevelTree._paintNodeWithPosition
-#             if parent is None:
-#                 nx = 100
-#                 ny = y
-#             else:                
-#                 # Search for the node sibling more to the left
-#                 # If only child, take x from parent and y to next level
-#                 nx = parent.item.x
-#                 ny = parent.item.y + self.lt.DY
-#                 
-#                 for child in parent.getChilds():
-#                     if child.getName() != node.getName():
-#                         if child.item.x > nx:
-#                             nx = child.item.x + child.width + self.lt.DX
-#                             ny = child.item.y  
-#             nodeInfo = self.settings.addNode(nodeId, x=nx, y=ny)
-#         else:
-#             nx, ny = nodeInfo.getPosition() 
-        
-        node.x = 0
-        node.y = 0
         item = RunBox(nodeInfo, self.runsGraphCanvas,
                       nodeText, node.x, node.y, bgColor=color, textColor=textColor)
         
@@ -915,7 +892,7 @@ class ProtocolsView(tk.Frame):
             #ActionIcons[ACTION_TREE] = RUNS_LIST
             show = self.runsGraphCanvas.frame
             hide = self.runsTree
-            #self.updateRunsGraph()
+            self.updateRunsGraph()
             #self.updateRunsGraphSelection()
         
         #self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
@@ -1253,7 +1230,8 @@ class ProtocolsView(tk.Frame):
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
-            print "update the tree layout"
+            self.settings.getNodes().clear() # clear nodes position to force re-organization
+            self.updateRunsGraph()
         elif action == ACTION_REFRESH:
             self.refreshRuns()
         elif action == ACTION_SWITCH_VIEW:
@@ -1270,5 +1248,10 @@ class RunBox(TextBox):
         canvas.addItem(self)
         
     def move(self, dx, dy):
-        TextBox.move(self, dx,dy)
-        #self.nodeInfo.setPosition(self.x, self.y)
+        TextBox.move(self, dx, dy)
+        self.nodeInfo.setPosition(self.x, self.y)
+
+    def moveTo(self, x, y):
+        TextBox.moveTo(self, x, y)
+        self.nodeInfo.setPosition(self.x, self.y)    
+        

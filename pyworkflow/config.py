@@ -87,7 +87,7 @@ class ProjectSettings(OrderedObject):
         self.protMenuList = SettingList() # Store different protocol configurations
         self.nodeList = NodeConfigList() # Store graph nodes positions and other info
         self.mapper = None # This should be set when load, or write
-        self.graphView = Boolean(False)
+        self.runsView = Integer(1) # by default the graph view
         self.readOnly = Boolean(False)
         self.runSelection = CsvList(int) # Store selected runs
         
@@ -119,11 +119,11 @@ class ProjectSettings(OrderedObject):
                 return host
         return None
     
-    def getGraphView(self):
-        return self.graphView.get()
+    def getRunsView(self):
+        return self.runsView.get()
     
-    def setGraphView(self, value):
-        self.graphView.set(value)
+    def setRunsView(self, value):
+        self.runsView.set(value)
         
     def getReadOnly(self):
         return self.readOnly.get()
@@ -411,3 +411,9 @@ class NodeConfigList(List):
         self._nodesDict.clear()
         for node in self:
             self._nodesDict[node.getId()] = node
+            
+    def clear(self):
+        List.clear(self)
+        self._nodesDict = {}
+        
+        
