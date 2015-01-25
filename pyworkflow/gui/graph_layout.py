@@ -81,7 +81,6 @@ class LevelTreeLayout(GraphLayout):
             # Calculate the y-position depending on the level
             # and the deltha-Y (DY)
             node.y = level * self.DY
-            #print "DEBUG: setLayoutLevel:   updating level to: ", level
             layout['level'] = level
             layout['parent'] = parent
             half = node.width / 2
@@ -89,9 +88,14 @@ class LevelTreeLayout(GraphLayout):
             layout['hLimits'] = [[-half, half]]
             layout['offset'] = 0
     
-            for child in node.getChilds():
-                self._setLayoutLevel(child, level+1, node)
+            if self.__isNodeExpanded(node):
+                for child in node.getChilds():
+                    self._setLayoutLevel(child, level+1, node)
     
+    def __isNodeExpanded(self, node):
+        """ Check if the status of the node is expanded or collapsed. """
+        return getattr(node, 'expanded', True)
+        
     def __setNodeOffset(self, node, offset):
         node._layout['offset'] = offset
         
@@ -102,7 +106,10 @@ class LevelTreeLayout(GraphLayout):
         """ Return the node's childs that have been 
         visited by this node first (its 'parent')
         """
-        return [c for c in node.getChilds() if c._layout['parent'] is node]
+        if self.__isNodeExpanded(node):
+            return [c for c in node.getChilds() if c._layout['parent'] is node]
+        else:
+            return [] # treat collapsed nodes as if they have no childs
         
     def _computeNodeOffsets(self, node, level):
         """ Position a parent node and its childs.
@@ -112,13 +119,10 @@ class LevelTreeLayout(GraphLayout):
         if level > self.maxLevel:
             return
         
-        #print "DEBUG: _computeNodeOffsets: node", node.getName()
-        
         childs = self.__getNodeChilds(node)
         n = len(childs)
 
         if n > 0:
-            #print "DEBUG: _computeNodeOffsets: childs: ", n
             for c in childs:
                 self._computeNodeOffsets(c, level + 1)
                 
@@ -190,16 +194,10 @@ class LevelTreeLayout(GraphLayout):
         if node._layout['level'] == self.maxLevel:
             return 
         
-        #print "DEBUG: _applyNodeOffsets: node", node.getName()
-        
         layout = node._layout
-        #print "DEBUG: _applyNodeOffsets:     bofore node.x: ", node.x
         node.x = x + layout['offset']
         
         childs = self.__getNodeChilds(node)
-        
-        #print "DEBUG: _applyNodeOffsets:     after node.x: ", node.x
-        #print "DEBUG: _applyNodeOffsets:     childs: ", len(childs)
         
         for child in childs:
             self._applyNodeOffsets(child, node.x)

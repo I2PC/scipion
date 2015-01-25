@@ -73,6 +73,8 @@ ACTION_CONTINUE = Message.LABEL_CONTINUE
 ACTION_RESULTS = Message.LABEL_ANALYZE
 ACTION_EXPORT = Message.LABEL_EXPORT
 ACTION_SWITCH_VIEW = 'Switch_View'
+ACTION_COLLAPSE = 'Collapse'
+ACTION_EXPAND = 'Expand'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -94,7 +96,9 @@ ActionIcons = {
     ACTION_STOP: Icon.ACTION_STOP,
     ACTION_CONTINUE: Icon.ACTION_CONTINUE,
     ACTION_RESULTS: Icon.ACTION_RESULTS,
-    ACTION_EXPORT: Icon.ACTION_EXPORT
+    ACTION_EXPORT: Icon.ACTION_EXPORT,
+    ACTION_COLLAPSE: 'fa-minus-square.png',
+    ACTION_EXPAND: 'fa-plus-square.png'
                }
 
 
@@ -153,6 +157,8 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
         if n:
             prot = self.project.getProtocol(self._selection[0]) 
             status = prot.getStatus()
+            nodeInfo = self.project.getSettings().getNodeById(prot.getObjId())
+            expanded = nodeInfo.isExpanded()
         else:
             status = None
         
@@ -163,7 +169,9 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
                    (ACTION_BROWSE, single and status != STATUS_SAVED),
                    (ACTION_DB, single),
                    (ACTION_STOP, status == STATUS_RUNNING and single),
-                   (ACTION_EXPORT, not single)
+                   (ACTION_EXPORT, not single),
+                   (ACTION_COLLAPSE, single and status and expanded),
+                   (ACTION_EXPAND, single and status and not expanded)
                    #(ACTION_CONTINUE, status == STATUS_INTERACTIVE and single)
                    ]
         
@@ -173,7 +181,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
             if a:
                 text = a
                 action = a
-                a = (text, lambda: self.actionFunc(action), ActionIcons[action])
+                a = (text, lambda: self.actionFunc(action), ActionIcons.get(action, None))
             return a
             
         actions = [addAction(a) for a, cond in self.getActionsFromSelection() if cond]
@@ -685,11 +693,11 @@ class ProtocolsView(tk.Frame):
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
-                           ACTION_EXPORT]
+                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
-            btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons[action]), 
+            btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons.get(action, None)), 
                        compound=tk.LEFT, cursor='hand2', bg='white')
             btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
             return btn
@@ -834,12 +842,12 @@ class ProtocolsView(tk.Frame):
         
         self.updateRunsGraph()        
 
-    def updateRunsGraph(self, refresh=False):  
+    def updateRunsGraph(self, refresh=False, reorganize=False):  
         self.runsGraph = self.project.getRunsGraph(refresh=refresh)
         self.runsGraphCanvas.clear()
         
         # Check if there are positions stored
-        if len(self.settings.getNodes()) == 0:
+        if reorganize or len(self.settings.getNodes()) == 0:
             layout = LevelTreeLayout() # create layout to arrange nodes as a level tree
         else:
             layout = None # use the stored node positions
@@ -850,32 +858,34 @@ class ProtocolsView(tk.Frame):
         nodeText = node.label
         textColor = 'black'
         color = '#ADD8E6' #Lightblue
-            
-        if node.run:
-            status = node.run.status.get(STATUS_FAILED)
-            if self.runsView == VIEW_TREE_SMALL:
-                nodeText = node.getName()
-            else:                
-                nodeText = nodeText + '\n' + node.run.getStatusMessage()
-            color = STATUS_COLORS[status]
-            nodeId = node.run.getObjId()
-        else:
-            nodeId = 0 # special node Project, that does not have associated run
         
+        nodeId = node.run.getObjId() if node.run else 0
+
         nodeInfo = self.settings.getNodeById(nodeId)
         
         if nodeInfo is None:
             node.x = 0
             node.y = 0
+            node.expanded = True
             nodeInfo = self.settings.addNode(nodeId)
         else:
             node.x, node.y = nodeInfo.getPosition()
+            node.expanded = nodeInfo.isExpanded()
+            
+        if node.run:
+            status = node.run.status.get(STATUS_FAILED)
+            if node.expanded:
+                expandedStr = ''
+            else:
+                expandedStr = ' (+)'
+            if self.runsView == VIEW_TREE_SMALL:
+                nodeText = node.getName() + expandedStr
+            else:                
+                nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
+            color = STATUS_COLORS[status]
         
         item = RunBox(nodeInfo, self.runsGraphCanvas,
                       nodeText, node.x, node.y, bgColor=color, textColor=textColor)
-        
-        node.item = item
-        item.node = node
         
         if nodeId in self._selection:
             item.setSelected(True)
@@ -885,20 +895,16 @@ class ProtocolsView(tk.Frame):
         viewValue = self.switchCombo.getValue()
         
         if viewValue == VIEW_LIST:
-            #ActionIcons[ACTION_TREE] = RUNS_TREE
             show = self.runsTree
             hide = self.runsGraphCanvas.frame
             self.updateRunsTreeSelection()
             self.viewButtons[ACTION_TREE].grid_remove()
         else:
-            #ActionIcons[ACTION_TREE] = RUNS_LIST
             show = self.runsGraphCanvas.frame
             hide = self.runsTree
             self.updateRunsGraph()
             self.viewButtons[ACTION_TREE].grid(row=0, column=1)
-            #self.updateRunsGraphSelection()
         
-        #self.viewButtons[ACTION_TREE].config(image=self.getImage(ActionIcons[ACTION_TREE]))
         hide.grid_remove()
         show.grid(row=0, column=0, sticky='news')
         
@@ -1225,6 +1231,16 @@ class ProtocolsView(tk.Frame):
                     self._analyzeResults(prot)
                 elif action == ACTION_EXPORT: 
                     self._exportProtocols()
+                elif action == ACTION_COLLAPSE:
+                    nodeInfo = self.settings.getNodeById(prot.getObjId())
+                    nodeInfo.setExpanded(False)
+                    self._updateActionToolbar()
+                    self.updateRunsGraph(True, reorganize=True)
+                elif action == ACTION_EXPAND:
+                    nodeInfo = self.settings.getNodeById(prot.getObjId())
+                    nodeInfo.setExpanded(True)
+                    self._updateActionToolbar()
+                    self.updateRunsGraph(True, reorganize=True)
                         
             except Exception, ex:
                 self.windows.showError(str(ex))
@@ -1233,8 +1249,7 @@ class ProtocolsView(tk.Frame):
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
-            self.settings.getNodes().clear() # clear nodes position to force re-organization
-            self.updateRunsGraph()
+            self.updateRunsGraph(reorganize=True)
         elif action == ACTION_REFRESH:
             self.refreshRuns()
         elif action == ACTION_SWITCH_VIEW:

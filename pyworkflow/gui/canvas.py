@@ -252,37 +252,45 @@ class Canvas(tk.Canvas, Scrollable):
         to create the boxes for each graph node.
         """
         
-        itemsNodeDict = {}
+        self.drawNode = drawNode
         
-        for node in graph.getNodes():
-            item = drawNode(self, node)
-            node.width, node.height = item.getDimensions()
-            self.addItem(item)
-            itemsNodeDict[node.getName()] = item
-            
+        self._drawNodes(graph.getRoot(), {})
+        
         if layout is not None:
             layout.draw(graph)
             
         # Update node positions
-        self._updatePositions(graph.getRoot(), itemsNodeDict, {})
+        self._updatePositions(graph.getRoot(), {})
         self.updateScrollRegion()
         
-    def _updatePositions(self, node, itemsNodeDict, 
-                         visitedDict={}):
-        """ Update position of nodes and create the edges. """
+    def _drawNodes(self, node, visitedDict={}):
         nodeName = node.getName()
-        
-        #print "DEBUG: Canvas._updatePositions, visitedDict", visitedDict
         
         if nodeName not in visitedDict:
             visitedDict[nodeName] = True
-            item = itemsNodeDict[nodeName]
-            #print "DEBUG: Canvas._updatePositions, moveTo", (node.x, node.y)
+            item = self.drawNode(self, node)
+            node.width, node.height = item.getDimensions()
+            node.item = item
+            item.node = node
+            self.addItem(item)
+            
+            if getattr(node, 'expanded', True):
+                for child in node.getChilds():
+                    self._drawNodes(child, visitedDict)
+        
+    def _updatePositions(self, node, visitedDict={}):
+        """ Update position of nodes and create the edges. """
+        nodeName = node.getName()
+        
+        if nodeName not in visitedDict:
+            visitedDict[nodeName] = True
+            item = node.item
             item.moveTo(node.x, node.y)
             
-            for child in node.getChilds():
-                self.createEdge(item, itemsNodeDict[child.getName()])
-                self._updatePositions(child, itemsNodeDict, visitedDict)
+            if getattr(node, 'expanded', True):
+                for child in node.getChilds():
+                    self.createEdge(item, child.item)
+                    self._updatePositions(child, visitedDict)
             
         
         
