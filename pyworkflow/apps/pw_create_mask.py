@@ -42,7 +42,5 @@ if __name__ == '__main__':
 
     project = Manager().loadProject(projectId)
     inputObject = project.mapper.selectById(int(inputId))
-
-    prot = project.newProtocol(ProtImportMask, maskPath=file, samplingRate=inputObject.getSamplingRate())
-    prot.setObjLabel('register mask')
-    project.launchProtocol(prot)
+    prot = project.newProtocol(ProtCreateMask, maskFile=file, inputImage=inputObject)
+    project.launchProtocol(prot, wait=True)

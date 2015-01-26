@@ -35,6 +35,7 @@ from pyworkflow.protocol.params import PointerParam, FileParam, StringParam, Int
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair
+from pyworkflow.em.data import Mask
 
 
 
@@ -343,4 +344,24 @@ class ProtUserSubSet(BatchProtocol):
         outputDict = {'output' + className.replace('SetOf', ''): output}
         self._defineOutputs(**outputDict) 
         
+
+class ProtCreateMask(BatchProtocol):
+     _label='create mask'
+
+     def _defineParams(self, form):
+        form.addHidden('inputImage', PointerParam, pointerClass='Image')
+        form.addHidden('maskFile', StringParam)
+
+     def _insertAllSteps(self):
+        self._insertFunctionStep('createMaskStep')
+
+     def createMaskStep(self):
+        inputImage = self.inputImage.get()
+        maskFile=self.maskFile.get()
+
+        mask = Mask()
+        mask.setFileName(maskFile)
+        mask.setSamplingRate(inputImage.getSamplingRate())
+        self._defineOutputs(outputMask=mask)
+        self._defineSourceRelation(inputImage, self.outputMask)
 
