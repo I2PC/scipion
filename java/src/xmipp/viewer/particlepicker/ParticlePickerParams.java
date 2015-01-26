@@ -77,7 +77,6 @@ public class ParticlePickerParams {
         inputfile = cmdLine.getOptionValue(INPUTOPT);
         outputdir = cmdLine.getOptionValue(OUTPUTOPT);
         String str = cmdLine.getOptionValue(MODEOPT);
-        System.out.println(str);
         mode = Mode.getMode(str);
          if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));

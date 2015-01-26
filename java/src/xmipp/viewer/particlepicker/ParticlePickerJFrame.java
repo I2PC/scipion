@@ -848,17 +848,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 sizetf.addActionListener(new ActionListener()
 		{
 
-                    
-
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         // event from sizes
-                        
                             readSizeFromTextField();
-                        
                     }
-
-                   
 		});
 
 		sizesl.addChangeListener(new ChangeListener()
@@ -890,7 +884,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         protected void readSizeFromTextField()
         {
             
-                    int size = ((Number) sizetf.getValue()).intValue();
+                int size = ((Number) sizetf.getValue()).intValue();
                 if (size == getParticlePicker().getSize())
                     return;
 

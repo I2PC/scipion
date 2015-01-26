@@ -84,7 +84,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
             sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
-            msgfields.put(runNameKey, "ProtUserSubset");
+            msgfields.put(runNameKey, "create subset");
             other = parameters.other;
             initComponents();
         } catch (Exception ex) {

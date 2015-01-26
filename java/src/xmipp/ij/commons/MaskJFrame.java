@@ -106,7 +106,7 @@ public class MaskJFrame extends JFrame{
     
     protected void registerMask() {
         HashMap<String, String> msgfields = new HashMap<String, String>();
-        msgfields.put("Run name:", "Register Mask");
+        msgfields.put("Run name:", "create mask");
         ScipionMessageDialog dlg = new ScipionMessageDialog(this, "Question", "Are you sure you want to register mask?", msgfields);
                         int create = dlg.action;
         boolean register = (create == ScipionMessageDialog.OK_OPTION);
