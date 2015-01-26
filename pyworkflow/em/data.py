@@ -1469,10 +1469,28 @@ class SetOfMovies(SetOfMicrographs):
         return self._gainFile.get()
     
     
+class MovieParticle(Particle):
+    def __init__(self, **kwargs):
+        Particle.__init__(self, **kwargs)
+        self._particleId = Integer()
+        self._frameId = Integer()
+    
+    def getParticleId(self):
+        return self._particleId.get()
+    
+    def setParticleId(self, partId):
+        self._particleId.set(partId)
+        
+    def getFrameId(self):
+        return self._frameId.get()
+    
+    def setFrameId(self, partId):
+        self._frameId.set(partId)
+
+
 class SetOfMovieParticles(SetOfParticles):
     """ This is just to distinguish the special case
     when the particles have been extracted from a set of movies.
     """
-    pass
-    
+    ITEM_TYPE = MovieParticle
     
