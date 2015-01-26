@@ -35,6 +35,48 @@ class GraphLayout(object):
         pass
 
 
+class BasicLayout(GraphLayout):
+    """ This layout will keep node position as much as possible.
+    It will try to allocate the nodes with x=0 and y=0.
+    """
+    
+    def __init__(self):
+        GraphLayout.__init__(self)
+        self.DY = 65
+        self.DX = 15
+        
+    def draw(self, graph, **kwargs):
+        """ Organize nodes of the graph in the plane.
+        Nodes should have: x, y, width and height attributes
+        x and y will be modified.
+        """
+        for node in graph.getNodes():
+            if node.x == 0 or node.y == 0:
+                self._drawNode(node)
+                
+    def _drawNode(self, node):
+        """ Allocate node with x=0 and y=0. """
+        parents = node.getParents()
+        maxParent = parents[0]
+        
+        for p in parents[1:]:
+            if p.y > maxParent.y:
+                maxParent = p
+                
+        siblings = maxParent.getChilds()
+        
+        if len(siblings) == 1:
+            node.x = maxParent.x
+            node.y = maxParent.y + self.DY
+        else:
+            rightSibling = siblings[0]
+            for s in siblings:
+                if s.x > rightSibling.x:
+                    rightSibling = s
+            node.x = rightSibling.x + rightSibling.width/2 + self.DX + node.width/2
+            node.y = rightSibling.y
+        
+
 class LevelTreeLayout(GraphLayout):
     """ Organize the nodes of the graph by levels.
     It will recursively organize childs and then
@@ -45,7 +87,7 @@ class LevelTreeLayout(GraphLayout):
         self.DY = 65
         self.DX = 15
         self.maxLevel = 9999
-        
+                        
     def draw(self, graph, **kwargs):
         """ Organize nodes of the graph in the plane.
         Nodes should have: x, y, width and height attributes
@@ -63,7 +105,6 @@ class LevelTreeLayout(GraphLayout):
         
         self._applyNodeOffsets(rootNode, -m + self.DY)
         
-    
     def _setLayoutLevel(self, node, level, parent):
         """ Iterate over all nodes and set _layout dict.
         Also set the node level, which is defined

@@ -35,7 +35,7 @@ import ttk
 
 
 from pyworkflow.utils.utils import prettyDict, prettySize, startDebugger
-from pyworkflow.gui.graph_layout import LevelTreeLayout
+from pyworkflow.gui.graph_layout import LevelTreeLayout, BasicLayout
 from pyworkflow.utils.utils import envVarOn
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
@@ -48,12 +48,11 @@ import pyworkflow.gui as gui
 from pyworkflow.gui.browser import ObjectBrowser, FileBrowserWindow, BrowserWindow, TreeProvider, BoundTree
 from pyworkflow.gui.tree import Tree, ObjectTreeProvider, ProjectRunsTreeProvider
 from pyworkflow.gui.form import FormWindow
-from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, showInfo,\
-    createMessageBody, fillMessageText
+from pyworkflow.gui.dialog import askYesNo, EditObjectDialog, createMessageBody, fillMessageText
 from pyworkflow.gui.text import TaggedText, TextFileViewer
 from pyworkflow.gui import Canvas, TextBox
 from pyworkflow.gui.graph import LevelTree
-from pyworkflow.gui.widgets import ComboBox, HotButton, IconButton
+from pyworkflow.gui.widgets import ComboBox, IconButton
 from pyworkflow.gui.tooltip import ToolTip
 
 from constants import STATUS_COLORS
@@ -158,7 +157,7 @@ class RunsTreeProvider(ProjectRunsTreeProvider):
             prot = self.project.getProtocol(self._selection[0]) 
             status = prot.getStatus()
             nodeInfo = self.project.getSettings().getNodeById(prot.getObjId())
-            expanded = nodeInfo.isExpanded()
+            expanded = nodeInfo.isExpanded() if nodeInfo else True
         else:
             status = None
         
@@ -850,7 +849,13 @@ class ProtocolsView(tk.Frame):
         if reorganize or len(self.settings.getNodes()) == 0:
             layout = LevelTreeLayout() # create layout to arrange nodes as a level tree
         else:
-            layout = None # use the stored node positions
+            # Create empty nodeInfo for new runs
+            for node in self.runsGraph.getNodes():
+                nodeId = node.run.getObjId() if node.run else 0
+                nodeInfo = self.settings.getNodeById(nodeId)
+                if nodeInfo is None:
+                    self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
+            layout = BasicLayout()
             
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
@@ -862,15 +867,8 @@ class ProtocolsView(tk.Frame):
         nodeId = node.run.getObjId() if node.run else 0
 
         nodeInfo = self.settings.getNodeById(nodeId)
-        
-        if nodeInfo is None:
-            node.x = 0
-            node.y = 0
-            node.expanded = True
-            nodeInfo = self.settings.addNode(nodeId)
-        else:
-            node.x, node.y = nodeInfo.getPosition()
-            node.expanded = nodeInfo.isExpanded()
+        node.x, node.y = nodeInfo.getPosition()
+        node.expanded = nodeInfo.isExpanded()
             
         if node.run:
             status = node.run.status.get(STATUS_FAILED)
@@ -983,17 +981,19 @@ class ProtocolsView(tk.Frame):
             item: the selected item.
         """
         prot = item.node.run
-        tm = '*%s*\n' % prot.getRunName()
-        tm += 'State: %s\n' % prot.getStatusMessage()
-        tm += ' Time: %s\n' % prot.getElapsedTime() 
-        if not hasattr(tw, 'tooltipText'):
-            frame = tk.Frame(tw)
-            frame.grid(row=0, column=0)
-            tw.tooltipText = createMessageBody(frame, tm, None, textPad=0,
-                                               textBg=Color.LIGHT_GREY_COLOR_2)
-            tw.tooltipText.config(bd=1, relief=tk.RAISED)
-        else:
-            fillMessageText(tw.tooltipText, tm)
+        
+        if prot:
+            tm = '*%s*\n' % prot.getRunName()
+            tm += 'State: %s\n' % prot.getStatusMessage()
+            tm += ' Time: %s\n' % prot.getElapsedTime() 
+            if not hasattr(tw, 'tooltipText'):
+                frame = tk.Frame(tw)
+                frame.grid(row=0, column=0)
+                tw.tooltipText = createMessageBody(frame, tm, None, textPad=0,
+                                                   textBg=Color.LIGHT_GREY_COLOR_2)
+                tw.tooltipText.config(bd=1, relief=tk.RAISED)
+            else:
+                fillMessageText(tw.tooltipText, tm)
             
         
     def _openProtocolForm(self, prot):
@@ -1232,15 +1232,15 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_EXPORT: 
                     self._exportProtocols()
                 elif action == ACTION_COLLAPSE:
+                    self.updateRunsGraph(True, reorganize=True)
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(False)
                     self._updateActionToolbar()
-                    self.updateRunsGraph(True, reorganize=True)
                 elif action == ACTION_EXPAND:
+                    self.updateRunsGraph(True, reorganize=True)
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(True)
                     self._updateActionToolbar()
-                    self.updateRunsGraph(True, reorganize=True)
                         
             except Exception, ex:
                 self.windows.showError(str(ex))
@@ -1249,7 +1249,7 @@ class ProtocolsView(tk.Frame):
  
         # Following actions do not need a select run
         if action == ACTION_TREE:
-            self.updateRunsGraph(reorganize=True)
+            self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
             self.refreshRuns()
         elif action == ACTION_SWITCH_VIEW:
