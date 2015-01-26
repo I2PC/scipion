@@ -92,7 +92,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             initComponents();
             setChanged(false);
         } catch (IllegalArgumentException ex) {
-            close();
+            //close();
             throw ex;
         }
     }

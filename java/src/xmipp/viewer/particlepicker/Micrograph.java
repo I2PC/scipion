@@ -14,7 +14,6 @@ import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippMessage;
-import xmipp.viewer.particlepicker.training.Main;
 
 public abstract class Micrograph {
 
@@ -58,7 +57,8 @@ public abstract class Micrograph {
                     path = Filename.removePrefix(file);
 		 if (!new File(path).exists()) 
                 {
-                     file = Filename.findImagePath(name, Main.selfile, true);
+                     
+                     file = Filename.findImagePath(name, ParticlePicker.getPicker().selfile, true);
                      if(file == null)
                         throw new IllegalArgumentException(XmippMessage.getNoSuchFieldValueMsg("file", file));
                 }

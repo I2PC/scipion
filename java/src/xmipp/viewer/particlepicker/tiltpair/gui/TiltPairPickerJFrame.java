@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import xmipp.ij.commons.XmippApplication;
 
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
@@ -362,6 +363,22 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 	@Override
 	public ParticlesDialog initParticlesJDialog() {
 		return new TiltPairParticlesDialog(this);
+	}
+        
+        public void close()
+	{
+		setVisible(false);
+		dispose();
+		if (getCanvas() != null)
+                {
+			getCanvas().getIw().close();
+                        if(getTiltedCanvas() != null)
+                            getTiltedCanvas().getIw().close();
+                }
+
+		
+		XmippApplication.removeInstance(false);
+
 	}
 
 }// class TiltPairPickerJFrame

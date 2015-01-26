@@ -5,6 +5,8 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.plugin.frame.RoiManager;
 import java.awt.Label;
 import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
@@ -17,6 +19,7 @@ import javax.swing.SwingUtilities;
 import org.junit.experimental.theories.ParameterSignature;
 import xmipp.ij.commons.XmippMenuBar.IJRequirement;
 import xmipp.utils.Params;
+import xmipp.utils.XmippWindowUtil;
 
 public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 {
@@ -75,7 +78,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                     }
                 });
                 menu.advancedmn.add(createMaskmi);
-                if(params.isMask())
+                if(params!= null && params.isMask())
                     loadMaskFrame();
             }
             pixelslb = new Label("                                          ");
@@ -144,6 +147,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
 	public void showPixels(int x, int y, int[] pixels)
 	{
+                if(pixelslb == null)//avoid error running showPixels before initialization
+                    return;
                 String text;
 		String value = "";
 		switch (imp.getType())

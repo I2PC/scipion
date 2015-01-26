@@ -16,6 +16,7 @@ import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;
@@ -23,6 +24,7 @@ import xmipp.viewer.JMetaDataIO;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.training.AutopickRunnable;
 import xmipp.viewer.particlepicker.training.CorrectAndAutopickRunnable;
 import xmipp.viewer.particlepicker.training.TrainRunnable;
@@ -63,16 +65,16 @@ public class SupervisedParticlePicker extends ParticlePicker
 
 	// private String reviewfile;
 
-	public SupervisedParticlePicker(String selfile, String outputdir, Mode mode)
+	public SupervisedParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params)
 	{
-		this(null, selfile, outputdir, mode);
+		this(null, selfile, outputdir, mode, params);
 
 	}
 
-	public SupervisedParticlePicker(String block, String selfile, String outputdir, Mode mode)
+	public SupervisedParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params)
 	{
 
-		super(block, selfile, outputdir, mode);
+		super(block, selfile, outputdir, mode, params);
 		try
 		{
 			templatesfile = getOutputPath("templates.stk");
@@ -102,9 +104,9 @@ public class SupervisedParticlePicker extends ParticlePicker
 	}
 
 	
-	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore)
+	public SupervisedParticlePicker(String selfile, String outputdir, Integer threads, boolean fastmode, boolean incore, ParticlePickerParams params)
 	{
-		this(selfile, outputdir, Mode.Manual);
+		this(selfile, outputdir, Mode.Manual, params);
 
 		this.threads = threads;
 		this.fastmode = fastmode;

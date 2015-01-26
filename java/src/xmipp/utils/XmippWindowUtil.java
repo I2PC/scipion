@@ -27,6 +27,8 @@ package xmipp.utils;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -65,7 +67,9 @@ public class XmippWindowUtil
 
 	public static void setLocation(double positionx, double positiony, Container w)
 	{
-		setLocation(positionx, positiony, w, w.getToolkit().getScreenSize(), new Point(0, 0));
+            GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+            Dimension d = new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
+		setLocation(positionx, positiony, w, d, new Point(0, 0));
 	}
 
 	public static void setLocation(float positionx, float positiony, Container w, Container parent)

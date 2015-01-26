@@ -18,6 +18,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -28,6 +29,8 @@ import javax.swing.JToggleButton;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.ScipionParams;
+import xmipp.viewer.scipion.ScipionGalleryJFrame;
+import xmipp.viewer.scipion.ScipionMessageDialog;
 
 /**
  *
@@ -102,19 +105,25 @@ public class MaskJFrame extends JFrame{
     }
     
     protected void registerMask() {
-        try {
-        String path = "mask.spi";
-        ImageGeneric ig = XmippImageConverter.convertToImageGeneric(mask);
-        ig.write(path);
-        ScipionParams params = (ScipionParams)iw.getParams();
-        String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path};
-        
-        String output = XmippWindowUtil.executeCommand(command, true);
-        System.out.println(output);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.getLogger(MaskJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        HashMap<String, String> msgfields = new HashMap<String, String>();
+        msgfields.put("Run name:", "Register Mask");
+        ScipionMessageDialog dlg = new ScipionMessageDialog(this, "Question", "Are you sure you want to register mask?", msgfields);
+                        int create = dlg.action;
+        boolean register = (create == ScipionMessageDialog.OK_OPTION);
+        if (register)
+            try {
+            String path = "mask.spi";
+            ImageGeneric ig = XmippImageConverter.convertToImageGeneric(mask);
+            ig.write(path);
+            ScipionParams params = (ScipionParams)iw.getParams();
+            String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path};
+
+            String output = XmippWindowUtil.executeCommand(command, true);
+            System.out.println(output);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.getLogger(MaskJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
     }
     
    

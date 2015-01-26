@@ -23,6 +23,7 @@ import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
+import xmipp.utils.Params;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -43,7 +44,6 @@ public abstract class ParticlePicker {
     protected String selfile;
     
     protected String configfile;
-    public String python, script, protid, projectid;//scipion params
     protected final String[] availableFilters = new String[]{"Duplicate", "Bandpass Filter...", "Anisotropic Diffusion...", "Mean Shift",
                    "Subtract Background...", "Gaussian Blur...", "Brightness/Contrast...", "Invert LUT"};
 
@@ -61,6 +61,8 @@ public abstract class ParticlePicker {
 
     protected static int nextcolor;
     public final HashMap<Format, String> emextensions;
+    protected ParticlePickerParams params;
+    protected static ParticlePicker picker;
 
     public static Color getNextColor() {
         Color next = colors[nextcolor];
@@ -96,6 +98,7 @@ public abstract class ParticlePicker {
     }
     
     
+    
 
     public String getParticlesAutoBlock(String file) {
         return particlesAutoBlock + "@" + file;
@@ -110,15 +113,16 @@ public abstract class ParticlePicker {
         return getParticlesAutoBlock(getOutputPath(m.getPosFile()));
     }
 
-    public ParticlePicker(String selfile, Mode mode) {
-        this(null, selfile, ".", mode);
+    public ParticlePicker(String selfile, Mode mode, ParticlePickerParams params) {
+        this(null, selfile, ".", mode, params);
     }
 
-    public ParticlePicker(String selfile, String outputdir, Mode mode) {
-        this(null, selfile, outputdir, mode);
+    public ParticlePicker(String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+        this(null, selfile, outputdir, mode, params);
     }
 
-    public ParticlePicker(String block, String selfile, String outputdir, Mode mode) {
+    public ParticlePicker(String block, String selfile, String outputdir, Mode mode, ParticlePickerParams params) {
+        this.params = params;
         this.block = block;
         this.outputdir = outputdir;
         this.selfile = selfile;
@@ -135,6 +139,7 @@ public abstract class ParticlePicker {
         emextensions.put(Format.Xmipp301, ".pos");
         emextensions.put(Format.Relion, ".star");
         emextensions.put(Format.Eman, ".box");
+        picker = this;
     }
 
     public void loadConfig() {
@@ -597,35 +602,19 @@ public abstract class ParticlePicker {
                 });
         }
 
-     public void setPython(String python)
-     {
-         this.python = python;
-     }
-     
-     public void setScipionScript(String script)
-     {
-         this.script = script;
-     }
-     
     
      
-     public void setProjectId(String projectid)
-     {
-         this.projectid = projectid;
-     }
      
-     public void setProtId(String protid)
-     {
-         this.protid = protid;
-     }
      
      public boolean isScipionSave()
      {
-         return script != null && mode != Mode.ReadOnly;
+         if(params == null)
+             return false;
+         return params.script != null && mode != Mode.ReadOnly;
      }
 
     public String[] getScipionSaveCommand() {
-        String[] cmd = new String[]{python, script, projectid, protid};
+        String[] cmd = new String[]{params.python, params.script, params.projectid, params.protid};
         return cmd;
     }
      
@@ -633,11 +622,14 @@ public abstract class ParticlePicker {
     public abstract int getParticlesCount();
 
     public String getProtId() {
-        return protid;
+        return params.protid;
     }
 
     
-
+    public static ParticlePicker getPicker()
+    {
+        return picker;
+    }
      
 
    
