@@ -280,6 +280,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # flags += ['CFLAGS=-I%s' % abspath('software/include'),
     #           'LDFLAGS=-L%s' %  abspath('software/lib')]
     # but then libraries like zlib will not compile.
+    # TODO: maybe add an argument to the function to chose if we want them?
 
     # Install everything in the appropriate place.
     for flag in flags:
@@ -396,9 +397,10 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         # select sources inside tarfile but we only get those files that match the pattern
         if tars: 
             tarfiles = tarfile.open(tars[x]).getmembers() 
-            sources += [join(dirs[x], tarred.name) for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
+            sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
         else:
             sources += glob(join(dirs[x], patterns[x]))
+    Depends(sources, untars)
 
     mpiArgs = {}
     if mpi:
@@ -430,6 +432,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
               **mpiArgs
               )
     SideEffect('dummy', library)
+    Depends(library, untars)
 
     for previous in lastTarget:
         env.Depends(library, previous)
@@ -561,7 +564,6 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     Returns the final targets, the ones that Command returns.
     
     """
-
     if not default and not GetOption(name):
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Add the program %s to the compilation' % name)
@@ -570,9 +572,9 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     pattern = pattern or ['*.cpp']
     installDir = installDir or 'bin'
     libs = libs or []
-    libPathsCopy = libPaths + ['lib', '#software/lib']
+    libPathsCopy = libPaths + ['lib', Dir('#software/lib').abspath]
     incs = incs or []
-    incs += ['libraries', '#software/include', '#software/include/python2.7']
+    incs += ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
@@ -664,7 +666,11 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
-               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+#               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+# The CFLAGS line is commented out because even if it is needed for modules
+# like libxml2, it causes problems for others like numpy and scipy (see for
+# (example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+# TODO: maybe add an argument to the function to chose if we want them?
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
                                                    'PATH': os.environ['PATH'],

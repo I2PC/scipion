@@ -42,7 +42,8 @@ config = {  'version': 1,
             'disable_existing_loggers': False,
             'formatters': {
                 'standard': {
-                    'format': '%(asctime)s %(levelname)s %(name)s (%(lineno)d):  %(message)s'
+                    'format': '%(asctime)s %(levelname)s:  %(message)s'
+                    # TODO: use formattime to show the time less verbose
                 },
                 'fileFormat': {
                     'format': '%(asctime)s %(levelname)s:  %(message)s'
@@ -105,7 +106,7 @@ class ScipionLogger():
             print message
             sys.stdout.flush()
         self._log.info(message, *args, **kwargs)
-    
+
     def warning(self, message, redirectStandard=False, *args, **kwargs):
         if redirectStandard:
             print message

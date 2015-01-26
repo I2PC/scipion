@@ -46,6 +46,10 @@ class ProtResMap(ProtAnalysis3D):
     Please find the manual at http://resmap.sourceforge.net 
     """
     _label = 'local resolution'
+    
+    def __init__(self, **kwargs):
+        ProtAnalysis3D.__init__(self, **kwargs)
+        self.histogramData = String()
              
     #--------------------------- DEFINE param functions --------------------------------------------   
     
@@ -120,7 +124,7 @@ class ProtResMap(ProtAnalysis3D):
         results = self.runResmap(self._getPath())
         
         from cPickle import dumps
-        self.histogramData = String(dumps(results['resHisto']))
+        self.histogramData.set(dumps(results['resHisto']))
         self._store(self.histogramData)
         
     #--------------------------- INFO functions -------------------------------------------- 
