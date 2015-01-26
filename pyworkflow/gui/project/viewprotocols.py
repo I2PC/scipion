@@ -849,13 +849,14 @@ class ProtocolsView(tk.Frame):
         if reorganize or len(self.settings.getNodes()) == 0:
             layout = LevelTreeLayout() # create layout to arrange nodes as a level tree
         else:
-            # Create empty nodeInfo for new runs
-            for node in self.runsGraph.getNodes():
-                nodeId = node.run.getObjId() if node.run else 0
-                nodeInfo = self.settings.getNodeById(nodeId)
-                if nodeInfo is None:
-                    self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
             layout = BasicLayout()
+            
+        # Create empty nodeInfo for new runs
+        for node in self.runsGraph.getNodes():
+            nodeId = node.run.getObjId() if node.run else 0
+            nodeInfo = self.settings.getNodeById(nodeId)
+            if nodeInfo is None:
+                self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
             
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
