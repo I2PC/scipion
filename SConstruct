@@ -280,6 +280,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
     # flags += ['CFLAGS=-I%s' % abspath('software/include'),
     #           'LDFLAGS=-L%s' %  abspath('software/lib')]
     # but then libraries like zlib will not compile.
+    # TODO: maybe add an argument to the function to chose if we want them?
 
     # Install everything in the appropriate place.
     for flag in flags:
@@ -396,9 +397,10 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         # select sources inside tarfile but we only get those files that match the pattern
         if tars: 
             tarfiles = tarfile.open(tars[x]).getmembers() 
-            sources += [join(dirs[x], tarred.name) for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
+            sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
         else:
             sources += glob(join(dirs[x], patterns[x]))
+    Depends(sources, untars)
 
     mpiArgs = {}
     if mpi:
@@ -430,6 +432,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
               **mpiArgs
               )
     SideEffect('dummy', library)
+    Depends(library, untars)
 
     for previous in lastTarget:
         env.Depends(library, previous)
@@ -561,7 +564,6 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     Returns the final targets, the ones that Command returns.
     
     """
-
     if not default and not GetOption(name):
         AddOption('--with-%s' % name, dest=name, action='store_true',
                   help='Add the program %s to the compilation' % name)
@@ -570,9 +572,9 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     pattern = pattern or ['*.cpp']
     installDir = installDir or 'bin'
     libs = libs or []
-    libPathsCopy = libPaths + ['lib', '#software/lib']
+    libPathsCopy = libPaths + ['lib', Dir('#software/lib').abspath]
     incs = incs or []
-    incs += ['libraries', '#software/include', '#software/include/python2.7']
+    incs += ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
@@ -664,7 +666,11 @@ def addModule(env, name, tar=None, buildDir=None, targets=None,
         tUntar,
         Action('PYTHONHOME="%(root)s" LD_LIBRARY_PATH="%(root)s/lib" '
                'PATH="%(root)s/bin:%(PATH)s" '
-               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+#               'CFLAGS="-I%(root)s/include" LDFLAGS="-L%(root)s/lib" '
+# The CFLAGS line is commented out because even if it is needed for modules
+# like libxml2, it causes problems for others like numpy and scipy (see for
+# (example http://mail.scipy.org/pipermail/scipy-user/2007-January/010773.html)
+# TODO: maybe add an argument to the function to chose if we want them?
                '%(root)s/bin/python setup.py install %(flags)s > '
                '%(root)s/log/%(name)s.log 2>&1' % {'root': Dir('#software').abspath,
                                                    'PATH': os.environ['PATH'],
@@ -829,16 +835,33 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/em/%s' % buildDir))
     if packageHome != 'unset':
-        symLink(env, '#software/em/%s' % name, Dir(packageHome).abspath)
+        symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
     if buildDir != name and packageHome == 'unset':
-        tLink = symLink(env, Entry('#software/em/%s' % name).abspath, Entry('#software/em/%s' % buildDir).abspath)
-        tLink = [Dir(tLink).abspath]
-        env.Depends(tLink, tUntar)
+        tLink = env.Command(
+            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s' % buildDir),
+            Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
+                   'Linking package %s to software/em/%s' % (name, name),
+                   chdir='software/em'))
     else:
         tLink = tUntar  # just so the targets are properly connected later on
     SideEffect('dummy', tLink)  # so it works fine in parallel builds
     lastTarget = tLink
-    
+
+    if extraActions:
+        for target, command in extraActions:
+            lastTarget = env.Command(
+                Entry('#software/em/%s/%s' % (name, target)).abspath,
+                lastTarget,
+                Action(command, chdir=Entry('#software/em/%s' % name).abspath))
+            SideEffect('dummy', lastTarget)
+        # Add the dependencies. Do it to the "link target" (tLink), so any
+        # extra actions (like setup scripts) have everything in place.
+        for dep in deps:
+            env.Depends(lastTarget, dep)
+        Default(lastTarget)
+        return lastTarget
+
     # Load Package vars
     # First we search this in cfg folder and otherwise in package home
     if not os.path.exists(confPath):
@@ -850,13 +873,13 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         Default(lastTarget)
         return lastTarget
     elif confPath != 'unset' and packageHome == 'unset':
-        print '''### 
-### Caution: you\'re using %s 
+        print >>sys.stderr, '''### 
+### Caution: you're using %s 
 ### as configuration file, and you may have not noticed. Please move this file
-### if you don\'t want to use it out from software/cfg and package home folders
-### or change its name to something different of <package_name>.cfg
+### if you don't want to use it out from software/cfg and package home folders
+### or change its name to something different than <package_name>.cfg
 ###''' % confPath
-    
+
     opts = Variables(confPath)
     opts.Add('PACKAGE_SCRIPT')
     opts.Add('PRIVATE_KEYS')
@@ -878,6 +901,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     altScriptPath = join(packageHome, 'SConscript_scipion')
     # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
     env.Replace(packageDeps=lastTarget)
+
     if scriptPath!='' and os.path.exists(scriptPath):
         print "Reading SCons script file at %s" % scriptPath
         #lastTarget = env.SConscript(scriptPath, exports='env')
@@ -886,12 +910,7 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         print "Config file not present. Trying SConscript in package home %s" % altScriptPath
         lastTarget = env.SConscript(altScriptPath, exports='env')
     else:
-        # If we can't find the SConscript, then only extra actions can be done
-        for target, command in extraActions:
-            lastTarget = env.Command('software/em/%s/%s' % (name, target),
-                                     lastTarget,
-                                     Action(command, chdir='software/em/%s' % name))
-            SideEffect('dummy', lastTarget)  # so it works fine in parallel builds
+        print "Package installed by just downloading. Nothing special to do."
 
     # Clean the special generated files
     for cFile in clean:

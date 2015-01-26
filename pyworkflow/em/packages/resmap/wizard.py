@@ -43,8 +43,8 @@ from pyworkflow.gui.matplotlib_image import FigureFrame
 #===============================================================================
 
 class ResmapPrewhitenWizard(EmWizard):
-    _targets = [(ProtResMap, ['prewhitenAng'])]
-
+    _targets = [(ProtResMap, ['prewhitenAng', 'prewhitenRamp'])]
+    
     def show(self, form):
         self.prot = form.protocol
         self.form = form
@@ -61,8 +61,7 @@ class ResmapPrewhitenWizard(EmWizard):
                 print "result: ", d.getElbowValue(), d.getRampValue()
                 form.setVar('prewhitenAng', d.getElbowValue())
                 form.setVar('prewhitenRamp', d.getRampValue())
-
-
+        
 # Change default instructions message
 
 INSTRUCTIONS = """Please check that the green line

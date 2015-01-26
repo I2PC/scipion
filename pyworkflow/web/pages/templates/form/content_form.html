@@ -38,8 +38,8 @@
 							<input type="text" style="width: 2em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
 						{% endfor %}
 							</td>
-							<td>
-							</td>
+<!-- 							<td> -->
+<!-- 							</td> -->
 						{% if param.hasWizard %}
 							<td class="ico">
 								<a class="fa fa-magic" href="javascript:putModeWiz('{{param.wizardClassName}}' );"></a>
@@ -127,6 +127,13 @@
 								<a href="javascript:browseObjects('{{paramName}}','objClass','{{param.pointerClass.get}}','{{param.pointerCondition.get}}');">
 									<i class="fa fa-search" style="font-size:1.1em;"></i>
 								</a> 
+							</td>
+							<td class="ico">
+								<a href="javascript:clearInput('');">
+									<i class="fa fa-trash-o" style="font-size:1.1em;"></i>
+								</a>  
+							</td>
+							<td class="ico">
 								<a href="javascript:loadPreviewImage('{{paramName}}_input');">	
 									<i class="fa fa-eye" style="font-size:1.1em;"></i>
 								</a> 
@@ -173,7 +180,7 @@
 								<a id="analyzeTool" href="javascript:putModeViewElm('{{paramName}}');" class="fa fa-eye"></a>
 							</td>
 						{% else %}
-							<td>
+							<td class="ico">
 							</td>
 						{% endif %}
 						{% if param.htmlHelp %}

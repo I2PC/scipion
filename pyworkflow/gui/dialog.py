@@ -228,7 +228,51 @@ class Dialog(tk.Toplevel):
     def resultCancel(self):
         return self.result == RESULT_CANCEL
 
+ 
+def fillMessageText(text, message):
+    # Insert lines of text
+    if isinstance(message, list):
+        lines = message
+    else:
+        lines = message.splitlines()
+    text.setReadOnly(False)
+    text.clear()
+    m = 0
+    for l in lines:
+        m = max(m, len(l))
+        text.addLine(l)
+    m = min(m + 5, 80)
+    h = min(len(lines)+3, 30)
+    text.config(height=h, width=m)
+    text.addNewline()
+    text.setReadOnly(True)
+    
+    
+def createMessageBody(bodyFrame, message, image, 
+                      frameBg='white',
+                      textBg='white',
+                      textPad=5):
+    """ Create a Text containing the message.
+    Params:
+        bodyFrame: tk.Frame to be filled.
+        msg: a str or list with the lines.
+    """
+    bodyFrame.config(bg=frameBg, bd=0)
+    text = TaggedText(bodyFrame, bg=textBg, bd=0)
+    # Insert image
+    if image:
+        label = tk.Label(bodyFrame, image=image, bg=textBg, bd=0)
+        label.grid(row=0, column=0, sticky='nw')
         
+    text.frame.grid(row=0, column=1, sticky='news', 
+                    padx=textPad, pady=textPad)
+    fillMessageText(text, message)
+    bodyFrame.rowconfigure(0, weight=1)
+    bodyFrame.columnconfigure(1, weight=1)  
+    
+    return text  
+        
+           
 class MessageDialog(Dialog):
     """Dialog subclasses to show message info, questions or errors.
     It can display an icon with the message"""
@@ -242,31 +286,7 @@ class MessageDialog(Dialog):
         
     def body(self, bodyFrame):
         self.image = gui.getImage(self.iconPath)
-        bodyFrame.config(bg='white', bd=2)
-        text = TaggedText(bodyFrame, bg='white', bd=0)
-        # Insert image
-        if self.image:
-            label = tk.Label(bodyFrame, image=self.image, bg='white', bd=0)
-            label.grid(row=0, column=0, sticky='nw')
-        # Insert lines of text
-        if isinstance(self.msg, list):
-            mylines = self.msg
-        else:
-            mylines = self.msg.splitlines()
-        m = 0
-        for l in mylines:
-            m = max(m, len(l))
-            text.addLine(l)
-        m = min(m + 5, 80)
-        h = min(len(mylines)+3, 30)
-        text.config(height=h, width=m)
-        text.addNewline()
-        text.config(state=tk.DISABLED)
-        text.frame.grid(row=0, column=1, sticky='news', padx=5, pady=5)
-        
-        bodyFrame.rowconfigure(0, weight=1)
-        bodyFrame.columnconfigure(1, weight=1)
-
+        createMessageBody(bodyFrame, self.msg, self.image)
 
 class YesNoDialog(MessageDialog):
     """Ask a question with YES/NO answer"""

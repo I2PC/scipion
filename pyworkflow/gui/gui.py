@@ -319,7 +319,7 @@ class Window():
         self.root.focus_set()
         self.root.mainloop()
         
-    def close(self):
+    def close(self, e=None):
         self.root.destroy()
         
     def _onClosing(self):

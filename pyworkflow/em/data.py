@@ -681,10 +681,11 @@ class SetOfImages(EMSet):
     def getSamplingRate(self):
         return self._samplingRate.get()
     
-    def writeStack(self, fnStack):
+    def writeStack(self, fnStack, orderBy='id', direction='ASC'):
         # TODO create empty file to improve efficiency
         ih = ImageHandler()
-        for i, img in enumerate(self):
+        for i, img in enumerate(self.iterItems(orderBy=orderBy,
+                                               direction=direction)):
             ih.convert(img, (i+1, fnStack))
     
     # TODO: Check whether this function can be used.

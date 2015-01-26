@@ -54,7 +54,7 @@ class TutorialIntro(tests.BaseTest):
             
             # Use graph view as default
             settings = project.getSettings()
-            settings.setGraphView(True)
+            settings.setRunsView(True)
             settings.write()
             
             # Update the path of imports

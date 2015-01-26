@@ -1,8 +1,6 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:    Airen Zaldivar         (airenzp@gmail.com)
-#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -26,23 +24,27 @@
 # *
 # **************************************************************************
 
-import sys
-from pyworkflow.em import *
-from pyworkflow.manager import Manager
 
 
-if __name__ == '__main__':
-    #TODO: REMOVE THIS AFTER DEBUGGING
-    # print "ARGS: "
-    # for i, arg in enumerate(sys.argv):
-    #     print "%02d: %s" % (i, arg)
-    projectId=sys.argv[1]
-    inputId=sys.argv[2]
-    file=sys.argv[3]
+from pyworkflow.em.packages.appion.convert import readCoordinates
 
-    project = Manager().loadProject(projectId)
-    inputObject = project.mapper.selectById(int(inputId))
+from os.path import  exists
+from pyworkflow.em.data import Coordinate
+from pyworkflow.em.metadata import MetaData, MDL_XCOOR, MDL_YCOOR
 
-    prot = project.newProtocol(ProtImportMask, maskPath=file, samplingRate=inputObject.getSamplingRate())
-    prot.setObjLabel('register mask')
-    project.launchProtocol(prot)
+class DogpickerImport():
+
+    def __init__(self, protocol):
+        self.protocol = protocol
+
+    def importCoordinates(self, fileName, addCoordinate):
+        print "In importCoordinates Appion with filename=%s" % fileName
+        if exists(fileName):
+            md = MetaData()
+            md.readPlain(fileName, 'xcoor ycoor')
+            for objId in md:
+                x = md.getValue(MDL_XCOOR, objId)
+                y = md.getValue(MDL_YCOOR, objId)
+                coord = Coordinate()
+                coord.setPosition(x, y)
+                addCoordinate(coord)

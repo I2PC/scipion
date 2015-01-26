@@ -221,6 +221,12 @@ class ProtocolViewer(Protocol, Viewer):
         self.formWindow = None
         self.setWorkingDir(self.getProject().getTmpPath())
         
+    def getWindow(self):
+        return self.formWindow
+    
+    def getTkRoot(self):
+        return self._tkRoot
+    
     def _defineParamsEmpty(self, form):
         """ Just do nothing and postpone the real definition. """
         pass

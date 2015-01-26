@@ -129,7 +129,7 @@ class Project(object):
         self.mapper = self.createMapper(self.dbPath)
         self.settings = loadSettings(self.settingsPath)
         
-    def create(self, confs={}, graphView=False, readOnly=False):
+    def create(self, confs={}, runsView=1, readOnly=False):
         """Prepare all required paths and files to create a new project.
         Params:
          hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
@@ -147,7 +147,7 @@ class Project(object):
         # Load settings from .conf files and write .sqlite
         self.settings = ProjectSettings(confs)
         self.settings.loadConfig(confs)
-        self.settings.setGraphView(graphView)
+        self.settings.setRunsView(runsView)
         self.settings.setReadOnly(readOnly)
         self.settings.write(self.settingsPath)
         # Create other paths inside project
