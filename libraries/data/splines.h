@@ -28,7 +28,7 @@
 
 #include "grids.h"
 
-#include "kernel.h"
+#include "headers/kernel.h"
 
 /* ========================================================================= */
 /* SPLINES                                                                   */

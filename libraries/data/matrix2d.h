@@ -29,7 +29,7 @@
 #include <fstream>
 #include <errno.h>
 #include <fcntl.h>
-#include "linearalgebra.h"
+#include "headers/linearalgebra.h"
 #include "xmipp_macros.h"
 #include "xmipp_filename.h"
 #include "xmipp_error.h"
