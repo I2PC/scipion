@@ -51,8 +51,9 @@ class BasicLayout(GraphLayout):
         x and y will be modified.
         """
         for node in graph.getNodes():
-            if node.x == 0 or node.y == 0:
-                self._drawNode(node)
+            if hasattr(node, 'x') and hasattr(node, 'y'):
+                if getattr(node, 'x', 0) == 0 or node.y == 0:
+                    self._drawNode(node)
                 
     def _drawNode(self, node):
         """ Allocate node with x=0 and y=0. """
