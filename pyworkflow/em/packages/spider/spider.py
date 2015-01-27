@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.utils import Environ
 """
 This sub-package will contains Spider protocols
 """
@@ -54,28 +55,30 @@ REGEX_KEYVALUE = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*
 REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<rest>\s+.*)")
 
 
-def loadEnvironment():
+def getEnviron():
     """ Load the environment variables needed for Spider.
     If SPIDER_DIR is defined, the bin, man and proc folders will be 
     defined from it. If not, each of them should be defined separately. 
     """
     global SPIDER
-    SPIDER_DIR = os.environ.get('SPIDER_DIR', None) # Scipion definition
+    env = Environ(os.environ)
+    SPIDER_DIR = env.get('SPIDER_DIR', None) # Scipion definition
     
     if SPIDER_DIR is None:
         errors = ''
         for var in ['SPBIN_DIR', 'SPMAN_DIR', 'SPPROC_DIR']:
-            if not var in os.environ:
+            if not var in env:
                 errors += "\n   Missing SPIDER variable: '%s'" % var
         if len(errors):
             print "ERRORS: " + errors
     else: 
-        os.environ['SPBIN_DIR'] = join(SPIDER_DIR, 'bin', '')
-        os.environ['SPMAN_DIR'] = join(SPIDER_DIR, 'man', '')
-        os.environ['SPPROC_DIR'] = join(SPIDER_DIR, 'proc', '')
+        env.update({'SPBIN_DIR': join(SPIDER_DIR, 'bin', ''),
+                    'SPMAN_DIR': join(SPIDER_DIR, 'man', ''),
+                    'SPPROC_DIR': join(SPIDER_DIR, 'proc', '')
+                    })
     
     # Get the executable or 'spider' by default
-    SPIDER = join(os.environ['SPBIN_DIR'], os.environ.get('SPIDER', 'spider_linux_mp_intel64'))
+    SPIDER = join(env['SPBIN_DIR'], env.get('SPIDER', 'spider_linux_mp_intel64'))
     # expand ~ and vars
     SPIDER = abspath(os.path.expanduser(os.path.expandvars(SPIDER)))
     # Check that executable exists
@@ -85,9 +88,14 @@ def loadEnvironment():
         msg += "\n named 'spider' or define the SPIDER environment variable"
         raise Exception(msg)
         
-    os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.environ['SPBIN_DIR']
+    env.set('PATH', env['SPBIN_DIR'], env.END)
     
+    return env
     
+
+environment = getEnviron()
+
+
 def _getFile(*paths):
     return join(PATH, *paths)
 
@@ -103,14 +111,14 @@ def __substituteVar(match, paramsDict, lineTemplate):
         return lineTemplate % d
     return None
     
-def runScript(inputScript, ext, paramsDict, log=None):
+    
+def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     """ This function will create a valid Spider script
     by copying the template and replacing the values in dictionary.
     After the new file is read, the Spider interpreter is invoked.
     Usually the execution should be done where the results will
     be left.
     """
-    loadEnvironment()
     outputScript = replaceBaseExt(inputScript, ext)
 
     fIn = open(getScript(inputScript), 'r')
@@ -139,7 +147,7 @@ def runScript(inputScript, ext, paramsDict, log=None):
     fOut.close()    
 
     scriptName = removeExt(outputScript)
-    runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals())
+    runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals(), env=environment, cwd=cwd)
     
 
 def runCustomMaskScript(filterRadius1, sdFactor,
@@ -171,15 +179,17 @@ class SpiderShell(object):
     """ This class will open a child process running Spider interpreter
     and will keep conection to send commands. 
     """
-    def __init__(self, ext='spi', **args):
-        self._debug = args.get('debug', True)
-        self._log = args.get('log', None)
+    def __init__(self, ext='spi', **kwargs):
+        self._debug = kwargs.get('debug', True)
+        self._log = kwargs.get('log', None)
+        cwd = kwargs.get('cwd', None)
         
-        loadEnvironment()
         FNULL = open(os.devnull, 'w')
         self._proc = subprocess.Popen(SPIDER, shell=True, 
                                       stdin=subprocess.PIPE,
-                                      stdout=FNULL, stderr=FNULL)
+                                      stdout=FNULL, stderr=FNULL,
+                                      env=environment,
+                                      cwd=cwd)
         if self._debug and self._log:
             self._log = open(self._log, 'w+')
             
