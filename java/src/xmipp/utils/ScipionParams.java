@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package xmipp.viewer.scipion;
+package xmipp.utils;
 
 import java.io.File;
 import org.apache.commons.cli.Option;
@@ -31,7 +31,11 @@ public class ScipionParams extends Params {
     
     public ScipionParams(String args[]) {
         super(args);
-        XmippWindowUtil.setIsScipion(cmdLine.hasOption(PROJECT));
+    }
+    
+    public boolean isScipion()
+    {
+        return cmdLine.hasOption(PROJECT);
     }
 
     public void defineArgs() {
@@ -79,6 +83,10 @@ public class ScipionParams extends Params {
 
     public String getObjectCmdScript() {
         return scripts + File.separator + "pw_run_obj_cmd.py";
+    }
+
+    public String getRegisterMaskScript() {
+        return scripts + File.separator + "pw_create_mask.py";
     }
     
    

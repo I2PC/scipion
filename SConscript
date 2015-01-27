@@ -51,14 +51,19 @@ DEPS = 4
 BASIC_DEPS = ['fftw', 'tiff', 'jpeg', 'sqlite', 'hdf5','hdf5_cpp', 'rt']
 BASIC_INCS = ['external',
               'libraries',
+              join('libraries', 'data'),
               join('external','fftw-3.3.3'), 
+              join('external','fftw-3.3.3','api'), 
               join('external','tiff-3.9.4'), 
               join('external','tiff-3.9.4','libtiff'), 
               join('external','jpeg-8c'), 
-              join('external','sqlite-3.6.23'), 
+              join('external','sqlite-3.6.23'),
+              join('external','sqliteExt'),
               join('external','hdf5-1.8.10','src'), 
               join('external','hdf5-1.8.10','c++'), 
-              join('external','hdf5-1.8.10','c++','src')]
+              join('external','hdf5-1.8.10','c++','src'),
+              join('external','alglib-3.8.0.cpp','src'),
+              join('external','bilib')]
 PYTHON_DIR = join("external","python","Python-2.7.2")
 CUDA_PATH = env['CUDA_SDK_PATH']
 
@@ -148,7 +153,7 @@ Libraries = {'fftw': {INCS: [join('external','fftw-3.3.3')],
                         DIR: join('libraries','bindings','python'),
                         DEPS: ['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_DEPS
                         }, 
-             'XmippParallel': {INCS: [env['MPI_INCLUDE']] + BASIC_INCS,
+             'XmippParallel': {INCS: [env['MPI_INCLUDE']] + BASIC_INCS + [join('libraries', 'data')],
                                LIBS: ['XmippParallel'],
                                SRC: [join('libraries','parallel','*.cpp')],
                                DIR: join('libraries','parallel'),
@@ -1242,7 +1247,7 @@ if int(env['matlab']):
         ''' name parameter is expected without .java extension '''
         source = 'libraries/bindings/matlab/'+name+".cpp"
         target = 'libraries/bindings/matlab/'+name+".mexa64"
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -Llib -lXmippRecons -lXmippData -lXmippExternal '+source
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries -I%s -I%s/libtiff -I%s -Llib -lXmippRecons -lXmippData -lXmippExternal '%(SQliteDir,TIFFDir,HDF5Dir)+source
         compileCmd = env.Command(target, source, command)
         env.Default(compileCmd)
         return compileCmd

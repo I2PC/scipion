@@ -50,7 +50,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
-import xmipp.viewer.scipion.ScipionMessageDialog;
+import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 
@@ -92,7 +92,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             initComponents();
             setChanged(false);
         } catch (IllegalArgumentException ex) {
-            close();
+            //close();
             throw ex;
         }
     }
@@ -455,7 +455,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         saveandexitbt.setEnabled(isenable);
          if(ppicker.isScipionSave())
         {
-            Color color = isenable? ScipionMessageDialog.firebrick: XmippWindowUtil.LIGHT_BLUE; 
+            Color color = isenable? XmippWindowUtil.firebrick: XmippWindowUtil.LIGHT_BLUE; 
             Color forecolor = isenable? Color.WHITE: Color.GRAY;
             saveandexitbt.setBackground(color);
             saveandexitbt.setForeground(forecolor);

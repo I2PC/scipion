@@ -77,7 +77,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.scipion.ScipionMessageDialog;
+import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -194,9 +194,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                 msgfields.put("Run name:", "ProtUserCoordinates");
                             int count = getParticlePicker().getParticlesCount();
                             String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
-                            ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
+                            InputFieldsMessageDialog dlg = new InputFieldsMessageDialog(ParticlePickerJFrame.this, "Question", msg);
                             
-                            if (dlg.action == ScipionMessageDialog.OK_OPTION)
+                            if (dlg.action == InputFieldsMessageDialog.OK_OPTION)
                                 executeScipionSaveAndExit();
                             
                         }
@@ -211,7 +211,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     Image img = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
                     saveandexitbt.setIcon(new ImageIcon(img));
                     saveandexitbt.setToolTipText("Create Coordinates");
-                    Color color = ScipionMessageDialog.firebrick; 
+                    Color color = XmippWindowUtil.firebrick; 
                     saveandexitbt.setBackground(color);
                     saveandexitbt.setForeground(Color.WHITE);
                     
@@ -812,7 +812,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		int size = getParticlePicker().getSize();
 		sizepn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, ParticlePicker.sizemax, size);
+		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
 		int height = (int) sizesl.getPreferredSize().getHeight();
@@ -848,17 +848,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 sizetf.addActionListener(new ActionListener()
 		{
 
-                    
-
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         // event from sizes
-                        
                             readSizeFromTextField();
-                        
                     }
-
-                   
 		});
 
 		sizesl.addChangeListener(new ChangeListener()
@@ -890,7 +884,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         protected void readSizeFromTextField()
         {
             
-                    int size = ((Number) sizetf.getValue()).intValue();
+                int size = ((Number) sizetf.getValue()).intValue();
                 if (size == getParticlePicker().getSize())
                     return;
 
@@ -912,7 +906,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizesl.setValue(size);
 		getCanvas().repaint();
 		getParticlePicker().setSize(size);
-                updateMicrographsModel();
+                //updateMicrographsModel();
                 if(particlesdialog != null)
                     loadParticles(true);
 		getParticlePicker().saveConfig();

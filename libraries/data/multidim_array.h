@@ -29,8 +29,8 @@
 #ifdef XMIPP_MMAP
 #include <sys/mman.h>
 #endif
-#include "../../external/bilib/types/tsplinebasis.h"
-#include "../../external/bilib/headers/kernel.h"
+#include "types/tsplinebasis.h"
+#include "headers/kernel.h"
 #include "xmipp_strings.h"
 #include "matrix1d.h"
 #include "matrix2d.h"

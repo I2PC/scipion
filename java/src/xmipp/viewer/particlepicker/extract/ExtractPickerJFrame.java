@@ -4,14 +4,11 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,12 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
-import xmipp.ij.commons.Tool;
-import xmipp.jni.CTFDescription;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.ctf.CTFAnalyzerJFrame;
@@ -42,7 +35,6 @@ import xmipp.viewer.particlepicker.ParticlesDialog;
 import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.windows.GalleryJFrame;
-import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class ExtractPickerJFrame extends ParticlePickerJFrame
 {
@@ -116,6 +108,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		colorlegendpn.add(new JLabel("Color by:"));
 		colorby = picker.getColumns();
 		scorescb = new JComboBox(colorby);
+                
 		scorescb.addActionListener(new ActionListener()
 		{
 			
@@ -136,14 +129,13 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 		colorlegendpn.add(ColorHelper.getColorMap());
 		colorlegendpn.add(maxlb);
 		
-		
-		
 		index = picker.getMicrographIndex();
 
 	}
 	
 	ColorHelper getColorHelper()
 	{
+                
 		return (ColorHelper)scorescb.getSelectedItem();
 	}
 	

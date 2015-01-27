@@ -27,10 +27,10 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include <external/bilib/headers/kerneldiff1.h>
-#include <external/bilib/types/tboundaryconvention.h>
-#include <external/bilib/headers/changebasis.h>
-#include <external/bilib/headers/pyramidtools.h>
+#include "headers/kerneldiff1.h"
+#include "types/tboundaryconvention.h"
+#include "headers/changebasis.h"
+#include "headers/pyramidtools.h"
 #include "matrix2d.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"

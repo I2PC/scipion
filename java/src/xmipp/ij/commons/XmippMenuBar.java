@@ -9,7 +9,6 @@ import ij.ImagePlus;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
-
 import java.awt.CheckboxMenuItem;
 import java.awt.Frame;
 import java.awt.Menu;
@@ -26,9 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
 import javax.vecmath.Color3f;
-
 import xmipp.utils.QuickHelpJDialog;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
@@ -40,9 +37,9 @@ import xmipp.utils.XmippFileChooser;
 public class XmippMenuBar extends MenuBar
 {
 
-	private Menu filemn;
-	private Menu imagemn;
-	private Menu advancedmn;
+	protected Menu filemn;
+	protected Menu imagemn;
+	protected Menu advancedmn;
 	private MenuItem savemi;
 	private MenuItem saveasmi;
 	private MenuItem openwith3dmi;
@@ -67,6 +64,7 @@ public class XmippMenuBar extends MenuBar
 	private Menu helpmn;
 	private MenuItem keyassistmi;
 	private QuickHelpJDialog keyassistdlg;
+        
 
 	enum IJRequirement
 	{
@@ -283,7 +281,10 @@ public class XmippMenuBar extends MenuBar
 		advancedmn.add(drawmn);
 		advancedmn.add(profilemn);
 		
-		
+                
+                
+                
+                	
 		keyassistmi = new MenuItem("Key Assist");
 		keyassistmi.addActionListener(new ActionListener()
 		{
@@ -520,5 +521,6 @@ public class XmippMenuBar extends MenuBar
 		map.put("Right click + Mouse move", "Moves image previously expanded");
 		return map;
 	}
-
+        
+        
 }

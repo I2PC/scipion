@@ -193,7 +193,7 @@ if int(env['gtest']):
 # VERY UGLY. CHANGE IT WHEN POSSIBLE #
 ######################################
 # --- From here...
-javaEnumDict = javaEnumDict = {
+javaEnumDict = {
             'ImageWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'WRITE_'],
             'CastWriteMode': [File('libraries/data/xmipp_image_base.h').abspath, 'CW_'],
             'MDLabel': [File('libraries/data/metadata_label.h').abspath, ['MDL_', 'RLN_', 'BSOFT']],
@@ -277,22 +277,27 @@ javaEnums = env.Alias('javaEnums',
                       ExtractEnumFromHeader))
 env.Default(javaEnums)
 
-ijLink = env.SymLink('java/lib/ij.jar', 'external/imagej/ij.jar')
+imagejUntar = env.Untar('external/imagej/ij.jar', 'external/imagej.tgz', cdir='external')
+Default(imagejUntar)
+
+ijLink = env.Command('java/lib/ij.jar', imagejUntar, env.SymLink)
+env.Depends(ijLink, 'external/imagej/ij.jar')
 env.Default(ijLink)
 # --- ...to here
 
 xmippJavaJNI = env.AddJavaLibrary(
              'XmippJNI',
-             #dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons', 'java/src/xmipp/ij/plugins/maskstoolbar'],
              dirs=['java/src/xmipp/jni', 'java/src/xmipp/ij/commons'],
              deps=['ij'],
              )
+env.Depends(xmippJavaJNI, ijLink)
 
 xmippUtils = env.AddJavaLibrary(
            'XmippUtils',
            dirs=['java/src/xmipp/utils', 'java/src/xmipp/jni/'],
            deps=['ij', 'commons-cli-1.1', 'XmippJNI'],
            )
+env.Depends(xmippUtils, ijLink)
 
 xmippIJ = env.AddJavaLibrary(
         'XmippIJ',
@@ -318,7 +323,9 @@ xmippIJPlugin = env.AddJavaLibrary(
               deps=['XmippJNI']
               )
 
-pluginLink = env.SymLink('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', str(xmippIJPlugin[0]))
+env.Depends(xmippIJPlugin, ijLink)
+pluginLink = env.Command('external/imagej/plugins/XmippIJPlugin_MasksToolbar.jar', xmippIJPlugin, env.SymLink)
+env.Depends(pluginLink, ijLink)
 env.Default(pluginLink)
 
 # For any yet unkown issue, using the environment used for the rest of the SCons is imposible to compile java code
@@ -331,6 +338,7 @@ env2.Default(javaExtraFileTypes)
 
 # FIXME: For any yet unkown issue, java is being compiled putting in -d flag the class name, producing a folder with the same name as the class and putting the class file inside
 fileTypesInstallation = env.Install('external/imagej/plugins/', 'java/build/HandleExtraFileTypes.class/HandleExtraFileTypes.class')
+env.Depends(fileTypesInstallation, pluginLink)
 env.Default(fileTypesInstallation)
 
 # Java tests
@@ -966,7 +974,7 @@ xmippMPIClassifyCL2D = env.AddProgram('xmipp_mpi_classify_CL2D',
                                       libs=_libsrecons,
                                       deps=_depsrecons,
                                       mpi=True)
-xmippClassifyCL2D = env.SymLink('bin/xmipp_classify_CL2D', 'bin/xmipp_mpi_classify_CL2D')
+xmippClassifyCL2D = env.Command('bin/xmipp_classify_CL2D', 'bin/xmipp_mpi_classify_CL2D', env.SymLink)
 Depends(xmippClassifyCL2D, xmippMPIClassifyCL2D)
 xmippMPIClassifyCLTomoProg = env.AddProgram('xmipp_mpi_classify_CLTomo_prog', 
                                             src=['applications/programs/mpi_classify_CLTomo_prog'],
@@ -974,7 +982,7 @@ xmippMPIClassifyCLTomoProg = env.AddProgram('xmipp_mpi_classify_CLTomo_prog',
                                             libs=_libsrecons+_libsinterf,
                                             deps=_depsrecons+_depsinterf,
                                             mpi=True)
-xmippClassifyCLTomo = env.SymLink('bin/xmipp_classify_CLTomo', 'bin/xmipp_mpi_classify_CLTomo')
+xmippClassifyCLTomo = env.Command('bin/xmipp_classify_CLTomo', 'bin/xmipp_mpi_classify_CLTomo', env.SymLink)
 Depends(xmippClassifyCLTomo, xmippMPIClassifyCLTomoProg)
 env.AddProgram('xmipp_mpi_classify_CL2D_core_analysis', 
                src=['applications/programs/mpi_classify_CL2D_core_analysis'],
@@ -1024,7 +1032,7 @@ xmippMPIImageSort = env.AddProgram('xmipp_mpi_image_sort',
                                    libs=_libsrecons,
                                    deps=_depsrecons,
                                    mpi=True)
-xmippImageSort = env.SymLink('bin/xmipp_image_sort', 'bin/xmipp_mpi_image_sort')
+xmippImageSort = env.Command('bin/xmipp_image_sort', 'bin/xmipp_mpi_image_sort', env.SymLink)
 Depends(xmippImageSort, xmippMPIImageSort)
 env.AddProgram('xmipp_mpi_ml_align2d', 
                src=['applications/programs/mpi_ml_align2d'],
@@ -1149,74 +1157,62 @@ if not int(env['release']):
                    mpi=True)
 
 # Batches (apps)
-xmippApropos = env.SymLink('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py')
-Depends(xmippApropos, packageDeps)
+xmippApropos = env.Command('bin/xmipp_apropos', 'applications/scripts/apropos/batch_apropos.py', env.SymLink)
+#Depends(xmippApropos, packageDeps)
 
-xmippCompile = env.SymLink('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py')
-Depends(xmippCompile, packageDeps)
+xmippCompile = env.Command('bin/xmipp_compile', 'applications/scripts/compile/batch_compile.py', env.SymLink)
+#Depends(xmippCompile, packageDeps)
 
-xmippExportEMX = env.SymLink('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py')
-Depends(xmippExportEMX, packageDeps)
+xmippExportEMX = env.Command('bin/xmipp_export_emx', 'applications/scripts/export_emx/batch_export_emx.py', env.SymLink)
+#Depends(xmippExportEMX, packageDeps)
 
-xmippImportBox = env.SymLink('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py')
-Depends(xmippImportBox, packageDeps)
+xmippImportBox = env.Command('bin/xmipp_import_box', 'applications/scripts/import_box/batch_import_box.py', env.SymLink)
+#Depends(xmippImportBox, packageDeps)
 
-xmippImportCTFparam = env.SymLink('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py')
-Depends(xmippImportCTFparam, packageDeps)
+xmippImportCTFparam = env.Command('bin/xmipp_import_ctfparam', 'applications/scripts/import_ctfparam/batch_import_ctfparam.py', env.SymLink)
 
-xmippImportCTFdat = env.SymLink('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py')
-Depends(xmippImportCTFdat, packageDeps)
+xmippImportCTFdat = env.Command('bin/xmipp_import_ctfdat', 'applications/scripts/import_ctfdat/batch_import_ctfdat.py', env.SymLink)
 
-xmippImportEMX = env.SymLink('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py')
-Depends(xmippImportEMX, packageDeps)
+xmippImportEMX = env.Command('bin/xmipp_import_emx', 'applications/scripts/import_emx/batch_import_emx.py', env.SymLink)
 
-xmippMetadataPlot = env.SymLink('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py')
-Depends(xmippMetadataPlot, packageDeps)
+xmippMetadataPlot = env.Command('bin/xmipp_metadata_plot', 'applications/scripts/metadata_plot/batch_metadata_plot.py', env.SymLink)
 
-xmippMetadataSelfileCreate = env.SymLink('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py')
-Depends(xmippMetadataSelfileCreate, packageDeps)
+xmippMetadataSelfileCreate = env.Command('bin/xmipp_metadata_selfile_create', 'applications/scripts/metadata_selfile_create/batch_metadata_selfile_create.py', env.SymLink)
 
-xmippProtocols = env.SymLink('bin/xmipp_protocols', 'protocols/batch_protocols.py')
-Depends(xmippProtocols, packageDeps)
+xmippProtocols = env.Command('bin/xmipp_protocols', 'protocols/batch_protocols.py', env.SymLink)
 
-xmippBrowser = env.SymLink('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py')
-Depends(xmippBrowser, packageDeps)
+xmippBrowser = env.Command('bin/xmipp_browser', 'applications/scripts/browser/batch_browser.py', env.SymLink)
 
-xmippMicrographParticlePicking = env.SymLink('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py')
-Depends(xmippMicrographParticlePicking, packageDeps)
+xmippMicrographParticlePicking = env.Command('bin/xmipp_micrograph_particle_picking', 'applications/scripts/micrograph_particle_picking/batch_micrograph_particle_picking.py', env.SymLink)
 
-xmippChimeraClient = env.SymLink('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py')
-Depends(xmippChimeraClient, packageDeps)
+xmippChimeraClient = env.Command('bin/xmipp_chimera_client', 'applications/scripts/chimera_client/batch_chimera_client.py', env.SymLink)
 
-xmippMicrographTiltpairPicking = env.SymLink('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py')
-Depends(xmippMicrographTiltpairPicking, packageDeps)
+xmippMicrographTiltpairPicking = env.Command('bin/xmipp_micrograph_tiltpair_picking', 'applications/scripts/micrograph_tiltpair_picking/batch_micrograph_tiltpair_picking.py', env.SymLink)
 
-xmippMPIClassifyCLTomo = env.SymLink('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh')
-Depends(xmippMPIClassifyCLTomo, packageDeps)
+xmippMPIClassifyCLTomo = env.Command('bin/xmipp_mpi_classify_CLTomo', 'applications/scripts/mpi_classify_CLTomo/batch_mpi_classify_CLTomo.sh', env.SymLink)
 
-xmippMPIStepsRunner = env.SymLink('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py')
-Depends(xmippMPIStepsRunner, packageDeps)
+xmippMPIStepsRunner = env.Command('bin/xmipp_mpi_steps_runner', 'protocols/batch_protocols.py', env.SymLink)
 
-xmippProjectionsExplorer = env.SymLink('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py')
-Depends(xmippProjectionsExplorer, packageDeps)
+xmippProjectionsExplorer = env.Command('bin/xmipp_projections_explorerj', 'applications/scripts/projections_explorerj/batch_projections_explorerj.py', env.SymLink)
 
-xmippShowj = env.SymLink('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py')
-Depends(xmippShowj, packageDeps)
+xmippShowj = env.Command('bin/xmipp_showj', 'applications/scripts/showj/batch_showj.py', env.SymLink)
 
-xmippTomoj = env.SymLink('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py')
-Depends(xmippTomoj, packageDeps)
+xmippTomoj = env.Command('bin/xmipp_tomoj', 'applications/scripts/tomoj/batch_tomoj.py', env.SymLink)
 
-xmippVisualizePreprocessingMicrographj = env.SymLink('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py')
-Depends(xmippVisualizePreprocessingMicrographj, packageDeps)
+xmippVisualizePreprocessingMicrographj = env.Command('bin/xmipp_visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph/batch_visualize_preprocessing_micrographj.py', env.SymLink)
 
-xmippVolumeAlign = env.SymLink('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh')
-Depends(xmippVolumeAlign, packageDeps)
+xmippVolumeAlign = env.Command('bin/xmipp_volume_align', 'applications/scripts/volume_align/batch_volume_align.sh', env.SymLink)
 
-xmippImagej = env.SymLink('bin/xmipp_imagej', 'external/runImageJ')
-Depends(xmippImagej, packageDeps)
+xmippImagej = env.Command('bin/xmipp_imagej', 'external/runImageJ', env.SymLink)
 
-xmippPython = env.SymLink('bin/xmipp_python', File('#software/bin/python').abspath)
-Depends(xmippPython, packageDeps)
+xmippPython = env.Command('bin/xmipp_python', File('#software/bin/python').abspath, env.SymLink)
+
+env.Alias('batchs', [xmippApropos, xmippCompile, xmippExportEMX, xmippImportBox, xmippImportCTFparam, 
+                     xmippImportCTFdat, xmippImportEMX, xmippMetadataPlot, xmippMetadataSelfileCreate, xmippProtocols, 
+                     xmippBrowser, xmippMicrographParticlePicking, xmippChimeraClient, xmippMicrographTiltpairPicking, xmippMPIClassifyCLTomo, 
+                     xmippMPIStepsRunner, xmippProjectionsExplorer, xmippShowj, xmippTomoj, xmippVisualizePreprocessingMicrographj, 
+                     xmippVolumeAlign, xmippImagej, xmippPython])
+env.Depends('batchs', packageDeps)
 
 # Tests
 if int(env['gtest']):
@@ -1359,15 +1355,15 @@ if int(env['gtest']):
     AddXmippTest('test_filename', testFilename, "$SOURCE --gtest_output=xml:$TARGET")
 
     # Python tests
-    testPythonInterface = env.SymLink('bin/xmipp_test_pythoninterface', 'applications/tests/test_pythoninterface/batch_test_pythoninterface.py')
+    testPythonInterface = env.Command('bin/xmipp_test_pythoninterface', 'applications/tests/test_pythoninterface/batch_test_pythoninterface.py', env.SymLink)
     Depends(testPythonInterface, packageDeps)
     AddXmippTest('test_pythoninterface', testPythonInterface, "$SOURCE $TARGET")
     
-    testPySqlite = env.SymLink('bin/xmipp_test_pysqlite', 'applications/tests/test_pysqlite/batch_test_pysqlite.py')
+    testPySqlite = env.Command('bin/xmipp_test_pysqlite', 'applications/tests/test_pysqlite/batch_test_pysqlite.py', env.SymLink)
     Depends(testPySqlite, packageDeps)
     AddXmippTest('test_pysqlite', testPySqlite, "$SOURCE $TARGET")
     
-    testEMX = env.SymLink('bin/xmipp_test_emx', 'applications/tests/test_emx/batch_test_emx.py')
+    testEMX = env.Command('bin/xmipp_test_emx', 'applications/tests/test_emx/batch_test_emx.py', env.SymLink)
     Depends(testEMX, packageDeps)
     AddXmippTest('test_emx', testEMX, "$SOURCE $TARGET")
 

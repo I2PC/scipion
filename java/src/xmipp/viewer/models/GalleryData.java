@@ -148,9 +148,6 @@ public class GalleryData {
         selectedVolFn = getVolumeAt(selectedIndex);
     }
 
-   
-
-      
 
     public enum Mode {
 
@@ -227,6 +224,7 @@ public class GalleryData {
             }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
                 mode = Mode.GALLERY_ROTSPECTRA;
+            
         }
     }
 
@@ -445,7 +443,7 @@ public class GalleryData {
         String label = "";
         
         for(ColumnInfo ci: displaycis.values())
-            label += md.getValueString(ci.label, id) + ", ";
+            label += ci.labelName + "=" + md.getValueString(ci.label, id) + ", ";
         if(!label.isEmpty())
             label = label.substring(0, label.length() - 2);
         return label;
@@ -707,7 +705,7 @@ public class GalleryData {
         if (isGalleryMode()) {
             mode = Mode.TABLE_MD;
            
-        } else if (isRotSpectraMd())
+        } else if (isRotSpectraMd() && parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA))
             mode = Mode.GALLERY_ROTSPECTRA;
         else if ( isVolumeMd) 
             mode = Mode.GALLERY_VOL;

@@ -83,7 +83,7 @@ public class MDSearchJDialog extends XmippDialog {
 	 * passed
 	 * */
 	public MDSearchJDialog(JFrame parent, JTable table, GalleryData data) {
-		super(parent, "Find and Replace", true);
+		super(parent, "Find and Replace", false);
 
 		this.parent = (GalleryJFrame) parent;
 		this.data = data;

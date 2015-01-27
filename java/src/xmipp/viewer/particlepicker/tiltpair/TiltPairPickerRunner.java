@@ -9,6 +9,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.ParticlePickerParams;
@@ -37,24 +38,15 @@ public class TiltPairPickerRunner implements Runnable {
 
     @Override
     public void run() {
-        try
-        {
+        
             TiltPairPicker ppicker = null;
-            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode);
+            ppicker = new TiltPairPicker(params.inputfile, params.outputdir, params.mode, params);
             
-            ppicker.setPython(params.python);
-            ppicker.setScipionScript(params.script);
-            ppicker.setProjectId(params.projectid);
-            ppicker.setProtId(params.protid);
+            if(params.isScipion())
+                XmippApplication.setIsScipion(true);
 
             new TiltPairPickerJFrame(ppicker);
-        } catch (Exception e) {
-            System.out.println("Error catched on main");
-            ParticlePicker.getLogger().log(Level.SEVERE, e.getMessage(), e);
-            XmippDialog.showException(null, e);
-
-        }
-
+        
     }
 
     public static void main(String[] args) {

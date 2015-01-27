@@ -28,8 +28,8 @@
 
 #include <iostream>
 #include<map>
-#include "../../external/hdf5-1.8.10/src/hdf5.h"
-#include "../../external/hdf5-1.8.10/c++/src/H5Cpp.h"
+#include "hdf5.h"
+#include "H5Cpp.h"
 #include "matrix1d.h"
 
 

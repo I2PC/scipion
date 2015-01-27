@@ -76,7 +76,8 @@ public class ParticlePickerParams {
         cmdLine = parser.parse(options, args);
         inputfile = cmdLine.getOptionValue(INPUTOPT);
         outputdir = cmdLine.getOptionValue(OUTPUTOPT);
-        mode = Mode.getMode(cmdLine.getOptionValue(MODEOPT));
+        String str = cmdLine.getOptionValue(MODEOPT);
+        mode = Mode.getMode(str);
          if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
         if (cmdLine.hasOption(FASTOPT)) 
@@ -86,7 +87,7 @@ public class ParticlePickerParams {
         
        
         if (cmdLine.hasOption(SCIPIONOPT)) {
-            XmippWindowUtil.setIsScipion(true);
+            
             
             cmdargs = cmdLine.getOptionValues(SCIPIONOPT);
             if(cmdargs != null)
@@ -101,5 +102,9 @@ public class ParticlePickerParams {
     }
     
     
+    public boolean isScipion()
+    {
+        return cmdLine.hasOption(SCIPIONOPT);
+    }
     
 }

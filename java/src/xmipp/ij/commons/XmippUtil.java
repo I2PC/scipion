@@ -35,6 +35,7 @@ public class XmippUtil {
                 writer.write("macro \"Particle Picker Tool - C0a0L18f8L818f\" {   }\nmacro \"Xmipp Micrograph Viewer Tool - C0a0L18f8L818f\" {  }");
                 writer.close();
                 IJ.run("Install...", "install=" + tempFile.getAbsolutePath());
+                //Tool cannot be set if it is not a default one
              } catch (Exception ex) {
                 Logger.getLogger(XmippUtil.class.getName()).log(Level.SEVERE, null, ex);
                 throw new IllegalArgumentException(ex);

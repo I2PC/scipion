@@ -277,6 +277,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void createModel() throws Exception
 	{
 		gallery = data.createModel();
+                if (data.parameters.columns > 0)
+			gallery.setColumns(data.parameters.columns);
+		else if (data.parameters.rows > 0)
+			gallery.setRows(data.parameters.rows);
 	}
 
 	public GalleryData getData()
@@ -458,10 +462,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void setInitialValues()
 	{
 		boolean adjust = false;
-		if (data.parameters.columns > 0)
-			gallery.setColumns(data.parameters.columns);
-		else if (data.parameters.rows > 0)
-			gallery.setRows(data.parameters.rows);
+		if (data.parameters.columns > 0 || data.parameters.rows > 0)
+			adjust = false;
 		else if (!data.isRotSpectraMode())
 			adjust = true;
 
@@ -1650,7 +1652,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					{
                                                 XmippUtil.showImageJ(Tool.VIEWER);
 						ImagePlusLoader loader = gallery.getImageLoader();
-						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, true);
+						ImagesWindowFactory.openXmippImageWindow(GalleryJFrame.this, loader, data.parameters);
 
                                                 
 					}

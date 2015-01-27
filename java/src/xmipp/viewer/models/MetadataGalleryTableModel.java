@@ -166,8 +166,10 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 		if (dim == null)
 			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
-                if(data.zoom == 0)
-                    data.zoom = GalleryData.getDefaultZoom(width);
+                int defZoom = GalleryData.getDefaultZoom(width);
+                int similarity = Math.min(defZoom, data.zoom)/Math.max(defZoom, data.zoom);
+                if(data.zoom == 0 || similarity < 0.5)
+                    data.zoom = defZoom;
 		return dim;
 	}
 
@@ -280,7 +282,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
                     loader.setGeometry(data.getGeometry(data.ids[index]));
                 if (data.getNormalized())
                     loader.setNormalize(normalize_min, normalize_max);
-                ImagesWindowFactory.openXmippImageWindow(data.window, loader, loader.allowsPoll());
+                ImagesWindowFactory.openXmippImageWindow(data.window, loader, data.parameters);
         }
 
 	@Override

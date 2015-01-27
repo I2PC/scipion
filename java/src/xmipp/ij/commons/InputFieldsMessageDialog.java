@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package xmipp.viewer.scipion;
+package xmipp.ij.commons;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -31,21 +31,20 @@ import xmipp.utils.XmippWindowUtil;
  *
  * @author airen
  */
-public class ScipionMessageDialog extends JDialog implements ActionListener {
+public class InputFieldsMessageDialog extends JDialog implements ActionListener {
     
     private String msg;
     private JButton cancelbt;
     private JButton okbt;
     public int action;
-    public static final Color firebrick = Color.decode("#B22222");
-    public static final Color lightgrey = Color.decode("#EAEBEC");
+   
     public static final int OK_OPTION = 1;
     public static final int CANCEL_OPTION = 0;
     private Map<String, String> fields;
     Map<String, JTextField> fieldstfs;
    
     
-    public ScipionMessageDialog(JFrame parent, String title, String msg, Map<String, String> fields)
+    public InputFieldsMessageDialog(JFrame parent, String title, String msg, Map<String, String> fields)
     {
         super(parent, true);
         this.msg = msg;
@@ -55,7 +54,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         
     }
     
-     public ScipionMessageDialog(JFrame parent, String title, String msg)
+     public InputFieldsMessageDialog(JFrame parent, String title, String msg)
     {
         this(parent, title, msg, null);
     }
@@ -93,7 +92,9 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
             }
         });
         buttonspn.add(cancelbt);
-        okbt = getScipionButton("Ok", true);
+        okbt = new JButton("Ok");
+        okbt.setBackground(XmippWindowUtil.firebrick);
+        okbt.setForeground(Color.WHITE);
         okbt.addActionListener(this);
         
         buttonspn.add(okbt);
@@ -107,15 +108,6 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     
  
     
-    public static JButton getScipionButton(String text, boolean isenabled)
-    {
-        JButton button = new JButton(text);
-        Color color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
-        Color forecolor = isenabled? Color.WHITE: Color.GRAY;
-        button.setBackground(color);
-        button.setForeground(forecolor);
-        return button;
-    }
     
     public void close()
     {

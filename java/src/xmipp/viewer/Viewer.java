@@ -3,14 +3,10 @@ package xmipp.viewer;
 import java.util.LinkedList;
 import javax.swing.SwingUtilities;
 import ij.IJ;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import xmipp.jni.Filename;
-import xmipp.jni.ImageGeneric;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.StopWatch;
-import xmipp.viewer.particlepicker.Micrograph;
 
 import xmipp.viewer.windows.ImagesWindowFactory;
 

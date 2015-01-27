@@ -5,27 +5,24 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.ij.commons.InputFieldsMessageDialog;
+import xmipp.utils.ScipionParams;
 import java.awt.Color;
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import xmipp.jni.Filename;
+import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
+import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.windows.GalleryJFrame;
 
@@ -48,7 +45,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String runNameKey = "Run name:";
     private String other;
     private JButton representativesbt;
-    private ScipionMessageDialog dlg;
+    private InputFieldsMessageDialog dlg;
     private String tmpdir;
     private JButton createvolbt;
     private String setType;
@@ -66,12 +63,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
       
     private void setScipionImageIcon()
     {
-        BufferedImage img = null;
-        try {
-            img = ImageIO.read(new File(Filename.getXmippPath("resources" + File.separator + "scipion_logo.png")));
+        
+            Image img = XmippResource.getIcon("scipion_logo.png").getImage();
             setIconImage(img);
-        } catch (IOException e) {
-}
+
     }
 
     protected void readScipionParams(ScipionParams parameters)
@@ -90,7 +85,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
             sqlitefile = data.getTmpFile("_selection");
             msgfields = new HashMap<String, String>();
-            msgfields.put(runNameKey, "ProtUserSubset");
+            msgfields.put(runNameKey, "create subset");
             other = parameters.other;
             initComponents();
         } catch (Exception ex) {
@@ -105,8 +100,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
     
     protected void initComponents() {
-        Icon icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator
-						+ "fa-times.png")));
+        Icon icon = XmippResource.getIcon("fa-times.png");
         JButton closebt = new JButton("Close", icon);
         closebt.addActionListener(new ActionListener() {
 
@@ -117,13 +111,14 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         });
         
         buttonspn.add(closebt);
-        if(!XmippWindowUtil.isScipionCmd())
+        if(!XmippApplication.isScipion())
             return;
             
         if (type != null) {
             if(!data.isCTFMd())
             {
-                cmdbutton = getScipionButton("Create " + type, new ActionListener() {
+                cmdbutton = XmippWindowUtil.getScipionIconButton("Create " + type);
+                cmdbutton.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -134,7 +129,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             if(data.hasClasses())
             {
-                classcmdbutton = getScipionButton("Create Classes", new ActionListener() {
+                classcmdbutton = XmippWindowUtil.getScipionIconButton("Create Classes");
+                classcmdbutton.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -144,7 +140,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 });
                 
                 String repText = isClass2D() ? "Create Averages": "Create Volumes";
-                representativesbt = getScipionButton(repText, new ActionListener() {
+                representativesbt = XmippWindowUtil.getScipionIconButton(repText);
+                representativesbt.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -160,16 +157,19 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             
             if(data.isCTFMd())
             {
-                icon = new ImageIcon(Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-cogs.png")));
-                JButton recalculatectfbt = getScipionButton("Recalculate CTFs", new ActionListener() {
+                icon = XmippResource.getIcon("fa-cogs.png");
+                JButton recalculatectfbt = XmippWindowUtil.getScipionIconButton("Recalculate CTFs");
+                recalculatectfbt.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
                         createCTFsSubset();
                     }
-                }, icon);
+                });
+                recalculatectfbt.setIcon(icon);
                 
-                JButton ctfsubsetbt = getScipionButton("Create Micrographs", new ActionListener() {
+                JButton ctfsubsetbt = XmippWindowUtil.getScipionIconButton("Create Micrographs");
+                ctfsubsetbt.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -186,7 +186,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             if(self.equals("Volume") || self.equals("Class3D"))
             {
-                createvolbt = getScipionButton("Create Volume", new ActionListener() {
+                createvolbt = XmippWindowUtil.getScipionIconButton("Create Volume");
+                createvolbt.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent ae) {
@@ -310,9 +311,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public boolean confirmCreate(String msg)
     {
        
-        dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
-                        int create = dlg.action;
-        return (create == ScipionMessageDialog.OK_OPTION);
+        dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
+        int create = dlg.action;
+        return (create == InputFieldsMessageDialog.OK_OPTION);
     }
 
     public void reloadTableData(boolean changed)
@@ -322,26 +323,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     }
     
     
-    public JButton getScipionButton(String text, ActionListener listener) {
-        Image imp = Toolkit.getDefaultToolkit().getImage(Filename.getXmippPath("resources" + File.separator + "fa-plus-circle.png"));
-        Icon icon = new ImageIcon(imp);
-        return getScipionButton(text, listener, icon);
-    }
     
-    public JButton getScipionButton(String text, ActionListener listener, Icon icon) {
-        JButton button = new JButton(text.replace("Create ", ""), icon);
-        button.setToolTipText(text);
-        button.addActionListener(listener);
-        button.setBackground(ScipionMessageDialog.firebrick);
-        button.setForeground(Color.WHITE);
-        return button;
-    }
 
     
 
     protected void enableActions() {
         boolean isenabled = !data.isVolumeMode();
-        Color color = isenabled ? ScipionMessageDialog.firebrick : ScipionMessageDialog.lightgrey;
+        Color color = isenabled ? XmippWindowUtil.firebrick : XmippWindowUtil.lightgrey;
         Color forecolor = isenabled ? Color.WHITE : Color.GRAY;
         if(cmdbutton != null)
         {
@@ -353,7 +341,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         if(classcmdbutton != null)
         {
             isenabled = data.hasClasses() && !data.isVolumeMode();
-            color = isenabled? ScipionMessageDialog.firebrick: ScipionMessageDialog.lightgrey; 
+            color = isenabled? XmippWindowUtil.firebrick: XmippWindowUtil.lightgrey; 
             forecolor = isenabled? Color.WHITE: Color.GRAY;
             classcmdbutton.setVisible( isenabled);
             classcmdbutton.setBackground(color);

@@ -29,6 +29,7 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.utils.Params;
 import xmipp.utils.XmippMessage;
 
 public class ImagePlusLoader {
@@ -37,9 +38,7 @@ public class ImagePlusLoader {
     private boolean existsfile;
     
 
-    public ImagePlusLoader() {
-
-    }
+    
 
     public ImagePlusLoader(ImagePlus imp) {
         this(getFile(imp), imp, null, false, false, -2);
@@ -170,5 +169,7 @@ public class ImagePlusLoader {
     {
         impreader.setDimension(width, height);
     }
+    
+    
 
 }

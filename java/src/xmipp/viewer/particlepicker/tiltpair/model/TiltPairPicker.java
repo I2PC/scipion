@@ -8,10 +8,12 @@ import javax.swing.JFrame;
 import xmipp.jni.Filename;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
+import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.Format;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
+import xmipp.viewer.particlepicker.ParticlePickerParams;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 
@@ -27,9 +29,9 @@ public class TiltPairPicker extends ParticlePicker
 	protected List<UntiltedMicrograph> micrographs;
 	private UntiltedMicrograph micrograph;
 
-	public TiltPairPicker(String selfile, String outputdir, Mode state)
+	public TiltPairPicker(String selfile, String outputdir, Mode state, ParticlePickerParams params)
 	{
-		super(selfile, outputdir, state);
+		super(selfile, outputdir, state, params);
 
 		for (UntiltedMicrograph um : micrographs)
 			loadMicrographParticles(um);

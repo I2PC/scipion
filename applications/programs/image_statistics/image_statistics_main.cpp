@@ -109,12 +109,15 @@ protected:
         // Process each file -----------------------------------------------------
         mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
 
-        if (short_format)
+        if (verbose > 0)
         {
-            std::cout << "Format: Name ZxYxX min max avg stddev ";
-            if (show_angles)
-                std::cout << " <rot tilt psi>";
-            std::cout << '>' << std::endl;
+          if (short_format)
+          {
+              std::cout << "Format: Name ZxYxX min max avg stddev ";
+              if (show_angles)
+                  std::cout << " <rot tilt psi>";
+              std::cout << '>' << std::endl;
+          }
         }
 
         // get xdim, ydim,zdim
@@ -160,23 +163,25 @@ protected:
         }
 
         // Show information
-        std::cout << stringToString(fnImg, max_length + 1);
-        if (zdimOut > 1)
-            formatString("%4dx%4dx%4d ", zdimOut, ydimOut, xdimOut);
-        else
-            formatString("%4dx%4d", ydimOut, xdimOut);
-
-        if (!short_format)
+        if (verbose > 0)
         {
-            std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
-                                      min_val, max_val, avg, stddev);
+          std::cout << stringToString(fnImg, max_length + 1);
+          if (zdimOut > 1)
+              formatString("%4dx%4dx%4d ", zdimOut, ydimOut, xdimOut);
+          else
+              formatString("%4dx%4d", ydimOut, xdimOut);
 
-            if (show_angles)
-                std::cout << formatString("rot=%10f tilt=%10f psi=%10f", rot, tilt, psi);
+          if (!short_format)
+          {
+              std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
+                                        min_val, max_val, avg, stddev);
+
+              if (show_angles)
+                  std::cout << formatString("rot=%10f tilt=%10f psi=%10f", rot, tilt, psi);
+          }
+          else
+              std::cout << formatString("%10f %10f %10f %10f", min_val, max_val, avg, stddev);
         }
-        else
-            std::cout << formatString("%10f %10f %10f %10f", min_val, max_val, avg, stddev);
-
         size_t id;
         id = DF_stats.addObject();
         DF_stats.setRow(rowIn,id);
@@ -192,7 +197,8 @@ protected:
         mean_stddev  += stddev;
 
         // Finish information .................................................
-        std::cout << std::endl;
+        if (verbose > 0)
+          std::cout << std::endl;
     }
 
     void postProcess()
@@ -200,22 +206,26 @@ protected:
 
         if (mdInSize > 1)
         {
-            // Show total statistics ------------------------------------------------
-            std::cout << "==================================================\n";
-            std::cout << "Total number of images/volumes: " << mdInSize << std::endl;
             mean_min_val /= mdInSize;
             mean_max_val /= mdInSize;
             mean_avg     /= mdInSize;
             mean_stddev  /= mdInSize;
 
-            std::cout << stringToString(" ", max_length + 13);
-            if (!short_format)
-                std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
-                                          mean_min_val, mean_max_val, mean_avg, mean_stddev);
-            else
-                std::cout << formatString("%10f %10f %10f %10f", mean_min_val, mean_max_val, mean_avg, mean_stddev);
-            std::cout << std::endl;
-            if(save_image_stats)
+            if (verbose)
+            {
+              // Show total statistics ------------------------------------------------
+              std::cout << "==================================================\n";
+              std::cout << "Total number of images/volumes: " << mdInSize << std::endl;
+              std::cout << stringToString(" ", max_length + 13);
+              if (!short_format)
+                  std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
+                                            mean_min_val, mean_max_val, mean_avg, mean_stddev);
+              else
+                  std::cout << formatString("%10f %10f %10f %10f", mean_min_val, mean_max_val, mean_avg, mean_stddev);
+              std::cout << std::endl;
+            }
+
+            if (save_image_stats)
             {
                 averageArray /= mdInSize;
                 if (mdInSize > 1)
@@ -242,9 +252,9 @@ protected:
         if(save_image_stats)
         {
             Image<double> dummyImage;
-            dummyImage()=averageArray;
+            dummyImage() = averageArray;
             dummyImage.write(statsRoot  + "average.xmp");
-            dummyImage()=stdArray;
+            dummyImage() = stdArray;
             dummyImage.write(statsRoot + "stddev.xmp");
         }
     }
