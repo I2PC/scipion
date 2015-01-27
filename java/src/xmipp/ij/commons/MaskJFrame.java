@@ -82,7 +82,7 @@ public class MaskJFrame extends JFrame{
         add(invertbt);
         add(invertbt, XmippWindowUtil.getConstraints(constraints, 0, 1));
         JPanel commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2));
+        add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
         
               
         registerbt = XmippWindowUtil.getScipionButton("Create Mask");
@@ -92,21 +92,20 @@ public class MaskJFrame extends JFrame{
             public void actionPerformed(ActionEvent ae) {
                 registerMask();
             }
-
             
         });
         
         commandspn.add(registerbt);
         registerbt.setVisible(XmippApplication.isScipion());
         pack();
-        XmippWindowUtil.setLocation(0.5, 0.5, this);
         setVisible(true);
 
     }
     
     protected void registerMask() {
         HashMap<String, String> msgfields = new HashMap<String, String>();
-        msgfields.put("Run name:", "create mask");
+        String field = "Run name:";
+        msgfields.put(field, "create mask");
         ScipionMessageDialog dlg = new ScipionMessageDialog(this, "Question", "Are you sure you want to register mask?", msgfields);
                         int create = dlg.action;
         boolean register = (create == ScipionMessageDialog.OK_OPTION);
@@ -116,7 +115,8 @@ public class MaskJFrame extends JFrame{
             ImageGeneric ig = XmippImageConverter.convertToImageGeneric(mask);
             ig.write(path);
             ScipionParams params = (ScipionParams)iw.getParams();
-            String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path};
+            String label = dlg.getFieldValue(field);
+            String[] command = new String[]{params.python, params.getRegisterMaskScript(), params.projectid, params.inputid, path, label};
 
             String output = XmippWindowUtil.executeCommand(command, true);
             System.out.println(output);

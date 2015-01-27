@@ -215,6 +215,8 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
                     @Override
                     public void run() {
                         maskfr = new MaskJFrame(XmippImageWindow.this);
+                        XmippWindowUtil.setLocation(0.2f, 0.5f, XmippImageWindow.this);
+                        XmippWindowUtil.setLocation(0.6f, 0.5f, maskfr);
                     }
                 });
                 
