@@ -1005,7 +1005,7 @@ class Set(OrderedObject):
         if self._mapperPath.isEmpty():
             raise Exception("Set.load:  mapper path and prefix not set.")
         fn, prefix = self._mapperPath
-        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)
+        self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
         self._size.set(self._mapper.count())
            
     def __del__(self):

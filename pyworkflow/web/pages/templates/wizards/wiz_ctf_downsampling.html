@@ -16,12 +16,7 @@
 {% for obj in objects %}
 {% if forloop.counter0 == 0 %} 
 <script>
-	function doPreviewCTF(){
-		var elm = $("tr.selected");
-		previewCTF(elm);
-	}
-	
-	firstElm  = {{obj.getObjId}};
+	var firstElm  = {{obj.getObjId}};
 </script>
 {% endif %}
 <tr id="{{obj.getObjId}}" class="no-selected"
@@ -57,7 +52,7 @@
 			<input id="downsampling" type="text" value="{{params.value.0}}"/>
 		</td>
 		<td>
-			<a href="javascript: doPreviewCTF();" class="buttonGrey">Preview</a>
+			<a href="javascript:doCTF();" class="buttonGrey">Preview</a>
 		</td>
 	</tr>
 </table>

@@ -436,9 +436,9 @@ def rowToCoordinate(coordRow):
     return coord
 
 
-def rowToParticle(partRow, **kwargs):
+def _rowToParticle(partRow, particleClass, **kwargs):
     """ Create a Particle from a row of a metadata. """
-    img = rowToImage(partRow, xmipp.MDL_IMAGE, Particle, **kwargs)
+    img = rowToImage(partRow, xmipp.MDL_IMAGE, particleClass, **kwargs)
     img.setCoordinate(rowToCoordinate(partRow))
     # copy micId if available
     # if not copy micrograph name if available
@@ -457,8 +457,16 @@ def rowToParticle(partRow, **kwargs):
     except Exception as e:
         print "Warning:", e.message
     return img
-    
-    
+
+
+def rowToParticle(partRow, **kwargs):
+    return _rowToParticle(partRow, Particle, **kwargs)
+
+
+def rowToMovieParticle(partRow, **kwargs):
+    return _rowToParticle(partRow, MovieParticle, **kwargs)
+
+
 def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
     imageToRow(part, partRow, xmipp.MDL_IMAGE, **kwargs)
@@ -779,7 +787,11 @@ def writeSetOfImages(imgSet, filename, imgToFunc, blockName='Images', **kwargs):
         
 def readSetOfParticles(filename, partSet, **kwargs):
     readSetOfImages(filename, partSet, rowToParticle, **kwargs)
-    
+
+
+def readSetOfMovieParticles(filename, partSet, **kwargs):
+    readSetOfImages(filename, partSet, rowToMovieParticle, **kwargs)
+
 
 def setOfParticlesToMd(imgSet, md, **kwargs):
     setOfImagesToMd(imgSet, md, particleToRow, **kwargs)

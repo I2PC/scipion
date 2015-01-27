@@ -24,6 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.data import Transform
 """
 This sub-package contains protocol for particles filters operations
 """
@@ -94,8 +95,10 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
+        imgSet.setAlignment2D()
         outputStk = self._getFileName('particlesAligned')
-        imgSet.readStack(outputStk)
+        imgSet.readStack(outputStk, 
+                         postprocessImage=lambda img: img.setTransform(Transform()))
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(particles, imgSet)
         

@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pprint import PrettyPrinter
+from pyworkflow.utils.utils import prettyDict
 """
 This module extends the functionalities of a normal Tkinter Canvas.
 The new Canvas class allows to easily display Texboxes and Edges
@@ -45,9 +47,9 @@ class Canvas(tk.Canvas, Scrollable):
     It will really contains a Frame, a Canvas and scrollbars"""
     _images = {}
     
-    def __init__(self, parent, **args):
+    def __init__(self, parent, tooltipCallback=None, tooltipDelay=1500, **kwargs):
         defaults = {'bg': 'white'}
-        defaults.update(args)
+        defaults.update(kwargs)
         Scrollable.__init__(self, parent, tk.Canvas, **defaults)
         
         self.lastItem = None # Track last item selected
@@ -70,7 +72,46 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Key>", self._unpostMenu)
         self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
+        
+        self._tooltipId = None
+        self._tooltipOn = False # True if the tooltip is displayed
+        self._tooltipCallback = tooltipCallback
+        self._tooltipDelay = tooltipDelay
+        
+        if tooltipCallback:
+            self.bind('<Motion>', self.onMotion)
+            #self.bind('<Leave>', self.onLeave)
+            self._createTooltip() # This should set
+        
         self._menu = tk.Menu(self, tearoff=0)
+        
+    def _createTooltip(self):
+        """ Create a Tooltip window to display tooltips in 
+        the canvas.
+        """
+        tw = tk.Toplevel(self)
+        tw.withdraw() # hidden by default
+        tw.wm_overrideredirect(1) # Remove window decorations
+        
+        self._tooltip = tw
+        
+    def _showTooltip(self, x, y, item):
+        # check that the mouse is still in the position
+        nx = self.winfo_pointerx()
+        ny = self.winfo_pointery()
+        if x == nx and y == ny:
+            self._tooltipOn = True
+            tw = self._tooltip # short notation
+            self._tooltipCallback(tw, item)
+            tw.update_idletasks()
+            tw.wm_geometry("+%d+%d" % (x, y))
+            tw.deiconify()
+        
+    def _hideTooltip(self):
+        if self._tooltipOn:
+            self._tooltipOn = False
+            tw = self._tooltip # short notation
+            tw.withdraw()
         
     def getImage(self, img):
         return gui.getImage(img, self._images)
@@ -90,23 +131,28 @@ class Canvas(tk.Canvas, Scrollable):
             self.lastItem.setSelected(False)
         self.lastItem = item
         item.setSelected(True)
-                    
-    def _handleMouseEvent(self, event, callback):
-        xc, yc = self.getCoordinates(event)
+               
+    def _findItem(self, xc, yc):
+        """ Find if there is any item in the canvas
+        in the mouse event coordinates.
+        Return None if not Found
+        """
         items = self.find_overlapping(xc-1, yc-1,  xc+1, yc+1)
-        if self.lastItem:
-            self.lastItem = None
-        self.callbackResults = None
-        self.lastPos = (0, 0)
         for i in items:
             if i in self.items:
-                self.lastItem = self.items[i]
-                #self.lastItem.setSelected(True)
-                if callback:
-                    self.callbackResults = callback(self.lastItem)
-                self.lastPos = (xc, yc)
-                break
-        
+                return self.items[i]
+        return None
+             
+    def _handleMouseEvent(self, event, callback):
+        xc, yc = self.getCoordinates(event)
+        self.lastItem = self._findItem(xc, yc)
+        self.callbackResults = None
+        self.lastPos = (0, 0)
+        if self.lastItem is not None:
+            if callback:
+                self.callbackResults = callback(self.lastItem)
+            self.lastPos = (xc, yc)
+            
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
@@ -151,6 +197,22 @@ class Canvas(tk.Canvas, Scrollable):
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
             self.lastPos = (xc, yc)  
             
+    def onMotion(self, event):
+        self.onLeave(event) # Hide tooltip and cancel schedule
+            
+        xc, yc = self.getCoordinates(event)
+        item = self._findItem(xc, yc)
+        if item is not None:
+            self._tooltipId = self.after(self._tooltipDelay, 
+                                         lambda: self._showTooltip(event.x_root,
+                                                                   event.y_root,
+                                                                   item))  
+        
+    def onLeave(self, event):
+        if self._tooltipId:
+            self.after_cancel(self._tooltipId)
+            self._hideTooltip()
+            
     def createTextbox(self, text, x, y, bgColor="#99DAE8", textColor='black'):
         tb = TextBox(self, text, x, y, bgColor, textColor)
         self.items[tb.id] = tb
@@ -178,12 +240,63 @@ class Canvas(tk.Canvas, Scrollable):
         return Cable(self,src,srcSocket,dst,dstSocket)
 
     def clear(self):
-        """Clear all items from the canvas"""
+        """ Clear all items from the canvas """
         self.delete(tk.ALL)
 
     def updateScrollRegion(self):
         self.update_idletasks()
-        self.config(scrollregion=self.bbox("all")) 
+        self.config(scrollregion=self.bbox("all"))
+        
+    def drawGraph(self, graph, layout=None, drawNode=None):
+        """ Draw a graph in the canvas.
+        nodes in the graph should have x and y.
+        If layout is not None, it will be used to 
+        reorganize the node positions.
+        Provide drawNode if you want to customize how
+        to create the boxes for each graph node.
+        """
+        
+        self.drawNode = drawNode
+        
+        self._drawNodes(graph.getRoot(), {})
+        
+        if layout is not None:
+            layout.draw(graph)
+            
+        # Update node positions
+        self._updatePositions(graph.getRoot(), {})
+        self.updateScrollRegion()
+        
+    def _drawNodes(self, node, visitedDict={}):
+        nodeName = node.getName()
+        
+        if nodeName not in visitedDict:
+            visitedDict[nodeName] = True
+            item = self.drawNode(self, node)
+            node.width, node.height = item.getDimensions()
+            node.item = item
+            item.node = node
+            self.addItem(item)
+            
+            if getattr(node, 'expanded', True):
+                for child in node.getChilds():
+                    self._drawNodes(child, visitedDict)
+        
+    def _updatePositions(self, node, visitedDict={}):
+        """ Update position of nodes and create the edges. """
+        nodeName = node.getName()
+        
+        if nodeName not in visitedDict:
+            visitedDict[nodeName] = True
+            item = node.item
+            item.moveTo(node.x, node.y)
+            
+            if getattr(node, 'expanded', True):
+                for child in node.getChilds():
+                    self.createEdge(item, child.item)
+                    self._updatePositions(child, visitedDict)
+            
+        
         
 
 def findClosestPoints(list1, list2):
@@ -226,7 +339,6 @@ class Item(object):
         self.sockets={}
         self.listeners = []
 
-
     def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
         yc=(y2+y1)/2.0
@@ -260,19 +372,15 @@ class Item(object):
         self.sockets[name]={"object": socketClass(self.canvas,x,y,name,fillColor=fillColor,outline=outline), "verticalLocation": verticalLocation, "position":position}
         self.paintSocket(self.getSocket(name))
 
-
     def getSocket(self,name):
         return self.sockets[name]["object"]
-
 
     def getSocketsAt(self,verticalLocation):
         return filter(lambda s: s["verticalLocation"] == verticalLocation, self.sockets.values())
 
-
     def getSocketCoords(self,name):
         socket=self.sockets[name]
         return self.getSocketCoordsAt(socket["verticalLocation"], socket["position"], self.countSockets(socket["verticalLocation"]))
-
 
     def getSocketCoordsAt(self,verticalLocation,position=1,socketsCount=1):
         x1,y1,x2,y2=self.getCorners()
@@ -285,7 +393,6 @@ class Item(object):
         else:
             y=y2
         return (x,y)
-
 
     def relocateSockets(self,verticalLocation,count):
         sockets=self.getSocketsAt(verticalLocation)
@@ -302,7 +409,6 @@ class Item(object):
     def paintSockets(self):
         for name in self.sockets.keys():
             self.paintSocket(self.getSocket(name))
-
 
     def getDimensions(self):
         x, y, x2, y2 = self.canvas.bbox(self.id)
@@ -332,7 +438,6 @@ class Item(object):
             bw = 2
         self.canvas.itemconfig(self.id, width=bw)
 
-
         
 class TextItem(Item):
     """This class will serve to paint and store rectange boxes with some text.
@@ -344,7 +449,6 @@ class TextItem(Item):
         self.text = text
         self.margin = 8
         self.paint()
-
         
     def _paintBounds(self, x, y, w, h, fillColor):
         """ Subclasses should implement this method 
@@ -370,7 +474,7 @@ class TextItem(Item):
         self.canvas.tag_raise(self.id_text)
 
     def move(self, dx, dy):
-        super(TextItem,self).move(dx,dy)
+        super(TextItem, self).move(dx,dy)
         self.canvas.move(self.id_text, dx, dy)
     
    
@@ -461,7 +565,7 @@ class Connector(Item):
         """Should be implemented by the subclasses"""
         pass
 
-    def paintPlug(cls,canvas,x,y):
+    def paintPlug(self, canvas, x, y):
         """Should be implemented by the subclasses"""
         pass
 

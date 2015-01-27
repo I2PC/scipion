@@ -168,7 +168,7 @@ class ComboBox(ttk.Combobox):
     """ Extension of ttk.ComboBox to allow having diferent display text and values.
     Also adding some utils to getSelected index and value (same for set)
     """
-    def __init__(self, parent, choices, values=None, initial=None, **args):
+    def __init__(self, parent, choices, values=None, initial=None, onChange=None, **kwargs):
         """ Create a combobox from a list of choices.
         Params:
             parent: the parent widget (required by Tkinter)
@@ -176,12 +176,14 @@ class ComboBox(ttk.Combobox):
             values: if None, will enumerate from 0 to len(choices)-1
                 if a list is provided, should have the same lenght than choices.
             initial: if None, take the first choice
-            **args: extra arguments passed to ttk.Combobox contructor.
+            onChange: provide a callback function to be used when change the selected value
+            **kwargs: extra arguments passed to ttk.Combobox contructor.
         """
         indexes = range(len(choices))
         if values is None:
             values = indexes
         choices = [str(c) for c in choices] # Convert to a list of strings
+        
         if initial is None:
             initial = choices[0]
         self._valuesDict = dict(zip(choices, values))
@@ -189,9 +191,9 @@ class ComboBox(ttk.Combobox):
         
         self._var = tk.StringVar()
         self._var.set(initial)
-        self._changeCallback = None
+        self._changeCallback = onChange
         self._var.trace('w', self._onChanged)
-        ttk.Combobox.__init__(self, parent, textvariable=self._var, state='readonly', **args)
+        ttk.Combobox.__init__(self, parent, textvariable=self._var, state='readonly', **kwargs)
         self['values'] = choices
         
     def getValue(self):

@@ -690,14 +690,16 @@ class SetOfImages(EMSet):
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
-    def readStack(self, fnStack):
+    def readStack(self, fnStack, postprocessImage=None):
         """ Populate the set with the images in the stack """
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.setLocation(i, fnStack)
-            self.append(img)
             img.cleanObjId()
+            img.setLocation(i, fnStack)
+            if postprocessImage is not None:
+                postprocessImage(img)
+            self.append(img)
     
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
@@ -1469,10 +1471,28 @@ class SetOfMovies(SetOfMicrographs):
         return self._gainFile.get()
     
     
+class MovieParticle(Particle):
+    def __init__(self, **kwargs):
+        Particle.__init__(self, **kwargs)
+        self._particleId = Integer()
+        self._frameId = Integer()
+    
+    def getParticleId(self):
+        return self._particleId.get()
+    
+    def setParticleId(self, partId):
+        self._particleId.set(partId)
+        
+    def getFrameId(self):
+        return self._frameId.get()
+    
+    def setFrameId(self, partId):
+        self._frameId.set(partId)
+
+
 class SetOfMovieParticles(SetOfParticles):
     """ This is just to distinguish the special case
     when the particles have been extracted from a set of movies.
     """
-    pass
-    
+    ITEM_TYPE = MovieParticle
     

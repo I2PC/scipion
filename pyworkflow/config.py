@@ -85,8 +85,9 @@ class ProjectSettings(OrderedObject):
         self.hostList = SettingList() # List to store different hosts configurations
         self.menuList = SettingList() # Store different menus
         self.protMenuList = SettingList() # Store different protocol configurations
+        self.nodeList = NodeConfigList() # Store graph nodes positions and other info
         self.mapper = None # This should be set when load, or write
-        self.graphView = Boolean(False)
+        self.runsView = Integer(1) # by default the graph view
         self.readOnly = Boolean(False)
         self.runSelection = CsvList(int) # Store selected runs
         
@@ -118,11 +119,11 @@ class ProjectSettings(OrderedObject):
                 return host
         return None
     
-    def getGraphView(self):
-        return self.graphView.get()
+    def getRunsView(self):
+        return self.runsView.get()
     
-    def setGraphView(self, value):
-        self.graphView.set(value)
+    def setRunsView(self, value):
+        self.runsView.set(value)
         
     def getReadOnly(self):
         return self.readOnly.get()
@@ -262,6 +263,15 @@ class ProjectSettings(OrderedObject):
     
         #writeConfig(menu, 'menu_test.xml')
         self.addMenu(menu)
+        
+    def getNodes(self):
+        return self.nodeList
+    
+    def getNodeById(self, nodeId):
+        return self.nodeList.getNode(nodeId)
+    
+    def addNode(self, nodeId, **kwargs):
+        return self.nodeList.addNode(nodeId, **kwargs)
 
 
 
@@ -328,3 +338,82 @@ class ProtocolConfig(MenuConfig):
                 args['icon'] = 'class_obj.gif'
         return MenuConfig.addSubMenu(self, text, value, **args)
 
+
+class NodeConfig(OrderedObject):
+    """ Store Graph node information such as x, y. """
+    
+    def __init__(self, nodeId=0, x=None, y=None, selected=False, expanded=True):
+        OrderedObject.__init__(self)
+        # Special node id 0 for project node
+        self._id = Integer(nodeId)
+        # Positions in the plane
+        self._x = Integer(x)
+        self._y = Integer(y)
+        # Flag to mark selected nodes
+        self._selected = Boolean(selected)        
+        # Flag to mark if this node is expanded or closed
+        self._expanded = Boolean(expanded)
+        
+    def getId(self):
+        return self._id.get()
+    
+    def setX(self, x):
+        self._x.set(x)
+        
+    def getX(self):
+        return self._x.get()
+    
+    def setY(self, y):
+        self._y.set(y)
+        
+    def getY(self):
+        return self._y.get()
+    
+    def setPosition(self, x, y):
+        self.setX(x)
+        self.setY(y)
+        
+    def getPosition(self):
+        return self.getX(), self.getY()
+        
+    def setSelected(self, selected):
+        self._selected.set(selected)
+        
+    def isSelected(self):
+        return self._selected.get()
+    
+    def setExpanded(self, expanded):
+        self._expanded.set(expanded)
+        
+    def isExpanded(self):
+        return self._expanded.get()
+    
+    
+class NodeConfigList(List):
+    """ Store all nodes information items and 
+    also store a dictionary for quick access
+    to nodes query.
+    """
+    def __init__(self):
+        self._nodesDict = {}
+        List.__init__(self)
+        
+    def getNode(self, nodeId):
+        return self._nodesDict.get(nodeId, None)
+    
+    def addNode(self, nodeId, **kwargs):
+        node = NodeConfig(nodeId, **kwargs)
+        self._nodesDict[node.getId()] = node
+        self.append(node)
+        return node
+        
+    def updateDict(self):
+        self._nodesDict.clear()
+        for node in self:
+            self._nodesDict[node.getId()] = node
+            
+    def clear(self):
+        List.clear(self)
+        self._nodesDict = {}
+        
+        
