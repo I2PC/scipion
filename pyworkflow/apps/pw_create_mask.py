@@ -39,8 +39,10 @@ if __name__ == '__main__':
     projectId=sys.argv[1]
     inputId=sys.argv[2]
     file=sys.argv[3]
+    label = sys.argv[4]
 
     project = Manager().loadProject(projectId)
     inputObject = project.mapper.selectById(int(inputId))
     prot = project.newProtocol(ProtCreateMask, maskFile=file, inputImage=inputObject)
+    prot.setObjLabel(label)
     project.launchProtocol(prot, wait=True)

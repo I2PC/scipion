@@ -68,6 +68,72 @@ class ProtUserSubSet(BatchProtocol):
         
     def _insertAllSteps(self):
         self._insertFunctionStep('createSetStep')
+
+
+    def createSetStep(self):
+        setObj = self.createSetObject()
+        inputObj = self.inputObject.get()
+
+        if self.volId.get():
+
+            if isinstance(setObj, SetOfVolumes):
+                volSet = SetOfVolumes(filename=self._dbName)
+                output = volSet[self.volId.get()]
+            else:
+                classSet = SetOfClasses3D(filename=self._dbName)
+                output = classSet[self.volId.get()].getRepresentative()
+            self._defineOutputs(outputVolume=output)
+
+        elif isinstance(inputObj, SetOfImages):
+                output = self._createSubSetFromImages(inputObj)
+
+        elif isinstance(inputObj, SetOfClasses):
+            output = self._createSubSetFromClasses(inputObj)
+
+        elif isinstance(inputObj, SetOfCTF):
+            outputClassName = self.outputClassName.get()
+            if outputClassName.startswith('SetOfMicrographs'):
+                self._createMicsSubSetFromCTF(inputObj)
+            else:
+                self._createSubSetOfCTF(inputObj)
+
+        elif isinstance(inputObj, MicrographsTiltPair):
+            self._createSubSetFromMicrographsTiltPair(inputObj)
+
+        elif isinstance(inputObj, EMProtocol):
+            otherObj = self.otherObj.get()
+
+            if isinstance(setObj, SetOfClasses):
+                setObj.setImages(otherObj)
+                output = self._createSubSetFromClasses(setObj)
+
+            elif isinstance(setObj, SetOfImages):
+                setObj.copyInfo(otherObj) # copy info from original images
+                output = self._createSubSetFromImages(setObj)
+        else:
+            className = inputObj.getClassName()
+            createFunc = getattr(self, '_create' + className)
+            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+
+            output = createFunc()
+            for item in modifiedSet:
+                if item.isEnabled():
+                    output.append(item)
+
+            if hasattr(modifiedSet, 'copyInfo'):
+                modifiedSet.copyInfo(output)
+            # Register outputs
+            self._defineOutput(className, output)
+
+
+        if isinstance(inputObj, EMProtocol):
+            for key, attr in inputObj.iterInputAttributes():
+                print attr
+                self._defineSourceRelation(attr.get(), output)
+        else:
+            if not isinstance(inputObj, SetOfCTF):#otherwise setted before
+                self._defineSourceRelation(inputObj, output)
+
     
     def _createSubSetFromImages(self, inputImages):
         className = inputImages.getClassName()
@@ -233,70 +299,7 @@ class ProtUserSubSet(BatchProtocol):
         self._defineOutputs(**outputDict)
         return output
 
-    def createSetStep(self):
-        setObj = self.createSetObject()
-        inputObj = self.inputObject.get()
 
-        if self.volId.get():
-
-            if isinstance(setObj, SetOfVolumes):
-                volSet = SetOfVolumes(filename=self._dbName)
-                output = volSet[self.volId.get()]
-            else:
-                classSet = SetOfClasses3D(filename=self._dbName)
-                output = classSet[self.volId.get()].getRepresentative()
-            self._defineOutputs(outputVolume=output)
-
-        elif isinstance(inputObj, SetOfImages):
-                output = self._createSubSetFromImages(inputObj)
-
-        elif isinstance(inputObj, SetOfClasses):
-            output = self._createSubSetFromClasses(inputObj)
-
-        elif isinstance(inputObj, SetOfCTF):
-            outputClassName = self.outputClassName.get()
-            if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj)
-            else:
-                self._createSubSetOfCTF(inputObj)
-
-        elif isinstance(inputObj, MicrographsTiltPair):
-            self._createSubSetFromMicrographsTiltPair(inputObj)
-
-        elif isinstance(inputObj, EMProtocol):
-            otherObj = self.otherObj.get()
-
-            if isinstance(setObj, SetOfClasses):
-                setObj.setImages(otherObj)
-                output = self._createSubSetFromClasses(setObj)
-
-            elif isinstance(setObj, SetOfImages):
-                setObj.copyInfo(otherObj) # copy info from original images
-                output = self._createSubSetFromImages(setObj)
-        else:
-            className = inputObj.getClassName()
-            createFunc = getattr(self, '_create' + className)
-            modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-
-            output = createFunc()
-            for item in modifiedSet:
-                if item.isEnabled():
-                    output.append(item)
-
-            if hasattr(modifiedSet, 'copyInfo'):
-                modifiedSet.copyInfo(output)
-            # Register outputs
-            self._defineOutput(className, output)
-
-
-        if isinstance(inputObj, EMProtocol):
-            for key, attr in inputObj.iterInputAttributes():
-                print attr
-                self._defineSourceRelation(attr.get(), output)
-        else:
-            if not isinstance(inputObj, SetOfCTF):#otherwise setted before
-                self._defineSourceRelation(inputObj, output)
-    
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
         self._dbName = self._getPath('subset.sqlite')
@@ -364,4 +367,12 @@ class ProtCreateMask(BatchProtocol):
         mask.setSamplingRate(inputImage.getSamplingRate())
         self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(inputImage, self.outputMask)
+
+     def _summary(self):
+        summary = []
+        summary.append('From image %s created mask %s'%(self.getObjectTag("inputImage"), self.getObjectTag("outputMask")))
+        return summary
+
+     def _methods(self):
+         return self._summary()
 
