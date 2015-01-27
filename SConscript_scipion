@@ -70,6 +70,19 @@ hdf5 = env.AddLibrary(
 Depends(hdf5, packageDeps)
 
 BASIC_LIBS = ['fftw3', 'fftw3_threads', 'tiff', 'jpeg', 'sqlite3', 'hdf5','hdf5_cpp', 'rt']
+BASIC_INCS = [Dir('#software/include').abspath,
+              Dir('#software/include/python2.7').abspath,
+              Dir('.').abspath,
+              Dir('external').abspath,
+              Dir('libraries').abspath, 
+              Dir('external/tiff-3.9.4').abspath, 
+              Dir('external/tiff-3.9.4','libtiff').abspath,  
+              Dir('external/sqlite-3.6.23').abspath, 
+              Dir('external/hdf5-1.8.10/src').abspath, 
+              Dir('external/hdf5-1.8.10/c++').abspath, 
+              Dir('external/hdf5-1.8.10/c++/src').abspath,
+              Dir('external/bilib/').abspath,
+              Dir('external/alglib-3.8.0.cpp/src').abspath]
 
 # XMIPP SHARED LIBRARIES
 # Xmipp External Libraries (bilib, condor, alglib)
@@ -87,7 +100,7 @@ xmippExternal = env.AddPackageLibrary(
               patterns=['bilib/sources/*.cc', 
                         'condor/*.cpp',
                         'alglib-3.8.0.cpp/src/*.cpp'],
-              incs=['external/bilib' + s for s in ['', '/headers', '/types']],
+              incs=BASIC_INCS+['external/bilib' + s for s in ['', '/headers', '/types']],
               deps=tiff + hdf5 + packageDeps)
 
 xmippSqliteExt = env.AddPackageLibrary(
@@ -102,8 +115,7 @@ xmippData = env.AddPackageLibrary(
           'XmippData',
           dirs=['libraries/data'],
           patterns=['*.cpp'],
-          incs=[Dir('.').path, 
-                Dir('libraries').path],
+          incs=BASIC_INCS,
           libs=['XmippExternal'] + BASIC_LIBS,
           deps=tiff + hdf5 + xmippExternal + xmippSqliteExt)
 
@@ -112,7 +124,7 @@ xmippClassif = env.AddPackageLibrary(
              'XmippClassif',
              dirs=['libraries/classification'],
              patterns=['*.cpp'],
-             incs=[Dir('.').path, Dir('libraries').path],
+             incs=BASIC_INCS,
              libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
              deps=xmippExternal + xmippSqliteExt + xmippData)
 
@@ -121,7 +133,7 @@ xmippDimred = env.AddPackageLibrary(
             'XmippDimred',
             dirs=['libraries/dimred'],
             patterns=['*.cpp'],
-            incs=[Dir('.').path, Dir('libraries').path],
+            incs=BASIC_INCS,
             libs=['XmippExternal', 'XmippData'] + BASIC_LIBS,
             deps=xmippExternal + xmippSqliteExt + xmippData)
 
@@ -130,7 +142,7 @@ xmippRecons = env.AddPackageLibrary(
             'XmippRecons',
             dirs=['libraries/reconstruction'],
             patterns=['*.cpp'],
-            incs=[Dir('.').path, Dir('libraries').path, Dir('libraries/reconstruction').path, Dir('external').path],
+            incs=BASIC_INCS+[Dir('libraries/reconstruction').path],
             libs=['XmippExternal', 'XmippData', 'XmippClassif'] + BASIC_LIBS,
             deps=xmippExternal + xmippSqliteExt + xmippData + xmippClassif)
 
@@ -139,7 +151,7 @@ xmippInterface = env.AddPackageLibrary(
                'XmippInterface',
                dirs=['libraries/interface'],
                patterns=['*.cpp'],
-               incs=[Dir('.').path, Dir('libraries').path, Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
                libs=['XmippExternal', 'XmippData', 'pthread'],
                deps=xmippExternal + xmippSqliteExt + xmippData)
 
@@ -148,7 +160,7 @@ xmippPyBinding = env.AddPackageLibrary(
                'xmipp',
                dirs=['libraries/bindings/python'],
                patterns=['*.cpp'],
-               incs=[Dir('.').path, Dir('libraries').path, Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
+               incs=BASIC_INCS+[Dir('#software/include/python2.7').abspath, Dir('#software/lib/python2.7/site-packages/numpy/core/include').abspath],
                libs=['XmippExternal', 'XmippData', 'XmippRecons'] + BASIC_LIBS,
                deps=xmippExternal + xmippSqliteExt + xmippData + xmippRecons,
                prefix='',
@@ -159,7 +171,7 @@ xmippJNI = env.AddPackageLibrary(
          'XmippJNI',
          dirs=['libraries/bindings/java'],
          patterns=['*.cpp'],
-         incs=[Dir('.').path, Dir('libraries').path],
+         incs=BASIC_INCS+[Dir('.').path, Dir('libraries').path],
          libs=['XmippData', 'pthread', 'XmippRecons', 'XmippClassif', 'XmippExternal'] + BASIC_LIBS,
          deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal)
 
@@ -168,7 +180,7 @@ xmippParallel = env.AddPackageLibrary(
               'XmippParallel',
               dirs=['libraries/parallel'],
               patterns=['*.cpp'],
-              incs=[Dir('.').path, Dir('libraries').path],
+              incs=BASIC_INCS,
               libs=['XmippExternal', 'XmippData', 'XmippClassif', 'XmippRecons', 'pthread', (env['MPI_LIB'] or '')] + BASIC_LIBS,
               deps=xmippData + xmippSqliteExt + xmippRecons + xmippClassif + xmippExternal,
               mpi=True)
