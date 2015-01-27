@@ -148,9 +148,6 @@ public class GalleryData {
         selectedVolFn = getVolumeAt(selectedIndex);
     }
 
-   
-
-      
 
     public enum Mode {
 
@@ -227,6 +224,7 @@ public class GalleryData {
             }
             else if (parameters.mode.equalsIgnoreCase(Params.OPENING_MODE_ROTSPECTRA)) 
                 mode = Mode.GALLERY_ROTSPECTRA;
+            
         }
     }
 
