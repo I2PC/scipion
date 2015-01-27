@@ -29,8 +29,6 @@ import javax.swing.JToggleButton;
 import xmipp.jni.ImageGeneric;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.ScipionParams;
-import xmipp.viewer.scipion.ScipionGalleryJFrame;
-import xmipp.viewer.scipion.ScipionMessageDialog;
 
 /**
  *
@@ -40,7 +38,6 @@ public class MaskJFrame extends JFrame{
     protected ImagePlus mask;
     private ImageJPanel imagepn;
     private JButton registerbt;
-    private JButton previewbt;
     protected int width, height;
     private ImagePlus imp;
     private JToggleButton invertbt;
@@ -85,7 +82,7 @@ public class MaskJFrame extends JFrame{
         add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
         
               
-        registerbt = XmippWindowUtil.getScipionButton("Create Mask");
+        registerbt = XmippWindowUtil.getScipionIconButton("Create Mask");
         registerbt.addActionListener(new ActionListener() {
 
             @Override
@@ -106,9 +103,9 @@ public class MaskJFrame extends JFrame{
         HashMap<String, String> msgfields = new HashMap<String, String>();
         String field = "Run name:";
         msgfields.put(field, "create mask");
-        ScipionMessageDialog dlg = new ScipionMessageDialog(this, "Question", "Are you sure you want to register mask?", msgfields);
+        InputFieldsMessageDialog dlg = new InputFieldsMessageDialog(this, "Question", "Are you sure you want to register mask?", msgfields);
                         int create = dlg.action;
-        boolean register = (create == ScipionMessageDialog.OK_OPTION);
+        boolean register = (create == InputFieldsMessageDialog.OK_OPTION);
         if (register)
             try {
             String path = "mask.spi";

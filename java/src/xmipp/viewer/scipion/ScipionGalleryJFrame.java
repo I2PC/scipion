@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.utils.ScipionParams;
 import java.awt.Color;
 import java.awt.Image;
@@ -44,7 +45,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private final String runNameKey = "Run name:";
     private String other;
     private JButton representativesbt;
-    private ScipionMessageDialog dlg;
+    private InputFieldsMessageDialog dlg;
     private String tmpdir;
     private JButton createvolbt;
     private String setType;
@@ -116,7 +117,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         if (type != null) {
             if(!data.isCTFMd())
             {
-                cmdbutton = XmippWindowUtil.getScipionButton("Create " + type);
+                cmdbutton = XmippWindowUtil.getScipionIconButton("Create " + type);
                 cmdbutton.addActionListener(new ActionListener() {
 
                     @Override
@@ -128,7 +129,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             if(data.hasClasses())
             {
-                classcmdbutton = XmippWindowUtil.getScipionButton("Create Classes");
+                classcmdbutton = XmippWindowUtil.getScipionIconButton("Create Classes");
                 classcmdbutton.addActionListener(new ActionListener() {
 
                     @Override
@@ -139,7 +140,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 });
                 
                 String repText = isClass2D() ? "Create Averages": "Create Volumes";
-                representativesbt = XmippWindowUtil.getScipionButton(repText);
+                representativesbt = XmippWindowUtil.getScipionIconButton(repText);
                 representativesbt.addActionListener(new ActionListener() {
 
                     @Override
@@ -157,7 +158,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             if(data.isCTFMd())
             {
                 icon = XmippResource.getIcon("fa-cogs.png");
-                JButton recalculatectfbt = XmippWindowUtil.getScipionButton("Recalculate CTFs");
+                JButton recalculatectfbt = XmippWindowUtil.getScipionIconButton("Recalculate CTFs");
                 recalculatectfbt.addActionListener(new ActionListener() {
 
                     @Override
@@ -167,7 +168,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 });
                 recalculatectfbt.setIcon(icon);
                 
-                JButton ctfsubsetbt = XmippWindowUtil.getScipionButton("Create Micrographs");
+                JButton ctfsubsetbt = XmippWindowUtil.getScipionIconButton("Create Micrographs");
                 ctfsubsetbt.addActionListener(new ActionListener() {
 
                     @Override
@@ -185,7 +186,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
             if(self.equals("Volume") || self.equals("Class3D"))
             {
-                createvolbt = XmippWindowUtil.getScipionButton("Create Volume");
+                createvolbt = XmippWindowUtil.getScipionIconButton("Create Volume");
                 createvolbt.addActionListener(new ActionListener() {
 
                     @Override
@@ -310,9 +311,9 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     public boolean confirmCreate(String msg)
     {
        
-        dlg = new ScipionMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
-                        int create = dlg.action;
-        return (create == ScipionMessageDialog.OK_OPTION);
+        dlg = new InputFieldsMessageDialog(ScipionGalleryJFrame.this, "Question", msg, msgfields);
+        int create = dlg.action;
+        return (create == InputFieldsMessageDialog.OK_OPTION);
     }
 
     public void reloadTableData(boolean changed)

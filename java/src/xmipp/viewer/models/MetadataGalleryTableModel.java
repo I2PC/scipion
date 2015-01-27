@@ -167,7 +167,7 @@ public class MetadataGalleryTableModel extends ImageGalleryTableModel
 			dim = new ImageDimension(width);
 		dim.setZDim(data.ids.length);
                 int defZoom = GalleryData.getDefaultZoom(width);
-                if(data.zoom == 0 || defZoom > 3*data.zoom)
+                if(data.zoom == 0 || defZoom > 3 * data.zoom)
                     data.zoom = defZoom;
 		return dim;
 	}

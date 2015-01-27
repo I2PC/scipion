@@ -50,7 +50,7 @@ import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.viewer.particlepicker.training.model.ParticleToTemplatesTask;
 import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
-import xmipp.viewer.scipion.ScipionMessageDialog;
+import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 

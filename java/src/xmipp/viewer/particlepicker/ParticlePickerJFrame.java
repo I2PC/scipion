@@ -77,7 +77,7 @@ import xmipp.utils.XmippResource;
 import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
-import xmipp.viewer.scipion.ScipionMessageDialog;
+import xmipp.ij.commons.InputFieldsMessageDialog;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -194,9 +194,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                 msgfields.put("Run name:", "ProtUserCoordinates");
                             int count = getParticlePicker().getParticlesCount();
                             String msg = String.format("<html>Are you sure you want to register a new set of Coordinates with <font color=red>%s</font> %s?", count, (count != 1)?"elements":"element");
-                            ScipionMessageDialog dlg = new ScipionMessageDialog(ParticlePickerJFrame.this, "Question", msg);
+                            InputFieldsMessageDialog dlg = new InputFieldsMessageDialog(ParticlePickerJFrame.this, "Question", msg);
                             
-                            if (dlg.action == ScipionMessageDialog.OK_OPTION)
+                            if (dlg.action == InputFieldsMessageDialog.OK_OPTION)
                                 executeScipionSaveAndExit();
                             
                         }

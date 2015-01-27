@@ -134,7 +134,7 @@ public class XmippWindowUtil
 		return label;
 	}
         
-        public static JButton getScipionButton(String text) {
+        public static JButton getScipionIconButton(String text) {
             Icon icon = XmippResource.getIcon("fa-plus-circle.png");
             JButton button = new JButton(text.replace("Create ", ""), icon);
             button.setToolTipText(text);

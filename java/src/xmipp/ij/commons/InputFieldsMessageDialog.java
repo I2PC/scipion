@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package xmipp.viewer.scipion;
+package xmipp.ij.commons;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -31,7 +31,7 @@ import xmipp.utils.XmippWindowUtil;
  *
  * @author airen
  */
-public class ScipionMessageDialog extends JDialog implements ActionListener {
+public class InputFieldsMessageDialog extends JDialog implements ActionListener {
     
     private String msg;
     private JButton cancelbt;
@@ -44,7 +44,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     Map<String, JTextField> fieldstfs;
    
     
-    public ScipionMessageDialog(JFrame parent, String title, String msg, Map<String, String> fields)
+    public InputFieldsMessageDialog(JFrame parent, String title, String msg, Map<String, String> fields)
     {
         super(parent, true);
         this.msg = msg;
@@ -54,7 +54,7 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
         
     }
     
-     public ScipionMessageDialog(JFrame parent, String title, String msg)
+     public InputFieldsMessageDialog(JFrame parent, String title, String msg)
     {
         this(parent, title, msg, null);
     }
@@ -92,7 +92,9 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
             }
         });
         buttonspn.add(cancelbt);
-        okbt = getScipionButton("Ok", true);
+        okbt = new JButton("Ok");
+        okbt.setBackground(XmippWindowUtil.firebrick);
+        okbt.setForeground(Color.WHITE);
         okbt.addActionListener(this);
         
         buttonspn.add(okbt);
@@ -106,15 +108,6 @@ public class ScipionMessageDialog extends JDialog implements ActionListener {
     
  
     
-    public static JButton getScipionButton(String text, boolean isenabled)
-    {
-        JButton button = new JButton(text);
-        Color color = isenabled? XmippWindowUtil.firebrick: XmippWindowUtil.lightgrey; 
-        Color forecolor = isenabled? Color.WHITE: Color.GRAY;
-        button.setBackground(color);
-        button.setForeground(forecolor);
-        return button;
-    }
     
     public void close()
     {
