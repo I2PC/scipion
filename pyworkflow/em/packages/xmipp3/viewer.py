@@ -153,6 +153,7 @@ class XmippViewer(Viewer):
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
+
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):

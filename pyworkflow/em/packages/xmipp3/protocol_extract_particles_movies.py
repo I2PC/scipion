@@ -33,7 +33,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 import os
 
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles, xmippToLocation
+from pyworkflow.em.packages.xmipp3.convert import readSetOfMovieParticles, xmippToLocation
 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import ProtExtractMovieParticles
@@ -257,7 +257,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             movieName = self._getMovieName(movieId)
             movieStk = movieName.replace('.mrc', '.stk')
             movieMdFile = movieName.replace('.mrc', '.xmd')
-             
+            
             # Store particle stack and metadata files in final particles folder
             if os.path.exists(movieStk):
                 mData.read(movieMdFile)
@@ -267,7 +267,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         mdAll.addItemId()
 #         print "mdAll: ", mdAll
         mdAll.write(particleMd)
-        readSetOfParticles(particleMd, particleSet, removeDisabled=False)
+        readSetOfMovieParticles(particleMd, particleSet, removeDisabled=False,
+                           postprocessImageRow=self._postprocessImageRow)
           
         self._defineOutputs(outputParticles=particleSet)
         self._defineSourceRelation(inputMovies, particleSet)
@@ -317,3 +318,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             return False
          
         return True
+    
+    def _postprocessImageRow(self, img, imgRow):
+        img.setFrameId(imgRow.getValue(md.MDL_FRAME_ID))
+        img.setParticleId(imgRow.getValue(md.MDL_PARTICLE_ID))

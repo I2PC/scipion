@@ -479,19 +479,31 @@ class XmippProtRansac(ProtInitialVolume):
     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputVolumes'):
-            summary.append("Output volumes not ready yet.")
-        else:
+        if hasattr(self, 'outputVolumes'):                        
             summary.append("RANSAC iterations: %d" % self.nRansac)
+            summary.append("Number of volumes to refine: %d" % self.numVolumes.get())
+            summary.append("Number of refinement interations: %d" % self.numIter.get())
             if self.summaryVar.hasValue():
                 summary.append(self.summaryVar.get())
             if self.useSA:
-                summary.append("Simulated annealing used")
-            return summary
+                summary.append("Simulated annealing used")            
+        else:
+            summary.append("Output volumes not ready yet.")
+
+        return summary
         
     def _methods(self):
-        return self._summary()  # summary is quite explicit and serve as methods
-            
+        strline=''
+        if hasattr(self, 'outputVolumes'):
+            strline+='We obtained %d initial volume(s) from %s set of images and symmetry %s.'%\
+                           (self.numVolumes.get(),self.getObjectTag('inputSet'),self.symmetryGroup.get())
+            strline+='The number of RANSAC volumes generated are %d.From this set, we selected the best %d volume(s) that was refined by %d projection matching iteration(s)'%\
+                           (self.nRansac.get(),self.numVolumes.get(),self.numIter.get())
+            strline+= ' [Vargas2014]'
+            if self.dimRed:
+                strline+='We performed dimensionality reduction using a %d x %d grid'%\
+                            (self.numGrids.get(),self.numGrids.get())
+        return [strline]               
     #--------------------------- UTILS functions --------------------------------------------        
     def getCCThreshold(self):
         fnCorr = self._getExtraPath("correlations.xmd")               
@@ -520,7 +532,7 @@ class XmippProtRansac(ProtInitialVolume):
             size = md.size()
             if (size < 5):
                 msg2 = "Num of random samples too small and equal to %d.\n" % size
-                msg2 += "If the option Dimensionality reduction is on, increase the number of grids per dimension.\n"
+                msg2 += "If the option Dimensionality reduction is on, increase the number of grids per dimension (In this case we recommend to put Dimensionality reduction off).\n"
                 msg2 += "If the option Dimensionality reduction is off, increase the number of random samples.\n"
                 
         msg = msg1 + msg2

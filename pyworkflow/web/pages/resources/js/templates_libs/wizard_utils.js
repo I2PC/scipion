@@ -335,6 +335,26 @@ function previewCTF(elm) {
 	);
 }
 
+function doCTF() {
+	/*
+	 * 	To obtain a preview image using the method previewPSD() to 
+	 * 	visualize the CTF.
+	 */
+	var img = $("img#psd");
+	img.hide();
+	
+//			var uri, img_load = previewPsd()
+	var res = previewPsd();
+	var uri = res[0];
+	var img_load = res[1];
+	
+	// show the new micrograph
+	img.load(putImage(uri, "psd_freq", 250, 250), function() {
+		// hide the load img
+		img_load.hide();
+	});
+}
+
 // *** Methods Wizard Particle Mask *** //
 function compositeParticle(elm){
 	/*

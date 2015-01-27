@@ -29,6 +29,7 @@ from pyworkflow.web.app.wizards.xmipp_wizard import *
 from pyworkflow.web.app.wizards.spider_wizard import *
 from pyworkflow.web.app.wizards.relion_wizard import *
 from pyworkflow.web.app.wizards.brandeis_wizard import *
+from pyworkflow.web.app.wizards.resmap_wizard import *
 
 #===============================================================================
 # Wizard base function (to call the others)

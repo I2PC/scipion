@@ -519,7 +519,19 @@ class ProtRelionBase(EMProtocol):
                         auxMovieParticles.append(movieParticle)
                         
                 writeSetOfParticles(auxMovieParticles,
-                                    self._getFileName('movie_particles'), None, originalSet=imgSet)
+                                    self._getFileName('movie_particles'), None, originalSet=imgSet,
+                                    postprocessImageRow=self._postprocessImageRow)
+                mdMovies = md.MetaData(self._getFileName('movie_particles'))
+                mdParts = md.MetaData(self._getFileName('input_star'))
+                mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
+                
+                
+                detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
+                mdAux = md.MetaData()
+                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
+                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
+                
+                mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
         
     def runRelionStep(self, params):
@@ -673,3 +685,8 @@ class ProtRelionBase(EMProtocol):
         else:
             continueIter = int(self.continueIter.get())
         return continueIter
+    
+    def _postprocessImageRow(self, img, imgRow):
+        partId = img.getParticleId()
+        imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
+        
