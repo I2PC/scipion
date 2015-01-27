@@ -812,7 +812,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 		int size = getParticlePicker().getSize();
 		sizepn.add(new JLabel("Size:"));
-		sizesl = new JSlider(0, ParticlePicker.sizemax, size);
+		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
 		sizesl.setPaintTicks(true);
 		sizesl.setMajorTickSpacing(100);
 		int height = (int) sizesl.getPreferredSize().getHeight();
@@ -906,7 +906,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		sizesl.setValue(size);
 		getCanvas().repaint();
 		getParticlePicker().setSize(size);
-                updateMicrographsModel();
+                //updateMicrographsModel();
                 if(particlesdialog != null)
                     loadParticles(true);
 		getParticlePicker().saveConfig();
