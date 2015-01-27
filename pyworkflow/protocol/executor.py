@@ -36,7 +36,7 @@ import traceback
 import threading
 
 import pyworkflow.utils.process as process
-import pyworkflow.protocol.constants as cts
+import constants as cts
 
 
 class StepExecutor():
