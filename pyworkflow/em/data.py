@@ -690,14 +690,16 @@ class SetOfImages(EMSet):
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
-    def readStack(self, fnStack):
+    def readStack(self, fnStack, postprocessImage=None):
         """ Populate the set with the images in the stack """
         _,_,_, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
-            img.setLocation(i, fnStack)
-            self.append(img)
             img.cleanObjId()
+            img.setLocation(i, fnStack)
+            if postprocessImage is not None:
+                postprocessImage(img)
+            self.append(img)
     
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
