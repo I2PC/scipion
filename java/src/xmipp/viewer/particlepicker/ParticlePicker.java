@@ -24,6 +24,7 @@ import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
 import xmipp.jni.Program;
 import xmipp.utils.Params;
+import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.training.model.Mode;
 
 /**
@@ -125,6 +126,8 @@ public abstract class ParticlePicker {
         this.params = params;
         this.block = block;
         this.outputdir = outputdir;
+        if(!new File(outputdir).isDirectory())
+            throw new IllegalArgumentException(XmippMessage.getInvalidDirectoryMsg(outputdir));
         this.selfile = selfile;
         this.mode = mode;
         this.configfile = getOutputPath("config.xmd");

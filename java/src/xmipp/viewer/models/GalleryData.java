@@ -77,7 +77,7 @@ public class GalleryData {
     protected List<ColumnInfo> labels = null;
     // First label that can be rendered
     protected ColumnInfo ciFirstRender = null;
-    protected int zoom;
+    protected Integer zoom;
     protected String filename;
     protected int resliceView;
     protected Mode mode;

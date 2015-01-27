@@ -16,7 +16,6 @@ import xmipp.jni.MDRow;
 import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.jni.PickingClassifier;
-import xmipp.utils.Params;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippMessage;
 import xmipp.utils.XmippWindowUtil;

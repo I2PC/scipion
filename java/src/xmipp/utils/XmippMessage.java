@@ -86,5 +86,9 @@ public class XmippMessage {
 		return "Unexpected error";
 	}
 
+    public static String getInvalidDirectoryMsg(String outputdir) {
+        return String.format("Directory '%s' doesn't exists.", outputdir);
+    }
+
         
 }
