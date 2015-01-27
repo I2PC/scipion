@@ -33,7 +33,8 @@ execution and tracking like: Step and Protocol
 # Possible status of a protocol run, used mainly to monitor progress
 
 STATUS_SAVED = "saved" # Parameters saved for later use
-STATUS_LAUNCHED = "launched"  # launched to queue system, only usefull for protocols
+STATUS_LAUNCHED = "launched"  # launched to queue system, only useful for protocols
+STATUS_NEW = "new"
 STATUS_RUNNING = "running"    # currently executing
 STATUS_FAILED = "failed"      # it have been failed
 STATUS_FINISHED = "finished"  # successfully finished
