@@ -32,19 +32,18 @@ Protocols for particles filter operations.
 from pyworkflow.object import Float
 from pyworkflow.protocol.params import (
     FloatParam, EnumParam, DigFreqParam, BooleanParam, PointerParam)
-from pyworkflow.em.data import ImageDim
+from pyworkflow.em.data import ImageDim, CTFModel
 from pyworkflow.em.constants import FILTER_LOW_PASS, FILTER_HIGH_PASS, FILTER_BAND_PASS
 from pyworkflow.em.protocol import ProtFilterParticles, ProtFilterVolumes
 from pyworkflow.em.packages.xmipp3.constants import (
     FILTER_SPACE_FOURIER, FILTER_SPACE_REAL, FILTER_SPACE_WAVELET)
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
+from pyworkflow.em.packages.xmipp3.convert import writeCTFModel
 
 
 
 class XmippFilterHelper():
     """ Filter operations such as: Fourier or Gaussian. """
-    tmpCTF = "ctf.xmd"
-
     # Some Filter Modes constants to be used locally
     # the special cases of low pass, high pass and band pass
     # should preserve the em.constants values 0, 1 and 2 respectively
@@ -225,7 +224,8 @@ class XmippFilterHelper():
                 filterStr = " band_pass %f %f %f " % (lowFreq, highFreq, freqDecay)
             elif mode == cls.FM_CTF:
                 ctfModel = protocol._getTmpPath(protocol.tmpCTF)
-                filterStr = " ctf %s " % ctfModel
+                sampling = protocol.getInputSampling()
+                filterStr = " ctf %s --sampling %f" % (ctfModel,sampling)
                 # Save CTF model too
                 protocol._insertFunctionStep("convertCTFXmippStep", ctfModel)
             else:
@@ -327,6 +327,7 @@ class XmippFilterHelper():
 class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
     """ Apply Fourier filters to a set of particles  """
     _label = 'filter particles'
+    tmpCTF = "ctf.xmd"
 
     def __init__(self, **kwargs):
         ProtFilterParticles.__init__(self, **kwargs)
@@ -352,7 +353,6 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertCTFXmippStep(self, ctfModel):
-        from convert import writeCTFModel
         #defocus comes from here
         ctf = self.inputCTF.get()
         inputSet = self.inputParticles.get()
@@ -364,7 +364,7 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
         ctf._xmipp_ctfSphericalAberration = Float(acquisition.getSphericalAberration())
         ctf._xmipp_ctfQ0 = Float(acquisition.getAmplitudeContrast())
         ctf._xmipp_ctfSamplingRate = Float(sampling)
-        writeCTFModel(self.inputCTF.get(), ctfModel)
+        writeCTFModel(ctf, ctfModel)
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def filterStep(self, args):

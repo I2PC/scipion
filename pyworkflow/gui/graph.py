@@ -42,8 +42,8 @@ class LevelTree(object):
     def setCanvas(self, canvas):
         self.canvas = canvas
         
-    def paint(self, createNode=None, createEdge=None, maxLevel=9999):
-        """ Paint the Graph.
+    def paint(self, createNode=None, createEdge=None, maxLevel=9999, usePositions=False):
+        """ Paint the Graph, nodes will be positioned by levels.
         Params:
             canvas: the canvas object to paint the graph.
             createNode: function to build the Item that represents a Node.
@@ -51,6 +51,8 @@ class LevelTree(object):
                         getDimensions: return the width and height
                         moveTo: change the position of the Item
             createEdge: function to build an Edge connection two Nodes
+            usePositions: if this is True, use the nodes positions without
+                recomputing them.
             
             If createNode and createEdge are None, the default ones will be used,
             that requires the setCanvas method had to be called first.
@@ -59,12 +61,17 @@ class LevelTree(object):
         self.createEdge = createEdge or self._defaultCreateEdge
         self.maxLevel = maxLevel
         rootNode = self.graph.getRoot()
-        self._setLevel(rootNode, 0, None)
-        self._paintNodeWithChilds(rootNode, 1)
-        m = 9999
-        for left, right in rootNode.hLimits:
-            m = min(m, left)
-        self._createEdges(rootNode, -m + self.DY)
+        
+        if usePositions:
+            self._paintNodeWithPosition(rootNode)
+            self._paintEdges(rootNode)
+        else:            
+            self._setLevel(rootNode, 0, None)
+            self._paintNodeWithChilds(rootNode, 1)
+            m = 9999
+            for left, right in rootNode.hLimits:
+                m = min(m, left)
+            self._createEdges(rootNode, -m + self.DY)
         
     def _setLevel(self, node, level, parent):
         """ Set the level of the nodes. """
@@ -101,29 +108,14 @@ class LevelTree(object):
                     c = childs[i+1]
                     c.offset = offset
                 
-#                print "\n\n----A------"
-#                print "Parent: %s" % node.t.text.replace('\n', '_')
-#                for c in childs:
-#                    print "  child: %s, width: %d, offset: %d" % (c.t.text.replace('\n', '_'), c.width, c.offset)
-                
                 total = childs[0].half + offset + childs[-1].half
                 half = total/2
                 for c in childs:
                     c.offset -= half - childs[0].half
                 
-#                print "\n----B------"
-#                print "childs[0].half: ", childs[0].half
-#                print "Parent: %s" % node.t.text.replace('\n', '_')
-#                for c in childs:
-#                    print "  child: %s, width: %d, offset: %d" % (c.t.text.replace('\n', '_'), c.width, c.offset)
             else:
                 childs[0].offset = 0
             self._getHLimits(node)
-#            print "\n=====C========"
-#            print "Parent: %s" % node.t.text.replace('\n', '_')
-#            print " offset: %d, width: %d" % (node.offset, node.width)
-#            for l, r in node.hLimits:
-#                print "[%d, %d]" % (l, r)
         
     def _defaultCreateNode(self, canvas, node, y):
         """ If not createNode is specified, this one will be used
@@ -156,7 +148,7 @@ class LevelTree(object):
         node.width, node.height = item.getDimensions()
         node.half = node.width / 2
         node.hLimits = [[-node.half, node.half]]
-        node.y = y
+        node.y = item.y
         node.offset = 0
         # Create link from both sides to reach
         node.item = item 
@@ -221,7 +213,6 @@ class LevelTree(object):
   
         return sep + self.DX
     
-    
     def _createEdges(self, node, x):
         """ Adjust the position of the nodes
         and create the edges between them.
@@ -236,6 +227,26 @@ class LevelTree(object):
             if c.parent is node:
                 self._createEdges(c, nx)
             self.createEdge(node.item, c.item)
+            
+    def _paintNodeWithPosition(self, node):
+        """ Paint nodes using its position. """
+        self._paintNode(node, None)
+        
+        for child in node.getChilds():
+            # parent = None for nodes that have been not traversed
+            parent = getattr(child, 'parent', None)
+            if parent is None:
+                child.parent = node
+                self._paintNodeWithPosition(child)
+                
+    def _paintEdges(self, node):
+        """ Paint only the edges between nodes, asumming they are 
+        already well positioned. 
+        """
+        for child in node.getChilds():
+            if child.parent is node:
+                self._paintEdges(child)        
+            self.createEdge(node.item, child.item)
             
 
 

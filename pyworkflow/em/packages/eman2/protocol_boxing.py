@@ -27,11 +27,8 @@
 import os
 
 from pyworkflow.object import String
-from pyworkflow.protocol.params import PointerParam, IntParam, Positive
-from pyworkflow.utils.path import copyTree
 from pyworkflow.utils.properties import Message
 from pyworkflow.gui.dialog import askYesNo
-from pyworkflow.em.data import EMObject
 from pyworkflow.em.protocol import ProtParticlePicking
 
 import eman2
@@ -47,8 +44,6 @@ class EmanProtBoxing(ProtParticlePicking):
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
     
-
-
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self.inputMics = self.inputMicrographs.get()
@@ -57,8 +52,6 @@ class EmanProtBoxing(ProtParticlePicking):
         self._params = {'inputMics': ' '.join(micList)}
         # Launch Boxing GUI
         self._insertFunctionStep('launchBoxingGUIStep', interactive=True)
-
-
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def launchBoxingGUIStep(self):
@@ -76,23 +69,18 @@ class EmanProtBoxing(ProtParticlePicking):
             self._leaveDir()# going back to project dir
             self._createOutput(self.getWorkingDir())
         
-
-
-    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _runSteps(self, startIndex):
         # Redefine run to change to workingDir path
         # Change to protocol working directory
         self._enterWorkingDir()
-#         eman2.loadEnvironment()
         ProtParticlePicking._runSteps(self, startIndex)
-
     
     def getFiles(self):
         filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
         return filePaths
 
-
-
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMics, coordSet)
+        
+        

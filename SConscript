@@ -116,6 +116,9 @@ libxslt = env.AddLibrary(
     targets=['lib/libxslt.so'],
     deps=[libxml2],
     default=False)
+# This library is pretty complicated to compile right. For the moment,
+# we will require it to be in the system (with development headers)
+# for anyone that wants to use it, instead of compiling it automatically.
 
 pcre = env.AddLibrary(
     'pcre',
@@ -278,8 +281,10 @@ tornado = addModule(
 lxml = addModule(
     'lxml',
     tar='lxml-3.4.1.tgz',
-    deps=[libxml2], #, libxslt],
+    deps=[], # libxml2], #, libxslt],
     default=False)
+# Commented out libxml2 and libxslt because they are so hard to
+# compile right.
 
 addModule(
     'ipython',

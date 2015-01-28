@@ -84,7 +84,6 @@ class EmanProtInitModel(ProtInitialVolume):
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self):        
-#         eman2.loadEnvironment()
         self._prepareDefinition()
         self._insertFunctionStep('createStackImgsStep')
         self._insertInitialModelStep()

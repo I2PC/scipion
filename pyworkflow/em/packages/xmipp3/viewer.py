@@ -153,6 +153,7 @@ class XmippViewer(Viewer):
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
+
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):
@@ -296,6 +297,7 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),
+                                                           'render': '_representative._filename average._filename',
                                                            'sortby': 'id'})
         
         elif issubclass(cls, XmippProtScreenClasses):

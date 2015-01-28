@@ -79,7 +79,7 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
                                          direction='ASC'))
     for particle, row in izip(partIter, parFile):
         import sys
-        print >> sys.stderr, particle.getObjId(), particle.getCTF(), row
+        print >> sys.stderr, particle.getObjId(), particle.get_CTF(), row
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign

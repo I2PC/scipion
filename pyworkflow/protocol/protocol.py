@@ -107,7 +107,7 @@ class Step(OrderedObject):
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
-        return self.status.get('new')
+        return self.status.get(STATUS_NEW)
     
     def getElapsedTime(self):
         """ Return the time that took to run 
@@ -879,7 +879,7 @@ class Protocol(Step):
                        
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
-        
+
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):
@@ -1335,6 +1335,16 @@ class Protocol(Step):
                 for p in s._prerequisites:
                     stepsDict[p].addChild(n)
         return g
+    
+    def closeMappers(self):
+        """ Close the mappers of all output Sets. """
+        for _, attr in self.iterOutputAttributes(Set):
+            attr.close()
+            
+    def loadMappers(self):
+        """ Open mapper connections from previous closed outputs. """
+        for _, attr in self.iterOutputAttributes(Set):
+            attr.load()
 
                 
 #---------- Helper functions related to Protocols --------------------
