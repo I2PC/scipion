@@ -143,30 +143,29 @@ class ThreadStepExecutor(StepExecutor):
 
 class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.
-    But execution the runJob statement through MPI workers
+    But call runJob through MPI workers.
     """
     def __init__(self, hostConfig, nMPI, comm):
         ThreadStepExecutor.__init__(self, hostConfig, nMPI)
         self.comm = comm
     
-    def runJob(self, log, programName, params,           
-           numberOfMpi=1, numberOfThreads=1, 
-           env=None, cwd=None):
+    def runJob(self, log, programName, params,
+               numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        # Import mpi here so if MPI4py was not properly compiled
+        # we can still run in parallel with threads.
         from pyworkflow.utils.mpi import runJobMPI
         node = threading.current_thread().thId + 1
-        print "==================calling runJobMPI=============================="
-        print " to node: ", node
         runJobMPI(programName, params, self.comm, node,
-                  numberOfMpi, hostConfig=self.hostConfig,
-                  env=env, cwd=cwd)
+                  numberOfMpi, hostConfig=self.hostConfig, env=env, cwd=cwd)
 
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         ThreadStepExecutor.runSteps(self, steps, stepStartedCallback, stepFinishedCallback)
 
-        # We import mpi here just to avoid failing in case MPI4py
-        # was not properly compiled, we still can run in parallel with threads
+        # Import mpi here so if MPI4py was not properly compiled
+        # we can still run in parallel with threads.
         from pyworkflow.utils.mpi import TAG_RUN_JOB
+
         # Send special command 'None' to MPI slaves to notify them
-        # that there is not more jobs to do and they can finish.
-        for i in range(1, self.numberOfProcs+1):
-            self.comm.send('None', dest=i, tag=(TAG_RUN_JOB+i))
+        # that there are no more jobs to do and they can finish.
+        for node in range(1, self.numberOfProcs+1):
+            self.comm.send('None', dest=node, tag=(TAG_RUN_JOB+node))
