@@ -35,6 +35,7 @@ class TestImportBase(BaseTest):
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dsMda = DataSet.getDataSet('mda')
         cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+        cls.dsGroel = DataSet.getDataSet('groel')
         
     def checkOutput(self, prot, outputName, conditions=[]):
         """ Check that an ouput was generated and
@@ -56,6 +57,7 @@ class TestImportCoordinates(TestImportBase):
     def testImportCoordinates(self):
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
+        protImport.setObjLabel('import micrographs from xmipp tutorial ')
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
 
@@ -94,4 +96,20 @@ class TestImportCoordinates(TestImportBase):
         prot3.setObjLabel('import coords from eman ')
 
         self.launchProtocol(prot3)
+
+        #First, import a set of micrographs
+        protImportGroel = self.newProtocol(ProtImportMicrographs, filesPath=self.dsGroel.getFile('mic1'), samplingRate=1)
+        protImportGroel.setObjLabel('import micrographs from groel')
+        self.launchProtocol(protImportGroel)
+        self.assertIsNotNone(protImportGroel.outputMicrographs.getFileName(), "There was a problem with the import")
+
+        protPickGroel = self.newProtocol(ProtImportCoordinates,
+                                 importFrom=ProtImportCoordinates.IMPORT_FROM_DOGPICKER,
+                                 filesPath=self.dsGroel.getFile('pickingDogpicker'),
+                                 filesPattern='*.txt', boxSize=10,
+                                 threshold=0.7)
+        protPickGroel.inputMicrographs.set(protImportGroel.outputMicrographs)
+        protPickGroel.setObjLabel('import coords from dogpicker ')
+
+        self.launchProtocol(protPickGroel)
 

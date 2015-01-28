@@ -286,19 +286,28 @@ def _getObjectLabel(obj, mapper):
     """
     from pyworkflow.protocol import Protocol
     
+    # Check the case of selected Items
+    if hasattr(obj, '_parentObject'):
+        suffix = '[Item %d]' % obj.getObjId()
+        obj = obj._parentObject 
+    else:
+        suffix = ''
+        
     label = obj.getObjLabel()
+    
     if not len(label.strip()):
         labelList = [obj.getLastName()]
         parent = mapper.getParent(obj)
-        
+
         while not isinstance(parent, Protocol):
             labelList.insert(0, parent.getLastName())
             parent = mapper.getParent(parent)  
-            
+        
         labelList.insert(0, parent.getObjLabel())
         label = '->'.join(labelList)
         
-    return label   
+    return label + suffix   
+
 
 def getPointerLabelAndInfo(ptr, mapper):
     """ 

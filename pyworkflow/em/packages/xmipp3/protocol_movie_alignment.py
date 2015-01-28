@@ -207,7 +207,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         if alMethod == AL_AVERAGE:
             command = '-i %(movieName)s -o %(micName)s' % locals()
             command += ' --nst %d --ned %d --simpleAverage' % (firstFrame, lastFrame)
-            self.runJob(program, command, cwd=movieFolder)
+            try:
+                self.runJob(program, command, cwd=movieFolder)
+            except:
+                import sys
+                print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
 
         # For DosefGPU Execution (and combination with optical flow)
         if alMethod == AL_DOSEFGPU or alMethod == AL_DOSEFGPUOPTICAL:
@@ -233,8 +237,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                 command += ' ' + '-fct %(corrMovieName)s -ssc 1 ' % locals()
             command += ' ' + self.extraParams.get()
             import pyworkflow.em.packages.dosefgpu as dosefgpu
-            self.runJob(program, command, cwd=movieFolder,
-                        env=dosefgpu.getEnviron())
+            try:
+                self.runJob(program, command, cwd=movieFolder,
+                            env=dosefgpu.getEnviron())
+            except:
+                import sys
+                print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
+
 
         # For Optical Flow execution (and combination with DosefGPU)
         if alMethod == AL_OPTICAL or alMethod == AL_DOSEFGPUOPTICAL:
@@ -252,7 +261,11 @@ class ProtMovieAlignment(ProtProcessMovies):
             command += ' --nst %d --ned %d' % (firstFrame, lastFrame)
             if self.doGPU:
                 command += ' --gpu %d' % gpuId
-            self.runJob(program, command, cwd=movieFolder)
+            try:
+                self.runJob(program, command, cwd=movieFolder)
+            except:
+                import sys
+                print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
             moveFile(join(movieFolder, metadataName), self._getExtraPath())
 
         # Move output micrograph and related information to 'extra' folder

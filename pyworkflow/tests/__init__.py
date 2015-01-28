@@ -137,7 +137,9 @@ DataSet(name='rct',  folder='rct',
 
 DataSet(name='groel',  folder='groel',
         files={
-               'averages': 'classes/level_classes.stk'
+               'averages': 'classes/level_classes.stk',
+               'mic1': 'micrographs/groel-stain.mrc',
+               'pickingDogpicker': 'pickingDogpicker'
         })
 
 DataSet(name='emx',  folder='emx', 

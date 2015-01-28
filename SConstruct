@@ -31,6 +31,7 @@
 
 
 import os
+import sys
 from os.path import join, abspath, splitext
 from glob import glob
 import tarfile
@@ -335,7 +336,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
             tMake+=make
         else:
             tMake.append(make)
-        tMake.append(make)
+
         SideEffect('dummy', tMake[x]) # so it works fine in parallel builds
         for cFile in clean:
             Clean(tMake[x], cFile)
@@ -346,7 +347,7 @@ def addLibrary(env, name, tar=None, buildDir=None, configDir=None,
         # Make library by default
         if default or GetOption(name):
             env.Default(tMake[x])
-        toReturn += [tMake[x]]
+        toReturn.append(tMake[x])
     return toReturn
 
 
@@ -377,6 +378,10 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     untars = []
     libpath.append(Dir('#software/lib').abspath)
     
+    # This is going to be funny. If tarfile exists, we're going to open it, search
+    # inside and make every later target depends on these sources. This way we'll 
+    # make the next target to be rebuild whenever a source file is touched. Otherwise, 
+    # if the tarfile doesn't exists, then we'll just supose a file called README
     if tars:
         for x, dir in enumerate(dirs):
             tarDestination, tarName = splitext(tars[x])
@@ -388,19 +393,24 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
             untars += tUntar
         lastTarget = untars
 
+    tarExists = False
     for x, p in enumerate(patterns):
-        sourcesRel = join(dirs[x], p)
-        if not sourcesRel.startswith(basedir):
-            sourcesRel = join(basedir, p)
-#        if p.endswith(".cu"):
-#            cudaFiles = True
-        # select sources inside tarfile but we only get those files that match the pattern
-        if tars: 
+        if tars and os.path.exists(File(tars[x]).abspath):
+            tarExists = True
+            sourcesRel = join(dirs[x], p)
+            if not sourcesRel.startswith(basedir):
+                sourcesRel = join(basedir, p)
+#            if p.endswith(".cu"):
+#                cudaFiles = True
+            # select sources inside tarfile but we only get those files that match the pattern
             tarfiles = tarfile.open(tars[x]).getmembers() 
             sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
         else:
             sources += glob(join(dirs[x], patterns[x]))
-    Depends(sources, untars)
+    if tarExists:
+        Depends(sources, untars)
+    else:
+        untars = sources
 
     mpiArgs = {}
     if mpi:
@@ -432,10 +442,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
               **mpiArgs
               )
     SideEffect('dummy', library)
-    Depends(library, untars)
-
-    for previous in lastTarget:
-        env.Depends(library, previous)
+    Depends(library, sources)
     
     if installDir:
         install = env.Install(installDir, library)
@@ -445,8 +452,8 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
         lastTarget = library
     env.Default(lastTarget)
     
-    env.Depends(lastTarget, deps)
-
+    for dep in deps:
+        env.Depends(untars, dep)
     return lastTarget
 
 
@@ -465,12 +472,17 @@ def symLink(env, target, source):
         sources = source[0].path
     if isinstance(sources, basestring) and sources.startswith(current):
         sources = sources.split(current)[1]
+    
     sources = os.path.relpath(sources, os.path.split(link)[0])
-    if os.path.lexists(link):
-        os.remove(link)
+    #if os.path.lexists(link):
+    #    os.remove(link)
     #print 'Linking to %s from %s' % (sources, link)
-    os.symlink(sources, link)
-    return target
+    #os.symlink(sources, link)
+    result = env.Command(Entry(link),
+                         Entry(source),
+                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, Entry(link).abspath),
+                                'Creating a link from %s to %s' % (link, sources)))
+    return result
 
 
 
@@ -572,9 +584,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     pattern = pattern or ['*.cpp']
     installDir = installDir or 'bin'
     libs = libs or []
-    libPathsCopy = libPaths + ['lib', Dir('#software/lib').abspath]
+    libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incs = incs or []
-    incs += ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
@@ -589,7 +600,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy = incs + env['CPPPATH']
+    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
@@ -838,8 +849,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
         symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
     if buildDir != name and packageHome == 'unset':
         tLink = env.Command(
-            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
-            Dir('#software/em/%s' % buildDir),
+            Dir('#software/em/%s/bin2').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s/bin' % buildDir),
             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
                    'Linking package %s to software/em/%s' % (name, name),
                    chdir='software/em'))
@@ -861,7 +872,11 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
             env.Depends(lastTarget, dep)
         Default(lastTarget)
         return lastTarget
-
+    
+    if (default or packageHome):
+        for lastT in lastTarget:
+            if lastT is not None:
+                env.Default(lastT)
     # Load Package vars
     # First we search this in cfg folder and otherwise in package home
     if not os.path.exists(confPath):
@@ -898,6 +913,8 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
     Help(opts.GenerateHelpText(env, sort=cmp))
 #    print opts.keys()
     scriptPath = env.get('PACKAGE_SCRIPT', '')
+    if packageHome == 'unset':
+        packageHome = './'
     altScriptPath = join(packageHome, 'SConscript_scipion')
     # FIXME: this scriptPath wont be reachable uless Xmipp is already downloaded
     env.Replace(packageDeps=lastTarget)
@@ -1050,7 +1067,7 @@ Help('\n')
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
 
-env.SConscript(File('#/SConscript').path, exports='env')
+env.SConscript(File('#SConscript').abspath, exports='env')
 
 # Add original help (the one that we would have if we didn't use
 # Help() before). But remove the "usage:" part (first line).

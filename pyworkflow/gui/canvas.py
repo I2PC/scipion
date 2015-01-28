@@ -96,12 +96,16 @@ class Canvas(tk.Canvas, Scrollable):
         self._tooltip = tw
         
     def _showTooltip(self, x, y, item):
-        self._tooltipOn = True
-        tw = self._tooltip # short notation
-        self._tooltipCallback(tw, item)
-        tw.update_idletasks()
-        tw.wm_geometry("+%d+%d" % (x, y))
-        tw.deiconify()
+        # check that the mouse is still in the position
+        nx = self.winfo_pointerx()
+        ny = self.winfo_pointery()
+        if x == nx and y == ny:
+            self._tooltipOn = True
+            tw = self._tooltip # short notation
+            self._tooltipCallback(tw, item)
+            tw.update_idletasks()
+            tw.wm_geometry("+%d+%d" % (x, y))
+            tw.deiconify()
         
     def _hideTooltip(self):
         if self._tooltipOn:

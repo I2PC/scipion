@@ -34,9 +34,8 @@ import Tkinter as tk
 import ttk
 
 
-from pyworkflow.utils.utils import prettyDict, prettySize, startDebugger
+from pyworkflow.utils.utils import prettySize
 from pyworkflow.gui.graph_layout import LevelTreeLayout, BasicLayout
-from pyworkflow.utils.utils import envVarOn
 from pyworkflow.protocol.protocol import STATUS_RUNNING, STATUS_FAILED, STATUS_SAVED, List, String, Pointer
 
 from pyworkflow.viewer import DESKTOP_TKINTER
@@ -986,7 +985,7 @@ class ProtocolsView(tk.Frame):
         if prot:
             tm = '*%s*\n' % prot.getRunName()
             tm += 'State: %s\n' % prot.getStatusMessage()
-            tm += ' Time: %s\n' % prot.getElapsedTime() 
+            tm += ' Time: %s\n' % prettyDelta(prot.getElapsedTime()) 
             if not hasattr(tw, 'tooltipText'):
                 frame = tk.Frame(tw)
                 frame.grid(row=0, column=0)

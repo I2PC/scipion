@@ -39,10 +39,14 @@ from pyworkflow.utils.path import replaceBaseExt, join, exists
 def getEnviron():
     """ Setup the environment variables needed to launch Appion. """
     environ = Environ(os.environ)
-    environ.update({
-            'PATH': os.environ['DOGPICKER_HOME'],
-            'LD_LIBRARY_PATH': join(os.environ['DOGPICKER_HOME'], 'appionlib') + ":" + os.environ['DOGPICKER_HOME'],
-            }, position=Environ.BEGIN)
+    if 'DOGPICKER_HOME' in environ:
+        environ.update({
+                'PATH': os.environ['DOGPICKER_HOME'],
+                'LD_LIBRARY_PATH': join(os.environ['DOGPICKER_HOME'], 'appionlib') + ":" + os.environ['DOGPICKER_HOME'],
+                }, position=Environ.BEGIN)
+    else:
+        #TODO: Find a generic way to warn of this situation
+        print "DOGPICKER_HOME variable not set on environment."
     return environ
 
 

@@ -400,7 +400,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         summary = []
         summary.append("Downsample type: %s" % downsampleTypeText.get(self.downsampleType.get()))
         if self.downsampleType == OTHER:
-            summary.append("Downsampling factor: %d" % self.downFactor)
+            summary.append("Downsampling factor: %.2f" % self.downFactor)
         summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):

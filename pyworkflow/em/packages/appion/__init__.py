@@ -1,8 +1,6 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:    Airen Zaldivar         (airenzp@gmail.com)
-#               J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Laura del Cano (ldelcano@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,24 +23,14 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This package contains the protocols and data for APPION
+"""
 
-import sys
-from pyworkflow.em import *
-from pyworkflow.manager import Manager
+_logo = "ncbi_logo.png"
+_references = ['Yoquese']
 
+from convert import getEnviron
+from protocol_picking import DogPickerProtPicking
 
-if __name__ == '__main__':
-    #TODO: REMOVE THIS AFTER DEBUGGING
-    # print "ARGS: "
-    # for i, arg in enumerate(sys.argv):
-    #     print "%02d: %s" % (i, arg)
-    projectId=sys.argv[1]
-    inputId=sys.argv[2]
-    file=sys.argv[3]
-    label = sys.argv[4]
-
-    project = Manager().loadProject(projectId)
-    inputObject = project.mapper.selectById(int(inputId))
-    prot = project.newProtocol(ProtCreateMask, maskFile=file, inputImage=inputObject)
-    prot.setObjLabel(label)
-    project.launchProtocol(prot, wait=True)
+_environ = getEnviron()

@@ -107,7 +107,7 @@ class Step(OrderedObject):
         self.status.set(STATUS_ABORTED)
 
     def getStatus(self):
-        return self.status.get('new')
+        return self.status.get(STATUS_NEW)
     
     def getElapsedTime(self):
         """ Return the time that took to run 
@@ -879,7 +879,7 @@ class Protocol(Step):
                        
         #self._log.info("runJob: cwd = %s" % kwargs.get('cwd', ''))
         #self._log.info("runJob: env = %s " % str(kwargs['env']))
-        
+
         self._stepsExecutor.runJob(self._log, program, arguments, **kwargs)
         
     def run(self):

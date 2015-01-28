@@ -880,6 +880,8 @@ class SqliteFlatDb(SqliteDb):
             raise Exception('Invalid type for orderBy: %s' % type(orderBy))
 
         cmd = self.selectCmd('1', orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
+        #import sys
+        #print >> sys.stderr, "command", cmd
         self.executeCommand(cmd)
         return self._results(iterate)
 
