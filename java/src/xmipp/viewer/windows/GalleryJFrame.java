@@ -138,7 +138,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	// this flag will be used to avoid firing properties change events
 	// when the change is from our code and not external user interaction
 	private boolean isUpdating;
-	private boolean autoAdjustColumns = false;
 	private GalleryPopupMenu jpopUpMenuTable;
 	protected GalleryMenu menu;
 	protected XmippFileChooser fc;
@@ -152,7 +151,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JLabel jlColumns;
 	private JToggleButton jcbAutoAdjustColumns;
 	private JButton btnChangeView;
-	private JCheckBox jcbShowLabels;
 	protected JPanel jpBottom;
 	protected JSpinner jsColumns;
 	protected JSpinner jsGoToImage;
@@ -183,7 +181,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	protected static int MAX_HEIGHT;
 	protected static int MAX_WIDTH;
 	protected static Dimension screenSize;
-	private Integer rows, columns;
+	
 
 
 	/** Store data about visualization */
@@ -277,10 +275,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void createModel() throws Exception
 	{
 		gallery = data.createModel();
-                if (data.parameters.columns > 0)
-			gallery.setColumns(data.parameters.columns);
-		else if (data.parameters.rows > 0)
-			gallery.setRows(data.parameters.rows);
+                if (data.getModelColumns() != null)
+			gallery.setColumns(data.getModelColumns());
+		else if (data.getModelRows() != null)
+			gallery.setRows(data.getModelRows());
 	}
 
 	public GalleryData getData()
@@ -700,10 +698,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		// }
 	}// function updateTable
 
+        
 	/** Adjust the columns depending on the current windows width and cell width */
 	private boolean adjustColumns()
 	{
-		if (autoAdjustColumns){
+		if (data.isAutoAdjust()){
 			//DEBUG.printStackTrace();
 			return gallery.adjustColumn(width - 50);
 		}
@@ -723,7 +722,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 
 	public void setAutoAdjustColumns(boolean autoAdjustColumns)
 	{
-		this.autoAdjustColumns = autoAdjustColumns;
 		jcbAutoAdjustColumns.setSelected(autoAdjustColumns);
 		jsColumns.setEnabled(!autoAdjustColumns);
 		jsRows.setEnabled(!autoAdjustColumns);
@@ -844,9 +842,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jlGoToImage.setEnabled(isCol);
 		}
 		jsColumns.setEnabled(allowColsResize);
-		jlColumns.setEnabled(allowColsResize);
 		jsRows.setEnabled(allowColsResize);
-		jlRows.setEnabled(allowColsResize);
 		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
 
@@ -876,11 +872,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			this.saved = !changed;
 
 			setGalleryTitle();
-
+                        Integer rows = data.getModelRows();
+                        Integer cols = data.getModelColumns();
 			if (rows != null)
 				gallery.setRows(rows);
-			if (columns != null)
-				gallery.setColumns(columns);
+			if (cols != null)
+				gallery.setColumns(cols);
 
 		}
 		catch (Exception e)
@@ -1166,7 +1163,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						{
 							data.loadMd();
 							reloadTableData();
-                                                        autoAdjustColumns(!data.isRotSpectraMode());
+                                                        autoAdjustColumns(data.isAutoAdjust());
 						}
 						catch (Exception e)
 						{
@@ -1275,8 +1272,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{// GEN-FIRST:event_jsRowsStateChanged
 		if (!isUpdating)
 		{
-			rows = (Integer) jsRows.getValue();
-			columns = null;
+			Integer rows = (Integer) jsRows.getValue();
+			data.setModelDim(rows, null);
 			gallery.setRows(rows);
 		}
 	}
@@ -1285,22 +1282,14 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{// GEN-FIRST:event_jsColumnsStateChanged
 		if (!isUpdating)
 		{
-			columns = (Integer) jsColumns.getValue();
-			rows = null;
-			gallery.setColumns(getLastColums());
+			Integer columns = (Integer) jsColumns.getValue();
+			data.setModelDim(null, columns);
+			gallery.setColumns(columns);
 
 		}
 	}
 
-	public int getLastRows()
-	{
-		return rows;
-	}
-
-	public int getLastColums()
-	{
-		return columns;
-	}
+	
 
 	private void jsGoToImageStateChanged(javax.swing.event.ChangeEvent evt)
 	{
@@ -1318,7 +1307,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void formComponentResized(java.awt.event.ComponentEvent evt)
 	{
 		width = getSize().width;
-		if (!isUpdating && autoAdjustColumns)
+		if (!isUpdating && data.isAutoAdjust())
 		{
 			adjustColumns();
 		}
@@ -1413,9 +1402,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		refreshExtractFrame();
 	}// function tableMouseClicked
 
-	private void autoAdjustColumns(boolean value)
+	private void autoAdjustColumns(boolean autoadjust)
 	{
-		setAutoAdjustColumns(value);
+		setAutoAdjustColumns(autoadjust);
+                if(autoadjust)
+                    data.setModelDim(null, null);
 		adjustColumns();
 	}
 

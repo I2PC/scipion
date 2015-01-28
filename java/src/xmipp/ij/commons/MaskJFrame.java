@@ -18,12 +18,15 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import xmipp.jni.ImageGeneric;
@@ -34,7 +37,7 @@ import xmipp.utils.ScipionParams;
  *
  * @author airen
  */
-public class MaskJFrame extends JFrame{
+public class MaskJFrame extends JFrame implements ActionListener{
     protected ImagePlus mask;
     private ImageJPanel imagepn;
     private JButton registerbt;
@@ -43,6 +46,8 @@ public class MaskJFrame extends JFrame{
     private JToggleButton invertbt;
     private JToggleButton addbt;
     private final XmippImageWindow iw;
+    private JCheckBox smoothbt;
+    private JFormattedTextField smoothtf;
     
     public MaskJFrame(XmippImageWindow iw)
     {
@@ -55,7 +60,7 @@ public class MaskJFrame extends JFrame{
     
     protected void initComponents()
     {
-        setTitle("Mask Manager");
+        setTitle("Design Mask");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
        
         GridBagConstraints constraints = new GridBagConstraints();
@@ -65,19 +70,24 @@ public class MaskJFrame extends JFrame{
         
         imagepn = new ImageJPanel(mask, width, height);
         add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-        invertbt = new JCheckBox("Invert");
-        invertbt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                createMask();
-                imagepn.setMask(mask, width, height);
-            }
-
-            
-        });
-        add(invertbt);
-        add(invertbt, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        
+        JPanel optionspn = new JPanel();
+        add(optionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        optionspn.add(new JLabel("Invert:"));
+        invertbt = new JCheckBox();
+        invertbt.addActionListener(this);
+        optionspn.add(invertbt);
+        
+        optionspn.add(new JLabel("Smooth:"));
+        smoothbt = new JCheckBox();
+        smoothbt.addActionListener(this);
+        optionspn.add(smoothbt);
+        smoothtf = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        smoothtf.setColumns(2);
+        smoothtf.setValue(2);
+        smoothtf.addActionListener(this);
+        smoothtf.setEnabled(false);
+        optionspn.add(smoothtf);
         JPanel commandspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         add(commandspn, XmippWindowUtil.getConstraints(constraints, 0, 2, 1, 1, GridBagConstraints.HORIZONTAL));
         
@@ -127,6 +137,7 @@ public class MaskJFrame extends JFrame{
     
     private void createMask() {
             imp = IJ.getImage();
+            
             width = imp.getCanvas().getWidth();
             height = imp.getCanvas().getHeight();
 
@@ -140,18 +151,19 @@ public class MaskJFrame extends JFrame{
 
                     mask.getProcessor().setColor(Color.WHITE);
                     mask.getProcessor().fill(roi);
-                    mask.updateAndDraw();
                     if(isInvert())
                     {
                         mask.setRoi((Roi) null); // ...clears selection...
                         mask.getProcessor().invert();
                         mask.setRoi(roi);   // ...to restore it later.
-                        mask.updateAndDraw();
                     }
+                    if(isSmooth())
+                        mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
+                    
                     
                 } else 
                     createDefaultMask();
-                    
+                mask.updateAndDraw();    
                 
             } else {
                 IJ.error("There are no images open.");
@@ -166,6 +178,13 @@ public class MaskJFrame extends JFrame{
         return invertbt.isSelected();
     }
     
+    public boolean isSmooth()
+    {
+        if(smoothbt == null)
+            return false;
+        return smoothbt.isSelected();
+    }
+    
     public boolean isAddRoi()
     {
         if(addbt == null)
@@ -177,7 +196,6 @@ public class MaskJFrame extends JFrame{
     {
         ByteProcessor processor = new ByteProcessor(imp.getWidth(), imp.getHeight());
         mask = new ImagePlus("Mask", processor);
-        mask.updateAndDraw();
             
 
     }
@@ -187,6 +205,14 @@ public class MaskJFrame extends JFrame{
         createMask();
         imagepn.setMask(mask, width, height);
         pack();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        smoothtf.setEnabled(isSmooth());
+        createMask();
+        imagepn.setMask(mask, width, height);
+        
     }
     
         

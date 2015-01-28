@@ -77,7 +77,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	// Where to show labels
 	// protected boolean showLabel = false;
 	// Whether to autoadjust columns
-	protected boolean adjustColumns = false;
 	// Flags and variables to control global normalization
 	protected boolean normalize_calculated = false;
 	protected double normalize_min = Double.POSITIVE_INFINITY,
@@ -214,7 +213,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	public void setRows(int rows) {
-		adjustColumns = false;
 		if (rows != this.rows) {
 			this.rows = rows;
 			cols = n / rows + (n % rows == 0 ? 0 : 1);
@@ -229,7 +227,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	}
 
 	public void setColumns(int cols) {
-		adjustColumns = false;
 		if (cols != this.cols) {
 			setColumnsValue(cols);
 		}
@@ -238,7 +235,6 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 	// Return True if columns were changed
 	public boolean adjustColumn(int width) {
 		last_width = width;
-		adjustColumns = true;
 		int new_cols = Math.max(Math.min(width / cellDim.width, n), 1);
 		if (new_cols != cols) {
 			setColumnsValue(new_cols);
@@ -336,7 +332,7 @@ public abstract class ImageGalleryTableModel extends AbstractTableModel {
 		if (data.zoom != z) {
 			setZoomValue(z);
 			fireTableDataChanged();
-			if (adjustColumns)
+			if (data.isAutoAdjust())
 				adjustColumn(last_width);
 		}
 	}

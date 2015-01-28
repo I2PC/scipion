@@ -72,7 +72,6 @@ public class QuickHelpPane extends JPanel
 		buttonspn = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
 		add(buttonspn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
-		XmippWindowUtil.setLocation(0.5f, 0.5f, this);
 		setVisible(true);
 	}
 

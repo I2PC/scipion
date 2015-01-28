@@ -32,6 +32,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -57,28 +58,29 @@ public class XmippWindowUtil
 	 * This function will be used to place the location of a windows relative to
 	 * another windows or screen
 	 */
-	private static void setLocation(double positionx, double positiony, Container w, Dimension dim, Point offset)
+	private static void setLocation(double positionx, double positiony, Container w, Rectangle bounds)
 	{
 		Rectangle abounds = w.getBounds();
-		int x = (int) (positionx * (dim.width - abounds.width) + offset.x);
-		int y = (int) (positiony * (dim.height - abounds.height) + offset.y);
+		int x = (int) (positionx * (bounds.width - abounds.width) + bounds.x);
+		int y = (int) (positiony * (bounds.height - abounds.height) + bounds.y);
 		w.setLocation(x, y);
 	}
 
-	public static void setLocation(double positionx, double positiony, Container w)
+	public static void setLocation(double positionx, double positiony, Window w)
 	{
             GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-            Dimension d = new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
-		setLocation(positionx, positiony, w, d, new Point(0, 0));
+            
+            
+            setLocation(positionx, positiony, w, gd.getDefaultConfiguration().getBounds());
 	}
 
 	public static void setLocation(float positionx, float positiony, Container w, Container parent)
 	{
-		setLocation(positionx, positiony, w, parent.getSize(), parent.getLocation());
+		setLocation(positionx, positiony, w, parent.getBounds());
 	}
 
 	/** Center the component in the screen */
-	public static void centerWindows(Container w)
+	public static void centerWindows(Window w)
 	{
 		setLocation(0.5f, 0.5f, w);
 	}
@@ -86,7 +88,7 @@ public class XmippWindowUtil
 	/** Center the component relative to parent component */
 	public static void centerWindows(Container w, Container parent)
 	{
-		setLocation(0.5f, 0.5f, w, parent.getSize(), parent.getLocation());
+		setLocation(0.5f, 0.5f, w, parent.getBounds());
 	}
 
 	public static GridBagConstraints getConstraints(GridBagConstraints constraints, int x, int y)
