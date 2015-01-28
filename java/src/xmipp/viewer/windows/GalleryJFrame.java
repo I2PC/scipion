@@ -841,9 +841,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jsGoToImage.setEnabled(isCol && gallery.getSize() > 0);
 			jlGoToImage.setEnabled(isCol);
 		}
-		jsColumns.setEnabled(allowColsResize);
-		jsRows.setEnabled(allowColsResize);
-		jcbAutoAdjustColumns.setEnabled(allowColsResize);
+		autoAdjustColumns(allowColsResize && data.isAutoAdjust());
 	}
 
 	public void reloadTableData()
@@ -1057,7 +1055,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				autoAdjustColumns(jcbAutoAdjustColumns.isSelected());
 			}
 		});
-		jcbAutoAdjustColumns.setSelected(true);
+		jcbAutoAdjustColumns.setSelected(data.isAutoAdjust());
 		jlRows = new javax.swing.JLabel();
 		jsRows = new javax.swing.JSpinner();
 		jlColumns = new javax.swing.JLabel();
@@ -1407,6 +1405,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		setAutoAdjustColumns(autoadjust);
                 if(autoadjust)
                     data.setModelDim(null, null);
+                else
+                    data.setModelDim((int)jsRows.getValue(), (int)jsColumns.getValue());
 		adjustColumns();
 	}
 
