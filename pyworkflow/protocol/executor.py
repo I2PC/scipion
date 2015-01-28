@@ -95,13 +95,13 @@ class ThreadStepExecutor(StepExecutor):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
-        # Keep a list of busy slots ids (used to number threads and mpi)
-        freeNodes = range(self.numberOfProcs)
-        runningSteps = {}
+
+        runningSteps = {}  # currently running step in each node ({node: step})
+        freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
 
         def getRunnable():
             """ Return the first step that is 'new' and all its
-            dependencies have been finished.
+            dependencies have been finished, or None if none ready.
             """
             for s in steps:
                 if (s.getStatus() == cts.STATUS_NEW and
@@ -110,12 +110,16 @@ class ThreadStepExecutor(StepExecutor):
             return None
 
         while True:
-            notRunning = [ns for ns in runningSteps.iteritems() if not ns[1].isRunning()]
-            for nodeId, step in notRunning:
-                runningSteps.pop(nodeId)
-                freeNodes.append(nodeId)
-                stepFinishedCallback(step)
+            # See which of the runningSteps are not really running anymore.
+            # Update them and freeNodes, and call final callback for step.
+            notRunning = [node for node, step in runningSteps.iteritems()
+                              if not step.isRunning()]
+            for node in notRunning:
+                step = runningSteps.pop(node)  # remove entry from runningSteps
+                freeNodes.append(node)  # the node is available now
+                stepFinishedCallback(step)  # and do final work on the finished step
 
+            # If there are available nodes, send next runnable step.
             if freeNodes:
                 step = getRunnable()
                 if step is not None:
@@ -123,13 +127,15 @@ class ThreadStepExecutor(StepExecutor):
                     # thread to do the job and book it.
                     step.setRunning()
                     stepStartedCallback(step)
-                    nodeId = freeNodes.pop()
-                    runningSteps[nodeId] = step
-                    StepThread(nodeId, step).start()
-                elif all(not s.isRunning() for s in steps):
+                    node = freeNodes.pop()  # take an available node
+                    runningSteps[node] = step
+                    StepThread(node, step).start()
+                elif not any(s.isRunning() for s in steps):  # nothing running
                     break  # yeah, we are done, either failed or finished :)
-            time.sleep(0.1)
-        # wait for all now
+
+            time.sleep(0.1)  # be gentle on the main thread
+
+        # Wait for all threads now.
         for t in threading.enumerate():
             if t is not threading.current_thread():
                 t.join()
