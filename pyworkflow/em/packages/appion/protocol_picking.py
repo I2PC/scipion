@@ -28,11 +28,12 @@ import os
 
 from pyworkflow.protocol.params import IntParam, FloatParam, BooleanParam, StringParam, LEVEL_EXPERT
 from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.properties import Message
 
 from convert import readSetOfCoordinates
 
-from pyworkflow.utils.path import replaceBaseExt, join, makePath, removeBaseExt, createLink, basename
+from pyworkflow.utils.path import replaceBaseExt, join, makePath, removeBaseExt, createLink, basename, getExt
 
 
 class DogPickerProtPicking(ProtParticlePicking):
@@ -71,7 +72,8 @@ class DogPickerProtPicking(ProtParticlePicking):
     def _insertAllSteps(self):
 
         self._params = {}
-        self._params['diam'] = self.diameter.get()
+        # diameter must be passed in Armstrongs and therefore should be converted
+        self._params['diam'] = self.diameter.get() * self.getInputMicrographs().getSamplingRate()
         # self._params['num-slices'] = self.numberSizes.get()
         # self._params['size-range'] = self.sizeRange.get()
         self._params['apix'] = self.inputMicrographs.get().getSamplingRate()
@@ -91,8 +93,25 @@ class DogPickerProtPicking(ProtParticlePicking):
 
         deps = [] # Store all steps ids, final step createOutput depends on all of them
 
+        ih = ImageHandler()
+
         for mic in self.inputMicrographs.get():
-            stepId = self._insertFunctionStep('executeDogpickerStep', mic.getFileName(), args)
+            # Create micrograph folder
+            micName = mic.getFileName()
+            micDir = self._getTmpPath(removeBaseExt(micName))
+            makePath(micDir)
+
+            # If needed convert micrograph to mrc format, otherwise link it
+            if getExt(micName) != ".mrc":
+                fnMicBase = replaceBaseExt(micName, 'mrc')
+                inputMic = join(micDir, fnMicBase)
+                ih.convert(mic.getLocation(), inputMic)
+            else:
+                inputMic = join(micDir, basename(micName))
+                createLink(micName, inputMic)
+
+            # Insert step to execute program
+            stepId = self._insertFunctionStep('executeDogpickerStep', inputMic, args)
             deps.append(stepId)
 
 
@@ -106,18 +125,12 @@ class DogPickerProtPicking(ProtParticlePicking):
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def executeDogpickerStep(self, inputMic, args):
-        # Create micrograph folder and create a link for micrograph
-        # micDir = self._getExtraPath(removeBaseExt(inputMic))
-        # makePath(micDir)
-
-        linkMic = self._getExtraPath(basename(inputMic))
-        createLink(inputMic, linkMic)
 
         # Program to execute and it arguments
         program = "ApDogPicker.py"
         outputFile = self._getExtraPath(replaceBaseExt(inputMic, "txt"))
 
-        args += " --image=%s --outfile=%s" % (linkMic, outputFile)
+        args += " --image=%s --outfile=%s" % (inputMic, outputFile)
 
         # Run the command with formatted parameters
 
@@ -130,7 +143,6 @@ class DogPickerProtPicking(ProtParticlePicking):
         coordSet = self._createSetOfCoordinates(micSet)
         self.readSetOfCoordinates(self._getExtraPath(), coordSet)
         coordSet.setBoxSize(self.diameter.get())
-        # coordSet.setObjComment(self.getSummary(coordSet))
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
 
@@ -144,14 +156,6 @@ class DogPickerProtPicking(ProtParticlePicking):
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMicrographs.get(), coordSet)
 
-    # def getSummary(self, coordSet):
-    #     summary = []
-    #     summary.append(ProtParticlePicking.getSummary(self, coordSet))
-    #     summary.append("Threshold: %0.2f" % self.threshold)
-    #     if self.extraParams.get() != "":
-    #         summary.append("And other parameters: %s" % self.extraParams)
-    #     return "\n".join(summary)
-
     def _summary(self):
         summary = []
         summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
@@ -159,7 +163,7 @@ class DogPickerProtPicking(ProtParticlePicking):
             summary.append("Number of particles picked: %d" % self.getCoords().getSize())
             summary.append("Particle size: %d" % self.getCoords().getBoxSize())
             summary.append("Threshold: %0.2f" % self.threshold)
-            if self.extraParams.get() != "":
+            if self.extraParams.hasValue():
                 summary.append("And other parameters: %s" % self.extraParams)
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
