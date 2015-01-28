@@ -2,7 +2,7 @@
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia, CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -30,15 +30,13 @@ There is one based on threads to execute steps in parallel
 using different threads and the last one with MPI processes.
 """
 
-from threading import Thread, Condition, Event, current_thread
+import time
+import datetime
+import traceback
+import threading
+
 import pyworkflow.utils.process as process
-
-STATUS_FINISHED = "finished"  # successfully finished
-STATUS_READY = "ready" # The step is ready for execution, i.e. all requirements are done
-STATUS_WAITING_OTHERS = "waiting_others" # There are some prerequisites steps that are not done yet
-
-NO_READY_STEPS = -1 # no ready steps at this moment, should wait for it
-NO_MORE_STEPS = -2  # all steps were done and nothing else to do.
+import constants as cts
 
 
 class StepExecutor():
@@ -69,143 +67,72 @@ class StepExecutor():
                     break
 
 
-class StepThread(Thread):
-    """ Thread to run Steps in parallel. 
-    If there is no work to do, the thread
-    should be waiting in his Event variable.
-    When the event is set to True, two things can happen:
-    1. The step variable is None and the thread should exit
-       since there is no more work to do, or
-    2. The step will be run and reported back after completion.
-    """
-    def __init__(self, thId, condition):
-        Thread.__init__(self)
+class StepThread(threading.Thread):
+    """ Thread to run Steps in parallel. """
+    def __init__(self, thId, step):
+        threading.Thread.__init__(self)
         self.thId = thId
-        self.condition = condition
-        self.event = Event() # Wait for work or exit
-        self.step = None
-        self.setDaemon(True)
-        
-    def isReady(self):
-        return not self.event.is_set()
-
-    def setStep(self, step):
         self.step = step
-        self.event.set() # Work to do!!!
-    
+
     def run(self):
-        while True:
-            # Wait for work
-            self.event.wait()
-            if self.step is None:
-                break
-            self.step.run()
-            # Notify finished step
-            self.condition.acquire()
-            self.event.clear()
-            self.condition.notify()
-            self.condition.release()
-            
-        
+        try:
+            self.step._run()  # not self.step.run() , to avoid race conditions
+            self.step.setStatus(cts.STATUS_FINISHED)
+        except Exception as e:
+            self.step.setFailed(str(e))
+            traceback.print_exc()
+        finally:
+            self.step.endTime.set(datetime.datetime.now())
+
+
 class ThreadStepExecutor(StepExecutor):
-    """ Run steps in parallel using threads. 
-    """
+    """ Run steps in parallel using threads. """
     def __init__(self, hostConfig, nThreads):
         StepExecutor.__init__(self, hostConfig)
-        self.numberOfThreads = nThreads
+        self.numberOfProcs = nThreads
         
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
-        self.stepStartedCallback = stepStartedCallback
-        self.stepFinishedCallback = stepFinishedCallback
-        self.steps = steps
-        self.stepsLeft = 0
-        self.condition = Condition() # Condition over global state
-        
-        for s in steps:
-            if not s.isFinished():
-                s.status.set(STATUS_WAITING_OTHERS)
-                self.stepsLeft += 1
-        
-        self.thList = []
-        
-        #print "main: creating %d threads. " % self.numberOfThreads
-        for i in range(self.numberOfThreads):
-            th = StepThread(i, self.condition)
-            self.thList.append(th)
-            th.start()
+        # Keep a list of busy slots ids (used to number threads and mpi)
+        freeNodes = range(self.numberOfProcs)
+        runningSteps = {}
 
-        self.condition.acquire()
-        
-        while self.stepsLeft:
-            self._launchThreads() # Check ready steps and launch threads
-            self.condition.wait() # Wait to some steps completed
-            self._updateThreads() # Check stepsLeft and clean finished threads status
+        def getRunnable():
+            """ Return the first step that is 'new' and all its
+            dependencies have been finished.
+            """
+            for s in steps:
+                if (s.getStatus() == cts.STATUS_NEW and
+                        all(steps[i-1].isFinished() for i in s._prerequisites)):
+                    return s
+            return None
 
-        self.condition.release() # Not needed
-        
-        #print "main: Waiting for threads..."
-        # Wait until all threads finish
-        for th in self.thList:
-            self.finishThread(th) # Let thread exit
-            
-        #print "main: Exit..."
-         
-    def finishThread(self, th):
-        th.setStep(None)
-        th.join()
-        
-    def _getReadyThread(self):
-        """ Get the first thread waiting for work. """
-        for th in self.thList:
-            #print "main: checking thread ready for th: ", th.thId
-            if th.isReady():
-                return th
-        return None
-    
-    def _updateThreads(self):
-        """ Check which threads are done with theirs job. """
-        for th in self.thList:
-            if th.isReady(): # Waiting for work
-                if th.step is not None: # Step finished
-                    self.stepFinishedCallback(th.step)
-                    if th.step.isFailed():
-                        self.stepsLeft = 0
-                        self.finishThread(th)
-                        import os
-                        os._exit(1)
-                        #raise Exception("Step failed!!!")
-                    else:
-                        self.stepsLeft -= 1
-                    th.step = None # clean the thread step
+        while True:
+            notRunning = [ns for ns in runningSteps.iteritems() if not ns[1].isRunning()]
+            for nodeId, step in notRunning:
+                runningSteps.pop(nodeId)
+                freeNodes.append(nodeId)
+                stepFinishedCallback(step)
 
-    def _isStepReady(self, step):
-        """ Check if a step has all prerequisites done. """
-        if step.status != STATUS_WAITING_OTHERS:
-            return False
-
-        for i in step._prerequisites:
-            if not self.steps[i-1].isFinished():
-                #print "main: prerequisite ", i, " is not finished!!!"
-                return False
-
-        return True
-                    
-    def _launchThreads(self):
-        """ Check ready steps and awake threads to work. """
-        for s in self.steps:
-            if self._isStepReady(s):
-                #print " step ready."
-                th = self._getReadyThread()
-                if th is None:
-                    #print "main: no thread available"
-                    break # exit if no available threads to work
-                s.setRunning()
-                self.stepStartedCallback(s)
-                #print "main: ", "awaking thread: ", th.thId
-                th.setStep(s) # Awake thread to work 
+            if freeNodes:
+                step = getRunnable()
+                if step is not None:
+                    # We found a step to work in, so let's start a new
+                    # thread to do the job and book it.
+                    step.setRunning()
+                    stepStartedCallback(step)
+                    nodeId = freeNodes.pop()
+                    runningSteps[nodeId] = step
+                    StepThread(nodeId, step).start()
+                elif all(not s.isRunning() for s in steps):
+                    break  # yeah, we are done, either failed or finished :)
+            time.sleep(0.1)
+        # wait for all now
+        for t in threading.enumerate():
+            if t is not threading.current_thread():
+                t.join()
 
 
 class MPIStepExecutor(ThreadStepExecutor):
@@ -214,25 +141,26 @@ class MPIStepExecutor(ThreadStepExecutor):
     """
     def __init__(self, hostConfig, nMPI, comm):
         ThreadStepExecutor.__init__(self, hostConfig, nMPI)
-        #self.runJob = runJob
         self.comm = comm
     
     def runJob(self, log, programName, params,           
            numberOfMpi=1, numberOfThreads=1, 
            env=None, cwd=None):
         from pyworkflow.utils.mpi import runJobMPI
-        node = current_thread().thId + 1
+        node = threading.current_thread().thId + 1
         print "==================calling runJobMPI=============================="
         print " to node: ", node
         runJobMPI(programName, params, self.comm, node,
                   numberOfMpi, hostConfig=self.hostConfig,
                   env=env, cwd=cwd)
-        
-    def finishThread(self, th):
+
+    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
+        ThreadStepExecutor.runSteps(self, steps, stepStartedCallback, stepFinishedCallback)
+
+        # We import mpi here just to avoid failing in case MPI4py
+        # was not properly compiled, we still can run in parallel with threads
         from pyworkflow.utils.mpi import TAG_RUN_JOB
-        th.setStep(None)
-        destMpi = th.thId+1
-        self.comm.send('None', dest=destMpi, tag=TAG_RUN_JOB + destMpi)
-        th.join()
-        
-        
+        # Send special command 'None' to MPI slaves to notify them
+        # that there is not more jobs to do and they can finish.
+        for i in range(1, self.numberOfProcs+1):
+            self.comm.send('None', dest=i, tag=(TAG_RUN_JOB+i))
