@@ -193,7 +193,7 @@ void Basis::produceSideInfo(const Grid &grid)
                 ImageOver footprintT;
                 footprintT.init(*VolPSF, subsampling);
 
-                convolutionFFT(*VolPSF, blobprint(), footprintT());
+                convolutionFFTStack(*VolPSF, blobprint(), footprintT());
 
                 blobprint = footprintT;
             }

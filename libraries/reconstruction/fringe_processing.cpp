@@ -1095,8 +1095,8 @@ void firsPSDZero(MultidimArray<double> & enhancedPSD, Matrix1D<double> & xPoints
         for (int j = -std::abs(wSize); j <= std::abs(wSize); j++ )
             A2D_ELEM(mask,i,j) = double(1)/ double(wSize*wSize+1);
 
-    convolutionFFT(fx,mask,fx);
-    convolutionFFT(fy,mask,fy);
+    convolutionFFTStack(fx,mask,fx);
+    convolutionFFTStack(fy,mask,fy);
 
     //From the derivatives we calculate kappa:
     MultidimArray<double> absFx;
