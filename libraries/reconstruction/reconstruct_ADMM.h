@@ -41,18 +41,19 @@ class AdmmKernel
 {
 public:
 	double supp;
-	double step;
+	double projectionStep;
+	double autocorrStep;
 	double alpha;
 	Matrix1D<double> projectionProfile; // Look-up table
 	MultidimArray< std::complex<double> > FourierProjectionAutocorr;
 	FourierTransformer transformer;
 	MultidimArray<double> projectionAutocorrWithCTF;
 
-	void initializeKernel(double alpha, double a, double astep);
+	void initializeKernel(double alpha, double a, double _projectionStep);
 
 	double projectionValueAt(double u, double v);
 
-	void convolveKernelWithItself();
+	void convolveKernelWithItself(double _autocorrStep);
 
 	void applyCTFToKernelAutocorrelation(CTFDescription &ctf, MultidimArray<double> &autocorrelationWithCTF);
 

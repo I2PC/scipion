@@ -122,8 +122,8 @@ void ProgReconsADMM::produceSideInfo()
 
 	// Prepare kernel
 	if (kernelShape=="KaiserBessel")
-		kernel.initializeKernel(alpha,a,0.005);
-	kernel.convolveKernelWithItself();
+		kernel.initializeKernel(alpha,a,0.0001);
+	kernel.convolveKernelWithItself(0.005);
 
 	// Get Htb reconstruction
 	if (fnHtb=="")
@@ -214,7 +214,7 @@ void ProgReconsADMM::constructHtb()
 	Image<double> I;
 	double rot, tilt, psi;
 	size_t i=0;
-	std::cerr << "Performing first reconstruction ...\n";
+	std::cerr << "Performing Htb ...\n";
 	init_progress_bar(mdIn.size());
 	double weight=1.;
 	ApplyGeoParams geoParams;
@@ -354,7 +354,7 @@ void ProgReconsADMM::computeHtKH()
 		Euler_angles2matrix(rot,tilt,psi,E,false);
 		E.getRow(0,r1);
 		E.getRow(1,r2);
-		double iStep=1.0/kernel.step;
+		double iStep=1.0/kernel.autocorrStep;
 		for (int k=((kernelV).zinit); k<=((kernelV).zinit + (int)(kernelV).zdim - 1); ++k)
 		{
 			double r1_z=k*ZZ(r1);
@@ -377,13 +377,6 @@ void ProgReconsADMM::computeHtKH()
 			progress_bar(i);
 	}
 	progress_bar(mdIn.size());
-
-//	Image<double> save;
-//	save()=kernelV;
-//	save.write("PPPHtH.vol");
-//	std::cout << "HtH written" << std::endl;
-	Image<double> aux;
-	aux.read("/media/big/KINGSTON/1BRD_20141112/HTH.raw#129,129,129,0,float");
 
 	FourierTransformer transformer;
 	transformer.FourierTransform(kernelV,fourierKernelV,true);
@@ -437,12 +430,6 @@ void ProgReconsADMM::addRegularizationTerms()
 
 void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<double> &AtAx)
 {
-//	x.initZeros();
-//	x.printShape();
-//	x(10,10,10)=2;
-//	Image<double> save;
-//	save()=x;
-//	save.write("PPPx0.vol");
 	paddedx.initZeros(2*ZSIZE(x)-1,2*YSIZE(x)-1,2*XSIZE(x)-1);
 	paddedx.setXmippOrigin();
 
@@ -450,8 +437,6 @@ void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<doubl
 	for (int k=STARTINGZ(x); k<=FINISHINGZ(x); ++k)
 		for (int i=STARTINGY(x); i<=FINISHINGY(x); ++i)
 			memcpy(&A3D_ELEM(paddedx,k,i,STARTINGX(x)),&A3D_ELEM(x,k,i,STARTINGX(x)),XSIZE(x)*sizeof(double));
-//	save()=paddedx;
-//	save.write("PPPpaddedx.vol");
 
 	// Compute Fourier transform of paddedx
 	transformerPaddedx.setReal(paddedx);
@@ -467,21 +452,13 @@ void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<doubl
 
 	// Inverse Fourier transform
 	transformerPaddedx.inverseFourierTransform();
-//	save()=paddedx;
-//	save.write("PPPpaddedxFiltered.vol");
 	CenterFFT(paddedx,false);
-//	save()=paddedx;
-//	save.write("PPPpaddedxFilteredCentered.vol");
 
 	// Crop central region
 	AtAx.resize(x);
 	for (int k=STARTINGZ(x); k<=FINISHINGZ(x); ++k)
 		for (int i=STARTINGY(x); i<=FINISHINGY(x); ++i)
 			memcpy(&A3D_ELEM(AtAx,k,i,STARTINGX(x)),&A3D_ELEM(paddedx,k,i,STARTINGX(x)),XSIZE(x)*sizeof(double));
-//	save()=AtAx;
-//	save.write("PPPpaddedxFilteredCenteredCropped.vol");
-//	std::cout << "Press any key" << std::endl;
-//	char c; std::cin>> c;
 }
 
 void ProgReconsADMM::applyLFilter(MultidimArray< std::complex<double> > &fourierL, bool adjoint)
@@ -530,7 +507,6 @@ void ProgReconsADMM::applyConjugateGradient()
 	// Compute first residual. This is the negative gradient of ||Ax-b||^2
 	r-=AtAVk;
 	double d=r.sum2();
-	std::cout << "d=" << d << std::endl;
 
 	// Search direction
 	MultidimArray<double> p, AtAp;
@@ -541,10 +517,8 @@ void ProgReconsADMM::applyConjugateGradient()
 
 	for (int iter=0; iter<Ncgiter; ++iter)
 	{
-		std::cout << "iter=" << iter << std::endl;
 		applyKernel3D(p,AtAp);
 		double alpha=d/p.dotProduct(AtAp);
-		std::cout << "alpha=" << alpha << std::endl;
 
 		// Update residual and current estimate
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(r)
@@ -554,8 +528,6 @@ void ProgReconsADMM::applyConjugateGradient()
 		}
 		double newd=r.sum2();
 		double beta=newd/d;
-		std::cout << "newd=" << newd << std::endl;
-		std::cout << "beta=" << beta << std::endl;
 		d=newd;
 
 		// Update search direction
@@ -651,30 +623,22 @@ void ProgReconsADMM::produceVolume()
 	MultidimArray<double> kernel3D;
 	kernel3D.resize(Ck());
 	kernel.computeKernel3D(kernel3D);
-	Image<double> save;
-	save()=kernel3D;
-	save.write("PPPkernel.vol");
-	std::cout << "Kernel written" << std::endl;
-	save()=Ck();
-	save.write("PPPCk.vol");
 	convolutionFFT(Ck(),kernel3D,Vk());
-	save()=Vk();
-	save.write("PPPVk.vol");
 	// Vk()*=kernel3D.sum();
 }
 
-void AdmmKernel::initializeKernel(double _alpha, double a, double astep)
+void AdmmKernel::initializeKernel(double _alpha, double a, double _projectionStep)
 {
-	step=astep;
+	projectionStep=_projectionStep;
 	supp=a;
 	alpha=_alpha;
-	size_t length=ceil(a/astep)+1;
+	size_t length=ceil(a/projectionStep)+1;
 	projectionProfile.initZeros(length);
 	double ia=1.0/a;
 	double K=a/bessi2(alpha)*sqrt(2.0*PI/alpha);
 	FOR_ALL_ELEMENTS_IN_MATRIX1D(projectionProfile)
 	{
-		double s=i*astep;
+		double s=i*projectionStep;
 		double tmp=s*ia;
 		tmp=sqrt(1.0 - tmp*tmp);
 		VEC_ELEM(projectionProfile,i)=K*pow(tmp,2.5)*bessi2_5(alpha*tmp);
@@ -690,7 +654,7 @@ double AdmmKernel::projectionValueAt(double u, double v) {
     if (r > supp) {
         return 0.;
     } else {
-        r = r/step ;
+        r = r/projectionStep ;
         int rmin = std::floor(r);
         int rmax = rmin+1    ;
         double p = r-rmin;
@@ -698,16 +662,27 @@ double AdmmKernel::projectionValueAt(double u, double v) {
     }
 }
 
-void AdmmKernel::convolveKernelWithItself()
+void AdmmKernel::convolveKernelWithItself(double _autocorrStep)
 {
-	size_t length=ceil(2.5*supp/step)+1;
+	autocorrStep=_autocorrStep;
+	size_t length=ceil(2.5*supp/autocorrStep)+1;
 	projectionAutocorrWithCTF.initZeros(2*length+1,2*length+1);
 	projectionAutocorrWithCTF.setXmippOrigin();
+	double isupp=1.0/supp;
+	double K=supp/bessi2(alpha)*sqrt(2.0*PI/alpha);
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(projectionAutocorrWithCTF)
-		A2D_ELEM(projectionAutocorrWithCTF,i,j)=projectionValueAt(i*step,j*step);
+	{
+		double s=sqrt(i*i+j*j)*autocorrStep;
+		double tmp=s*isupp;
+		if (tmp<1)
+		{
+			tmp=sqrt(1.0 - tmp*tmp);
+			A2D_ELEM(projectionAutocorrWithCTF,i,j)=K*pow(tmp,2.5)*bessi2_5(alpha*tmp);
+		}
+	}
 
 	transformer.FourierTransform(projectionAutocorrWithCTF,FourierProjectionAutocorr);
-	double K=MULTIDIM_SIZE(projectionAutocorrWithCTF)*step*step;
+	K=MULTIDIM_SIZE(projectionAutocorrWithCTF)*autocorrStep*autocorrStep;
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(FourierProjectionAutocorr)
 		A2D_ELEM(FourierProjectionAutocorr,i,j)*=A2D_ELEM(FourierProjectionAutocorr,i,j)*K;
 }
@@ -727,7 +702,7 @@ void AdmmKernel::applyCTFToKernelAutocorrelation(CTFDescription &ctf, MultidimAr
 	int xdim=(int)XSIZE(projectionAutocorrWithCTF);
 	int xdim_2=xdim/2;
 	double ixdim=1.0/xdim;
-	double maxFreq=2*step;
+	double maxFreq=2*autocorrStep;
 	double maxFreq2=maxFreq*maxFreq;
 	// Initialize Fourier transform to 0
 	memset(&A2D_ELEM(transformer.fFourier,0,0),0,MULTIDIM_SIZE(transformer.fFourier)*sizeof(std::complex<double>));
