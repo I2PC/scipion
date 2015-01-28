@@ -403,15 +403,14 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
 #            if p.endswith(".cu"):
 #                cudaFiles = True
             # select sources inside tarfile but we only get those files that match the pattern
-            if tars: 
-                tarfiles = tarfile.open(tars[x]).getmembers() 
-                sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
-            else:
-                sources += glob(join(dirs[x], patterns[x]))
+            tarfiles = tarfile.open(tars[x]).getmembers() 
+            sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
+        else:
+            sources += glob(join(dirs[x], patterns[x]))
     if tarExists:
         Depends(sources, untars)
     else:
-        sources = untars
+        untars = sources
 
     mpiArgs = {}
     if mpi:
@@ -587,7 +586,6 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     libs = libs or []
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incs = incs or []
-    incs += ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
@@ -602,7 +600,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy = incs + env['CPPPATH']
+    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
