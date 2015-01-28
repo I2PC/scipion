@@ -64,7 +64,6 @@ public class XmippWindowUtil
 		int x = (int) (positionx * (bounds.width - abounds.width) + bounds.x);
 		int y = (int) (positiony * (bounds.height - abounds.height) + bounds.y);
 		w.setLocation(x, y);
-                System.out.printf("positiony %s screen height %s, window height %s y %s\n", positiony, bounds.height, abounds.height, y);
 	}
 
 	public static void setLocation(double positionx, double positiony, Window w)

@@ -68,7 +68,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
             setMenuBar(menu);
             if(XmippApplication.isScipion())
             {
-                MenuItem createMaskmi = new MenuItem("Mask Manager");
+                MenuItem createMaskmi = new MenuItem("Design Mask");
                 
                 createMaskmi.addActionListener(new ActionListener() {
 

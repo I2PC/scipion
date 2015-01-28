@@ -151,7 +151,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private JLabel jlColumns;
 	private JToggleButton jcbAutoAdjustColumns;
 	private JButton btnChangeView;
-	private JCheckBox jcbShowLabels;
 	protected JPanel jpBottom;
 	protected JSpinner jsColumns;
 	protected JSpinner jsGoToImage;
@@ -276,10 +275,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void createModel() throws Exception
 	{
 		gallery = data.createModel();
-                if (data.parameters.columns > 0)
-			gallery.setColumns(data.parameters.columns);
-		else if (data.parameters.rows > 0)
-			gallery.setRows(data.parameters.rows);
+                if (data.getModelColumns() != null)
+			gallery.setColumns(data.getModelColumns());
+		else if (data.getModelRows() != null)
+			gallery.setRows(data.getModelRows());
 	}
 
 	public GalleryData getData()
@@ -843,9 +842,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jlGoToImage.setEnabled(isCol);
 		}
 		jsColumns.setEnabled(allowColsResize);
-		jlColumns.setEnabled(allowColsResize);
 		jsRows.setEnabled(allowColsResize);
-		jlRows.setEnabled(allowColsResize);
 		jcbAutoAdjustColumns.setEnabled(allowColsResize);
 	}
 
@@ -1166,7 +1163,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 						{
 							data.loadMd();
 							reloadTableData();
-                                                        autoAdjustColumns(!data.isRotSpectraMode());
+                                                        autoAdjustColumns(data.isAutoAdjust());
 						}
 						catch (Exception e)
 						{
@@ -1405,9 +1402,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		refreshExtractFrame();
 	}// function tableMouseClicked
 
-	private void autoAdjustColumns(boolean value)
+	private void autoAdjustColumns(boolean autoadjust)
 	{
-		setAutoAdjustColumns(value);
+		setAutoAdjustColumns(autoadjust);
+                if(autoadjust)
+                    data.setModelDim(null, null);
 		adjustColumns();
 	}
 

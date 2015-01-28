@@ -199,6 +199,10 @@ public class GalleryData {
             setFileName(md.getPath());
             zoom = parameters.zoom;
             resliceView = parameters.resliceView;
+            if(parameters.rows > 0)
+                rows = parameters.rows;
+            if(parameters.columns > 0)
+                columns = parameters.columns;
             loadMd();
 
         } catch (Exception e) {
