@@ -110,7 +110,7 @@ public class GalleryData {
     protected String[] sortby;
     
     protected boolean isVolumeMd;
-    
+    protected Integer rows, columns;
 
     
     
@@ -126,6 +126,16 @@ public class GalleryData {
         return false;
     }
 
+    public Integer getModelRows()
+    {
+        return rows;
+    }
+    
+    public Integer getModelColumns()
+    {
+        return columns;
+    }
+    
     public void runObjectCommand(int index, String objectCommand) {
         try {
             String[] cmd = new String[]{objectCommand};
@@ -146,6 +156,16 @@ public class GalleryData {
 
     public void selectVolumeAt(int selectedIndex) {
         selectedVolFn = getVolumeAt(selectedIndex);
+    }
+
+    public boolean isAutoAdjust()
+    {
+        return rows == null && columns == null;
+    }
+
+    public void setModelDim(Integer rows, Integer cols) {
+        this.rows = rows;
+        this.columns = cols;
     }
 
 
