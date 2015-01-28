@@ -122,7 +122,7 @@ void ProgReconsADMM::produceSideInfo()
 
 	// Prepare kernel
 	if (kernelShape=="KaiserBessel")
-		kernel.initializeKernel(alpha,a,0.01);
+		kernel.initializeKernel(alpha,a,0.005);
 	kernel.convolveKernelWithItself();
 
 	// Get Htb reconstruction
@@ -145,7 +145,10 @@ void ProgReconsADMM::produceSideInfo()
 	if (fnFirst=="")
 		Ck().initZeros(CHtb());
 	else
+	{
 		Ck.read(fnFirst);
+		Ck().setXmippOrigin();
+	}
 
 	// Compute H'*K*H+mu*L^T*L+lambda_1 I
 	computeHtKH();
@@ -225,7 +228,7 @@ void ProgReconsADMM::constructHtb()
 		mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
 		mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
 		mdIn.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-		if (mdIn.containsLabel(MDL_WEIGHT))
+		if (useWeights && mdIn.containsLabel(MDL_WEIGHT))
 			mdIn.getValue(MDL_WEIGHT,weight,__iter.objId);
 
 		project(rot,tilt,psi,I(),true,weight);
@@ -235,7 +238,7 @@ void ProgReconsADMM::constructHtb()
 			progress_bar(i);
 	}
 	progress_bar(mdIn.size());
-	CHtb.write(fnRoot+"_firstReconstruction.vol");
+	CHtb.write(fnRoot+"_Htb.vol");
 }
 
 void ProgReconsADMM::project(double rot, double tilt, double psi, MultidimArray<double> &P, bool adjoint, double weight)
@@ -375,6 +378,13 @@ void ProgReconsADMM::computeHtKH()
 	}
 	progress_bar(mdIn.size());
 
+//	Image<double> save;
+//	save()=kernelV;
+//	save.write("PPPHtH.vol");
+//	std::cout << "HtH written" << std::endl;
+	Image<double> aux;
+	aux.read("/media/big/KINGSTON/1BRD_20141112/HTH.raw#129,129,129,0,float");
+
 	FourierTransformer transformer;
 	transformer.FourierTransform(kernelV,fourierKernelV,true);
 }
@@ -427,6 +437,12 @@ void ProgReconsADMM::addRegularizationTerms()
 
 void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<double> &AtAx)
 {
+//	x.initZeros();
+//	x.printShape();
+//	x(10,10,10)=2;
+//	Image<double> save;
+//	save()=x;
+//	save.write("PPPx0.vol");
 	paddedx.initZeros(2*ZSIZE(x)-1,2*YSIZE(x)-1,2*XSIZE(x)-1);
 	paddedx.setXmippOrigin();
 
@@ -434,6 +450,8 @@ void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<doubl
 	for (int k=STARTINGZ(x); k<=FINISHINGZ(x); ++k)
 		for (int i=STARTINGY(x); i<=FINISHINGY(x); ++i)
 			memcpy(&A3D_ELEM(paddedx,k,i,STARTINGX(x)),&A3D_ELEM(x,k,i,STARTINGX(x)),XSIZE(x)*sizeof(double));
+//	save()=paddedx;
+//	save.write("PPPpaddedx.vol");
 
 	// Compute Fourier transform of paddedx
 	transformerPaddedx.setReal(paddedx);
@@ -449,13 +467,21 @@ void ProgReconsADMM::applyKernel3D(MultidimArray<double> &x, MultidimArray<doubl
 
 	// Inverse Fourier transform
 	transformerPaddedx.inverseFourierTransform();
+//	save()=paddedx;
+//	save.write("PPPpaddedxFiltered.vol");
 	CenterFFT(paddedx,false);
+//	save()=paddedx;
+//	save.write("PPPpaddedxFilteredCentered.vol");
 
 	// Crop central region
 	AtAx.resize(x);
 	for (int k=STARTINGZ(x); k<=FINISHINGZ(x); ++k)
 		for (int i=STARTINGY(x); i<=FINISHINGY(x); ++i)
 			memcpy(&A3D_ELEM(AtAx,k,i,STARTINGX(x)),&A3D_ELEM(paddedx,k,i,STARTINGX(x)),XSIZE(x)*sizeof(double));
+//	save()=AtAx;
+//	save.write("PPPpaddedxFilteredCenteredCropped.vol");
+//	std::cout << "Press any key" << std::endl;
+//	char c; std::cin>> c;
 }
 
 void ProgReconsADMM::applyLFilter(MultidimArray< std::complex<double> > &fourierL, bool adjoint)
@@ -504,27 +530,32 @@ void ProgReconsADMM::applyConjugateGradient()
 	// Compute first residual. This is the negative gradient of ||Ax-b||^2
 	r-=AtAVk;
 	double d=r.sum2();
+	std::cout << "d=" << d << std::endl;
 
 	// Search direction
 	MultidimArray<double> p, AtAp;
 	p=r;
 
 	// Perform CG iterations
-	MultidimArray<double> &mVk=Ck();
+	MultidimArray<double> &mCk=Ck();
 
 	for (int iter=0; iter<Ncgiter; ++iter)
 	{
+		std::cout << "iter=" << iter << std::endl;
 		applyKernel3D(p,AtAp);
 		double alpha=d/p.dotProduct(AtAp);
+		std::cout << "alpha=" << alpha << std::endl;
 
 		// Update residual and current estimate
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(r)
 		{
 			DIRECT_MULTIDIM_ELEM(r,n)  -=alpha*DIRECT_MULTIDIM_ELEM(AtAp,n);
-			DIRECT_MULTIDIM_ELEM(mVk,n)+=alpha*DIRECT_MULTIDIM_ELEM(p,n);
+			DIRECT_MULTIDIM_ELEM(mCk,n)+=alpha*DIRECT_MULTIDIM_ELEM(p,n);
 		}
 		double newd=r.sum2();
 		double beta=newd/d;
+		std::cout << "newd=" << newd << std::endl;
+		std::cout << "beta=" << beta << std::endl;
 		d=newd;
 
 		// Update search direction
@@ -532,7 +563,7 @@ void ProgReconsADMM::applyConjugateGradient()
 			DIRECT_MULTIDIM_ELEM(p,n)  = DIRECT_MULTIDIM_ELEM(r,n)+beta*DIRECT_MULTIDIM_ELEM(p,n);
 
 		if (applyMask)
-			mask.apply_mask(mVk,mVk);
+			mask.apply_mask(mCk,mCk);
 
 //		Image<double> save;
 //		save()=Vk();
@@ -620,7 +651,15 @@ void ProgReconsADMM::produceVolume()
 	MultidimArray<double> kernel3D;
 	kernel3D.resize(Ck());
 	kernel.computeKernel3D(kernel3D);
+	Image<double> save;
+	save()=kernel3D;
+	save.write("PPPkernel.vol");
+	std::cout << "Kernel written" << std::endl;
+	save()=Ck();
+	save.write("PPPCk.vol");
 	convolutionFFT(Ck(),kernel3D,Vk());
+	save()=Vk();
+	save.write("PPPVk.vol");
 	// Vk()*=kernel3D.sum();
 }
 
