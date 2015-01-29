@@ -576,7 +576,7 @@ def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
 def mdToCTFModel(md, mic):    
     ctfRow = rowFromMd(md, md.firstObject())
     ctfObj = rowToCtfModel(ctfRow)
-    ctfObj.setObjId(mic.getObjId())
+    # the ctf id is set to micId when calling setMicrograph
     ctfObj.setMicrograph(mic)
     
     return ctfObj
