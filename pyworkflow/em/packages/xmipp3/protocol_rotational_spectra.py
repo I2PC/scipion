@@ -26,12 +26,18 @@
 """
 This sub-package contains wrapper around rotational spectra Xmipp program
 """
+from os.path import join
+import numpy as np
 
-from pyworkflow.em import *  
-import xmipp
-
+import pyworkflow.em as em  
+from pyworkflow.utils.path import makePath
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.protocol.params import EnumParam, IntParam
 import xmipp, xmipp3
+
+
 from protocol_kerdensom import KendersomBaseClassify
+from convert import readSetOfClasses2D
 
         
 class XmippProtRotSpectra(KendersomBaseClassify):
@@ -134,6 +140,65 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         self.runJob(program, args % self._params)
         return [outputSpectra]
     
+    def createOutputStep(self):
+        self.plotsDir = self._getExtraPath('plots')
+        makePath(self.plotsDir)
+        
+        fnClassVectors = self._params['kvectors'].replace('xmd', 'vec')
+        f = open(fnClassVectors)
+        self.classArray = np.fromfile(f, dtype=np.float32)
+        f.close()
+        
+        fnImgVectors = self._params['vectors'].replace('xmd', 'vec')
+        f = open(fnImgVectors)
+        self.imgArray = np.fromfile(f, dtype=np.float32)
+        f.close()
+        self.imgCount = 0
+        
+        imgSet = self.inputParticles.get()
+        classes2DSet = self._createSetOfClasses2D(imgSet)
+        readSetOfClasses2D(classes2DSet, self._params['kclasses'], 
+                           preprocessClass=self._preprocessClass,
+                           postprocessImageRow=self._postprocessImageRow)
+        self._defineOutputs(outputClasses=classes2DSet)
+        self._defineSourceRelation(imgSet, classes2DSet)
+                
+    def _preprocessClass(self, classItem, classRow):
+        KendersomBaseClassify._preprocessClass(self, classItem, classRow)
+        ref = classRow.getValue(xmipp.MDL_REF) # get class number
+        classItem.spectraPlot = em.Image()
+        classItem.spectraPlot.setFileName(self._createSpectraPlot('class', 
+                                                                  self.classArray, 
+                                                                  ref))
+        
+    def _postprocessImageRow(self, img, imgRow):
+        self.imgCount += 1
+        img.spectraPlot = em.Image()
+        img.spectraPlot.setFileName(self._createSpectraPlot('image', 
+                                                            self.imgArray, 
+                                                            self.imgCount, 
+                                                            img.getObjId()))
+        
+    def _createSpectraPlot(self, label, array, index, objId=None):
+        if objId is None:
+            objId = index
+        # Number of harmonics calculated
+        plotter = Plotter()
+        a = plotter.createSubPlot('Spectrum for %s %d' % (label, objId), 
+                                  xlabel='Harmonics', ylabel='Energy')
+        
+        n = self.spectraHighHarmonic.get() - self.spectraLowHarmonic.get() + 1
+        i1 = (index-1) * n
+        i2 = i1 + n
+        xdata = range(self.spectraLowHarmonic.get(), self.spectraHighHarmonic.get()+1)
+        ydata = array[i1:i2]
+        a.plot(xdata, ydata)
+        
+        plotFile = join(self.plotsDir, 'spectra_%s%06d.png' % (label, objId))
+        plotter.savefig(plotFile)
+        
+        return plotFile
+        
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         return KendersomBaseClassify._validate(self)
@@ -146,4 +211,4 @@ class XmippProtRotSpectra(KendersomBaseClassify):
     
     def _methods(self):
         return KendersomBaseClassify._methods(self)
-        
+   

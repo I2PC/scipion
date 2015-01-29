@@ -202,6 +202,8 @@ class KendersomBaseClassify(ProtClassify2D):
         messages = []  
         if not hasattr(self, 'outputClasses'):
             messages.append("Output classification not ready yet.")
+        elif self.inputParticles.get() is None:
+            messages.append('Input not selected yet.')
         else:    
             messages.append("*Kendersom classification*")
             messages.append('%s particles from %s were classified to obtain %s classes %s.'
