@@ -107,6 +107,10 @@ def viewToUrl(request, view):
     from pyworkflow.gui.plotter import Plotter
     from pyworkflow.em import TABLE_NAME, DataView, PATH
 
+    url = ""
+    
+    print "type: ", type(view)
+    
     # PLOT
     if isinstance(view, Plotter):
         url = 'url::/' + savePlot(request, view)
