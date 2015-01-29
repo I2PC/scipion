@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
 import xmipp.ij.commons.XmippApplication;
 import xmipp.jni.MetaData;
 import xmipp.utils.XmippDialog;
@@ -404,13 +405,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 	 * Open another metadata separataly *
 	 */
     @Override
-    public void openMetadata(MetaData md)
+    public void openMetadata(final MetaData md)
     {
         try
         {
-            String[] args = new String[]{"--python", python, scripts, "--project",projectid, inputid, ""};
-            ScipionParams params = new ScipionParams(args);
-            new ScipionGalleryJFrame(new ScipionGalleryData(this, params, (ScipionMetaData)md));
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    new ScipionGalleryJFrame(new ScipionGalleryData(ScipionGalleryJFrame.this, data.parameters, (ScipionMetaData)md));
+                }
+            });
+            
         }
         catch(Exception e)
         {

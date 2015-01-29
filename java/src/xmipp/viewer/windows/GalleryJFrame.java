@@ -251,11 +251,18 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/**
 	 * Open another metadata separataly *
 	 */
-	public void openMetadata(MetaData md)
+	public void openMetadata(final MetaData md)
 	{
             try
             {
-                new GalleryJFrame(md, data.parameters);
+                SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        new GalleryJFrame(md, data.parameters);
+                    }
+                });
+                
             }
             catch(Exception e)
             {
