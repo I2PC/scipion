@@ -48,6 +48,7 @@ public class ImagePlusFromFile extends ImagePlusReader{
                         {
                             try
                             {
+                                
                                 ig = new ImageGeneric(fileName);//to read again file
                             }
                             catch(Exception e)
@@ -93,6 +94,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		}
 		return imp;
 	}
+        
+        
     
         public boolean hasChanged()
 	{
@@ -105,22 +108,22 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		return fileName;
 	}
 
-    @Override
-    public boolean getAllowsPoll() {
-        return true;
-    }
+        @Override
+        public boolean getAllowsPoll() {
+            return true;
+        }
 
-    @Override
-    public String getName() {
+        @Override
+        public String getName() {
 
-        String name = fileName;
-        
-        
-        if(index != -2)
-            name = String.format("%d@%s", index, name);
-        return name;
+            String name = fileName;
 
-    }
+
+            if(index != -2)
+                name = String.format("%d@%s", index, name);
+            return name;
+
+        }
         
         
 }

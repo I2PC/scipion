@@ -253,11 +253,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	 */
 	public void openMetadata(MetaData md)
 	{
-
             try
             {
                 Params p = new Params();
-                
                 new GalleryJFrame(md, p);
             }
             catch(Exception e)
@@ -828,7 +826,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 		btnChangeView.setIcon(icon);
 		btnChangeView.setToolTipText(text);
-		boolean allowColsResize = true;
 		if (data.isTableMode())
 		{ // if we are in table mode only allow change
 			// if exist render label
@@ -837,11 +834,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
 			boolean isCol = data.isColumnFormat();
-			allowColsResize = false;
 			jsGoToImage.setEnabled(isCol && gallery.getSize() > 0);
 			jlGoToImage.setEnabled(isCol);
+                        autoAdjustColumns(true);
 		}
-		autoAdjustColumns(allowColsResize && data.isAutoAdjust());
+                else
+                    autoAdjustColumns(data.isAutoAdjust());
 	}
 
 	public void reloadTableData()
