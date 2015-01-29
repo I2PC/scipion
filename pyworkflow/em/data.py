@@ -156,6 +156,7 @@ class CTFModel(EMObject):
     
     def setMicrograph(self, mic):
         self._micObj = mic
+        self.copyObjId(mic)
 
     def getDefocus(self):
         """ Returns defocusU, defocusV and defocusAngle. """
