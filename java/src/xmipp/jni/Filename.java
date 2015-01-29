@@ -25,8 +25,13 @@ public class Filename {
 	public final static String EXT_INF = ".inf";
 	public final static String EXT_SPE = ".spe";
 	public final static String EXT_TIF = ".tif";
-	public final static String EXT_JPG = ".jpg";
+	public final static String EXT_JPG = ".jpg";//supported only in black and white
+        public final static String EXT_PNG = ".png";
 	public final static String EXT_PSD = ".psd";
+        public final static String EXT_HDF = ".hdf";
+        public final static String EXT_HDF5 = ".hdf5";
+        public final static String EXT_H5 = ".h5";
+        
 	// metadata extensions
 	public final static String EXT_XMD = ".xmd";
 	public final static String EXT_SEL = ".sel";
@@ -49,9 +54,11 @@ public class Filename {
 
 	public final static String[] SINGLE_IMAGES = new String[] { EXT_XMP,
 			EXT_IMG, EXT_HED, EXT_PSD, EXT_SER, EXT_DM3, EXT_EM, EXT_PIF,
-			EXT_RAW, EXT_INF, EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC, EXT_MRC2 };
+			EXT_RAW, EXT_INF, EXT_SPE, EXT_SPI, EXT_TIF, EXT_MRC, EXT_MRC2, EXT_PNG, EXT_JPG };
+        
 	public final static String[] VOLUMES = new String[] { EXT_MRC, EXT_MRC2,
 			EXT_VOL, EXT_EM, EXT_PIF };
+        
 	public final static String[] STACKS = new String[] { EXT_MRCS, EXT_MRCS2,
 			EXT_STK, EXT_PIF };
 
@@ -62,6 +69,9 @@ public class Filename {
 
 	public final static String[] TEXT = new String[] { EXT_TXT, EXT_LOG,
 			EXT_ERR, EXT_OUT, EXT_BOX };
+        
+        public final static String[] XMIPP_SUPPORTED = new String[]{EXT_RAW, EXT_SPI, EXT_XMP, EXT_VOL, EXT_STK, EXT_MRC, EXT_MRC2, EXT_MRCS2, EXT_MRCS, 
+            EXT_HED, EXT_IMG, EXT_INF, EXT_RAW, EXT_TIF, EXT_DM3, EXT_SER, EXT_SPE, EXT_EM, EXT_PIF, EXT_HDF, EXT_HDF5, EXT_H5};
 
 	public static boolean isPSD(String filename) {
 		return filename != null && filename.endsWith(EXT_PSD);
@@ -85,6 +95,7 @@ public class Filename {
 
 	public static native String getXmippPath() throws Exception;
 
+        
 	public static String getXmippPath(String relpath) {
 		try {
 			return getXmippPath() + File.separator + relpath;
@@ -97,7 +108,10 @@ public class Filename {
 
 	public static boolean isSingleImage(String filename) throws Exception {
 		try {
-			return (new ImageGeneric(filename)).isSingleImage();
+                        if(isXmippSupported(filename))
+                            return (new ImageGeneric(filename)).isSingleImage();
+                        else
+                            return isFileType(filename, SINGLE_IMAGES);
 		} catch (Exception ex) {
 			return filename != null && isFileType(filename, SINGLE_IMAGES);
 		}
@@ -108,10 +122,14 @@ public class Filename {
 	}
 
 	public static boolean isVolume(String filename) {
+                
 		try {
-			return (new ImageGeneric(filename)).isVolume();
+                        if(isXmippSupported(filename))
+                            return (new ImageGeneric(filename)).isVolume();
+                        else
+                            return isFileType(filename, VOLUMES);
 		} catch (Exception ex) {
-			return filename != null && isFileType(filename, VOLUMES);
+			return isFileType(filename, VOLUMES);
 		}
 	}
 
@@ -121,7 +139,10 @@ public class Filename {
 
 	public static boolean isStack(String filename) throws Exception {
 		try {
-			return (new ImageGeneric(filename)).isStack();
+                        if(isXmippSupported(filename))
+                            return (new ImageGeneric(filename)).isStack();
+                        else
+                            return isFileType(filename, STACKS);
 		} catch (Exception ex) {
 			return filename != null && isFileType(filename, STACKS);
 		}
@@ -151,8 +172,10 @@ public class Filename {
 	}
 
 	private static boolean isFileType(String filename, String filetypes[]) {
+                if(filename == null)
+                    return false;
 		for (int i = 0; i < filetypes.length; i++) {
-			if (filename.endsWith(filetypes[i])) {
+			if (filename.toLowerCase().endsWith(filetypes[i])) {
 				return true;
 			}
 		}
@@ -451,4 +474,10 @@ public class Filename {
             return part1 + "." + ext;
             
         }
+
+    public static boolean isXmippSupported(String filename) {
+        return isFileType(filename, XMIPP_SUPPORTED);
+    }
+        
+        
 }

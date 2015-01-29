@@ -29,7 +29,6 @@ import ij.ImagePlus;
 import java.io.File;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.Params;
 import xmipp.utils.XmippMessage;
 
 public class ImagePlusLoader {

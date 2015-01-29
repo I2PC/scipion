@@ -1,9 +1,6 @@
 package xmipp.viewer;
 
-import java.util.LinkedList;
 import javax.swing.SwingUtilities;
-import ij.IJ;
-import xmipp.jni.Filename;
 import xmipp.utils.DEBUG;
 import xmipp.utils.Params;
 import xmipp.utils.StopWatch;
@@ -51,39 +48,5 @@ public class Viewer
 		ImagesWindowFactory.openFilesAsDefault(parameters.files, parameters);
 	}
 
-	static String[][] getSeparatedFiles(String items[])
-	{
-		LinkedList<String> images = new LinkedList<String>();
-		LinkedList<String> files = new LinkedList<String>();
-		LinkedList<String> storeTo;
-
-		for (int i = 0; i < items.length; i++)
-		{
-			String filename = items[i];
-
-			try
-			{
-				storeTo = Filename.isSingleImage(filename) ? images : files;
-				storeTo.add(filename);
-			}
-			catch (Exception e)
-			{
-				IJ.error(e.getMessage());
-			}
-		}
-
-		String result[][] = new String[2][];
-
-		if (!images.isEmpty())
-		{
-			result[0] = images.toArray(new String[images.size()]);
-		}
-
-		if (!files.isEmpty())
-		{
-			result[1] = files.toArray(new String[files.size()]);
-		}
-
-		return result;
-	}
+	
 }

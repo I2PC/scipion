@@ -8,6 +8,7 @@ package xmipp.ij.commons;
 
 import ij.ImagePlus;
 import java.io.File;
+import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
 
 /**
@@ -38,22 +39,28 @@ public class ImagePlusFromFile extends ImagePlusReader{
         
        
         
+        
         @Override
     	public ImagePlus loadImagePlus()
 	{
+                
                 imp = null;
 		try
 		{
 			if (ig == null || hasChanged())
                         {
-                            try
-                            {
-                                ig = new ImageGeneric(fileName);//to read again file
-                            }
-                            catch(Exception e)
-                            {
+                            if(Filename.isXmippSupported(fileName))
+                                try
+                                {
+
+                                    ig = new ImageGeneric(fileName);//to read again file
+                                }
+                                catch(Exception e)
+                                {
+                                    imp = new ImagePlus(fileName);
+                                }
+                            else
                                 imp = new ImagePlus(fileName);
-                            }
                             if(ig != null && !hasIndex())
                             {
                                 imp = XmippImageConverter.readToImagePlus(ig);
@@ -93,6 +100,8 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		}
 		return imp;
 	}
+        
+        
     
         public boolean hasChanged()
 	{
@@ -105,22 +114,24 @@ public class ImagePlusFromFile extends ImagePlusReader{
 		return fileName;
 	}
 
-    @Override
-    public boolean getAllowsPoll() {
-        return true;
-    }
+        @Override
+        public boolean getAllowsPoll() {
+            return true;
+        }
 
-    @Override
-    public String getName() {
+        @Override
+        public String getName() {
 
-        String name = fileName;
+            String name = fileName;
+
+
+            if(index != -2)
+                name = String.format("%d@%s", index, name);
+            return name;
+
+        }
+
         
-        
-        if(index != -2)
-            name = String.format("%d@%s", index, name);
-        return name;
-
-    }
         
         
 }

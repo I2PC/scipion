@@ -178,9 +178,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
         self.fourierprojector = FourierProjector(self.image, padding_factor, max_freq, spline_degree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
 
-        printCmd('initListenThread')
         self.initListenThread()
-        printCmd('creating iw')
         if size == 'default':
             self.size = self.xdim if self.xdim > 128 else 128
         else:
@@ -188,6 +186,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
 
         import ntpath
         self.iw = ImageWindow(filename=ntpath.basename(volfile),image=self.projection, dim=self.size, label="Projection")
+        
         self.iw.root.protocol("WM_DELETE_WINDOW", self.exitClient)
         self.iw.root.mainloop()
 
@@ -220,9 +219,7 @@ class XmippProjectionExplorer(XmippChimeraClient):
             
             
     def exitClient(self):
-        self.client.send('exit_client')
-        self.exit()
-        
+        pass
         
      
             

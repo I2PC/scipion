@@ -251,14 +251,18 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	/**
 	 * Open another metadata separataly *
 	 */
-	public void openMetadata(MetaData md)
+	public void openMetadata(final MetaData md)
 	{
-
             try
             {
-                Params p = new Params();
+                SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        new GalleryJFrame(md, data.parameters);
+                    }
+                });
                 
-                new GalleryJFrame(md, p);
             }
             catch(Exception e)
             {
@@ -828,7 +832,6 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 		btnChangeView.setIcon(icon);
 		btnChangeView.setToolTipText(text);
-		boolean allowColsResize = true;
 		if (data.isTableMode())
 		{ // if we are in table mode only allow change
 			// if exist render label
@@ -837,13 +840,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			jsZoom.setEnabled(hasRender);
 			jlZoom.setEnabled(hasRender);
 			boolean isCol = data.isColumnFormat();
-			allowColsResize = false;
 			jsGoToImage.setEnabled(isCol && gallery.getSize() > 0);
 			jlGoToImage.setEnabled(isCol);
+                        autoAdjustColumns(true);
 		}
-		jsColumns.setEnabled(allowColsResize);
-		jsRows.setEnabled(allowColsResize);
-		jcbAutoAdjustColumns.setEnabled(allowColsResize);
+                else
+                    autoAdjustColumns(data.isAutoAdjust());
 	}
 
 	public void reloadTableData()
@@ -1057,7 +1059,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				autoAdjustColumns(jcbAutoAdjustColumns.isSelected());
 			}
 		});
-		jcbAutoAdjustColumns.setSelected(true);
+		jcbAutoAdjustColumns.setSelected(data.isAutoAdjust());
 		jlRows = new javax.swing.JLabel();
 		jsRows = new javax.swing.JSpinner();
 		jlColumns = new javax.swing.JLabel();
@@ -1407,6 +1409,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		setAutoAdjustColumns(autoadjust);
                 if(autoadjust)
                     data.setModelDim(null, null);
+                else
+                    data.setModelDim((Integer)jsRows.getValue(), (Integer)jsColumns.getValue());
 		adjustColumns();
 	}
 

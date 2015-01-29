@@ -35,33 +35,7 @@ class ChimeraServer:
         
         chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)
         chimera.triggers.addHandler(chimera.APPQUIT, self.onAppQuit, None)
-        self.initListen()
-            
-            
-    def initListen(self):
-        self.listen_thread = Thread(target=self.listen)
-        self.listen_thread.daemon = True
-        self.listen_thread.start()
-    
-
-    def listen(self):
-        try:
-            while True:
-                if self.remote_conn.poll():
-                    
-                    msg = self.remote_conn.recv()
-                    
-                    
-                    if msg == 'exit_client':
-                        break
-                    else:
-                        sleep(0.01)
-        except EOFError:
-            print 'Lost connection to client'
-        finally:
-            self.listener.close()
-            runCommand('close all')
-            runCommand('stop really')
+   
             
             
             
