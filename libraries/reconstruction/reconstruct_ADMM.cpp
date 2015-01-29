@@ -25,7 +25,6 @@
  ***************************************************************************/
 
 /* TODO:
- * - Add mask
  * - Mirrors
  * - Default parameters
  * - Multiresolution
@@ -49,6 +48,8 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" [--downsamplingI <Tp=1>]: Downsampling factor for projections");
     addParamsLine(" [--dontUseWeights]: Do not use weights if available in the input metadata");
     addParamsLine(" [--dontUseCTF]: Do not use CTF if available in the input metadata");
+    addParamsLine("               : If the CTF information is used, the algorithm assumes that the input images are phase flipped");
+    addParamsLine(" [--sampling <Ts=1>]: The sampling rate is only used to correct for the CTF");
     addParamsLine(" [--mu <mu=1e-4>]: Augmented Lagrange penalty");
     addParamsLine(" [--lambda <lambda=1e-5>]: Total variation parameter");
     addParamsLine(" [--lambda1 <lambda1=1e-7>]: Tikhonov parameter");
@@ -76,6 +77,7 @@ void ProgReconsADMM::readParams()
 	Tp=getDoubleParam("--downsamplingI");
 	useWeights=!checkParam("--dontUseWeights");
 	useCTF=!checkParam("--dontUseCTF");
+	Ts=getDoubleParam("--sampling");
 	mu=getDoubleParam("--mu");
 	lambda=getDoubleParam("--lambda");
 	lambda1=getDoubleParam("--lambda1");
@@ -345,7 +347,7 @@ void ProgReconsADMM::computeHtKH()
 		{
 			ctf.readFromMetadataRow(mdIn,__iter.objId);
 			ctf.produceSideInfo();
-			kernel.applyCTFToKernelAutocorrelation(ctf,kernelAutocorr);
+			kernel.applyCTFToKernelAutocorrelation(ctf,Ts,kernelAutocorr);
 		}
 		kernelAutocorr.setXmippOrigin();
 
@@ -533,9 +535,6 @@ void ProgReconsADMM::applyConjugateGradient()
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(p)
 			DIRECT_MULTIDIM_ELEM(p,n)  = DIRECT_MULTIDIM_ELEM(r,n)+beta*DIRECT_MULTIDIM_ELEM(p,n);
 
-		if (applyMask)
-			mask.apply_mask(mCk,mCk);
-
 //		Image<double> save;
 //		save()=Vk();
 //		save.write("PPPVk.vol");
@@ -547,7 +546,7 @@ void ProgReconsADMM::applyConjugateGradient()
 void ProgReconsADMM::doPOCSProjection()
 {
 	if (applyMask)
-		mask.apply_mask(CHtb(),CHtb());
+		mask.apply_mask(Ck(),Ck());
 
 	if (positivity)
 	{
@@ -684,6 +683,14 @@ void AdmmKernel::convolveKernelWithItself(double _autocorrStep)
 	K=MULTIDIM_SIZE(projectionAutocorrWithCTF)*autocorrStep*autocorrStep;
 	FOR_ALL_ELEMENTS_IN_ARRAY2D(FourierProjectionAutocorr)
 		A2D_ELEM(FourierProjectionAutocorr,i,j)*=A2D_ELEM(FourierProjectionAutocorr,i,j)*K;
+
+//  Debugging code
+//	  transformer.inverseFourierTransform();
+//    Image<double> save;
+//    save()=projectionAutocorrWithCTF;
+//    save.write("PPPautocorrelationWithoutCTF.xmp");
+//    std::cout << "Press any key" << std::endl;
+//    char c; std::cin>> c;
 }
 
 void AdmmKernel::getKernelAutocorrelation(MultidimArray<double> &autocorrelation)
@@ -694,9 +701,9 @@ void AdmmKernel::getKernelAutocorrelation(MultidimArray<double> &autocorrelation
     CenterFFT(autocorrelation, false);
 }
 
-void AdmmKernel::applyCTFToKernelAutocorrelation(CTFDescription &ctf, MultidimArray<double> &autocorrelationWithCTF)
+void AdmmKernel::applyCTFToKernelAutocorrelation(CTFDescription &ctf, double Ts, MultidimArray<double> &autocorrelationWithCTF)
 {
-	double dig2cont=1.0/ctf.Tm;
+	double dig2cont=1.0/Ts;
 	double wx, wy;
 	int xdim=(int)XSIZE(projectionAutocorrWithCTF);
 	int xdim_2=xdim/2;
@@ -722,12 +729,20 @@ void AdmmKernel::applyCTFToKernelAutocorrelation(CTFDescription &ctf, MultidimAr
 				continue;
 			wx*=dig2cont;
 			ctf.precomputeValues(wx,wy);
-			A2D_ELEM(transformer.fFourier,i,j)=A2D_ELEM(FourierProjectionAutocorr,i,j)*ctf.getValueAt();
+			// A2D_ELEM(transformer.fFourier,i,j)=A2D_ELEM(FourierProjectionAutocorr,i,j)*fabs(ctf.getValueAt());
+			A2D_ELEM(transformer.fFourier,i,j)=fabs(ctf.getValueAt());
 	    }
 	}
 	transformer.inverseFourierTransform();
 	autocorrelationWithCTF=projectionAutocorrWithCTF;
     CenterFFT(autocorrelationWithCTF, false);
+
+// Debugging code
+//    Image<double> save;
+//    save()=autocorrelationWithCTF;
+//    save.write("PPPautocorrelationWithCTF.xmp");
+//    std::cout << "Press any key" << std::endl;
+//    char c; std::cin>> c;
 }
 
 void AdmmKernel::computeGradient(MultidimArray<double> &gradient, char direction, bool adjoint)

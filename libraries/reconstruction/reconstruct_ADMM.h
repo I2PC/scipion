@@ -55,7 +55,7 @@ public:
 
 	void convolveKernelWithItself(double _autocorrStep);
 
-	void applyCTFToKernelAutocorrelation(CTFDescription &ctf, MultidimArray<double> &autocorrelationWithCTF);
+	void applyCTFToKernelAutocorrelation(CTFDescription &ctf, double Ts, MultidimArray<double> &autocorrelationWithCTF);
 
 	void getKernelAutocorrelation(MultidimArray<double> &autocorrelation);
 
@@ -88,6 +88,7 @@ public:
 	int Nadmmiter; // Number of ADMM iterations
 	bool positivity; // Positivity constraint
 	bool applyMask;
+	double Ts; // Sampling rate
 	Mask mask; // Mask
 	String symmetry;
 public:
