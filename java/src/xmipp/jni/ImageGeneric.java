@@ -77,6 +77,7 @@ public class ImageGeneric {
     public ImageGeneric(String filename) throws Exception {
         this();
         setFilename(filename);
+        
     }
     
     /** Set a new filename and reload the header */
