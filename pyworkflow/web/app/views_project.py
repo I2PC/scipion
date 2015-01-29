@@ -103,15 +103,12 @@ def update_prot_tree(request):
 
 
 def update_graph_view(request):
-    status = request.GET.get('status', None)
+    status = request.GET.get('status', 1)
     projectName = request.session['projectName']
     project = loadProject(projectName)
     project_settings = project.getSettings()
 
-    if status == "True":
-        project_settings.graphView.set(True)
-    else :
-        project_settings.graphView.set(False)
+    project_settings.runsView.set(status)    
     project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
@@ -173,11 +170,11 @@ def run_table_graph(request):
             selectedRuns = project_settings.runSelection
     
             # Get the mode view (list or graph) stored in BD
-            graphView = project_settings.graphView.get()
+            runsView = project_settings.runsView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
-                       'graphView': graphView, 
+                       'runsView': runsView, 
                        'selectedRuns' : selectedRuns}
             
             return render_to_response('project_content/run_table_graph.html', context)
@@ -255,7 +252,7 @@ def contentContext(request, projectName):
     selectedRuns = project_settings.runSelection
 
     # Get the mode view (list or graph) stored in BD
-    graphView = project_settings.graphView.get()
+    runsView = project_settings.runsView.get()
     
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
@@ -290,7 +287,7 @@ def contentContext(request, projectName):
                'runs': runs,
                'columns': provider.getColumns(),
                'projectNameHeader': projectNameHeader, 
-               'graphView': graphView,
+               'runsView': runsView,
                'selectedRuns': selectedRuns
                }
 
@@ -409,7 +406,7 @@ def create_service_project(request):
         customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
         confs = {'protocols': customMenu}
-        project = manager.createProject(projectName, confs, graphView=True)   
+        project = manager.createProject(projectName, confs, runsView=1)   
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
