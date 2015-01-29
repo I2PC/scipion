@@ -45,7 +45,7 @@ class KendersomBaseClassify(ProtClassify2D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputImages', PointerParam, label="Input images", important=True, 
+        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       help='Select the input images from the project.'
                            'It should be a SetOfParticles class')
@@ -111,6 +111,7 @@ class KendersomBaseClassify(ProtClassify2D):
     def _insertAllSteps(self):
         self._prepareParams()
         self._insertProccesStep()
+        self._insertFunctionStep('rewriteClassBlockStep')
         self._insertFunctionStep('createOutputStep')
     
     def _insertKerdensomStep(self):
@@ -121,21 +122,60 @@ class KendersomBaseClassify(ProtClassify2D):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self):
-        writeSetOfParticles(self.inputImages.get(),self.imgsFn) 
+        writeSetOfParticles(self.inputParticles.get(),self.imgsFn) 
+
+    #--------------------------- INFO functions ----------------------------------------------------
+    def rewriteClassBlockStep(self):
+        firstImage = self.inputParticles.get().getFirstItem()
+        fnClasses = self._params['kclasses']
+        mdClasses = "classes@%s" % fnClasses
+        fnClassStack = self._params['classes']
+        fnAverageStack = self._params['averages']      
+        
+        md = xmipp.MetaData(mdClasses)
+        image = ImageHandler().createImage()
+        
+        counter = 1
+        
+        for objId in md:
+            imageName =  "%06d@%s" % (counter, fnClassStack)
+            averageName = "%06d@%s" % (counter, fnAverageStack)
+            
+            if md.getValue(xmipp.MDL_CLASS_COUNT, objId) > 0:
+                # compute the average of images assigned to this class
+                classPrefix = 'class%06d' % counter
+                classMd = '%s_images@%s' % (classPrefix, fnClasses)
+                classRoot = self._getTmpPath(classPrefix)
+                self.runJob('xmipp_image_statistics', 
+                            '-i %s --save_image_stats %s -v 0' % (classMd, classRoot))
+                image.read(classRoot + 'average.xmp')
+            else:
+                # Create emtpy image as average
+                image.read(firstImage.getLocation()) # just to take the right dimensions and datatype
+                image.initConstant(0.)
+                
+            image.write(averageName)
+            md.setValue(xmipp.MDL_IMAGE, imageName, objId)
+            md.setValue(xmipp.MDL_IMAGE2, averageName, objId)
+            
+            counter += 1
+            
+        md.write(mdClasses, xmipp.MD_APPEND)
+        
+    def _preprocessClass(self, classItem, classRow):
+        classItem.average = Particle()
+        classItem.average.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE2)))
         
     def createOutputStep(self):
         """ Store the kenserdom object 
         as result of the protocol.
         """
-        imgSet = self.inputImages.get()
+        imgSet = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
         readSetOfClasses2D(classes2DSet, self._params['kclasses'], 
                            preprocessClass=self._preprocessClass)
         self._defineOutputs(outputClasses=classes2DSet)
         self._defineSourceRelation(imgSet, classes2DSet)
-        
-    def _preprocessClass(self, classItem, classRow):
-        pass
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
@@ -144,9 +184,9 @@ class KendersomBaseClassify(ProtClassify2D):
             errors.append("Regularization must decrease over iterations:")
             errors.append("    Initial regularization must be larger than final")
         if self.useMask:
-            mask = self.Mask.get().getFileName()
-            if not exists(mask):
-                errors.append("Cannot find the file " + mask)
+            mask = self.Mask.get()
+            if mask is None:
+                errors.append("You have selected to use a mask. Select one.")
         return errors
     
     def _summary(self):
@@ -154,7 +194,7 @@ class KendersomBaseClassify(ProtClassify2D):
         if not hasattr(self, 'outputClasses'):
             summary.append("Output classification not ready yet.")
         else:
-            summary.append("Input Particles: %s" % self.inputImages.get().getSize())
+            summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
             summary.append("Classified into %s classes" % self.outputClasses.getSize())
         return summary
     
@@ -165,7 +205,7 @@ class KendersomBaseClassify(ProtClassify2D):
         else:    
             messages.append("*Kendersom classification*")
             messages.append('%s particles from %s were classified to obtain %s classes %s.'
-                            % (self.inputImages.get().getSize(), self.getObjectTag('inputImages'), self.outputClasses.getSize(), self.getObjectTag('outputClasses')))
+                            % (self.inputParticles.get().getSize(), self.getObjectTag('inputParticles'), self.outputClasses.getSize(), self.getObjectTag('outputClasses')))
             if self.useMask:
                 messages.append('Mask %s was used in classification.' % self.getObjectTag('Mask'))
         return messages
@@ -199,7 +239,6 @@ class XmippProtKerdensom(KendersomBaseClassify):
         self._insertImgToVectorStep()
         self._insertKerdensomStep()
         self._insertVectorToImgStep()
-        self._insertFunctionStep('rewriteClassBlockStep', 6)
     
     def _insertImgToVectorStep(self):
         """ Insert runJob for convert into a vector Md """
@@ -215,48 +254,6 @@ class XmippProtKerdensom(KendersomBaseClassify):
             args += ' --mask binary_file %(mask)s'
         self._insertRunJobStep("xmipp_image_vectorize", args % self._params)
 #        deleteFiles([self._getExtraPath("kerdensom_vectors.xmd"),self._getExtraPath("kerdensom_vectors.vec")], True)
-    
-    #--------------------------- INFO functions ----------------------------------------------------
-    def rewriteClassBlockStep(self, r):
-        fnClasses = self._params['kclasses']
-        mdClasses = "classes@%s" % fnClasses
-        fnClassStack = self._params['classes']
-        fnAverageStack = self._params['averages']      
-        
-        md = xmipp.MetaData(mdClasses)
-        image = ImageHandler().createImage()
-        
-        counter = 1
-        
-        for objId in md:
-            imageName =  "%06d@%s" % (counter, fnClassStack)
-            averageName = "%06d@%s" % (counter, fnAverageStack)
-            
-            if md.getValue(xmipp.MDL_CLASS_COUNT, objId) > 0:
-                # compute the average of images assigned to this class
-                classPrefix = 'class%06d' % counter
-                classMd = '%s_images@%s' % (classPrefix, fnClasses)
-                classRoot = self._getTmpPath(classPrefix)
-                self.runJob('xmipp_image_statistics', 
-                            '-i %s --save_image_stats %s -v 0' % (classMd, classRoot))
-                image.read(classRoot + 'average.xmp')
-            else:
-                # Create emtpy image as average
-                image.read(imageName)
-                image.initConstant(0.)
-                
-            image.write(averageName)
-            md.setValue(xmipp.MDL_IMAGE, imageName, objId)
-            md.setValue(xmipp.MDL_IMAGE2, averageName, objId)
-            
-            counter += 1
-            
-        md.write(mdClasses, xmipp.MD_APPEND)
-        
-    def _preprocessClass(self, classItem, classRow):
-        classItem.average = Particle()
-        classItem.average.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE2)))
-        
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):

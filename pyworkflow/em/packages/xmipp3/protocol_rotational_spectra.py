@@ -44,30 +44,37 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         
     #--------------------------- DEFINE param functions --------------------------------------------
     def _addParams(self, form):
-        form.addSection(label='Kerdensom')
-        form.addParam('howCenter', EnumParam, choices=['Middle of the image', 'Minimize first harmonic'], 
-                      default=xmipp3.ROTSPECTRA_CENTER_MIDDLE, important=True, 
-                      label='How to find the center of rotation', display=EnumParam.DISPLAY_COMBO, 
-                      help='Select how to find the center of rotation.')  
-        form.addParam('spectraInnerRadius', IntParam, default=15,
-                      label='Inner radius for rotational harmonics (%)',
-                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
-        form.addParam('spectraOuterRadius', IntParam, default=80,
-                      label='Outer radius for rotational harmonics (%)',
-                      help='A percentage of the image radius', expertLevel=LEVEL_ADVANCED)
-        form.addParam('spectraLowHarmonic', IntParam, default=1,
-                      label='Lowest harmonic to calculate',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('spectraHighHarmonic', IntParam, default=15,
-                      label='Highest harmonic to calculate',
-                      expertLevel=LEVEL_ADVANCED) 
+        form.addSection(label='Spectra')
+        form.addParam('howCenter', EnumParam, 
+                      choices=['Middle of the image', 'Minimize first harmonic'], 
+                      default=xmipp3.ROTSPECTRA_CENTER_FIRST_HARMONIC, 
+                      display=EnumParam.DISPLAY_COMBO, 
+                      label='How to find the center of rotation', important=True,  
+                      help='Select how to find the center of rotation.')
+        
+        line = form.addLine('Rotational harmonics radius (px)')
+        line.addParam('spectraInnerRadius', IntParam, 
+                      label='Inner',
+                      help='A percentage of the image radius')
+        line.addParam('spectraOuterRadius', IntParam, 
+                      label='Outer',
+                      help='A percentage of the image radius')
+        
+        line = form.addLine('Harmonics to calculate')
+        line.addParam('spectraLowHarmonic', IntParam, default=1,
+                      label='Lowest')
+        line.addParam('spectraHighHarmonic', IntParam, default=15,
+                      label='Highest') 
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _prepareParams(self):
         KendersomBaseClassify._prepareParams(self)
         self._params['extraDir'] = self._getExtraPath()
-        self._params['R1'] = self.spectraInnerRadius.get()
-        self._params['R2'] = self.spectraOuterRadius.get()
+        # we need to convert R1 and R2 to percentage of the radius
+        radius = self.inputParticles.get().getDim()[0] / 2
+        percent = 100. / radius
+        self._params['R1'] = self.spectraInnerRadius.get() * percent
+        self._params['R2'] = self.spectraOuterRadius.get() * percent
         self._params['spectraLowHarmonic'] = self.spectraLowHarmonic.get()
         self._params['spectraHighHarmonic'] = self.spectraHighHarmonic.get()
         self._params['vectors'] = self._getExtraPath("rotSpectra.xmd")
@@ -85,7 +92,7 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         # Call kerdensom for classification
         self._insertKerdensomStep()
     
-    def _insertMiddleStep(self, inputImages, outputCenter):
+    def _insertMiddleStep(self, imagesFn, outputCenter):
         R2 = self._params['R2']
         
         if R2 + 20 > 100:
@@ -98,14 +105,14 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         self._params['R4'] = R4
         
         program = 'xmipp_image_find_center'
-        args = '-i ' + inputImages
+        args = '-i ' + imagesFn
         args += ' --oroot %(extraDir)s/center2d --r1 %(R1)d --r2 %(R2)d --r3 %(R3)d --r4 %(R4)d'
         # Run the command with formatted parameters
         self._insertRunJobStep(program, args % self._params)
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def centerFirstHarmonicStep(self, inputImages, outputCenter):
-        dims = xmipp.MetaDataInfo(str(inputImages))
+    def centerFirstHarmonicStep(self, imagesFn, outputCenter):
+        dims = xmipp.MetaDataInfo(str(imagesFn))
         md = xmipp.MetaData()
         objId = md.addObject()
         md.setValue(xmipp.MDL_X, float(dims[0] / 2), objId)
@@ -113,14 +120,14 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         md.write(outputCenter)
         return [outputCenter] # this file should exists after the step
             
-    def calculateSpectraStep(self, inputImages, inputCenter, outputSpectra):     
+    def calculateSpectraStep(self, imagesFn, inputCenter, outputSpectra):     
         md = xmipp.MetaData(inputCenter)
         objId = md.firstObject()
         self._params['xOffset'] = md.getValue(xmipp.MDL_X, objId)
         self._params['yOffset'] = md.getValue(xmipp.MDL_Y, objId)
         
         program = 'xmipp_image_rotational_spectra'
-        args = "-i %s -o %s" % (inputImages, outputSpectra)
+        args = "-i %s -o %s" % (imagesFn, outputSpectra)
         args += ' --x0 %(xOffset)s --y0 %(yOffset)s --r1 %(R1)d --r2 %(R2)d' + \
                      ' --low %(spectraLowHarmonic)d --high %(spectraHighHarmonic)d'
         # Run the command with formatted parameters
