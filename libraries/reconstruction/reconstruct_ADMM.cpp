@@ -29,7 +29,6 @@
  * - Mirrors
  * - Default parameters
  * - Multiresolution
- * - Symmetry
  * - Parallelization
  */
 
