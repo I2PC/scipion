@@ -54,13 +54,46 @@ class TutorialIntro(tests.BaseTest):
             
             # Use graph view as default
             settings = project.getSettings()
-            settings.setRunsView(True)
+            settings.setRunsView(1) # graph view
             settings.write()
             
             # Update the path of imports
             protImportMics = project.getProtocolsByClass('ProtImportMicrographs')[0]
             protImportMics.filesPath.set(self.ds.getFile('allMics'))
             project.saveProtocol(protImportMics)
+            
+            protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
+            protImportVol.filesPath.set(self.ds.getFile('vol1'))
+            project.saveProtocol(protImportVol)
+
+        self.project = project
+        
+        
+class Tutorial2D(tests.BaseTest):
+    
+    def __init__(self):
+        projName = self.__class__.__name__
+        manager = Manager()
+        if manager.hasProject(projName):
+            project = manager.loadProject(projName)
+        else:
+            project = manager.createProject(projName)
+            
+            # Create a new project
+            self.outputPath = project.path
+            self.ds = tests.DataSet.getDataSet('2d_analysis')
+            
+            project.loadProtocols(self.ds.getFile('workflow.json'))
+            
+            # Use graph view as default
+            #settings = project.getSettings()
+            #settings.setRunsView(1) # graph view
+            #settings.write()
+            
+            # Update the path of imports
+            protImportParticles = project.getProtocolsByClass('ProtImportParticles')[0]
+            protImportParticles.filesPath.set(self.ds.getFile('allMics'))
+            project.saveProtocol(protImportParticles)
             
             protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
             protImportVol.filesPath.set(self.ds.getFile('vol1'))
