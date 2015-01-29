@@ -95,6 +95,7 @@ public class Filename {
 
 	public static native String getXmippPath() throws Exception;
 
+        
 	public static String getXmippPath(String relpath) {
 		try {
 			return getXmippPath() + File.separator + relpath;
