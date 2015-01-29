@@ -978,12 +978,14 @@ int PROJECT_Effectively_project(const FileName &fnOut,
         SF.setValue(MDL_ENABLED,1,DFmov_objId);
 
         // Choose angles .....................................................
-        double rot, tilt, psi, x, y;    // Actual projecting angles
+        double rot, tilt, psi, x=0, y=0;    // Actual projecting angles
         side.DF.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
         side.DF.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
         side.DF.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-        side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
-        side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
+        if (side.DF.containsLabel(MDL_SHIFT_X))
+        	side.DF.getValue(MDL_SHIFT_X,x,__iter.objId);
+        if (side.DF.containsLabel(MDL_SHIFT_Y))
+        	side.DF.getValue(MDL_SHIFT_Y,y,__iter.objId);
 
         SF.setValue(MDL_ANGLE_ROT,realWRAP(rot, 0, 360),DFmov_objId);
         SF.setValue(MDL_ANGLE_TILT,realWRAP(tilt, 0, 360),DFmov_objId);
