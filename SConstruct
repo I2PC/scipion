@@ -403,15 +403,14 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
 #            if p.endswith(".cu"):
 #                cudaFiles = True
             # select sources inside tarfile but we only get those files that match the pattern
-            if tars: 
-                tarfiles = tarfile.open(tars[x]).getmembers() 
-                sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
-            else:
-                sources += glob(join(dirs[x], patterns[x]))
+            tarfiles = tarfile.open(tars[x]).getmembers() 
+            sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
+        else:
+            sources += glob(join(dirs[x], patterns[x]))
     if tarExists:
         Depends(sources, untars)
     else:
-        sources = untars
+        untars = sources
 
     mpiArgs = {}
     if mpi:
@@ -474,15 +473,15 @@ def symLink(env, target, source):
     if isinstance(sources, basestring) and sources.startswith(current):
         sources = sources.split(current)[1]
     
-    #sources = os.path.relpath(sources, os.path.split(link)[0])
+    sources = os.path.relpath(sources, os.path.split(link)[0])
     #if os.path.lexists(link):
     #    os.remove(link)
     #print 'Linking to %s from %s' % (sources, link)
     #os.symlink(sources, link)
-    result = env.Command(link,
-                         sources,
-                         Action('rm -rf %s && ln -v -s %s %s' % (link, sources, link),
-                                'Creating a link from %s to %s' % (target, source)))
+    result = env.Command(Entry(link),
+                         Entry(source),
+                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, Entry(link).abspath),
+                                'Creating a link from %s to %s' % (link, sources)))
     return result
 
 
@@ -585,9 +584,8 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     pattern = pattern or ['*.cpp']
     installDir = installDir or 'bin'
     libs = libs or []
-    libPathsCopy = libPaths + ['lib', Dir('#software/lib').abspath]
+    libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incs = incs or []
-    incs += ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     if cuda:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'npp', 'nvToolsExt', 'opencv_gpu']
         incs += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
@@ -602,7 +600,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None, libPaths=[], 
     ccCopy = env['MPI_CC'] if mpi else env['CC']
     cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy = incs + env['CPPPATH']
+    incsCopy = incs + env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']

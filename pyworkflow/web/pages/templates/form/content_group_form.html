@@ -25,7 +25,7 @@
 				<td>
 			{% for paramLineName, paramLine in paramGroup.iterParams %}
 				{{paramLine.label.get}}
-				<input type="text" style="width: 2em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
+				<input type="text" style="width: 4em;" id="{{paramLineName}}_input" data-objId="{{paramLine.htmlIdValue}}" name="{{paramLineName}}" value="{{paramLine.htmlValue}}" >
 			{% endfor %}
 				</td>
 				<td>

@@ -95,13 +95,13 @@ class ThreadStepExecutor(StepExecutor):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
-        # Keep a list of busy slots ids (used to number threads and mpi)
-        freeNodes = range(self.numberOfProcs)
-        runningSteps = {}
+
+        runningSteps = {}  # currently running step in each node ({node: step})
+        freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
 
         def getRunnable():
             """ Return the first step that is 'new' and all its
-            dependencies have been finished.
+            dependencies have been finished, or None if none ready.
             """
             for s in steps:
                 if (s.getStatus() == cts.STATUS_NEW and
@@ -110,12 +110,16 @@ class ThreadStepExecutor(StepExecutor):
             return None
 
         while True:
-            notRunning = [ns for ns in runningSteps.iteritems() if not ns[1].isRunning()]
-            for nodeId, step in notRunning:
-                runningSteps.pop(nodeId)
-                freeNodes.append(nodeId)
-                stepFinishedCallback(step)
+            # See which of the runningSteps are not really running anymore.
+            # Update them and freeNodes, and call final callback for step.
+            notRunning = [node for node, step in runningSteps.iteritems()
+                              if not step.isRunning()]
+            for node in notRunning:
+                step = runningSteps.pop(node)  # remove entry from runningSteps
+                freeNodes.append(node)  # the node is available now
+                stepFinishedCallback(step)  # and do final work on the finished step
 
+            # If there are available nodes, send next runnable step.
             if freeNodes:
                 step = getRunnable()
                 if step is not None:
@@ -123,13 +127,15 @@ class ThreadStepExecutor(StepExecutor):
                     # thread to do the job and book it.
                     step.setRunning()
                     stepStartedCallback(step)
-                    nodeId = freeNodes.pop()
-                    runningSteps[nodeId] = step
-                    StepThread(nodeId, step).start()
-                elif all(not s.isRunning() for s in steps):
+                    node = freeNodes.pop()  # take an available node
+                    runningSteps[node] = step
+                    StepThread(node, step).start()
+                elif not any(s.isRunning() for s in steps):  # nothing running
                     break  # yeah, we are done, either failed or finished :)
-            time.sleep(0.1)
-        # wait for all now
+
+            time.sleep(0.1)  # be gentle on the main thread
+
+        # Wait for all threads now.
         for t in threading.enumerate():
             if t is not threading.current_thread():
                 t.join()
@@ -137,30 +143,29 @@ class ThreadStepExecutor(StepExecutor):
 
 class MPIStepExecutor(ThreadStepExecutor):
     """ Run steps in parallel using threads.
-    But execution the runJob statement through MPI workers
+    But call runJob through MPI workers.
     """
     def __init__(self, hostConfig, nMPI, comm):
         ThreadStepExecutor.__init__(self, hostConfig, nMPI)
         self.comm = comm
     
-    def runJob(self, log, programName, params,           
-           numberOfMpi=1, numberOfThreads=1, 
-           env=None, cwd=None):
+    def runJob(self, log, programName, params,
+               numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        # Import mpi here so if MPI4py was not properly compiled
+        # we can still run in parallel with threads.
         from pyworkflow.utils.mpi import runJobMPI
         node = threading.current_thread().thId + 1
-        print "==================calling runJobMPI=============================="
-        print " to node: ", node
         runJobMPI(programName, params, self.comm, node,
-                  numberOfMpi, hostConfig=self.hostConfig,
-                  env=env, cwd=cwd)
+                  numberOfMpi, hostConfig=self.hostConfig, env=env, cwd=cwd)
 
     def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
         ThreadStepExecutor.runSteps(self, steps, stepStartedCallback, stepFinishedCallback)
 
-        # We import mpi here just to avoid failing in case MPI4py
-        # was not properly compiled, we still can run in parallel with threads
+        # Import mpi here so if MPI4py was not properly compiled
+        # we can still run in parallel with threads.
         from pyworkflow.utils.mpi import TAG_RUN_JOB
+
         # Send special command 'None' to MPI slaves to notify them
-        # that there is not more jobs to do and they can finish.
-        for i in range(1, self.numberOfProcs+1):
-            self.comm.send('None', dest=i, tag=(TAG_RUN_JOB+i))
+        # that there are no more jobs to do and they can finish.
+        for node in range(1, self.numberOfProcs+1):
+            self.comm.send('None', dest=node, tag=(TAG_RUN_JOB+node))

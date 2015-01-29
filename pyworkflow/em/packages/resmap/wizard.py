@@ -99,7 +99,7 @@ class PreWhiteningDialog(dialog.Dialog):
             ih.convert(prot.splitVolume.get(), join(self.workingDir, 'volume2.map'))
     
         self.results = prot.runResmap(self.workingDir, wizardMode=True)
-        
+         
     def _runPreWhitening(self, newElbowAngstrom, newRampWeight):
         # Add resmap libraries to the path
         sys.path.append(os.environ['RESMAP_HOME'])

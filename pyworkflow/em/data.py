@@ -156,6 +156,7 @@ class CTFModel(EMObject):
     
     def setMicrograph(self, mic):
         self._micObj = mic
+        self.copyObjId(mic)
 
     def getDefocus(self):
         """ Returns defocusU, defocusV and defocusAngle. """
@@ -758,7 +759,7 @@ class SetOfImages(EMSet):
         class and append to the set all that are enabled. 
         """
         for cls in classesSet:
-            if cls.isEnabled():
+            if cls.isEnabled() and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():               
                         self.append(img)

@@ -352,25 +352,35 @@ class ProtCreateMask(BatchProtocol):
      _label='create mask'
 
      def _defineParams(self, form):
-        form.addHidden('inputImage', PointerParam, pointerClass='Image')
+        form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
         form.addHidden('maskFile', StringParam)
 
      def _insertAllSteps(self):
         self._insertFunctionStep('createMaskStep')
 
      def createMaskStep(self):
-        inputImage = self.inputImage.get()
+        inputObj = self.inputObj.get()
         maskFile=self.maskFile.get()
+        samplingRate = None
+        if(hasattr(inputObj, "getSamplingRate")):
+            samplingRate = inputObj.getSamplingRate()
+        else:
+            for key, attr in inputObj.iterInputAttributes():
+                print key
+                if hasattr(attr.get(), "getSamplingRate"):
+                    samplingRate = attr.get().getSamplingRate()
+        if  not samplingRate:
+            raise Exception("sampling rate required")
 
         mask = Mask()
         mask.setFileName(maskFile)
-        mask.setSamplingRate(inputImage.getSamplingRate())
+        mask.setSamplingRate(samplingRate)
         self._defineOutputs(outputMask=mask)
-        self._defineSourceRelation(inputImage, self.outputMask)
+        self._defineSourceRelation(inputObj, self.outputMask)
 
      def _summary(self):
         summary = []
-        summary.append('From image %s created mask %s'%(self.getObjectTag("inputImage"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
         return summary
 
      def _methods(self):

@@ -160,7 +160,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             objCommands = '%s %s' % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, self.protocol.strId(), viewParams={OBJCMDS: objCommands}, **args))
-              
+
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
@@ -197,7 +197,7 @@ class XmippViewer(Viewer):
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
-            tmpDir = self._getTmpPath(obj.getName()) 
+            tmpDir = self._getTmpPath(obj.getName())
             makePath(tmpDir)
             
             if mdFn:
@@ -209,7 +209,8 @@ class XmippViewer(Viewer):
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
-                writeSetOfCoordinates(tmpDir, obj)   
+                writeSetOfCoordinates(tmpDir, obj)
+
             self._views.append(CoordinatesObjectView(fn, tmpDir))
 
         elif issubclass(cls, SetOfParticles):
@@ -293,11 +294,16 @@ class XmippViewer(Viewer):
                 self._views.append(xplotter)
     
         elif issubclass(cls, XmippProtRotSpectra):
-            self._visualize(obj.outputClasses, viewParams={'mode': 'rotspectra', 'columns': obj.SomXdim.get()})
+            self._visualize(obj.outputClasses, viewParams={#'mode': 'rotspectra', 
+                                                           'columns': obj.SomXdim.get(),
+                                                           'render': 'average._filename spectraPlot._filename',
+                                                           'labels': '_size',
+                                                           'sortby': 'id'})
         
         elif issubclass(cls, XmippProtKerdensom):
             self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),
-                                                           'render': '_representative._filename average._filename',
+                                                           'render': 'average._filename _representative._filename',
+                                                           'labels': '_size',
                                                            'sortby': 'id'})
         
         elif issubclass(cls, XmippProtScreenClasses):

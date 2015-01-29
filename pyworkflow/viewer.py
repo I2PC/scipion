@@ -30,7 +30,7 @@ serve as base for implementing visualization tools(Viewer sub-classes).
 
 from os.path import join
 from protocol import Protocol
-from em import SetOfVolumes, Volume
+
 from pyworkflow.utils.path import cleanPath
 
 DESKTOP_TKINTER = 'tkinter'
@@ -309,7 +309,7 @@ class ProtocolViewer(Protocol, Viewer):
         return values
 
     def createVolumesSqlite(self, files, path, samplingRate):
-
+        from em import SetOfVolumes, Volume
         cleanPath(path)
         volSet = SetOfVolumes(filename=path)
         volSet.setSamplingRate(samplingRate)

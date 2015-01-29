@@ -41,7 +41,7 @@ from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryFiles, writeSqliteIterData
+from convert import convertBinaryFiles, writeSqliteIterData, writeSetOfParticles
 
 
 class ProtRelionBase(EMProtocol):
@@ -496,13 +496,12 @@ class ProtRelionBase(EMProtocol):
         """
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
-        filesMapping = convertBinaryFiles(imgSet,self._getTmpPath())
 
         self.info("Converting set from '%s' into '%s'" %
                            (imgSet.getFileName(), imgStar))
-        from convert import writeSetOfParticles
+        
         # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet, imgStar, filesMapping)
+        writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
         
         if self.doCtfManualGroups:
             self._splitInCTFGroups(imgStar)

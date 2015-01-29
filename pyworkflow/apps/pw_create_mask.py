@@ -43,6 +43,6 @@ if __name__ == '__main__':
 
     project = Manager().loadProject(projectId)
     inputObject = project.mapper.selectById(int(inputId))
-    prot = project.newProtocol(ProtCreateMask, maskFile=file, inputImage=inputObject)
+    prot = project.newProtocol(ProtCreateMask, maskFile=file, inputObj=inputObject)
     prot.setObjLabel(label)
     project.launchProtocol(prot, wait=True)

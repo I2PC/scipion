@@ -108,10 +108,14 @@ def update_graph_view(request):
     project = loadProject(projectName)
     project_settings = project.getSettings()
 
-    if status == "True":
-        project_settings.graphView.set(True)
-    else :
-        project_settings.graphView.set(False)
+#     DEPRECATED:
+#     if status == "True":
+#         project_settings.graphView.set(True)
+#     else :
+#         project_settings.graphView.set(False)
+    
+    project_settings.runsView.set(int(status))
+    
     project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
@@ -171,13 +175,18 @@ def run_table_graph(request):
             
             # Get the selected runs stored in BD    
             selectedRuns = project_settings.runSelection
-    
+            
+            # DEPRECATED
             # Get the mode view (list or graph) stored in BD
-            graphView = project_settings.graphView.get()
+            # graphView = project_settings.graphView.get()
+            
+            # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
+            runsView = project_settings.runsView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
-                       'graphView': graphView, 
+#                        'graphView': graphView,
+                       'runsView': runsView,
                        'selectedRuns' : selectedRuns}
             
             return render_to_response('project_content/run_table_graph.html', context)
@@ -254,9 +263,13 @@ def contentContext(request, projectName):
     # Get the selected runs stored in BD    
     selectedRuns = project_settings.runSelection
 
+    # DEPRECATED
     # Get the mode view (list or graph) stored in BD
-    graphView = project_settings.graphView.get()
+    # graphView = project_settings.graphView.get()
     
+    # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
+    runsView = project_settings.runsView.get()
+        
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
@@ -290,7 +303,8 @@ def contentContext(request, projectName):
                'runs': runs,
                'columns': provider.getColumns(),
                'projectNameHeader': projectNameHeader, 
-               'graphView': graphView,
+#                'graphView': graphView,
+               'runsView': runsView,
                'selectedRuns': selectedRuns
                }
 
@@ -409,7 +423,10 @@ def create_service_project(request):
         customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
         confs = {'protocols': customMenu}
-        project = manager.createProject(projectName, confs, graphView=True)   
+        
+#         DEPRECATED:
+#         project = manager.createProject(projectName, confs, graphView=True)
+        project = manager.createProject(projectName, confs, runsView=1)   
         
         # 1. Import averages
         protImport = project.newProtocol(ProtImportAverages,
