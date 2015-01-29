@@ -186,7 +186,6 @@ For example:
     LABEL_VOLTAGE = 'Microscope voltage (kV)'
     TEXT_VOLTAGE = "Microscope voltage"
     LABEL_SPH_ABERRATION = 'Spherical aberration (mm)'
-<<<<<<< Updated upstream
     TEXT_SPH_ABERRATION = """\
 Optical effect due to the increased refraction of light rays when they
 strike the lens near its edge, in comparison with those that strike near
@@ -198,13 +197,6 @@ Produced by the loss of amplitude (i.e. electrons) from the beam.
 For a weak phase and weak amplitude object, the amplitude contrast ratio Qo
 is automatically computed. It should be a positive number, typically between
 0.05 and 0.3."""
-=======
-    TEXT_SPH_ABERRATION = "Optical effect due to the increased refraction of light rays when they strike lens near its edge, in comparison with those that strike nearer the centre."
-    LABEL_AMPLITUDE = 'Amplitude Contrast'
-    TEXT_AMPLITUDE = 'Amplitude contrast is produced by the loss of amplitude (i.e. electrons) from the beam. ' \
-    'For a weak phase, weak amplitude object, amplitude contrast ratio Qo is determined.'\
-                     'It should be a positive number, typically between 0.05 and 0.3.'
->>>>>>> Stashed changes
     LABEL_PATTERNU = 'Pattern untilted'
     LABEL_PATTERNT = 'Pattern tilted'
 
