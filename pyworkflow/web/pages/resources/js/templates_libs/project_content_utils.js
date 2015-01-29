@@ -763,7 +763,7 @@ function graphON(graph, icon_graph, list, icon_list) {
 	icon_list.show();
 
 	// Update Graph View
-	updateGraphView("True");
+	updateGraphView("1");
 }
 
 function graphOFF(graph, icon_graph, list, icon_list) {
@@ -782,7 +782,7 @@ function graphOFF(graph, icon_graph, list, icon_list) {
 	icon_graph.show();
 
 	// Update Graph View
-	updateGraphView("False")
+	updateGraphView("0")
 }
 
 function changeStatusGraph(status, graph, graphTool, list, listTool) {
