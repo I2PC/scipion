@@ -145,14 +145,15 @@ def _setupEmxParticle(emxData, coordinate, index, filename, micSet):
     i = index or 1
     emxParticle = emxlib.EmxParticle(fileName=filename, index=i)
     if coordinate:
-        mic = micSet[coordinate.getMicId()] # get micrograph
-        index, filename = mic.getLocation()
-        i = index or 1
-        filename = basename(filename)  ## Careful here if two micrographs have the same name...
-        mapKey = OrderedDict([('fileName', filename), ('index', i)])
+        if micSet is not None:
+            mic = micSet[coordinate.getMicId()] # get micrograph
+            index, filename = mic.getLocation()
+            i = index or 1
+            filename = basename(filename)  ## Careful here if two micrographs have the same name...
+            mapKey = OrderedDict([('fileName', filename), ('index', i)])
 
-        emxMic = emxData.getObject(mapKey)
-        emxParticle.setMicrograph(emxMic)
+            emxMic = emxData.getObject(mapKey)
+            emxParticle.setMicrograph(emxMic)
         #TODO: ADD foreign key
         _dictToEmx(emxParticle, {'centerCoord__X': coordinate.getX(), 
                                  'centerCoord__Y': coordinate.getY()})
