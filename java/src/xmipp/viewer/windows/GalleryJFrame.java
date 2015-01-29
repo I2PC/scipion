@@ -255,8 +255,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	{
             try
             {
-                Params p = new Params();
-                new GalleryJFrame(md, p);
+                new GalleryJFrame(md, data.parameters);
             }
             catch(Exception e)
             {
