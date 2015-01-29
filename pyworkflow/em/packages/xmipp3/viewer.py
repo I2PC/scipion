@@ -197,7 +197,7 @@ class XmippViewer(Viewer):
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
             mdFn = getattr(micSet, '_xmippMd', None)
-            tmpDir = self._getTmpPath(obj.getName()) 
+            tmpDir = self._getTmpPath(obj.getName())
             makePath(tmpDir)
             
             if mdFn:
@@ -209,7 +209,8 @@ class XmippViewer(Viewer):
             if posDir:
                 copyTree(posDir.get(), tmpDir)
             else:
-                writeSetOfCoordinates(tmpDir, obj)   
+                writeSetOfCoordinates(tmpDir, obj)
+
             self._views.append(CoordinatesObjectView(fn, tmpDir))
 
         elif issubclass(cls, SetOfParticles):
