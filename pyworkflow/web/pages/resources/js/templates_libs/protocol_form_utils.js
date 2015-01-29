@@ -185,8 +185,8 @@ $(document).ready(function() {
 					errorPopup("Error", "Input selected are None");
 				} else if (html=="errorIterate"){
 					errorPopup("Error", "Error iterating over the input set");
-				} else{
-					customPopupHTML(html,790,540);
+				} else {
+					customPopupHTML(html,800,540);
 				}
 				return false;
 			});
