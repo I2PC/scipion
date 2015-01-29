@@ -75,11 +75,9 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
     #create dictionary that matches input particles with param file
     samplingRate = inputSet.getSamplingRate()
     parFile = FrealignParFile(parFileName)
-    partIter = iter(inputSet.get().iterItems(orderBy=['_micId', 'id'],
-                                         direction='ASC'))
-    for particle, row in izip(partIter, parFile):
-        import sys
-        print >> sys.stderr, particle.getObjId(), particle.get_CTF(), row
+    partIter = iter(inputSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
+    
+    for particle, row in izip(partIter, parFile):        
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
         # in order to be processed in Frealign
