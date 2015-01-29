@@ -180,16 +180,15 @@ $(document).ready(function() {
 				$('.messi-modal').remove();
 				
 				if(html=="errorInput"){		// Important. Stop the normal POST
-					return false;
-
 					errorPopup("Error", "Input was not selected, please choose one.");
 				} else if (html=="errorEmpty"){
-					errorPopup("Error", "Input particles selected are None");
+					errorPopup("Error", "Input selected are None");
 				} else if (html=="errorIterate"){
-					errorPopup("Error", "Error iterating over the set of particles");
-				} else{
-					customPopupHTML(html,790,480);
+					errorPopup("Error", "Error iterating over the input set");
+				} else {
+					customPopupHTML(html,800,540);
 				}
+				return false;
 			});
 
 // ---------- MODE VIEWER -----------------------------------------------------

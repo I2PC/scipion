@@ -520,5 +520,6 @@ function previewSpiderCustomMask(path, radius1, sdFactor, radius2, maskThreshold
 	}
 }
 
+//*** Methods ResMap Wizard *** //
 
 

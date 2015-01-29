@@ -27,12 +27,6 @@
 This module implement some wizards
 """
 
-import os
-import Tkinter as tk
-import ttk
-
-import xmipp
-
 from pyworkflow.em.constants import *
 from constants import *
 
@@ -49,6 +43,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_helical_parameters import XmippProtHelicalParameters
 from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
+from protocol_rotational_spectra import XmippProtRotSpectra
 
 from pyworkflow.em.wizard import *
 
@@ -240,7 +235,8 @@ class XmippParticleMaskRadiusWizard(ParticleMaskRadiusWizard):
 
     
 class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
-    _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius'])]
+    _targets = [(XmippProtMaskParticles, ['innerRadius', 'outerRadius']),
+                (XmippProtRotSpectra, ['spectraInnerRadius', 'spectraOuterRadius'])]
     
     def _getParameters(self, protocol):
         
