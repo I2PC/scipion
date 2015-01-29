@@ -367,7 +367,7 @@ void ProgReconsADMM::computeHtKH()
 		        {
 					double r1_xyz=j*XX(r1)+r1_yz;
 					double r2_xyz=j*XX(r2)+r2_yz;
-					A3D_ELEM(kernelV,k,i,j)+=kernelAutocorr.interpolatedElement2D(r1_xyz*iStep,r2_xyz*iStep);
+					A3D_ELEM(kernelV,k,i,j)+=weight*kernelAutocorr.interpolatedElement2D(r1_xyz*iStep,r2_xyz*iStep);
 		        }
 		    }
 		}
