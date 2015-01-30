@@ -631,10 +631,14 @@ class SqliteFlatMapper(Mapper):
         objRows = self.db.selectObjectsBy(**args)
         return self.__objectsFromRows(objRows, iterate, objectFilter)
     
-    def selectAll(self, iterate=True, objectFilter=None, orderBy='id', direction='ASC'):
+    def selectAll(self, iterate=True
+                      , objectFilter=None
+                      , orderBy='id'
+                      , direction='ASC'
+                      , where='1'):
         if self._objTemplate is None:
             self.__loadObjDict()
-        objRows = self.db.selectAll(orderBy=orderBy, direction=direction)
+        objRows = self.db.selectAll(orderBy=orderBy, direction=direction,where=where)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -857,7 +861,7 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd("id=?"), (objId,))
         return self.cursor.fetchone()
 
-    def selectAll(self, iterate=True, orderBy='id', direction='ASC'):
+    def selectAll(self, iterate=True, orderBy='id', direction='ASC', where='1'):
         # Handle the specials orderBy values of 'id' and 'RANDOM()'
         # other columns names should be mapped to table column
         # such as: _micId -> c04
@@ -879,7 +883,7 @@ class SqliteFlatDb(SqliteDb):
         else:
             raise Exception('Invalid type for orderBy: %s' % type(orderBy))
 
-        cmd = self.selectCmd('1', orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
+        cmd = self.selectCmd(where, orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
         #import sys
         #print >> sys.stderr, "command", cmd
         self.executeCommand(cmd)
