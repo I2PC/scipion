@@ -85,13 +85,15 @@
 <div id="headerToolbar">
 	<span id="toolbar" style="float:right;">
 		<span id="treeTool">
-			<a href="javascript:switchGraph();"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{msg.LABEL_TREE}}</a>
+			<a href="javascript:switchMode(1);"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{msg.LABEL_TREE}}</a>
+		</span>
+		<span id="treeSmallTool">
+			<a href="javascript:switchMode(2);"><i class="fa fa-sitemap" style="margin-right:5px"></i>{{msg.LABEL_SMALLTREE}}</a>
 		</span>
 		<span id="listTool" style="display:none;">
-			<a href="javascript:switchGraph();"><i class="fa fa-bars" style="margin-right:5px"></i>{{msg.LABEL_LIST}}</a>
+			<a href="javascript:switchMode(0);"><i class="fa fa-bars" style="margin-right:5px"></i>{{msg.LABEL_LIST}}</a>
 		</span>
 		<span id="refreshTool" style="display:both;">
-<!-- 			<a href="javascript:refreshRuns(1);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a> -->
 			<a href="javascript:window.location.reload(true);"><i class="fa fa-refresh" style="margin-right:5px"></i>{{msg.LABEL_REFRESH}}</a>
 		</span>
 	</span>
@@ -117,13 +119,6 @@
 				{{msg.LABEL_DELETE}}
 			</a>
 		</span>
-<!-- 		BROWSE BUTTON -->
-<!-- 		<span id="browseTool" style="display:none;"> -->
-<!-- 			<a id="browseTool" href=""> -->
-<!-- 				<i class="fa fa-folder-open" style="margin-right:5px"></i> -->
-<!-- 				{{msg.LABEL_BROWSE}} -->
-<!-- 			</a> -->
-<!-- 		</span> -->
 <!-- 		STOP BUTTON -->
 		<span id="stopTool" style="display:none;">
 			<a id="stopTool" href="">

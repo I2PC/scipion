@@ -75,6 +75,7 @@ class Message():
     LABEL_STOP_ACTION = 'Stop execution'
     LABEL_ANALYZE = 'Analyze Results'
     LABEL_TREE = 'Tree'
+    LABEL_SMALLTREE = 'Small Tree'
     LABEL_LIST = 'List'
     LABEL_REFRESH = 'Refresh'
     LABEL_DEFAULT = 'Default'
