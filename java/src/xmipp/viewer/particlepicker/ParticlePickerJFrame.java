@@ -511,7 +511,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if (defaultlistener)
 			mi.addActionListener(this);
 		filtersmn.add(mi);
-		mi.setEnabled(picker.getMode() != Mode.ReadOnly);
+		//mi.setEnabled(picker.getMode() != Mode.ReadOnly);
 		return mi;
 	}
 
@@ -544,8 +544,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                                     loadParticles(true);    
                                 
 			}
-
-			getParticlePicker().saveConfig();
+                        if(getParticlePicker().getMode() != Mode.ReadOnly)
+                            getParticlePicker().saveConfig();
 		}
 		catch (Exception ex)
 		{
