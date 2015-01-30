@@ -731,13 +731,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		jsRows.setEnabled(!autoAdjustColumns);
 	}
 
-	private void makeVisible(int index)
+	private void makeVisible(int row, int col)
 	{
-		Point coords = gallery.getCoords(index);
 		//DEBUG.printMessage(String.format("gotoImage, index: %d, row: %d, col:%d", index, coords[0], coords[1]));
 
 		// Gets current selected cell bounds.
-		Rectangle rect = table.getCellRect(coords.x, coords.y, true);
+		Rectangle rect = table.getCellRect(row, col, true);
 
 		// Ensures item is visible
 		Point pos = jspContent.getViewport().getViewPosition();
@@ -750,7 +749,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	private void goToImage(int index)
 	{
 		gallery.gotoItem(index);
-		makeVisible(index);
+		makeVisible(index, 0);
 	}
 
 	
@@ -979,7 +978,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         {
             			data.changeMode();
 				reloadTableData();
-				makeVisible(gallery.getFirstSelectedIndex());
+				makeVisible(gallery.getFirstSelectedIndex(), 0);
 	
         }
         
@@ -1023,7 +1022,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					return;
 				}
 				gallery.setZoom(zoom);
-				makeVisible(gallery.getFirstSelectedIndex());
+				makeVisible(gallery.getFirstSelectedIndex(), 0);
 				// gallery.updateTableSelection(table);
 			}
 		});
@@ -1328,7 +1327,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		}
 		gallery.clearSelection();
 		gallery.touchItem(row, col);
-		makeVisible(row);
+		makeVisible(row, col);
 
 	}
 
@@ -1556,7 +1555,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                                             ((MetadataTableModel) gallery).setRenderImages(getItemSelected(DISPLAY_RENDERIMAGES));
                                             setItemEnabled(DISPLAY_SHOWLABELS, gallery.showLabels());
                                         }
-					makeVisible(gallery.getFirstSelectedIndex());
+					makeVisible(gallery.getFirstSelectedIndex(), 0);
 				}
 				
 				else if (cmd.equals(DISPLAY_COLUMNS))

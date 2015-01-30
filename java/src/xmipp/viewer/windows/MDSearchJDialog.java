@@ -77,6 +77,7 @@ public class MDSearchJDialog extends XmippDialog {
 	private JButton btnReplaceAll;
 	private JRadioButton jrbForward;
 	private JCheckBox jchCase;
+        private int column;
 
 	/**
 	 * Constructor to add a new label the labels present in the metadata are
@@ -177,7 +178,10 @@ public class MDSearchJDialog extends XmippDialog {
 		if (o == jtFind || o == btnFind)
 			find();
 		else if (o == jcbLabel)
-			label = labels.get(jcbLabel.getSelectedIndex());
+                {
+                        column = jcbLabel.getSelectedIndex();
+			label = labels.get(column);
+                }
 		else if (o == btnReplace)
 			replace(selected_index);
 		else if (o == btnReplaceFind) {
@@ -217,7 +221,7 @@ public class MDSearchJDialog extends XmippDialog {
 					index = nextIndex(index, direction);
 			}
 			if (selected_index > -1)
-				parent.selectItem(selected_index, 0);
+				parent.selectItem(selected_index, column);
 		} catch (Exception e) {
 			showException(e);
 		}
