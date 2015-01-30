@@ -898,8 +898,8 @@ class SqliteFlatDb(SqliteDb):
 
         cmd = self.selectCmd(whereStr,
                              orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
-        import sys
-        print >> sys.stderr, "command", cmd
+        #import sys
+        #print >> sys.stderr, "command", cmd
         self.executeCommand(cmd)
         return self._results(iterate)
 
