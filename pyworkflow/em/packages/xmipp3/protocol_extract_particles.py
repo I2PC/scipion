@@ -484,7 +484,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return None
 
     def getOutput(self):
-        if self.outputParticles.hasValue():
+        if (self.hasAttribute('outputParticles') and
+            self.outputParticles.hasValue()):
             return self.outputParticles
         else:
             return None
