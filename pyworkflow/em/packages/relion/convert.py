@@ -559,7 +559,7 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
 def splitInCTFGroups(imgStar, groups):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
-    defocus = [mdAll.getValue(md.MDL_CTF_DEFOCUSU, objId) for objId in mdAll]
+    defocus = [mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) for objId in mdAll]
     
     minDef = min(defocus)
     maxDef = max(defocus)
@@ -567,26 +567,26 @@ def splitInCTFGroups(imgStar, groups):
     increment = (maxDef - minDef) / groups
     counter = 1
     part = 1
-    mdAll.sort(md.MDL_CTF_DEFOCUSU)
+    mdAll.sort(md.RLN_CTF_DEFOCUSU)
     
     for objId in mdAll:
-        partDef = mdAll.getValue(md.MDL_CTF_DEFOCUSU, objId)
+        partDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
         currDef = minDef + increment
         
         if partDef <= currDef:
             part = part + 1
-            mdAll.setValue(md.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+            mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
         else:
             if part < 100:
                 increment = mdAll.getValue(md.MDL_CTF_DEFOCUSU, objId) - minDef
                 part = part + 1
-                mdAll.setValue(md.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+                mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
             else:
                 part = 1
-                minDef = mdAll.getValue(md.MDL_CTF_DEFOCUSU, objId)
+                minDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
                 counter = counter + 1
                 increment = (maxDef - minDef) / (groups - counter)
-                mdAll.setValue(md.MDL_SERIE, "ctfgroup_%05d" % counter, objId)
+                mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
     mdAll.write(imgStar)
     
         
