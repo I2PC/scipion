@@ -638,7 +638,9 @@ class SqliteFlatMapper(Mapper):
                       , where='1'):
         if self._objTemplate is None:
             self.__loadObjDict()
-        objRows = self.db.selectAll(orderBy=orderBy, direction=direction,where=where)
+        objRows = self.db.selectAll(orderBy=orderBy,
+                                    direction=direction,
+                                    where=where)
         
         return self.__objectsFromRows(objRows, iterate, objectFilter) 
 
@@ -883,9 +885,21 @@ class SqliteFlatDb(SqliteDb):
         else:
             raise Exception('Invalid type for orderBy: %s' % type(orderBy))
 
-        cmd = self.selectCmd(where, orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
-        #import sys
-        #print >> sys.stderr, "command", cmd
+        # Parse the where string to replace the colunm name with
+        # the real table column name ( for example: _micId -> c01 )
+        # Right now we are asuming a simple where string in the form
+        # colName=VALUE
+        if '=' in where:
+            whereCol = where.split('=')[0]
+            whereRealCol = _getRealCol(whereCol)
+            whereStr = where.replace(whereCol, whereRealCol)
+        else:
+            whereStr = where
+
+        cmd = self.selectCmd(whereStr,
+                             orderByStr=' ORDER BY %s %s' % (orderByCol, direction))
+        import sys
+        print >> sys.stderr, "command", cmd
         self.executeCommand(cmd)
         return self._results(iterate)
 
