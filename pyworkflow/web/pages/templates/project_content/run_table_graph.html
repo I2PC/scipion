@@ -3,6 +3,8 @@
 	$(function() {
 		{% if runsView == 1 %}
 			switchMode(1);
+		{% elif runsView == 2 %}
+			switchMode(2);
 		{% endif %}
 		
 		preloadToolbar({{selectedRuns}});

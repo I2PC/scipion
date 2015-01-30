@@ -818,12 +818,12 @@ function switchMode(mode) {
 
 	// Graph will be painted once
 	if (graph.attr("data-time") == 'first') {
-		callPaintGraph();
+		callPaintGraph(graph, "normal");
 		graph.attr("data-time", "not");
 	}
 	
 	if (smallGraph.attr("data-time") == 'first') {
-//		callPaintSmallGraph();
+		callPaintGraph(smallGraph, "small");
 		smallGraph.attr("data-time", "not");
 	}
 
