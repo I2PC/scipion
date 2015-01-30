@@ -1013,15 +1013,13 @@ class SetOfCoordinates(EMSet):
         else:
             raise Exception('Invalid input micrograph of type %s' % type(micrograph))
         
-        #TODO: Improve the iteration of micrograph coordinates
-        # by using a where and not iteration over all coordinates
-        for coord in self:
-            if micId is None:
-                yield coord 
-            else:
-                if coord.getMicId() == micId:
-                    yield coord
-    
+        #Iterate over all coordinates if micId is None,
+        #otherwise use micId to filter the where selection
+        coordWhere = '1' if  micId is None else '_micId=%d' % micId
+
+        for coord in self.iterItems(where=coordWhere):
+            yield coord
+
     def getMicrographs(self):
         """ Returns the SetOfMicrographs associated with 
         this SetOfCoordinates"""
