@@ -24,7 +24,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	protected XmippMenuBar menu;
 	protected ImagePlusLoader ipl;
 	protected Label pixelslb;
-        private MaskJFrame maskfr;
+        private DesignMaskJFrame maskfr;
         protected Params params;
     
 
@@ -146,35 +146,39 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 	{
                 if(pixelslb == null)//avoid error running showPixels before initialization
                     return;
-                String text;
-		String value = "";
-		switch (imp.getType())
-		{
-		case ImagePlus.GRAY8:
-		case ImagePlus.GRAY16:
-			double cValue = imp.getCalibration().getCValue(pixels[0]);
-			if (cValue == pixels[0])
-				value = String.valueOf(pixels[0]);
-			else
-				value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
-                        text = String.format("x=%s, y=%s, value=%-5s", x, y, value);
-                        pixelslb.setText(text);
-			break;
-		case ImagePlus.GRAY32:
-                        text = String.format("x=%s, y=%s, value=%.2f", x, y, Float.intBitsToFloat(pixels[0]));
-                        pixelslb.setText(text);
-			break;
-		case ImagePlus.COLOR_256:
-		case ImagePlus.COLOR_RGB:
-                        value =  pixels[0] + "," + pixels[1] + "," + pixels[2];
-                        text = String.format("x=%s, y=%s, value=%-15s", x, y, value);
-                        pixelslb.setText(text);
-			break;
+                pixelslb.setText(pixelsToString(imp, x, y, pixels));
 		
-		}
+		
 		
 	}
         
+        public static String pixelsToString(ImagePlus imp, int x, int y, int[] pixels)
+        {
+                String text = "";
+		String value = "";
+		switch (imp.getType())
+		{
+                    case ImagePlus.GRAY8:
+                    case ImagePlus.GRAY16:
+                            double cValue = imp.getCalibration().getCValue(pixels[0]);
+                            if (cValue == pixels[0])
+                                    value = String.valueOf(pixels[0]);
+                            else
+                                    value = IJ.d2s(cValue) + " (" + pixels[0] + ")";
+                            text = String.format("x=%s, y=%s, value=%-5s", x, y, value);
+                            break;
+                    case ImagePlus.GRAY32:
+                            text = String.format("x=%s, y=%s, value=%.2f", x, y, Float.intBitsToFloat(pixels[0]));
+                            break;
+                    case ImagePlus.COLOR_256:
+                    case ImagePlus.COLOR_RGB:
+                            value =  pixels[0] + "," + pixels[1] + "," + pixels[2];
+                            text = String.format("x=%s, y=%s, value=%-15s", x, y, value);
+                            break;
+                }
+                return text;
+            
+        }
         
         
         @Override
@@ -211,7 +215,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
                     @Override
                     public void run() {
-                        maskfr = new MaskJFrame(XmippImageWindow.this);
+                        maskfr = new DesignMaskJFrame(XmippImageWindow.this);
                         XmippWindowUtil.setLocation(0.2f, 0.5f, XmippImageWindow.this);
                         XmippWindowUtil.setLocation(0.6f, 0.5f, maskfr);
                     }
