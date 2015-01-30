@@ -32,6 +32,7 @@ import sys
 
 from pyworkflow.protocol.params import BooleanParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.gui.plotter import Plotter
 from protocol_resmap import ProtResMap
 
 
@@ -83,15 +84,15 @@ class ResMapViewer(ProtocolViewer):
     
     def _showVolumeSlices(self, param=None):
         from ResMap_visualization import plotOriginalVolume
-        figure = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
-        return [figure]
+        fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
+        return [Plotter(figure=fig)]
         
     def _showResMapSlices(self, param=None):
         from ResMap_visualization import plotResMapVolume
-        figure = plotResMapVolume(self._getVolumeMatrix('volume1.map'),
+        fig = plotResMapVolume(self._getVolumeMatrix('volume1.map'),
                                   minRes=self.protocol.minRes.get(),
                                   maxRes=self.protocol.maxRes.get())
-        return [figure]
+        return [Plotter(figure=fig)]
              
     def _plotHistogram(self, param=None):
         """ First we parse the cas_EIG file and we read:
@@ -101,8 +102,8 @@ class ResMapViewer(ProtocolViewer):
         from ResMap_visualization import plotResolutionHistogram
         from cPickle import loads
         histogramData = loads(self.protocol.histogramData.get())
-        figure = plotResolutionHistogram(histogramData)
-        return [figure]
+        fig = plotResolutionHistogram(histogramData)
+        return [Plotter(figure=fig)]
     
     def _showChimera(self, param=None):
         os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
