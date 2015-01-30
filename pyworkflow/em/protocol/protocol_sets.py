@@ -136,7 +136,102 @@ class ProtUnionSet(ProtSets):
         return self._summary()
 
 
-import sys
+class ProtUnionMicCtf(ProtSets):
+    """
+    Protocol to join two or more sets of Ctf + Micrographs.
+    This protocol allows to select two or more set of CTF
+    and will produce another two sets. The first one
+    contains all the Micrographs while the second one contains all the CTFs
+    This protocol ensures that the 1-1 mapping is preserved between
+    CTFs and Micrographs
+    """
+    _label = 'union Mic+Ctf'
+
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        form.addParam('inputSets', MultiPointerParam, label="Input set", important=True,
+                      pointerClass='SetOfCTF', minNumObjects=2, maxNumObjects=0,
+                      help='Select two or more sets of CTF estimations to be united.'
+                           'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
+                           'total of 500 elements.')
+
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    #--------------------------- STEPS functions --------------------------------------------
+    def createOutputStep(self):
+        set1 = self.inputSets[0].get()  # 1st set (we use it many times)
+
+        # Read ClassName and create the corresponding EMSet (SetOfParticles...)
+        outputSetMic = self._createSetOfMicrographs()
+        outputSetCtf = self._createSetOfCTF()
+
+        # Copy info from input sets (sampling rate, etc).
+        outputSetCtf.copyInfo(set1)  # all sets must have the same info as set1!
+        outputSetMic.copyInfo(set1.getMicrographs())
+
+        # Keep original ids until we find a conflict. From then on, use new ids.
+        usedIds = set()  # to keep track of the object ids we have already seen
+        cleanIds = False
+        #process Micrographs
+        for ctfSet in self.inputSets:
+            for ctf in ctfSet.get():
+                mic   = ctf.getMicrograph()
+                ctfId = ctf.getObjId()
+                if cleanIds:
+                    ctf.cleanObjId()  # so it will be assigned automatically
+                    #mic.cleanObjId()  # so it will be assigned automatically
+                elif ctfId in usedIds:  # duplicated id!
+                    # Note that we cannot use  "objId in outputSet"
+                    # because outputSet has not been saved to the sqlite
+                    # file yet, and it would fail :(
+                    ctf.cleanObjId()
+                    cleanIds = True  # from now on, always clean the ids
+                else:
+                    usedIds.add(ctfId)
+                outputSetCtf.append(ctf)
+                mic.copyObjId(ctf)
+                outputSetMic.append(mic)
+
+        self._defineOutputs(outputCTF=outputSetCtf)
+        self._defineOutputs(outputMicrographs=outputSetMic)
+        self._defineCtfRelation(outputSetMic, outputSetCtf)
+
+    def getObjDict(self, includeClass=False):
+        return super(ProtUnionSet, self).getObjDict(includeClass)
+
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        # Are all inputSets from the same class?
+        classes = {x.get().getClassName() for x in self.inputSets}
+        if len(classes) > 1:
+            return ["All objects should have the same type.",
+                    "Types of objects found: %s" % ", ".join(classes)]
+
+        # Do all inputSets contain elements with the same attributes defined?
+        def attrNames(s):  # get attribute names of the first element of set s
+            return sorted(iter(s.get()).next().getObjDict().keys())
+        attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+        if len(attrs) > 1:
+            return ["All elements must have the same attributes.",
+                    "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+
+        return []  # no errors
+
+    def _summary(self):
+        if not hasattr(self, 'outputSet'):
+            return ["Protocol has not finished yet."]
+        else:
+            return ["We have merged the following sets:",
+                    ", ".join(x.get().getNameId() for x in self.inputSets)]
+
+    def _methods(self):
+        return self._summary()
+
+
 class ProtSplitSet(ProtSets):
     """ Protocol to split a set in two or more subsets.
     """
