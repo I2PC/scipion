@@ -686,5 +686,7 @@ class ProtRelionBase(EMProtocol):
     
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
+        magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
+        imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
         
