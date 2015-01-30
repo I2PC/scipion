@@ -197,28 +197,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
-                                            
+
             #if self.doFlip.get():
             if self.ctfRelations.hasValue():
-                mic.setCTF(ctfSet[micId])       
+                mic.setCTF(ctfSet[micId])
 
-            # If downsample type is 'other' perform a downsample
-            if self.downsampleType == OTHER:
+                # If downsample type is 'other' perform a downsample
+            downFactor = self.downFactor.get()
+            if self.downsampleType == OTHER and abs(downFactor - 1.) > 0.0001:
                 fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
-                downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
                 localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
-                
+
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
                 localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnNoDust
-                
-                        
+
+
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
             #FIXME: Check only if mic has CTF when implemented ok
@@ -230,15 +230,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                 # Insert step to flip micrograph
                 if self.doFlip:
-                    localDeps = [self._insertFunctionStep('flipMicrographStep', 
-                                                      micName, fnCTF, micrographToExtract,
-                                                      prerequisites=localDeps)]
+                    localDeps = [self._insertFunctionStep('flipMicrographStep',
+                                                          micName, fnCTF, micrographToExtract,
+                                                          prerequisites=localDeps)]
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
             else:
-                fnCTF = None        
-            # Actually extract
-            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
-                                              fnCTF, micrographToExtract, prerequisites=localDeps))
+                fnCTF = None
+                # Actually extract
+            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName,
+                                                 fnCTF, micrographToExtract, prerequisites=localDeps))
         # TODO: Delete temporary files
                         
         # Insert step to create output objects      
