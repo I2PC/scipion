@@ -253,29 +253,6 @@ void ProgRecFourier::produceSideinfo()
     }
 }
 
-void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
-        double &tilt, double &psi, double &xoff, double &yoff, bool &flip,
-        double &weight, MetaData * docfile)
-{
-    std::vector<size_t> found;
-    (*docfile).findObjects(found,MDValueEQ(MDL_IMAGE,(std::string)fn));
-
-    if (found.size()==1)
-    {
-        (*docfile).getValue(MDL_ANGLE_ROT,rot,found[0]);
-        (*docfile).getValue(MDL_ANGLE_TILT,tilt,found[0]);
-        (*docfile).getValue(MDL_ANGLE_PSI,psi,found[0]);
-        (*docfile).getValue(MDL_SHIFT_X,xoff,found[0]);
-        (*docfile).getValue(MDL_SHIFT_Y,yoff,found[0]);
-        flip=0;
-        weight=0;
-        (*docfile).getValue(MDL_FLIP,flip,found[0]);
-        (*docfile).getValue(MDL_WEIGHT,weight,found[0]);
-    }
-    else
-        REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
-}
-
 void * ProgRecFourier::processImageThread( void * threadArgs )
 {
 

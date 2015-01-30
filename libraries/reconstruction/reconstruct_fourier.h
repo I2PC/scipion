@@ -201,10 +201,6 @@ public:
     /// Produce side info: fill arrays with relevant transformation matrices
     void produceSideinfo();
 
-    /// Get angles (either from reading the header or from a docfile)
-    void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
-                              double &psi, double &xoff, double &yoff, bool &flip, double &weight, MetaData * docFile);
-
     void finishComputations( const FileName &out_name );
 
     /// Process one image
