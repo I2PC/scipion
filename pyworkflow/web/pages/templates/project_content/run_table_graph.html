@@ -1,8 +1,8 @@
 
 <script type="text/javascript">
 	$(function() {
-		{% if graphView %}
-			switchGraph();
+		{% if runsView == 1 %}
+			switchMode(1);
 		{% endif %}
 		
 		preloadToolbar({{selectedRuns}});
@@ -48,6 +48,12 @@
 		data-time="first" data-project="{{projectName}}" data-option="">
 		<!-- data-option: Used to remove the last highlighted node. -->
 	</div>
+	
+	<div id="graphSmallActiv" style="display:none;" data-mode="inactive"
+		data-time="first" data-project="{{projectName}}" data-option="">
+		<!-- data-option: Used to remove the last highlighted node. -->
+	</div>
+	
 </div>
 
 

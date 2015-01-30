@@ -661,52 +661,52 @@ function updateButtons(id, mode) {
 
 	switch (mode) {
 
-	case "single":
-
-		// Action Edit Button
-		$("a#editTool").attr('href',
-				'javascript:popup("/form/?protocolId=' + id + '")');
-		$("span#editTool").show();
-
-		// Action Copy Button
-		$("a#copyTool").attr(
-				'href',
-				'javascript:popup("/form/?protocolId=' + id + '&action=copy'
-						+ '")');
-		$("span#copyTool").show();
-
-		// Action Delete Button
-		$("a#deleteTool").attr('href',
-				'javascript:deleteProtocolForm("' + id + '","single")');
-		$("span#deleteTool").show();
-
-		// Action Browse Button
-		var aux = "javascript:alert('Not implemented yet')";
-		$("a#browseTool").attr('href', aux);
-		$("span#browseTool").show();
-
-		break;
-
-	case "multiple":
-
-		// Action Edit Button
-		$("a#editTool").attr('href', '#');
-		$("span#editTool").hide();
-
-		// Action Copy Button
-		$("a#copyTool").attr('href', 'javascript:copyProtocol("' + id + '")');
-		$("span#copyTool").show();
-
-		// Action Delete Button
-		$("a#deleteTool").attr('href',
-				'javascript:deleteProtocolForm("' + id + '","multiple")');
-		$("span#deleteTool").show();
-
-		// Action Browse Button
-		$("a#browseTool").attr('href', '#');
-		$("span#browseTool").hide();
-
-		break;
+		case "single":
+	
+			// Action Edit Button
+			$("a#editTool").attr('href',
+					'javascript:popup("/form/?protocolId=' + id + '")');
+			$("span#editTool").show();
+	
+			// Action Copy Button
+			$("a#copyTool").attr(
+					'href',
+					'javascript:popup("/form/?protocolId=' + id + '&action=copy'
+							+ '")');
+			$("span#copyTool").show();
+	
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+					'javascript:deleteProtocolForm("' + id + '","single")');
+			$("span#deleteTool").show();
+	
+			// Action Browse Button
+			var aux = "javascript:alert('Not implemented yet')";
+			$("a#browseTool").attr('href', aux);
+			$("span#browseTool").show();
+	
+			break;
+	
+		case "multiple":
+	
+			// Action Edit Button
+			$("a#editTool").attr('href', '#');
+			$("span#editTool").hide();
+	
+			// Action Copy Button
+			$("a#copyTool").attr('href', 'javascript:copyProtocol("' + id + '")');
+			$("span#copyTool").show();
+	
+			// Action Delete Button
+			$("a#deleteTool").attr('href',
+					'javascript:deleteProtocolForm("' + id + '","multiple")');
+			$("span#deleteTool").show();
+	
+			// Action Browse Button
+			$("a#browseTool").attr('href', '#');
+			$("span#browseTool").hide();
+	
+			break;
 
 	}
 	// Show toolbar
@@ -747,85 +747,94 @@ function updateTree(id, elm, row) {
 	}
 }
 
-function graphON(graph, icon_graph, list, icon_list) {
-	/*
-	 * Function to disable the list view and enable the tree graph view.
-	 */
-
-	// Graph ON
-	graph.attr("data-mode", "active");
-	graph.show();
-	icon_graph.hide();
-
-	// Table OFF
-	list.attr("data-mode", "inactive");
-	list.hide();
-	icon_list.show();
-
-	// Update Graph View
-	updateGraphView("1");
-}
-
-function graphOFF(graph, icon_graph, list, icon_list) {
-	/*
-	 * Function to disable the tree graph view and enable the list view.
-	 */
-
-	// Table ON
-	list.attr("data-mode", "active");
-	list.show();
-	icon_list.hide();
-
-	// Graph OFF
-	graph.attr("data-mode", "inactive");
-	graph.hide();
-	icon_graph.show();
-
-	// Update Graph View
-	updateGraphView("0")
-}
-
-function changeStatusGraph(status, graph, graphTool, list, listTool) {
-	/*
-	 * Function to switch between the graph/list view depending on the status.
-	 */
-	if (status == 'inactive') {
-		// Graph ON & Table OFF
-		graphON(graph, graphTool, list, listTool);
-	} else if (status == 'active') {
-		// Table ON & Graph OFF
-		graphOFF(graph, graphTool, list, listTool);
+function switchView(state, elm, tool){
+	if (state){
+		elm.attr("data-mode", "active");
+		elm.show();
+		tool.hide();
+	} else{
+		elm.attr("data-mode", "inactive");
+		elm.hide();
+		tool.show();
 	}
 }
 
-function switchGraph() {
+function changeStatusGraph(mode, param) {
 	/*
-	 * Main function called to change between graph tree/list views.
+	 * Function to switch between the graph/list/small view depending on the status.
 	 */
 
-	// graph status (active or inactive)
-	var status = $("div#graphActiv").attr("data-mode");
+	graph = param['graph'];
+	graphTool = param['graphTool'];
+	list = param['list'];
+	listTool = param['listTool'];
+	smallGraph = param['smallGraph'];
+	smallGraphTool = param['smallGraphTool'];
+
+	if (mode == 1) {
+		switchView(true, graph, graphTool)
+		switchView(false, list, listTool)
+		switchView(false, smallGraph, smallGraphTool)
+		updateGraphView("1");
+	} else if (mode == 0) {
+		switchView(false, graph, graphTool)
+		switchView(true, list, listTool)
+		switchView(false, smallGraph, smallGraphTool)
+		updateGraphView("0");
+	} else if (mode == 2) {
+		switchView(false, graph, graphTool)
+		switchView(false, list, listTool)
+		switchView(true, smallGraph, smallGraphTool)
+		updateGraphView("2");
+	}
+}
+
+function switchMode(mode) {
+	/*
+	 * Main function called to change between graph tree/list/small views.
+	 */
 
 	// element marked obtained from value in the toolbar
 	var id = $("div#toolbar").attr("value");
-
+	
 	// get row elements
 	var graph = $("div#graphActiv");
 	var graphTool = $("span#treeTool");
 	var list = $("div#runTable");
 	var listTool = $("span#listTool");
+	var smallGraph = $("div#graphSmallActiv");
+	var smallGraphTool = $("span#treeSmallTool");
 
-	changeStatusGraph(status, graph, graphTool, list, listTool);
+	// create dictionary of elements
+	var param = {};
+	param['graph'] = graph;
+	param['graphTool'] = graphTool; 
+	param['list'] = list;
+	param['listTool'] = listTool;
+	param['smallGraph'] = smallGraph;
+	param['smallGraphTool'] = smallGraphTool ;
+	
+	changeStatusGraph(mode, param);
 
 	// Graph will be painted once
 	if (graph.attr("data-time") == 'first') {
 		callPaintGraph();
 		graph.attr("data-time", "not");
 	}
+	
+	if (smallGraph.attr("data-time") == 'first') {
+//		callPaintSmallGraph();
+		smallGraph.attr("data-time", "not");
+	}
 
 	// Keep the consistency about the selected elements between
 	// the list and graph views.
-	transposeElmMarked(status);
+	if (mode == 1){
+		transposeElmMarked("active");
+	}
+	else {
+		transposeElmMarked("inactive");
+	}
 
 }
 

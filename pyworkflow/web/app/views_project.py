@@ -103,12 +103,13 @@ def update_prot_tree(request):
 
 
 def update_graph_view(request):
-    status = request.GET.get('status', 1)
+    status = request.GET.get('status', None)
     projectName = request.session['projectName']
     project = loadProject(projectName)
     project_settings = project.getSettings()
 
-    project_settings.runsView.set(status)    
+    project_settings.runsView.set(int(status))
+    
     project_settings.write()
     return HttpResponse(mimetype='application/javascript')
 
@@ -168,13 +169,13 @@ def run_table_graph(request):
             
             # Get the selected runs stored in BD    
             selectedRuns = project_settings.runSelection
-    
-            # Get the mode view (list or graph) stored in BD
+            
+            # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
             runsView = project_settings.runsView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
-                       'runsView': runsView, 
+                       'runsView': runsView,
                        'selectedRuns' : selectedRuns}
             
             return render_to_response('project_content/run_table_graph.html', context)
@@ -251,9 +252,9 @@ def contentContext(request, projectName):
     # Get the selected runs stored in BD    
     selectedRuns = project_settings.runSelection
 
-    # Get the mode view (list or graph) stored in BD
+    # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
     runsView = project_settings.runsView.get()
-    
+        
     # load the protocol tree current active
     htmlTree = loadProtTree(project)
     
@@ -406,6 +407,7 @@ def create_service_project(request):
         customMenu = os.path.join(os.environ['HOME'], '.config/scipion/menu_initvolume.conf')
         writeCustomMenu(customMenu)
         confs = {'protocols': customMenu}
+        
         project = manager.createProject(projectName, confs, runsView=1)   
         
         # 1. Import averages

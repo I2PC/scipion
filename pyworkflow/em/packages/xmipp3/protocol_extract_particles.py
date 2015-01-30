@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 """
 
 from glob import glob
-from os.path import exists
+from os.path import exists, basename
 
 import xmipp
 from pyworkflow.object import String, Float
@@ -162,7 +162,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
-        """       
+        """
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
         
@@ -297,6 +297,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
                 md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 md.write(selfile)
+        else:
+            self.warning(" The micrograph %s hasn't coordinate file! Maybe you picked over a subset of micrographs" % micName)
                 
     def runNormalize(self, stack, normType, bgRadius):
         program = "xmipp_transform_normalize"
@@ -324,14 +326,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
-            md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData('particles@%s' % posFn)
-            mdPos.merge(md) 
-            #imgSet.appendFromMd(mdPos)
-            imgsXmd.unionAll(mdPos)
-   
-        #TODO: CHECK WITH JAVI
-        #imgsXmd.sort(xmipp.MDL_IMAGE)
+            if exists(xmdFn):
+                md = xmipp.MetaData(xmdFn)
+                mdPos = xmipp.MetaData('particles@%s' % posFn)
+                mdPos.merge(md) 
+                #imgSet.appendFromMd(mdPos)
+                imgsXmd.unionAll(mdPos)
+            else:
+                self.warning("The coord file %s wasn't used to extract! Maybe you are extracting over a subset of micrographs" % basename(posFn))
         imgsXmd.write(fnImages)
 
         # IF selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
