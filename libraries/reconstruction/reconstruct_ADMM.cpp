@@ -25,14 +25,16 @@
  ***************************************************************************/
 
 /* TODO:
- * - Mirrors
  * - Default parameters
- * - Multiresolution
  * - Parallelization
+ * - Symmetrize HtKH and Htb
  */
 
 #include "reconstruct_ADMM.h"
+#include "symmetrize.h"
 #include <data/metadata_extension.h>
+
+#define SYMMETRIZE_PROJECTIONS
 
 void ProgReconsADMM::defineParams()
 {
@@ -40,6 +42,7 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" -i <metadata>: Input metadata with images and angles");
     addParamsLine(" [--oroot <root=reconstruct_admm>]: Rootname for output files");
     addParamsLine(" [--Htb <volume=\"\">]: Filename of the Htb volume");
+    addParamsLine(" [--HtKH <volume=\"\">]: Filename of the HtKH volume");
     addParamsLine(" [--firstVolume <volume=\"\">]: Filename of the first initial guess");
     addParamsLine(" [--kernel <shape=KaiserBessel>]: Kernel shape");
     addParamsLine("    where <shape>");
@@ -57,6 +60,7 @@ void ProgReconsADMM::defineParams()
     addParamsLine(" [--admmiter <N=30>]: ADMM iterations");
     addParamsLine(" [--positivity]: Positivity constraint");
     addParamsLine(" [--sym <s=c1>]: Symmetry constraint");
+    addParamsLine(" [--saveIntermediate]: Save Htb and HtKH volumes for posterior calls");
 
     mask.defineParams(this,INT_MASK);
 }
@@ -67,6 +71,7 @@ void ProgReconsADMM::readParams()
 	fnRoot=getParam("--oroot");
 	fnFirst=getParam("--firstVolume");
 	fnHtb=getParam("--Htb");
+	fnHtKH=getParam("--HtKH");
 	kernelShape=getParam("--kernel");
 	if (kernelShape=="KaiserBessel")
 	{
@@ -84,6 +89,7 @@ void ProgReconsADMM::readParams()
 	Ncgiter=getIntParam("--cgiter");
 	Nadmmiter=getIntParam("--admmiter");
 	positivity=checkParam("--positivity");
+	saveIntermediate=checkParam("--saveIntermediate");
 
 	applyMask=checkParam("--mask");
 	if (applyMask)
@@ -97,6 +103,7 @@ void ProgReconsADMM::produceSideInfo()
 	mdIn.read(fnIn);
 
 	// Symmetrize input images
+#ifdef SYMMETRIZE_PROJECTIONS
 	Matrix2D<double> Lsym(3,3), Rsym(3,3);
 	MetaData mdSym;
 	MDRow row;
@@ -120,6 +127,7 @@ void ProgReconsADMM::produceSideInfo()
 	}
 	mdIn=mdSym;
 	mdSym.clear();
+#endif
 
 	// Prepare kernel
 	if (kernelShape=="KaiserBessel")
@@ -136,8 +144,8 @@ void ProgReconsADMM::produceSideInfo()
 	}
 
 	// Adjust regularization weights
-	double Nimgs=mdIn.size();
-	double CHtb_norm=sqrt(CHtb().sum2()/MULTIDIM_SIZE(CHtb()));
+	//double Nimgs=mdIn.size();
+	//double CHtb_norm=sqrt(CHtb().sum2()/MULTIDIM_SIZE(CHtb()));
 	//COSS mu*=Nimgs/XSIZE(CHtb())*CHtb_norm;
 	//COSS lambda*=Nimgs/XSIZE(CHtb())*CHtb_norm;
 	//COSS lambda1*=Nimgs/XSIZE(CHtb());
@@ -152,7 +160,18 @@ void ProgReconsADMM::produceSideInfo()
 	}
 
 	// Compute H'*K*H+mu*L^T*L+lambda_1 I
-	computeHtKH();
+	Image<double> kernelV;
+	if (fnHtKH=="")
+		computeHtKH(kernelV());
+	else
+	{
+		kernelV.read(fnHtKH);
+		kernelV().setXmippOrigin();
+	}
+	FourierTransformer transformer;
+	transformer.FourierTransform(kernelV(),fourierKernelV,true);
+
+	// Add regularization in Fourier space
 	addRegularizationTerms();
 
 	// Resize u and d volumes
@@ -165,7 +184,6 @@ void ProgReconsADMM::produceSideInfo()
 	dz=ux;
 
 	// Prepare Lt filters
-	FourierTransformer transformer;
 	MultidimArray<double> L;
 	L.resize(ux);
 	kernel.computeGradient(L,'x');
@@ -239,7 +257,15 @@ void ProgReconsADMM::constructHtb()
 			progress_bar(i);
 	}
 	progress_bar(mdIn.size());
-	CHtb.write(fnRoot+"_Htb.vol");
+
+	// Symmetrize Htb
+#ifndef SYMMETRIZE_PROJECTIONS
+	MultidimArray<double> CHtbsym;
+	symmetrizeVolume(SL, CHtb(), CHtbsym, false, false, true);
+	CHtb=CHtbsym;
+#endif
+	if (saveIntermediate)
+		CHtb.write(fnRoot+"_Htb.vol");
 }
 
 void ProgReconsADMM::project(double rot, double tilt, double psi, MultidimArray<double> &P, bool adjoint, double weight)
@@ -317,9 +343,8 @@ void ProgReconsADMM::project(const Matrix1D<double> &r1, const Matrix1D<double> 
     }
 }
 
-void ProgReconsADMM::computeHtKH()
+void ProgReconsADMM::computeHtKH(MultidimArray<double> &kernelV)
 {
-	MultidimArray<double> kernelV;
 	kernelV.initZeros(2*ZSIZE(CHtb())-1,2*YSIZE(CHtb())-1,2*XSIZE(CHtb())-1);
 	kernelV.setXmippOrigin();
 
@@ -379,8 +404,14 @@ void ProgReconsADMM::computeHtKH()
 	}
 	progress_bar(mdIn.size());
 
-	FourierTransformer transformer;
-	transformer.FourierTransform(kernelV,fourierKernelV,true);
+#ifndef SYMMETRIZE_PROJECTIONS
+	MultidimArray<double> kernelVsym;
+	symmetrizeVolume(SL, kernelV, kernelVsym, false, false, true);
+	kernelV=kernelVsym;
+#endif
+
+	if (saveIntermediate)
+		kernelV.write(fnRoot+"_HtKH.vol");
 }
 
 void addGradientTerm(double mu, AdmmKernel &kernel, MultidimArray<double> &L, FourierTransformer &transformer,

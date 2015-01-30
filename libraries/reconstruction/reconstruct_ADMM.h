@@ -72,7 +72,8 @@ public:
 	FileName fnIn; // Set of input images
 	FileName fnRoot; // Rootname for output files
 	FileName fnFirst; // First reconstruction filename
-	FileName fnHtb; // Htb reconstruction filename
+	FileName fnHtb; // Htb filename
+	FileName fnHtKH; // HtKH filename
 	String kernelShape;
 	double a;     // Kaiser-Bessel maximum radius
 	double alpha; // Kaiser-Bessel shape
@@ -91,6 +92,7 @@ public:
 	double Ts; // Sampling rate
 	Mask mask; // Mask
 	String symmetry;
+	bool saveIntermediate;
 public:
     void defineParams();
     void readParams();
@@ -112,7 +114,7 @@ public:
     /** Compute H^t*K*H.
      * H is the projection operator, K is the CTF operator
      */
-    void computeHtKH();
+    void computeHtKH(MultidimArray<double> &kernelV);
 
     /** Add regularization to the kernel */
     void addRegularizationTerms();
