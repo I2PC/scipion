@@ -10,6 +10,8 @@ import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import javax.swing.JPanel;
 
 /**
@@ -31,6 +33,7 @@ public class ImageJPanel extends JPanel{
     public Dimension getPreferredSize()
     {
         return new Dimension(width, height);
+        
     }
 
     @Override
@@ -49,5 +52,7 @@ public class ImageJPanel extends JPanel{
         repaint();
         
     }
+
+    
 
 }
