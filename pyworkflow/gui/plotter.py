@@ -52,53 +52,62 @@ class Plotter(View):
             dpi: resolution, 100 by default.
             windowTitle: title for the whole windows.
         """
-        self.fontsize = fontsize
-        self.tightLayoutOn = True
-        
-        if self.plt is None:
-            if self.interactive:
-                self.backend = 'TkAgg'
-            else:
-                self.backend = 'Agg'
+        figure = kwargs.get('figure', None)
+        if figure is None:
+            self.fontsize = fontsize
+            self.tightLayoutOn = True
+            
+            if self.plt is None:
+                if self.interactive:
+                    self.backend = 'TkAgg'
+                else:
+                    self.backend = 'Agg'
+                import matplotlib.pyplot as plt
+                plt.switch_backend(self.backend)
+                self.plt = plt
+                if self.interactive:
+                    plt.ion()
+           
+               
+            if figsize is None: # Set some defaults values
+                if x == 1 and y == 1:
+                    figsize = (6, 5)
+                elif x == 1 and y == 2:
+                    figsize = (4, 6)
+                elif x == 2 and y == 1:
+                    figsize = (6, 4)
+                else:
+                    figsize = (8, 6)
+            
+            # Create grid
+            import matplotlib.gridspec as gridspec
+            from matplotlib.figure import Figure
+            self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
+            self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
+            self.gridx = x
+            self.gridy = y
+            self.figure = plt.figure(figsize=figsize, dpi=dpi)
+            #self.figure = Figure(figsize=figsize, dpi=dpi)
+            #self.mainTitle = mainTitle
+            #self.windowTitle = windowTitle
+            if (mainTitle):
+                self.figure.suptitle(mainTitle, fontsize=fontsize + 4)
+            if (windowTitle):
+                self.figure.canvas.set_window_title(windowTitle) 
+            self.plot_count = 0
+            self.last_subplot = None
+            self.plot_title_fontsize = fontsize + 4
+            self.plot_axis_fontsize  = fontsize + 2
+            self.plot_text_fontsize  = fontsize
+            self.plot_yformat = '%1.2e'
+        else:
+            self.figure = figure
+            self.tightLayoutOn = False
+            self.plot_count = 0
+            self.backend = 'Agg'
             import matplotlib.pyplot as plt
             plt.switch_backend(self.backend)
-            self.plt = plt
-            if self.interactive:
-                plt.ion()
-       
-           
-        if figsize is None: # Set some defaults values
-            if x == 1 and y == 1:
-                figsize = (6, 5)
-            elif x == 1 and y == 2:
-                figsize = (4, 6)
-            elif x == 2 and y == 1:
-                figsize = (6, 4)
-            else:
-                figsize = (8, 6)
-        
-        # Create grid
-        import matplotlib.gridspec as gridspec
-        from matplotlib.figure import Figure
-        self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
-        self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
-        self.gridx = x
-        self.gridy = y
-        self.figure = plt.figure(figsize=figsize, dpi=dpi)
-        #self.figure = Figure(figsize=figsize, dpi=dpi)
-        #self.mainTitle = mainTitle
-        #self.windowTitle = windowTitle
-        if (mainTitle):
-            self.figure.suptitle(mainTitle, fontsize=fontsize + 4)
-        if (windowTitle):
-            self.figure.canvas.set_window_title(windowTitle) 
-        self.plot_count = 0
-        self.last_subplot = None
-        self.plot_title_fontsize = fontsize + 4
-        self.plot_axis_fontsize  = fontsize + 2
-        self.plot_text_fontsize  = fontsize
-        self.plot_yformat = '%1.2e'
-
+            
     def activate(self):
         """ Activate this figure. """
         self.plt.figure(self.figure.number)
