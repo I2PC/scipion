@@ -143,7 +143,7 @@ def main():
         sys.exit(0)
 
     # If we get here, we did not use the right arguments. Show a little help.
-    parser.print_usage()
+    get_parser().print_usage()
 
 
 def get_parser():
@@ -417,10 +417,9 @@ def createMANIFEST(path):
 
     with open(join(path, 'MANIFEST'), 'w') as manifest:
         for root, dirs, files in os.walk(path):
-            for filename in files:
-                if filename != 'MANIFEST':  # do not include ourselves
-                    fn = join(root, filename)  # file to check
-                    manifest.write('%s %s\n' % (relpath(fn, path), md5sum(fn)))
+            for filename in set(files) - {'MANIFEST'}:  # all but ourselves
+                fn = join(root, filename)  # file to check
+                manifest.write('%s %s\n' % (relpath(fn, path), md5sum(fn)))
 
 
 def md5sum(fname):
