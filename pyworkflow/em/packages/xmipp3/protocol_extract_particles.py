@@ -207,7 +207,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
                 downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
-                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals())]
+                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
