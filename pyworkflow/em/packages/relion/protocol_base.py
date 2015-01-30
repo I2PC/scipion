@@ -218,10 +218,9 @@ class ProtRelionBase(EMProtocol):
                            'are not multiplied by the CTFs.')        
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
-                      condition='not is2D',
                       help='Set this to Yes the CTFs will grouping manually.')
         form.addParam('numberOfGroups', IntParam, default=200,
-                      label='Number of ctf groups', condition='doCtfManualGroups and not is2D',
+                      label='Number of ctf groups', condition='doCtfManualGroups',
                       help='Number of ctf groups that will be create')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
