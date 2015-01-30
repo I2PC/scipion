@@ -11,6 +11,7 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
+import ij.process.FloatProcessor;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -29,15 +30,16 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import xmipp.jni.ImageGeneric;
-import xmipp.utils.XmippWindowUtil;
 import xmipp.utils.ScipionParams;
+import xmipp.utils.XmippWindowUtil;
 
 /**
  *
  * @author airen
  */
-public class MaskJFrame extends JFrame implements ActionListener{
+public class DesignMaskJFrame extends JFrame implements ActionListener{
     protected ImagePlus mask;
     private ImageJPanel imagepn;
     private JButton registerbt;
@@ -49,7 +51,7 @@ public class MaskJFrame extends JFrame implements ActionListener{
     private JCheckBox smoothbt;
     private JFormattedTextField smoothtf;
     
-    public MaskJFrame(XmippImageWindow iw)
+    public DesignMaskJFrame(XmippImageWindow iw)
     {
         this.iw = iw;
         createMask();
@@ -129,7 +131,7 @@ public class MaskJFrame extends JFrame implements ActionListener{
             System.out.println(output);
             } catch (Exception ex) {
                 ex.printStackTrace();
-                Logger.getLogger(MaskJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DesignMaskJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
     }
     
@@ -152,17 +154,16 @@ public class MaskJFrame extends JFrame implements ActionListener{
                     mask.getProcessor().setColor(Color.WHITE);
                     mask.getProcessor().fill(roi);
                     if(isInvert())
-                    {
-                        mask.setRoi((Roi) null); // ...clears selection...
                         mask.getProcessor().invert();
-                        mask.setRoi(roi);   // ...to restore it later.
-                    }
                     if(isSmooth())
                         mask.getProcessor().blurGaussian(((Number) smoothtf.getValue()).intValue());
                     
                     
                 } else 
                     createDefaultMask();
+               
+                mask.getProcessor().multiply(1/mask.getProcessor().getMax());
+                mask.getProcessor().setMinAndMax(0, 1);
                 mask.updateAndDraw();    
                 
             } else {
@@ -194,7 +195,7 @@ public class MaskJFrame extends JFrame implements ActionListener{
     
     protected void createDefaultMask()
     {
-        ByteProcessor processor = new ByteProcessor(imp.getWidth(), imp.getHeight());
+        FloatProcessor processor = new FloatProcessor(imp.getWidth(), imp.getHeight());
         mask = new ImagePlus("Mask", processor);
             
 
