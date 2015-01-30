@@ -578,7 +578,7 @@ def splitInCTFGroups(imgStar, groups):
             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
         else:
             if part < 100:
-                increment = mdAll.getValue(md.MDL_CTF_DEFOCUSU, objId) - minDef
+                increment = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) - minDef
                 part = part + 1
                 mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
             else:
