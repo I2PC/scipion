@@ -242,7 +242,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
         # TODO: Delete temporary files
-        self._insertFunctionStep('removeTmpFiles', tmpDir = self._getTmpPath())
+        self._insertFunctionStep('removeTmpFiles', tmpDir = self._getTmpPath(), prerequisites=localDeps)
 
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
