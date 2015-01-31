@@ -239,11 +239,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName,
                                                  fnCTF, micrographToExtract, prerequisites=localDeps))
-        # TODO: Delete temporary files
-                        
-        # Insert step to create output objects      
+        # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-                
+        # TODO: Delete temporary files
+        self._insertFunctionStep('removeTmpFiles', tmpDir = self._getTmpPath())
+
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph on metadata format. """
@@ -491,3 +491,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return self.outputParticles
         else:
             return None
+
+    #TODO: Move this function to a utilities file?
+    def removeTmpFiles(self, tmpDir):
+        """Remove files but keep directory"""
+        from os import unlink, walk
+        from os.path import join
+        from shutil import  rmtree
+
+        for root, dirs, files in walk(tmpDir):
+            for f in files:
+                unlink(join(root, f))
+            for d in dirs:
+                rmtree(join(root, d))
