@@ -50,7 +50,8 @@ import pyworkflow.em.metadata as md
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
-       ("_voltage", md.RLN_CTF_VOLTAGE)
+       ("_voltage", md.RLN_CTF_VOLTAGE),
+        ("_magnification", md.RLN_CTF_MAGNIFICATION)
        ])
 
 COOR_DICT = OrderedDict([

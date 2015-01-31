@@ -406,7 +406,8 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
             tarfiles = tarfile.open(tars[x]).getmembers() 
             sources += [Entry(join(dirs[x], tarred.name)).abspath for tarred in tarfiles if fnmatch.fnmatch(tarred.name, p)]
         else:
-            sources += glob(join(dirs[x], patterns[x]))
+            #sources = deps
+            sources += [Entry(join(dirs[x], untarTargets[x])).abspath]
     if tarExists:
         Depends(sources, untars)
     else:
@@ -429,10 +430,10 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
 
-    
     #print env2.Dump()
     library = env2.SharedLibrary(
               target=join(basedir, fullname),
+              #source=Entry(sources).abspath,
               source=sources,
               CPPPATH=incs + [env['CPPPATH']] + [Dir('#software/include').abspath],
               LIBPATH=libpath,
@@ -442,7 +443,7 @@ def addPackageLibrary(env, name, dirs=None, tars=None, untarTargets=None, patter
               **mpiArgs
               )
     SideEffect('dummy', library)
-    Depends(library, sources)
+    env.Depends(library, sources)
     
     if installDir:
         install = env.Install(installDir, library)
@@ -520,10 +521,10 @@ def addJavaLibrary(env, name, jar=None, dirs=None, patterns=None, installDir=Non
     
     env2 = Environment()
     env2['ENV']['PATH'] = env['ENV']['PATH']
-    env2['ENV']['JAVA_ROOT'] = env['ENV']['JAVA_ROOT']
-    env2['ENV']['JAVA_HOME'] = env['ENV']['JAVA_HOME']
-    env2['ENV']['JAVA_HOME'] = env['ENV']['JAVA_BINDIR']
-    env2['ENV']['JRE_HOME'] = env['ENV']['JRE_HOME']
+    env2['ENV']['JAVA_ROOT'] = env['ENV'].get('JAVA_ROOT', '')
+    env2['ENV']['JAVA_HOME'] = env['ENV'].get('JAVA_HOME', '')
+    env2['ENV']['JAVA_HOME'] = env['ENV'].get('JAVA_BINDIR', '')
+    env2['ENV']['JRE_HOME'] = env['ENV'].get('JRE_HOME', '')
     env2.AppendUnique(JAVACLASSPATH=":".join(glob(join(Dir(installDir).abspath,'*.jar'))))
     env2.AppendUnique(JAVASOURCEPATH=Dir(sourcePath).abspath)
 
@@ -845,11 +846,12 @@ def addPackage(env, name, tar=None, buildDir=None, url=None, neededProgs=[],
                    cdir=Dir('#software/em').abspath)
     SideEffect('dummy', tUntar)  # so it works fine in parallel builds
     Clean(tUntar, Dir('#software/em/%s' % buildDir))
+    Clean(tUntar, Dir('#software/em/%s' % name))
     if packageHome != 'unset':
         symLink(env, Dir('#software/em/%s' % name).abspath, Dir(packageHome).abspath)
     if buildDir != name and packageHome == 'unset':
         tLink = env.Command(
-            Dir('#software/em/%s/bin2').abspath % name,  # TODO: find smtg better than "/bin"
+            Dir('#software/em/%s/bin').abspath % name,  # TODO: find smtg better than "/bin"
             Dir('#software/em/%s/bin' % buildDir),
             Action('rm -rf %s && ln -v -s %s %s' % (name, buildDir, name),
                    'Linking package %s to software/em/%s' % (name, name),

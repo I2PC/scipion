@@ -55,6 +55,10 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
               label='Movie particles refine run',
               help='Select the Relion 3D auto-refine run where \n'
                    'the movie particles where refined.')
+        form.addParam('maskRadius', IntParam, default=100,
+                      label='Particle mask RADIUS (px)',
+                      help='Radius of the circular mask that will be used '
+                           'to define the background area.') 
 
         group = form.addGroup('Movement')
         group.addParam('linerFitParticleMovements', BooleanParam, default=True,
@@ -118,21 +122,25 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         #--white_dust -1 --black_dust -1
         
         params = ' --i %s' % imgStar
-        params += ' --o %s' % 'shiny'
+        params += ' --o %s' % self._getExtraPath('shiny')
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
-        params += ' --movie_frames_running_avg %f' % refineRun.movieAvgWindow.get()
+        params += ' --movie_frames_running_avg %d' % refineRun.movieAvgWindow.get()
         params += ' --dont_read_old_files'
         params += ' --sym %s' % self.symmetryGroup.get()
-        params += ' --sigma_nb %0.3f' % self.stddevParticleDistance.get()
+        params += ' --sigma_nb %d' % self.stddevParticleDistance.get()
         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
         params += ' --autob_lowres %0.3f' % self.lowresLimitBfactorEstimation.get()
-#         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
+        
+        x, _, _ = imgSet.getDimensions()
+        if self.maskRadius.get() >= x/2 or self.maskRadius.get() < 0:
+            params += ' --bg_radius %d' % (x/2)
+        else:
+            params += ' --bg_radius %d' % self.maskRadius.get()
+        
         if self.performBfactorWeighting:
             params += ' --mask %s' % self.maskForReconstructions.get().getFileName()
         else:
             params += ' --skip_bfactor_weighting'
-            if '--bg_radius' not in self.extraParams.get():
-                params += ' --bg_radius -1'
         params += ' ' + self.extraParams.get()
         
         self._insertFunctionStep('polishStep', params)
