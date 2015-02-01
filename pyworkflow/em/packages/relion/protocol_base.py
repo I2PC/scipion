@@ -219,9 +219,19 @@ class ProtRelionBase(EMProtocol):
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
                       help='Set this to Yes the CTFs will grouping manually.')
-        form.addParam('numberOfGroups', IntParam, default=200,
-                      label='Number of ctf groups', condition='doCtfManualGroups',
-                      help='Number of ctf groups that will be create')
+        #, defocusRange=1000, numParticles=1
+        # form.addParam('numberOfGroups', IntParam, default=200,
+        #               label='Number of ctf groups', condition='doCtfManualGroups',
+        #               help='Number of ctf groups that will be create')
+        form.addParam('defocusRange', FloatParam, default=1000,
+                      label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups',
+                      help='Particles will be grouped by defocus.'
+                      'This parameter is the bin for an histogram.'
+                      'All particles asigned to a bin form a group')
+        form.addParam('numParticles', FloatParam, default=1,
+                      label='minimum size for defocus group', condition='doCtfManualGroups',
+                      help='If defocus group is smaller than this value'
+                      'It will be expanded untill numParticles per defocus group is reached')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
                       label='Ignore CTFs until first peak?',
@@ -673,7 +683,9 @@ class ProtRelionBase(EMProtocol):
     def _splitInCTFGroups(self, imgStar):
         """ Add a new colunm in the image star to separate the particles into ctf groups """
         from convert import splitInCTFGroups
-        splitInCTFGroups(imgStar, self.numberOfGroups.get())
+        splitInCTFGroups(imgStar
+                         , self.defocusRange.get()
+                         , self.numParticles.get())
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()

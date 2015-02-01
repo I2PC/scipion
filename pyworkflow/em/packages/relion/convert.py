@@ -244,8 +244,7 @@ def rowToCtfModel(ctfRow):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    from numpy import rad2deg
-    
+
     if inverseTransform:
         from numpy.linalg import inv
         matrix = inv(matrix)
@@ -557,38 +556,53 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
             
     
     
-def splitInCTFGroups(imgStar, groups):
+def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
-    defocus = [mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) for objId in mdAll]
-    
-    minDef = min(defocus)
-    maxDef = max(defocus)
-    
-    increment = (maxDef - minDef) / groups
-    counter = 1
-    part = 1
     mdAll.sort(md.RLN_CTF_DEFOCUSU)
-    
+
+    focusGroup = 1
+    counter=0
+    oldDefocusU = mdAll.getValue(md.RLN_CTF_DEFOCUSU, mdAll.firstObject())
+    groupName = '%s_%06d_%05d'%('ctfgroup',oldDefocusU,focusGroup)
     for objId in mdAll:
-        partDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-        currDef = minDef + increment
-        
-        if partDef <= currDef:
-            part = part + 1
-            mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
+        counter = counter + 1
+        defocusU = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
+        if counter < numParticles:
+            pass
         else:
-            if part < 100:
-                increment = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) - minDef
-                part = part + 1
-                mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-            else:
-                part = 1
-                minDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-                counter = counter + 1
-                increment = (maxDef - minDef) / (groups - counter)
-                mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
+            if (defocusU - oldDefocusU) > defocusRange:
+                focusGroup = focusGroup + 1
+                oldDefocusU = defocusU
+                groupName = '%s_%06d_%05d'%('ctfgroup',oldDefocusU,focusGroup)
+                counter=0
+        mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME,groupName,objId)
+
     mdAll.write(imgStar)
+    mdCount = md.MetaData()
+    mdCount.aggregate(md, md.AGGR_COUNT, md.MDL_SERIE, md.MDL_SERIE, md.MDL_COUNT)
+    print "number of particles per group: ", mdCount
+
+
+    # for objId in mdAll:
+    #     partDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
+    #     currDef = minDef + increment
+    #
+    #     if partDef <= currDef:
+    #         part = part + 1
+    #         mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
+    #     else:
+    #         if part < 100:
+    #             increment = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) - minDef
+    #             part = part + 1
+    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
+    #         else:
+    #             part = 1
+    #             minDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
+    #             counter = counter + 1
+    #             increment = (maxDef - minDef) / (groups - counter)
+    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
+    # mdAll.write(imgStar)
     
         
 def prependToFileName(imgRow, prefixPath):
