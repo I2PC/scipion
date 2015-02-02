@@ -241,8 +241,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                                                  fnCTF, micrographToExtract, prerequisites=localDeps))
         # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-        # TODO: Delete temporary files
-        self._insertFunctionStep('removeTmpFiles', tmpDir = self._getTmpPath(), prerequisites=deps)
 
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
@@ -492,15 +490,3 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             return None
 
-    #TODO: Move this function to a utilities file?
-    def removeTmpFiles(self, tmpDir):
-        """Remove files but keep directory"""
-        from os import unlink, walk
-        from os.path import join
-        from shutil import  rmtree
-
-        for root, dirs, files in walk(tmpDir):
-            for f in files:
-                unlink(join(root, f))
-            for d in dirs:
-                rmtree(join(root, d))

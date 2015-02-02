@@ -36,8 +36,8 @@ import time
 from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr
-from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath,
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn
+from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
@@ -839,6 +839,10 @@ class Protocol(Step):
             self.__deleteOutputs()
         # Create workingDir, extra and tmp paths
         makePath(*paths)
+        
+    def cleanTmp(self):
+        """ Delete all files and subdirectories under Tmp folder. """
+        cleanPattern(self._getTmpPath('*'))
     
     def _run(self):
         # Check that a proper Steps executor have been set
@@ -903,6 +907,13 @@ class Protocol(Step):
     def _endRun(self):
         """ Print some ending message and close some files. """   
         self._store()
+        
+        if envVarOn('SCIPION_DEBUG_NOCLEAN'):
+            self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
+        else:
+            self.info('Cleaning temporarly files....')
+            self.cleanTmp()
+            
         self.info(greenStr('------------------- PROTOCOL ' +
                            self.getStatusMessage().upper()))
         self.__closeLogs()
