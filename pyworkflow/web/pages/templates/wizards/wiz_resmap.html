@@ -39,8 +39,9 @@
 			var ramp_val = $('input#ramp_val').val()
 			var useSplit = $('input#useSplit').val()
 			
-			var URL = "/get_resmap_plot/?ang="+ang_val+"&ramp="+ramp_val+
-					"&inputId="+inputId
+			var URL = "/"+setSubDomainURL("get_resmap_plot/?ang="+ang_val+"&ramp="+ramp_val+
+					"&inputId="+inputId)
+					
 					
 			if (useSplit == 1){
 				var splitId = $('input#splitId').val()
@@ -53,11 +54,10 @@
 			
 			$.ajax({
 				type : "GET",
-				url : setSubDomainURL(URL),
+				url : URL,
 				dataType : "text",
 				success : function(text) {
 					$("img#plot").attr("src", text)
-
 					$('.messi').remove();
 					$('.messi-modal').remove();			
 				}
