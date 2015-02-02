@@ -47,7 +47,7 @@ class DataSet:
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
         folder = cls._datasetDict[name].folder
-        if not 'SCIPION_TEST_NOSYNC' in os.environ:
+        if not envVarOn('SCIPION_TEST_NOSYNC'):
             scipion = "%s %s/scipion" % (os.environ['SCIPION_PYTHON'],
                                          os.environ['SCIPION_HOME'])
             command = scipion + " testdata --download " + folder

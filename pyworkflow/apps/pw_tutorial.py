@@ -63,7 +63,7 @@ class TutorialIntro(tests.BaseTest):
             project.saveProtocol(protImportMics)
             
             protImportVol = project.getProtocolsByClass('ProtImportVolumes')[0]
-            protImportVol.filesPath.set(self.ds.getFile('vol1'))
+            protImportVol.filesPath.set(self.ds.getFile('vol110'))
             project.saveProtocol(protImportVol)
 
         self.project = project
