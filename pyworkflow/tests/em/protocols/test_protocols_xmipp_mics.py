@@ -339,4 +339,4 @@ class TestXmippExtractParticles(TestXmippBase):
         protExtract.setObjLabel("extract-sort")
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertIsNotNone(protExtract.outputParticles, "There was a problem generating the output.")
-        self.assertTrue(protExtract.outputParticles.getSize() == 276, "Output particles were not correctly sorted.")
+        self.assertTrue(protExtract.outputParticles.getSize() == 283, "Output particles were not correctly sorted.")
