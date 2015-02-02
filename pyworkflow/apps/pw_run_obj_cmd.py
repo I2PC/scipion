@@ -19,8 +19,9 @@ if __name__ == '__main__':
     project = Manager().loadProject(projectId)
     protocol = project.mapper.selectById(protocolId)
     
+    Plotter.setBackend('TkAgg')
+    
     if cmd == OBJCMD_NMA_PLOTDIST:
-        Plotter.setInteractive(True) # use 
         plotter = createDistanceProfilePlot(protocol, modeNumber=objId)
         plotter.show(block=True)
         
@@ -29,17 +30,14 @@ if __name__ == '__main__':
         vmd.show()
 
     elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-        Plotter.setInteractive(True) # use
         plotter = createPlots(PLOT_POLAR, protocol, objId)
         plotter.show(block=True)
 
     elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-        Plotter.setInteractive(True) # use
         plotter = createPlots(PLOT_CART, protocol, objId)
         plotter.show(block=True)
 
     elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-        Plotter.setInteractive(True) # use
         plotter = createPlots(PLOT_POLARCART, protocol, objId)
         plotter.show(block=True)
 
