@@ -579,7 +579,7 @@ def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
 
     mdAll.write(imgStar)
     mdCount = md.MetaData()
-    mdCount.aggregate(md, md.AGGR_COUNT, md.MDL_SERIE, md.MDL_SERIE, md.MDL_COUNT)
+    mdCount.aggregate(mdAll, md.AGGR_COUNT, md.RLN_MLMODEL_GROUP_NAME, md.RLN_MLMODEL_GROUP_NAME, md.MDL_COUNT)
     print "number of particles per group: ", mdCount
 
 
