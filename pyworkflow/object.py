@@ -1092,6 +1092,13 @@ class Set(OrderedObject):
         set its value as an object attribute.
         """
         self.setAttributeValue(propertyName, self.getProperty(propertyName, defaultValue))
+        
+    def getIdSet(self):
+        """ Return a Python set object containing all ids. """
+        s = set()
+        for item in self.iterItems():
+            s.add(item.getObjId())
+        return s
 
 
 def ObjectWrap(value):
