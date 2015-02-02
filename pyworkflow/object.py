@@ -949,8 +949,10 @@ class Set(OrderedObject):
         """ element in Set """
         return self._getMapper().selectById(itemId) != None
 
-    def iterItems(self, orderBy='id', direction='ASC'):
-        return self._getMapper().selectAll(orderBy=orderBy,direction=direction)#has flat mapper, iterate is true
+    def iterItems(self, orderBy='id', direction='ASC', where='1'):
+        return self._getMapper().selectAll(orderBy=orderBy,
+                                           direction=direction,
+                                           where=where)#has flat mapper, iterate is true
 
     def getFirstItem(self):
         """ Return the first item in the Set. """

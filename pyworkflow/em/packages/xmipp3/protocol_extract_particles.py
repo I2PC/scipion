@@ -31,7 +31,7 @@ This sub-package contains the XmippProtExtractParticles protocol
 """
 
 from glob import glob
-from os.path import exists
+from os.path import exists, basename
 
 import xmipp
 from pyworkflow.object import String, Float
@@ -162,7 +162,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it
-        """       
+        """
         # Set sampling rate and inputMics according to downsample type
         self.inputCoords = self.inputCoordinates.get() 
         
@@ -197,28 +197,28 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             micrographToExtract = mic.getFileName()
             micName = removeBaseExt(mic.getFileName())
             micId = mic.getObjId()
-                                            
+
             #if self.doFlip.get():
             if self.ctfRelations.hasValue():
-                mic.setCTF(ctfSet[micId])       
+                mic.setCTF(ctfSet[micId])
 
-            # If downsample type is 'other' perform a downsample
-            if self.downsampleType == OTHER:
+                # If downsample type is 'other' perform a downsample
+            downFactor = self.downFactor.get()
+            if self.downsampleType == OTHER and abs(downFactor - 1.) > 0.0001:
                 fnDownsampled = self._getTmpPath(micName+"_downsampled.xmp")
-                downFactor = self.downFactor.get()
                 args = "-i %(micrographToExtract)s -o %(fnDownsampled)s --step %(downFactor)f --method fourier"
-                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals())]
+                localDeps=[self._insertRunJobStep("xmipp_transform_downsample", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnDownsampled
             # If remove dust 
             if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(micName+"_noDust.xmp")
-                
+
                 thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
                 args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
                 localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),prerequisites=localDeps)]
                 micrographToExtract = fnNoDust
-                
-                        
+
+
             #self._insertFunctionStep('getCTF', micId, micName, micrographToExtract)
             micName = removeBaseExt(mic.getFileName())
             #FIXME: Check only if mic has CTF when implemented ok
@@ -230,20 +230,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 fnCTF = micrographToCTFParam(mic, self._getTmpPath("%s.ctfParam" % micName))
                 # Insert step to flip micrograph
                 if self.doFlip:
-                    localDeps = [self._insertFunctionStep('flipMicrographStep', 
-                                                      micName, fnCTF, micrographToExtract,
-                                                      prerequisites=localDeps)]
+                    localDeps = [self._insertFunctionStep('flipMicrographStep',
+                                                          micName, fnCTF, micrographToExtract,
+                                                          prerequisites=localDeps)]
                     micrographToExtract = self._getTmpPath(micName +"_flipped.xmp")
             else:
-                fnCTF = None        
-            # Actually extract
-            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName, 
-                                              fnCTF, micrographToExtract, prerequisites=localDeps))
-        # TODO: Delete temporary files
-                        
-        # Insert step to create output objects      
+                fnCTF = None
+                # Actually extract
+            deps.append(self._insertFunctionStep('extractParticlesStep', micId, micName,
+                                                 fnCTF, micrographToExtract, prerequisites=localDeps))
+        # Insert step to create output objects
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-                
+        # TODO: Delete temporary files
+        self._insertFunctionStep('removeTmpFiles', tmpDir = self._getTmpPath(), prerequisites=deps)
+
     #--------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph on metadata format. """
@@ -297,6 +297,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 md.operate("Xcoor=Xcoor*%f" % downsamplingFactor)
                 md.operate("Ycoor=Ycoor*%f" % downsamplingFactor)
                 md.write(selfile)
+        else:
+            self.warning(" The micrograph %s hasn't coordinate file! Maybe you picked over a subset of micrographs" % micName)
                 
     def runNormalize(self, stack, normType, bgRadius):
         program = "xmipp_transform_normalize"
@@ -324,14 +326,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
-            md = xmipp.MetaData(xmdFn)
-            mdPos = xmipp.MetaData('particles@%s' % posFn)
-            mdPos.merge(md) 
-            #imgSet.appendFromMd(mdPos)
-            imgsXmd.unionAll(mdPos)
-   
-        #TODO: CHECK WITH JAVI
-        #imgsXmd.sort(xmipp.MDL_IMAGE)
+            if exists(xmdFn):
+                md = xmipp.MetaData(xmdFn)
+                mdPos = xmipp.MetaData('particles@%s' % posFn)
+                mdPos.merge(md) 
+                #imgSet.appendFromMd(mdPos)
+                imgsXmd.unionAll(mdPos)
+            else:
+                self.warning("The coord file %s wasn't used to extract! Maybe you are extracting over a subset of micrographs" % basename(posFn))
         imgsXmd.write(fnImages)
 
         # IF selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
@@ -484,7 +486,21 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return None
 
     def getOutput(self):
-        if self.outputParticles.hasValue():
+        if (self.hasAttribute('outputParticles') and
+            self.outputParticles.hasValue()):
             return self.outputParticles
         else:
             return None
+
+    #TODO: Move this function to a utilities file?
+    def removeTmpFiles(self, tmpDir):
+        """Remove files but keep directory"""
+        from os import unlink, walk
+        from os.path import join
+        from shutil import  rmtree
+
+        for root, dirs, files in walk(tmpDir):
+            for f in files:
+                unlink(join(root, f))
+            for d in dirs:
+                rmtree(join(root, d))

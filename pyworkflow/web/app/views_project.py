@@ -108,12 +108,6 @@ def update_graph_view(request):
     project = loadProject(projectName)
     project_settings = project.getSettings()
 
-#     DEPRECATED:
-#     if status == "True":
-#         project_settings.graphView.set(True)
-#     else :
-#         project_settings.graphView.set(False)
-    
     project_settings.runsView.set(int(status))
     
     project_settings.write()
@@ -176,16 +170,11 @@ def run_table_graph(request):
             # Get the selected runs stored in BD    
             selectedRuns = project_settings.runSelection
             
-            # DEPRECATED
-            # Get the mode view (list or graph) stored in BD
-            # graphView = project_settings.graphView.get()
-            
             # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
             runsView = project_settings.runsView.get()
             
             context = {'runs': runsNew,
                        'columns': provider.getColumns(),
-#                        'graphView': graphView,
                        'runsView': runsView,
                        'selectedRuns' : selectedRuns}
             
@@ -263,10 +252,6 @@ def contentContext(request, projectName):
     # Get the selected runs stored in BD    
     selectedRuns = project_settings.runSelection
 
-    # DEPRECATED
-    # Get the mode view (list or graph) stored in BD
-    # graphView = project_settings.graphView.get()
-    
     # Get the run mode view (0:list / 1:graph / 2:small graph) stored in BD
     runsView = project_settings.runsView.get()
         
@@ -303,7 +288,6 @@ def contentContext(request, projectName):
                'runs': runs,
                'columns': provider.getColumns(),
                'projectNameHeader': projectNameHeader, 
-#                'graphView': graphView,
                'runsView': runsView,
                'selectedRuns': selectedRuns
                }
@@ -424,8 +408,6 @@ def create_service_project(request):
         writeCustomMenu(customMenu)
         confs = {'protocols': customMenu}
         
-#         DEPRECATED:
-#         project = manager.createProject(projectName, confs, graphView=True)
         project = manager.createProject(projectName, confs, runsView=1)   
         
         # 1. Import averages

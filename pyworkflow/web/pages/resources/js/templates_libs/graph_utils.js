@@ -114,34 +114,41 @@ var sourceEndpoint = {
 
 /** METHODS *******************************************************************/
 
-function callPaintGraph() {
+function callPaintGraph(nodeSource, type) {
 	/*
-	 * This function paint the protocol graph in the templat/protocol_info/e project_content.html
+	 * This function paint the protocol graph in the template project_content.html
 	 */ 
 	
-	// Draw the boxes
-	var nodeSource = $("div#graphActiv");
+	var nameId = "graph_"
+	if (type == "small"){
+		nameId = "graphSmall_"
+	}
 	
 	var status = "finished";
 	var aux = [];
 
 	// Paint the first node
-	paintBox(nodeSource, "graph_PROJECT", "PROJECT", "runs");
-	var width = $("div#" + "graph_PROJECT" + ".window").width();
-	var height = $("div#" + "graph_PROJECT" + ".window").height();
+	paintBox(nodeSource, nameId, nameId + "PROJECT", "PROJECT", "runs");
+	var width = $("div#" + nameId + "PROJECT" + ".window").width();
+	var height = $("div#" + nameId + "PROJECT" + ".window").height();
 	aux.push("PROJECT" + "-" + width + "-" + height);
 
 	// Paint the other nodes (selected include)
 	$("tr.runtr,tr.selected").each(function() {
 		var id = jQuery(this).attr('id');
-		var idNew = "graph_" + id;
+		var idNew = nameId + id;
 
 		var name = jQuery(this).attr('data-label');
 		if (name==""){
 			name = jQuery(this).attr('data-name');
 		}
 
-		paintBox(nodeSource, idNew, name, "runs");
+		if(type == "normal"){
+			paintBox(nodeSource, nameId, idNew, name, "runs");
+		} else if (type == "small"){
+			paintBox(nodeSource, nameId, idNew, id, "runs");
+		}
+		
 		var width = $("div#" + idNew + ".window").width();
 		var height = $("div#" + idNew + ".window").height();
 
@@ -156,7 +163,7 @@ function callPaintGraph() {
 		dataType : "json",
 		async: false,
 		success : function(json) {
-			processNodes(json, "runs")
+			processNodes(json, "runs", nameId, type)
 		}
 	});
 	jsPlumb.draggable($(".window"));
@@ -181,9 +188,9 @@ function callPaintObjGraph(){
 			$.each(json, function(i, item) {
 				var id = "graph_" + item.id
 				var label = item.label
-
+				
 				// Draw box
-				paintBox(nodeSource, id, label, "objects");
+				paintBox(nodeSource, "graph_", id, label, "objects");
 				
 				if(item.id!= 'PROJECT'){
 					// Get the size
@@ -201,7 +208,7 @@ function callPaintObjGraph(){
 				dataType : "json",
 				async: false,
 				success : function(json) {
-					processNodes(json, "objects")
+					processNodes(json, "objects", "graph_")
 				}
 			});
 		}
@@ -210,7 +217,7 @@ function callPaintObjGraph(){
 }
 
 
-function paintBox(nodeSource, id, msg, mode) {
+function paintBox(nodeSource, nameId, id, msg, mode) {
 	/*
 	 * Function to paint a box like a node inside the protocol graph.
 	 * The node source is passed by arguments.
@@ -219,9 +226,9 @@ function paintBox(nodeSource, id, msg, mode) {
 	 * in first instance the boxes in bad position, before to be processed.
 	 * 
 	 */
-
-	if (id != "graph_PROJECT") {
-		var objId = id.replace("graph_", "");
+	var auxId = nameId + "PROJECT";
+	if (id != auxId) {
+		var objId = id.replace(nameId, "");
 		
 		switch(mode){
 			case "runs":
@@ -233,7 +240,7 @@ function paintBox(nodeSource, id, msg, mode) {
 				var onclick = "launchToolbarObjTree('" + objId	+ "', $(this), isCtrlPress(event))";
 		}
 		
-		var projName = $("div#graphActiv").attr("data-project");
+		var projName = nodeSource.attr("data-project");
 		var aux = '<div class="window" style="display:none;" onclick="' + onclick + '" id="'
 				+ id + '" data-label="'+ msg +'"><a href="' + href + '"><strong>' + msg
 				+ '</strong></a><br/><span id="nodeStatus" data-val=""></span></div>';	
@@ -245,19 +252,19 @@ function paintBox(nodeSource, id, msg, mode) {
 }
 
 
-function processNodes(json, mode){
+function processNodes(json, mode, nameId, type){
 	// Iterate over the nodes and position in the screen
 	// coordinates should come in the json response
 	
-	positionNodes(json, mode)
+	positionNodes(json, mode, nameId, type)
 	
 	// After all nodes are positioned, then create the edges
 	// between them
 	
-	putEdges(json)
+	putEdges(json, nameId)
 }
 
-function positionNodes(json, mode){
+function positionNodes(json, mode, nameId, type){
 	for ( var i = 0; i < json.length; i++) {
 		var top = json[i].y*0.8;
 		var left = json[i].x;
@@ -271,7 +278,9 @@ function positionNodes(json, mode){
 				break;
 				
 			case "runs":
-				addStatusBox("graph_" + json[i].id,	json[i].status);
+				if (type!="small"){
+					addStatusBox(nameId + json[i].id,	json[i].status);
+				}
 						
 				var style = "top:" + top
 					+ "px;left:" + left
@@ -279,7 +288,7 @@ function positionNodes(json, mode){
 				break;
 		}
 		
-		$("div#graph_" + json[i].id + ".window").attr(
+		$("div#"+ nameId + json[i].id + ".window").attr(
 				"style", style);
 	}
 }
@@ -291,12 +300,12 @@ function addStatusBox(id, status) {
 	$("div#" + id + ".window").find("#nodeStatus").html(status);
 }
 
-function putEdges(json){
+function putEdges(json, nameId){
 	for ( var i = 0; i < json.length; i++) {
 		for ( var j = 0; j < json[i].childs.length; j++) {
-			var source = $("div#graph_" + json[i].id
+			var source = $("div#"+ nameId + json[i].id
 					+ ".window");
-			var target = $("div#graph_" + json[i].childs[j]
+			var target = $("div#"+ nameId + json[i].childs[j]
 					+ ".window");
 			connectNodes(source, target);
 		}
