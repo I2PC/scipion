@@ -54,9 +54,17 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
         else:
             plotUrl, min_ang = getPlotResMap(request, protocol)
     
-            context = {'inputId': protocol.inputVolume.getObjId(),
+            context = {
+                       # Params
+                       'inputId': protocol.inputVolume.getObjId(),
                        'ang': protocol.prewhitenAng.get(),
                        'ramp': protocol.prewhitenRamp.get(),
+                       # Extra Params
+                       'pValue': self.pVal.get(),
+                       'minRes': self.minRes.get(), 
+                       'maxRes': self.maxRes.get(),
+                       'stepRes': self.stepRes.get(),
+                       # Others
                        'plot': plotUrl,
                        'min_ang': min_ang,
                        'messi_js': getResourceJs('messi'),
@@ -67,6 +75,11 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
                 context.update({'useSplit' : 1,
                                 'splitId' : protocol.splitVolume.getObjId(),
                                 })
+           
+            if protocol.applyMask == True and protocol.maskVolume.get().hasValue():
+                context.update({'useMask' : 1,
+                                'maskId' : protocol.maskVolume.getObjId(),
+                                }) 
             
             context = base_wiz(request, context)
             return render_to_response('wizards/wiz_resmap.html', context)
@@ -97,9 +110,33 @@ def get_resmap_plot(request):
     useSplit = request.GET.get('useSplit', None)
     if useSplit is not None:
         newProtocol.useSplitVolume = True
-        inputSplit = request.GET.get('splitId',  None)
+        splitId = request.GET.get('splitId', None)
         splitVolume = project.mapper.selectById(splitId)
         newProtocol.splitVolume.set(splitVolume.get())
+        
+    useMask = request.GET.get('useMask', None)
+    if useSplit is not None:
+        newProtocol.applyMask = True
+        maskId = request.GET.get('maskId',  None)
+        inputMask = project.mapper.selectById(maskId)
+        newProtocol.maskVolume.set(inputMask.get())
+        
+    # Extra Params
+    pValue = request.GET.get('pValue', None)
+    if pValue is not None:
+        newProtocol.pVal.set(float(pValue))
+        
+    minRes = request.GET.get('minRes', None)
+    if minRes is not None:
+        newProtocol.minRes.set(float(minRes))
+        
+    maxRes = request.GET.get('maxRes', None)
+    if maxRes is not None:
+        newProtocol.maxRes.set(float(maxRes))
+        
+    stepRes = request.GET.get('stepRes', None)
+    if stepRes is not None:
+        newProtocol.stepRes.set(float(stepRes))
 
     plotUrl, _ = getPlotResMap(request, newProtocol)
     
@@ -116,7 +153,7 @@ def getPlotResMap(request, protocol):
     #2nd step: Generate plot
     plotter = _runPreWhiteningWeb(protocol, results)
     #3rd step: Save to png image
-    plotUrl = savePlot(request, plotter)
+    plotUrl = "/" + savePlot(request, plotter)
     return plotUrl, min_ang
 
 def _beforePreWhitening(protocol, dir):

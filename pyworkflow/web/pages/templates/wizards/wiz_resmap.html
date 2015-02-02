@@ -38,14 +38,30 @@
 			var ang_val = $('input#ang_val').val()
 			var ramp_val = $('input#ramp_val').val()
 			var useSplit = $('input#useSplit').val()
-			
-			var URL = "/get_resmap_plot/?ang="+ang_val+"&ramp="+ramp_val+
+			var useMask = $('input#useMask').val()
+			var pValue = $('input#pValue').val()
+            var minRes =  $('input#minRes').val(), 
+            var maxRes =  $('input#maxRes').val(), 
+            var stepRes =  $('input#stepRes').val(), 
+                       
+			var URL = "/" + setSubDomainURL("get_resmap_plot/?" +
+					"ang=" + ang_val +
+					"&ramp=" + ramp_val +
+					"&pValue="+pValue +
+					"&minRes="+minRes +
+					"&maxRes="+maxRes +
 					"&inputId="+inputId
+					)
 					
 			if (useSplit == 1){
 				var splitId = $('input#splitId').val()
 				URL += "&useSplit="+useSplit+"&splitId="+splitId
 			} 
+			
+			if (useMask == 1){
+				var splitId = $('input#maskId').val()
+				URL += "&useMask="+useMask+"&maskId="+splitId
+			}
 			
 			new Messi("<i class='fa fa-refresh'/> Updating Plot...",{
 				modal : true
@@ -53,11 +69,10 @@
 			
 			$.ajax({
 				type : "GET",
-				url : setSubDomainURL(URL),
+				url : URL,
 				dataType : "text",
 				success : function(text) {
 					$("img#plot").attr("src", text)
-
 					$('.messi').remove();
 					$('.messi-modal').remove();			
 				}
@@ -71,6 +86,12 @@
 			<input id="inputId" type="hidden" value="{{inputId}}" />
 			<input id="useSplit" type="hidden" value="{{useSplit}}" />
 			<input id="splitId" type="hidden" value="{{splitId}}" />
+			<input id="useMask" type="hidden" value="{{useMask}}" />
+			<input id="maskId" type="hidden" value="{{maskId}}" />
+			<input id="pValue" type="hidden" value="{{pValue}}" />
+			<input id="minRes" type="hidden" value="{{minRes}}" />
+			<input id="maxRes" type="hidden" value="{{maxRes}}" />
+			<input id="stepRes" type="hidden" value="{{stepRes}}" />
 			<img id="plot" src="{{plot}}" style="width:790px;height:auto;"/>
 			
 			<div class="options">
