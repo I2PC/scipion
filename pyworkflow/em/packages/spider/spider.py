@@ -23,19 +23,18 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.utils import Environ
 """
 This sub-package will contains Spider protocols
 """
 import os
+from os.path import join, dirname, abspath
 import subprocess
 import re
 
-from os.path import join, dirname, abspath, exists, basename
 from pyworkflow.object import String
+from pyworkflow.utils import runJob, Environ
+from pyworkflow.utils.path import replaceBaseExt, removeBaseExt
 from pyworkflow.em.data import EMObject
-from pyworkflow.utils.path import copyFile, removeExt, replaceExt, replaceBaseExt
-from pyworkflow.utils import runJob
 
 
 END_HEADER = 'END BATCH HEADER'
@@ -120,6 +119,9 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     be left.
     """
     outputScript = replaceBaseExt(inputScript, ext)
+    
+    if cwd is not None:
+        outputScript = join(cwd, outputScript)
 
     fIn = open(getScript(inputScript), 'r')
     fOut = open(outputScript, 'w')
@@ -146,8 +148,10 @@ def runScript(inputScript, ext, paramsDict, log=None, cwd=None):
     fIn.close()
     fOut.close()    
 
-    scriptName = removeExt(outputScript)
-    runJob(log, SPIDER, "%(ext)s @%(scriptName)s" % locals(), env=environment, cwd=cwd)
+    scriptName = removeBaseExt(outputScript)
+    args = " %s @%s" % (ext, scriptName)
+    
+    runJob(log, SPIDER, args, env=dict(environment), cwd=cwd)
     
 
 def runCustomMaskScript(filterRadius1, sdFactor,
@@ -166,13 +170,8 @@ def runCustomMaskScript(filterRadius1, sdFactor,
               '[input_image]': inputImage,
               '[output_mask]': outputMask,
               } 
-    # Store current directory and enter in the given workingDir
-    cwd = os.getcwd()
-    os.chdir(workingDir)
     # Run the script with the given parameters
-    runScript('mda/custommask.msa', ext, params)
-    # Return to previous current directory
-    os.chdir(cwd)
+    runScript('mda/custommask.msa', ext, params, cwd=workingDir)
     
     
 class SpiderShell(object):

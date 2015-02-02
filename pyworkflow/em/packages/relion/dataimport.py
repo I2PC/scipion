@@ -199,6 +199,7 @@ class RelionImport():
             self.alignType = ALIGN_NONE
             self._classesFunc = None
             self._modelStarFile = None
+            modelRow = None
         # Check if the MetaData contains either MDL_MICROGRAPH_ID
         # or MDL_MICROGRAPH, this will be used when imported
         # particles to keep track of the particle's micrograph
@@ -266,7 +267,8 @@ class RelionImport():
             if row.containsLabel('rlnSphericalAberration'):
                 acquisitionDict['sphericalAberration'] = row.getValue('rlnSphericalAberration')
 
-            if modelRow.containsLabel('rlnPixelSize'):
+            if (modelRow is not None and
+                modelRow.containsLabel('rlnPixelSize')):
                 acquisitionDict['samplingRate'] = modelRow.getValue('rlnPixelSize')
 
         except Exception, ex:

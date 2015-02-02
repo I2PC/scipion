@@ -283,6 +283,7 @@ MASKRESULT_LABELS = ['input image',
                      'inverted \nmask * image',
                      ]
 
+
 class SpiderCustomMaskWizard(EmWizard):    
     _targets = [(SpiderProtCustomMask, CUSTOMMASK_VARS)]
     
@@ -319,7 +320,8 @@ class CustomMaskDialog(ImagePreviewDialog):
         self.lastObj = None
         self.rightPreviewLabel = "Final mask"
         self.message = "Generating mask..."
-        self.rightImage = ImageHandler()._img
+        self.ih = ImageHandler()
+        self.rightImage = self.ih.createImage()
         
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to 
@@ -364,19 +366,25 @@ class CustomMaskDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        tmp = '.'#self.project.getTmpPath()
-        ext = self.protocolParent.getExt()
+        prot = self.protocolParent # short notation
+        tmp = prot.getProject().getTmpPath()
+        ext = prot.getExt()
+        # Convert input image to spider
+        imgPrefix = 'inputImage'
+        imgName = '%s.%s' % (imgPrefix, ext)
+        imgFn = os.path.join(tmp, imgName)
+        self.ih.convert(self.lastObj, (1, imgFn))
         
         runCustomMaskScript(self.getVarValue('filterRadius1'), 
                             self.getVarValue('sdFactor'), 
                             self.getVarValue('filterRadius2'), 
                             self.getVarValue('maskThreshold'), 
                             workingDir=tmp, ext=ext,
-                            inputImage=removeExt(self.lastObj.getFileName()))
+                            inputImage=imgPrefix+'@1')
         
         for i, preview in enumerate(self._previews):
             if i == 0:
-                self.rightImage.read(self.lastObj.getFileName())
+                self.rightImage.read(imgFn)
             else:
                 self.rightImage.read('%d@%s/stkmask.%s' % (i, tmp, ext))
             preview.updateData(self.rightImage.getData())
