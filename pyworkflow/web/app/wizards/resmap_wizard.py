@@ -60,10 +60,10 @@ class ResmapPrewhitenWizardWeb(ResmapPrewhitenWizard):
                        'ang': protocol.prewhitenAng.get(),
                        'ramp': protocol.prewhitenRamp.get(),
                        # Extra Params
-                       'pValue': self.pVal.get(),
-                       'minRes': self.minRes.get(), 
-                       'maxRes': self.maxRes.get(),
-                       'stepRes': self.stepRes.get(),
+                       'pValue': protocol.pVal.get(),
+                       'minRes': protocol.minRes.get(), 
+                       'maxRes': protocol.maxRes.get(),
+                       'stepRes': protocol.stepRes.get(),
                        # Others
                        'plot': plotUrl,
                        'min_ang': min_ang,
