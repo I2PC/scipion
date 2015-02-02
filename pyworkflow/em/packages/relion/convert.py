@@ -540,21 +540,20 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
     mdAll = md.MetaData(inDataStar)
     
     refsList = range(1, numberOfClasses + 1) 
-    print "refsList: ", refsList
+
     for ref3d in refsList:
         for prefix in prefixes:
             mdGroup = md.MetaData()
-            mdGroup.importObjects(mdAll, md.MDValueEQ(md.MDL_REF, ref3d))
+            mdGroup.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
             mdDist = md.MetaData()
             mdDist.aggregateMdGroupBy(mdGroup, md.AGGR_COUNT,
-                                      [md.MDL_ANGLE_ROT, md.MDL_ANGLE_TILT],
-                                      md.MDL_ANGLE_ROT, md.MDL_WEIGHT)
-            mdDist.setValueCol(md.MDL_ANGLE_PSI, 0.0)
+                                      [md.RLN_ORIENT_ROT, md.RLN_ORIENT_TILT],
+                                      md.RLN_ORIENT_ROT, md.MDL_WEIGHT)
+            mdDist.setValueCol(md.RLN_ORIENT_PSI, 0.0)
             blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
             print "Writing angular distribution to: ", blockName + outAngularDist
             mdDist.write(blockName + outAngularDist, md.MD_APPEND) 
             
-    
     
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
