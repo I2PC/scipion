@@ -36,6 +36,7 @@ figureCounter = 0
 
 class Plotter(View):
     """ Create different types of plots using the matplotlib library. """
+    backend = None
     
     @classmethod
     def setBackend(cls, value):
@@ -43,7 +44,9 @@ class Plotter(View):
         - TkAgg for Tkinter
         - Agg for non-interactive plots.
         """
-        plt.switch_backend('TkAgg')
+        print "setBackend, oldValue: ", cls.backend, "new value: ", value
+        plt.switch_backend(value)
+        cls.backend = value
         
     def __init__(self, x=1, y=1, mainTitle="", 
                  figsize=None, dpi=100, windowTitle="",
@@ -58,6 +61,9 @@ class Plotter(View):
             windowTitle: title for the whole windows.
         """
         figure = kwargs.get('figure', None)
+        
+        if self.backend is None:
+            Plotter.setBackend('Agg')
         
         if figure is None:
             self.fontsize = fontsize
