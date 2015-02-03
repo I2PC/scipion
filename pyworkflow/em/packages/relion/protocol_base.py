@@ -708,5 +708,5 @@ class ProtRelionBase(EMProtocol):
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%d@movie%s"%(img.getFrameId(), str(img.getMicId())))
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@movie_%06d.mrcs" %(img.getFrameId() + 1, img.getMicId()))
         

@@ -147,7 +147,13 @@ leads to objective and high-quality results.
         summary = []
         summary.append("Continue from iteration %01d" % self._getContinueIter())
         return summary
-    
+
+    def _summary(self):
+        if not hasattr(self, 'outputVolume'):
+            return ["Output volume not ready yet."]
+        else:
+            return ProtRelionBase._summary(self)
+
     #--------------------------- UTILS functions --------------------------------------------
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.relion.convert import createItemMatrix

@@ -132,12 +132,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
     
         return msg
-    
-    def _summary(self):
-        if self.getOutputsSize() > 0:
-            return ProtParticlePicking._summary(self)
-        else:
-            return [self.getSummary(None)]
 
     def _methods(self):
         if self.getOutputsSize() > 0:
