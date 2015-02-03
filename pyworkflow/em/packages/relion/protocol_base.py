@@ -280,7 +280,7 @@ class ProtRelionBase(EMProtocol):
                                'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
                                'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                                'the solvent area with random noise, some classifications go better when using zeros.') 
-        form.addParam('referenceMask', PointerParam, pointerClass='Mask',
+        form.addParam('referenceMask', PointerParam, pointerClass='Mask,VolumeMask',
                       label='Reference mask (optional)', allowsNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
                            'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
