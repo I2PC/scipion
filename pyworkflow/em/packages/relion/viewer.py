@@ -39,6 +39,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
 from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.utils.path import exists
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -407,8 +408,10 @@ Examples:
             for volFn in volumes:
                 # We assume that the chimera script will be generated
                 # at the same folder than relion volumes
-                localVol = os.path.basename(volFn.replace(':mrc', ''))
-                f.write("open %s\n" % localVol)
+                vol = volFn.replace(':mrc', '')
+                localVol = os.path.basename(vol)
+                if exists(vol):
+                    f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
             view = CommandView('chimera %s &' % cmdFile)                    
@@ -459,9 +462,12 @@ Examples:
             ref3d = self._refsList[0]
             for prefix in prefixes:
                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-                from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-                return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                if exists(volFn.replace(":mrc","")):
+                    angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
+                    from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+                    return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                else:
+                    raise Exception("This class is Empty. Please try with other class")
         
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
