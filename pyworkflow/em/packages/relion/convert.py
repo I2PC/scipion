@@ -404,6 +404,11 @@ def particleToRow(part, partRow, **kwargs):
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
         partRow.setValue(md.RLN_MICROGRAPH_NAME, str(part.getMicId()))
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    postprocessImageRow = kwargs.get('postprocessImageRow', None)
+    if postprocessImageRow:
+        postprocessImageRow(part, partRow)
         
 
 def rowToParticle(partRow, **kwargs):
