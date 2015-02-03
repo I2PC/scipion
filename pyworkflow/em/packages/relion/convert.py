@@ -244,6 +244,7 @@ def rowToCtfModel(ctfRow):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
 
     if inverseTransform:
         from numpy.linalg import inv
