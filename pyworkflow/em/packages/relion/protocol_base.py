@@ -518,14 +518,19 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
                 movieParticleSet = self.inputMovieParticles.get()
+                
+#                 parentProtocol = self.getMapper().getParent(movieParticleSet)
+#                 print "Proj", parentProtocol.getProject()
+                
+                
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
                 # Discard the movie particles that are not present in the refinement set
                 for movieParticle in movieParticleSet:
-                    particle = imgSet[movieParticle._xmipp_particleId.get()]
+                    particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
-                        
+                            
                 writeSetOfParticles(auxMovieParticles,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
@@ -697,8 +702,10 @@ class ProtRelionBase(EMProtocol):
         return continueIter
     
     def _postprocessImageRow(self, img, imgRow):
+        from convert import locationToRelion
         partId = img.getParticleId()
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME, locationToRelion(img.getFrameId(), str(img.getMicId())))
         

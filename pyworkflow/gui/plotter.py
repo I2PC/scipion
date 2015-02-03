@@ -27,18 +27,26 @@
 This module implement the classes to create plots on xmipp.
 """
 
+import matplotlib.pyplot as plt
+
 from pyworkflow.viewer import View
+
+figureCounter = 0
 
 
 class Plotter(View):
     """ Create different types of plots using the matplotlib library. """
-    plt = None
     backend = None
-    interactive = False
     
     @classmethod
-    def setInteractive(cls, value):
-        cls.interactive = value
+    def setBackend(cls, value):
+        """ Possible values are:
+        - TkAgg for Tkinter
+        - Agg for non-interactive plots.
+        """
+        print "setBackend, oldValue: ", cls.backend, "new value: ", value
+        plt.switch_backend(value)
+        cls.backend = value
         
     def __init__(self, x=1, y=1, mainTitle="", 
                  figsize=None, dpi=100, windowTitle="",
@@ -53,22 +61,14 @@ class Plotter(View):
             windowTitle: title for the whole windows.
         """
         figure = kwargs.get('figure', None)
+        
+        if self.backend is None:
+            Plotter.setBackend('Agg')
+        
         if figure is None:
             self.fontsize = fontsize
             self.tightLayoutOn = True
             
-            if self.plt is None:
-                if self.interactive:
-                    self.backend = 'TkAgg'
-                else:
-                    self.backend = 'Agg'
-                import matplotlib.pyplot as plt
-                plt.switch_backend(self.backend)
-                self.plt = plt
-                if self.interactive:
-                    plt.ion()
-           
-               
             if figsize is None: # Set some defaults values
                 if x == 1 and y == 1:
                     figsize = (6, 5)
@@ -80,19 +80,19 @@ class Plotter(View):
                     figsize = (8, 6)
             
             # Create grid
-            import matplotlib.gridspec as gridspec
-            from matplotlib.figure import Figure
-            self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
-            self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
+            #import matplotlib.gridspec as gridspec
+            #self.grid = gridspec.GridSpec(x, y)#, height_ratios=[7,4])
+            #self.grid.update(left=0.15, right=0.95, hspace=0.25, wspace=0.4)#, top=0.8, bottom=0.2)  
             self.gridx = x
             self.gridy = y
-            self.figure = plt.figure(figsize=figsize, dpi=dpi)
+            global figureCounter
+            figureCounter += 1
+            self.figure = plt.figure(figureCounter, figsize=figsize, dpi=dpi)
+            #from matplotlib.figure import Figure
             #self.figure = Figure(figsize=figsize, dpi=dpi)
-            #self.mainTitle = mainTitle
-            #self.windowTitle = windowTitle
-            if (mainTitle):
+            if mainTitle:
                 self.figure.suptitle(mainTitle, fontsize=fontsize + 4)
-            if (windowTitle):
+            if windowTitle:
                 self.figure.canvas.set_window_title(windowTitle) 
             self.plot_count = 0
             self.last_subplot = None
@@ -104,13 +104,10 @@ class Plotter(View):
             self.figure = figure
             self.tightLayoutOn = False
             self.plot_count = 0
-            self.backend = 'Agg'
-            import matplotlib.pyplot as plt
-            plt.switch_backend(self.backend)
             
     def activate(self):
         """ Activate this figure. """
-        self.plt.figure(self.figure.number)
+        plt.figure(self.figure.number)
         
     def getCanvas(self):
         return self.figure.canvas
@@ -172,13 +169,13 @@ class Plotter(View):
         return a
     
     def tightLayout(self):
-        if self.tightLayoutOn and self.plot_count > 1:
-            self.grid.tight_layout(self.figure)            
+        if self.tightLayoutOn:
+            self.activate()
+            plt.tight_layout()
         
     def show(self, interactive=True, block=False):
-        self.setInteractive(interactive)
         self.tightLayout()
-        self.plt.show(block=block)
+        plt.show(block=block)
 
     def draw(self):
         self.tightLayout()
@@ -195,9 +192,9 @@ class Plotter(View):
         
     def isClosed(self):
         """ Return true if the figure have been closed. """
-        return not self.plt.fignum_exists(self.figure.number)
+        return not plt.fignum_exists(self.figure.number)
     
     def close(self):
         """ Close current Plotter figure. """
-        self.plt.close(self.figure)
+        plt.close(self.figure)
         

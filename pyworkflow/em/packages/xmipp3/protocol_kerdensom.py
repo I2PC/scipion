@@ -190,14 +190,8 @@ class KendersomBaseClassify(ProtClassify2D):
         return errors
     
     def _summary(self):
-        summary = []
-        if not hasattr(self, 'outputClasses'):
-            summary.append("Output classification not ready yet.")
-        else:
-            summary.append("Input Particles: %s" % self.inputParticles.get().getSize())
-            summary.append("Classified into %s classes" % self.outputClasses.getSize())
-        return summary
-    
+        return self._methods()
+
     def _methods(self):
         messages = []  
         if not hasattr(self, 'outputClasses'):

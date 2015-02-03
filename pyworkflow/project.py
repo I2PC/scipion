@@ -684,7 +684,18 @@ class Project(object):
                 root.addChild(n)
             
         return g
-               
+    
+    def getSourceChilds(self, obj):
+        """ Return all the objects have used obj
+        as a source.
+        """
+        return self.mapper.getRelationChilds(RELATION_SOURCE, obj)
+    
+    def getSourceParents(self, obj):
+        """ Return all the objects that are SOURCE of this object.
+        """
+        return self.mapper.getRelationParents(RELATION_SOURCE, obj)
+    
     def getTransformGraph(self, refresh=False):
         """ Get the graph from the TRASNFORM relation. """
         if refresh or not self._transformGraph:

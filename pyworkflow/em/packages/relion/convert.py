@@ -244,6 +244,7 @@ def rowToCtfModel(ctfRow):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
 
     if inverseTransform:
         from numpy.linalg import inv
@@ -403,6 +404,11 @@ def particleToRow(part, partRow, **kwargs):
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
         partRow.setValue(md.RLN_MICROGRAPH_NAME, str(part.getMicId()))
+    # Provide a hook to be used if something is needed to be 
+    # done for special cases before converting image to row
+    postprocessImageRow = kwargs.get('postprocessImageRow', None)
+    if postprocessImageRow:
+        postprocessImageRow(part, partRow)
         
 
 def rowToParticle(partRow, **kwargs):
@@ -540,21 +546,20 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
     mdAll = md.MetaData(inDataStar)
     
     refsList = range(1, numberOfClasses + 1) 
-    print "refsList: ", refsList
+
     for ref3d in refsList:
         for prefix in prefixes:
             mdGroup = md.MetaData()
-            mdGroup.importObjects(mdAll, md.MDValueEQ(md.MDL_REF, ref3d))
+            mdGroup.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
             mdDist = md.MetaData()
             mdDist.aggregateMdGroupBy(mdGroup, md.AGGR_COUNT,
-                                      [md.MDL_ANGLE_ROT, md.MDL_ANGLE_TILT],
-                                      md.MDL_ANGLE_ROT, md.MDL_WEIGHT)
-            mdDist.setValueCol(md.MDL_ANGLE_PSI, 0.0)
+                                      [md.RLN_ORIENT_ROT, md.RLN_ORIENT_TILT],
+                                      md.RLN_ORIENT_ROT, md.MDL_WEIGHT)
+            mdDist.setValueCol(md.RLN_ORIENT_PSI, 0.0)
             blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
             print "Writing angular distribution to: ", blockName + outAngularDist
             mdDist.write(blockName + outAngularDist, md.MD_APPEND) 
             
-    
     
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
