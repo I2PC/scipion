@@ -523,15 +523,15 @@ class ProtRelionBase(EMProtocol):
 #                 print "Proj", parentProtocol.getProject()
                 
                 
-                auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
-                auxMovieParticles.copyInfo(movieParticleSet)
-                # Discard the movie particles that are not present in the refinement set
-                for movieParticle in movieParticleSet:
-                    particle = imgSet[movieParticle.getParticleId()]
-                    if particle is not None:
-                        auxMovieParticles.append(movieParticle)
+#                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
+#                 auxMovieParticles.copyInfo(movieParticleSet)
+#                 # Discard the movie particles that are not present in the refinement set
+#                 for movieParticle in movieParticleSet:
+#                     particle = imgSet[movieParticle.getParticleId()]
+#                     if particle is not None:
+#                         auxMovieParticles.append(movieParticle)
                             
-                writeSetOfParticles(auxMovieParticles,
+                writeSetOfParticles(movieParticleSet,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
@@ -546,7 +546,7 @@ class ProtRelionBase(EMProtocol):
                 mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
                 
                 mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
-                cleanPath(auxMovieParticles.getFileName())
+#                 cleanPath(auxMovieParticles.getFileName())
         
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
@@ -708,5 +708,5 @@ class ProtRelionBase(EMProtocol):
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%d@movie%s"%(img.getFrameId(), str(img.getMicId())))
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@movie_%06d.mrcs" %(img.getFrameId(), img.getMicId()))
         
