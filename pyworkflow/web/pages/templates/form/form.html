@@ -71,14 +71,21 @@
 		$("input#wizClassName").attr("value", className);
 		putMode("wiz");
 	}
+	
 	function putModeViewElm(param, func){
 		$("input#viewerParam").attr("value", param);
 		putMode("viewerElement");
 	}
+	
 	function loadPreviewImage(param){
 		var objId = $("#"+ param).attr("data-objId");
 		launchViewer(objId);
 	}
+	
+	function clearInput(paramName){
+		$("input#"+paramName).val('');
+	}
+	
 	</script>
 	<script>
 	  $(function() {

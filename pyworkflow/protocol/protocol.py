@@ -32,7 +32,6 @@ import os
 import sys
 import datetime as dt
 import pickle
-import time
 from collections import OrderedDict
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -935,8 +934,13 @@ class Protocol(Step):
         self.__openLogsFiles(mode)
         # Redirect the system streams to the protocol files
         sys.stdout = self.__fOut
-        sys.stderr = self.__fErr
-    
+        if envVarOn('SCIPION_SEPARATE_STDERR'):
+            sys.stderr = self.__fErr
+        else:
+            sys.stderr = self.__fOut  # send stderr to wherever stdout appears
+            # TODO: maybe do not show separate "run.stdout" and "run.stderr"
+            # in the "Output Log" section if we put them together.
+
     def getLogPaths(self):
         return map(self._getLogsPath, ['run.stdout', 'run.stderr', 'run.log'])
 
@@ -947,8 +951,8 @@ class Protocol(Step):
     def __openLogsFiles(self, mode):
         self.__fOut = open(self.getLogPaths()[0], mode)
         self.__fErr = open(self.getLogPaths()[1], mode)
-        
-    def __closeLogsFiles(self):       
+
+    def __closeLogsFiles(self):
         self.__fOut.close()
         self.__fErr.close()
     

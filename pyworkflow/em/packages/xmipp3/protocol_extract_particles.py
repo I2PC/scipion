@@ -102,7 +102,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Perform sort by statistics to add zscore info to particles.')
 
         form.addParam('rejectionMethod', EnumParam, choices=['None','MaxZscore', 'Percentage'],
-                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO, condition='doSort==True',
+                      default=REJECT_NONE, display=EnumParam.DISPLAY_COMBO, condition='doSort',
                       label='Automatic particle rejection',
                       help='How to automatically reject particles. It can be none (no rejection),'
                       ' maxZscore (reject a particle if its Zscore is larger than this value), '
@@ -110,7 +110,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       expertLevel=LEVEL_ADVANCED)
 
         form.addParam('maxZscore', IntParam, default=3, expertLevel=LEVEL_ADVANCED,
-                      condition='doSort==True and rejectionMethod==%d' % REJECT_MAXZSCORE,
+                      condition='doSort and rejectionMethod==%d' % REJECT_MAXZSCORE,
                       label='Maximum Zscore',
                       help='Maximum Zscore above which particles are rejected.')
         

@@ -51,7 +51,7 @@ config = {  'version': 1,
             },
             'handlers': {
                 'fileHandler': {
-                    'level': 'NOTSET',    
+                    'level': 'NOTSET',
                     'class': 'logging.handlers.RotatingFileHandler',
                     'formatter': 'standard',
                     'filename': LOG_FILE,
@@ -65,7 +65,7 @@ config = {  'version': 1,
             },
             'loggers': {
                 '': {                  
-                    'handlers': ['consoleHandler','fileHandler'],        
+                    'handlers': ['consoleHandler', 'fileHandler'],
                     'level': 'INFO',  
                     'propagate': False,
                     'qualname': 'pyworkflow',
@@ -83,14 +83,20 @@ class ScipionLogger():
         makeFilePath(self._filePath)
 
         if self._filePath not in config['loggers']:
-            config['handlers'][self._filePath] = {'level': 'NOTSET',    
-                                            'class': 'logging.handlers.RotatingFileHandler',
-                                            'formatter': 'fileFormat',
-                                            'filename': self._filePath,
-                                            'maxBytes': 100000,}
-            config['loggers'][self._filePath] = {'handlers': ['consoleHandler', self._filePath],        
-                                           'level': 'NOTSET',  
-                                           'propagate': False,}
+            config['handlers'][self._filePath] = {
+                'level': 'NOTSET',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'formatter': 'fileFormat',
+                'filename': self._filePath,
+                'maxBytes': 100000}
+
+            config['loggers'][self._filePath] = {
+                'handlers': [self._filePath],
+                'level': 'NOTSET',
+                'propagate': False}
+            # Note: if we want to see in the console what we also have in
+            # run.log, add 'consoleHandler' to the list of 'handlers'.
+
             logging.config.dictConfig(config)
             
         self._log = logging.getLogger(self._filePath) 

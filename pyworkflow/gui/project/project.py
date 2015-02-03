@@ -24,7 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui.browser import FileBrowserWindow
 """
 Main Project window implementation.
 It is composed by three panels:
@@ -42,6 +41,7 @@ from pyworkflow.manager import Manager
 from pyworkflow.config import * # We need this to retrieve object from mapper
 from pyworkflow.project import Project
 from pyworkflow.gui import Message
+from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
 
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
@@ -59,7 +59,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         
-        Plotter.setInteractive(True)   
+        Plotter.setBackend('TkAgg')   
         
         ProjectBaseWindow.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
