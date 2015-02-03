@@ -163,12 +163,17 @@ void ProgReconstructSignificant::alignImagesToGallery()
 
 			// Compute all correlations
 	    	for (size_t nVolume=0; nVolume<Nvols; ++nVolume)
+	    	{
+	    		AlignmentTransforms *transforms=galleryTransforms[nVolume];
 		    	for (size_t nDir=0; nDir<Ndirs; ++nDir)
 				{
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					double corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
+							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+//					double corr=alignImagesConsideringMirrors(mGalleryProjection,
+//							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
@@ -207,6 +212,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					else if (imed>worstImed)
 						worstImed=imed;
 				}
+	    	}
 
 	    	// Keep the best assignment for the projection matching
 	    	// Each process keeps a list of the images for each volume
@@ -574,6 +580,10 @@ void ProgReconstructSignificant::generateProjections()
 	// Read projection galleries
 	std::vector<GalleryImage> galleryNames;
 	mdGallery.clear();
+
+	CorrelationAux aux;
+	AlignmentAux aux2;
+	MultidimArray<double> mGalleryProjection;
 	for (int n=0; n<Nvol; n++)
 	{
 		mdGallery.push_back(galleryNames);
@@ -590,6 +600,23 @@ void ProgReconstructSignificant::generateProjections()
 			mdGallery[n].push_back(I);
 		}
 		gallery[n].read(fnGallery);
+
+		// Calculate transforms of this gallery
+		size_t kmax=NSIZE(gallery[n]());
+		if (galleryTransforms[n]==NULL)
+		{
+			delete galleryTransforms[n];
+			galleryTransforms[n]=new AlignmentTransforms[kmax];
+		}
+		AlignmentTransforms *transforms=galleryTransforms[n];
+		for (size_t k=0; k<kmax; ++k)
+		{
+			mGalleryProjection.aliasImageInStack(gallery[n](),k);
+			mGalleryProjection.setXmippOrigin();
+			aux.transformer1.FourierTransform((MultidimArray<double> &)mGalleryProjection, transforms[k].FFTI, true);
+		    normalizedPolarFourierTransform(mGalleryProjection, transforms[k].polarFourierI, false,
+		                                    XSIZE(mGalleryProjection) / 5, XSIZE(mGalleryProjection) / 2, aux2.plans, 1);
+		}
 	}
 }
 
@@ -681,6 +708,7 @@ void ProgReconstructSignificant::produceSideinfo()
 			mdIn.write(fnAngles);
 		}
 		gallery.push_back(galleryDummy);
+		galleryTransforms.push_back(NULL);
 		mdReconstructionPartial.push_back(mdPartial);
 		mdReconstructionProjectionMatching.push_back(mdProjMatch);
 		idx++;
