@@ -250,7 +250,7 @@ def fixVolumeFileName(image):
     """
     fn = image.getFileName()
     if isinstance(image, Volume):
-        if fn.endswith('.mrc'):
+        if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
         
     return fn   
