@@ -466,6 +466,14 @@ double bestShift(const MultidimArray< double >& I1,
                const MultidimArray< int >* mask = NULL,
                int maxShift=-1);
 
+/** Translational search.
+ * Assumes that FFTI1 is already computed.
+ */
+double bestShift(const MultidimArray<double> &I1, const MultidimArray< std::complex<double> > &FFTI1,
+		       const MultidimArray<double> &I2,
+               double &shiftX, double &shiftY, CorrelationAux &aux,
+               const MultidimArray<int> *mask=NULL, int maxShift=-1);
+
 /** Translational search (3D)
  * @ingroup Filters
  *
@@ -494,6 +502,13 @@ void bestNonwrappingShift(const MultidimArray< double >& I1,
                           CorrelationAux &aux);
 
 /** Translational search (non-wrapping).
+ * Assumes that the FFTI1 is already computed.
+ */
+void bestNonwrappingShift(const MultidimArray<double> &I1, const MultidimArray< std::complex<double> > &FFTI1,
+                          const MultidimArray<double> &I2, double &shiftX, double &shiftY,
+                          CorrelationAux &aux);
+
+/** Translational search (non-wrapping).
  * @ingroup Filters
  *
  * Search is performed in real-space
@@ -509,9 +524,16 @@ public:
     Matrix2D<double> ARS, ASR, R;
     MultidimArray<double> IauxSR, IauxRS, rotationalCorr;
     Polar_fftw_plans *plans;
-    Polar< std::complex<double> > polarFourierIref, polarFourierI;
+    Polar< std::complex<double> > polarFourierI;
     AlignmentAux();
     ~AlignmentAux();
+};
+
+class AlignmentTransforms
+{
+public:
+	Polar< std::complex<double> > polarFourierI;
+	MultidimArray< std::complex< double > > FFTI;
 };
 
 /** Align two images
@@ -531,6 +553,14 @@ double alignImages(const MultidimArray< double >& Iref,
 /** Align two images considering mirrors */
 double alignImagesConsideringMirrors(const MultidimArray<double>& Iref, MultidimArray<double>& I,
                    Matrix2D<double>&M, bool wrap);
+
+/** Fast alignment of two images considering mirrors.
+ * The transforms of Iref are presumed to be precomputed in IrefTransforms.
+ */
+double alignImagesConsideringMirrors(const MultidimArray<double>& Iref, const AlignmentTransforms& IrefTransforms,
+                                     MultidimArray<double>& I, Matrix2D<double> &M, AlignmentAux& aux,
+                                     CorrelationAux& aux2, RotationalCorrelationAux &aux3, bool wrap,
+                                     const MultidimArray<int>* mask=NULL);
 
 /** Fast version of align two images
  * @ingroup Filters
