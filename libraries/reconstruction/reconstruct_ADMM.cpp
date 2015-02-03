@@ -36,6 +36,12 @@
 
 #define SYMMETRIZE_PROJECTIONS
 
+ProgReconsADMM::ProgReconsADMM(): XmippProgram()
+{
+	rank=0;
+	Nprocs=1;
+}
+
 void ProgReconsADMM::defineParams()
 {
     addUsageLine("Reconstruct with Alternative Direction Method of Multipliers");
@@ -136,7 +142,11 @@ void ProgReconsADMM::produceSideInfo()
 
 	// Get Htb reconstruction
 	if (fnHtb=="")
+	{
 		constructHtb();
+		if (saveIntermediate && rank==0)
+			CHtb.write(fnRoot+"_Htb.vol");
+	}
 	else
 	{
 		CHtb.read(fnHtb);
@@ -162,7 +172,11 @@ void ProgReconsADMM::produceSideInfo()
 	// Compute H'*K*H+mu*L^T*L+lambda_1 I
 	Image<double> kernelV;
 	if (fnHtKH=="")
+	{
 		computeHtKH(kernelV());
+		if (saveIntermediate && rank==0)
+			kernelV.write(fnRoot+"_HtKH.vol");
+	}
 	else
 	{
 		kernelV.read(fnHtKH);
@@ -199,6 +213,7 @@ void ProgReconsADMM::produceSideInfo()
 	// Prepare mask
 	if (applyMask)
 		mask.generate_mask(CHtb());
+	synchronize();
 }
 
 void ProgReconsADMM::show()
@@ -209,18 +224,22 @@ void ProgReconsADMM::show()
 void ProgReconsADMM::run()
 {
 	produceSideInfo();
-	std::cout << "Running ADMM iterations ..." << std::endl;
-	init_progress_bar(Nadmmiter);
-	for (int iter=0; iter<Nadmmiter; ++iter)
+	if (rank==0)
 	{
-		applyConjugateGradient();
-		doPOCSProjection();
-		updateUD();
-		progress_bar(iter);
+		std::cout << "Running ADMM iterations ..." << std::endl;
+		init_progress_bar(Nadmmiter);
+		for (int iter=0; iter<Nadmmiter; ++iter)
+		{
+			applyConjugateGradient();
+			doPOCSProjection();
+			updateUD();
+			progress_bar(iter);
+		}
+		progress_bar(Nadmmiter);
+		produceVolume();
+		Vk.write(fnRoot+".vol");
 	}
-	progress_bar(Nadmmiter);
-	produceVolume();
-	Vk.write(fnRoot+".vol");
+	synchronize();
 }
 
 void ProgReconsADMM::constructHtb()
@@ -233,30 +252,35 @@ void ProgReconsADMM::constructHtb()
 	Image<double> I;
 	double rot, tilt, psi;
 	size_t i=0;
-	std::cerr << "Performing Htb ...\n";
-	init_progress_bar(mdIn.size());
+	if (rank==0)
+	{
+		std::cerr << "Performing Htb ...\n";
+		init_progress_bar(mdIn.size());
+	}
 	double weight=1.;
 	ApplyGeoParams geoParams;
 	geoParams.only_apply_shifts=true;
 	geoParams.wrap=DONT_WRAP;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
-		// COSS: Read also MIRROR
-		I.readApplyGeo(mdIn,__iter.objId,geoParams);
-		I().setXmippOrigin();
-		mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-		mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-		mdIn.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-		if (useWeights && mdIn.containsLabel(MDL_WEIGHT))
-			mdIn.getValue(MDL_WEIGHT,weight,__iter.objId);
+		if ((i+1)%Nprocs==rank)
+		{
+			I.readApplyGeo(mdIn,__iter.objId,geoParams);
+			I().setXmippOrigin();
+			mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+			mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+			mdIn.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+			if (useWeights && mdIn.containsLabel(MDL_WEIGHT))
+				mdIn.getValue(MDL_WEIGHT,weight,__iter.objId);
 
-		project(rot,tilt,psi,I(),true,weight);
-
+			project(rot,tilt,psi,I(),true,weight);
+		}
 		i++;
-		if (i%100==0)
+		if (i%100==0 && rank==0)
 			progress_bar(i);
 	}
-	progress_bar(mdIn.size());
+	if (rank==0)
+		progress_bar(mdIn.size());
 
 	// Symmetrize Htb
 #ifndef SYMMETRIZE_PROJECTIONS
@@ -264,8 +288,7 @@ void ProgReconsADMM::constructHtb()
 	symmetrizeVolume(SL, CHtb(), CHtbsym, false, false, true);
 	CHtb=CHtbsym;
 #endif
-	if (saveIntermediate)
-		CHtb.write(fnRoot+"_Htb.vol");
+	shareVolume(CHtb());
 }
 
 void ProgReconsADMM::project(double rot, double tilt, double psi, MultidimArray<double> &P, bool adjoint, double weight)
@@ -348,8 +371,11 @@ void ProgReconsADMM::computeHtKH(MultidimArray<double> &kernelV)
 	kernelV.initZeros(2*ZSIZE(CHtb())-1,2*YSIZE(CHtb())-1,2*XSIZE(CHtb())-1);
 	kernelV.setXmippOrigin();
 
-	std::cerr << "Calculating H'KH ...\n";
-	init_progress_bar(mdIn.size());
+	if (rank==0)
+	{
+		std::cerr << "Calculating H'KH ...\n";
+		init_progress_bar(mdIn.size());
+	}
 	size_t i=0;
 	double rot, tilt, psi, weight=1;
 	bool hasWeight=mdIn.containsLabel(MDL_WEIGHT) && useWeights;
@@ -362,47 +388,51 @@ void ProgReconsADMM::computeHtKH(MultidimArray<double> &kernelV)
 	Matrix1D<double> r1(3), r2(3);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
-		// COSS: Read also MIRROR
-		mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
-		mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
-		mdIn.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
-		if (hasWeight)
-			mdIn.getValue(MDL_WEIGHT,weight,__iter.objId);
-		if (hasCTF)
+		if ((i+1)%Nprocs==rank)
 		{
-			ctf.readFromMetadataRow(mdIn,__iter.objId);
-			ctf.produceSideInfo();
-			kernel.applyCTFToKernelAutocorrelation(ctf,Ts,kernelAutocorr);
-		}
-		kernelAutocorr.setXmippOrigin();
+			// COSS: Read also MIRROR
+			mdIn.getValue(MDL_ANGLE_ROT,rot,__iter.objId);
+			mdIn.getValue(MDL_ANGLE_TILT,tilt,__iter.objId);
+			mdIn.getValue(MDL_ANGLE_PSI,psi,__iter.objId);
+			if (hasWeight)
+				mdIn.getValue(MDL_WEIGHT,weight,__iter.objId);
+			if (hasCTF)
+			{
+				ctf.readFromMetadataRow(mdIn,__iter.objId);
+				ctf.produceSideInfo();
+				kernel.applyCTFToKernelAutocorrelation(ctf,Ts,kernelAutocorr);
+			}
+			kernelAutocorr.setXmippOrigin();
 
-		// Update kernel
-		Euler_angles2matrix(rot,tilt,psi,E,false);
-		E.getRow(0,r1);
-		E.getRow(1,r2);
-		double iStep=1.0/kernel.autocorrStep;
-		for (int k=((kernelV).zinit); k<=((kernelV).zinit + (int)(kernelV).zdim - 1); ++k)
-		{
-			double r1_z=k*ZZ(r1);
-			double r2_z=k*ZZ(r2);
-		    for (int i=((kernelV).yinit); i<=((kernelV).yinit + (int)(kernelV).ydim - 1); ++i)
-		    {
-				double r1_yz=i*YY(r1)+r1_z;
-				double r2_yz=i*YY(r2)+r2_z;
-		        for (int j=((kernelV).xinit); j<=((kernelV).xinit + (int)(kernelV).xdim - 1); ++j)
-		        {
-					double r1_xyz=j*XX(r1)+r1_yz;
-					double r2_xyz=j*XX(r2)+r2_yz;
-					A3D_ELEM(kernelV,k,i,j)+=weight*kernelAutocorr.interpolatedElement2D(r1_xyz*iStep,r2_xyz*iStep);
-		        }
-		    }
+			// Update kernel
+			Euler_angles2matrix(rot,tilt,psi,E,false);
+			E.getRow(0,r1);
+			E.getRow(1,r2);
+			double iStep=1.0/kernel.autocorrStep;
+			for (int k=((kernelV).zinit); k<=((kernelV).zinit + (int)(kernelV).zdim - 1); ++k)
+			{
+				double r1_z=k*ZZ(r1);
+				double r2_z=k*ZZ(r2);
+				for (int i=((kernelV).yinit); i<=((kernelV).yinit + (int)(kernelV).ydim - 1); ++i)
+				{
+					double r1_yz=i*YY(r1)+r1_z;
+					double r2_yz=i*YY(r2)+r2_z;
+					for (int j=((kernelV).xinit); j<=((kernelV).xinit + (int)(kernelV).xdim - 1); ++j)
+					{
+						double r1_xyz=j*XX(r1)+r1_yz;
+						double r2_xyz=j*XX(r2)+r2_yz;
+						A3D_ELEM(kernelV,k,i,j)+=weight*kernelAutocorr.interpolatedElement2D(r1_xyz*iStep,r2_xyz*iStep);
+					}
+				}
+			}
 		}
 
 		i++;
-		if (i%100==0)
+		if (i%100==0 && rank==0)
 			progress_bar(i);
 	}
-	progress_bar(mdIn.size());
+	if (rank==0)
+		progress_bar(mdIn.size());
 
 #ifndef SYMMETRIZE_PROJECTIONS
 	MultidimArray<double> kernelVsym;
@@ -410,8 +440,7 @@ void ProgReconsADMM::computeHtKH(MultidimArray<double> &kernelV)
 	kernelV=kernelVsym;
 #endif
 
-	if (saveIntermediate)
-		kernelV.write(fnRoot+"_HtKH.vol");
+	shareVolume(kernelV);
 }
 
 void addGradientTerm(double mu, AdmmKernel &kernel, MultidimArray<double> &L, FourierTransformer &transformer,

@@ -93,7 +93,10 @@ public:
 	Mask mask; // Mask
 	String symmetry;
 	bool saveIntermediate;
+	size_t Nprocs;
+	size_t rank;
 public:
+	ProgReconsADMM();
     void defineParams();
     void readParams();
     void show();
@@ -137,6 +140,12 @@ public:
 
     /** Convert from coefficients to voxel volume */
     void produceVolume();
+
+    // Share a volume among nodes
+    virtual void shareVolume(MultidimArray<double> &V) {}
+
+	// Redefine how to synchronize
+	virtual void synchronize() {}
 
 public:
 	AdmmKernel           kernel;
