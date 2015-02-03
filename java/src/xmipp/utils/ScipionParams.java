@@ -88,6 +88,10 @@ public class ScipionParams extends Params {
     public String getRegisterMaskScript() {
         return scripts + File.separator + "pw_create_mask.py";
     }
+
+    public String getPlotSqliteScript() {
+        return scripts + File.separator + "pw_sqlite_plot.py";
+    }
     
    
 }

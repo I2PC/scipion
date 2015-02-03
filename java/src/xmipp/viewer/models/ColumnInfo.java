@@ -116,11 +116,13 @@ public class ColumnInfo {
 		public String color;
 		public String marker;
 		public String linestyle;
+                public boolean plot;
 		
 		public ColumnExtraInfo(String c){
 			color = c;
 			linestyle = "solid";
 			marker = "none";
+                        plot = false;
 		}
 	}
 	

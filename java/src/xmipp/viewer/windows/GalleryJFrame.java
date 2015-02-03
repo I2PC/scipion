@@ -201,7 +201,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		aux = (float) MAX_HEIGHT * DIM_RATE;
 		MAX_WIDTH = Math.round(aux);
 	}
-        private JButton searchbt;
+        protected JButton searchbt;
+        protected JButton plotbt;
 
 
 	/** Initialization function after GalleryData structure is created */
@@ -867,6 +868,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			menu.update();
 			updateVisibleCombos();
                         searchbt.setEnabled(data.isTableMode());
+                        plotbt.setEnabled(data.isTableMode());
 			if (dlgSave != null && changed)
 				dlgSave.setInitialValues();
 
@@ -1121,6 +1123,20 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                     }
                 });
                 toolBar.add(searchbt);
+                plotbt = new JButton(XmippResource.getIcon("plot.png"));
+                plotbt.setEnabled(data.isTableMode());
+                plotbt.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        try {
+                            plotColumns();
+                        } catch (Exception ex) {
+                            Logger.getLogger(GalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                toolBar.add(plotbt);
 
 	}// function createToolbar
 
@@ -1418,6 +1434,11 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 		data.setResliceView(view);
 		reloadTableData();
 	}
+        
+        protected void plotColumns() {
+            PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
+            dlg.showDialog();
+        }
 
 	protected class GalleryMenu extends XmippMenuBarCreator
 	{
@@ -1672,8 +1693,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(MD_PLOT))
 				{
-					PlotJDialog dlg = new PlotJDialog(GalleryJFrame.this);
-					dlg.showDialog();
+                                        plotColumns();
+					
 				}
 				else if (cmd.equals(MD_CLASSES))
 				{
@@ -1784,6 +1805,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
                         }
 
 		}
+
+        
                 
                 class DisplayLabelActionListener implements ActionListener
 		{
