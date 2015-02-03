@@ -35,6 +35,7 @@ import random
 from protocol import EMProtocol
 from pyworkflow.protocol.params import (
     PointerParam, BooleanParam, MultiPointerParam, IntParam)
+from pyworkflow.protocol.constants import LEVEL_EXPERT
 
 
 class ProtSets(EMProtocol):
@@ -60,6 +61,10 @@ class ProtUnionSet(ProtSets):
                       help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
                            'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
                            'total of 500 elements.')
+        form.addParam('renumber', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+                      label="Create new ids",
+                      help='Make an automatic renumbering of the ids, so the new objects\n'
+                           'are not associated to the old ones.')
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
     #--------------------------- INSERT steps functions --------------------------------------------   
@@ -79,10 +84,22 @@ class ProtUnionSet(ProtSets):
         # Keep original ids until we find a conflict. From then on, use new ids.
         usedIds = set()  # to keep track of the object ids we have already seen
         cleanIds = False
+
+        # If we want to renumber all start with an objId higher than any other.
+        if self.renumber.get():
+            firstObjId = max(obj.getObjId() for itemSet in self.inputSets
+                             for obj in itemSet.get()) + 1
+            cleanIds = True
+        else:
+            firstObjId = None
+
         for itemSet in self.inputSets:
             for obj in itemSet.get():
                 objId = obj.getObjId()
-                if cleanIds:
+                if firstObjId is not None:  # 1st time renumbering
+                    obj.setObjId(firstObjId)
+                    firstObjId = None  # next ones assigned automatically
+                elif cleanIds:
                     obj.cleanObjId()  # so it will be assigned automatically
                 elif objId in usedIds:  # duplicated id!
                     # Note that we cannot use  "objId in outputSet"
