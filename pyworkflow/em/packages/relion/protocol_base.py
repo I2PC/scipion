@@ -537,11 +537,12 @@ class ProtRelionBase(EMProtocol):
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
                 mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
-                
+                mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
                 mdAux = md.MetaData()
                 mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
+                
                 mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
                 
                 mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
@@ -702,10 +703,10 @@ class ProtRelionBase(EMProtocol):
         return continueIter
     
     def _postprocessImageRow(self, img, imgRow):
-        from convert import locationToRelion
+#         from convert import locationToRelion
         partId = img.getParticleId()
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME, locationToRelion(img.getFrameId(), str(img.getMicId())))
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%d@movie%s"%(img.getFrameId(), str(img.getMicId())))
         
