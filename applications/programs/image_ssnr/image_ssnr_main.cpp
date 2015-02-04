@@ -23,6 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "reconstruction/program_image_ssnr.h"
+#include <reconstruction/program_image_ssnr.h>
 
 RUN_XMIPP_PROGRAM(ProgImageSSNR)
