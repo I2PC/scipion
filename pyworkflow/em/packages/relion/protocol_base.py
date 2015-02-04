@@ -75,7 +75,6 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -215,7 +214,14 @@ class ProtRelionBase(EMProtocol):
                       help='Set this option to Yes if the reference map represents CTF-unaffected density, '
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
-                           'are not multiplied by the CTFs.')        
+                           'are not multiplied by the CTFs.') 
+        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+                      label='Have data been phase-flipped?',
+                      help='Set this to Yes if the images have been ctf-phase corrected during the '
+                           'pre-processing steps. Note that CTF-phase flipping is NOT a necessary '
+                           'pre-processing step for MAP-refinement in RELION, as this can be done inside '
+                           'the internal CTF-correction. However, if the phases have been flipped, '
+                           'you should tell the program about it by setting this option to Yes.')       
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
                       help='Set this to Yes the CTFs will grouping manually.')
@@ -484,7 +490,7 @@ class ProtRelionBase(EMProtocol):
         if self.hasReferenceCTFCorrected:
             args['--ctf_corrected_ref'] = ''
             
-        if self.haveDataPhaseFlipped:
+        if self.haveDataBeenPhaseFlipped:
             args['--ctf_phase_flipped'] = ''
             
         if self.ignoreCTFUntilFirstPeak:
