@@ -103,12 +103,12 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        self._insertFunctionStep("convertInputStep")
+        self._insertFunctionStep("convertInputStep", self._getInputParticles().getObjId())
         self._insertFunctionStep('processStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
-    def convertInputStep(self):
+    def convertInputStep(self, particlesId):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
