@@ -44,6 +44,7 @@ void ProgImageSSNR::defineParams()
     addParamsLine(" [--sampling <Ts=1>]:  Sampling rate in Angstroms/pixel");
     addParamsLine(" [--ssnrcut <ssnr=-1>]:  Disable images whose SSNR is below this value");
     addParamsLine(" [--ssnrpercent <p=-1>]:  Disable images whose SSNR is below this percentage");
+    addParamsLine(" [--normalizessnr]: Normalize the SSNR by dividing by the maximum SSNR");
     addExampleLine("xmipp_image_ssnr -i images.xmd -o imagesOut.xmd ");
 }
 
@@ -57,6 +58,7 @@ void ProgImageSSNR::readParams()
     sampling=getDoubleParam("--sampling");
     ssnrcut=getDoubleParam("--ssnrcut");
     ssnrpercent=getDoubleParam("--ssnrpercent");
+    normalizessnr=checkParam("--normalizessnr");
 }
 
 void ProgImageSSNR::preProcess()
@@ -124,6 +126,29 @@ void thresholdSSNR(MetaData &mdOut, double ssnrcut)
 	}
 }
 
+void normalizeSSNR(MetaData &mdOut)
+{
+	double maxSSNR=-1e38;
+	FOR_ALL_OBJECTS_IN_METADATA(mdOut)
+	{
+		double ssnr;
+		mdOut.getValue(MDL_CUMULATIVE_SSNR,ssnr,__iter.objId);
+		if (ssnr>maxSSNR)
+			maxSSNR=ssnr;
+	}
+
+	if (maxSSNR>0)
+	{
+		double imaxSSNR=1/maxSSNR;
+		FOR_ALL_OBJECTS_IN_METADATA(mdOut)
+		{
+			double ssnr;
+			mdOut.getValue(MDL_CUMULATIVE_SSNR,ssnr,__iter.objId);
+			mdOut.setValue(MDL_SSNR_WEIGHT,ssnr*imaxSSNR,__iter.objId);
+		}
+	}
+}
+
 void ProgImageSSNR::postProcess()
 {
 	if (ssnrcut>0)
@@ -137,6 +162,9 @@ void ProgImageSSNR::postProcess()
 		size_t idx=(size_t)(ssnrpercent/100.0*ssnr.size());
 		thresholdSSNR(*getOutputMd(),ssnr[idx]);
 	}
+
+	if (normalizessnr)
+		normalizeSSNR(*getOutputMd());
 	if (fn_out!="")
 		getOutputMd()->write(fn_out);
 	else

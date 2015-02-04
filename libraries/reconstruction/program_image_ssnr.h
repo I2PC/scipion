@@ -33,7 +33,7 @@ public:
 	double fmin, fmax;
 	double sampling;
 	double ssnrcut, ssnrpercent;
-
+	bool normalizessnr;
 public:
     void defineParams();
     void readParams();
