@@ -72,12 +72,22 @@ class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
 
 
 class RelionPartMaskRadiusWizard(RelionBackRadiusWizard):
-    _targets = [(ProtRelionClassify2D, ['maskRadiusA']),
-                (ProtRelionRefine3D, ['maskRadiusA']),
-                (ProtRelionClassify3D, ['maskRadiusA']),
-                (ProtRelionClassify2D, ['maskRadiusA'])]
+    _targets = [(ProtRelionClassify2D, ['maskDiameterA']),
+                (ProtRelionRefine3D, ['maskDiameterA']),
+                (ProtRelionClassify3D, ['maskDiameterA']),
+                (ProtRelionClassify2D, ['maskDiameterA'])]
     _unit = UNIT_ANGSTROM
+    
+    def _getParameters(self, protocol):
+        protParams = RelionBackRadiusWizard._getParameters(self, protocol)
+        # adjust to from diameter to radius
+        protParams['value'] = protParams['value'] / 2
         
+        return protParams 
+    
+    def setVar(self, form, label, value):
+        # adjust again from radius to diameter
+        form.setVar(label, value * 2)        
 
 #===============================================================================
 # FILTER

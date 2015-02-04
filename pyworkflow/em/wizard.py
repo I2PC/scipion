@@ -233,12 +233,16 @@ class MaskRadiusWizard(EmWizard):
         if provider is not None:
             d = MaskPreviewDialog(form.root, 
                                        provider, 
-                                       maskRadius = value, 
+                                       maskRadius=value, 
                                        unit=units)
             if d.resultYes():
-                form.setVar(label, d.getRadius())
+                self.setVar(form, label, d.getRadius())
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
+            
+    def setVar(self, form, label, value):
+        form.setVar(label, value) 
+
 
 class MaskRadiiWizard(EmWizard):
     
