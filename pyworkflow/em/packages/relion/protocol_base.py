@@ -75,7 +75,6 @@ class ProtRelionBase(EMProtocol):
         self._createIterTemplates()
         
         self.ClassFnTemplate = '%(rootDir)s/relion_it%(iter)03d_class%(ref)03d.mrc:mrc'
-        self.haveDataPhaseFlipped = self._getInputParticles().isPhaseFlipped()
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -215,7 +214,14 @@ class ProtRelionBase(EMProtocol):
                       help='Set this option to Yes if the reference map represents CTF-unaffected density, '
                            'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
                            'then in the first iteration, the Fourier transforms of the reference projections ' 
-                           'are not multiplied by the CTFs.')        
+                           'are not multiplied by the CTFs.') 
+        form.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+                      label='Have data been phase-flipped?',
+                      help='Set this to Yes if the images have been ctf-phase corrected during the '
+                           'pre-processing steps. Note that CTF-phase flipping is NOT a necessary '
+                           'pre-processing step for MAP-refinement in RELION, as this can be done inside '
+                           'the internal CTF-correction. However, if the phases have been flipped, '
+                           'you should tell the program about it by setting this option to Yes.')       
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
                       label='Do manual grouping ctfs?',
                       help='Set this to Yes the CTFs will grouping manually.')
@@ -260,14 +266,14 @@ class ProtRelionBase(EMProtocol):
                                'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
                                'Too small values yield too-low resolution structures; too high values result in ' 
                                'over-estimated resolutions and overfitting.') 
-        form.addParam('maskRadiusA', IntParam, default=200,
-                      label='Particle mask RADIUS (A)',
+        form.addParam('maskDiameterA', IntParam, default=200,
+                      label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a soft circular mask '
-                           'with this <radius> (Note that in Relion GUI the diameter is used). '
-                           'Make sure this radius is not set too small because that may mask '
+                           'with this <diameter>. '
+                           'Make sure this diameter is not set too small because that may mask '
                            'away part of the signal! If set to a value larger than the image '
                            'size no masking will be performed.\n\n'
-                           'The same radius will also be used for a spherical mask of the '
+                           'The same diameter will also be used for a spherical mask of the '
                            'reference structures if no user-provided mask is specified.') 
         if self.IS_CLASSIFY:
             form.addParam('maskZero', EnumParam, default=0,
@@ -423,7 +429,7 @@ class ProtRelionBase(EMProtocol):
         
     def _setNormalArgs(self, args):
         args.update({'--i': self._getFileName('input_star'),
-                     '--particle_diameter': self.maskRadiusA.get() * 2.0,
+                     '--particle_diameter': self.maskDiameterA.get(),
                      '--angpix': self._getInputParticles().getSamplingRate(),
                     })
         self._setMaskArgs(args)
@@ -484,7 +490,7 @@ class ProtRelionBase(EMProtocol):
         if self.hasReferenceCTFCorrected:
             args['--ctf_corrected_ref'] = ''
             
-        if self.haveDataPhaseFlipped:
+        if self.haveDataBeenPhaseFlipped:
             args['--ctf_phase_flipped'] = ''
             
         if self.ignoreCTFUntilFirstPeak:

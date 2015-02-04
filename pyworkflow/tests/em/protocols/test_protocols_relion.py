@@ -84,7 +84,7 @@ class TestRelionClassify2D(TestRelionBase):
     def testRelion2D(self):                  
         print "Run relion2D"
         prot2D = self.newProtocol(ProtRelionClassify2D,
-                                  doCTF=False, maskRadiusA=170,
+                                  doCTF=False, maskDiameterA=170,
                                   numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
@@ -258,7 +258,7 @@ class TestPolishParticles(TestRelionBase):
         
         print "Run Relion Refine"
         proRef = self.newProtocol(ProtRelionRefine3D,
-                                  initialLowPassFilterA=40, maskRadiusA=250,
+                                  initialLowPassFilterA=40, maskDiameterA=250,
                                   numberOfMpi=8, numberOfThreads=2)
         proRef.inputParticles.set(protExtract.outputParticles)
         proRef.referenceVolume.set(self.protImportVol.outputVolume)
