@@ -689,17 +689,19 @@ def parseText(text, func=replacePattern):
     return parsedText[:-6]    
 
 
+def getImageUrl(filename):
+    url_plot = django_settings.ABSOLUTE_URL + "get_image_plot/?image=" + filename
+    return url_plot
+    
+    
 def savePlot(request, plot):
     projectPath = request.session['projectPath']
     
     name_img = 'image%s.png' % id(plot)
-    fn = os.path.join(projectPath,'Tmp', name_img)
+    fn = os.path.join(projectPath, 'Tmp', name_img)
     plot.savefig(fn)
-    url_plot = django_settings.ABSOLUTE_URL + "get_image_plot/?image=" + fn
     
-    print "URL PLOT: ", url_plot
-        
-    return url_plot
+    return getImageUrl(fn)
 
 #===============================================================================
 # ERROR PAGE
