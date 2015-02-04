@@ -450,15 +450,20 @@ def get_image_plot(request):
     from PIL import Image
     imagePath = os.path.join(request.GET.get('image'))
     img = Image.open(imagePath)
-    
     response = HttpResponse(mimetype="image/png")
-    
     # Create and save the image
     img.save(response, "PNG")
     # after the image is removed from the file system
     os.remove(imagePath)
-    
     return response   
+
+def get_image_path(request):
+    from PIL import Image
+    imagePath = os.path.join(request.GET.get('image'))
+    img = Image.open(imagePath)
+    response = HttpResponse(mimetype="image/png")
+    img.save(response, "PNG")
+    return response
     
 def get_image(request):
     imageNo = None
@@ -690,7 +695,7 @@ def parseText(text, func=replacePattern):
 
 
 def getImageUrl(filename):
-    url_plot = django_settings.ABSOLUTE_URL + "get_image_plot/?image=" + filename
+    url_plot = django_settings.ABSOLUTE_URL + "get_image_path/?image=" + filename
     return url_plot
     
     
