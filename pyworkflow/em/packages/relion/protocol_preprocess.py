@@ -103,7 +103,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
-        self._insertFunctionStep("convertInputStep", self._getInputParticles().getObjId())
+        self._insertFunctionStep("convertInputStep", self.inputParticles.get().getObjId())
         self._insertFunctionStep('processStep')
         self._insertFunctionStep('createOutputStep')
     
