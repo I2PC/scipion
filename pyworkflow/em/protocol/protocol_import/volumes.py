@@ -65,22 +65,22 @@ class ProtImportVolumes(ProtImportImages):
         Register other parameters.
         """
         self.info("Using pattern: '%s'" % pattern)
-        
+
         # Create a Volume template object
         vol = Volume()
         vol.setSamplingRate(self.samplingRate.get())
         copyOrLink = self.getCopyOrLink()
         imgh = ImageHandler()
-        
+
         volSet = self._createSetOfVolumes()
         volSet.setSamplingRate(self.samplingRate.get())
-        
+
         for fileName, fileId in self.iterFiles():
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
             x, y, z, n = imgh.getDimensions(dst)
-            
-            if (n == x and n == y and z == 1) or n == 1:
+#            if (n == x and n == y and z == 1) or n == 1:
+            if (z == 1 and n != 1) or z !=1:
                 vol.setObjId(fileId)
                 vol.setLocation(dst)
                 volSet.append(vol)
@@ -89,12 +89,12 @@ class ProtImportVolumes(ProtImportImages):
                     vol.cleanObjId()
                     vol.setLocation(index, dst)
                     volSet.append(vol)
-        
+
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
             self._defineOutputs(outputVolume=vol)
-        
+
     #--------------------------- INFO functions ----------------------------------------------------
     
     def _getVolMessage(self):

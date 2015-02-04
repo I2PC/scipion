@@ -280,7 +280,7 @@ class ProtRelionBase(EMProtocol):
                                'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
                                'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
                                'the solvent area with random noise, some classifications go better when using zeros.') 
-        form.addParam('referenceMask', PointerParam, pointerClass='Mask',
+        form.addParam('referenceMask', PointerParam, pointerClass='Mask,VolumeMask',
                       label='Reference mask (optional)', allowsNull=True,
                       help='A volume mask containing a (soft) mask with the same dimensions ' 
                            'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
@@ -518,25 +518,31 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
                 movieParticleSet = self.inputMovieParticles.get()
+                
+#                 parentProtocol = self.getMapper().getParent(movieParticleSet)
+#                 print "Proj", parentProtocol.getProject()
+                
+                
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
                 # Discard the movie particles that are not present in the refinement set
                 for movieParticle in movieParticleSet:
-                    particle = imgSet[movieParticle._xmipp_particleId.get()]
+                    particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
-                        
+                            
                 writeSetOfParticles(auxMovieParticles,
                                     self._getFileName('movie_particles'), None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
                 mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
-                
+                mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
                 detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
                 mdAux = md.MetaData()
                 mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
+                
                 mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
                 
                 mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
@@ -697,8 +703,10 @@ class ProtRelionBase(EMProtocol):
         return continueIter
     
     def _postprocessImageRow(self, img, imgRow):
+#         from convert import locationToRelion
         partId = img.getParticleId()
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@movie_%06d.mrcs" %(img.getFrameId() + 1, img.getMicId()))
         
