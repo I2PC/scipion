@@ -41,7 +41,7 @@ from pyworkflow.web.app.views_base import base_wiz
 # MASKS
 #===============================================================================
 
-class RelionPartMaskRadiusWeb(RelionPartMaskRadiusWizard):
+class RelionPartMaskRadiusWeb(RelionPartMaskDiameterWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):

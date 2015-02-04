@@ -71,7 +71,7 @@ class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
         ParticleMaskRadiusWizard.show(self, form, _value, _label, units=self._unit)
 
 
-class RelionPartMaskRadiusWizard(RelionBackRadiusWizard):
+class RelionPartMaskDiameterWizard(RelionBackRadiusWizard):
     _targets = [(ProtRelionClassify2D, ['maskDiameterA']),
                 (ProtRelionRefine3D, ['maskDiameterA']),
                 (ProtRelionClassify3D, ['maskDiameterA']),
@@ -93,47 +93,6 @@ class RelionPartMaskRadiusWizard(RelionBackRadiusWizard):
 # FILTER
 #===============================================================================
 
-class RelionBandpassWizard(FilterParticlesWizard):
-    _targets = [(ProtRelionClassify3D, ['iniLowPassFilter'])]
-    
-    def _getParameters(self, protocol):
-        
-        label, value = self._getInputProtocol(self._targets, protocol)
-        
-        protParams = {}
-        protParams['input']= protocol.inputParticles
-        protParams['label']= label
-        protParams['value']= value
-        return protParams  
-    
-    def _getProvider(self, protocol):
-        _objs = self._getParameters(protocol)['input']
-        return FilterParticlesWizard._getListProvider(self, _objs)
-  
-    def show(self, form):
-        params = self._getParameters(form.protocol)
-        protocol = form.protocol
-        provider = self._getProvider(protocol)
-
-        if provider is not None:
-            self.mode = FILTER_LOW_PASS_NO_DECAY
-            
-            args = {'mode':  self.mode,                   
-                    'highFreq': params['value'],
-                    'unit': UNIT_ANGSTROM
-                    }
-            
-            args['showLowFreq'] = False
-            args['showDecay'] = False
-
-            d = BandPassFilterDialog(form.root, provider, **args)
-            
-            if d.resultYes():
-                form.setVar('iniLowPassFilter', d.samplingRate/d.getHighFreq())
-        else:
-            dialog.showWarning("Input particles", "Select particles first", form.root)
-
-
 class RelionVolFilterWizard(FilterVolumesWizard):
     _targets = [(ProtRelionClassify3D, ['initialLowPassFilterA']),
                 (ProtRelionRefine3D, ['initialLowPassFilterA'])]
@@ -145,7 +104,7 @@ class RelionVolFilterWizard(FilterVolumesWizard):
         protParams = {}
         protParams['input']= protocol.referenceVolume
         protParams['label']= [None, label]
-        protParams['value']= [0., value]
+        protParams['value']= [0., value, 0.02]
         return protParams  
     
     def _getProvider(self, protocol):
@@ -154,9 +113,11 @@ class RelionVolFilterWizard(FilterVolumesWizard):
     
     def show(self, form):
         params = self._getParameters(form.protocol)
+        # Value should be LowFreq=0, HighFreq and Decay for Low pass filter
         _value = params['value']
         _label = params['label']
         FilterVolumesWizard.show(self, form, _value, _label, 
-                                 mode=FILTER_LOW_PASS_NO_DECAY, 
-                                 units=UNIT_ANGSTROM)
+                                 mode=FILTER_LOW_PASS, 
+                                 unit=UNIT_ANGSTROM,
+                                 showDecay=False)
         
