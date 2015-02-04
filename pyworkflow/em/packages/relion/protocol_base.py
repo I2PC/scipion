@@ -401,7 +401,7 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self): 
         self._initialize()
-        self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId())
         self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
     
@@ -499,9 +499,12 @@ class ProtRelionBase(EMProtocol):
  
    
     #--------------------------- STEPS functions --------------------------------------------       
-    def convertInputStep(self):
+    def convertInputStep(self, particlesId):
         """ Create the input file in STAR format as expected by Relion.
-        If the input particles comes from Relion, just link the file. 
+        If the input particles comes from Relion, just link the file.
+        Params:
+            particlesId: use this parameters just to force redo of convert if 
+                the input particles are changed.
         """
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('input_star')
