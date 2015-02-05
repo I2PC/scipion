@@ -27,8 +27,8 @@
 import os
 import json
 from django.shortcuts import render_to_response
-from views_util import getResourceCss, getResourceIcon, getResourceJs, parseText
-from views_base import base_grid
+from pyworkflow.web.app.views_util import getResourceCss, getResourceIcon, getResourceJs, parseText
+from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse
 from django.core.context_processors import csrf
 
@@ -37,10 +37,12 @@ def desktop(request):
     return render(request, 'index/index.html')
 
 def download_form(request):
-    context = {"download_utils": getResourceJs("download_utils")}
+    
+    desktop_utils = django_settings.STATIC_URL + "js/download_utils.js"
+    context = {"download_utils": desktop_utils }
     context = base_grid(request, context)
     context.update(csrf(request))
-    return render_to_response('desktop/download_form.html', context)
+    return render_to_response('download_form.html', context)
 
 def doDownload(request):
     

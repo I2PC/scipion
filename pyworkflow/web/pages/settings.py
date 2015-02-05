@@ -100,6 +100,7 @@ STATIC_URL = ABSOLUTE_URL+'/static/'
 STATICFILES_DIRS = (
       os.path.join(pw.HOME, 'web', 'pages', 'resources'),
       os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'resources'),
+      os.path.join(pw.HOME, 'web', 'webservices', 'desktop', 'resources'),
     
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
@@ -147,6 +148,8 @@ WSGI_APPLICATION = 'pages.wsgi.application'
 TEMPLATE_DIRS = (
     os.path.join(DIRECTORY_PROJECT, 'templates'),
     os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'templates'),
+    os.path.join(pw.HOME, 'web', 'webservices', 'desktop', 'templates'),
+    
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
