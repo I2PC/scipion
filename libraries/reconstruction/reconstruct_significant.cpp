@@ -56,6 +56,7 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--strictDirection]          : Images not significant for a direction are also discarded");
     addParamsLine("  [--angDistance <a=10>]       : Angular distance");
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
+    addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
 }
 
 // Read arguments ==========================================================
@@ -78,6 +79,13 @@ void ProgReconstructSignificant::readParams()
     angDistance=getDoubleParam("--angDistance");
     Nvolumes=getIntParam("--numberOfVolumes");
     applyFisher=checkParam("--dontApplyFisher");
+    doReconstruct=!checkParam("--dontReconstruct");
+    if (!doReconstruct)
+    {
+    	if (rank==0)
+    		std::cout << "Setting iterations to 1 because of --dontReconstruct\n";
+    	Niter=1; // Make sure that there is a single iteration
+    }
 }
 
 // Show ====================================================================
@@ -98,6 +106,7 @@ void ProgReconstructSignificant::show()
         std::cout << "Use Imed                    : "  << useImed << std::endl;
         std::cout << "Angular distance            : "  << angDistance << std::endl;
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
+        std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
         if (fnInit !="")
@@ -144,11 +153,13 @@ void ProgReconstructSignificant::alignImagesToGallery()
 	}
 
 	MultidimArray<double> ccVol(Nvols);
+	MDRow row;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		if ((nImg+1)%Nprocessors==rank)
 		{
 			mdIn.getValue(MDL_IMAGE,fnImg,__iter.objId);
+			mdIn.getRow(row,__iter.objId);
 #ifdef DEBUG
 			std::cout << "Processing: " << fnImg << std::endl;
 #endif
@@ -223,8 +234,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
-				size_t recId=mdProjectionMatching.addObject();
-				mdProjectionMatching.setValue(MDL_IMAGE,fnImg,recId);
+				size_t recId=mdProjectionMatching.addRow(row);
 				mdProjectionMatching.setValue(MDL_ENABLED,1,recId);
 				mdProjectionMatching.setValue(MDL_MAXCC,bestCorr,recId);
 				mdProjectionMatching.setValue(MDL_ANGLE_ROT,bestRot,recId);
@@ -295,8 +305,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						          << "shiftX=" << shiftX << " shiftY=" << shiftY << std::endl;
 			#endif
 
-						size_t recId=mdPartial.addObject();
-						mdPartial.setValue(MDL_IMAGE,fnImg,recId);
+						size_t recId=mdPartial.addRow(row);
 						mdPartial.setValue(MDL_ENABLED,1,recId);
 						mdPartial.setValue(MDL_MAXCC,cc,recId);
 						mdPartial.setValue(MDL_COST,imed,recId);
@@ -310,6 +319,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 						mdPartial.setValue(MDL_REF,(int)nDir,recId);
 						mdPartial.setValue(MDL_REF3D,(int)nVolume,recId);
 						mdPartial.setValue(MDL_WEIGHT,thisWeight,recId);
+						mdPartial.setValue(MDL_WEIGHT_SIGNIFICANT,thisWeight,recId);
 					}
 				}
 			}
@@ -444,6 +454,7 @@ void ProgReconstructSignificant::run()
 					mdReconstruction.getValue(MDL_REF,nDir,__iter.objId);
 					mdReconstruction.getValue(MDL_REF3D,nVol,__iter.objId);
 					mdReconstruction.setValue(MDL_WEIGHT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
+					mdReconstruction.setValue(MDL_WEIGHT_SIGNIFICANT,DIRECT_A3D_ELEM(weight,nImg,nVol,nDir),__iter.objId);
 					//if (DIRECT_A3D_ELEM(weight,nImg,nVol,nDir)==0)
 					//	std::cout << "Direction " << nDir << " does not accept img " << nImg << std::endl;
 				}
@@ -510,7 +521,10 @@ void ProgReconstructSignificant::run()
     	synchronize();
 
     	// Reconstruct
-    	reconstructCurrent();
+    	if (doReconstruct)
+    		reconstructCurrent();
+    	else
+    		break;
 
     	currentAlpha+=deltaAlpha;
 

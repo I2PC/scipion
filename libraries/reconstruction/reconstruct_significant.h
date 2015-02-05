@@ -80,6 +80,8 @@ public:
     /** Apply fisher */
     bool applyFisher;
 
+    /** Do reconstruct */
+    bool doReconstruct;
 public: // Internal members
     size_t rank, Nprocessors;
 
