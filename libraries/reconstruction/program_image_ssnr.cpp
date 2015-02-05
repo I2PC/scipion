@@ -144,7 +144,7 @@ void normalizeSSNR(MetaData &mdOut)
 		{
 			double ssnr;
 			mdOut.getValue(MDL_CUMULATIVE_SSNR,ssnr,__iter.objId);
-			mdOut.setValue(MDL_SSNR_WEIGHT,ssnr*imaxSSNR,__iter.objId);
+			mdOut.setValue(MDL_WEIGHT_SSNR,ssnr*imaxSSNR,__iter.objId);
 		}
 	}
 }
