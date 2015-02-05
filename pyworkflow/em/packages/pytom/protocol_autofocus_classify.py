@@ -23,6 +23,10 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils.path import createLink
+from pyworkflow.em.constants import NO_INDEX
+from pyworkflow.em.convert import ImageHandler
+
 """
 This sub-package contains wrapper around auto_focus_classify algorithm in Pytom
 """
@@ -64,12 +68,22 @@ class ProtAutofocusClassify(em.ProtClassify3D):
 
     #--------------------------- STEPS functions --------------------------------------------        
     def convertInputStep(self):
-        return
-        self.inputClasses.get().writeStack(self._getExtraPath("classes.spi:stk"))
+        ih = ImageHandler()
+        for vol in self.inputVolumes.get():
+            newFn = self._getVolTmp(vol)
+            index, fn = vol.getLocation()
+            if index == NO_INDEX and fn.endswith('.mrc'):
+                createLink(fn, newFn)
+            else:
+                ih.convert(vol, newFn)
+        args = os.path.join(os.environ['PYTOM_HOME'],"bin","createParticleListFromDir.py")+\
+           " -d tmp -w 0.0 -o volumes.xml"
+        self.runJob("python", args, cwd=self._getPath())
             
     def runAutofocus(self):
         args = os.path.join(os.environ['PYTOM_HOME'],"classification","auto_focus_classify.py")
         self.runJob("python", args, cwd=self._getExtraPath())
+        # scipion run python /home/coss/usb_linux/scipion/scipion/software/em/pytom/classification/auto_focus_classify.py -p volumes.xml -k 1 -f 2 -m ../phantom.mrc -s 5 -i 10 -n 0.2 -g -2 -t 0.4
 
     def createOutputStep(self):
         pass
@@ -86,3 +100,8 @@ class ProtAutofocusClassify(em.ProtClassify3D):
     
     def _methods(self):
         return []
+    
+    #--------------------------- UTILS functions --------------------------------------------   
+    
+    def _getVolTmp(self, vol):
+        return self._getTmpPath('volume_%06d.mrc' % vol.getObjId())

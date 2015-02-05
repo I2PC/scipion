@@ -403,12 +403,11 @@ def particleToRow(part, partRow, **kwargs):
         coordinateToRow(coord, partRow, copyId=False)
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        partRow.setValue(md.RLN_MICROGRAPH_NAME, str(part.getMicId()))
-    # Provide a hook to be used if something is needed to be 
-    # done for special cases before converting image to row
-    postprocessImageRow = kwargs.get('postprocessImageRow', None)
-    if postprocessImageRow:
-        postprocessImageRow(part, partRow)
+        # If the row does not contains the micrgraphs name
+        # use a fake micrograph name using id to relion
+        # could at least group for CTF using that
+        if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
+            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
         
 
 def rowToParticle(partRow, **kwargs):
@@ -456,13 +455,11 @@ def rowToParticle(partRow, **kwargs):
         postprocessImageRow(img, partRow)
     
     img.setCoordinate(rowToCoordinate(partRow))
-    # copy micId if available
-    # if not copy micrograph name if available
-    try:
-        if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
-            img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
-    except Exception as e:
-        print "Warning:", e.message
+    
+    # copy micId if available from row to particle
+    if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
+        img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
+
     return img
 
 

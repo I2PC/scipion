@@ -216,6 +216,8 @@ class ImageFileHandler(FileHandler):
     _index = ''
     
     def _getImageString(self, filename):
+        if isStandardImage(filename):
+            return "Image file."
         import xmipp
         x, y, z, n = xmipp.getImageSize(filename)
         objType = 'Image'
@@ -232,9 +234,14 @@ class ImageFileHandler(FileHandler):
         return (dimMsg + "\n" + expMsg) % locals()
     
     def _getImagePreview(self, filename):
-        fn = self._index + filename
         dim = 128
-        self.tkImg = gui.getTkImage(self._image, fn, dim)
+        
+        if isStandardImage(filename):
+            self.tkImg = gui.getImage(os.path.abspath(filename), tkImage=True, maxheight=dim)
+        else:
+            fn = self._index + filename
+            self.tkImg = gui.getTkImage(self._image, fn, dim)
+            
         return self.tkImg
         
     def getFilePreview(self, objFile):
@@ -548,7 +555,15 @@ class BrowserWindow(gui.Window):
         browser.grid(row=row, column=column, sticky='news')
         self.itemConfig = browser.tree.itemConfig
         
-        
+ 
+STANDARD_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg']
+
+def isStandardImage(filename):
+    """ Check if a filename have an standard image extension. """
+    fnLower = filename.lower()
+    return any(fnLower.endswith(ext) for ext in STANDARD_IMAGE_EXTENSIONS)
+
+       
 class FileBrowserWindow(BrowserWindow):
     """ Windows to hold a file browser frame inside. """
     def __init__(self, title, master=None, path=None, 
@@ -579,7 +594,8 @@ class FileBrowserWindow(BrowserWindow):
         FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite', '.db')
         FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
                                              '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
-                                             '.ser', '.img', '.hed')
+                                             '.ser', '.img', '.hed', 
+                                             *STANDARD_IMAGE_EXTENSIONS)
         FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
         FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
     

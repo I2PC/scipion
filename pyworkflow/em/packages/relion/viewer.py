@@ -448,7 +448,7 @@ Examples:
     
     def _createAngDistChimera(self, it):
         # FIXME
-        #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
+        #outerRadius = int(float(self.maskDiameterA)/self.SamplingRate)
         outerRadius = 30
         radius = float(outerRadius) * 1.1
         # Common variables to use

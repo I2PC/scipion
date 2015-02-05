@@ -171,7 +171,15 @@ class CoordinatesObjectView(DataView):
     def show(self):
         runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
         
-
+        
+class ImageView(View):
+    """ Customized ObjectView for SetOfClasses. """
+    def __init__(self, imagePath, **kwargs):
+        View.__init__(self)
+        self._imagePath = os.path.abspath(imagePath)
+        
+    def getImagePath(self):
+        return self._imagePath
     
         
 #------------------------ Some views and  viewers ------------------------
