@@ -74,6 +74,7 @@ USE_TZ = True
 # Example: "/var/www/example.com/media/"
 
 MEDIA_ROOT = os.path.join(pw.HOME, 'resources')
+MEDIA_MYFIRSTMAP = os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'resources')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -97,7 +98,8 @@ STATIC_URL = ABSOLUTE_URL+'/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-      os.path.join(pw.HOME, 'web', 'pages','resources'),
+      os.path.join(pw.HOME, 'web', 'pages', 'resources'),
+      os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'resources'),
     
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
@@ -144,6 +146,7 @@ WSGI_APPLICATION = 'pages.wsgi.application'
 
 TEMPLATE_DIRS = (
     os.path.join(DIRECTORY_PROJECT, 'templates'),
+    os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'templates'),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.

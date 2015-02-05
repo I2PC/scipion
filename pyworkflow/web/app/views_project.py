@@ -36,6 +36,7 @@ from django.shortcuts import render_to_response
 
 # WEBSERVICES IMPORT
 from pyworkflow.web.webservices.myfirstmap.views import *
+from pyworkflow.web.webservices.desktop.views import *
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
@@ -221,19 +222,7 @@ def project_content(request):
     context.update({'mode': None})
     return render_to_response('project_content/project_content.html', context)
 
-def service_content(request):
-    projectName = request.GET.get('p', None)
-    context = contentContext(request, projectName)
-    context.update({'importAverages': getResourceIcon('importAverages'),
-                    'useProtocols': getResourceIcon('useProtocols'),
-                    'protForm': getResourceIcon('protForm'),
-                    'summary': getResourceIcon('summary'),
-                    'showj': getResourceIcon('showj'),
-                    'alignVol': getResourceIcon('alignVol'),
-                    'download': getResourceIcon('download'),
-                    'mode':'service',
-                    })
-    return render_to_response('project_content/project_content.html', context)
+
 
 def contentContext(request, projectName):
     from pyworkflow.gui.tree import ProjectRunsTreeProvider

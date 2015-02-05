@@ -13,7 +13,10 @@ urlpatterns = patterns('',
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-                
+    
+    # webservices resources
+    (r'^resources_myfirstmap/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_MYFIRSTMAP}),
+    
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
@@ -105,8 +108,8 @@ urlpatterns = patterns('',
     
     # DESKTOP
 #     url(r'^desktop/', 'app.views_desktop.desktop'),
-    url(r'^download_form/', 'app.views_desktop.download_form'),
-    url(r'^doDownload/', 'app.views_desktop.doDownload'),
+    url(r'^download_form/', 'app.views_project.download_form'),
+    url(r'^doDownload/', 'app.views_project.doDownload'),
     
 
 #===============================================================================

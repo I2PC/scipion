@@ -27,10 +27,13 @@
 from os.path import exists, join, basename
 from pyworkflow.web.app.views_util import loadProject, getResourceCss, getResourceJs
 from pyworkflow.web.app.views_base import base_grid, base_flex
+from pyworkflow.web.app.views_project import contentContext
 from django.shortcuts import render_to_response
+from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
+
 
 def service_projects(request):
     #Example Projects to be showed
@@ -38,8 +41,11 @@ def service_projects(request):
     if 'projectName' in request.session: request.session['projectName'] = ""
     if 'projectPath' in request.session: request.session['projectPath'] = ""
 
+    myfirstmap_utils = django_settings.STATIC_URL + "js/myfirstmap_utils.js"
+
     context = {'projects_css': getResourceCss('projects'),
                'project_utils_js': getResourceJs('project_utils'),
+               'myfirstmap_utils': myfirstmap_utils,
                'hiddenTreeProt': True,
                }
     
@@ -186,3 +192,20 @@ def check_project_id(request):
     
     return HttpResponse(result, mimetype='application/javascript')
  
+def service_content(request):
+    projectName = request.GET.get('p', None)
+    path_files = '/resources_myfirstmap/img/'
+    
+    context = contentContext(request, projectName)
+    context.update({'importAverages': path_files + 'importAverages.png',
+                    'useProtocols': path_files + 'useProtocols.png',
+                    'protForm': path_files + 'protForm.png',
+                    'summary': path_files + 'summary.png',
+                    'showj': path_files + 'showj.png',
+                    'alignVol': path_files + 'alignVol.png',
+                    'download': path_files + 'download.png',
+                    'mode':'service',
+                    })
+    
+    return render_to_response('service_content.html', context)
+
