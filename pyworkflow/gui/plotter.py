@@ -44,7 +44,6 @@ class Plotter(View):
         - TkAgg for Tkinter
         - Agg for non-interactive plots.
         """
-        print "setBackend, oldValue: ", cls.backend, "new value: ", value
         plt.switch_backend(value)
         cls.backend = value
         
