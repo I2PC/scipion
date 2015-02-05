@@ -347,7 +347,6 @@ enum MDLabel
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
-    MDL_SSNR_WEIGHT, ///< Weight due to SSNR
     MDL_STDDEV, ///<stdandard deviation value (double)
     MDL_STAR_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_SUM, ///< Sum of elements of a given type (double) [this is a genereic type do not use to transfer information to another program]
@@ -368,6 +367,8 @@ enum MDLabel
     MDL_VOLUME_SCORE3,/// < Score 3 for volumes
     MDL_VOLUME_SCORE4,/// < Score 4 for volumes
     MDL_WEIGHT, ///< Weight assigned to the image (double)
+    MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
+    MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
     MDL_XCOOR, ///< X component (int)
@@ -1668,7 +1669,6 @@ private:
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
-        MDL::addLabel(MDL_SSNR_WEIGHT, LABEL_DOUBLE, "ssnrWeight");
         MDL::addLabel(MDL_STDDEV, LABEL_DOUBLE, "stddev");
         MDL::addLabel(MDL_STAR_COMMENT, LABEL_STRING, "starComment");
         MDL::addLabel(MDL_SUM, LABEL_DOUBLE, "sum");
@@ -1692,6 +1692,8 @@ private:
         MDL::addLabel(MDL_VOLUME_SCORE4, LABEL_DOUBLE, "volScore4");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
+        MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
+        MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
         MDL::addLabel(MDL_XCOOR, LABEL_INT, "xcoor");
         MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");
