@@ -42,6 +42,7 @@ from pyworkflow.utils.graph import Graph
 from pyworkflow.hosts import HostMapper, HostConfig
 import pyworkflow.protocol.launch as jobs
 from pyworkflow.em.constants import RELATION_TRANSFORM, RELATION_SOURCE
+from pyworkflow.utils import getFreePort
 
 PROJECT_DBNAME = 'project.sqlite'
 PROJECT_LOGS = 'Logs'
@@ -74,6 +75,8 @@ class Project(object):
         self._runsGraph = None
         self._transformGraph = None
         self._sourceGraph = None
+        self.address = ''
+        self.port = getFreePort()
         
     def getObjId(self):
         """ Return the unique id assigned to this project. """

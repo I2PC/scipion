@@ -132,7 +132,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
         #display metadata with selected variables
         labels = 'id enabled _micObj._filename method1 method2 resolution _defocusU _defocusV _defocusAngle' 
-        views.append(ObjectView(self._project.getName(), 
+        views.append(ObjectView(self._project,
                                 self.protocol.strId(), 
                                 self.targetFile,
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
@@ -145,7 +145,7 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
         #display metadata with selected variables
         labels = '_micObj._filename averageDefocusU averageDefocusV averageDefocusAngle averageResolution' 
-        views.append(ObjectView(self._project.getName(), 
+        views.append(ObjectView(self._project,
                                 self.protocol.strId(), 
                                 self.averagesFile,
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))

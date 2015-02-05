@@ -120,18 +120,16 @@ class DataView(View):
         
 class ObjectView(DataView):
     """ Wrapper to DataView but for displaying Scipion objects. """
-    def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
-        self.python = pw.PYTHON
-        self.scripts = pw.join('apps')
         self.type = type
-        self.projectid = projectid
+        self.port = project.port
         self.inputid = inputid
         self.other = other
         
     def getShowJParams(self):
         # mandatory to provide scipion params
-        params = DataView.getShowJParams(self) + ' --python %s  %s --project \"%s\" %s %s'%(self.python, self.scripts,  self.projectid, self.inputid, self.other)
+        params = DataView.getShowJParams(self) + ' --scipion %s %s %s'%(self.port, self.inputid, self.other)
         return params
     
     def show(self):
@@ -140,22 +138,22 @@ class ObjectView(DataView):
         
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
         labels =  'enabled id _size _representative._filename'
         defaultViewParams = {ORDER:labels,
                              VISIBLE: labels, RENDER:'_representative._filename',
                              'sortby': '_size desc', 'labels': 'id _size',
                              }
         defaultViewParams.update(viewParams)
-        ObjectView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
+        ObjectView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
         
         
 class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, projectid, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
         defaultViewParams = {ZOOM: '99', MODE: 'metadata'}
         defaultViewParams.update(viewParams)
-        ClassesView.__init__(self, projectid, inputid, path, other, defaultViewParams, **kwargs)
+        ClassesView.__init__(self, project, inputid, path, other, defaultViewParams, **kwargs)
             
             
 class CoordinatesObjectView(DataView):

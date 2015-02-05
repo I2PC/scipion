@@ -154,21 +154,21 @@ class XmippViewer(Viewer):
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
 
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn))
+            self._views.append(ObjectView(self._project, obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             objCommands = '%s %s' % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, self.protocol.strId(), viewParams={OBJCMDS: objCommands}, **args))
+            self._views.append(ObjectView(self._project, obj.strId(), fn, self.protocol.strId(), viewParams={OBJCMDS: objCommands}, **args))
 
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))
+            self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfMovies):
             fn = self._getTmpPath(obj.getName() + '_movies.xmd')
             writeSetOfMovies(obj, fn)
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, **args))    
+            self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
 
 
         elif issubclass(cls, MicrographsTiltPair):          
@@ -177,7 +177,7 @@ class XmippViewer(Viewer):
 #             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
 #             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
             labels = 'id enabled _untilted._filename _tilted._filename'
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
+            self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
                                                       MODE: MODE_MD,
@@ -185,7 +185,7 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, ParticlesTiltPair):          
             labels = 'id enabled _untilted._filename _tilted._filename'
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), obj.getFileName(), 
+            self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, RENDER:'_untilted._filename _tilted._filename',
                                                       MODE: MODE_MD}))
@@ -217,7 +217,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             labels = 'id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR _sampling '
             labels += '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
                                                       'sortby': '_xmipp_zScore asc', RENDER:'_filename'}))
@@ -225,16 +225,16 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
             labels = 'id enabled comment _filename '
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn,
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, RENDER: '_filename'}))
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ClassesView(self._project.getName(), obj.strId(), fn, **args))
+            self._views.append(ClassesView(self._project, obj.strId(), fn, **args))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
-            self._views.append(Classes3DView(self._project.getName(), obj.strId(), fn))            
+            self._views.append(Classes3DView(self._project, obj.strId(), fn))
         
         if issubclass(cls, XmippProtCTFMicrographs) and not obj.hasAttribute("outputCTF"):
             mics = obj.inputMicrographs.get()
@@ -253,7 +253,7 @@ class XmippViewer(Viewer):
             psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
             labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio '\
                      '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _micObj._filename' % psdLabels 
-            self._views.append(ObjectView(self._project.getName(), obj.strId(), fn, 
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
 
         elif issubclass(cls, CoordinatesTiltPair):
@@ -318,7 +318,7 @@ class XmippViewer(Viewer):
                 fn = obj.outputAverages.getFileName()
                 labels = 'id enabled _index _filename _xmipp_maxCC _transform._matrix'
                 labelRender = "_filename"
-                self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
+                self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
                                                       'sortby': '_xmipp_maxCC des', RENDER:labelRender}))
@@ -335,7 +335,7 @@ class XmippViewer(Viewer):
                 fn = obj.outputAverages.getFileName()
                 labels = 'id enabled _index _filename  _xmipp_maxCC _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _transform._matrix'
                 labelRender = "_filename"
-                self._views.append(ObjectView(self._project.getName(), obj.outputAverages.strId(), fn,
+                self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
                                               viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
                                                       'sortby': '_xmipp_zScoreResCov des', RENDER:labelRender}))
@@ -374,10 +374,11 @@ class XmippViewer(Viewer):
             args = " --input %(mdFn)s --output %(extraDir)s --mode readonly --scipion %(scipion)s"%locals()
         
             runJavaIJapp("%dg" % obj.memory.get(), app, args)
+
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = self.protocol.outputMicrographs
             objCommands = '%s %s %s' % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
-            self._views.append(ObjectView(self._project.getName(), outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands}))
+            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands}))
 
             
         elif issubclass(cls, XmippProtExtractParticlesPairs):

@@ -43,6 +43,10 @@ from pyworkflow.project import Project
 from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.gui.plotter import Plotter
+from threading import Thread
+from time import sleep
+import socket
+import shlex
 
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
@@ -58,8 +62,10 @@ class ProjectWindow(ProjectBaseWindow):
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
-        
-        Plotter.setBackend('TkAgg')   
+
+        self.initListenThread()#Socket thread to communicate with clients
+
+        Plotter.setBackend('TkAgg')
         
         ProjectBaseWindow.__init__(self, self.projName, master, icon=self.icon, minsize=(900,500))
         
@@ -80,6 +86,7 @@ class ProjectWindow(ProjectBaseWindow):
     def _onClosing(self):
         try:
             self.saveSettings()
+            self.closeSocket()
         except Exception, ex:
             print Message.NO_SAVE_SETTINGS + str(ex) 
         ProjectBaseWindow._onClosing(self)
@@ -130,6 +137,76 @@ class ProjectWindow(ProjectBaseWindow):
                           onSelect=self._loadWorkflow,
                           selectButton='Import'
                           ).show()
+
+
+
+    def initListenThread(self):
+            self.listen_thread = Thread(target=self.listen)
+            self.listen_thread.daemon = True
+            self.listen_thread.start()
+
+
+    def listen(self):
+        address = self.project.address
+        port = self.project.port
+        print port
+        self.authkey = 'test'
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn = None
+        print 'Socket created'
+        try:
+            self.socket.bind((address, port))
+            self.socket.listen(1)
+            print 'Socket now listening'
+            self.listenSocket = True
+            while self.listenSocket:
+                    self.conn, addr = self.socket.accept()
+
+                    print 'Connected with ' + addr[0] + ':' + str(addr[1])
+                    msg = self.conn.recv(1024)
+
+                    if msg.startswith('run protocol'):
+                        print msg
+                        tokens = shlex.split(msg)
+                        protocolName = tokens[2]
+                        from pyworkflow.em import getProtocols
+                        protocolClass = getProtocols()[protocolName]
+                        # Create the new protocol instance and set the input values
+                        protocol = self.project.newProtocol(protocolClass)
+
+                        for token in tokens[3:]:
+                            print token
+                            param, value = token.split('=')
+                            attr = getattr(protocol, param, None)
+                            if param == 'label':
+                                protocol.setObjLabel(value)
+                            elif attr.isPointer():
+                                obj = self.project.getObject(int(value))
+                                attr.set(obj)
+                            elif value:
+                                attr.set(value)
+
+
+                        self.project.launchProtocol(protocol, wait=True)
+                    elif msg == 'exit\n':
+                        self.conn.close()
+                        self.conn = None
+                    else:
+                        answer = 'no answer available'
+                        self.conn.send(answer + '\n')
+                    sleep(0.01)
+
+        except socket.error , errormsg:
+            print 'Bind failed. Error code: ' + str(errormsg[0]) + 'Error message: ' + errormsg[1]
+            print 'Lost connection'
+
+    def closeSocket(self):
+        self.listenSocket = False
+        if self.conn:
+            self.conn.send('exit\n')
+            self.conn.close()
+        self.socket.close()
+
 
 
 class ProjectManagerWindow(ProjectBaseWindow):

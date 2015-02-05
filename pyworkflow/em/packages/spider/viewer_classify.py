@@ -304,7 +304,7 @@ class SpiderViewerDiday(SpiderViewerClassify):
         classes2D.write()
         classes2D.close()
 
-        return [ClassesView(self.getProject().getName(),
+        return [ClassesView(self.getProject(),
                             prot.strId(), classes2D.getFileName(), 
                             prot.inputParticles.get().strId())]
                               

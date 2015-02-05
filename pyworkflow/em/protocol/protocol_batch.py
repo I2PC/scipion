@@ -60,12 +60,14 @@ class ProtUserSubSet(BatchProtocol):
         BatchProtocol.__init__(self, **args)
         
     def _defineParams(self, form):
-        form.addHidden('inputObject', PointerParam, pointerClass='XmippProtDimredNMA')
-        form.addHidden('otherObj', PointerParam, pointerClass='EMObject', allowsNull=True)
+        form.addHidden('inputObject', PointerParam, pointerClass='Object')
+        form.addHidden('other', StringParam, allowsNull=True)
         form.addHidden('sqliteFile', FileParam)
         form.addHidden('outputClassName', StringParam)
-        form.addHidden('volId', IntParam, allowsNull=True)
-        
+
+
+
+
     def _insertAllSteps(self):
         self._insertFunctionStep('createSetStep')
 
@@ -73,15 +75,17 @@ class ProtUserSubSet(BatchProtocol):
     def createSetStep(self):
         setObj = self.createSetObject()
         inputObj = self.inputObject.get()
+        other = self.other.get()
 
-        if self.volId.get():
+        if other and ',Volume' in other:
+            volId = int(other.split(',')[0])
 
             if isinstance(setObj, SetOfVolumes):
                 volSet = SetOfVolumes(filename=self._dbName)
-                output = volSet[self.volId.get()]
+                output = volSet[volId]
             else:
                 classSet = SetOfClasses3D(filename=self._dbName)
-                output = classSet[self.volId.get()].getRepresentative()
+                output = classSet[volId].getRepresentative()
             self._defineOutputs(outputVolume=output)
 
         elif isinstance(inputObj, SetOfImages):
@@ -101,7 +105,9 @@ class ProtUserSubSet(BatchProtocol):
             self._createSubSetFromMicrographsTiltPair(inputObj)
 
         elif isinstance(inputObj, EMProtocol):
-            otherObj = self.otherObj.get()
+            otherid = self.other.get()
+            otherObj = self.getProject().mapper.selectById(int(otherid))
+
 
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
@@ -324,6 +330,7 @@ class ProtUserSubSet(BatchProtocol):
         return summary
 
     def getDefaultSummary(self):
+
         input = ''
 
 
