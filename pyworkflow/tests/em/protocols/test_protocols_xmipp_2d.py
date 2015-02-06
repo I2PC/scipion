@@ -711,7 +711,7 @@ class TestXmippRotSpectra(TestXmippBase):
     def test_rotSpectra(self):
         print "Run Rotational Spectra"
         xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, SomXdim=2, SomYdim=2)
-        xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
+        xmippProtRotSpectra.inputParticles.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
@@ -719,7 +719,7 @@ class TestXmippRotSpectra(TestXmippBase):
         print "Run Rotational Spectra with Mask"
         protMask = self.runCreateMask(3.5, 100)
         xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, useMask=True, SomXdim=2, SomYdim=2)
-        xmippProtRotSpectra.inputImages.set(self.align2D.outputParticles)
+        xmippProtRotSpectra.inputParticles.set(self.align2D.outputParticles)
         xmippProtRotSpectra.useMask.set(True)
         xmippProtRotSpectra.Mask.set(protMask.outputMask)
         self.launchProtocol(xmippProtRotSpectra)
@@ -737,7 +737,7 @@ class TestXmippKerdensom(TestXmippBase):
     def test_kerdensom(self):
         print "Run Kerdensom"
         xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
-        xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
+        xmippProtKerdensom.inputParticles.set(self.align2D.outputParticles)
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
@@ -745,7 +745,7 @@ class TestXmippKerdensom(TestXmippBase):
         print "Run Kerdensom with a mask"
         protMask = self.runCreateMask(3.5, 100)
         xmippProtKerdensom = self.newProtocol(XmippProtKerdensom, SomXdim=2, SomYdim=2)
-        xmippProtKerdensom.inputImages.set(self.align2D.outputParticles)
+        xmippProtKerdensom.inputParticles.set(self.align2D.outputParticles)
         xmippProtKerdensom.useMask.set(True)
         xmippProtKerdensom.Mask.set(protMask.outputMask)
         self.launchProtocol(xmippProtKerdensom)
