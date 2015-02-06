@@ -175,7 +175,6 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
             index, imgPath = relionToLocation(mdShiny.getValue(md.RLN_IMAGE_NAME, objId))
             newPath = self._getExtraPath(os.path.basename(imgPath))
             newLoc = locationToRelion(index, newPath)
-            print "newLoc ", newLoc
             mdShiny.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
             if oldImgPath != imgPath and exists(imgPath):
                 moveFile(imgPath, newPath)
@@ -183,6 +182,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         mdShiny.write(pathFixedShiny)
     
     def createOutputStep(self):
+        from pyworkflow.em import ALIGN_PROJ
         from pyworkflow.em.packages.relion.convert import readSetOfParticles
         imgSet = self.refineRun.get()._getInputParticles()
         vol = Volume()
@@ -192,8 +192,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         shinyPartSet = self._createSetOfParticles()
         
         shinyPartSet.copyInfo(imgSet)
-        shinyPartSet.setAlignmentProj()
-        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet)
+        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet, alignType=ALIGN_PROJ)
         
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineSourceRelation(imgSet, shinyPartSet)
