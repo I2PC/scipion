@@ -448,7 +448,8 @@ Examples:
         mdSSNR = md.MetaData()
         # only cross by 1 is important
         mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
-        mdSSNR.operate("resolutionSSNR=log(resolutionSSNR)")
+        #TODO name should be a MDL_LABEL converted
+        mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
         resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
         frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
         a.plot(resolution_inv, frc)
