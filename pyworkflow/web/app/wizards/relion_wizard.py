@@ -41,7 +41,7 @@ from pyworkflow.web.app.views_base import base_wiz
 # MASKS
 #===============================================================================
 
-class RelionPartMaskRadiusWeb(RelionPartMaskRadiusWizard):
+class RelionPartMaskRadiusWeb(RelionPartMaskDiameterWizard):
     _environments = [WEB_DJANGO]
     
     def _run(self, protocol, request):
@@ -104,30 +104,30 @@ class RelionVolMaskRadiusWeb(RelionBackRadiusWizard):
 # FILTERS
 #===============================================================================
 
-class RelionBandpassWeb(RelionBandpassWizard):
-    _environments = [WEB_DJANGO]
-    
-    def _run(self, protocol, request):
-        params = self._getParameters(protocol)
-        objs = params['input'].get()
-        
-        res = validateParticles(objs)
-        
-        if res is not 1:
-            return HttpResponse(res)
-        else:
-            particles = self._getParticles(objs)
-            
-            if len(particles) == 0:
-                return HttpResponse("errorIterate")
-            
-            context = {'objects': particles,
-                       'params':params
-                       }
-            
-            context = wiz_base(request, context)
-            
-            return render_to_response('wizards/wiz_relion_bandpass.html', context)
+# class RelionBandpassWeb(RelionBandpassWizard):
+#     _environments = [WEB_DJANGO]
+#     
+#     def _run(self, protocol, request):
+#         params = self._getParameters(protocol)
+#         objs = params['input'].get()
+#         
+#         res = validateParticles(objs)
+#         
+#         if res is not 1:
+#             return HttpResponse(res)
+#         else:
+#             particles = self._getParticles(objs)
+#             
+#             if len(particles) == 0:
+#                 return HttpResponse("errorIterate")
+#             
+#             context = {'objects': particles,
+#                        'params':params
+#                        }
+#             
+#             context = wiz_base(request, context)
+#             
+#             return render_to_response('wizards/wiz_relion_bandpass.html', context)
 
 
     

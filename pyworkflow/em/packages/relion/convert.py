@@ -245,6 +245,7 @@ def rowToCtfModel(ctfRow):
 
 def geometryFromMatrix(matrix, inverseTransform):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
+    from numpy import rad2deg
 
     if inverseTransform:
         from numpy.linalg import inv
@@ -403,7 +404,11 @@ def particleToRow(part, partRow, **kwargs):
         coordinateToRow(coord, partRow, copyId=False)
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        partRow.setValue(md.RLN_MICROGRAPH_NAME, str(part.getMicId()))
+        # If the row does not contains the micrgraphs name
+        # use a fake micrograph name using id to relion
+        # could at least group for CTF using that
+        if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
+            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
         
 
 def rowToParticle(partRow, **kwargs):
@@ -451,13 +456,11 @@ def rowToParticle(partRow, **kwargs):
         postprocessImageRow(img, partRow)
     
     img.setCoordinate(rowToCoordinate(partRow))
-    # copy micId if available
-    # if not copy micrograph name if available
-    try:
-        if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
-            img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
-    except Exception as e:
-        print "Warning:", e.message
+    
+    # copy micId if available from row to particle
+    if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
+        img.setMicId(partRow.getValue(md.RLN_MICROGRAPH_ID))
+
     return img
 
 
@@ -541,21 +544,20 @@ def writeIterAngularDist(self, inDataStar, outAngularDist, numberOfClasses, pref
     mdAll = md.MetaData(inDataStar)
     
     refsList = range(1, numberOfClasses + 1) 
-    print "refsList: ", refsList
+
     for ref3d in refsList:
         for prefix in prefixes:
             mdGroup = md.MetaData()
-            mdGroup.importObjects(mdAll, md.MDValueEQ(md.MDL_REF, ref3d))
+            mdGroup.importObjects(mdAll, md.MDValueEQ(md.RLN_PARTICLE_CLASS, ref3d))
             mdDist = md.MetaData()
             mdDist.aggregateMdGroupBy(mdGroup, md.AGGR_COUNT,
-                                      [md.MDL_ANGLE_ROT, md.MDL_ANGLE_TILT],
-                                      md.MDL_ANGLE_ROT, md.MDL_WEIGHT)
-            mdDist.setValueCol(md.MDL_ANGLE_PSI, 0.0)
+                                      [md.RLN_ORIENT_ROT, md.RLN_ORIENT_TILT],
+                                      md.RLN_ORIENT_ROT, md.MDL_WEIGHT)
+            mdDist.setValueCol(md.RLN_ORIENT_PSI, 0.0)
             blockName = '%sclass%06d_angularDist@' % (prefix, ref3d)
             print "Writing angular distribution to: ", blockName + outAngularDist
             mdDist.write(blockName + outAngularDist, md.MD_APPEND) 
             
-    
     
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
@@ -699,8 +701,6 @@ def convertBinaryFiles(imgSet, outputDir):
 
 
 def createItemMatrix(item, row, align):
-    from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
-    
     item.setTransform(rowToAlignment(row, alignType=align))
 
 def readCoordinates(mic, fileName, coordsSet):

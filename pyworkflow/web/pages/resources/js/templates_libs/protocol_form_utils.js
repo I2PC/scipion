@@ -230,7 +230,6 @@ function fixInput(serialize_form){
 	return serialize_form
 }
 
-
 function evalElements() {
 	/*
 	 * Function to evaluate the elements in a form, depending the type of the

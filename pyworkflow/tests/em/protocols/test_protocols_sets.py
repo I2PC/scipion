@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import random
+import unittest
 from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -110,7 +111,6 @@ class TestSets(BaseTest):
 
         p_split = self.proj.newProtocol(ProtSplitSet, numberOfSets=n)
         p_split.inputSet.set(em_set)
-###        p_split.numberOfSets.set(n)
         p_split.randomize.set(randomize)
         self.proj.launchProtocol(p_split, wait=True)
         return p_split
@@ -214,7 +214,7 @@ class TestSets(BaseTest):
         """ create set of particles and orderby a given attribute
         """
         # This function was written by Roberto. It does things
-        # differently, so let's keep it as refernce.
+        # differently, so let's keep it for reference.
 
         #create set of particles
 

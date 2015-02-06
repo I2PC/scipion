@@ -145,10 +145,13 @@ def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None)
         return None
     if imgDict is not None and imageName in imgDict:
         return imgDict[imageName]
-    imagePath = findResource(imageName)
+    if not os.path.isabs(imageName):
+        imagePath = findResource(imageName)
+    else:
+        imagePath = imageName
     image = None
     if imagePath:
-        from PIL import Image, ImageTk
+        from PIL import Image
         image = Image.open(imagePath)
         w, h = image.size
         newSize = None
@@ -160,6 +163,7 @@ def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None)
         if newSize:
             image.thumbnail(newSize, Image.ANTIALIAS)
         if tkImage:
+            from PIL import ImageTk
             image = ImageTk.PhotoImage(image)
         if imgDict is not None:
             imgDict[imageName] = image

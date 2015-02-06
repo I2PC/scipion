@@ -468,6 +468,19 @@ class Volume(Image):
     def __init__(self, **args):
         Image.__init__(self, **args)
 
+    def getDim(self):
+        """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
+        fn = self.getFileName()
+        if fn is not None and exists(fn.replace(':mrc', '')):
+            x, y, z, n = ImageHandler().getDimensions(self)
+
+            # Some volumes in mrc format can have the z dimension
+            # as n dimension, so we need to consider this case.
+            if z > 1:
+                return x, y, z
+            else:
+                return x, y, n
+        return None
         
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """

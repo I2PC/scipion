@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 
+import os
+from os.path import exists
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume 
@@ -105,9 +107,9 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self): 
-        #self.doContinue = False
         self._initialize()
         self._insertPolishStep()
+        self._insertFunctionStep('organizeDataStep')
         self._insertFunctionStep('createOutputStep')
         
     def _insertPolishStep(self):
@@ -115,14 +117,15 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         imgSet = refineRun._getInputParticles()
         refineRun._initialize() # load filenames stuff
         
-        imgStar = refineRun._getFileName('data', iter=refineRun._lastIter())
+        imgStar = self._getFileName('data', iter=refineRun._lastIter())
+        
         # `which relion_particle_polish_mpi` --i Refine3D/run2_ct21_it021_data.star 
         # --o folder/shiny  --angpix 3.54 --movie_frames_running_avg 5 --dont_read_old_files  
         # --sigma_nb 100 --perframe_highres 6 --autob_lowres 20 --sym C1 --bg_radius 28 
         #--white_dust -1 --black_dust -1
         
         params = ' --i %s' % imgStar
-        params += ' --o %s' % self._getExtraPath('shiny')
+        params += ' --o shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
         params += ' --movie_frames_running_avg %d' % refineRun.movieAvgWindow.get()
         params += ' --dont_read_old_files'
@@ -150,10 +153,52 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file. 
         """
+        from pyworkflow.utils.path import copyTree
+        copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
         self.runJob(self._getProgram('relion_particle_polish'), params)
-            
+    
+    def organizeDataStep(self):
+        from pyworkflow.utils import moveFile
+        import pyworkflow.em.metadata as md
+        from convert import relionToLocation, locationToRelion
+        
+        # moving shiny.star form project base path to the current protocol extra path.
+        shinyStar = "shiny.star"
+        pathFixedShiny = self._getExtraPath(shinyStar)
+        
+        if exists(shinyStar):
+            moveFile(shinyStar, pathFixedShiny)
+        mdShiny = md.MetaData(pathFixedShiny)
+        
+        oldImgPath = ""
+        for objId in mdShiny:
+            index, imgPath = relionToLocation(mdShiny.getValue(md.RLN_IMAGE_NAME, objId))
+            newPath = self._getExtraPath(os.path.basename(imgPath))
+            newLoc = locationToRelion(index, newPath)
+            mdShiny.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
+            if oldImgPath != imgPath and exists(imgPath):
+                moveFile(imgPath, newPath)
+                oldImgPath = imgPath
+        mdShiny.write(pathFixedShiny)
+    
     def createOutputStep(self):
-        pass
+        from pyworkflow.em import ALIGN_PROJ
+        from pyworkflow.em.packages.relion.convert import readSetOfParticles
+        imgSet = self.refineRun.get()._getInputParticles()
+        vol = Volume()
+        vol.setFileName(self._getFileName('volume_shiny', iter=self._lastIter()))
+        vol.setSamplingRate(imgSet.getSamplingRate())
+        
+        shinyPartSet = self._createSetOfParticles()
+        
+        shinyPartSet.copyInfo(imgSet)
+        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet, alignType=ALIGN_PROJ)
+        
+        self._defineOutputs(outputParticles=shinyPartSet)
+        self._defineSourceRelation(imgSet, shinyPartSet)
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, vol)
+
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

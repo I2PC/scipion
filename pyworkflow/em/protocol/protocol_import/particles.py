@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 """
 In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
@@ -31,7 +32,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 from os.path import exists
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, FileParam, BooleanParam
+from pyworkflow.protocol.params import FloatParam, FileParam, BooleanParam, EnumParam
 
 from images import ProtImportImages
 
@@ -46,6 +47,7 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
+    alignTypeList=[ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -62,7 +64,14 @@ class ProtImportParticles(ProtImportImages):
                       label='Input EMX file',
                       help="Select the EMX file containing particles information.\n"
                            "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
-        
+
+        form.addParam('alignType', EnumParam,
+                      condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      default = 0,
+                      choices =self.alignTypeList,
+                      label='Alignment Type',
+                      help="Is this a 2D alignment, a 3D alignment or a set of projections")
+#
         form.addParam('mdFile', FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
@@ -111,7 +120,9 @@ class ProtImportParticles(ProtImportImages):
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
             self.importFilePath = self.emxFile.get('').strip()
-            return EmxImport(self, self.importFilePath)
+            print "getImportClass", self.alignTypeList[self.alignType.get()]
+            return EmxImport(self, self.importFilePath,
+                                   self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
             from pyworkflow.em.packages.xmipp3.dataimport import XmippImport
             self.importFilePath = self.mdFile.get('').strip()

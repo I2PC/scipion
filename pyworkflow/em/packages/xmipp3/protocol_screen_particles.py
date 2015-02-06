@@ -130,9 +130,9 @@ class XmippProtScreenParticles(ProtProcessParticles):
             summary.append("Output particles not ready yet.")
         else:
             zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
-            summary.append("The minimum ZScore is %s" % min(zscores))
-            summary.append("The maximum ZScore is %s" % max(zscores))
-            summary.append("The mean ZScore is %s" % (sum(zscores)*1.0/len(self.outputParticles)))
+            summary.append("The minimum ZScore is %.2f" % min(zscores))
+            summary.append("The maximum ZScore is %.2f" % max(zscores))
+            summary.append("The mean ZScore is %.2f" % (sum(zscores)*1.0/len(self.outputParticles)))
         return summary
     
     def _validate(self):

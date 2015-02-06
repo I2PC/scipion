@@ -281,14 +281,17 @@ class TestXmippWorkflow(TestWorkflow):
         print "Run kerdensom"
         ProtKerdensom = self.newProtocol(XmippProtKerdensom, useMask=False, SomXdim=2, SomYdim=2,
                                  SomReg0=800, SomReg1=400, SomSteps=2)
-        ProtKerdensom.inputImages.set(protOnlyAlign.outputParticles)
+        ProtKerdensom.inputParticles.set(protOnlyAlign.outputParticles)
         self.launchProtocol(ProtKerdensom)        
         self.assertIsNotNone(ProtKerdensom.outputClasses, "There was a problem with kerdensom")  
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
         print "Run Rotational Spectra"
-        xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, SomXdim=2, SomYdim=2)
-        xmippProtRotSpectra.inputImages.set(protOnlyAlign.outputParticles)
+        xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, 
+                                               SomXdim=2, SomYdim=2,
+                                               spectraInnerRadius=4,
+                                               spectraOuterRadius=24)
+        xmippProtRotSpectra.inputParticles.set(protOnlyAlign.outputParticles)
         self.launchProtocol(xmippProtRotSpectra)        
         self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
         

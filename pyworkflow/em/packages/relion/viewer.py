@@ -38,7 +38,8 @@ from protocol_classify3d import ProtRelionClassify3D
 from protocol_refine3d import ProtRelionRefine3D
 from protocol_postprocess import ProtRelionPostprocess
 from pyworkflow.protocol.params import *
-from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter
+from pyworkflow.em.plotter import EmPlotter
+from pyworkflow.utils.path import exists
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -52,6 +53,52 @@ VOLUME_CHIMERA = 1
 CLASSES_ALL = 0
 CLASSES_SEL = 1
 
+
+
+class RelionPlotter(EmPlotter):
+    ''' Class to create several plots with Xmipp utilities'''
+    def __init__(self, x=1, y=1, mainTitle="", **kwargs):
+        EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
+    
+    def plotMdAngularDistribution(self, title, angularMd, color='blue'):
+        '''Create an special type of subplot, representing the angular
+        distribution of weight projections. A metadata should be provided containing
+        labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT '''
+        from math import radians
+        
+        rot = [radians(angularMd.getValue(md.RLN_ORIENT_ROT, objId)) for objId in angularMd]
+        tilt = [angularMd.getValue(md.RLN_ORIENT_TILT, objId) for objId in angularMd]
+        weight = [angularMd.getValue(md.MDL_WEIGHT, objId) for objId in angularMd]
+        
+        self.plotAngularDistribution(title, rot, tilt, weight)
+
+    def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
+        """ plot metadata columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
+        if mdLabelX:
+            xx = []
+        else:
+            xx = range(1, md.size() + 1)
+        yy = []
+        for objId in md:
+            if mdLabelX:
+                xx.append(md.getValue(mdLabelX, objId))
+            yy.append(md.getValue(mdLabelY, objId))
+        
+        nbins = args.pop('nbins', None)
+        if nbins is None:
+            self.plotData(xx, yy, color, **args)
+        else:
+            self.plotHist(yy, nbins, color, **args)
+        
+    def plotMdFile(self, mdFilename, mdLabelX, mdLabelY, color='g', **args):
+        """ plot metadataFile columns mdLabelX and mdLabelY
+            if nbins is in args then and histogram over y data is made
+        """
+        md = md.MetaData(mdFilename)
+        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
+        
     
 class RelionViewer(ProtocolViewer):
     """ This protocol serve to analyze the results of Relion runs.
@@ -285,7 +332,7 @@ Examples:
             
         colors = ['g', 'b']
 
-        xplotter = XmippPlotter()
+        xplotter = RelionPlotter()
         xplotter.createSubPlot("Avg PMax per Iterations", "Iterations", "Avg PMax")
         
         for label, color in zip(labels, colors):
@@ -361,8 +408,10 @@ Examples:
             for volFn in volumes:
                 # We assume that the chimera script will be generated
                 # at the same folder than relion volumes
-                localVol = os.path.basename(volFn.replace(':mrc', ''))
-                f.write("open %s\n" % localVol)
+                vol = volFn.replace(':mrc', '')
+                localVol = os.path.basename(vol)
+                if exists(vol):
+                    f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
             view = CommandView('chimera %s &' % cmdFile)                    
@@ -399,7 +448,7 @@ Examples:
     
     def _createAngDistChimera(self, it):
         # FIXME
-        #outerRadius = int(float(self.MaskRadiusA)/self.SamplingRate)
+        #outerRadius = int(float(self.maskDiameterA)/self.SamplingRate)
         outerRadius = 30
         radius = float(outerRadius) * 1.1
         # Common variables to use
@@ -413,9 +462,12 @@ Examples:
             ref3d = self._refsList[0]
             for prefix in prefixes:
                 volFn = self.protocol._getFileName(prefix + 'volume', iter=it, ref3d=ref3d)
-                angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
-                from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
-                return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                if exists(volFn.replace(":mrc","")):
+                    angDistFile = "%sclass%06d_angularDist@%s" % (prefix, ref3d, data_angularDist)
+                    from pyworkflow.em.packages.xmipp3.viewer import ChimeraClient
+                    return ChimeraClient(volFn, angularDist=angDistFile, radius=radius, sphere=sphere)
+                else:
+                    raise Exception("This class is Empty. Please try with other class")
         
         else:
             return self.infoMessage("Please select only one class to display angular distribution",
@@ -430,7 +482,8 @@ Examples:
         gridsize = self._getGridSize(n)
         
         data_angularDist = self.protocol._getIterAngularDist(it)
-        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], 
+                                 mainTitle='Iteration %d' % it, windowTitle="Angular Distribution")
         for ref3d in self._refsList:
             for prefix in prefixes:
                 mdAng = md.MetaData("class%06d_angularDist@%s" % (ref3d, data_angularDist))
@@ -448,7 +501,6 @@ Examples:
         mdSSNR = md.MetaData()
         # only cross by 1 is important
         mdSSNR.importObjects(mdOut, md.MDValueGT(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, 0.9))
-        #TODO name should be a MDL_LABEL converted
         mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
         resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
         frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
@@ -461,12 +513,12 @@ Examples:
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         md.activateMathExtensions()
-        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1])
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1])
         
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@' % ref3d
                 legendName = []
                 for it in self._iterations:
@@ -503,12 +555,12 @@ Examples:
         
         md.activateMathExtensions()
         
-        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
 
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = prefix + 'class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
                 legends = []
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
@@ -624,8 +676,8 @@ class PostprocessViewer(ProtocolViewer):
         
         md.activateMathExtensions()
         
-        xplotter = XmippPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-        a = xplotter.createSubPlot("GoldStandard FSC", 'Armstrongs^-1', 'FSC', yformat=False)
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+        a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
         model_star = self.protocol._getExtraPath('postprocess.star')
         if os.path.exists(model_star):

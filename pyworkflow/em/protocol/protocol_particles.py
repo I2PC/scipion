@@ -149,7 +149,9 @@ class ProtParticlePicking(ProtParticles):
 
     def _summary(self):
         summary = []
-        summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        if self.getInputMicrographs() is  not None:
+            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+
         if(self.getOutputsSize() > 1):
             for key, output in self.iterOutputAttributes(EMObject):
                 label = output.getObjLabel() if output.getObjLabel() != "" else key
