@@ -205,7 +205,7 @@ class ProtRelionBase(EMProtocol):
                
         form.addSection(label='CTF')
         form.addParam('doCTF', BooleanParam, default=True,
-                      label='Do CTF-amplitud correction?',
+                      label='Do CTF-amplitude correction?',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
                            'The resulting algorithm intrinsically implements the optimal linear, ' 
                            'or Wiener filter. Note that input particles should contains CTF parameters.')

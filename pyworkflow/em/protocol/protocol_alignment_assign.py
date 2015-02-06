@@ -83,7 +83,6 @@ class ProtAlignmentAssign(ProtAlign2D):
 
         outputParticles.copyItems(inputParticles,
                             updateItemCallback=self._updateItem)
-        outputParticles.setAlignment(ALIGN_2D)
 
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(inputParticles, outputParticles)
@@ -119,7 +118,16 @@ class ProtAlignmentAssign(ProtAlign2D):
         """
         #check that input set of aligned particles do have 2D alignment
         errors = [ ]
-        if not self.inputAlignment.get().hasAlignment2D():
-            errors.append("Input aligned particles should have alignment 2D.")
+        inputAlignmentSet = self.inputAlignment.get()
+        if not inputAlignmentSet.hasAlignment():
+            errors.append("Input alignment set should contains some kind of alignment (2D, 3D or Projection).")
+        else:
+            # Just for consistency, check that the particles really contains Transform object
+            first = inputAlignmentSet.getFirstItem()
+            alignment = first.getTransform()
+            if alignment is None:
+                errors.append('Inconsistency detected in *Input alignment* !!!')
+                errors.append('It has alignment: _%s_, but the alignment is missing!!!' % inputAlignmentSet.getAlignment())
+            
         # Add some errors if input is not valid
         return errors

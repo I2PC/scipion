@@ -117,7 +117,8 @@ def viewToUrl(request, view):
     # PLOT
     if isinstance(view, Plotter):
         url = 'url::/' + savePlot(request, view)
-        
+                
+    # IMAGE
     elif isinstance(view, ImageView):
         url = 'url::/' + getImageUrl(view.getImagePath())
     
