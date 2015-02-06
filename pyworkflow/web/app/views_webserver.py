@@ -25,5 +25,5 @@
 # **************************************************************************
 
 # WEBSERVICES IMPORT
-from pyworkflow.web.webservices.myfirstmap.views import *
-from pyworkflow.web.webservices.desktop.views import *
+from pyworkflow.web.webservers.myfirstmap.views import *
+from pyworkflow.web.webservers.desktop.views import *

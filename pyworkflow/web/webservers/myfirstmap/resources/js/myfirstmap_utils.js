@@ -133,7 +133,7 @@ function downloadTestdata(elm){
 }
 
 function createServProject(elm) {
-	projName = randomString(32, '#aA')
+	var projName = randomString(32, '#aA')
 	var selected = $("#testData input[type='radio']:checked").val();
 
 	var URL = getSubDomainURL() + "/create_service_project/?projectName=" + projName
@@ -163,17 +163,6 @@ function createServProject(elm) {
 		}
 	});
 }
-
-//function goToProjectForm() {
-//	var title = 'Confirm access code'
-//	var dialog = "<p>Please write the <strong>identification code</strong> " +
-//		"to access to your <strong>Project</strong>.</p>" +
-//		"<p>This code was given to you after the creation of your project.</p>" +
-//		"<p>If you forgot it, please contact us using this mail: <span style='color:firebrick;'>myfirstmap@cnb.csic.es</span></p><br />";
-//	var msg = dialog + "<p><input type='text' id='code' class='content' style='width:100%;text-align:center;'/></p>";
-//	var funcName = 'goToProject';
-//	accessPopup(title, msg, funcName, 'Confirm', 'Cancel');
-//}
 
 function goToProject(elm) {
 	var code = elm.val();
