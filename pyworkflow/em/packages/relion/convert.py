@@ -700,8 +700,6 @@ def convertBinaryFiles(imgSet, outputDir):
 
 
 def createItemMatrix(item, row, align):
-    from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
-    
     item.setTransform(rowToAlignment(row, alignType=align))
 
 def readCoordinates(mic, fileName, coordsSet):

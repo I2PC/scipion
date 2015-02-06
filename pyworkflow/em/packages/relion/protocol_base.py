@@ -89,7 +89,8 @@ class ProtRelionBase(EMProtocol):
                   'all_avgPmax_xmipp': self._getTmpPath('iterations_avgPmax_xmipp.xmd'),
                   'all_changes_xmipp': self._getTmpPath('iterations_changes_xmipp.xmd'),
                   'selected_volumes': self._getTmpPath('selected_volumes_xmipp.xmd'),
-                  'movie_particles': self._getPath('movie_particles.star')
+                  'movie_particles': self._getPath('movie_particles.star'),
+                  'volume_shiny': self.extraIter + 'data_shiny_post.mrc:mrc'
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:

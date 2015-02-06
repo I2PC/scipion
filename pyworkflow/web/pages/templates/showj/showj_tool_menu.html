@@ -2,7 +2,7 @@
 $(document).ready(function(){
 	
 	//After push Enabled, Disabled or Close the windows is closed.
-    $("i#closeMenu, .buttonMirror, .buttonTransf, .buttonShift, .buttonWrap").click(function(){
+    $("i#closeMenuTool, .buttonMirror, .buttonTransf, .buttonShift, .buttonWrap").click(function(){
     	showHideOptionMenu();
     });
 	
@@ -17,7 +17,7 @@ $(document).ready(function(){
 	<li class=optionListTitle>
 		<strong>Tools Menu</strong>
 		<span style="float:right;">
-		<i id="closeMenu" class="fa fa-times"></i>
+		<i id="closeMenuTool" class="fa fa-times"></i>
 		</span>
 	</li>
 	<li class="buttonMirror">{{ form.mirrorY }} {{ form.mirrorY.label_tag }}</li>
