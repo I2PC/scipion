@@ -183,7 +183,23 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         mdShiny.write(pathFixedShiny)
     
     def createOutputStep(self):
-        pass
+        from pyworkflow.em.packages.relion.convert import readSetOfParticles
+        imgSet = self.refineRun.get()._getInputParticles()
+        vol = Volume()
+        vol.setFileName(self._getFileName('volume_shiny', iter=self._lastIter()))
+        vol.setSamplingRate(imgSet.getSamplingRate())
+        
+        shinyPartSet = self._createSetOfParticles()
+        
+        shinyPartSet.copyInfo(imgSet)
+        shinyPartSet.setAlignmentProj()
+        readSetOfParticles(self._getExtraPath("shiny.star"), shinyPartSet)
+        
+        self._defineOutputs(outputParticles=shinyPartSet)
+        self._defineSourceRelation(imgSet, shinyPartSet)
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(imgSet, vol)
+
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
