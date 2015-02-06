@@ -33,7 +33,7 @@ from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.manager import Manager
 from django.http import HttpResponse
 from pyworkflow.tests.tests import DataSet
-
+from pyworkflow.utils import copyFile
 
 def service_projects(request):
     #Example Projects to be showed

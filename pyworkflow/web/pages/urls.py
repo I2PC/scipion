@@ -1,3 +1,5 @@
+import os
+import pyworkflow as pw
 from django.conf.urls import patterns, include, url
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -8,29 +10,18 @@ from django.conf import settings
 # URL ASSOCIATION
 #===============================================================================
 
-urlpatterns = patterns('',
-    
+urls = ['',
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-    
-    # webservices resources
-    (r'^resources_myfirstmap/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_MYFIRSTMAP}),
     
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
     
     # If no path given, load the projects view
 #     url(r'^$', 'app.views_project.projects'),
-    url(r'^$', 'app.views_project.service_projects'),
+    url(r'^$', 'app.views_project.projects'),
     
-    #SERVICE PROJECT 
-    url(r'^service_projects/', 'app.views_project.service_projects'),
-    url(r'^check_project_id/$', 'app.views_project.check_project_id'),
-    url(r'^create_service_project/$', 'app.views_project.create_service_project'),
-    url(r'^get_testdata/$', 'app.views_project.get_testdata'),
-    url(r'^service_content/$', 'app.views_project.service_content'),
-
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
@@ -106,10 +97,18 @@ urlpatterns = patterns('',
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     
+    # MYFIRSTMAP
+    url(r'^service_projects/', 'app.views_webservice.service_projects'),
+    url(r'^check_project_id/$', 'app.views_webservice.check_project_id'),
+    url(r'^create_service_project/$', 'app.views_webservice.create_service_project'),
+    url(r'^get_testdata/$', 'app.views_webservice.get_testdata'),
+    url(r'^service_content/$', 'app.views_webservice.service_content'),
+    (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(pw.HOME, 'web', 'webservices', 'myfirstmap', 'resources')}),
+   
     # DESKTOP
 #     url(r'^desktop/', 'app.views_desktop.desktop'),
-    url(r'^download_form/', 'app.views_project.download_form'),
-    url(r'^doDownload/', 'app.views_project.doDownload'),
+    url(r'^download_form/', 'app.views_webservice.download_form'),
+    url(r'^doDownload/', 'app.views_webservice.doDownload'),
     
 
 #===============================================================================
@@ -125,7 +124,10 @@ urlpatterns = patterns('',
 #    url(r'^delete host/$', 'app.views_host.deleteHost'),
 #    url(r'^host_form/$', 'app.views_host.hostForm'),
 
-)
+]
 
 # handler404 = "app.views_util.error"
 # handler500 = "app.views_util.error"
+
+urlpatterns = patterns(*urls)
+

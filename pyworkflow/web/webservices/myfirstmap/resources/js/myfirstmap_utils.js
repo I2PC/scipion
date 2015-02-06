@@ -147,9 +147,13 @@ function createServProject(elm) {
 		async: false,
 		success : function() {
 			var title = "ACCESS CODE"
-			
+			var funcHref = "javascript:goToProject(jQuery('.content'));"
+				
 			var msg = "<p>Your <strong>url to access </strong> to this <strong>Project</strong> is:</p>" +
-			"<br /><p><h3>" + 
+			"<br /><p><h3>" +
+			
+			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
+			
 			"<a style='color:firebrick;' href='http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "'>" +
 			"http://scipion.cnb.csic.es/myfirstmap/service_content/?p="+ projName+ "</a>"+
 			"</h3></p><br />" +

@@ -31,6 +31,7 @@ from pyworkflow.web.app.views_util import getResourceCss, getResourceIcon, getRe
 from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse
 from django.core.context_processors import csrf
+from pyworkflow.web.pages import settings as django_settings
 
 def desktop(request):
     context = {}

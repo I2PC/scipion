@@ -34,9 +34,6 @@ from pyworkflow.utils.path import copyFile
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render_to_response
 
-# WEBSERVICES IMPORT
-from pyworkflow.web.webservices.myfirstmap.views import *
-from pyworkflow.web.webservices.desktop.views import *
 
 def projects(request):
     from pyworkflow.utils.utils import prettyDate
