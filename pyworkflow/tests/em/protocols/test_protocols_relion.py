@@ -84,7 +84,7 @@ class TestRelionClassify2D(TestRelionBase):
     def testRelion2D(self):                  
         print "Run relion2D"
         prot2D = self.newProtocol(ProtRelionClassify2D,
-                                  doCTF=False, maskDiameterA=170,
+                                  doCTF=False, maskDiameterA=340,
                                   numberOfMpi=4, numberOfThreads=1)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)
@@ -118,7 +118,7 @@ class TestRelionClassify3D(TestRelionBase):
         print "Run ProtRelionClassify3D"
         relion3DClass = self.newProtocol(ProtRelionClassify3D, 
                                          numberOfClasses=3, numberOfIterations=4, 
-                                         doCTF=False, runMode=1,
+                                         doCTF=False, runMode=1, maskDiameterA=320,
                                          numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
@@ -149,6 +149,7 @@ class TestRelionRefine(TestRelionBase):
         print "Run ProtRelionRefine"
         relion3DClass = self.newProtocol(ProtRelionRefine3D, 
                                          doCTF=False, runMode=1,
+                                         maskDiameterA=340,
                                          extraParams='--low_resol_join_halves 40 --memory_per_thread 1',
                                          numberOfMpi=3, numberOfThreads=2)
         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
