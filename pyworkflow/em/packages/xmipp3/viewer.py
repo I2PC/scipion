@@ -377,10 +377,15 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, ProtMovieAlignment):
             outputMics = self.protocol.outputMicrographs
+            plotLabels = 'plotPolar._filename plotCart._filename'
+            labels = plotLabels + ' _filename '
             objCommands = '%s %s %s' % (OBJCMD_MOVIE_ALIGNPOLAR, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_MOVIE_ALIGNPOLARCARTESIAN)
-            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={OBJCMDS: objCommands}))
 
-            
+            self._views.append(ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId(), viewParams={MODE: MODE_MD,
+                                                      ORDER: labels, VISIBLE: labels, RENDER: plotLabels, 'zoom': 50,
+                                                      OBJCMDS: objCommands}))
+
+
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)
 

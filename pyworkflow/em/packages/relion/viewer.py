@@ -518,7 +518,7 @@ Examples:
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'log(SSNR)', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@' % ref3d
                 legendName = []
                 for it in self._iterations:
@@ -560,7 +560,7 @@ Examples:
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = prefix + 'class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Armstrongs^-1', 'FSC', yformat=False)
+                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
                 legends = []
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
@@ -677,7 +677,7 @@ class PostprocessViewer(ProtocolViewer):
         md.activateMathExtensions()
         
         xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-        a = xplotter.createSubPlot("GoldStandard FSC", 'Armstrongs^-1', 'FSC', yformat=False)
+        a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
         
         model_star = self.protocol._getExtraPath('postprocess.star')
         if os.path.exists(model_star):

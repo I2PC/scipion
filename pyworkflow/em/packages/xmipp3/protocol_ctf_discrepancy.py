@@ -136,8 +136,10 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
             ctf.setDefocusV(    (ctf1.getDefocusV() + ctf2.getDefocusV())/2. )
             ctf.setDefocusAngle((ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2. )
             ctf.setMicrograph(   ctf1.getMicrograph())
-            #Same ctf appears many times so I can not keep the ctfId
-            #ctf.setObjId(ctfId)
+
+            #Clean objId since we can have ctf from the same micrograph
+            # and by default it is set to micrograph id
+            ctf.cleanObjId()
             resolution = self._freqResol[(method1, method2, ctfId)]
             ctf.resolution = Float(resolution)
             ctf.method1 = String(self.methodNames[method1])
