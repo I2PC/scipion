@@ -983,6 +983,7 @@ class ProtocolsView(tk.Frame):
         
         if prot:
             tm = '*%s*\n' % prot.getRunName()
+            tm += '   Id: %s\n' % prot.getObjId()
             tm += 'State: %s\n' % prot.getStatusMessage()
             tm += ' Time: %s\n' % prettyDelta(prot.getElapsedTime()) 
             if not hasattr(tw, 'tooltipText'):
