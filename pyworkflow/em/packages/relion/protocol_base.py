@@ -570,6 +570,13 @@ class ProtRelionBase(EMProtocol):
     def _validate(self):
         errors = []
         if self.doContinue:
+            continueProtocol = self.continueRun.get()
+            if (continueProtocol is not None and
+                continueProtocol.getObjId() == self.getObjId()):
+                errors.append('In Scipion you must create a new Relion run')
+                errors.append('and select the continue option rather than')
+                errors.append('select continue from the same run.')
+                errors.append('') # add a new line
             errors += self._validateContinue()
         else:
             if self._getInputParticles().isOddX():
