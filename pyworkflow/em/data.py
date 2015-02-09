@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from collections import OrderedDict
 """
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
@@ -203,36 +204,104 @@ class CTFModel(EMObject):
 
 class DefocusGroup(EMObject):
     """ Groups CTFs by defocus"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._defocusMin = Float()
         self._defocusMax = Float()
-        self._defocusAvg = Float()
-        self._size = Integer()
+        self._size = Integer(0)
         
     def getDefocusMin(self):
         return self._defocusMin.get()
         
-    def setDefocusMin(self, value):
-        self._defocusMin.set(value)
-
     def getDefocusMax(self):
         return self._defocusMax.get()
         
-    def setDefocusMax(self, value):
-        self._defocusMax.set(value)
-        
     def getDefocusAvg(self):
-        return self._defocusAvg.get()
-        
-    def setDefocusAvg(self, value):
-        self._defocusAvg.set(value)
-        
-    def setSize(self, value):
-        self._size.set(value)
+        return self._defocusAvg.get() / self.getSize()
         
     def getSize(self):
         return self._size.get()
+    
+    def addCTF(self, ctf):
+        """ Add a new CTF to the group.
+        Update values like min, max, avg and size. 
+        """
+        self._size.increment()
+        defocusU = ctf.getDefocusU()
+        self._defocusMin.set(min(defocusU, self._defocusMin.get()))
+        self._defocusMax.set(max(defocusU, self._defocusMax.get()))
+        self._defocusSum += defocusU
+        
+    def containsCTF(self, ctf):
+        """ Return True if a CTF is inside the group defocus range. """ 
+        defocusU = ctf.getDefocusU()
+        return (defocusU >= self.getDefocusMin() and
+                defocusU <= self.getDefocusMax())
+        
+        
+class SetOfDefocusGroups():
+    """ Store a set of several defocus groups."""
+    def __init__(self, inputSet, 
+                 groupRange=1000,
+                 groupMinSize=1,
+                 **kwargs):
+        """ Create necessary defocus groups.
+        Params:
+            inputSet: input particles or micrographs with CTF information.
+            groupRange: maximum defocus range allowed in one group.
+            groupMinSize: impose a minimun number of particles per group.
+        """
+        self._groups = OrderedDict()
+        self.__createGroups(inputSet, groupRange, groupMinSize)
+        
+    def __createGroups(self, inputSet, groupRange, groupMinSize):
+        iterSet = iter(inputSet.iterItems(orderBy=['_ctfModel._defocusU', 'id'], direction='ASC'))
+        first = iterSet.next()
+        self.__addNewGroup(first.getCTF())
+        
+        for item in iterSet:
+            ctf = item.getCTF()
+            # Keep adding ctf to the current group
+            # if the groupMinSize is not reached or
+            # if the particle is inside the groupRange
+            if (self._lastGroup.getSize() < groupMinSize or 
+                ctf.getDefocusU() - self._lastDefocus < groupRange):
+                self._lastGroup.addCTF(ctf)
+            else:
+                self.__addNewGroup(ctf)
+            
+    def __addNewGroup(self, ctf):
+        group = DefocusGroup()
+        group.addCTf(ctf)
+        count = len(self._groups) + 1
+        defocusU = ctf.getDefocusU()
+        groupName = 'ctfgroup_%06d_%05d' % (defocusU, count)
+        self._groups[groupName] = group
+        
+        self._lastDefocus = defocusU
+        self._lastGroup = group
+
+    def getGroupByName(self, groupName):
+        """ Return the Group for a given Name.
+        If not exists, return None.
+        """
+        return self._groups.get(groupName, None)
+
+    def getGroupByCTF(self, ctf):
+        """ Get the CTF group for this ctf. """
+        for group in self._groups.values():
+            if group.containsCTF(ctf):
+                return group
+        return None
+                
+    def getDefocusMax(self):
+        return self._defocusMax.get()
+        
+    def getDefocusAvg(self):
+        return self._defocusAvg.get() / self.getSize()
+        
+    def getSize(self):
+        return len(self._groups)
 
 
 class ImageDim(CsvList):
