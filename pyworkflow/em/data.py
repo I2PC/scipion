@@ -102,11 +102,11 @@ class Acquisition(EMObject):
     
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._defocusU = Float(args.get('defocusU', None))
-        self._defocusV = Float(args.get('defocusV', None))
-        self._defocusAngle = Float(args.get('defocusAngle', None))
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._defocusU = Float(kwargs.get('defocusU', None))
+        self._defocusV = Float(kwargs.get('defocusV', None))
+        self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
         self._psdFile = String()
 #         self._micFile = String()
@@ -208,6 +208,7 @@ class DefocusGroup(EMObject):
         EMObject.__init__(self, **kwargs)
         self._defocusMin = Float()
         self._defocusMax = Float()
+        self._defocusSum = Float(0)
         self._size = Integer(0)
         
     def getDefocusMin(self):
@@ -217,7 +218,7 @@ class DefocusGroup(EMObject):
         return self._defocusMax.get()
         
     def getDefocusAvg(self):
-        return self._defocusAvg.get() / self.getSize()
+        return self._defocusSum.get() / self.getSize()
         
     def getSize(self):
         return self._size.get()
@@ -230,7 +231,7 @@ class DefocusGroup(EMObject):
         defocusU = ctf.getDefocusU()
         self._defocusMin.set(min(defocusU, self._defocusMin.get()))
         self._defocusMax.set(max(defocusU, self._defocusMax.get()))
-        self._defocusSum += defocusU
+        self._defocusSum.set(self._defocusSum.get() + defocusU)
         
     def containsCTF(self, ctf):
         """ Return True if a CTF is inside the group defocus range. """ 
