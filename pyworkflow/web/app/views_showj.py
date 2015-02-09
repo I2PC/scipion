@@ -213,7 +213,10 @@ def setRenderingOptions(request, dataset, table, inputParams):
         #Setting the _imageDimensions
         _imageDimensions = readDimensions(request, _imageVolName, _typeOfColumnToRender)
         
-        dataset.setNumberSlices(_imageDimensions[2])
+        if _imageDimensions is None: 
+            dataset.setNumberSlices(None)
+        else:
+            dataset.setNumberSlices(_imageDimensions[2])
         
         if _typeOfColumnToRender == sj.COL_RENDER_IMAGE or isVol:
             is3D = inputParams[sj.MODE] == sj.MODE_VOL_ASTEX or inputParams[sj.MODE] == sj.MODE_VOL_CHIMERA or inputParams[sj.MODE] == sj.MODE_VOL_JSMOL
