@@ -96,6 +96,10 @@ class LevelTreeLayout(GraphLayout):
         """
         rootNode = graph.getRoot()
         
+        # Setup empty layout for each node
+        for node in graph.getNodes():
+            node._layout = {}
+            
         # Do some level initialization on each node
         self._setLayoutLevel(rootNode,  1, None)
         self._computeNodeOffsets(rootNode, 1)
@@ -106,6 +110,10 @@ class LevelTreeLayout(GraphLayout):
         
         self._applyNodeOffsets(rootNode, -m + self.DY)
         
+        # Clean temporarly _layout attributes
+        for node in graph.getNodes():
+            del node._layout
+        
     def _setLayoutLevel(self, node, level, parent):
         """ Iterate over all nodes and set _layout dict.
         Also set the node level, which is defined
@@ -114,9 +122,6 @@ class LevelTreeLayout(GraphLayout):
         if level > self.maxLevel:
             return 
         
-        if not hasattr(node, '_layout'):
-            node._layout = {}
-            
         layout = node._layout
         
         if level > layout.get('level', 0):

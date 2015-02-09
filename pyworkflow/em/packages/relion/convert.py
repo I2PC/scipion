@@ -40,6 +40,7 @@ from pyworkflow.utils import Environ
 from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    findRootFrom, replaceBaseExt)
 import pyworkflow.em as em
+
 # Since Relion share several conventions with Xmipp, we will reuse 
 # the xmipp3 tools implemented for Scipion here
 import pyworkflow.em.metadata as md
@@ -252,7 +253,7 @@ def geometryFromMatrix(matrix, inverseTransform):
         shifts = -translation_from_matrix(matrix)
     else:
         shifts = translation_from_matrix(matrix)
-    angles = -rad2deg(euler_from_matrix(matrix, axes='szyz'))
+    angles = -numpy.rad2deg(euler_from_matrix(matrix, axes='szyz'))
     return shifts, angles
 
 
