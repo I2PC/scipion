@@ -83,9 +83,10 @@ def getEnviron():
     # Check that executable exists
     if not os.path.exists(SPIDER):
         msg = "SPIDER executable not found at:\n   '%s'" % SPIDER
-        msg += "\nPlease create a link inside the bin folder: \n   '%s'" % os.environ['SPBIN_DIR']
+        msg += "\nPlease create a link inside the bin folder: \n   '%s'" % env['SPBIN_DIR']
         msg += "\n named 'spider' or define the SPIDER environment variable"
-        raise Exception(msg)
+        print msg
+        return None
         
     env.set('PATH', env['SPBIN_DIR'], env.END)
     

@@ -145,7 +145,10 @@ def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None)
         return None
     if imgDict is not None and imageName in imgDict:
         return imgDict[imageName]
-    imagePath = findResource(imageName)
+    if not os.path.isabs(imageName):
+        imagePath = findResource(imageName)
+    else:
+        imagePath = imageName
     image = None
     if imagePath:
         from PIL import Image

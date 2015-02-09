@@ -233,12 +233,16 @@ class MaskRadiusWizard(EmWizard):
         if provider is not None:
             d = MaskPreviewDialog(form.root, 
                                        provider, 
-                                       maskRadius = value, 
+                                       maskRadius=value, 
                                        unit=units)
             if d.resultYes():
-                form.setVar(label, d.getRadius())
+                self.setVar(form, label, d.getRadius())
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
+            
+    def setVar(self, form, label, value):
+        form.setVar(label, value) 
+
 
 class MaskRadiiWizard(EmWizard):
     
@@ -276,14 +280,14 @@ class VolumeMaskRadiiWizard(MaskRadiiWizard):
 
 class FilterWizard(EmWizard):
                 
-    def show(self, form, value, label, mode, unit=UNIT_PIXEL):
+    def show(self, form, value, label, mode, unit=UNIT_PIXEL, **args):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
         if provider is not None:
             self.mode = mode
-            args = {'mode':  self.mode,
-                    'unit': unit}
+            args.update({'mode':  self.mode,
+                         'unit': unit})
             if self.mode == FILTER_LOW_PASS:
                 args['showLowFreq'] = False                
                 args['highFreq'] = value[1]
@@ -296,14 +300,6 @@ class FilterWizard(EmWizard):
                 args['lowFreq'] = value[0]
                 args['highFreq'] = value[1]
                 args['freqDecay'] = value[2]
-            #elif self.mode == FILTER_LOW_PASS_NO_DECAY:
-            #    args['showLowFreq'] = False
-            #    args['showDecay'] = False
-            #    args['highFreq'] = value[1]
-            #elif self.mode == FILTER_NO_DECAY:
-            #    args['lowFreq'] = value[0]
-            #    args['highFreq'] = value[1]
-            #    args['showDecay'] = False
             else:
                 raise Exception("Unknown mode '%s'" % self.mode)
 
@@ -762,18 +758,30 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         create the items preview. 
         """
         from pyworkflow.gui.matplotlib_image import MaskPreview    
+        if self.innerRadius is None:
+            self.innerRadius = 0
+        if self.outerRadius is None:
+            self.outerRadius = int(self.dim_par/2)
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=0)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
-        self.radiusSliderOut = LabelSlider(frame, 'Outer radius', from_=0, to=int(self.dim_par/2), value=self.outerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+            
+        self.radiusSliderOut = LabelSlider(frame, 'Outer radius', 
+                                           from_=0, to=int(self.dim_par/2), 
+                                           value=self.outerRadius, step=1, 
+                                           callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
         self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5) 
 
-        self.radiusSliderIn = LabelSlider(frame, 'Inner radius', from_=0, to=int(self.dim_par/2), value=self.innerRadius, step=1, callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+        self.radiusSliderIn = LabelSlider(frame, 'Inner radius', 
+                                          from_=0, to=int(self.dim_par/2), 
+                                          value=self.innerRadius, step=1, 
+                                          callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
         self.radiusSliderIn.grid(row=1, column=0, padx=5, pady=5) 
     
     def updateRadius(self, radiusSliderOut, radiusSliderIn):
-        self.preview.updateMask(outerRadius = radiusSliderOut.get() * self.ratio, innerRadius = radiusSliderIn.get() * self.ratio)     
+        self.preview.updateMask(outerRadius=radiusSliderOut.get() * self.ratio, 
+                                innerRadius=radiusSliderIn.get() * self.ratio)     
         
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())

@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.em.viewer import ImageView
 """
 Visualization of the ResMap outputs.
 """
@@ -48,7 +49,7 @@ class ResMapViewer(ProtocolViewer):
     Please find the manual at http://resmap.sourceforge.net 
     """
            
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _environments = [DESKTOP_TKINTER]
     _targets = [ProtResMap]
     _label = 'viewer resmap'
     
@@ -77,34 +78,33 @@ class ResMapViewer(ProtocolViewer):
                 'doShowChimera': self._showChimera,
                 }
         
-    def _getVolumeMatrix(self, volName):
-        from ResMap_fileIO import MRC_Data
-        volPath = self.protocol._getPath(volName)
-        return MRC_Data(volPath, 'ccp4').matrix
-    
     def _showVolumeSlices(self, param=None):
-        from ResMap_visualization import plotOriginalVolume
-        fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
-        return [Plotter(figure=fig)]
+        return [self.protocol._plotVolumeSlices()]
         
     def _showResMapSlices(self, param=None):
-        from ResMap_visualization import plotResMapVolume
-        fig = plotResMapVolume(self._getVolumeMatrix('volume1.map'),
-                                  minRes=self.protocol.minRes.get(),
-                                  maxRes=self.protocol.maxRes.get())
-        return [Plotter(figure=fig)]
+        return [self.protocol._plotResMapSlices()]
              
     def _plotHistogram(self, param=None):
-        """ First we parse the cas_EIG file and we read:
-        first line: take the number of eigen values.
-        then one line per factor and we read the percent and cumulative percent.
-        """
-        from ResMap_visualization import plotResolutionHistogram
-        from cPickle import loads
-        histogramData = loads(self.protocol.histogramData.get())
-        fig = plotResolutionHistogram(histogramData)
-        return [Plotter(figure=fig)]
+        return [self.protocol._plotHistogram()]
     
     def _showChimera(self, param=None):
         os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
+        
+        
+class ResMapViewerWeb(ResMapViewer):
+    """
+    Same viewer for ResMap web, but using saved images of the plots.
+    """
+           
+    _environments = [WEB_DJANGO]
+    
+    def _showVolumeSlices(self, param=None):
+        return [ImageView(self.protocol._getExtraPath('volume1.map.png'))]
+        
+    def _showResMapSlices(self, param=None):
+        return [ImageView(self.protocol._getExtraPath('volume1_resmap.map.png'))]
+    
+    def _plotHistogram(self, param=None):
+        return [ImageView(self.protocol._getExtraPath('histogram.png'))]
+    
         

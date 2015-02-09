@@ -34,6 +34,7 @@ from pyworkflow.object import String
 from pyworkflow.protocol.params import PointerParam, BooleanParam, FloatParam
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.gui.plotter import Plotter
 
 
 
@@ -104,6 +105,7 @@ class ProtResMap(ProtAnalysis3D):
                                  self.stepRes.get(),
                                  self.prewhitenAng.get(),
                                  self.prewhitenRamp.get())
+        self._insertFunctionStep('savePlotsStep')
 
     #--------------------------- STEPS functions --------------------------------------------       
     
@@ -126,6 +128,18 @@ class ProtResMap(ProtAnalysis3D):
         from cPickle import dumps
         self.histogramData.set(dumps(results['resHisto']))
         self._store(self.histogramData)
+        
+    def savePlotsStep(self):
+        """ Store png images of the plots to be used
+        from web. 
+        """
+        # Add resmap libraries to the path
+        sys.path.append(os.environ['RESMAP_HOME'])
+        # This is needed right now because we are having
+        # some memory problem with matplotlib plots right now in web
+        self._plotVolumeSlices().savefig(self._getExtraPath('volume1.map.png'))
+        self._plotResMapSlices().savefig(self._getExtraPath('volume1_resmap.map.png'))
+        self._plotHistogram().savefig(self._getExtraPath('histogram.png'))
         
     #--------------------------- INFO functions -------------------------------------------- 
     
@@ -196,5 +210,32 @@ class ProtResMap(ProtAnalysis3D):
         
         return results   
     
-     
+    #--------- Functions related to Plotting
+    
+    def _getVolumeMatrix(self, volName):
+        from ResMap_fileIO import MRC_Data
+        
+        volPath = self._getPath(volName)
+        return MRC_Data(volPath, 'ccp4').matrix
+    
+    def _plotVolumeSlices(self):
+        from ResMap_visualization import plotOriginalVolume
+        
+        fig = plotOriginalVolume(self._getVolumeMatrix('volume1.map'))
+        return Plotter(figure=fig)
+        
+    def _plotResMapSlices(self):
+        from ResMap_visualization import plotResMapVolume
+        
+        fig = plotResMapVolume(self._getVolumeMatrix('volume1_resmap.map'),
+                                  minRes=self.minRes.get(),
+                                  maxRes=self.maxRes.get())
+        return Plotter(figure=fig)
+             
+    def _plotHistogram(self):
+        from ResMap_visualization import plotResolutionHistogram
+        from cPickle import loads
+        histogramData = loads(self.histogramData.get())
+        fig = plotResolutionHistogram(histogramData)
+        return Plotter(figure=fig)    
 

@@ -30,19 +30,12 @@ This module contains protocols related to Set operations such us:
 - split
 ... etc
 """
-import os
-import math
-from os.path import basename
+
+import random
 from protocol import EMProtocol
-from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam, BooleanParam,
-                                        MultiPointerParam, IntParam)
-from pyworkflow.em.data import (SetOfMicrographs, SetOfParticles, SetOfImages, SetOfCTF, SetOfClasses, SetOfVolumes, Volume,
-                                SetOfClasses2D, SetOfClasses3D, SetOfNormalModes) #we need to import this to be used dynamically
-
-
-from pyworkflow.em.data_tiltpairs import MicrographsTiltPair, TiltPair
-from pyworkflow.utils.path import createLink
-
+from pyworkflow.protocol.params import (
+    PointerParam, BooleanParam, MultiPointerParam, IntParam)
+from pyworkflow.protocol.constants import LEVEL_EXPERT
 
 
 class ProtSets(EMProtocol):
@@ -68,6 +61,10 @@ class ProtUnionSet(ProtSets):
                       help='Select two or more sets (of micrographs, particles, volumes, etc.) to be united.'
                            'If you select 3 sets with 100, 200, 200 elements, the final set will contain a '
                            'total of 500 elements.')
+        form.addParam('renumber', BooleanParam, default=False, expertLevel=LEVEL_EXPERT,
+                      label="Create new ids",
+                      help='Make an automatic renumbering of the ids, so the new objects\n'
+                           'are not associated to the old ones.')
         # TODO: See what kind of restrictions we add (like "All sets should have the same sampling rate.")
 
     #--------------------------- INSERT steps functions --------------------------------------------   
@@ -87,10 +84,22 @@ class ProtUnionSet(ProtSets):
         # Keep original ids until we find a conflict. From then on, use new ids.
         usedIds = set()  # to keep track of the object ids we have already seen
         cleanIds = False
+
+        # If we want to renumber all start with an objId higher than any other.
+        if self.renumber.get():
+            firstObjId = max(obj.getObjId() for itemSet in self.inputSets
+                             for obj in itemSet.get()) + 1
+            cleanIds = True
+        else:
+            firstObjId = None
+
         for itemSet in self.inputSets:
             for obj in itemSet.get():
                 objId = obj.getObjId()
-                if cleanIds:
+                if firstObjId is not None:  # 1st time renumbering
+                    obj.setObjId(firstObjId)
+                    firstObjId = None  # next ones assigned automatically
+                elif cleanIds:
                     obj.cleanObjId()  # so it will be assigned automatically
                 elif objId in usedIds:  # duplicated id!
                     # Note that we cannot use  "objId in outputSet"
@@ -327,18 +336,24 @@ class ProtSubSet(ProtSets):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):    
         form.addSection(label='Input')
-        
-        form.addParam('inputFullSet', PointerParam, label="Full set of items",
-                      important=True, pointerClass='EMSet',
-                      help='Even if the operation can be applied to two arbitrary sets,\n'
-                           'the most common use-case is to retrieve a subset of\n'
-                           'elements from an original full set.\n' 
-                           '*Note*: the elements of the resulting set will be the same\n'
-                           'ones as this input set.')
-        form.addParam('inputSubSet', PointerParam, label="Subset of items",
-                      important=True, pointerClass='EMSet',
-                      help='The elements that are in this (normally smaller) set and\n'
-                           'in the full set will be included in the resulting set.')
+
+        add = form.addParam  # short notation
+        add('inputFullSet', PointerParam, label="Full set of items",
+            important=True, pointerClass='EMSet',
+            help='Even if the operation can be applied to two arbitrary sets,\n'
+                 'the most common use-case is to retrieve a subset of\n'
+                 'elements from an original full set.\n'
+                 '*Note*: the elements of the resulting set will be the same\n'
+                 'ones as this input set.')
+        add('chooseAtRandom', BooleanParam, default=False, label="Make random subset",
+            help='Choose elements randomly form the full set.')
+        add('inputSubSet', PointerParam, label="Subset of items",
+            pointerClass='EMSet', condition='not chooseAtRandom',
+            help='The elements that are in this (normally smaller) set and\n'
+                 'in the full set will be included in the resulting set.')
+        add('nElements', IntParam, default=2, label="Number of elements",
+            condition='chooseAtRandom',
+            help='How many elements will be taken from the full set.')
 
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
@@ -347,29 +362,48 @@ class ProtSubSet(ProtSets):
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         inputFullSet = self.inputFullSet.get()
-        inputSubSet = self.inputSubSet.get()
 
         inputClassName = inputFullSet.getClassName()
         outputSetFunction = getattr(self, "_create%s" % inputClassName)
 
         outputSet = outputSetFunction()
-        outputSet.copyInfo(inputFullSet)    
-        # Iterate over the elements in the smaller set
-        # and take the info from the full set
-        for elem in inputSubSet:
-            # TODO: this can be improved if we perform intersection directly in sqlite
-            origElem = inputFullSet[elem.getObjId()]
-            if origElem is not None:
-                outputSet.append(origElem)
+        outputSet.copyInfo(inputFullSet)
+
+        if self.chooseAtRandom.get():
+            chosen = random.sample(xrange(len(inputFullSet)), self.nElements.get())
+            for i, elem in enumerate(inputFullSet):
+                if i in chosen:
+                    outputSet.append(elem)
+        else:
+            # Iterate over the elements in the smaller set
+            # and take the info from the full set
+            inputSubSet = self.inputSubSet.get()
+            for elem in inputSubSet:
+                # TODO: this can be improved if we perform
+                # intersection directly in sqlite
+                origElem = inputFullSet[elem.getObjId()]
+                if origElem is not None:
+                    outputSet.append(origElem)
             
         key = 'output' + inputClassName.replace('SetOf', '') 
         self._defineOutputs(**{key: outputSet})
         self._defineTransformRelation(inputFullSet, outputSet)
-        self._defineSourceRelation(inputSubSet, outputSet)
+        if not self.chooseAtRandom.get():
+            self._defineSourceRelation(inputSubSet, outputSet)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         """Make sure the input data make sense."""
+
+        # First dispatch the easy case, where we choose elements at random.
+        if self.chooseAtRandom.get():
+            if self.nElements.get() <= len(self.inputFullSet.get()):
+                return []
+            else:
+                return ["Number of elements to choose cannot be bigger than",
+                        "the number of elements in the set."]
+
+        # Now the harder case: two sets. Check for compatible classes.
 
         # self.inputFullSet and self.inputSubSet .get().getClassName() can be SetOf...
         #   Alignment

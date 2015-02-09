@@ -27,6 +27,10 @@
 import json
 from django.http import HttpResponse
 from pyworkflow.viewer import WEB_DJANGO, MessageView, ProtocolViewer, TextView
+from pyworkflow.web.app.views_util import getImageUrl
+from views_util import savePlot
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em import TABLE_NAME, DataView, ImageView, PATH
 
 ############## 1ST STEP: LAUNCH VIEWER METHODS ##############
 
@@ -60,7 +64,9 @@ def launch_viewer(request):
         if obj.isPointer():
             obj = obj.get()
         
-        viewers = findViewers(obj.getClassName(), WEB_DJANGO)
+        print 'className %s' % obj.getClassName()
+        
+        viewers = findViewers(obj.getClassName(), WEB_DJANGO)        
     
         if len(viewers) == 0:
             views = []
@@ -103,9 +109,6 @@ def viewerForm(project, protocol, viewer):
 ############## 2ND STEP: VIEWER FUNCTION METHODS ##############
 
 def viewToUrl(request, view):
-    from views_util import savePlot
-    from pyworkflow.gui.plotter import Plotter
-    from pyworkflow.em import TABLE_NAME, DataView, PATH
 
     url = ""
     
@@ -114,6 +117,10 @@ def viewToUrl(request, view):
     # PLOT
     if isinstance(view, Plotter):
         url = 'url::/' + savePlot(request, view)
+                
+    # IMAGE
+    elif isinstance(view, ImageView):
+        url = 'url::/' + getImageUrl(view.getImagePath())
     
     # SHOWJ
     elif isinstance(view, DataView):
