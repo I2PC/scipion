@@ -260,7 +260,7 @@ class TestPolishParticles(TestRelionBase):
         
         print "Run Relion Refine"
         proRef = self.newProtocol(ProtRelionRefine3D,
-                                  initialLowPassFilterA=40, maskDiameterA=250,
+                                  initialLowPassFilterA=40, maskDiameterA=500,
                                   numberOfMpi=8, numberOfThreads=2)
         proRef.inputParticles.set(protExtract.outputParticles)
         proRef.referenceVolume.set(self.protImportVol.outputVolume)

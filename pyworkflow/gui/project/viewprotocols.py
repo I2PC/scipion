@@ -479,6 +479,7 @@ class ProtocolsView(tk.Frame):
         self._loadSelection()        
         self._items = {}
         self._lastSelectedProtId = None
+        self._lastStatus = None
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
@@ -890,24 +891,22 @@ class ProtocolsView(tk.Frame):
         return item
         
     def switchRunsView(self):
+        previousView = self.runsView
         viewValue = self.switchCombo.getValue()
-        
-        if viewValue == VIEW_LIST:
-            show = self.runsTree
-            hide = self.runsGraphCanvas.frame
-            self.updateRunsTreeSelection()
-            self.viewButtons[ACTION_TREE].grid_remove()
-        else:
-            show = self.runsGraphCanvas.frame
-            hide = self.runsTree
-            self.updateRunsGraph()
-            self.viewButtons[ACTION_TREE].grid(row=0, column=1)
-        
-        hide.grid_remove()
-        show.grid(row=0, column=0, sticky='news')
-        
         self.runsView = viewValue
         self.settings.setRunsView(viewValue)
+        
+        if viewValue == VIEW_LIST:
+            self.runsTree.grid(row=0, column=0, sticky='news')
+            self.runsGraphCanvas.frame.grid_remove()
+            self.updateRunsTreeSelection()
+            self.viewButtons[ACTION_TREE].grid_remove()
+        else:            
+            self.runsTree.grid_remove()
+            self.updateRunsGraph(reorganize=(previousView!=VIEW_LIST))
+            self.runsGraphCanvas.frame.grid(row=0, column=0, sticky='news')
+            self.viewButtons[ACTION_TREE].grid(row=0, column=1)
+        
     
     def _protocolItemClick(self, e=None):
         # Get the tree widget that originated the event
@@ -984,6 +983,7 @@ class ProtocolsView(tk.Frame):
         
         if prot:
             tm = '*%s*\n' % prot.getRunName()
+            tm += '   Id: %s\n' % prot.getObjId()
             tm += 'State: %s\n' % prot.getStatusMessage()
             tm += ' Time: %s\n' % prettyDelta(prot.getElapsedTime()) 
             if not hasattr(tw, 'tooltipText'):
@@ -1096,7 +1096,10 @@ class ProtocolsView(tk.Frame):
 
         if len(self._selection) != 1 or not prot:
             self.outputViewer.clear()
-        elif prot.getObjId() != self._lastSelectedProtId:
+            self._lastStatus = None
+        elif (prot.getObjId() != self._lastSelectedProtId or
+              prot.isActive() or prot.getStatus() != self._lastStatus):
+            self._lastStatus = prot.getStatus()
             i = self.outputViewer.getIndex()
             self.outputViewer.clear()
             for f in prot.getLogPaths():
@@ -1232,14 +1235,14 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_EXPORT: 
                     self._exportProtocols()
                 elif action == ACTION_COLLAPSE:
-                    self.updateRunsGraph(True, reorganize=True)
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(False)
+                    self.updateRunsGraph(True, reorganize=True)
                     self._updateActionToolbar()
                 elif action == ACTION_EXPAND:
-                    self.updateRunsGraph(True, reorganize=True)
                     nodeInfo = self.settings.getNodeById(prot.getObjId())
                     nodeInfo.setExpanded(True)
+                    self.updateRunsGraph(True, reorganize=True)
                     self._updateActionToolbar()
                         
             except Exception, ex:

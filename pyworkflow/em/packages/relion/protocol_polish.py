@@ -101,7 +101,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                       label='Additional parameters',
                       help='')
         
-        form.addParallelSection(threads=1, mpi=1) 
+        form.addParallelSection(threads=0, mpi=3) 
         #TODO: Add an option to allow the user to decide if copy binary files or not        
             
     #--------------------------- INSERT steps functions --------------------------------------------  
