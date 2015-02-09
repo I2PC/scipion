@@ -304,9 +304,9 @@ def get_attributes(request):
         project = loadProject(projectName)
         objId = request.GET.get('objId', None)
         
-        obj = project.getProtocol(int(objId))
+        obj = project.getObject(int(objId))
         if obj is None:
-            obj = project.getProtocol(int(objId)).get()
+            obj = project.getObject(int(objId)).get()
             
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
         return HttpResponse(res, mimetype='application/javascript')
@@ -322,9 +322,9 @@ def set_attributes(request):
         projectName = request.session['projectName']
         project = loadProject(projectName)
 
-        obj = project.getProtocol(int(id))
+        obj = project.getObject(int(id))
         if obj is None:
-            obj = project.getProtocol(int(id)).get()
+            obj = project.getObject(int(id)).get()
                 
         obj.setObjLabel(label)
         obj.setObjComment(comment)
