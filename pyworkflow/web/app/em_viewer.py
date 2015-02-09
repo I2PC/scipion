@@ -64,8 +64,6 @@ def launch_viewer(request):
         if obj.isPointer():
             obj = obj.get()
         
-        print 'className %s' % obj.getClassName()
-        
         viewers = findViewers(obj.getClassName(), WEB_DJANGO)        
     
         if len(viewers) == 0:
@@ -125,15 +123,7 @@ def viewToUrl(request, view):
     # SHOWJ
     elif isinstance(view, DataView):
         url = "/showj/?%s=%s" % (PATH, view.getPath())
-        showjParams = view.getShowJWebParams()
-        
-        if showjParams:
-            for key in showjParams:
-                url += '&%s=%s' % (key, showjParams[key])
-        
-        if view.getTableName():
-            url += '&%s=%s' % (TABLE_NAME, view.getTableName())
-        url = 'showj::'+ url
+        url = 'showj::'+ url + getShowjWebURL(view)
         
     # TEXT VIEWER
     elif isinstance(view, TextView):
@@ -144,6 +134,16 @@ def viewToUrl(request, view):
     elif isinstance(view, MessageView):
         url = 'error::' + view.getMessage()
     
+    return url
+
+def getShowjWebURL(view):
+    url = ""
+    showjParams = view.getShowJWebParams()
+    if showjParams:
+        for key in showjParams:
+            url += '&%s=%s' % (key, showjParams[key])
+    if view.getTableName():
+        url += '&%s=%s' % (TABLE_NAME, view.getTableName())
     return url
 
 def viewer_element(request):
