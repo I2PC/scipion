@@ -26,7 +26,7 @@
 # **************************************************************************
 
 from pyworkflow.protocol.params import (PointerParam, FloatParam, PathParam,
-                                        BooleanParam, IntParam, LEVEL_EXPERT)
+                                        BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D
 
@@ -114,12 +114,12 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
                       ' frequency (in Angstroms). When using a resolution that is higher than the'
                       ' gold-standard FSC-reported resolution, take care not to interpret noise'
                       ' in the map for signal...')
-        form.addParam('filterEdgeWidth', IntParam, default=2, expertLevel=LEVEL_EXPERT,
+        form.addParam('filterEdgeWidth', IntParam, default=2, expertLevel=LEVEL_ADVANCED,
                       label='Low-pass filter edge width:',
                       help='Width of the raised cosine on the low-pass filter edge'
                            '(in resolution shells)\n'
                            'Relion param: *--filter_edge_width*')
-        form.addParam('randomizeAtFsc', FloatParam, default=5, expertLevel=LEVEL_EXPERT,
+        form.addParam('randomizeAtFsc', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label='Randomize phases threshold',
                       help='Randomize phases from the resolution where FSC drops below this value\n'
                            'Relion param: *--randomize_at_fsc*')

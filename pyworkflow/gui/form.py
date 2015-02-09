@@ -1274,8 +1274,9 @@ class FormWindow(Window):
         expFrame = tk.Frame(paramsFrame)
         expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
         expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundCombo(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES, 
-                                          self._onExpertLevelChanged) 
+        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, LEVEL_CHOICES,
+                                            self.protocol.expertLevel.get(),
+                                            self._onExpertLevelChanged) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
         
@@ -1343,9 +1344,11 @@ class FormWindow(Window):
             var.set(value)
         return tk.Entry(parent, font=self.font, width=width, textvariable=var)
     
-    def _createEnumBinding(self, paramName, choices, *callbacks):
+    def _createEnumBinding(self, paramName, choices, value=None, *callbacks):
         param = EnumParam(choices=choices)
         var = ComboVar(param)
+        if value is not None:
+            var.set(value)
         self._addVarBinding(paramName, var, None, *callbacks)
         return param, var
         
@@ -1356,11 +1359,11 @@ class FormWindow(Window):
         
         return combo
     
-    def _createBoundOptions(self, parent, paramName, choices, *callbacks, **args):
-        param, var = self._createEnumBinding(paramName, choices, *callbacks)
-        frame = tk.Frame(parent, **args)
+    def _createBoundOptions(self, parent, paramName, choices, value, *callbacks, **kwargs):
+        param, var = self._createEnumBinding(paramName, choices, value, *callbacks)
+        frame = tk.Frame(parent, **kwargs)
         for i, opt in enumerate(param.choices):
-            rb = tk.Radiobutton(frame, text=opt, variable=var, value=opt)
+            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt)
             rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
         
         return frame
@@ -1567,6 +1570,7 @@ class FormWindow(Window):
             self._checkCondition(paramName)
             
     def _onExpertLevelChanged(self, *args):
+        print 'DEBUG: _onExpertLevelChanged'
         self._checkAllChanges()
         self.root.update_idletasks()
         for s in self._sections:

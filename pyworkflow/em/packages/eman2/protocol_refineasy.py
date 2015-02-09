@@ -32,7 +32,7 @@ import os
 import pyworkflow.em as em
 from pyworkflow.em.packages.eman2.eman2 import getEmanProgram
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam, EnumParam,
-                                        StringParam, BooleanParam, LEVEL_EXPERT)
+                                        StringParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.utils.path import cleanPattern
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtRefine3D

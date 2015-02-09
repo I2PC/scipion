@@ -35,7 +35,7 @@ from pyworkflow.utils import isPower2, getListFromRangeString
 from pyworkflow.utils.path import copyFile, cleanPath 
 from pyworkflow.protocol.params import (PointerParam, PathParam, IntParam, EnumParam,
                                         FloatParam,
-                                        LEVEL_EXPERT, LEVEL_ADVANCED)
+                                        LEVEL_ADVANCED, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles,\
@@ -60,7 +60,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
         form.addParam('inputModes', PointerParam, pointerClass='SetOfNormalModes',
                       label="Normal modes",                        
                       help='Set of normal modes to explore.')
-        form.addParam('modeList', NumericRangeParam, expertLevel=LEVEL_EXPERT,
+        form.addParam('modeList', NumericRangeParam, expertLevel=LEVEL_ADVANCED,
                       label="Modes selection",
                       help='Select which modes do you want to use from all of them.\n'
                            'If you leave the field empty, all modes will be used.\n'
@@ -74,7 +74,7 @@ class XmippProtAlignmentNMA(ProtAnalysis3D):
                       help='Select the set of particles that you want to use for flexible analysis.')  
 
         form.addParam('copyDeformations', PathParam,
-                      expertLevel=LEVEL_EXPERT,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Precomputed results (for development)',
                       help='Enter a metadata file with precomputed elastic  \n'
                            'and rigid-body alignment parameters and perform \n'

@@ -33,7 +33,7 @@ from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
                                         IntParam, EnumParam, StringParam)
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_EXPERT
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
 import pyworkflow.em.metadata as md
@@ -185,7 +185,7 @@ class ProtRelionBase(EMProtocol):
                            'If set to 0, no low-pass filter will be applied to the initial reference(s).')
         
         form.addParam('paddingFactor', FloatParam, default=3,
-                      condition='isClassify', expertLevel=LEVEL_EXPERT,
+                      condition='isClassify', expertLevel=LEVEL_ADVANCED,
                       label='Padding factor',
                       help='The padding factor used for oversampling of the Fourier transform. The default is 3x padding, '
                            'which is combined with nearest-neighbour interpolation. However, for large 3D maps, storing the '
@@ -199,7 +199,7 @@ class ProtRelionBase(EMProtocol):
         
         extraDefault = '' if self.IS_CLASSIFY else '--low_resol_join_halves 40 '
         form.addParam('extraParams', StringParam, default=extraDefault,
-                      expertLevel=LEVEL_EXPERT,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Additional parameters',
                       help='')
                
@@ -297,7 +297,7 @@ class ProtRelionBase(EMProtocol):
                            'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
                            'to use a second mask. Use <More options> and check <Solvent mask> parameter. ') 
         form.addParam('solventMask', PointerParam, pointerClass='Mask',
-                      expertLevel=LEVEL_EXPERT, allowsNull=True,
+                      expertLevel=LEVEL_ADVANCED, allowsNull=True,
                       label='Solvent mask (optional)',
                       help='For all white (value 1) pixels in this second mask the '
                            'corresponding pixels in the reconstructed map are set to the average value of '
