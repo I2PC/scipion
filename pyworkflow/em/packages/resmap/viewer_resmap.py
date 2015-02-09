@@ -31,7 +31,7 @@ Visualization of the ResMap outputs.
 import os
 import sys
 
-from pyworkflow.protocol.params import BooleanParam
+from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.gui.plotter import Plotter
 from protocol_resmap import ProtResMap
@@ -60,14 +60,14 @@ class ResMapViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group = form.addGroup('2D Plots')
-        group.addParam('doShowVolumeSlices', BooleanParam, default=True, 
+        group.addParam('doShowVolumeSlices', LabelParam, default=True,
                       label="Show volume slices?")
-        group.addParam('doShowResMapSlices', BooleanParam, default=True, 
+        group.addParam('doShowResMapSlices', LabelParam, default=True,
                       label="Show ResMap slices?")               
-        group.addParam('doShowResHistogram', BooleanParam, 
+        group.addParam('doShowResHistogram', LabelParam,
                       label="Show resolution histogram?", default=True)
         
-        form.addParam('doShowChimera', BooleanParam, 
+        form.addParam('doShowChimera', LabelParam,
                       label="Show Chimera animation?", default=True)
         
         
