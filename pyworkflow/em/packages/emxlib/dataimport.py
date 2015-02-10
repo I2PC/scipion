@@ -30,6 +30,7 @@ In this module are two protocols to Import/Export data from/to EMX.
 
 from os.path import join, dirname, exists
 from collections import OrderedDict
+from pyworkflow.em.constants import ALIGN_NONE
 
 from pyworkflow.protocol.params import PointerParam, RelationParam, StringParam
 from pyworkflow.em.data import EMXObject
@@ -54,11 +55,12 @@ class EmxImport():
     """
         
     
-    def __init__(self, protocol, emxFile):
-        self.protocol = protocol
-        self._emxFile = emxFile
+    def __init__(self, protocol, emxFile, alignType=ALIGN_NONE):
+        self.protocol   = protocol
+        self._emxFile   = emxFile
         self.copyOrLink = protocol.getCopyOrLink()
-        
+        self.alignType  = alignType
+
     def _loadEmxInfo(self):
         """ Load the EMX file and get some information about the type
         of objects contained and the binary data.
@@ -77,7 +79,7 @@ class EmxImport():
                 self.objDict[classElement] = obj
                 #is the binary file of this type
                 binaryFile = join(emxDir, obj.get(emxlib.FILENAME))
-                
+                print "binaryFile",binaryFile
                 if exists(binaryFile):
                     self.object = obj
                     self.binaryFile = binaryFile
@@ -108,7 +110,8 @@ class EmxImport():
         from convert import importData
         #emxFile=self._getRelPathExecutionDir(emxFile)
         importData(prot, self._emxFile, prot._getExtraPath(), 
-                   acquisition, prot.samplingRate.get(), self.copyOrLink)
+                   acquisition, prot.samplingRate.get(), self.copyOrLink,
+                   self.alignType)
         
     def importMicrographs(self):
         self.importData()
