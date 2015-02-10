@@ -302,7 +302,7 @@ def main():
 
     # TODO(josemiguel): review and see if we really need it.
     elif mode == MODE_DBBROWSE:
-        browserArgs = " ".join(sys.argv[2:])
+        browserArgs = " ".join('"%s"' % x for x in sys.argv[2:])
         runApp('pw_browser.py', args=browserArgs)
 
     elif mode == MODE_VIEWER:

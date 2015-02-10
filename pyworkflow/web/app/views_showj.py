@@ -85,8 +85,6 @@ def updateTable(inputParams, dataset):
     else:
 #        print "NO CHANGES"
         pass
-    
-
 
 def hasTableChanged(request, inputParams):
     return request.session.get(inputParams[sj.PATH], {}).get(sj.TABLE_NAME, None) != inputParams.get(sj.TABLE_NAME, None)    
