@@ -298,6 +298,9 @@ def _getObjectLabel(obj, mapper):
     if not len(label.strip()):
         labelList = [obj.getLastName()]
         parent = mapper.getParent(obj)
+        
+        if parent is None:
+            return "Wrong object: %s, possible db corrupted!!!" % obj.getObjId() 
 
         while not isinstance(parent, Protocol):
             labelList.insert(0, parent.getLastName())
