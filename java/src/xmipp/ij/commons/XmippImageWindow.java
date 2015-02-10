@@ -195,6 +195,20 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		
 	}
         
+        @Override
+        public  boolean close()
+        {
+            boolean result = super.close();
+            XmippApplication.removeInstance(true);
+            if(maskfr != null)
+            {
+                maskfr.setVisible(false);
+                maskfr.dispose();
+                
+            }
+            return result;
+        }
+        
        
         public Params getParams()
         {

@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.ij.commons.SocketClient;
 import xmipp.ij.commons.InputFieldsMessageDialog;
 import xmipp.utils.ScipionParams;
 import java.awt.Color;
@@ -35,12 +36,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
     private String type;
     private String self;
-    private String scripts, script, ctfscript;
-    private String projectid;
+    private int port;
     private JButton cmdbutton;
     private String sqlitefile;
     private JButton classcmdbutton;
-    private String python;
     private String inputid;
     private HashMap<String, String> msgfields;
     private final String runNameKey = "Run name:";
@@ -50,6 +49,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private String tmpdir;
     private JButton createvolbt;
     private String setType;
+    private static final String runProtCreateSubset = "run protocol ProtUserSubSet inputObject=%s sqliteFile='%s','%s' outputClassName=%s other='%s' label='%s'";
     
    
 
@@ -76,11 +76,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             self = ((ScipionGalleryData)data).getSelf();
             setType = ((ScipionMetaData)data.getMd()).getSetType();
             type = ((ScipionGalleryData)data).getScipionType() + "s";
-            python = parameters.python;
-            scripts = parameters.scripts;
-            script = parameters.getSubsetScript();
-            ctfscript = parameters.getCTFScript();
-            projectid = parameters.projectid;
+            port = parameters.port;
             inputid = parameters.inputid;
             String filename = data.getFileName();
             tmpdir = new File(filename).getParent() + File.separator + "tmp";
@@ -177,7 +173,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         int size = ((ScipionGalleryData)data).getEnabledCount();
                         if (confirmCreate("Micrographs", size)) 
                         {
-                            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", "SetOfMicrographs", dlg.getFieldValue(runNameKey), other};
+                            String command = String.format(runProtCreateSubset, 
+                            inputid, sqlitefile, "", "SetOfMicrographs", other, getRunLabel());
                             createSubset(command, "Creating set ...");
                         }
                     }
@@ -219,9 +216,20 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         boolean register = confirmCreate("Are you sure you want to register volume in scipion?");
         if(register)
         {
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," , setType, dlg.getFieldValue(runNameKey), data.getSelVolId().toString() + ",Volume"};
+            String command = String.format(runProtCreateSubset, 
+                inputid, sqlitefile, "", setType, data.getSelVolId().toString() + ",Volume", getRunLabel());
             createSubset(command, "Creating set ...");
         }
+    }
+    
+    public String getRunLabel()
+    {
+        return dlg.getFieldValue(runNameKey);
+    }
+    
+    public String getDBPreffix()
+    {
+        return ((ScipionGalleryData)data).getPreffix();
     }
     
     protected void createSimpleSubset()
@@ -238,7 +246,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             size = ((ScipionGalleryData)data).getEnabledCount();
         if (confirmCreate(type, size)) 
         {
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + "," + ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), dlg.getFieldValue(runNameKey), other};
+            String command = String.format(runProtCreateSubset, 
+                    inputid, sqlitefile, ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
             createSubset(command, "Creating set ...");
         }
     }
@@ -249,7 +258,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         int size = ((ScipionGalleryData)data).getEnabledCount();
                        
         if (confirmCreate("Classes", size)) {
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", setType , dlg.getFieldValue(runNameKey), other};
+            String command = String.format(runProtCreateSubset, 
+                inputid, sqlitefile, "", setType , other, getRunLabel());
 
             createSubset(command, "Creating set ...");
 
@@ -262,7 +272,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                         
         if (confirmCreate("Representatives", size)) {
             String output = isClass2D()? "SetOfAverages,Representatives":"SetOfVolumes,Representatives";
-            String[] command = new String[]{python, script, projectid, inputid, sqlitefile + ",", output , dlg.getFieldValue(runNameKey), other};
+            String command = String.format(runProtCreateSubset, 
+            inputid, sqlitefile, "", output , other, getRunLabel());
             createSubset(command, "Creating set ...");
 
         }
@@ -279,7 +290,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             }
 
             ((ScipionGalleryData)data).overwrite(sqlitefile);
-            final String[] command = new String[]{python, ctfscript, projectid, inputid, sqlitefile};
+            final String[] command = new String[]{"ctf script???", inputid, sqlitefile};
             new Thread(new Runnable() {
 
                 @Override
@@ -323,9 +334,6 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         enableActions();
     }
     
-    
-    
-
     
 
     protected void enableActions() {
@@ -372,7 +380,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         return true;
     }
     
-   protected void createSubset(final String[] command, String msg) 
+   protected void createSubset(final String command, String msg) 
     {
         XmippWindowUtil.blockGUI(ScipionGalleryJFrame.this, msg);
         new Thread(new Runnable() {
@@ -381,10 +389,11 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             public void run() {
                 try {
                     ((ScipionGalleryData)data).overwrite(sqlitefile);
-                    String output = XmippWindowUtil.executeCommand(command, true);
+                    XmippWindowUtil.runCommand(command, port);
+//                    String output = XmippWindowUtil.executeCommand(command, true);
                     XmippWindowUtil.releaseGUI(ScipionGalleryJFrame.this.getRootPane());
-                    if (output != null && !output.isEmpty()) 
-                        System.out.println(output);
+//                    if (output != null && !output.isEmpty()) 
+//                        System.out.println(output);
                     close(false);
 //                        XmippDialog.showInfo(ScipionGalleryJFrame.this, output);
 //                        

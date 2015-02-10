@@ -7,8 +7,6 @@ package xmipp.utils;
 
 import java.io.File;
 import org.apache.commons.cli.Option;
-import xmipp.utils.Params;
-import xmipp.utils.XmippWindowUtil;
 
 
 /**
@@ -18,15 +16,13 @@ import xmipp.utils.XmippWindowUtil;
 public class ScipionParams extends Params {
 
     
-    public String projectid;
+    public int port;
     public String inputid;
     public String other;
-    public String python;
     public String scripts;
     public String[] objectCommands;
 
-    public final static String PYTHON = "python";
-    public final static String PROJECT = "project";
+    public final static String SCIPION = "scipion";
     
     
     public ScipionParams(String args[]) {
@@ -35,16 +31,13 @@ public class ScipionParams extends Params {
     
     public boolean isScipion()
     {
-        return cmdLine.hasOption(PROJECT);
+        return cmdLine.hasOption(SCIPION);
     }
 
     public void defineArgs() {
         super.defineArgs();
-        Option opt = new Option(PROJECT, "");
+        Option opt = new Option(SCIPION, "");
         opt.setArgs(3);
-        options.addOption(opt);
-        opt = new Option(PYTHON, "");
-        opt.setArgs(2);
         options.addOption(opt);
         opt = new Option(OBJECT_CMDS, "");
         opt.setArgs(Integer.MAX_VALUE);
@@ -55,20 +48,14 @@ public class ScipionParams extends Params {
     public void processArgs(String args[]) {
         super.processArgs(args);
         
-        
-        if (cmdLine.hasOption(PROJECT)) {
+        if (cmdLine.hasOption(SCIPION)) {
             
-            String[] cmdargs = cmdLine.getOptionValues(PROJECT);
-            projectid = cmdargs[0];
+            String[] cmdargs = cmdLine.getOptionValues(SCIPION);
+            port = Integer.parseInt(cmdargs[0]);
             inputid = cmdargs[1];
             other = (cmdargs.length == 3)? cmdargs[2]: "";
         }
-        if(cmdLine.hasOption(PYTHON))
-            {
-                args = cmdLine.getOptionValues(PYTHON);
-            	python = args[0];
-                scripts = args[1];
-            }
+      
     }
     
     public String getCTFScript()

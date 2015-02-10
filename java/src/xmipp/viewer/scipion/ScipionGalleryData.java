@@ -5,6 +5,7 @@
  */
 package xmipp.viewer.scipion;
 
+import xmipp.ij.commons.SocketClient;
 import xmipp.utils.ScipionParams;
 import java.io.File;
 import java.sql.SQLException;
@@ -408,8 +409,10 @@ public class ScipionGalleryData extends GalleryData {
     public void runObjectCommand(int index, String objectCommand) {
         try {
             ScipionParams params = (ScipionParams)parameters;
-            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.other, String.valueOf(getId(index))};
-            XmippWindowUtil.executeCommand(cmd, false);
+            String command = String.format("run function runObjectCommand '%s' %s %s", objectCommand, params.inputid, getId(index));
+            XmippWindowUtil.runCommand(command, params.port);
+//            String[] cmd = new String[]{params.python, params.getObjectCmdScript(), String.format("'%s'", objectCommand), params.projectid, params.other, String.valueOf(getId(index))};
+//            XmippWindowUtil.executeCommand(cmd, false);
         } catch (Exception ex) {
             Logger.getLogger(GalleryData.class.getName()).log(Level.SEVERE, null, ex);
         } 

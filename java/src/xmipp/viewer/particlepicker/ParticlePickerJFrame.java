@@ -77,6 +77,7 @@ import xmipp.utils.XmippWindowUtil;
 import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
 import xmipp.ij.commons.InputFieldsMessageDialog;
+import xmipp.ij.commons.SocketClient;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -964,15 +965,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 public void run() {
 
                     try {
-                        String[] cmd = getParticlePicker().getScipionSaveCommand();
-                        String output = XmippWindowUtil.executeCommand(cmd, true);
+                        String cmd = getParticlePicker().getScipionSaveCommand();
+                        XmippWindowUtil.runCommand(cmd, getParticlePicker().getParams().port);
                         XmippWindowUtil.releaseGUI(ParticlePickerJFrame.this.getRootPane());
                         getCanvas().setEnabled(true);
-                        if(output != null && !output.isEmpty())
-                        {
-                            XmippDialog.showInfo(ParticlePickerJFrame.this, output);
-                            System.out.println(output);
-                        }
+                        
                         close();
 
                     } catch (Exception ex) {

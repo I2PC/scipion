@@ -37,6 +37,9 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -249,28 +252,51 @@ public class XmippWindowUtil
                 return readProcessOutput(p);
             }
             return null;
-    }
-    
-    
-    
-    public static String readProcessOutput(Process p) throws IOException
-    {
-        StringBuffer output = new StringBuffer();
-        BufferedReader reader
-                = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        }
+        
+        public static void runCommand(String command, int port) {
+        
+        String hostName = "";
+ 
+        try {
+            Socket socket = new Socket(hostName, port);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            System.out.println(command);
+            out.println(command);
+            socket.close();
+        
+            
+        } catch (UnknownHostException e) {
+            System.err.println("Don't know about host " + hostName);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection to " +
+                hostName);
+            System.exit(1);
+        }
+        }
 
-       
-        String line = "";
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
+
+
+        public static String readProcessOutput(Process p) throws IOException
+        {
+            StringBuffer output = new StringBuffer();
+            BufferedReader reader
+                    = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+            while ((line = reader.readLine()) != null) {
+                output.append(line + "\n");
+            }
+            return output.toString();
+
         }
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        
-        while ((line = reader.readLine()) != null) {
-            output.append(line + "\n");
-        }
-        return output.toString();
-        
-    }
 
 }

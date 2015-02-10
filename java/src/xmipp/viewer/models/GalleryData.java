@@ -1676,6 +1676,7 @@ public class GalleryData {
             else
                 return MetaData.isImage(ci.label) && ci.visible;
         }
+
         
         for (String i : getRenderLabels()) {
             if (i.equals(ci.labelName) && ci.visible) {

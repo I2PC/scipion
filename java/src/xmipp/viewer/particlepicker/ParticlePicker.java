@@ -98,7 +98,10 @@ public abstract class ParticlePicker {
 
     }
     
-    
+    public ParticlePickerParams getParams()
+    {
+        return params;
+    }
     
 
     public String getParticlesAutoBlock(String file) {
@@ -613,11 +616,11 @@ public abstract class ParticlePicker {
      {
          if(params == null)
              return false;
-         return params.script != null && mode != Mode.ReadOnly;
+         return params.port != null && mode != Mode.ReadOnly;
      }
 
-    public String[] getScipionSaveCommand() {
-        String[] cmd = new String[]{params.python, params.script, params.projectid, params.protid};
+    public String getScipionSaveCommand() {
+        String cmd = String.format("run function registerCoords %s %s", params.dbpath, params.protid);
         return cmd;
     }
      
