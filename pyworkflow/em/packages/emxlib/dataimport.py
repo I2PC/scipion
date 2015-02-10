@@ -79,7 +79,6 @@ class EmxImport():
                 self.objDict[classElement] = obj
                 #is the binary file of this type
                 binaryFile = join(emxDir, obj.get(emxlib.FILENAME))
-                print "binaryFile",binaryFile
                 if exists(binaryFile):
                     self.object = obj
                     self.binaryFile = binaryFile
@@ -129,7 +128,6 @@ class EmxImport():
         errors = []
         # Check that input EMX file exist
         if not exists(emxFile):
-                print
                 errors.append("Input EMX file doesn't exists:\n*%s*" % emxFile)
         else:
             self._loadEmxInfo()   
