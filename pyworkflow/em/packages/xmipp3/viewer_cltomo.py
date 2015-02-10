@@ -32,6 +32,7 @@ from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em import *
 from protocol_cltomo import XmippProtCLTomo
 from pyworkflow.gui.text import *
+from pyworkflow.protocol.params import LabelParam
 from pyworkflow.gui.dialog import showError, showWarning
 import glob
 
@@ -44,7 +45,7 @@ class XmippCLTomoViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowLastLevel', BooleanParam, label="Visualize last level.", default=True)     
+        form.addParam('doShowLastLevel', LabelParam, label="Visualize last level.")
         form.addParam('showSeveralLevels', StringParam, default='',
               label='Visualize several levels', condition='not doShowLastLevel',
               help='Create a  list of levels like: 0,1,3 or 0-3 ')    
